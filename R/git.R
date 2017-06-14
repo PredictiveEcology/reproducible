@@ -14,7 +14,8 @@
 #'        cloned, pulled, and checked out from.
 #' @param cred Character string. Either the name of the environment variable
 #'             that contains the GitHub PAT or filename of the github Private Key File.
-#'
+#' @return Invisibly returns a repository class object, defined in
+#' \code{\link[git2r]{git_repository}}
 checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
 
   params <- devtools:::parse_git_repo(repo)
@@ -45,24 +46,25 @@ checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
   if(!remoteWasHTTPS)
     git2r::remote_set_url(repo, "origin", url=httpsURL)
 
-  # Get specific LandWeb version
-  hasUncommittedFiles <- sum(sapply(status(repo), length))>0
-  if(hasUncommittedFiles) {
-    lastCommit <- revparse_single(repo, "HEAD")
-    git2r::add(repo, unlist(status(repo)$unstaged))
-    tempCommit <- commit(repo, "testing")
-  } else {
-    lastCommit <- NULL
-  }
+  # # Get specific LandWeb version
+  # hasUncommittedFiles <- sum(sapply(status(repo), length))>0
+  # if(hasUncommittedFiles) {
+  #   lastCommit <- revparse_single(repo, "HEAD")
+  #   git2r::add(repo, unlist(status(repo)$unstaged))
+  #   tempCommit <- commit(repo, "testing")
+  # } else {
+  #   lastCommit <- NULL
+  # }
 
   if(gitHash %in% c("development", "master")) git2r::pull(repo, cred)
 
   tryCatch(git2r::checkout(lookup(repo, gitHash)), error=function(x)
     git2r::checkout(repo, gitHash))
 
+  if(!remoteWasHTTPS)
+    git2r::remote_set_url(repo, "origin", url=sshURL)
 
-  return(list(repo=repo, hasUncommittedFiles=hasUncommittedFiles, lastCommit=lastCommit,
-              remoteWasHTTPS=remoteWasHTTPS, sshURL=sshURL))
+  return(invisible(repo))
 }
 
 

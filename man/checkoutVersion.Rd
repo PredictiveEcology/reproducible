@@ -19,6 +19,10 @@ cloned, pulled, and checked out from.}
 \item{cred}{Character string. Either the name of the environment variable
 that contains the GitHub PAT or filename of the github Private Key File.}
 }
+\value{
+Invisibly returns a repository class object, defined in
+\code{\link[git2r]{git_repository}}
+}
 \description{
 In reproducible research, not only do packages and R version have to be
 consistent, but also specific versions of version controlled scripts. This
