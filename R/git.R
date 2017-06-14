@@ -10,16 +10,17 @@
 #' @import devtools
 #' @importFrom git2r checkout remote_set_url pull remote_url lookup
 #' @importFrom git2r cred_token cred_ssh_key clone init
+#' @importFrom utils getFromNamespace
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'        cloned, pulled, and checked out from.
 #' @param cred Character string. Either the name of the environment variable
 #'             that contains the GitHub PAT or filename of the github Private Key File.
 #' @return Invisibly returns a repository class object, defined in
-#' \code{\link[git2r]{git_repository}}
+#' \code{git2r::git_repository}
 checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
 
-  params <- devtools:::parse_git_repo(repo)
+  params <- getFromNamespace("parse_git_repo", ns="devtools")(repo)
   gitHash <- if(is.null(params$ref)) "master" else params$ref
   repositoryName <- params$repo
   repositoryAccount <- params$username
