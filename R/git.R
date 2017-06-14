@@ -9,8 +9,8 @@
 #' @inheritParams devtools::install_github
 #'
 #' @import devtools
-#' @importFrom git2r checkout clone commit cred_token cred_ssh_key
-#'                   init lookup remote_set_url remote_url revparse_single status
+#' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init is_local
+#'                   lookup pull remote_set_url remote_url revparse_single status
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'                      cloned, pulled, and checked out from.
@@ -24,7 +24,7 @@
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
   .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools")
   params <- .parse_git_repo(repo)
-  gitHash <- params$ref
+  gitHash <- if (is.null(params$ref)) "master" else params$ref
   repositoryName <- params$repo
   repositoryAccount <- params$username
 
@@ -37,12 +37,14 @@ checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
                           privatekey = githubPrivateKeyFile)
    }
 
-  pathExists <- file.exists(normalizePath(localRepoPath))
+  pathExists <- suppressWarnings(file.exists(normalizePath(localRepoPath)))
   httpsURL <- paste0("https://github.com/", repositoryAccount, "/", repositoryName, ".git")
   sshURL <- paste0("git@github.com:", repositoryAccount, "/", repositoryName, ".git")
 
   if (!(pathExists)) {
-    clone(httpsURL, localRepoPath, branch = gitHash, credentials = cred)
+    # using "~" in a path doesn't seem to work correctly. Must use path.expand to
+    #  give an absolute path in this case.
+    clone(httpsURL, path.expand(localRepoPath), branch = gitHash, credentials = cred)
   }
 
   # If repo is set to using ssh, git2r package doesn't work -- must change it
