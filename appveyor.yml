@@ -75,10 +75,10 @@ artifacts:
 
 notifications:
   - provider: Email
-  to:
+    to:
     - alex.chubaty@gmail.com
-  subject: 'reproducible: r-appveyor build {{status}}'
-  message: "https://ci.appveyor.com/project/achubaty/reproducible"
-  on_build_success: false
-  on_build_failure: false
-  on_build_status_changed: true
+    subject: 'reproducible: r-appveyor build {{status}}'
+    message: "https://ci.appveyor.com/project/achubaty/reproducible"
+    on_build_success: false
+    on_build_failure: false
+    on_build_status_changed: true
