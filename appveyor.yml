@@ -3,22 +3,25 @@
 # Download script file from GitHub
 init:
   ps: |
-  $ErrorActionPreference = "Stop"
-  Invoke-WebRequest http://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
-  Import-Module '..\appveyor-tool.ps1'
+        $ErrorActionPreference = "Stop"
+        Invoke-WebRequest http://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
+        Import-Module '..\appveyor-tool.ps1'
 
-  install:
-    ps: Bootstrap
+install:
+  ps: Bootstrap
 
-  # Adapt as necessary starting from here
+cache:
+  - C:\RLibrary
 
-  version: 1.0.{build}-{branch}
+# Adapt as necessary starting from here
 
-  environment:
-    global:
+version: 1.0.{build}-{branch}
+
+environment:
+  global:
     R_ARCH: x64
-  USE_RTOOLS: true
-  WARNINGS_ARE_ERRORS: 1
+    USE_RTOOLS: true
+    WARNINGS_ARE_ERRORS: 1
 
   matrix:
   - R_VERSION: devel
@@ -41,37 +44,37 @@ init:
 
   clone_depth: 5
 
-  build_script:
-    - travis-tool.sh install_deps
+build_script:
+  - travis-tool.sh install_deps
 
-  test_script:
-    - travis-tool.sh run_tests
+test_script:
+  - travis-tool.sh run_tests
 
-  on_failure:
-    - 7z a failure.zip *.Rcheck\*
-    - appveyor PushArtifact failure.zip
+on_failure:
+  - 7z a failure.zip *.Rcheck\*
+  - appveyor PushArtifact failure.zip
 
-  artifacts:
-    - path: '*.Rcheck\**\*.log'
-  name: Logs
+artifacts:
+  - path: '*.Rcheck\**\*.log'
+    name: Logs
 
   - path: '*.Rcheck\**\*.out'
-  name: Logs
+    name: Logs
 
   - path: '*.Rcheck\**\*.fail'
-  name: Logs
+    name: Logs
 
   - path: '*.Rcheck\**\*.Rout'
-  name: Logs
+    name: Logs
 
   - path: '\*_*.tar.gz'
-  name: Bits
+    name: Bits
 
   - path: '\*_*.zip'
-  name: Bits
+    name: Bits
 
-  notifications:
-    - provider: Email
+notifications:
+  - provider: Email
   to:
     - alex.chubaty@gmail.com
   subject: 'reproducible: r-appveyor build {{status}}'
