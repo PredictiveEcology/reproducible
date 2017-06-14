@@ -34,15 +34,15 @@ environment:
   - R_VERSION: 3.3.2
     RTOOLS_VERSION: 33
 
-  branches:
-    only:
-    - master
-    - development
+branches:
+  only:
+  - master
+  - development
 
-    except:
-    - gh-pages
+  except:
+  - gh-pages
 
-  clone_depth: 5
+clone_depth: 5
 
 build_script:
   - travis-tool.sh install_deps
