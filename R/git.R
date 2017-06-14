@@ -7,8 +7,8 @@
 #' Personal Access Tokens.
 #'
 #' @inheritParams devtools::install_github
-#' @import devtools 
-#' @importFrom git2r checkout remote_set_url status commit lookup revparse_single
+#' @import devtools
+#' @importFrom git2r checkout remote_set_url status commit remote_url lookup revparse_single
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'        cloned, pulled, and checked out from.
@@ -17,14 +17,13 @@
 #'
 checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
 
-  browser()
   params <- devtools:::parse_git_repo(repo)
   gitHash <- params$ref
   repositoryName <- params$repo
   repositoryAccount <- params$username
 
   githubPrivateKeyFile <- if(file.exists(cred)) cred else NULL
-  
+
    if(is.null(githubPrivateKeyFile)) {
      cred <- git2r::cred_token(cred)
    } else {
@@ -32,12 +31,11 @@ checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
                                  privatekey = githubPrivateKeyFile)
    }
 
-  browser()
-  pathExists <- tryCatch(SpaDES::checkPath(localRepoPath), error=function(x) NULL)
+  pathExists <- file.exists(normalizePath(localRepoPath))
   httpsURL <- paste0("https://github.com/",repositoryAccount,"/",repositoryName,".git")
   sshURL <- paste0("git@github.com:",repositoryAccount,"/",repositoryName,".git")
 
-  if(is.null(pathExists)) {
+  if(!(pathExists)) {
     git2r::clone(httpsURL, localRepoPath, branch=gitHash, credentials=cred)
   }
 
