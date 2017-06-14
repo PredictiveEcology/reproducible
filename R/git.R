@@ -8,8 +8,8 @@
 #'
 #' @inheritParams devtools::install_github
 #' @import devtools
-#' @importFrom git2r checkout remote_set_url status commit pull remote_url lookup revparse_single
-#' @importFrom git2r cred_token cred_ssh_key clone init is_local head
+#' @importFrom git2r checkout remote_set_url pull remote_url lookup
+#' @importFrom git2r cred_token cred_ssh_key clone init
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'        cloned, pulled, and checked out from.
@@ -33,21 +33,30 @@ checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
                                  privatekey = githubPrivateKeyFile)
    }
 
-  pathExists <- suppressWarnings(file.exists(normalizePath(localRepoPath)))
+  pathExists <- suppressWarnings(file.exists(normalizePath(path.expand(localRepoPath))))
   httpsURL <- paste0("https://github.com/",repositoryAccount,"/",repositoryName,".git")
   sshURL <- paste0("git@github.com:",repositoryAccount,"/",repositoryName,".git")
+
+  needSSH <- class(cred)=="cred_ssh_key"
+  urls <- c(httpsURL, sshURL)
+  url1 <- ifelse(needSSH, sshURL, httpsURL)
 
   if(!(pathExists)) {
     # using "~" in a path doesn't seem to work correctly. Must use path.expand to
     #  give an absolute path in this case.
-    git2r::clone(httpsURL, path.expand(localRepoPath), branch=gitHash, credentials=cred)
+    git2r::clone(url1, path.expand(localRepoPath), branch=gitHash, credentials=cred)
+
   }
 
   # If repo is set to using ssh, git2r package doesn't work -- must change it
   repo <- git2r::init(localRepoPath)
-  remoteWasHTTPS <- any(grepl(httpsURL, git2r::remote_url(repo)))
-  if(!remoteWasHTTPS)
-    git2r::remote_set_url(repo, "origin", url=httpsURL)
+
+  isSSH <- any(grepl(sshURL, git2r::remote_url(repo)))
+  #needHTTPS <- any(grepl(httpsURL, git2r::remote_url(repo))) & !(class(cred)=="cred_ssh_key")
+  needSwitchURL <- xor(isSSH, needSSH)
+
+  if(needSwitchURL)
+    git2r::remote_set_url(repo, "origin", url=url1)
 
   # # Get specific LandWeb version
   # hasUncommittedFiles <- sum(sapply(status(repo), length))>0
@@ -64,20 +73,9 @@ checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
   tryCatch(git2r::checkout(lookup(repo, gitHash)), error=function(x)
     git2r::checkout(repo, gitHash))
 
-  if(!remoteWasHTTPS)
-    git2r::remote_set_url(repo, "origin", url=sshURL)
+  if(needSwitchURL)
+    git2r::remote_set_url(repo, "origin", url=setdiff(urls, url1))
 
   return(invisible(repo))
-}
-
-
-#' @importFrom git2r reset
-checkoutDev <- function(checkoutCondition) {
-  checkout(checkoutCondition$repo, "development")
-  if(checkoutCondition$hasUncommittedFiles) git2r::reset(checkoutCondition$lastCommit,
-                                                         reset_type = "soft")
-  if(!checkoutCondition$remoteWasHTTPS)
-    remote_set_url(checkoutCondition$repo, "origin", url=checkoutCondition$sshURL)
-
 }
 
