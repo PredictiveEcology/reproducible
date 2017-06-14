@@ -1,0 +1,23 @@
+Package: reproducible
+Type: Package
+Title: A set of tools for R that enhance reproducibility beyond package management, including tools for caching and access github repositories
+Description: 
+URL: https://github.com/PredictiveEcology/reproducible
+Date: 2017-06-13
+Version: 0.0.1.9000
+Authors@R: c(
+    person(c("Eliot", "J", "B"), "McIntire", email = "eliot.mcintire@canada.ca",
+    role = c("aut", "cre")),
+    person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca",
+    role = c("aut")),
+    person("Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada",
+    role = "cph")
+    )
+Depends:
+    R (>= 3.3.2)
+Imports:
+    git2r (>= 0.18)
+License: GPL-3
+BugReports: https://github.com/PredictiveEcology/reproducible/issues
+ByteCompile: yes
+RoxygenNote: 6.0.1
