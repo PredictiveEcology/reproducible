@@ -1,50 +1,55 @@
 #' Clone, pull, & checkout from github.com repositories
 #'
 #' In reproducible research, not only do packages and R version have to be
-#' consistent, but also specific versions of version controlled scripts. This
-#' function allows a simple way to create an exactly copy locally of a git
-#' repository. It can use ssh keys (including github deploy keys) or GitHub
+#' consistent, but also specific versions of version controlled scripts.
+#' This function allows a simple way to create an exactly copy locally of a git
+#' repository. It can use ssh keys (including GitHub deploy keys) or GitHub
 #' Personal Access Tokens.
 #'
 #' @inheritParams devtools::install_github
+#'
 #' @import devtools
-#' @importFrom git2r checkout remote_set_url status commit remote_url lookup revparse_single
+#' @importFrom git2r checkout clone commit cred_token cred_ssh_key
+#'                   init lookup remote_set_url remote_url revparse_single status
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
-#'        cloned, pulled, and checked out from.
+#'                      cloned, pulled, and checked out from.
+#'
 #' @param cred Character string. Either the name of the environment variable
-#'             that contains the GitHub PAT or filename of the github Private Key File.
+#'             that contains the GitHub PAT or filename of the GitHub private key file.
+#'
 #' @return Invisibly returns a repository class object, defined in
-#' \code{\link[git2r]{git_repository}}
-checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
-
-  params <- devtools:::parse_git_repo(repo)
+#' \code{\link[git2r]{git_repository-class}}
+#'
+checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
+  .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools")
+  params <- .parse_git_repo(repo)
   gitHash <- params$ref
   repositoryName <- params$repo
   repositoryAccount <- params$username
 
-  githubPrivateKeyFile <- if(file.exists(cred)) cred else NULL
+  githubPrivateKeyFile <- if (file.exists(cred)) cred else NULL
 
-   if(is.null(githubPrivateKeyFile)) {
-     cred <- git2r::cred_token(cred)
+   if (is.null(githubPrivateKeyFile)) {
+     cred <- cred_token(cred)
    } else {
-     cred <- git2r::cred_ssh_key(publickey = paste0(githubPrivateKeyFile,".pub"),
-                                 privatekey = githubPrivateKeyFile)
+     cred <- cred_ssh_key(publickey = paste0(githubPrivateKeyFile, ".pub"),
+                          privatekey = githubPrivateKeyFile)
    }
 
   pathExists <- file.exists(normalizePath(localRepoPath))
-  httpsURL <- paste0("https://github.com/",repositoryAccount,"/",repositoryName,".git")
-  sshURL <- paste0("git@github.com:",repositoryAccount,"/",repositoryName,".git")
+  httpsURL <- paste0("https://github.com/", repositoryAccount, "/", repositoryName, ".git")
+  sshURL <- paste0("git@github.com:", repositoryAccount, "/", repositoryName, ".git")
 
-  if(!(pathExists)) {
-    git2r::clone(httpsURL, localRepoPath, branch=gitHash, credentials=cred)
+  if (!(pathExists)) {
+    clone(httpsURL, localRepoPath, branch = gitHash, credentials = cred)
   }
 
   # If repo is set to using ssh, git2r package doesn't work -- must change it
-  repo <- git2r::init(localRepoPath)
-  remoteWasHTTPS <- any(grepl(httpsURL, git2r::remote_url(repo)))
-  if(!remoteWasHTTPS)
-    git2r::remote_set_url(repo, "origin", url=httpsURL)
+  repo <- init(localRepoPath)
+  remoteWasHTTPS <- any(grepl(httpsURL, remote_url(repo)))
+  if (!remoteWasHTTPS)
+    remote_set_url(repo, "origin", url = httpsURL)
 
   # # Get specific LandWeb version
   # hasUncommittedFiles <- sum(sapply(status(repo), length))>0
@@ -56,29 +61,49 @@ checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
   #   lastCommit <- NULL
   # }
 
-  if(gitHash %in% c("development", "master")) git2r::pull(repo, cred)
+  if (gitHash %in% c("development", "master")) git2r::pull(repo, cred)
 
-  tryCatch(git2r::checkout(lookup(repo, gitHash)), error=function(x)
-    git2r::checkout(repo, gitHash))
+  tryCatch(git2r::checkout(lookup(repo, gitHash)), error = function(x) {
+    checkout(repo, gitHash)
+  })
 
-  if(!remoteWasHTTPS)
-    git2r::remote_set_url(repo, "origin", url=sshURL)
+  if (!remoteWasHTTPS) {
+    remote_set_url(repo, "origin", url = sshURL)
+  }
 
   return(invisible(repo))
 }
 
-
+#' Checkout the development branch of a repository
+#'
+#' @param checkoutCondition NEEDS DESCRIPTION
+#'
+#' @author Eliot Mcintire
+#' @docType methods
+#' @export
+#' @importFrom git2r checkout reset remote_set_url
+#'
 checkoutDev <- function(checkoutCondition) {
   checkout(checkoutCondition$repo, "development")
-  if(checkoutCondition$hasUncommittedFiles) git2r::reset(checkoutCondition$lastCommit,
-                                                         reset_type = "soft")
-  if(!checkoutCondition$remoteWasHTTPS)
-    remote_set_url(checkoutCondition$repo, "origin", url=checkoutCondition$sshURL)
-
+  if (checkoutCondition$hasUncommittedFiles) {
+    reset(checkoutCondition$lastCommit, reset_type = "soft")
+  }
+  if (!checkoutCondition$remoteWasHTTPS) {
+    remote_set_url(checkoutCondition$repo, "origin", url = checkoutCondition$sshURL)
+  }
 }
 
-
-robocopy <- function(from, to, options=c("xo", "e"), files) {
-  system(paste("robocopy", normalizePath(from),
-               normalizePath(to), paste(paste0("/",options), collapse=" ")))
+#' Use 'RoboCopy' on Windows to intelligently copy files
+#'
+#' @param from source directory
+#' @param to   destination directory
+#' @param options RoboCopy options (default \code{c("xo", "e")}).
+#' @param files files to copy
+robocopy <- function(from, to, options = c("xo", "e"), files) {
+  if (Sys.info()["sysname"] == "Windows") {
+    system(paste("robocopy", normalizePath(from),
+                 normalizePath(to), paste(paste0("/", options), collapse = " ")))
+  } else {
+    stop("RoboCopy is only available on Windows. On other operating systems, use 'rsync' if it's available instead.")
+  }
 }

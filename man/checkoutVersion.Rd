@@ -17,16 +17,16 @@ precedence.}
 cloned, pulled, and checked out from.}
 
 \item{cred}{Character string. Either the name of the environment variable
-that contains the GitHub PAT or filename of the github Private Key File.}
+that contains the GitHub PAT or filename of the GitHub private key file.}
 }
 \value{
 Invisibly returns a repository class object, defined in
-\code{\link[git2r]{git_repository}}
+\code{\link[git2r]{git_repository-class}}
 }
 \description{
 In reproducible research, not only do packages and R version have to be
-consistent, but also specific versions of version controlled scripts. This
-function allows a simple way to create an exactly copy locally of a git
-repository. It can use ssh keys (including github deploy keys) or GitHub
+consistent, but also specific versions of version controlled scripts.
+This function allows a simple way to create an exactly copy locally of a git
+repository. It can use ssh keys (including GitHub deploy keys) or GitHub
 Personal Access Tokens.
 }
