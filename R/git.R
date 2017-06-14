@@ -8,7 +8,8 @@
 #'
 #' @inheritParams devtools::install_github
 #' @import devtools
-#' @importFrom git2r checkout remote_set_url status commit remote_url lookup revparse_single
+#' @importFrom git2r checkout remote_set_url status commit pull remote_url lookup revparse_single
+#' @importFrom git2r cred_token cred_ssh_key clone init is_local head
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'        cloned, pulled, and checked out from.
@@ -19,7 +20,7 @@
 checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
 
   params <- devtools:::parse_git_repo(repo)
-  gitHash <- params$ref
+  gitHash <- if(is.null(params$ref)) "master" else params$ref
   repositoryName <- params$repo
   repositoryAccount <- params$username
 
@@ -32,12 +33,14 @@ checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
                                  privatekey = githubPrivateKeyFile)
    }
 
-  pathExists <- file.exists(normalizePath(localRepoPath))
+  pathExists <- suppressWarnings(file.exists(normalizePath(localRepoPath)))
   httpsURL <- paste0("https://github.com/",repositoryAccount,"/",repositoryName,".git")
   sshURL <- paste0("git@github.com:",repositoryAccount,"/",repositoryName,".git")
 
   if(!(pathExists)) {
-    git2r::clone(httpsURL, localRepoPath, branch=gitHash, credentials=cred)
+    # using "~" in a path doesn't seem to work correctly. Must use path.expand to
+    #  give an absolute path in this case.
+    git2r::clone(httpsURL, path.expand(localRepoPath), branch=gitHash, credentials=cred)
   }
 
   # If repo is set to using ssh, git2r package doesn't work -- must change it
@@ -68,6 +71,7 @@ checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
 }
 
 
+#' @importFrom git2r reset
 checkoutDev <- function(checkoutCondition) {
   checkout(checkoutCondition$repo, "development")
   if(checkoutCondition$hasUncommittedFiles) git2r::reset(checkoutCondition$lastCommit,
@@ -77,8 +81,3 @@ checkoutDev <- function(checkoutCondition) {
 
 }
 
-
-robocopy <- function(from, to, options=c("xo", "e"), files) {
-  system(paste("robocopy", normalizePath(from),
-               normalizePath(to), paste(paste0("/",options), collapse=" ")))
-}
