@@ -1,6 +1,6 @@
 Package: reproducible
 Type: Package
-Title: A set of tools for R that enhance reproducibility beyond package management, including tools for caching and accessing github repositories
+Title: A set of tools for R that enhance reproducibility beyond package management, including tools for caching and accessing GitHub repositories
 Description: 
 URL: https://github.com/PredictiveEcology/reproducible
 Date: 2017-06-13
