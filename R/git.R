@@ -9,8 +9,9 @@
 #' @inheritParams devtools::install_github
 #'
 #' @import devtools
-#' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init is_local
+#' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init
 #'                   lookup pull remote_set_url remote_url revparse_single status
+#' @importFrom utils getFromNamespace
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'                      cloned, pulled, and checked out from.
@@ -19,12 +20,13 @@
 #'             that contains the GitHub PAT or filename of the GitHub private key file.
 #'
 #' @return Invisibly returns a repository class object, defined in
-#' \code{\link[git2r]{git_repository-class}}
+#'         \code{\link[git2r]{git_repository-class}}
 #'
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
   .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools")
   params <- .parse_git_repo(repo)
   gitHash <- if (is.null(params$ref)) "master" else params$ref
+
   repositoryName <- params$repo
   repositoryAccount <- params$username
 
@@ -37,21 +39,27 @@ checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
                           privatekey = githubPrivateKeyFile)
    }
 
-  pathExists <- suppressWarnings(file.exists(normalizePath(localRepoPath)))
+  pathExists <- suppressWarnings(file.exists(normalizePath(path.expand(localRepoPath))))
   httpsURL <- paste0("https://github.com/", repositoryAccount, "/", repositoryName, ".git")
   sshURL <- paste0("git@github.com:", repositoryAccount, "/", repositoryName, ".git")
+
+  needSSH <- class(cred) == "cred_ssh_key"
+  urls <- c(httpsURL, sshURL)
+  url1 <- ifelse(needSSH, sshURL, httpsURL)
 
   if (!(pathExists)) {
     # using "~" in a path doesn't seem to work correctly. Must use path.expand to
     #  give an absolute path in this case.
-    clone(httpsURL, path.expand(localRepoPath), branch = gitHash, credentials = cred)
+    clone(url1, path.expand(localRepoPath), branch = gitHash, credentials = cred)
   }
 
   # If repo is set to using ssh, git2r package doesn't work -- must change it
   repo <- init(localRepoPath)
-  remoteWasHTTPS <- any(grepl(httpsURL, remote_url(repo)))
-  if (!remoteWasHTTPS)
-    remote_set_url(repo, "origin", url = httpsURL)
+  isSSH <- any(grepl(httpsURL, remote_url(repo)))
+  needSwitchURL <- xor(isSSH, needSSH)
+  if (needSwitchURL) {
+    remote_set_url(repo, "origin", url = url1)
+  }
 
   # # Get specific LandWeb version
   # hasUncommittedFiles <- sum(sapply(status(repo), length))>0
@@ -69,28 +77,9 @@ checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
     checkout(repo, gitHash)
   })
 
-  if (!remoteWasHTTPS) {
-    remote_set_url(repo, "origin", url = sshURL)
+  if (needSwitchURL) {
+    remote_set_url(repo, "origin", url = setdiff(urls, url1))
   }
 
   return(invisible(repo))
-}
-
-#' Checkout the development branch of a repository
-#'
-#' @param checkoutCondition NEEDS DESCRIPTION
-#'
-#' @author Eliot Mcintire
-#' @docType methods
-#' @export
-#' @importFrom git2r checkout reset remote_set_url
-#'
-checkoutDev <- function(checkoutCondition) {
-  checkout(checkoutCondition$repo, "development")
-  if (checkoutCondition$hasUncommittedFiles) {
-    reset(checkoutCondition$lastCommit, reset_type = "soft")
-  }
-  if (!checkoutCondition$remoteWasHTTPS) {
-    remote_set_url(checkoutCondition$repo, "origin", url = checkoutCondition$sshURL)
-  }
 }
