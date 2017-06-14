@@ -7,7 +7,7 @@
 #' Personal Access Tokens.
 #'
 #' @inheritParams devtools::install_github
-#'
+#' @import devtools 
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'        cloned, pulled, and checked out from.
@@ -22,6 +22,9 @@ checkoutVersion <- function(repo, localRepoPath=".", cred = "") {
   repositoryName <- params$repo
   repositoryAccount <- params$username
 
+  githubPrivateKeyFile <- if(file.exists(cred)) cred
+    
+  
    if(!nzchar(cred)) {
      cred <- git2r::cred_token(cred)
    } else {
