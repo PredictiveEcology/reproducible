@@ -189,7 +189,6 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-# @include simList-class.R
 #' @docType methods
 #' @rdname cache
 #' @author Eliot McIntire
@@ -594,7 +593,6 @@ setMethod(
 #'                 then matching is by `and`. For `or` matching, use | in a single character
 #'                 string. See examples.
 #'
-# @include simList-class.R
 #' @docType methods
 #' @rdname viewCache
 #' @examples
@@ -727,7 +725,6 @@ setMethod(
 #' @export
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
-# @include simList-class.R
 #' @docType methods
 #' @rdname viewCache
 #' @examples
@@ -804,7 +801,6 @@ setMethod(
     objsDT
   })
 
-# @include simList-class.R
 #' @docType methods
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after, before, ...) {
@@ -877,8 +873,6 @@ setMethod(
 #'
 #' @seealso \code{\link[archivist]{cache}}.
 #' @seealso \code{\link[digest]{digest}}.
-# @include simList-class.R
-# @include misc-methods.R
 #' @importFrom digest digest
 #' @docType methods
 #' @keywords internal
