@@ -281,7 +281,7 @@ setMethod(
           sim <- get("sim", envir = sys.frame(doEventFrameNum))
           cacheRepo <- sim@paths$cachePath
         } else {
-          cacheRepo <- getOption("spades.cachePath") 
+          cacheRepo <- getOption("spades.cachePath")
           #checkPath(cacheRepo, create = TRUE) #SpaDES dependency
         }
       }
@@ -431,12 +431,12 @@ setMethod(
 
           if (isListOfSimLists) {
             for (i in seq_along(out)) {
-              keepFromOrig <- !(ls(origEnv) %in% ls(out[[i]]))
+              keepFromOrig <- !(ls(origEnv) %in% ls(out[[i]]@.envir))
               list2env(mget(ls(origEnv)[keepFromOrig], envir = origEnv),
                        envir = simListOut[[i]]@.envir)
             }
           } else {
-            keepFromOrig <- !(ls(origEnv) %in% ls(out))
+            keepFromOrig <- !(ls(origEnv) %in% ls(out@.envir))
             list2env(mget(ls(origEnv)[keepFromOrig], envir = origEnv),
                      envir = simListOut@.envir)
           }
@@ -680,7 +680,7 @@ setMethod(
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("spades.cachePath") )
-      x <- getOption("spades.cachePath") 
+      x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.Date() + 1
@@ -742,7 +742,7 @@ setMethod(
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("spades.cachePath") )
-      x <- getOption("spades.cachePath") 
+      x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.Date() + 1
@@ -814,7 +814,7 @@ setMethod(
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("spades.cachePath") )
-      x <- getOption("spades.cachePath") 
+      x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.Date() + 1
@@ -911,7 +911,7 @@ setMethod(
   "makeDigestible",
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo) {
-    
+
     if (is(object, "RasterStack") | is(object, "RasterBrick")) {
       dig <- suppressWarnings(
         list(dim(object), res(object), crs(object), extent(object),
@@ -952,7 +952,7 @@ setMethod(
     } else {
       aaa <- suppressMessages(broom::tidy(object))
     }
-    
+
     # The following Rounding is necessary to make digest equal on linux and windows
     for (i in names(aaa)) {
       if (!is.integer(aaa[, i])) {
@@ -960,7 +960,7 @@ setMethod(
           aaa[,i] <- round(aaa[, i], 4)
       }
     }
-    
+
     dig <- fastdigest::fastdigest(aaa)
     #dig <- digest::digest(bbb, algo = algo)
     return(dig)
@@ -1261,7 +1261,7 @@ listOrEnvDigestRecursive <- function(object) {
 }
 
 #' @rdname customDigests
-#' @importFrom raster res crs extent 
+#' @importFrom raster res crs extent
 digestRaster <- function(object, compareRasterFileLength, algo) {
   dig <- fastdigest::fastdigest(list(dim(object), res(object), crs(object),
                                      extent(object), object@data))
@@ -1275,7 +1275,7 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 }
 
 #' Check existence of path, and create
-#' 
+#'
 #' This is copied from SpaDES::checkPath
 #' @param path A character string reprenting a directory path to check existence for
 #' @param create Logical. If \code{TRUE}, create that path if it does not exist.
@@ -1289,7 +1289,7 @@ checkPath2 <- function (path, create) {
       stop("Invalid path: cannot be NA.")
     }
     else {
-      # This is instead of using SpaDES::normPath 
+      # This is instead of using SpaDES::normPath
       path <- lapply(path, function(x) {
         if (is.na(x)) {
           NA_character_
@@ -1297,17 +1297,17 @@ checkPath2 <- function (path, create) {
         else {
           normalizePath(x, winslash = "/", mustWork = FALSE)
         }
-      }) %>% unlist() %>% gsub("^[.]", paste0(getwd()), .) %>% 
-        gsub("\\\\", "//", .) %>% gsub("//", "/", .) %>% gsub("/$", 
+      }) %>% unlist() %>% gsub("^[.]", paste0(getwd()), .) %>%
+        gsub("\\\\", "//", .) %>% gsub("//", "/", .) %>% gsub("/$",
                                                               "", .)
-      
+
       if (!file.exists(path)) {
         if (create == TRUE) {
-          dir.create(file.path(path), recursive = TRUE, 
+          dir.create(file.path(path), recursive = TRUE,
                      showWarnings = FALSE)
         }
         else {
-          stop(paste("Specified path", path, "doesn't exist.", 
+          stop(paste("Specified path", path, "doesn't exist.",
                      "Create it and try again."))
         }
       }
