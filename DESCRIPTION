@@ -20,9 +20,20 @@ Authors@R: c(
 Depends:
     R (>= 3.3.2)
 Imports:
+    archivist (>= 2.1.2),
+    data.table (>= 1.10.4),
+    devtools,
+    digest,
+    fastdigest,
     git2r (>= 0.18),
-    devtools
+    magrittr,
+    methods,
+    raster,
+    sp
 License: GPL-3
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 6.0.1
+Collate: 
+    'cache.R'
+    'git.R'
