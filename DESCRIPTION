@@ -1,13 +1,13 @@
 Package: reproducible
 Type: Package
-Title: A set of tools for R that enhance reproducibility beyond package management
+Title: A set of tools that enhance reproducibility beyond package management
 Description: Built on top of 'git2r' and 'archivist', this package aims at
     making high-level, robust, machine and OS independent tools for making
     deeply reproducible and re-useable content in R. This extends beyond the
     package management utilites of 'packrat' and 'checkpoint' by including tools
     for caching and accessing GitHub repositories.
 URL: https://github.com/PredictiveEcology/reproducible
-Date: 2017-06-13
+Date: 2017-06-16
 Version: 0.0.1.9000
 Authors@R: c(
     person(c("Eliot", "J", "B"), "McIntire", email = "eliot.mcintire@canada.ca",
