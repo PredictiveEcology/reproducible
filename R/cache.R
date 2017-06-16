@@ -33,45 +33,44 @@ if (getRversion() >= "3.1.0") {
 #' but also the \code{.envir} slot in the \code{simList}.
 #' Functions are formatted to text before running \code{fastdigest}.
 #'
-#' Cache (capital C) is a short cut to using SpaDES::cache (which is
-#' being deprecated). It has the added benefit that if no cacheRepo is
-#' specified, it will choose a smart option. If called
-#' from inside a SpaDES module, \code{Cache} will use the cacheRepo from a call
-#' to \code{cachePath(sim)}, taking the sim from the call stack. Similarly, if no
-#' \code{cacheRepo} is specified, then it will use \code{getOption("spades.cachePath") }, which
-#' will, by default, be a temporary location with no persistence between R sessions!
+#' Cache (capital C) is a short cut to using SpaDES::cache (which is deprecated).
+#' It has the added benefit that if no cacheRepo is specified, it will choose a smart option.
+#' If called from inside a SpaDES module, \code{Cache} will use the cacheRepo from
+#' a call to \code{cachePath(sim)}, taking the sim from the call stack.
+#' Similarly, if no \code{cacheRepo} is specified, then it will use
+#' \code{getOption("spades.cachePath") }, which will, by default, be a temporary
+#' location with no persistence between R sessions!
 #' To persist between sessions, use \code{SpaDES::setPaths()} every session.
 #'
 #' \code{Cache} (uppercase C) is also defined so that it is not confused with the
 #' \code{archivist::cache} function which will not work in a SpaDES context.
 #' If a user would like to use \code{cache} (lowercase c), then it must be
 #' always prefixed with \code{SpaDES::cache(  )} so that it does not accidentally
-#' call the archivist package version of cache.
+#' call \code{archivist::cache}.
 #'
-#' @section Caching as part of SpaDES:
+#' @section Caching as part of \code{SpaDES}:
 #'
-#' SpaDES has several levels of caching. Each level can be used to a modeler's
+#' \code{SpaDES} has several levels of caching. Each level can be used to a modeler's
 #' advantage; and, all can be -- and are often -- used concurrently.
 #'
 #' @section \code{spades} or \code{experiment}:
 #'
-#' And entire call
-#' to \code{spades} or \code{experiment} can be cached. This will have the effect
-#' of eliminating any stochasticity in the model as the output will simply be
-#' the cached version of the \code{simList}. This is likely most useful in
-#' situations where reproducibility is more important than "new" stochasticity
-#' (e.g., building decision support systems, apps, final version of a manuscript).
+#' An entire call to \code{spades} or \code{experiment} can be cached.
+#' This will have the effect of eliminating any stochasticity in the model as the
+#' output will simply be the cached version of the \code{simList}.
+#' This is likely most useful in situations where reproducibility is more
+#' important than "new" stochasticity (e.g., building decision support systems,
+#' apps, final version of a manuscript).
 #'
 #' @section Module-level caching:
 #'
-#' If the parameter \code{.useCache} in the module's metadata
-#' is set to TRUE, then the \code{doEvent.moduleName}
-#' will be cached. That means that every time that module
-#' is called from within a spades or experiment call, \code{Cache} will be called. Only
-#' the objects inside the \code{simList} that correspond to the \code{inputObjects} of the
-#' module and the \code{outputObjects} from the module (as specified in the module
-#' metadata) will be assessed for caching
-#' inputs or output, respectively.
+#' If the parameter \code{.useCache = TRUE} in the module's metadata, then the
+#' \code{doEvent.moduleName} will be cached. That means that every time that module
+#' is called from within a spades or experiment call, \code{Cache} will be called.
+#' Only the objects inside the \code{simList} that correspond to the
+#' \code{inputObjects} of the module and the \code{outputObjects} from the module
+#' (as specified in the module metadata) will be assessed for caching inputs or
+#' output, respectively.
 #'
 #' In general use, module level caching would be mostly useful for modules that have
 #' no stochasticity, such as data-preparation modules, GIS modules etc.
@@ -89,9 +88,8 @@ if (getRversion() >= "3.1.0") {
 #' and \code{outputObjects} are cached and returned may be inefficient (i.e., it may
 #' cache more objects than are necessary) for individual events.
 #'
-#' Similar to module-level caching, event-level caching would be mostly
-#' useful for events that have
-#' no stochasticity, such as data-preparation events, GIS events etc.
+#' Similar to module-level caching, event-level caching would be mostly useful for
+#' events that have no stochasticity, such as data-preparation events, GIS events etc.
 #'
 #' @section Function-level caching:
 #'
@@ -169,6 +167,9 @@ if (getRversion() >= "3.1.0") {
 #' reproducible work flow
 #'
 #' @seealso \code{\link[archivist]{cache}}, \code{\link{makeDigestible}}
+#'
+#' @author Eliot McIntire
+#' @docType methods
 #' @export
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom digest digest
@@ -189,9 +190,8 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-#' @docType methods
 #' @rdname cache
-#' @author Eliot McIntire
+#'
 #' @examples
 #' \dontrun{
 #' mySim <- simInit(times = list(start = 0.0, end = 5.0),
@@ -253,20 +253,20 @@ if (getRversion() >= "3.1.0") {
 #'    }
 #' }
 #'
-setGeneric("Cache", signature = "...",
-           function(FUN, ..., notOlderThan = NULL,
-                    objects = NULL, outputObjects = NULL, algo = "xxhash64",
-                    cacheRepo = NULL, compareRasterFileLength = 1e6,
-                    userTags = c(), debugCache = FALSE) {
-             archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
-           })
+setGeneric(
+  "Cache", signature = "...",
+  function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
+           algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
+           userTags = c(), debugCache = FALSE) {
+    archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
+})
 
 #' @export
 #' @rdname cache
 setMethod(
   "Cache",
-  definition = function(FUN, ..., notOlderThan, objects, outputObjects,
-                        algo, cacheRepo, compareRasterFileLength, userTags, debugCache) {
+  definition = function(FUN, ..., notOlderThan, objects, outputObjects, algo,
+                        cacheRepo, compareRasterFileLength, userTags, debugCache) {
     tmpl <- list(...)
 
     if (missing(notOlderThan)) notOlderThan <- NULL
@@ -281,7 +281,7 @@ setMethod(
           sim <- get("sim", envir = sys.frame(doEventFrameNum))
           cacheRepo <- sim@paths$cachePath
         } else {
-          cacheRepo <- getOption("spades.cachePath") 
+          cacheRepo <- getOption("spades.cachePath")
           #checkPath(cacheRepo, create = TRUE) #SpaDES dependency
         }
       }
@@ -431,12 +431,12 @@ setMethod(
 
           if (isListOfSimLists) {
             for (i in seq_along(out)) {
-              keepFromOrig <- !(ls(origEnv) %in% ls(out[[i]]))
+              keepFromOrig <- !(ls(origEnv) %in% ls(out[[i]]@.envir))
               list2env(mget(ls(origEnv)[keepFromOrig], envir = origEnv),
                        envir = simListOut[[i]]@.envir)
             }
           } else {
-            keepFromOrig <- !(ls(origEnv) %in% ls(out))
+            keepFromOrig <- !(ls(origEnv) %in% ls(out@.envir))
             list2env(mget(ls(origEnv)[keepFromOrig], envir = origEnv),
                      envir = simListOut@.envir)
           }
@@ -559,7 +559,7 @@ setMethod(
     }
 
     if (isNullOutput) return(NULL) else return(output)
-  })
+})
 
 #' @param x A simList or a directory containing a valid archivist repository
 #' @param after A time (POSIX, character understandable by data.table).
@@ -680,7 +680,7 @@ setMethod(
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("spades.cachePath") )
-      x <- getOption("spades.cachePath") 
+      x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.Date() + 1
@@ -705,7 +705,7 @@ setMethod(
       rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE)
     }
     return(invisible(objsDT))
-  })
+})
 
 #' \code{showCache}, \code{clearCache} and \code{keepCache}
 #'
@@ -722,10 +722,11 @@ setMethod(
 #' @inheritParams clearCache
 #'
 #' @seealso \code{\link[archivist]{splitTagsLocal}}.
+#'
+#' @docType methods
 #' @export
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
-#' @docType methods
 #' @rdname viewCache
 #' @examples
 #' \dontrun{
@@ -742,7 +743,7 @@ setMethod(
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("spades.cachePath") )
-      x <- getOption("spades.cachePath") 
+      x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.Date() + 1
@@ -799,7 +800,7 @@ setMethod(
       # }
     }
     objsDT
-  })
+})
 
 #' @docType methods
 #' @rdname viewCache
@@ -814,7 +815,7 @@ setMethod(
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("spades.cachePath") )
-      x <- getOption("spades.cachePath") 
+      x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.Date() + 1
@@ -834,7 +835,7 @@ setMethod(
     }
 
     return(objsDT)
-  })
+})
 
 ################################################################################
 #' Remove any reference to environments or filepaths in objects
@@ -871,17 +872,18 @@ setMethod(
 #' @return A simplified version of the \code{simList} object, but with no
 #'         reference to any environments, or other session-specific information.
 #'
-#' @seealso \code{\link[archivist]{cache}}.
-#' @seealso \code{\link[digest]{digest}}.
-#' @importFrom digest digest
+#' @seealso \code{\link[archivist]{cache}}, \code{\link[digest]{digest}}.
+#'
+#' @author Eliot McIntire
 #' @docType methods
+#' @export
+#' @importFrom digest digest
 #' @keywords internal
 #' @rdname makeDigestible
-#' @author Eliot McIntire
-#' @export
-setGeneric("makeDigestible", function(object, objects,
-                                      compareRasterFileLength = 1e6,
-                                      algo = "xxhash64") {
+#'
+setGeneric(
+  "makeDigestible",
+  function(object, objects, compareRasterFileLength = 1e6, algo = "xxhash64") {
   standardGeneric("makeDigestible")
 })
 
@@ -911,7 +913,7 @@ setMethod(
   "makeDigestible",
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo) {
-    
+
     if (is(object, "RasterStack") | is(object, "RasterBrick")) {
       dig <- suppressWarnings(
         list(dim(object), res(object), crs(object), extent(object),
@@ -952,7 +954,7 @@ setMethod(
     } else {
       aaa <- suppressMessages(broom::tidy(object))
     }
-    
+
     # The following Rounding is necessary to make digest equal on linux and windows
     for (i in names(aaa)) {
       if (!is.integer(aaa[, i])) {
@@ -960,7 +962,7 @@ setMethod(
           aaa[,i] <- round(aaa[, i], 4)
       }
     }
-    
+
     dig <- fastdigest::fastdigest(aaa)
     #dig <- digest::digest(bbb, algo = algo)
     return(dig)
@@ -1183,8 +1185,9 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
 #' @param silent Should a progress be printed.
 #'
 #' @inheritParams base::file.copy
-#' @docType methods
+
 #' @author Eliot McIntire
+#' @docType methods
 #' @rdname copyFile
 #'
 copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
@@ -1194,7 +1197,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
   origDir <- getwd()
   useFileCopy <- FALSE
-  checkPath2(to, create=TRUE)#SpaDES dependency
+  checkPath2(to, create = TRUE) # SpaDES dependency
   if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
   os <- tolower(Sys.info()[["sysname"]])
   if (os == "windows") {
@@ -1253,7 +1256,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #' @seealso \code{\link{makeDigestible}}
 #' @inheritParams makeDigestible
 listOrEnvDigestRecursive <- function(object) {
-  if(is.environment(object)|is.list(object)) {
+  if (is.environment(object) | is.list(object)) {
     lapply(object, listOrEnvDigestRecursive)
   } else {
     fastdigest(object)
@@ -1261,7 +1264,7 @@ listOrEnvDigestRecursive <- function(object) {
 }
 
 #' @rdname customDigests
-#' @importFrom raster res crs extent 
+#' @importFrom raster res crs extent
 digestRaster <- function(object, compareRasterFileLength, algo) {
   dig <- fastdigest::fastdigest(list(dim(object), res(object), crs(object),
                                      extent(object), object@data))
@@ -1275,12 +1278,12 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 }
 
 #' Check existence of path, and create
-#' 
+#'
 #' This is copied from SpaDES::checkPath
 #' @param path A character string reprenting a directory path to check existence for
 #' @param create Logical. If \code{TRUE}, create that path if it does not exist.
 #' @return Returns the normalized path
-checkPath2 <- function (path, create) {
+checkPath2 <- function(path, create) {
   if (length(path) != 1) {
     stop("path must be a character vector of length 1.")
   }
@@ -1289,7 +1292,7 @@ checkPath2 <- function (path, create) {
       stop("Invalid path: cannot be NA.")
     }
     else {
-      # This is instead of using SpaDES::normPath 
+      # This is instead of using SpaDES::normPath
       path <- lapply(path, function(x) {
         if (is.na(x)) {
           NA_character_
@@ -1297,17 +1300,16 @@ checkPath2 <- function (path, create) {
         else {
           normalizePath(x, winslash = "/", mustWork = FALSE)
         }
-      }) %>% unlist() %>% gsub("^[.]", paste0(getwd()), .) %>% 
-        gsub("\\\\", "//", .) %>% gsub("//", "/", .) %>% gsub("/$", 
-                                                              "", .)
-      
+      }) %>% unlist() %>% gsub("^[.]", paste0(getwd()), .) %>%
+        gsub("\\\\", "//", .) %>% gsub("//", "/", .) %>% gsub("/$", "", .)
+
       if (!file.exists(path)) {
         if (create == TRUE) {
-          dir.create(file.path(path), recursive = TRUE, 
+          dir.create(file.path(path), recursive = TRUE,
                      showWarnings = FALSE)
         }
         else {
-          stop(paste("Specified path", path, "doesn't exist.", 
+          stop(paste("Specified path", path, "doesn't exist.",
                      "Create it and try again."))
         }
       }
@@ -1315,5 +1317,3 @@ checkPath2 <- function (path, create) {
     }
   }
 }
-
-
