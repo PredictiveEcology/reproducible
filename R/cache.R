@@ -33,24 +33,24 @@ if (getRversion() >= "3.1.0") {
 #' but also the \code{.envir} slot in the \code{simList}.
 #' Functions are formatted to text before running \code{fastdigest}.
 #'
-#' Cache (capital C) is a short cut to using SpaDES::cache (which is
-#' being deprecated). It has the added benefit that if no cacheRepo is
-#' specified, it will choose a smart option. If called
-#' from inside a SpaDES module, \code{Cache} will use the cacheRepo from a call
-#' to \code{cachePath(sim)}, taking the sim from the call stack. Similarly, if no
-#' \code{cacheRepo} is specified, then it will use \code{getOption("spades.cachePath") }, which
-#' will, by default, be a temporary location with no persistence between R sessions!
+#' Cache (capital C) is a short cut to using SpaDES::cache (which is deprecated).
+#' It has the added benefit that if no cacheRepo is specified, it will choose a smart option.
+#' If called from inside a SpaDES module, \code{Cache} will use the cacheRepo from
+#' a call to \code{cachePath(sim)}, taking the sim from the call stack.
+#' Similarly, if no \code{cacheRepo} is specified, then it will use
+#' \code{getOption("spades.cachePath") }, which will, by default, be a temporary
+#' location with no persistence between R sessions!
 #' To persist between sessions, use \code{SpaDES::setPaths()} every session.
 #'
 #' \code{Cache} (uppercase C) is also defined so that it is not confused with the
 #' \code{archivist::cache} function which will not work in a SpaDES context.
 #' If a user would like to use \code{cache} (lowercase c), then it must be
 #' always prefixed with \code{SpaDES::cache(  )} so that it does not accidentally
-#' call the archivist package version of cache.
+#' call \code{archivist::cache}.
 #'
-#' @section Caching as part of SpaDES:
+#' @section Caching as part of \code{SpaDES}:
 #'
-#' SpaDES has several levels of caching. Each level can be used to a modeler's
+#' \code{SpaDES} has several levels of caching. Each level can be used to a modeler's
 #' advantage; and, all can be -- and are often -- used concurrently.
 #'
 #' @section \code{spades} or \code{experiment}:
@@ -169,6 +169,9 @@ if (getRversion() >= "3.1.0") {
 #' reproducible work flow
 #'
 #' @seealso \code{\link[archivist]{cache}}, \code{\link{makeDigestible}}
+#'
+#' @author Eliot McIntire
+#' @docType methods
 #' @export
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom digest digest
@@ -189,9 +192,8 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-#' @docType methods
 #' @rdname cache
-#' @author Eliot McIntire
+#'
 #' @examples
 #' \dontrun{
 #' mySim <- simInit(times = list(start = 0.0, end = 5.0),
@@ -253,20 +255,20 @@ if (getRversion() >= "3.1.0") {
 #'    }
 #' }
 #'
-setGeneric("Cache", signature = "...",
-           function(FUN, ..., notOlderThan = NULL,
-                    objects = NULL, outputObjects = NULL, algo = "xxhash64",
-                    cacheRepo = NULL, compareRasterFileLength = 1e6,
-                    userTags = c(), debugCache = FALSE) {
-             archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
-           })
+setGeneric(
+  "Cache", signature = "...",
+  function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
+           algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
+           userTags = c(), debugCache = FALSE) {
+    archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
+})
 
 #' @export
 #' @rdname cache
 setMethod(
   "Cache",
-  definition = function(FUN, ..., notOlderThan, objects, outputObjects,
-                        algo, cacheRepo, compareRasterFileLength, userTags, debugCache) {
+  definition = function(FUN, ..., notOlderThan, objects, outputObjects, algo,
+                        cacheRepo, compareRasterFileLength, userTags, debugCache) {
     tmpl <- list(...)
 
     if (missing(notOlderThan)) notOlderThan <- NULL
@@ -559,7 +561,7 @@ setMethod(
     }
 
     if (isNullOutput) return(NULL) else return(output)
-  })
+})
 
 #' @param x A simList or a directory containing a valid archivist repository
 #' @param after A time (POSIX, character understandable by data.table).
@@ -705,7 +707,7 @@ setMethod(
       rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE)
     }
     return(invisible(objsDT))
-  })
+})
 
 #' \code{showCache}, \code{clearCache} and \code{keepCache}
 #'
@@ -722,10 +724,11 @@ setMethod(
 #' @inheritParams clearCache
 #'
 #' @seealso \code{\link[archivist]{splitTagsLocal}}.
+#'
+#' @docType methods
 #' @export
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
-#' @docType methods
 #' @rdname viewCache
 #' @examples
 #' \dontrun{
@@ -799,7 +802,7 @@ setMethod(
       # }
     }
     objsDT
-  })
+})
 
 #' @docType methods
 #' @rdname viewCache
@@ -834,7 +837,7 @@ setMethod(
     }
 
     return(objsDT)
-  })
+})
 
 ################################################################################
 #' Remove any reference to environments or filepaths in objects
@@ -871,17 +874,18 @@ setMethod(
 #' @return A simplified version of the \code{simList} object, but with no
 #'         reference to any environments, or other session-specific information.
 #'
-#' @seealso \code{\link[archivist]{cache}}.
-#' @seealso \code{\link[digest]{digest}}.
-#' @importFrom digest digest
+#' @seealso \code{\link[archivist]{cache}}, \code{\link[digest]{digest}}.
+#'
+#' @author Eliot McIntire
 #' @docType methods
+#' @export
+#' @importFrom digest digest
 #' @keywords internal
 #' @rdname makeDigestible
-#' @author Eliot McIntire
-#' @export
-setGeneric("makeDigestible", function(object, objects,
-                                      compareRasterFileLength = 1e6,
-                                      algo = "xxhash64") {
+#'
+setGeneric(
+  "makeDigestible",
+  function(object, objects, compareRasterFileLength = 1e6, algo = "xxhash64") {
   standardGeneric("makeDigestible")
 })
 
@@ -1183,8 +1187,9 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
 #' @param silent Should a progress be printed.
 #'
 #' @inheritParams base::file.copy
-#' @docType methods
+
 #' @author Eliot McIntire
+#' @docType methods
 #' @rdname copyFile
 #'
 copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
@@ -1194,7 +1199,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
   origDir <- getwd()
   useFileCopy <- FALSE
-  checkPath2(to, create=TRUE)#SpaDES dependency
+  checkPath2(to, create = TRUE) # SpaDES dependency
   if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
   os <- tolower(Sys.info()[["sysname"]])
   if (os == "windows") {
@@ -1253,7 +1258,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #' @seealso \code{\link{makeDigestible}}
 #' @inheritParams makeDigestible
 listOrEnvDigestRecursive <- function(object) {
-  if(is.environment(object)|is.list(object)) {
+  if (is.environment(object) | is.list(object)) {
     lapply(object, listOrEnvDigestRecursive)
   } else {
     fastdigest(object)
@@ -1280,7 +1285,7 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #' @param path A character string reprenting a directory path to check existence for
 #' @param create Logical. If \code{TRUE}, create that path if it does not exist.
 #' @return Returns the normalized path
-checkPath2 <- function (path, create) {
+checkPath2 <- function(path, create) {
   if (length(path) != 1) {
     stop("path must be a character vector of length 1.")
   }
@@ -1298,8 +1303,7 @@ checkPath2 <- function (path, create) {
           normalizePath(x, winslash = "/", mustWork = FALSE)
         }
       }) %>% unlist() %>% gsub("^[.]", paste0(getwd()), .) %>%
-        gsub("\\\\", "//", .) %>% gsub("//", "/", .) %>% gsub("/$",
-                                                              "", .)
+        gsub("\\\\", "//", .) %>% gsub("//", "/", .) %>% gsub("/$", "", .)
 
       if (!file.exists(path)) {
         if (create == TRUE) {
@@ -1315,5 +1319,3 @@ checkPath2 <- function (path, create) {
     }
   }
 }
-
-

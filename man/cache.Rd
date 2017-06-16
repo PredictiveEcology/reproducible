@@ -107,20 +107,20 @@ This is generally functions that are loaded from the modules,
 but also the \code{.envir} slot in the \code{simList}.
 Functions are formatted to text before running \code{fastdigest}.
 
-Cache (capital C) is a short cut to using SpaDES::cache (which is
-being deprecated). It has the added benefit that if no cacheRepo is
-specified, it will choose a smart option. If called
-from inside a SpaDES module, \code{Cache} will use the cacheRepo from a call
-to \code{cachePath(sim)}, taking the sim from the call stack. Similarly, if no
-\code{cacheRepo} is specified, then it will use \code{getOption("spades.cachePath") }, which
-will, by default, be a temporary location with no persistence between R sessions!
+Cache (capital C) is a short cut to using SpaDES::cache (which is deprecated).
+It has the added benefit that if no cacheRepo is specified, it will choose a smart option.
+If called from inside a SpaDES module, \code{Cache} will use the cacheRepo from
+a call to \code{cachePath(sim)}, taking the sim from the call stack.
+Similarly, if no \code{cacheRepo} is specified, then it will use
+\code{getOption("spades.cachePath") }, which will, by default, be a temporary
+location with no persistence between R sessions!
 To persist between sessions, use \code{SpaDES::setPaths()} every session.
 
 \code{Cache} (uppercase C) is also defined so that it is not confused with the
 \code{archivist::cache} function which will not work in a SpaDES context.
 If a user would like to use \code{cache} (lowercase c), then it must be
 always prefixed with \code{SpaDES::cache(  )} so that it does not accidentally
-call the archivist package version of cache.
+call \code{archivist::cache}.
 }
 \note{
 Several objects require pre-treatment before successful caching will
@@ -143,10 +143,10 @@ sufficient number of calls to \code{experiment}) such that no new explorations
 of stochastic outcomes are required. It will also be very useful in a
 reproducible work flow
 }
-\section{Caching as part of SpaDES}{
+\section{Caching as part of \code{SpaDES}}{
 
 
-SpaDES has several levels of caching. Each level can be used to a modeler's
+\code{SpaDES} has several levels of caching. Each level can be used to a modeler's
 advantage; and, all can be -- and are often -- used concurrently.
 }
 
