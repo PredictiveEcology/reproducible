@@ -55,23 +55,22 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @section \code{spades} or \code{experiment}:
 #'
-#' And entire call
-#' to \code{spades} or \code{experiment} can be cached. This will have the effect
-#' of eliminating any stochasticity in the model as the output will simply be
-#' the cached version of the \code{simList}. This is likely most useful in
-#' situations where reproducibility is more important than "new" stochasticity
-#' (e.g., building decision support systems, apps, final version of a manuscript).
+#' An entire call to \code{spades} or \code{experiment} can be cached.
+#' This will have the effect of eliminating any stochasticity in the model as the
+#' output will simply be the cached version of the \code{simList}.
+#' This is likely most useful in situations where reproducibility is more
+#' important than "new" stochasticity (e.g., building decision support systems,
+#' apps, final version of a manuscript).
 #'
 #' @section Module-level caching:
 #'
-#' If the parameter \code{.useCache} in the module's metadata
-#' is set to TRUE, then the \code{doEvent.moduleName}
-#' will be cached. That means that every time that module
-#' is called from within a spades or experiment call, \code{Cache} will be called. Only
-#' the objects inside the \code{simList} that correspond to the \code{inputObjects} of the
-#' module and the \code{outputObjects} from the module (as specified in the module
-#' metadata) will be assessed for caching
-#' inputs or output, respectively.
+#' If the parameter \code{.useCache = TRUE} in the module's metadata, then the
+#' \code{doEvent.moduleName} will be cached. That means that every time that module
+#' is called from within a spades or experiment call, \code{Cache} will be called.
+#' Only the objects inside the \code{simList} that correspond to the
+#' \code{inputObjects} of the module and the \code{outputObjects} from the module
+#' (as specified in the module metadata) will be assessed for caching inputs or
+#' output, respectively.
 #'
 #' In general use, module level caching would be mostly useful for modules that have
 #' no stochasticity, such as data-preparation modules, GIS modules etc.
@@ -89,9 +88,8 @@ if (getRversion() >= "3.1.0") {
 #' and \code{outputObjects} are cached and returned may be inefficient (i.e., it may
 #' cache more objects than are necessary) for individual events.
 #'
-#' Similar to module-level caching, event-level caching would be mostly
-#' useful for events that have
-#' no stochasticity, such as data-preparation events, GIS events etc.
+#' Similar to module-level caching, event-level caching would be mostly useful for
+#' events that have no stochasticity, such as data-preparation events, GIS events etc.
 #'
 #' @section Function-level caching:
 #'
