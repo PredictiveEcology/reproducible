@@ -12,7 +12,7 @@ if (getRversion() >= "3.1.0") {
 #' 3) it does not detect objects that have file-base storage of information
 #' (specifically \code{\link[raster]{RasterLayer-class}} objects).
 #' 4) the default hashing method is relatively slow
-#' This version of the \code{Cache} function accommodates those three special,
+#' This version of the \code{Cache} function accommodates those four special,
 #' though quite common, cases by:
 #' 1) converting any environments into list equivalents;
 #' 2) identifying the dispatched S4 method (including those made through
@@ -25,99 +25,15 @@ if (getRversion() >= "3.1.0") {
 #' in RAM (i.e., not for file-backed objects0) which appears to be up to
 #' 10x faster than \code{\link[digest]{digest}}.
 #'
-#' While \code{Cache} is built to work with any R function, we have also built
-#' several accommodations within the \code{SpaDES} package context. Principally,
-#' the \code{simList} class has an environment as one of
-#' its slots, but also many system specific paths.
-#' Some of the details of the \code{simList}-specific features of this \code{Cache}
-#' function include:
-#' We remove all elements that have an environment as part of their attributes.
-#' This is generally functions that are loaded from the modules,
-#' but also the \code{.envir} slot in the \code{simList}.
-#' Functions are formatted to text before running \code{fastdigest}.
+#' \code{Cache} (uppercase C) is used here so that it is not confused with and does
+#' not mask the \code{archivist::cache} function.
 #'
-#' Cache (capital C) is a short cut to using SpaDES::cache (which is
-#' being deprecated). It has the added benefit that if no cacheRepo is
-#' specified, it will choose a smart option. If called
-#' from inside a SpaDES module, \code{Cache} will use the cacheRepo from a call
-#' to \code{cachePath(sim)}, taking the sim from the call stack. Similarly, if no
-#' \code{cacheRepo} is specified, then it will use \code{getOption("spades.cachePath") }, which
-#' will, by default, be a temporary location with no persistence between R sessions!
-#' To persist between sessions, use \code{SpaDES::setPaths()} every session.
 #'
-#' \code{Cache} (uppercase C) is also defined so that it is not confused with the
-#' \code{archivist::cache} function which will not work in a SpaDES context.
-#' If a user would like to use \code{cache} (lowercase c), then it must be
-#' always prefixed with \code{SpaDES::cache(  )} so that it does not accidentally
-#' call the archivist package version of cache.
-#'
-#' @section Caching as part of SpaDES:
-#'
-#' SpaDES has several levels of caching. Each level can be used to a modeler's
-#' advantage; and, all can be -- and are often -- used concurrently.
-#'
-#' @section \code{spades} or \code{experiment}:
-#'
-#' And entire call
-#' to \code{spades} or \code{experiment} can be cached. This will have the effect
-#' of eliminating any stochasticity in the model as the output will simply be
-#' the cached version of the \code{simList}. This is likely most useful in
-#' situations where reproducibility is more important than "new" stochasticity
-#' (e.g., building decision support systems, apps, final version of a manuscript).
-#'
-#' @section Module-level caching:
-#'
-#' If the parameter \code{.useCache} in the module's metadata
-#' is set to TRUE, then the \code{doEvent.moduleName}
-#' will be cached. That means that every time that module
-#' is called from within a spades or experiment call, \code{Cache} will be called. Only
-#' the objects inside the \code{simList} that correspond to the \code{inputObjects} of the
-#' module and the \code{outputObjects} from the module (as specified in the module
-#' metadata) will be assessed for caching
-#' inputs or output, respectively.
-#'
-#' In general use, module level caching would be mostly useful for modules that have
-#' no stochasticity, such as data-preparation modules, GIS modules etc.
-#'
-#' @section Event-level caching:
-#'
-#' If the parameter \code{.useCache} in the module's metadata
-#' is set to a character or character vector,
-#' then that or those event(s) will be cached. That means that every time the event
-#' is called from within a spades or experiment call, \code{Cache} will be called.
-#' Only
-#' the objects inside the \code{simList} that correspond to the \code{inputObjects} or the
-#' \code{outputObjects} as defined in the module metadata  will be assessed for caching
-#' inputs or output, respectively. The fact that all and only the named \code{inputObjects}
-#' and \code{outputObjects} are cached and returned may be inefficient (i.e., it may
-#' cache more objects than are necessary) for individual events.
-#'
-#' Similar to module-level caching, event-level caching would be mostly
-#' useful for events that have
-#' no stochasticity, such as data-preparation events, GIS events etc.
-#'
-#' @section Function-level caching:
-#'
-#' Any function can be cached using:
-#' \code{Cache(FUN = functionName, ...)}
-#' or
-#' \code{cache(cacheRepo = cacheDirectory, FUN = functionName, ...)}.
-#' This will be a slight change to a function call, such as:
-#' \code{projectRaster(raster, crs = crs(newRaster))}
-#' to
-#' \code{Cache(projectRaster, raster, crs = crs(newRaster))}.
-#'
-#' @note Several objects require pre-treatment before successful caching will
-#' work. \code{Raster*} objects have the potential for disk-backed storage. If
-#' the object in the R session is cached using \code{archivist::cache}, only
-#' the header component will be assessed for caching. Thus, objects like this
-#' require more work. Also, because \code{Raster*} can have a built-in representation
-#' for having their data content located on disk, this format will be maintained
-#' if the raster already is file-backed, i.e., to create .tif or .grd backed rasters,
-#' use writeRaster first, then Cache. The .tif or .grd will be copied to the "raster"
-#' subdirectory of the \code{cacheRepo}.
-#' Their RAM representation (as an R object) will still be in the usual "gallery" directory.
-#' For \code{inMemory} raster objects, they will remain as binary .rdata files.
+#' @note As indicated above, several objects require pre-treatment before
+#' caching will work as expected. The function \code{robustDigest} accommodates this.
+#' It is an S4 generic, meaning that developers can produce their own methods for
+#' different classes of objects. Currently, there are methods for several types
+#' of classes. See \code{\link{robustDigest}} .
 #'
 #' See \code{\link{robustDigest}} for other specifics for other classes.
 #'
@@ -296,10 +212,10 @@ setMethod(
 
     # if a simList is in ...
     # userTags added based on object class
-    userTags <- c(userTags, unlist(lapply(tmpl, tagsByClass)))
+    userTags <- c(userTags, unlist(lapply(tmpl, .tagsByClass)))
 
     # get cacheRepo if not supplied
-    if(is.null(cacheRepo)) cacheRepo <- checkCacheRepo(tmpl)
+    if(is.null(cacheRepo)) cacheRepo <- .checkCacheRepo(tmpl)
 
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
@@ -333,7 +249,7 @@ setMethod(
         out <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
         # Class-specific message
-        cacheMessage(out, functionDetails$functionName)
+        .cacheMessage(out, functionDetails$functionName)
 
         archivist::addTagsRepo(isInRepo$artifact[lastOne],
                                repoDir = cacheRepo,
@@ -368,7 +284,7 @@ setMethod(
     if (isS4(FUN)) attr(output, "function") <- FUN@generic
 
     # Can make new methods by class to add tags to outputs
-    outputToSave <- addTagsToOutput(output, outputObjects, FUN)
+    outputToSave <- .addTagsToOutput(output, outputObjects, FUN)
 
     # This is for write conflicts to the SQLite database, i.e., keep trying until it is
     # written
@@ -398,7 +314,7 @@ setMethod(
     }
 
     while (!written) {
-      objSize <- objSizeInclEnviros(outputToSave)
+      objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
                     paste0("function:",functionDetails$functionName),
                     paste0("object.size:", objSize),
@@ -424,42 +340,56 @@ setMethod(
 
 
 ################################################################################
-#' Remove any reference to environments or filepaths in objects
+#' Create reproducible digests of objects in R
 #'
-#' Using \code{\link[fastdigest]{fastdigest}} will include every detail of an object, including
-#' environments of functions, including those that are session-specific. Since
-#' the goal of using fastdigest::fastdigest is not session specific, this function
+#' Not all aspects of R objects are captured by current hashing tools in R (e.g.
+#' \code{digest::digest}, \code{fastdigest::fastdigest}, \code{knitr} caching,
+#' \code{archivist::cache}). This is mostly because many objects have "transient"
+#' (e.g., functions have environments), or "disk-backed" features. This function
+#' allows for these accommodations to be made and uses \code{\link[fastdigest]{fastdigest}}
+#' internally.  Since
+#' the goal of using reproducibility is to have tools that are not session specific,
+#' this function
 #' attempts to strip all session specific information so that the fastdigest
 #' works between sessions and operating systems. It is tested under many
 #' conditions and object types, there are bound to be others that don't
 #' work correctly.
 #'
-#' This is primarily for internal use only. Especially when
-#' caching a \code{simList}.
+#' @section Classes:
 #'
-#' This is a derivative of the class \code{simList}, except that all references
-#' to local environments are removed.
-#' Specifically, all functions (which are contained within environments) are
+#' \code{Raster*} objects have the potential for disk-backed storage. If
+#' the object in the R session is cached using \code{archivist::cache}, only
+#' the header component will be assessed for caching. Thus, objects like this
+#' require more work. Also, because \code{Raster*} can have a built-in representation
+#' for having their data content located on disk, this format will be maintained
+#' if the raster already is file-backed, i.e., to create .tif or .grd backed rasters,
+#' use writeRaster first, then Cache. The .tif or .grd will be copied to the "raster"
+#' subdirectory of the \code{cacheRepo}.
+#' Their RAM representation (as an R object) will still be in the usual "gallery" directory.
+#' For \code{inMemory} raster objects, they will remain as binary .rdata files.
+#'
+#' Functions (which are contained within environments) are
 #' converted to a text representation via a call to \code{format(FUN)}.
-#' Also the objects that were contained within the \code{.envir} slot are hashed
-#' using \code{\link[fastdigest]{fastdigest}}.
-#' The \code{paths} slot is not used (to allow comparison across platforms); it's
-#' not relevant where the objects are gotten from, so long as they are the same.
-#' The \code{.envir} slot is emptied (\code{NULL}).
-#' The object is then converted to a \code{simList_} which has a \code{.list} slot.
-#' The hashes of the objects are then placed in that \code{.list} slot.
 #'
-#' @param object an object to convert to a 'digestible' state
+#' Objects contained within a list or environment are recursively hashed
+#' using \code{\link[fastdigest]{fastdigest}}, while removing all references to
+#' environments.
+#'
+#' Character strings are first assessed with \code{dir.exists} and \code{file.exists}
+#' to check for paths. If they are found to be paths, then the path is hashed with
+#' only its filename via \code{basename(filename)}.
+#'
+#' @param object an object to digest.
 #'
 #' @param objects Optional character vector indicating which objects are to
-#'                be considered while making digestible.
+#'                be considered while making digestible. This is only relevant
+#'                if the object being passed is an environment or list or the like.
 #' @inheritParams Cache
 #'
-#' @return A simplified version of the \code{simList} object, but with no
-#'         reference to any environments, or other session-specific information.
+#' @return A hash i.e., digest of the object passed in.
 #'
 #' @seealso \code{\link[archivist]{cache}}.
-#' @seealso \code{\link[digest]{digest}}.
+#' @seealso \code{\link[fastdigest]{fastdigest}}.
 #' @importFrom digest digest
 #' @importFrom fastdigest fastdigest
 #' @docType methods

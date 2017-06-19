@@ -21,10 +21,11 @@ arguments to the FUN}
 \item{overrideCall}{A character string indicating a different (not "Cache") function
 name to search for. Mostly so that this works with deprecated "cache".}
 
-\item{object}{an object to convert to a 'digestible' state}
+\item{object}{an object to digest.}
 
 \item{objects}{Optional character vector indicating which objects are to
-be considered while making digestible.}
+be considered while making digestible. This is only relevant
+if the object being passed is an environment or list or the like.}
 
 \item{compareRasterFileLength}{Numeric. Optional. When there are Rasters, that
 have file-backed storage, this is passed to the length arg in \code{digest}

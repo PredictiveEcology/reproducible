@@ -12,7 +12,7 @@
 \alias{robustDigest,list-method}
 \alias{robustDigest,Raster-method}
 \alias{robustDigest,Spatial-method}
-\title{Remove any reference to environments or filepaths in objects}
+\title{Create reproducible digests of objects in R}
 \usage{
 robustDigest(object, objects, compareRasterFileLength = 1e+06,
   algo = "xxhash64")
@@ -36,10 +36,11 @@ robustDigest(object, objects, compareRasterFileLength = 1e+06,
 \S4method{robustDigest}{Spatial}(object, compareRasterFileLength, algo)
 }
 \arguments{
-\item{object}{an object to convert to a 'digestible' state}
+\item{object}{an object to digest.}
 
 \item{objects}{Optional character vector indicating which objects are to
-be considered while making digestible.}
+be considered while making digestible. This is only relevant
+if the object being passed is an environment or list or the like.}
 
 \item{compareRasterFileLength}{Numeric. Optional. When there are Rasters, that
 have file-backed storage, this is passed to the length arg in \code{digest}
@@ -53,38 +54,52 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
     \code{murmur32}.}
 }
 \value{
-A simplified version of the \code{simList} object, but with no
-        reference to any environments, or other session-specific information.
+A hash i.e., digest of the object passed in.
 }
 \description{
-Using \code{\link[fastdigest]{fastdigest}} will include every detail of an object, including
-environments of functions, including those that are session-specific. Since
-the goal of using fastdigest::fastdigest is not session specific, this function
+Not all aspects of R objects are captured by current hashing tools in R (e.g.
+\code{digest::digest}, \code{fastdigest::fastdigest}, \code{knitr} caching,
+\code{archivist::cache}). This is mostly because many objects have "transient"
+(e.g., functions have environments), or "disk-backed" features. This function
+allows for these accommodations to be made and uses \code{\link[fastdigest]{fastdigest}}
+internally.  Since
+the goal of using reproducibility is to have tools that are not session specific,
+this function
 attempts to strip all session specific information so that the fastdigest
 works between sessions and operating systems. It is tested under many
 conditions and object types, there are bound to be others that don't
 work correctly.
 }
-\details{
-This is primarily for internal use only. Especially when
-caching a \code{simList}.
+\section{Classes}{
 
-This is a derivative of the class \code{simList}, except that all references
-to local environments are removed.
-Specifically, all functions (which are contained within environments) are
+
+\code{Raster*} objects have the potential for disk-backed storage. If
+the object in the R session is cached using \code{archivist::cache}, only
+the header component will be assessed for caching. Thus, objects like this
+require more work. Also, because \code{Raster*} can have a built-in representation
+for having their data content located on disk, this format will be maintained
+if the raster already is file-backed, i.e., to create .tif or .grd backed rasters,
+use writeRaster first, then Cache. The .tif or .grd will be copied to the "raster"
+subdirectory of the \code{cacheRepo}.
+Their RAM representation (as an R object) will still be in the usual "gallery" directory.
+For \code{inMemory} raster objects, they will remain as binary .rdata files.
+
+Functions (which are contained within environments) are
 converted to a text representation via a call to \code{format(FUN)}.
-Also the objects that were contained within the \code{.envir} slot are hashed
-using \code{\link[fastdigest]{fastdigest}}.
-The \code{paths} slot is not used (to allow comparison across platforms); it's
-not relevant where the objects are gotten from, so long as they are the same.
-The \code{.envir} slot is emptied (\code{NULL}).
-The object is then converted to a \code{simList_} which has a \code{.list} slot.
-The hashes of the objects are then placed in that \code{.list} slot.
+
+Objects contained within a list or environment are recursively hashed
+using \code{\link[fastdigest]{fastdigest}}, while removing all references to
+environments.
+
+Character strings are first assessed with \code{dir.exists} and \code{file.exists}
+to check for paths. If they are found to be paths, then the path is hashed with
+only its filename via \code{basename(filename)}.
 }
+
 \seealso{
 \code{\link[archivist]{cache}}.
 
-\code{\link[digest]{digest}}.
+\code{\link[fastdigest]{fastdigest}}.
 }
 \author{
 Eliot McIntire
