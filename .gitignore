@@ -1,10 +1,9 @@
+.csv
+.log
 .Rapp.history
 .RData
 .Rhistory
 .Rproj.user
-*.Rproj
-.csv
-.log
 
 #################
 ## LaTeX
