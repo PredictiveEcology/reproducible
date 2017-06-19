@@ -29,9 +29,11 @@ cache(cacheRepo = NULL, FUN, ..., notOlderThan = NULL, objects = NULL,
 
 \item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 
-\item{objects}{Character vector of objects within the simList that should
-be considered for caching. i.e., only use a subset of
-the simList objects. Only used if ... includes a \code{simList}.}
+\item{objects}{Character vector of objects to be digested. This is only applicable
+if there is a list, environment or simList with named objects
+within it. Only this/these objects will be considered for caching,
+i.e., only use a subset of
+the list, environment or simList objects.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for \code{simList} objects}
@@ -97,30 +99,33 @@ or any other R object where the data is in a file, rather than RAM object).
 4) We use \code{\link[fastdigest]{fastdigest}} internally when the object is
 in RAM (i.e., not for file-backed objects0) which appears to be up to
 10x faster than \code{\link[digest]{digest}}.
-In the \code{SpaDES} context, the \code{simList} has an environment as one of
-its slots, thus using \code{archivist::cache} will not work correctly.
 }
 \details{
+While \code{Cache} is intended to work with any R function, we have built
+several accommodations within the \code{SpaDES} package context, a package
+which depends on \code{reproducible}. Principally,
+the \code{simList} has an environment as one of
+its slots, but also many system specific paths.
 Some of the details of the changes include:
 We remove all elements that have an environment as part of their attributes.
 This is generally functions that are loaded from the modules,
 but also the \code{.envir} slot in the \code{simList}.
 Functions are formatted to text before running \code{fastdigest}.
 
-Cache (capital C) is a short cut to using SpaDES::cache (which is deprecated).
-It has the added benefit that if no cacheRepo is specified, it will choose a smart option.
-If called from inside a SpaDES module, \code{Cache} will use the cacheRepo from
-a call to \code{cachePath(sim)}, taking the sim from the call stack.
-Similarly, if no \code{cacheRepo} is specified, then it will use
-\code{getOption("spades.cachePath") }, which will, by default, be a temporary
-location with no persistence between R sessions!
+Cache (capital C) is a short cut to using SpaDES::cache (which is
+being deprecated). It has the added benefit that if no cacheRepo is
+specified, it will choose a smart option. If called
+from inside a SpaDES module, \code{Cache} will use the cacheRepo from a call
+to \code{cachePath(sim)}, taking the sim from the call stack. Similarly, if no
+\code{cacheRepo} is specified, then it will use \code{getOption("spades.cachePath") }, which
+will, by default, be a temporary location with no persistence between R sessions!
 To persist between sessions, use \code{SpaDES::setPaths()} every session.
 
 \code{Cache} (uppercase C) is also defined so that it is not confused with the
 \code{archivist::cache} function which will not work in a SpaDES context.
 If a user would like to use \code{cache} (lowercase c), then it must be
 always prefixed with \code{SpaDES::cache(  )} so that it does not accidentally
-call \code{archivist::cache}.
+call the archivist package version of cache.
 }
 \note{
 Several objects require pre-treatment before successful caching will
@@ -143,34 +148,35 @@ sufficient number of calls to \code{experiment}) such that no new explorations
 of stochastic outcomes are required. It will also be very useful in a
 reproducible work flow
 }
-\section{Caching as part of \code{SpaDES}}{
+\section{Caching as part of SpaDES}{
 
 
-\code{SpaDES} has several levels of caching. Each level can be used to a modeler's
+SpaDES has several levels of caching. Each level can be used to a modeler's
 advantage; and, all can be -- and are often -- used concurrently.
 }
 
 \section{\code{spades} or \code{experiment}}{
 
 
-An entire call to \code{spades} or \code{experiment} can be cached.
-This will have the effect of eliminating any stochasticity in the model as the
-output will simply be the cached version of the \code{simList}.
-This is likely most useful in situations where reproducibility is more
-important than "new" stochasticity (e.g., building decision support systems,
-apps, final version of a manuscript).
+And entire call
+to \code{spades} or \code{experiment} can be cached. This will have the effect
+of eliminating any stochasticity in the model as the output will simply be
+the cached version of the \code{simList}. This is likely most useful in
+situations where reproducibility is more important than "new" stochasticity
+(e.g., building decision support systems, apps, final version of a manuscript).
 }
 
 \section{Module-level caching}{
 
 
-If the parameter \code{.useCache = TRUE} in the module's metadata, then the
-\code{doEvent.moduleName} will be cached. That means that every time that module
-is called from within a spades or experiment call, \code{Cache} will be called.
-Only the objects inside the \code{simList} that correspond to the
-\code{inputObjects} of the module and the \code{outputObjects} from the module
-(as specified in the module metadata) will be assessed for caching inputs or
-output, respectively.
+If the parameter \code{.useCache} in the module's metadata
+is set to TRUE, then the \code{doEvent.moduleName}
+will be cached. That means that every time that module
+is called from within a spades or experiment call, \code{Cache} will be called. Only
+the objects inside the \code{simList} that correspond to the \code{inputObjects} of the
+module and the \code{outputObjects} from the module (as specified in the module
+metadata) will be assessed for caching
+inputs or output, respectively.
 
 In general use, module level caching would be mostly useful for modules that have
 no stochasticity, such as data-preparation modules, GIS modules etc.
@@ -190,8 +196,9 @@ inputs or output, respectively. The fact that all and only the named \code{input
 and \code{outputObjects} are cached and returned may be inefficient (i.e., it may
 cache more objects than are necessary) for individual events.
 
-Similar to module-level caching, event-level caching would be mostly useful for
-events that have no stochasticity, such as data-preparation events, GIS events etc.
+Similar to module-level caching, event-level caching would be mostly
+useful for events that have
+no stochasticity, such as data-preparation events, GIS events etc.
 }
 
 \section{Function-level caching}{
@@ -209,6 +216,7 @@ to
 
 \examples{
 \dontrun{
+
 mySim <- simInit(times = list(start = 0.0, end = 5.0),
                  params = list(.globals = list(stackName = "landscape", burnStats = "testStats")),
                  modules = list("randomLandscapes", "fireSpread"),

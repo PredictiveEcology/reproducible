@@ -3,11 +3,14 @@
 \name{listOrEnvDigestRecursive}
 \alias{listOrEnvDigestRecursive}
 \alias{digestRaster}
+\alias{getFunctionName}
 \title{Custom tools for digesting objects}
 \usage{
 listOrEnvDigestRecursive(object)
 
 digestRaster(object, compareRasterFileLength, algo)
+
+getFunctionName(FUN)
 }
 \arguments{
 \item{object}{an object to convert to a 'digestible' state}
@@ -22,6 +25,8 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64} and
     \code{murmur32}.}
+
+\item{FUN}{A function}
 }
 \description{
 For reproducibility, there are many features or attributes of objects that must
@@ -30,6 +35,8 @@ used slots and elements that are not perfectly maintained with manipulation.
 These customDigest functions attempt to deal with some of the types of problems.
 In conjunction with \code{\link{makeDigestible}}, these are helpers to create
 consisten cache results.
+
+These are internal only.
 }
 \seealso{
 \code{\link{makeDigestible}}
