@@ -30,6 +30,8 @@ Imports:
     methods,
     raster,
     sp
+Suggests:
+    SpaDES
 License: GPL-3
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
