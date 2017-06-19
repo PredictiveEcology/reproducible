@@ -294,48 +294,12 @@ setMethod(
     if (missing(notOlderThan)) notOlderThan <- NULL
 
     # if a simList is in ...
-    whSimList <- which(sapply(tmpl, function(x) is(x, "simList")))
-    if(length(whSimList)>0) {
-      if (!requireNamespace("SpaDES", quietly = TRUE)) {
-        stop("SpaDES needed for to correctly Cache a simList. Please install it.",
-             call. = FALSE)
-      }
-
-    }
-    # userTags from an active event situation in the simList
-    if (length(whSimList) > 0 | exists("sim")) {
-      if (length(whSimList) > 0) {
-        cur <- tmpl[[whSimList]]@current
-      } else {
-        cur <- sim@current
-      }
-      if (NROW(cur)) {
-        userTags <- c(userTags,
-                      paste0("module:",cur$moduleName),
-                      paste0("eventType:",cur$eventType),
-                      paste0("eventTime:",cur$eventTime),
-                      paste0("function:spades")) # add this because it will be an
-                                                 # outer function, if there are
-                                                 # events occurring
-      }
-    }
-
+    # userTags added based on object class
+    userTags <- c(userTags, unlist(lapply(tmpl, tagsByClass)))
 
     # get cacheRepo if not supplied
-    if (is.null(cacheRepo)) {
-      if (length(whSimList) > 0) {
-        cacheRepo <- tmpl[whSimList][[1]]@paths$cachePath # just take the first simList, if there are >1
-      } else {
-        doEventFrameNum <- grep(sys.calls(), pattern = "(^doEvent)|(^.parseModule)")[2]
-        if (!is.na(doEventFrameNum)) {
-          sim <- get("sim", envir = sys.frame(doEventFrameNum))
-          cacheRepo <- sim@paths$cachePath
-        } else {
-          cacheRepo <- getOption("spades.cachePath")
-          #checkPath(cacheRepo, create = TRUE) #SpaDES dependency
-        }
-      }
-    }
+    if(is.null(cacheRepo)) cacheRepo <- checkCacheRepo(tmpl)
+
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
       archivist::createLocalRepo(cacheRepo)
@@ -359,56 +323,24 @@ setMethod(
     isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
 
     # If it is in the existing record:
-    if (nrow(isInRepo) > 0) {
+    if (NROW(isInRepo) > 0) {
       lastEntry <- max(isInRepo$createdDate)
       lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-        if (grepl(format(FUN)[1], pattern = "function \\(sim, eventTime")) {
-          # very coarse way of determining doEvent call
-          message("Using cached copy of ", cur$eventType, " event in ", cur$moduleName, " module")
-        } else {
-          message("loading cached result from previous ", functionDetails$functionName, " call.")
-        }
-
         out <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+        cacheMessage(out, functionDetails$functionName)
+
         archivist::addTagsRepo(isInRepo$artifact[lastOne],
                                repoDir = cacheRepo,
                                tags = paste0("accessed:", Sys.time()))
 
-        if (length(whSimList) > 0) {
-          simListOut <- out # gets all items except objects in list(...)
-          origEnv <- list(...)[[whSimList]]@.envir
-          isListOfSimLists <-
-            if (is.list(out)) if (is(out[[1]], "simList")) TRUE else FALSE else FALSE
+        # This allows for any class specific things
+        out <- prepareOutput(out, cacheRepo, ...)
 
-          if (isListOfSimLists) {
-            for (i in seq_along(out)) {
-              keepFromOrig <- !(ls(origEnv) %in% ls(out[[i]]@.envir))
-              list2env(mget(ls(origEnv)[keepFromOrig], envir = origEnv),
-                       envir = simListOut[[i]]@.envir)
-            }
-          } else {
-            keepFromOrig <- !(ls(origEnv) %in% ls(out@.envir))
-            list2env(mget(ls(origEnv)[keepFromOrig], envir = origEnv),
-                     envir = simListOut@.envir)
-          }
-          return(simListOut)
-        }
-
-        if (is(out, "RasterLayer")) {
-          out <-  prepareFileBackedRaster(out, repoDir = cacheRepo)
-        }
-        isNullOutput <- FALSE
-        if (is.character(out)) {
-          if (length(out) == 1) {
-            # need something to attach tags to if it is actually NULL
-            if (out == "Null") isNullOutput <- TRUE
-          }
-        }
-        if (isNullOutput) return(NULL) else return(out)
+        return(out)
       }
     }
 
@@ -433,21 +365,8 @@ setMethod(
     attr(output, "call") <- ""
     if (isS4(FUN)) attr(output, "function") <- FUN@generic
 
-    if (is(output, "simList")) {
-      if (!is.null(outputObjects)) {
-        outputToSave <- output
-        outputToSave@.envir <- new.env()
-        list2env(mget(outputObjects, envir = output@.envir), envir = outputToSave@.envir)
-        attr(outputToSave, "tags") <- attr(output, "tags")
-        attr(outputToSave, "call") <- attr(output, "call")
-        if (isS4(FUN))
-          attr(outputToSave, "function") <- attr(output, "function")
-      } else {
-        outputToSave <- output
-      }
-    } else {
-      outputToSave <- output
-    }
+    # Can make new methods by class to add tags to outputs
+    outputToSave <- addTagsToOutput(output, outputObjects, FUN)
 
     # This is for write conflicts to the SQLite database, i.e., keep trying until it is
     # written
@@ -477,25 +396,14 @@ setMethod(
     }
 
     while (!written) {
-      objSize <- object.size(outputToSave)
-      if (length(whSimList) > 0) { # can be a simList or list of simLists
-
-        if (is.list(output)) { # list of simLists
-          objS <- lapply(output, function(x) lapply(x@.envir, object.size))
-        } else {
-          objS <- lapply(output@.envir, object.size)
-        }
-        objSize <- objS %>%
-          unlist() %>%
-          sum() %>%
-          `+`(objSize)
-      }
+      objSize <- objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
                     paste0("function:",functionDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()))
       saved <- try(saveToLocalRepo(outputToSave, repoDir = cacheRepo,
-                                   archiveData = TRUE, archiveSessionInfo = FALSE,
+                                   artifactName="Cache",
+                                   archiveData = FALSE, archiveSessionInfo = FALSE,
                                    archiveMiniature = FALSE, rememberName = FALSE, silent = TRUE,
                                    userTags = userTags),
                    silent = TRUE)
@@ -936,12 +844,7 @@ setMethod(
         dig <- append(dig, digest(file = object@filename, length = compareRasterFileLength))
       }
     } else {
-      #if(inMemory(object)) {
-      #object@legend@colortable <- character()
       dig <- suppressWarnings(digestRaster(object, compareRasterFileLength, algo))
-      #} else {
-      #  dig <- suppressWarnings(digestRasterFromDisk(object, compareRasterFileLength, algo))
-      #}
     }
     return(dig)
   })
@@ -967,7 +870,6 @@ setMethod(
     }
 
     dig <- fastdigest::fastdigest(aaa)
-    #dig <- digest::digest(bbb, algo = algo)
     return(dig)
   })
 
@@ -1007,6 +909,211 @@ setMethod(
       sapply(., rmFromLocalRepo, repoDir = repoDir)
     return(invisible(md5hashInBackpack[toRemove]))
   })
+
+
+
+
+################################################################################
+#' Add extra tags to an archive based on class
+#'
+#' This is a generic definition that can be extended according to class.
+#'
+#' @return A character vector of new tags.
+#'
+#' @param object Any R object.
+#'
+#' @export
+#' @importFrom archivist showLocalRepo rmFromLocalRepo
+#' @docType methods
+#' @rdname tagsByClass
+#' @author Eliot McIntire
+setGeneric("tagsByClass", function(object) {
+  standardGeneric("tagsByClass")
+})
+
+#' @export
+#' @rdname tagsByClass
+setMethod(
+  "tagsByClass",
+  signature = "ANY",
+  definition = function(object) {
+    NULL
+  })
+
+
+
+################################################################
+################################################################################
+#' Create a custom cache message by class
+#'
+#' This is a generic definition that can be extended according to class.
+#'
+#' @return Nothing; called for its messaging side effect.
+#'
+#' @param object Any R object.
+#' @param functionName A character string indicating the function name
+#'
+#' @export
+#' @docType methods
+#' @rdname cacheMessage
+#' @author Eliot McIntire
+setGeneric("cacheMessage", function(object, functionName) {
+  standardGeneric("cacheMessage")
+})
+
+#' @export
+#' @rdname cacheMessage
+setMethod(
+  "cacheMessage",
+  signature = "ANY",
+  definition = function(object, functionName) {
+    message("loading cached result from previous ", functionName, " call.")
+  })
+
+
+
+################################################################################
+#' Determine object size of all objects inside environments
+#'
+#' This is a generic definition that can be extended according to class.
+#'
+#' @return A numeric, the result of object.size for all objects in environments.
+#'
+#' @param object Any R object.
+#'
+#' @export
+#' @docType methods
+#' @rdname objSizeInclEnviros
+#' @author Eliot McIntire
+setGeneric("objSizeInclEnviros", function(object) {
+  standardGeneric("objSizeInclEnviros")
+})
+
+#' @export
+#' @rdname objSizeInclEnviros
+setMethod(
+  "objSizeInclEnviros",
+  signature = "ANY",
+  definition = function(object) {
+    object.size(object)
+  })
+
+#' @export
+#' @rdname objSizeInclEnviros
+setMethod(
+  "objSizeInclEnviros",
+  signature = "environment",
+  definition = function(object) {
+    object.size(as.list(object, all.names = TRUE))
+  })
+
+
+################################################################################
+#' Add tags to output
+#'
+#' This is a generic definition that can be extended according to class.
+#' This function and methods should do "deep" copy for archiving purposes.
+#'
+#' @return New object with tags attached.
+#'
+#' @param output Any R object.
+#' @inheritParams Cache
+#' @param FUN A function
+#'
+#' @export
+#' @docType methods
+#' @rdname addTagsToOutput
+#' @author Eliot McIntire
+setGeneric("addTagsToOutput", function(output, outputObjects, FUN) {
+  standardGeneric("addTagsToOutput")
+})
+
+#' @export
+#' @rdname addTagsToOutput
+setMethod(
+  "addTagsToOutput",
+  signature = "ANY",
+  definition = function(output, outputObjects, FUN) {
+
+    output
+})
+
+
+
+
+################################################################################
+#' Check for cache repository info in ...
+#'
+#' This is a generic definition that can be extended according to class.
+#'
+#' @return A character string with a path to a cache repository.
+#'
+#' @param cacheCallList A list of all elements in the call to Cache
+#'
+#' @export
+#' @importFrom archivist showLocalRepo rmFromLocalRepo
+#' @docType methods
+#' @rdname checkCacheRepo
+#' @author Eliot McIntire
+setGeneric("checkCacheRepo", function(cacheCallList) {
+  standardGeneric("checkCacheRepo")
+})
+
+#' @export
+#' @rdname checkCacheRepo
+setMethod(
+  "checkCacheRepo",
+  signature = "ANY",
+  definition = function(cacheCallList) {
+    stop("must supply a cacheRepo argument")
+  })
+
+#################################
+################################################################################
+#' Make any modifications to output recovered from cacheRepo
+#'
+#' This is a generic definition that can be extended according to class.
+#'
+#' @return The object, modified
+#'
+#' @param object Any R object
+#' @inheritParams Cache
+#'
+#' @export
+#' @importFrom archivist showLocalRepo rmFromLocalRepo
+#' @docType methods
+#' @rdname prepareOutput
+#' @author Eliot McIntire
+setGeneric("prepareOutput", function(object, cacheRepo, ...) {
+  standardGeneric("prepareOutput")
+})
+
+#' @export
+#' @rdname prepareOutput
+setMethod(
+  "prepareOutput",
+  signature = "RasterLayer",
+  definition = function(object, cacheRepo, ...) {
+    prepareFileBackedRaster(object, repoDir = cacheRepo)
+})
+
+
+#' @export
+#' @rdname prepareOutput
+setMethod(
+  "prepareOutput",
+  signature = "ANY",
+  definition = function(object, cacheRepo, ...) {
+    if (is.character(object)) {
+      if (length(object) == 1) {
+        # need something to attach tags to if it is actually NULL
+        if (object == "Null") object <- NULL
+      }
+    }
+    object
+
+  })
+
 
 #' Deprecated functions
 #' @export
@@ -1299,7 +1406,6 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
 getFunctionName <- function(FUN, ..., overrideCall) {
-
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -1361,3 +1467,6 @@ getFunctionName <- function(FUN, ..., overrideCall) {
   }
   return(list(functionName=functionName, .FUN=.FUN))
 }
+
+
+
