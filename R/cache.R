@@ -119,7 +119,7 @@ if (getRversion() >= "3.1.0") {
 #' Their RAM representation (as an R object) will still be in the usual "gallery" directory.
 #' For \code{inMemory} raster objects, they will remain as binary .rdata files.
 #'
-#' See \code{\link{makeDigestible}} for other specifics for other classes.
+#' See \code{\link{robustDigest}} for other specifics for other classes.
 #'
 #' @inheritParams archivist::cache
 #' @inheritParams archivist::saveToLocalRepo
@@ -145,7 +145,7 @@ if (getRversion() >= "3.1.0") {
 #' @param debugCache Logical. If \code{TRUE}, then the returned object from the Cache
 #'        function will have two attributes, "debugCache1" and "debugCache2" which
 #'        are the entire list(...) and that same object, but
-#'        after all "makeDigestible" calls, at the moment that it is digested using
+#'        after all "robustDigest" calls, at the moment that it is digested using
 #'        \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")} can
 #'        then be compared to
 #'        a subsequent call and individual items within the object
@@ -173,7 +173,7 @@ if (getRversion() >= "3.1.0") {
 #' of stochastic outcomes are required. It will also be very useful in a
 #' reproducible work flow
 #'
-#' @seealso \code{\link[archivist]{cache}}, \code{\link{makeDigestible}}
+#' @seealso \code{\link[archivist]{cache}}, \code{\link{robustDigest}}
 #' @export
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom digest digest
@@ -848,41 +848,100 @@ setMethod(
 #' @seealso \code{\link[archivist]{cache}}.
 #' @seealso \code{\link[digest]{digest}}.
 #' @importFrom digest digest
+#' @importFrom fastdigest fastdigest
 #' @docType methods
 #' @keywords internal
-#' @rdname makeDigestible
+#' @rdname robustDigest
 #' @author Eliot McIntire
 #' @export
-setGeneric("makeDigestible", function(object, objects,
+setGeneric("robustDigest", function(object, objects,
                                       compareRasterFileLength = 1e6,
                                       algo = "xxhash64") {
-  standardGeneric("makeDigestible")
+  standardGeneric("robustDigest")
 })
 
 
-#' @rdname makeDigestible
-#' @exportMethod makeDigestible
+#' @rdname robustDigest
+#' @exportMethod robustDigest
 setMethod(
-  "makeDigestible",
-  signature = "environment",
+  "robustDigest",
+  signature = "ANY",
   definition = function(object) {
-    # objNames <- ls(envir = object)
-    # object <- mget(objNames, envir = object) # convert to list
-    object <- as.list(object)
-    whDeeperEnvs1 <- lapply(object, is.environment)
-    if(length(whDeeperEnvs1)) {
-      whDeeperEnvs <- which(unlist(whDeeperEnvs1))
-      object[whDeeperEnvs] <- lapply(object[whDeeperEnvs], makeDigestible)
-    }
-    dig <- fastdigest::fastdigest(object)
-    #dig <- digest::digest(bbb, algo = algo)
-    return(dig)
+    fastdigest(object)
   })
 
-#' @rdname makeDigestible
-#' @exportMethod makeDigestible
+
+#' @import parallel
+setOldClass("cluster")
+
+#' @rdname robustDigest
+#' @exportMethod robustDigest
 setMethod(
-  "makeDigestible",
+  "robustDigest",
+  signature = "cluster",
+  definition = function(object) {
+    fastdigest(NULL)
+  })
+
+#' @rdname robustDigest
+#' @exportMethod robustDigest
+setMethod(
+  "robustDigest",
+  signature = "function",
+  definition = function(object) {
+    fastdigest(format(object))
+  })
+
+#' @rdname robustDigest
+#' @exportMethod robustDigest
+setMethod(
+  "robustDigest",
+  signature = "expression",
+  definition = function(object) {
+    fastdigest(format(object))
+  })
+
+#' @rdname robustDigest
+#' @exportMethod robustDigest
+setMethod(
+  "robustDigest",
+  signature = "character",
+  definition = function(object, compareRasterFileLength, algo) {
+    if (any(unlist(lapply(object, dir.exists)))) {
+      fastdigest::fastdigest(basename(object))
+    } else if(any(unlist(lapply(object, file.exists)))) {
+      digest::digest(file = object,
+                     length = compareRasterFileLength,
+                     algo = algo)
+    } else {
+      fastdigest::fastdigest(object)
+    }
+  })
+
+
+
+#' @rdname robustDigest
+#' @exportMethod robustDigest
+setMethod(
+  "robustDigest",
+  signature = "environment",
+  definition = function(object, objects) {
+    listOrEnvDigestRecursive(object, objects)
+  })
+
+#' @rdname robustDigest
+#' @exportMethod robustDigest
+setMethod(
+  "robustDigest",
+  signature = "list",
+  definition = function(object) {
+    listOrEnvDigestRecursive(object)
+  })
+
+#' @rdname robustDigest
+#' @exportMethod robustDigest
+setMethod(
+  "robustDigest",
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo) {
 
@@ -890,18 +949,13 @@ setMethod(
       dig <- suppressWarnings(
         list(dim(object), res(object), crs(object), extent(object),
              lapply(object@layers, function(yy) {
-               #if(inMemory(yy)) {
-               #yy@legend@colortable <- character()
                digestRaster(yy, compareRasterFileLength, algo)
-               #} else {
-               # digestRasterFromDisk(object, compareRasterFileLength, algo)
-               #}
              })
         )
       )
       if (nzchar(object@filename, keepNA=TRUE)) {
         # if the Raster is on disk, has the first compareRasterFileLength characters;
-        # uses SpaDES:::digest on the file
+        # uses digest::digest on the file
         dig <- append(dig, digest(file = object@filename, length = compareRasterFileLength))
       }
     } else {
@@ -915,10 +969,10 @@ setMethod(
     return(dig)
   })
 
-#' @rdname makeDigestible
-#' @exportMethod makeDigestible
+#' @rdname robustDigest
+#' @exportMethod robustDigest
 setMethod(
-  "makeDigestible",
+  "robustDigest",
   signature = "Spatial",
   definition = function(object, compareRasterFileLength, algo) {
     if (is(object, "SpatialPoints")) {
