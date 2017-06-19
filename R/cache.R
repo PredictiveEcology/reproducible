@@ -25,12 +25,12 @@ if (getRversion() >= "3.1.0") {
 #' in RAM (i.e., not for file-backed objects0) which appears to be up to
 #' 10x faster than \code{\link[digest]{digest}}.
 #'
-#' While \code{Cache} is intended to work with any R function, we have built
-#' several accommodations within the \code{SpaDES} package context, a package
-#' which depends on \code{reproducible}. Principally,
-#' the \code{simList} has an environment as one of
+#' While \code{Cache} is built to work with any R function, we have also built
+#' several accommodations within the \code{SpaDES} package context. Principally,
+#' the \code{simList} class has an environment as one of
 #' its slots, but also many system specific paths.
-#' Some of the details of the changes include:
+#' Some of the details of the \code{simList}-specific features of this \code{Cache}
+#' function include:
 #' We remove all elements that have an environment as part of their attributes.
 #' This is generally functions that are loaded from the modules,
 #' but also the \code{.envir} slot in the \code{simList}.
@@ -276,6 +276,8 @@ setMethod(
     tmpl <- list(...)
 
     if (missing(notOlderThan)) notOlderThan <- NULL
+
+    # if a simList is in ...
     whSimList <- which(sapply(tmpl, function(x) is(x, "simList")))
     if(length(whSimList)>0) {
       if (!requireNamespace("SpaDES", quietly = TRUE)) {
@@ -284,6 +286,24 @@ setMethod(
       }
 
     }
+    # userTags from an active event situation in the simList
+    if (length(whSimList) > 0 | exists("sim")) {
+      if (length(whSimList) > 0) {
+        cur <- tmpl[[whSimList]]@current
+      } else {
+        cur <- sim@current
+      }
+      if (NROW(cur)) {
+        userTags <- c(userTags,
+                      paste0("module:",cur$moduleName),
+                      paste0("eventType:",cur$eventType),
+                      paste0("eventTime:",cur$eventTime),
+                      paste0("function:spades")) # add this because it will be an
+                                                 # outer function, if there are
+                                                 # events occurring
+      }
+    }
+
 
     # get cacheRepo if not supplied
     if (is.null(cacheRepo)) {
@@ -305,78 +325,18 @@ setMethod(
       archivist::createLocalRepo(cacheRepo)
     }
 
-    whRasOrSpatial <- which(sapply(tmpl, function(x) is(x, "Raster") | is(x, "Spatial")))
-    whSpatial <- which(sapply(tmpl, function(x) is(x, "Spatial")))
-    whFun <- which(sapply(tmpl, function(x) is.function(x) | is(x, "expression")))
-    whFilename <- which(sapply(tmpl, function(x) is.character(x)))
-    if (length(whFilename) > 0) {
-      tmpl[whFilename] <- lapply(whFilename, function(xx) {
-        if (any(unlist(lapply(tmpl[[xx]], dir.exists)))) {
-          basename(tmpl[[xx]])
-        } else if (any(unlist(lapply(tmpl[[xx]], file.exists)))) {
-          sapply(tmpl[[xx]], function(yyy)
-            digest::digest(file = yyy,
-                           length = compareRasterFileLength,
-                           algo = algo))
-        } else  {
-          tmpl[[xx]]
-        }
-      })
-    }
-
-    whCluster <- which(sapply(tmpl, function(x) is(x, "cluster")))
-
-    # special behaviour if a simList
-    if (length(whSimList) > 0 | exists("sim")) {
-      if (length(whSimList) > 0) {
-        cur <- tmpl[[whSimList]]@current
-      } else {
-        cur <- sim@current
-      }
-      if (NROW(cur)) {
-        userTags <- c(userTags,
-                      paste0("module:",cur$moduleName),
-                      paste0("eventType:",cur$eventType),
-                      paste0("eventTime:",cur$eventTime),
-                      paste0("function:spades"))
-      }
-    }
-
-    # deal with simList, and sub-objects of simList or lists or environments
-    if (is.null(objects)) {
-      if (length(whSimList) > 0) tmpl[whSimList] <- lapply(tmpl[whSimList], SpaDES::makeDigestible,
-                                                           compareRasterFileLength = compareRasterFileLength,
-                                                           algo = algo)
-    } else {
-      if (length(whSimList) > 0) {
-        tmpl[whSimList] <- lapply(tmpl[whSimList], function(xx) {
-          SpaDES::makeDigestible(xx, objects, compareRasterFileLength = compareRasterFileLength,
-                       algo = algo)
-        })
-      } else {
-        whListOrEnv <- which(sapply(tmpl, function(x) is.environment(x) | is.list(x)))
-        tmpl[whListOrEnv] <- lapply(tmpl[whListOrEnv], function(xx) {
-          listOrEnvDigestRecursive(xx[objects])
-        })
-
-      }
-    }
-
     # get function name and convert the contents to text so digestible
-    tmpl <- append(tmpl, getFunctionName(FUN))
+    functionDetails <- getFunctionName(FUN, ...)
+    tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting
 
-    if (length(whRasOrSpatial) > 0) {
-      tmpl[whRasOrSpatial] <- lapply(tmpl[whRasOrSpatial], makeDigestible,
-                                     compareRasterFileLength = compareRasterFileLength,
-                                     algo = algo)
-    }
-    if (length(whCluster) > 0) tmpl[whCluster] <- NULL
-    if (length(whFun) > 0) tmpl[whFun] <- lapply(tmpl[whFun], format)
+    # remove things in the Cache call that are not relevant to Caching
     if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
 
     # Do the digesting
-    # Environments & lists -- need this because environments can be hiding inside of lists
-    outputHash <- fastdigest(lapply(tmpl, listOrEnvDigestRecursive))
+    preDigest <- lapply(tmpl, recursiveRobustDigest, objects = objects,
+                        compareRasterFileLength=compareRasterFileLength,
+                        algo=algo)
+    outputHash <- fastdigest(preDigest)
 
     localTags <- showLocalRepo(cacheRepo, "tags")
     isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
@@ -389,7 +349,7 @@ setMethod(
           # very coarse way of determining doEvent call
           message("Using cached copy of ", cur$eventType, " event in ", cur$moduleName, " module")
         } else {
-          message("loading cached result from previous ", tmpl$functionName, " call.")
+          message("loading cached result from previous ", functionDetails$functionName, " call.")
         }
 
         out <- loadFromLocalRepo(isInRepo$artifact[lastOne],
@@ -401,16 +361,17 @@ setMethod(
         if (length(whSimList) > 0) {
           simListOut <- out # gets all items except objects in list(...)
           origEnv <- list(...)[[whSimList]]@.envir
-          isListOfSimLists <- if (is.list(out)) if (is(out[[1]], "simList")) TRUE else FALSE else FALSE
+          isListOfSimLists <-
+            if (is.list(out)) if (is(out[[1]], "simList")) TRUE else FALSE else FALSE
 
           if (isListOfSimLists) {
             for (i in seq_along(out)) {
-              keepFromOrig <- !(ls(origEnv) %in% ls(out[[i]]))
+              keepFromOrig <- !(ls(origEnv) %in% ls(out[[i]]@.envir))
               list2env(mget(ls(origEnv)[keepFromOrig], envir = origEnv),
                        envir = simListOut[[i]]@.envir)
             }
           } else {
-            keepFromOrig <- !(ls(origEnv) %in% ls(out))
+            keepFromOrig <- !(ls(origEnv) %in% ls(out@.envir))
             list2env(mget(ls(origEnv)[keepFromOrig], envir = origEnv),
                      envir = simListOut@.envir)
           }
@@ -514,7 +475,7 @@ setMethod(
           `+`(objSize)
       }
       userTags <- c(userTags,
-                    paste0("function:",tmpl$functionName),
+                    paste0("function:",functionDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()))
       saved <- try(saveToLocalRepo(outputToSave, repoDir = cacheRepo,
@@ -926,7 +887,7 @@ setMethod(
   "robustDigest",
   signature = "environment",
   definition = function(object, objects) {
-    listOrEnvDigestRecursive(object, objects)
+    recursiveRobustDigest(object, objects)
   })
 
 #' @rdname robustDigest
@@ -935,7 +896,7 @@ setMethod(
   "robustDigest",
   signature = "list",
   definition = function(object) {
-    listOrEnvDigestRecursive(object)
+    recursiveRobustDigest(object)
   })
 
 #' @rdname robustDigest
@@ -1272,19 +1233,21 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #' be removed e.g., environments have unique labels, rasters have several infrequently
 #' used slots and elements that are not perfectly maintained with manipulation.
 #' These customDigest functions attempt to deal with some of the types of problems.
-#' In conjunction with \code{\link{makeDigestible}}, these are helpers to create
+#' In conjunction with \code{\link{robustDigest}}, these are helpers to create
 #' consisten cache results.
 #'
 #' @importFrom fastdigest fastdigest
 #' @rdname cacheHelper
 #' @author Eliot McIntire
-#' @seealso \code{\link{makeDigestible}}
-#' @inheritParams makeDigestible
-listOrEnvDigestRecursive <- function(object) {
+#' @seealso \code{\link{robustDigest}}
+#' @inheritParams robustDigest
+recursiveRobustDigest <- function(object, objects, compareRasterFileLength, algo) {
   if(is.environment(object)|is.list(object)) {
-    lapply(object, listOrEnvDigestRecursive)
+    lapply(as.list(object, all.names=TRUE), recursiveRobustDigest,
+           objects=objects, compareRasterFileLength = compareRasterFileLength,
+           algo=algo) # need hidden objects too
   } else {
-    fastdigest(object)
+    robustDigest(object, objects, compareRasterFileLength, algo)
   }
 }
 
@@ -1308,7 +1271,7 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #'
 #' @rdname cacheHelper
 #' @param FUN A function
-getFunctionName <- function(FUN) {
+getFunctionName <- function(FUN, ...) {
 
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method

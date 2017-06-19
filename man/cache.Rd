@@ -57,7 +57,7 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 \item{debugCache}{Logical. If \code{TRUE}, then the returned object from the Cache
 function will have two attributes, "debugCache1" and "debugCache2" which
 are the entire list(...) and that same object, but
-after all "makeDigestible" calls, at the moment that it is digested using
+after all "robustDigest" calls, at the moment that it is digested using
 \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")} can
 then be compared to
 a subsequent call and individual items within the object
@@ -101,12 +101,12 @@ in RAM (i.e., not for file-backed objects0) which appears to be up to
 10x faster than \code{\link[digest]{digest}}.
 }
 \details{
-While \code{Cache} is intended to work with any R function, we have built
-several accommodations within the \code{SpaDES} package context, a package
-which depends on \code{reproducible}. Principally,
-the \code{simList} has an environment as one of
+While \code{Cache} is built to work with any R function, we have also built
+several accommodations within the \code{SpaDES} package context. Principally,
+the \code{simList} class has an environment as one of
 its slots, but also many system specific paths.
-Some of the details of the changes include:
+Some of the details of the \code{simList}-specific features of this \code{Cache}
+function include:
 We remove all elements that have an environment as part of their attributes.
 This is generally functions that are loaded from the modules,
 but also the \code{.envir} slot in the \code{simList}.
@@ -140,7 +140,7 @@ subdirectory of the \code{cacheRepo}.
 Their RAM representation (as an R object) will still be in the usual "gallery" directory.
 For \code{inMemory} raster objects, they will remain as binary .rdata files.
 
-See \code{\link{makeDigestible}} for other specifics for other classes.
+See \code{\link{robustDigest}} for other specifics for other classes.
 
 In general, it is expected that caching will only be used when stochasticity
 is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
@@ -278,7 +278,7 @@ mySim <- simInit(times = list(start = 0.0, end = 5.0),
 
 }
 \seealso{
-\code{\link[archivist]{cache}}, \code{\link{makeDigestible}}
+\code{\link[archivist]{cache}}, \code{\link{robustDigest}}
 }
 \author{
 Eliot McIntire
