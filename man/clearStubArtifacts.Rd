@@ -20,7 +20,7 @@ Done for its side effect on the repoDir
 }
 \description{
 When an archive object is being saved, if this is occurring at the same time
-as another process doing the same thing, a stub of a artifact occurs. This
+as another process doing the same thing, a stub of an artifact may occur. This
 function will clear those stubs.
 }
 \author{

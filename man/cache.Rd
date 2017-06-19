@@ -4,8 +4,6 @@
 \name{Cache}
 \alias{Cache}
 \alias{Cache,ANY-method}
-\alias{cache}
-\alias{cache,ANY-method}
 \title{Cache method that accommodates environments, S4 methods, Rasters}
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
@@ -15,12 +13,6 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   compareRasterFileLength = 1e+06, userTags = c(), debugCache = FALSE)
-
-cache(cacheRepo = NULL, FUN, ..., notOlderThan = NULL, objects = NULL,
-  outputObjects = NULL, algo = "xxhash64")
-
-\S4method{cache}{ANY}(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,
-  objects = NULL, outputObjects = NULL, algo = "xxhash64")
 }
 \arguments{
 \item{FUN}{A function to be called.}

@@ -10,7 +10,7 @@ recursiveRobustDigest(object, objects, compareRasterFileLength, algo)
 
 digestRaster(object, compareRasterFileLength, algo)
 
-getFunctionName(FUN, ...)
+getFunctionName(FUN, ..., overrideCall)
 }
 \arguments{
 \item{object}{an object to convert to a 'digestible' state}
@@ -33,6 +33,9 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{...}{passing the ... from outer function, which will include potential
 arguments to the FUN}
+
+\item{overrideCall}{A character string indicating a different (not "Cache") function
+name to search for. Mostly so that this works with deprecated "cache".}
 }
 \description{
 For reproducibility, there are many features or attributes of objects that must

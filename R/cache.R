@@ -977,7 +977,7 @@ setMethod(
 #' Clear erroneous archivist artifacts
 #'
 #' When an archive object is being saved, if this is occurring at the same time
-#' as another process doing the same thing, a stub of a artifact occurs. This
+#' as another process doing the same thing, a stub of an artifact may occur. This
 #' function will clear those stubs.
 #'
 #' @return Done for its side effect on the repoDir
@@ -1011,7 +1011,7 @@ setMethod(
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @docType methods
-#' @rdname cache
+#' @rdname reproducible-deprecated
 setGeneric("cache", signature = "...",
            function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,
                     objects = NULL, outputObjects = NULL, algo = "xxhash64") {
@@ -1019,11 +1019,16 @@ setGeneric("cache", signature = "...",
            })
 
 #' @export
-#' @rdname cache
+#' @rdname reproducible-deprecated
 setMethod(
   "cache",
   definition = function(cacheRepo, FUN, ..., notOlderThan, objects,
                         outputObjects, algo) {
+    .Deprecated("Cache", package="reproducible",
+                msg=paste0("cache from SpaDES and reproducible is deprecated.\n",
+                          "Use Cache with capital C if you want the robust Cache function.\n",
+                          "e.g., Cache(",getFunctionName(FUN, ..., overrideCall = "cache")$functionName,
+                          ", ", paste(list(...), collapse=", "), ")"))
     Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
   })
@@ -1289,7 +1294,9 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #' @param FUN A function
 #' @param ... passing the ... from outer function, which will include potential
 #'        arguments to the FUN
-getFunctionName <- function(FUN, ...) {
+#' @param overrideCall A character string indicating a different (not "Cache") function
+#'        name to search for. Mostly so that this works with deprecated "cache".
+getFunctionName <- function(FUN, ..., overrideCall) {
 
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
@@ -1324,13 +1331,23 @@ getFunctionName <- function(FUN, ...) {
     .FUN <- format(methodUsed@.Data)
     functionName <- FUN@generic
   } else {
-    functionCall <- grep(sys.calls(), pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache", value = TRUE)
+    if(!missing(overrideCall)) {
+      functionCall <- grep(sys.calls(), pattern = paste0("^",overrideCall), value = TRUE)
+    } else {
+      functionCall <- grep(sys.calls(), pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache", value = TRUE)
+    }
     if (length(functionCall)) {
       # for() loop is a work around for R-devel that produces a different final call in the
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
       for (fns in rev(functionCall)) {
-        functionName <- match.call(Cache,
-                                   parse(text = fns))$FUN
+        if(!missing(overrideCall)) {
+          functionName <- match.call(get(overrideCall),
+                                     parse(text = fns))$FUN
+
+        } else {
+          functionName <- match.call(Cache,
+                                     parse(text = fns))$FUN
+        }
         functionName <- deparse(functionName)
         if (functionName != "FUN") break
       }
