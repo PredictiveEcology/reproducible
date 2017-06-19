@@ -37,6 +37,8 @@ BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 6.0.1
 Collate: 
-    'consistentPaths.R'
+    'cache-helpers.R'
+    'cache-tools.R'
     'cache.R'
+    'consistentPaths.R'
     'git.R'
