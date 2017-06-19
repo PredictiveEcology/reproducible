@@ -5,7 +5,7 @@ if (getRversion() >= "3.1.0") {
 ################################################################################
 #' Cache method that accommodates environments, S4 methods, Rasters
 #'
-#' This function is largely copied from \code{\link[archivist]{cache}}, with
+#' This function takes elements from \code{\link[archivist]{cache}}, with
 #' four very critical modifications:
 #' 1) the \code{archivist} package detects different environments as different;
 #' 2) it also does not detect S4 methods correctly due to method inheritance;
@@ -200,6 +200,22 @@ if (getRversion() >= "3.1.0") {
 #' @examples
 #' \dontrun{
 #'
+#' library(raster)
+#' tmpdir <- tempdir()
+#' ras <- raster(extent(0,100,0,100), res = 1,
+#'               vals = sample(1:5, replace=TRUE, size = 1e4),
+#'               crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
+#'
+#' # A slow operation, like GIS operation
+#' notCached <- projectRaster(ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
+#' cached <- Cache(projectRaster, ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
+#' # 2nd time is much faster
+#' reRun <- Cache(projectRaster, ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
+#' all.equal(notCached, reRun) # TRUE meaning the recovered cached version is same
+#'                             # as notCached version
+#'
+#'
+#' # if using with SpaDES
 #' mySim <- simInit(times = list(start = 0.0, end = 5.0),
 #'                  params = list(.globals = list(stackName = "landscape", burnStats = "testStats")),
 #'                  modules = list("randomLandscapes", "fireSpread"),
