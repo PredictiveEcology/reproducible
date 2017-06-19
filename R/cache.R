@@ -1008,8 +1008,10 @@ setMethod(
     return(invisible(md5hashInBackpack[toRemove]))
   })
 
+#' Deprecated functions
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
+#' @inheritParams Cache
 #' @docType methods
 #' @rdname reproducible-deprecated
 setGeneric("cache", signature = "...",
