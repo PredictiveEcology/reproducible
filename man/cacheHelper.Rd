@@ -30,6 +30,9 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
     \code{murmur32}.}
 
 \item{FUN}{A function}
+
+\item{...}{passing the ... from outer function, which will include potential
+arguments to the FUN}
 }
 \description{
 For reproducibility, there are many features or attributes of objects that must

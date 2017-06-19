@@ -338,12 +338,16 @@ setMethod(
                         algo=algo)
     outputHash <- fastdigest(preDigest)
 
+    # compare outputHash to existing Cache record
     localTags <- showLocalRepo(cacheRepo, "tags")
     isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+
+    # If it is in the existing record:
     if (nrow(isInRepo) > 0) {
       lastEntry <- max(isInRepo$createdDate)
       lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
 
+      # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
         if (grepl(format(FUN)[1], pattern = "function \\(sim, eventTime")) {
           # very coarse way of determining doEvent call
@@ -389,8 +393,6 @@ setMethod(
           }
         }
         if (isNullOutput) return(NULL) else return(out)
-
-        #if(isTRUE(tryCatch(out=="NULL", error = function(x) FALSE))) return(NULL) else return(out)
       }
     }
 
@@ -452,8 +454,6 @@ setMethod(
       if (isS4(FUN))
         attr(outputToSave, "function") <- attr(output, "function")
       output <- outputToSave
-      #archiveSessionInfo = FALSE,
-      #archiveMiniature = FALSE, rememberName = FALSE, silent = TRUE)
     }
     if (debugCache) {
       attr(output, "debugCache1") <- attr(outputToSave, "debugCache1") <- list(...)
@@ -1271,6 +1271,8 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #'
 #' @rdname cacheHelper
 #' @param FUN A function
+#' @param ... passing the ... from outer function, which will include potential
+#'        arguments to the FUN
 getFunctionName <- function(FUN, ...) {
 
   if (isS4(FUN)) {
@@ -1319,7 +1321,7 @@ getFunctionName <- function(FUN, ...) {
     } else {
       functionName <- ""
     }
-    .FUN <- format(FUN) # This is changed to allow copying between computers
+    .FUN <- format(FUN) # This allows copying between computers
 
   }
   return(list(functionName=functionName, .FUN=.FUN))
