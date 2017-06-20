@@ -10,11 +10,11 @@
 #'
 #' @return Character vector of cleaned up filepaths.
 #'
-#' @export
 #' @docType methods
+#' @export
+#' @importFrom magrittr %>%
 #' @rdname normPath
 #'
-# igraph exports %>% from magrittr
 setGeneric("normPath", function(path) {
   standardGeneric("normPath")
 })
@@ -36,7 +36,7 @@ setMethod("normPath",
               gsub("\\\\", "//", .) %>%
               gsub("//", "/", .) %>%
               gsub("/$", "", .) # nolint
-          })
+})
 
 #' @export
 #' @rdname normPath
@@ -44,7 +44,7 @@ setMethod("normPath",
           signature(path = "list"),
           definition = function(path) {
             return(normPath(unlist(path)))
-          })
+})
 
 #' @export
 #' @rdname normPath
@@ -52,7 +52,7 @@ setMethod("normPath",
           signature(path = "NULL"),
           definition = function(path) {
             return(character(0))
-          })
+})
 
 #' @export
 #' @rdname normPath
@@ -60,7 +60,7 @@ setMethod("normPath",
           signature(path = "missing"),
           definition = function() {
             return(character(0))
-          })
+})
 
 ################################################################################
 #' Check filepath
@@ -77,11 +77,11 @@ setMethod("normPath",
 #'
 #' @seealso \code{\link{file.exists}}, \code{\link{dir.create}}.
 #'
-#' @export
 #' @docType methods
+#' @export
+#' @importFrom magrittr %>%
 #' @rdname checkPath
 #'
-# igraph exports %>% from magrittr
 setGeneric("checkPath", function(path, create) {
   standardGeneric("checkPath")
 })
@@ -111,7 +111,7 @@ setMethod(
         return(normPath(path)) # ensure path re-normalized after creation (see #267)
       }
     }
-  })
+})
 
 #' @export
 #' @rdname checkPath
@@ -119,7 +119,7 @@ setMethod("checkPath",
           signature(path = "character", create = "missing"),
           definition = function(path) {
             return(checkPath(path, create = FALSE))
-          })
+})
 
 #' @export
 #' @rdname checkPath
@@ -127,7 +127,7 @@ setMethod("checkPath",
           signature(path = "NULL", create = "ANY"),
           definition = function(path) {
             stop("Invalid path: cannot be NULL.")
-          })
+})
 
 #' @export
 #' @rdname checkPath
@@ -135,4 +135,4 @@ setMethod("checkPath",
           signature(path = "missing", create = "ANY"),
           definition = function() {
             stop("Invalid path: no path specified.")
-          })
+})

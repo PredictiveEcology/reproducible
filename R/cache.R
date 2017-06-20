@@ -411,7 +411,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) {
     fastdigest(object)
-  })
+})
 
 
 #' @import parallel
@@ -424,7 +424,7 @@ setMethod(
   signature = "cluster",
   definition = function(object) {
     fastdigest(NULL)
-  })
+})
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -433,7 +433,7 @@ setMethod(
   signature = "function",
   definition = function(object) {
     fastdigest(format(object))
-  })
+})
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -442,7 +442,7 @@ setMethod(
   signature = "expression",
   definition = function(object) {
     fastdigest(format(object))
-  })
+})
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -459,7 +459,7 @@ setMethod(
     } else {
       fastdigest::fastdigest(object)
     }
-  })
+})
 
 
 
@@ -470,7 +470,7 @@ setMethod(
   signature = "environment",
   definition = function(object, objects) {
     recursiveRobustDigest(object, objects)
-  })
+})
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -479,7 +479,7 @@ setMethod(
   signature = "list",
   definition = function(object) {
     recursiveRobustDigest(object)
-  })
+})
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -505,7 +505,7 @@ setMethod(
       dig <- suppressWarnings(digestRaster(object, compareRasterFileLength, algo))
     }
     return(dig)
-  })
+})
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -529,7 +529,7 @@ setMethod(
 
     dig <- fastdigest::fastdigest(aaa)
     return(dig)
-  })
+})
 
 
 
@@ -566,10 +566,7 @@ setMethod(
     md5hashInBackpack[toRemove] %>%
       sapply(., rmFromLocalRepo, repoDir = repoDir)
     return(invisible(md5hashInBackpack[toRemove]))
-  })
-
-
-
+})
 
 #' Deprecated functions
 #' @export
@@ -590,13 +587,13 @@ setMethod(
   definition = function(cacheRepo, FUN, ..., notOlderThan, objects,
                         outputObjects, algo) {
     .Deprecated("Cache", package="reproducible",
-                msg=paste0("cache from SpaDES and reproducible is deprecated.\n",
-                          "Use Cache with capital C if you want the robust Cache function.\n",
-                          "e.g., Cache(",getFunctionName(FUN, ..., overrideCall = "cache")$functionName,
-                          ", ", paste(list(...), collapse=", "), ")"))
+                msg = paste0("cache from SpaDES and reproducible is deprecated.\n",
+                             "Use Cache with capital C if you want the robust Cache function.\n",
+                             "e.g., Cache(",getFunctionName(FUN, ..., overrideCall = "cache")$functionName,
+                             ", ", paste(list(...), collapse = ", "), ")"))
     Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
-  })
+})
 
 #' Alternative to \code{archivist::saveToRepo} for rasters
 #'
@@ -818,20 +815,22 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #' For reproducibility, there are many features or attributes of objects that must
 #' be removed e.g., environments have unique labels, rasters have several infrequently
 #' used slots and elements that are not perfectly maintained with manipulation.
-#' These customDigest functions attempt to deal with some of the types of problems.
+#' These custom digest functions attempt to deal with some of the types of problems.
 #' In conjunction with \code{\link{robustDigest}}, these are helpers to create
-#' consisten cache results.
+#' consistent cache results.
 #'
+#' @inheritParams robustDigest
+#'
+#' @author Eliot McIntire
 #' @importFrom fastdigest fastdigest
 #' @rdname cacheHelper
-#' @author Eliot McIntire
 #' @seealso \code{\link{robustDigest}}
-#' @inheritParams robustDigest
+#'
 recursiveRobustDigest <- function(object, objects, compareRasterFileLength, algo) {
-  if(is.environment(object)|is.list(object)) {
-    lapply(as.list(object, all.names=TRUE), recursiveRobustDigest,
-           objects=objects, compareRasterFileLength = compareRasterFileLength,
-           algo=algo) # need hidden objects too
+  if (is.environment(object) | is.list(object)) {
+    lapply(as.list(object, all.names = TRUE), recursiveRobustDigest,
+           objects = objects, compareRasterFileLength = compareRasterFileLength,
+           algo = algo) # need hidden objects too
   } else {
     robustDigest(object, objects, compareRasterFileLength, algo)
   }
@@ -850,4 +849,3 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
                                  algo = algo)))
   }
 }
-

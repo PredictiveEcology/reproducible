@@ -1,4 +1,3 @@
-
 ################################################################################
 #' Add extra tags to an archive based on class
 #'
@@ -8,11 +7,12 @@
 #'
 #' @param object Any R object.
 #'
+#' @author Eliot McIntire
+#' @docType methods
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
-#' @docType methods
 #' @rdname tagsByClass
-#' @author Eliot McIntire
+#'
 setGeneric(".tagsByClass", function(object) {
   standardGeneric(".tagsByClass")
 })
@@ -24,11 +24,8 @@ setMethod(
   signature = "ANY",
   definition = function(object) {
     NULL
-  })
+})
 
-
-
-################################################################
 ################################################################################
 #' Create a custom cache message by class
 #'
@@ -39,10 +36,11 @@ setMethod(
 #' @param object Any R object.
 #' @param functionName A character string indicating the function name
 #'
+#' @author Eliot McIntire
 #' @export
 #' @docType methods
 #' @rdname cacheMessage
-#' @author Eliot McIntire
+#'
 setGeneric(".cacheMessage", function(object, functionName) {
   standardGeneric(".cacheMessage")
 })
@@ -54,9 +52,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName) {
     message("loading cached result from previous ", functionName, " call.")
-  })
-
-
+})
 
 ################################################################################
 #' Determine object size of all objects inside environments
@@ -82,7 +78,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) {
     object.size(object)
-  })
+})
 
 #' @export
 #' @rdname objSizeInclEnviros
@@ -91,8 +87,7 @@ setMethod(
   signature = "environment",
   definition = function(object) {
     object.size(as.list(object, all.names = TRUE))
-  })
-
+})
 
 ################################################################################
 #' Add tags to object
@@ -100,16 +95,19 @@ setMethod(
 #' This is a generic definition that can be extended according to class.
 #' This function and methods should do "deep" copy for archiving purposes.
 #'
-#' @return New object with tags attached.
+#' @inheritParams Cache
 #'
 #' @param object Any R object.
-#' @inheritParams Cache
+#'
 #' @param FUN A function
 #'
-#' @export
-#' @docType methods
-#' @rdname addTagsToOutput
+#' @return New object with tags attached.
+#'
 #' @author Eliot McIntire
+#' @docType methods
+#' @export
+#' @rdname addTagsToOutput
+#'
 setGeneric(".addTagsToOutput", function(object, outputObjects, FUN) {
   standardGeneric(".addTagsToOutput")
 })
@@ -120,27 +118,24 @@ setMethod(
   ".addTagsToOutput",
   signature = "ANY",
   definition = function(object, outputObjects, FUN) {
-
     object
-  })
-
-
-
+})
 
 ################################################################################
 #' Check for cache repository info in ...
 #'
 #' This is a generic definition that can be extended according to class.
 #'
-#' @return A character string with a path to a cache repository.
-#'
 #' @param object A list of all elements in the call to Cache
 #'
+#' @return A character string with a path to a cache repository.
+#'
+#' @author Eliot McIntire
+#' @docType methods
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
-#' @docType methods
 #' @rdname checkCacheRepo
-#' @author Eliot McIntire
+#'
 setGeneric(".checkCacheRepo", function(object) {
   standardGeneric(".checkCacheRepo")
 })
@@ -152,24 +147,25 @@ setMethod(
   signature = "ANY",
   definition = function(object) {
     stop("must supply a cacheRepo argument")
-  })
+})
 
-#################################
 ################################################################################
 #' Make any modifications to object recovered from cacheRepo
 #'
 #' This is a generic definition that can be extended according to class.
 #'
-#' @return The object, modified
-#'
-#' @param object Any R object
 #' @inheritParams Cache
 #'
+#' @param object Any R object
+#'
+#' @return The object, modified
+#'
+#' @author Eliot McIntire
+#' @docType methods
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
-#' @docType methods
 #' @rdname prepareOutput
-#' @author Eliot McIntire
+#'
 setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
   standardGeneric(".prepareOutput")
 })
@@ -181,8 +177,7 @@ setMethod(
   signature = "RasterLayer",
   definition = function(object, cacheRepo, ...) {
     prepareFileBackedRaster(object, repoDir = cacheRepo)
-  })
-
+})
 
 #' @export
 #' @rdname prepareOutput
@@ -197,19 +192,23 @@ setMethod(
       }
     }
     object
-
-  })
+})
 
 #' A set of helpers for Cache
 #'
 #' These are internal only.
 #'
-#' @rdname cacheHelper
 #' @param FUN A function
 #' @param ... passing the ... from outer function, which will include potential
 #'        arguments to the FUN
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
+#'
+#' @author Eliot Mcintire
+#' @docType methods
+#' @keywords internal
+#' @rdname cacheHelper
+#'
 getFunctionName <- function(FUN, ..., overrideCall) {
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
@@ -219,9 +218,15 @@ getFunctionName <- function(FUN, ..., overrideCall) {
       unlist(lapply(y, function(z) z[1]))
     })
     firstElems <- firstElems[!unlist(lapply(firstElems, is.null))] # remove nulls
-    firstElems <- firstElems[!unlist(lapply(firstElems, function(x) any(grepl(x, pattern = "inherited"))))] # remove "nulls"inherited
-    firstElems <- firstElems[!unlist(lapply(firstElems, function(x) any(grepl(x, pattern = "\\(inherited"))))] # remove "nulls"inherited
-    firstElems <- firstElems[!unlist(lapply(firstElems, function(x) any(grepl(x, pattern = "^Function:"))))] # remove "nulls"inherited
+    firstElems <- firstElems[!unlist(lapply(firstElems, function(x) {
+      any(grepl(x, pattern = "inherited")) # remove "nulls" inherited
+    }))]
+    firstElems <- firstElems[!unlist(lapply(firstElems, function(x) {
+      any(grepl(x, pattern = "\\(inherited")) # remove "nulls" inherited
+    }))]
+    firstElems <- firstElems[!unlist(lapply(firstElems, function(x) {
+      any(grepl(x, pattern = "^Function:"))  # remove "nulls" inherited
+    }))]
 
     sigArgs <- lapply(unique(firstElems), function(x) {
       FUN@signature %in% x
@@ -244,7 +249,7 @@ getFunctionName <- function(FUN, ..., overrideCall) {
     .FUN <- format(methodUsed@.Data)
     functionName <- FUN@generic
   } else {
-    if(!missing(overrideCall)) {
+    if (!missing(overrideCall)) {
       functionCall <- grep(sys.calls(), pattern = paste0("^",overrideCall), value = TRUE)
     } else {
       functionCall <- grep(sys.calls(), pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache", value = TRUE)
@@ -253,13 +258,10 @@ getFunctionName <- function(FUN, ..., overrideCall) {
       # for() loop is a work around for R-devel that produces a different final call in the
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
       for (fns in rev(functionCall)) {
-        if(!missing(overrideCall)) {
-          functionName <- match.call(get(overrideCall),
-                                     parse(text = fns))$FUN
-
+        if (!missing(overrideCall)) {
+          functionName <- match.call(get(overrideCall), parse(text = fns))$FUN
         } else {
-          functionName <- match.call(Cache,
-                                     parse(text = fns))$FUN
+          functionName <- match.call(Cache, parse(text = fns))$FUN
         }
         functionName <- deparse(functionName)
         if (functionName != "FUN") break
@@ -268,10 +270,6 @@ getFunctionName <- function(FUN, ..., overrideCall) {
       functionName <- ""
     }
     .FUN <- format(FUN) # This allows copying between computers
-
   }
-  return(list(functionName=functionName, .FUN=.FUN))
+  return(list(functionName = functionName, .FUN = .FUN))
 }
-
-
-

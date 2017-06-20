@@ -142,7 +142,7 @@ setMethod(
       rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE)
     }
     return(invisible(objsDT))
-  })
+})
 
 #' \code{showCache}, \code{clearCache} and \code{keepCache}
 #'
@@ -236,7 +236,7 @@ setMethod(
       # }
     }
     objsDT
-  })
+})
 
 #' @docType methods
 #' @rdname viewCache
@@ -271,4 +271,4 @@ setMethod(
     }
 
     return(objsDT)
-  })
+})
