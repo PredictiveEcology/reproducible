@@ -32,6 +32,7 @@ Imports:
     rgdal,
     sp
 Suggests:
+    hunspell,
     knitr,
     rmarkdown,
     testthat
