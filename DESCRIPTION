@@ -29,7 +29,12 @@ Imports:
     magrittr,
     methods,
     raster,
+    rgdal,
     sp
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat
 License: GPL-3
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes

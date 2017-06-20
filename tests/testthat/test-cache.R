@@ -1,5 +1,5 @@
 test_that("test file-backed raster caching", {
-  library(igraph)
+  library(magrittr)
   library(raster)
 
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
@@ -12,7 +12,7 @@ test_that("test file-backed raster caching", {
   nOT <- Sys.time()
 
   randomPolyToDisk <- function(tmpdir, tmpRasterfile) {
-    r <- raster(extent(0, 10, 0, 10), vals=sample(1:30, size=100, replace = TRUE))
+    r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     #r <- randomPolygons(numTypes = 30)
     writeRaster(r, tmpRasterfile, overwrite = TRUE)
     r <- raster(tmpRasterfile)
@@ -71,7 +71,7 @@ test_that("test file-backed raster caching", {
 
   # Check that Caching of rasters saves them to tif file instead of rdata
   randomPolyToMemory <- function(tmpdir) {
-    r <- raster(extent(0, 10, 0, 10), vals=sample(1:30, size=100, replace = TRUE))
+    r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     #r <- randomPolygons(numTypes = 30)
     dataType(r) <- "INT1U"
     r
@@ -86,7 +86,7 @@ test_that("test file-backed raster caching", {
 
   # Test that factors are saved correctly
   randomPolyToFactorInMemory <- function(tmpdir) {
-    r <- raster(extent(0, 10, 0, 10), vals=sample(1:30, size=100, replace = TRUE))
+    r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30,replace = TRUE),
                             vals2 <- sample(1:7, size = 30, replace = TRUE))
     dataType(r) <- "INT1U"
@@ -100,7 +100,7 @@ test_that("test file-backed raster caching", {
   expect_true(NROW(raster::levels(bb)[[1]]) == 30)
 
   randomPolyToFactorOnDisk <- function(tmpdir, tmpFile) {
-    r <- raster(extent(0, 10, 0, 10), vals=sample(1:30, size=100, replace = TRUE))
+    r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
                             vals2 = sample(1:7, size = 30, replace = TRUE))
     r <- writeRaster(r, tmpFile, overwrite = TRUE, datatype = "INT1U")
@@ -130,7 +130,7 @@ test_that("test file-backed raster caching", {
 })
 
 test_that("test date-based cache removal", {
-  library(igraph)
+  library(magrittr)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
@@ -151,8 +151,8 @@ test_that("test date-based cache removal", {
 
 })
 
-test_that("test keepCach", {
-  library(igraph)
+test_that("test keepCache", {
+  library(magrittr)
   library(raster)
 
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
@@ -188,7 +188,7 @@ test_that("test keepCach", {
 })
 
 test_that("test environments", {
-  library(igraph)
+  library(magrittr)
   library(raster)
 
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
@@ -213,9 +213,9 @@ test_that("test environments", {
 
   # Upper level -- all are same, because values are same, even though all are enviros
   shortFn <- function(a) sample(a$a)
-  out <- Cache(shortFn, a=a, cacheRepo = tmpdir)
-  out2 <- Cache(shortFn, a=b, cacheRepo = tmpdir)
-  out3 <- Cache(shortFn, a=g, cacheRepo = tmpdir)
+  out <- Cache(shortFn, a = a, cacheRepo = tmpdir)
+  out2 <- Cache(shortFn, a = b, cacheRepo = tmpdir)
+  out3 <- Cache(shortFn, a = g, cacheRepo = tmpdir)
   expect_true(identical(attributes(out), attributes(out2)))
   expect_true(identical(attributes(out), attributes(out3)))
 
@@ -228,21 +228,19 @@ test_that("test environments", {
   i2 <- i
   i2$d <- as.list(i2$d)
 
-  out <- Cache(shortFn, a=a, cacheRepo = tmpdir)
-  out2 <- Cache(shortFn, a=b, cacheRepo = tmpdir)
-  out3 <- Cache(shortFn, a=g, cacheRepo = tmpdir)
-  out4 <- Cache(shortFn, a=i, cacheRepo = tmpdir)
-  out5 <- Cache(shortFn, a=i2, cacheRepo = tmpdir)
+  out <- Cache(shortFn, a = a, cacheRepo = tmpdir)
+  out2 <- Cache(shortFn, a = b, cacheRepo = tmpdir)
+  out3 <- Cache(shortFn, a = g, cacheRepo = tmpdir)
+  out4 <- Cache(shortFn, a = i, cacheRepo = tmpdir)
+  out5 <- Cache(shortFn, a = i2, cacheRepo = tmpdir)
 
   expect_false(identical(attributes(out), attributes(out2))) # test different values are different
   expect_true(identical(attributes(out), attributes(out3))) # test same values but different enviros are same
   expect_true(identical(attributes(out), attributes(out4))) # test environment is same as a list
   expect_true(identical(attributes(out), attributes(out5))) # test environment is same as recursive list
 
-  df <- data.frame(a=a$a, b = LETTERS[1:10])
+  df <- data.frame(a = a$a, b = LETTERS[1:10])
   out6 <- Cache(shortFn, a = df, cacheRepo = tmpdir)
   out7 <- Cache(shortFn, a = df, cacheRepo = tmpdir)
   expect_true(identical(attributes(out6), attributes(out7))) # test data.frame
-
-
 })

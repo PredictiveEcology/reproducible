@@ -16,22 +16,36 @@ matrix:
   - os: linux
     dist: trusty
     r: oldrel
+    addons:
+      apt:
+        packages:
+          - libgdal1-dev
 
   - os: linux
     dist: trusty
     r: release
+    addons:
+      apt:
+        packages:
+          - libgdal1-dev
     after_success:
     - Rscript -e 'library(covr); coveralls(coverage = print(package_coverage(quiet = FALSE)))'
 
   - os: linux
     dist: trusty
     r: devel
+    addons:
+      apt:
+        packages:
+          - libgdal1-dev
 
   - os: osx
     osx_image: xcode8
     latex: false
     r_build_args: '--no-build-vignettes'
     r_check_args: '--as-cran --ignore-vignettes --no-examples'
+    before_script:
+    - Rscript -e "install.packages('rgdal', type = 'source')"
 
 r_build_args: " "
 
