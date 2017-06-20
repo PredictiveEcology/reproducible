@@ -20,6 +20,7 @@ matrix:
       apt:
         packages:
           - libgdal1-dev
+          - libproj-dev
 
   - os: linux
     dist: trusty
@@ -28,6 +29,7 @@ matrix:
       apt:
         packages:
           - libgdal1-dev
+          - libproj-dev
     after_success:
     - Rscript -e 'library(covr); coveralls(coverage = print(package_coverage(quiet = FALSE)))'
 
@@ -38,6 +40,7 @@ matrix:
       apt:
         packages:
           - libgdal1-dev
+          - libproj-dev
 
   - os: osx
     osx_image: xcode8
