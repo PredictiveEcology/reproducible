@@ -451,11 +451,24 @@ setMethod(
   signature = "character",
   definition = function(object, compareRasterFileLength, algo) {
     if (any(unlist(lapply(object, dir.exists)))) {
-      fastdigest::fastdigest(basename(object))
+      unlist(lapply(object, function(x) {
+        if(dir.exists(x)) {
+          fastdigest::fastdigest(basename(x))
+        } else {
+          fastdigest::fastdigest(x)
+        }
+      }))
     } else if (any(unlist(lapply(object, file.exists)))) {
-      digest::digest(file = object,
-                     length = compareRasterFileLength,
-                     algo = algo)
+      unlist(lapply(object, function(x) {
+        if(file.exists(x)) {
+          digest::digest(file=x,
+                         length = compareRasterFileLength,
+                         algo = algo)
+        } else {
+          fastdigest::fastdigest(x)
+        }
+      }))
+
     } else {
       fastdigest::fastdigest(object)
     }
@@ -476,7 +489,10 @@ setMethod(
   "robustDigest",
   signature = "list",
   definition = function(object) {
-    recursiveRobustDigest(object)
+
+    rrd <- recursiveRobustDigest(object)
+    return(rrd)
+
 })
 
 #' @rdname robustDigest
@@ -841,7 +857,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #'
 recursiveRobustDigest <- function(object, objects, compareRasterFileLength, algo) {
   if (is.environment(object) | is.list(object)) {
-    lapply(as.list(object, all.names = TRUE), recursiveRobustDigest,
+    lapply(sortDotsUnderscoreFirst(as.list(object, all.names = TRUE)), recursiveRobustDigest,
            objects = objects, compareRasterFileLength = compareRasterFileLength,
            algo = algo) # need hidden objects too
   } else {
@@ -926,3 +942,25 @@ setMethod("Copy",
 
 
 
+################################################################################
+#' Sort a any named object with dotted names first
+#'
+#' Internal use only. This exists so Windows and Linux machines can have
+#' the same order after a sort.
+#'
+#' @param obj  An arbitrary R object for which a \code{names} function
+#'              returns a character vector.
+#'
+#' @return The same object as \code{obj}, but sorted with .objects first.
+#'
+#' @docType methods
+#' @export
+#' @rdname sortDotsUnderscoreFirst
+#' @author Eliot McIntire
+sortDotsUnderscoreFirst <- function(obj) {
+  names(obj) <- gsub(names(obj), pattern="\\.", replacement = "DOT")
+  names(obj) <- gsub(names(obj), pattern="_", replacement = "US")
+  allLower <- which(tolower(names(obj))==names(obj))
+  names(obj)[allLower] <- paste0("ALLLOWER",names(obj)[allLower])
+  obj[order(names(obj))]
+}
