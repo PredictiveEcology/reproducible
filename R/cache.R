@@ -618,7 +618,7 @@ setMethod(
 #' @docType methods
 #' @author Eliot McIntire
 #' @rdname prepareFileBackedRaster
-#'
+#' @export
 prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
