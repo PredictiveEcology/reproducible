@@ -591,11 +591,13 @@ setMethod(
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
 })
 
-#' Alternative to \code{archivist::saveToRepo} for rasters
+#' Copy the file-backing of a file-backed Raster* object
 #'
-#' Rasters are sometimes file-based, so the normal save mechanism doesn't work.
-#' This function creates an explicit save of the file that is backing the raster,
-#' in addition to saving the object metadata in the \code{archivist} repository database.
+#' Rasters are sometimes file-based, so the normal save and copy and assign
+#' mechanisms in R don't work for saving, copying and assigning.
+#' This function creates an explicit file copy of the file that is backing the raster,
+#' and changes the pointer (i.e., filename(object)) so that it is pointing to the new
+#' file.
 #'
 #' @param obj The raster object to save to the repository.
 #'
@@ -605,7 +607,10 @@ setMethod(
 #'
 #' @param ... passed to \code{archivist::saveToRepo}
 #'
-#' @return A raster object and its file backing will be passed to the archivist repository.
+#' @return A raster object and its newly located file backing. Note that if this is a
+#' legitimate archivist repository,
+#' the new location will be in a subfolder called "rasters" of \code{repoDir}.
+#' If this is not a repository, then the new file location will placed in \code{repoDir}.
 #'
 #' @author Eliot McIntire
 #' @docType methods
@@ -618,6 +623,13 @@ setMethod(
 prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
+  repoDir <- checkPath(repoDir, create = TRUE)
+  isRepo <- if (!all(c("backpack.db", "gallery") %in% list.files(repoDir))) {
+    FALSE
+  } else {
+    TRUE
+  }
+
   if (!inMemory(obj)) {
     isFilebacked <- TRUE
     if (is(obj, "RasterLayer")) {
@@ -655,8 +667,13 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
       slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
     }
   } else {
-    saveFilename <- file.path(repoDir, "rasters", basename(curFilename)) %>%
-      normalizePath(., winslash = "/", mustWork = FALSE)
+    saveFilename <- if(isRepo) {
+      file.path(repoDir, "rasters", basename(curFilename))
+    } else {
+      file.path(repoDir, basename(curFilename))
+    }
+
+    saveFilename <- normalizePath(saveFilename, winslash = "/", mustWork = FALSE)
   }
 
   if (any(saveFilename != curFilename)) { # filenames are not the same
@@ -845,3 +862,67 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
                                  algo = algo)))
   }
 }
+
+
+#' Recursive copying of nested environments
+#'
+#' When copying environments and all the objects contained within them, there are
+#' no copies made: it is a pass-by-reference operation. Sometimes, a deep copy is
+#' needed, and sometimes, this must be recursive (i.e., environments inside
+#' environments)
+#'
+#' @author Eliot McIntire
+#' @rdname Copy
+#' @seealso \code{\link{robustDigest}}
+#'
+#' @export
+#'
+#' @param object  An R object (likely containing environments) or an environment
+#' @param filebackedDir A directory to copy any files that are backing R objects,
+#'                      currently only valid for \code{Raster} classes. Defaults
+#'                      to \code{tempdir()}, which is unlikely to be very useful.
+#' @param ... Only used for custom Methods
+#' @importFrom data.table copy
+#' @docType methods
+#' @rdname Copy
+setGeneric("Copy", function(object, filebackedDir=tempdir(), ...) {
+  standardGeneric("Copy")
+})
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "ANY"),
+          definition = function(object, filebackedDir, ...) {
+            # make an outer copy
+            if(is.environment(object)) {
+              object <- as.list(object, all.names = TRUE)
+              wasEnv <- TRUE
+            } else {
+              wasEnv <- FALSE
+            }
+
+            if(is.list(object))
+              object <- lapply(object, function(x) Copy(x, filebackedDir, ...))
+
+            if(wasEnv)
+              object <- as.environment(object)
+            return(object)
+          })
+
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "data.table"),
+          definition = function(object, ...) {
+             data.table::copy(object)
+})
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "Raster"),
+          definition = function(object, filebackedDir, ...) {
+            object <- prepareFileBackedRaster(object, repoDir = filebackedDir)
+          })
+
+
+
