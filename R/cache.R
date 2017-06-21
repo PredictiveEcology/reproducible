@@ -91,17 +91,14 @@ if (getRversion() >= "3.1.0") {
 #' reproducible work flow
 #'
 #' @seealso \code{\link[archivist]{cache}}, \code{\link{robustDigest}}
+#'
+#' @author Eliot McIntire
+#' @docType methods
 #' @export
-#' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
-#' @importFrom digest digest
-#' @importFrom magrittr %>%
-#' @importFrom stats na.omit
-#' @importFrom fastdigest fastdigest
-#' @importFrom utils object.size
+#' @importClassesFrom raster RasterBrick
 #' @importClassesFrom raster RasterLayer
 #' @importClassesFrom raster RasterLayerSparse
 #' @importClassesFrom raster RasterStack
-#' @importClassesFrom raster RasterBrick
 #' @importClassesFrom sp Spatial
 #' @importClassesFrom sp SpatialLines
 #' @importClassesFrom sp SpatialLinesDataFrame
@@ -111,9 +108,14 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-#' @docType methods
+#' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
+#' @importFrom digest digest
+#' @importFrom fastdigest fastdigest
+#' @importFrom magrittr %>%
+#' @importFrom stats na.omit
+#' @importFrom utils object.size
 #' @rdname cache
-#' @author Eliot McIntire
+#'
 #' @examples
 #' \dontrun{
 #'
@@ -198,7 +200,7 @@ setGeneric("Cache", signature = "...",
                     cacheRepo = NULL, compareRasterFileLength = 1e6,
                     userTags = c(), debugCache = FALSE) {
              archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
-           })
+})
 
 #' @export
 #' @rdname cache
@@ -215,8 +217,7 @@ setMethod(
     userTags <- c(userTags, unlist(lapply(tmpl, .tagsByClass)))
 
     # get cacheRepo if not supplied
-    if(is.null(cacheRepo)) cacheRepo <- .checkCacheRepo(tmpl)
-
+    if (is.null(cacheRepo)) cacheRepo <- .checkCacheRepo(tmpl)
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
       archivist::createLocalRepo(cacheRepo)
@@ -231,8 +232,8 @@ setMethod(
 
     # Do the digesting
     preDigest <- lapply(tmpl, recursiveRobustDigest, objects = objects,
-                        compareRasterFileLength=compareRasterFileLength,
-                        algo=algo)
+                        compareRasterFileLength = compareRasterFileLength,
+                        algo = algo)
     outputHash <- fastdigest(preDigest)
 
     # compare outputHash to existing Cache record
@@ -320,7 +321,7 @@ setMethod(
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()))
       saved <- try(saveToLocalRepo(outputToSave, repoDir = cacheRepo,
-                                   artifactName="Cache",
+                                   artifactName = "Cache",
                                    archiveData = FALSE, archiveSessionInfo = FALSE,
                                    archiveMiniature = FALSE, rememberName = FALSE, silent = TRUE,
                                    userTags = userTags),
@@ -336,8 +337,7 @@ setMethod(
     }
 
     if (isNullOutput) return(NULL) else return(output)
-  })
-
+})
 
 ################################################################################
 #' Create reproducible digests of objects in R
@@ -452,7 +452,7 @@ setMethod(
   definition = function(object, compareRasterFileLength, algo) {
     if (any(unlist(lapply(object, dir.exists)))) {
       fastdigest::fastdigest(basename(object))
-    } else if(any(unlist(lapply(object, file.exists)))) {
+    } else if (any(unlist(lapply(object, file.exists)))) {
       digest::digest(file = object,
                      length = compareRasterFileLength,
                      algo = algo)
@@ -460,8 +460,6 @@ setMethod(
       fastdigest::fastdigest(object)
     }
 })
-
-
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -496,7 +494,7 @@ setMethod(
              })
         )
       )
-      if (nzchar(object@filename, keepNA=TRUE)) {
+      if (nzchar(object@filename, keepNA = TRUE)) {
         # if the Raster is on disk, has the first compareRasterFileLength characters;
         # uses digest::digest on the file
         dig <- append(dig, digest(file = object@filename, length = compareRasterFileLength))
@@ -530,8 +528,6 @@ setMethod(
     dig <- fastdigest::fastdigest(aaa)
     return(dig)
 })
-
-
 
 ################################################################################
 #' Clear erroneous archivist artifacts
@@ -586,7 +582,7 @@ setMethod(
   "cache",
   definition = function(cacheRepo, FUN, ..., notOlderThan, objects,
                         outputObjects, algo) {
-    .Deprecated("Cache", package="reproducible",
+    .Deprecated("Cache", package = "reproducible",
                 msg = paste0("cache from SpaDES and reproducible is deprecated.\n",
                              "Use Cache with capital C if you want the robust Cache function.\n",
                              "e.g., Cache(",getFunctionName(FUN, ..., overrideCall = "cache")$functionName,
@@ -611,14 +607,14 @@ setMethod(
 #'
 #' @return A raster object and its file backing will be passed to the archivist repository.
 #'
+#' @author Eliot McIntire
+#' @docType methods
+#' @export
 #' @importFrom digest digest
 #' @importFrom raster filename dataType inMemory writeRaster nlayers
 #' @importFrom methods slot is selectMethod showMethods slot<-
-#'
-#' @docType methods
-#' @author Eliot McIntire
 #' @rdname prepareFileBackedRaster
-#' @export
+#'
 prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
