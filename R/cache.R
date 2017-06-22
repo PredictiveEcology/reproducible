@@ -803,12 +803,17 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   if (os == "windows") {
     robocopy_bin <- tryCatch(system("where robocopy", intern = TRUE),
                              warning = function(w) NA_character_)
-    opts <- if (silent) " /ETA /NDL /NFL /NJH /NJS " else " /ETA /xo "
 
-    robocopy <- paste0(robocopy_bin, " ", "/purge"[delDestination], opts,
-                       normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\\ ",
-                       normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E"[recursive],
-                       " ", basename(from))
+    robocopy <-  if (silent) {
+      paste0(robocopy_bin, "", "/purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",
+             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\\ ",
+             normalizePath(to, mustWork = FALSE, winslash = "\\"),  " ", basename(from))
+    } else {
+      paste0(robocopy_bin, " ", "/purge"[delDestination], " /ETA /xo ",
+             normalizePath(from, mustWork = TRUE, winslash = "\\"), "\\ ",
+             normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E"[recursive], " " ,
+             basename(from))
+    }
 
     useFileCopy <- if (useRobocopy && !is.na(robocopy_bin)) {
       tryCatch(system(robocopy, intern = TRUE), error = function(x) TRUE)
