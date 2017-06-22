@@ -784,8 +784,10 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
 #' @param silent Should a progress be printed.
 #'
 #' @inheritParams base::file.copy
-#' @docType methods
+#'
 #' @author Eliot McIntire
+#' @docType methods
+#' @export
 #' @rdname copyFile
 #'
 copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
@@ -795,41 +797,33 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
   origDir <- getwd()
   useFileCopy <- FALSE
-  #checkPath(to, create=TRUE)#SpaDES dependency
+
   if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
   os <- tolower(Sys.info()[["sysname"]])
   if (os == "windows") {
-    if (useRobocopy) {
-      if (silent) {
-        suppressWarnings(useFileCopy <- tryCatch(
-          system(paste0("robocopy ", "/purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",
-                        normalizePath(dirname(from), winslash = "\\"),
-                        "\\ ", normalizePath(to, winslash = "\\"),
-                        " ", basename(from)), intern = TRUE),
-          error = function(x) TRUE)
-        )
-      } else {
-        useFileCopy <- tryCatch(
-          system(paste0("robocopy ", "/purge"[delDestination], " /ETA /xo ",
-                        normalizePath(from, winslash = "\\"), "\\ ",
-                        normalizePath(to, winslash = "\\"), " ", "/E"[recursive], " " , basename(from)), intern = TRUE),
-          error = function(x) TRUE)
-        # system(paste0("robocopy /E ","/purge"[delDestination]," /ETA ", normalizePath(fromDir, winslash = "\\"),
-        #               "\\ ", normalizePath(toDir, winslash = "\\"), "\\"))
-      }
+    robocopy_bin <- tryCatch(system("where robocopy", intern = TRUE),
+                             warning = function(w) NA_character_)
+    opts <- if (silent) " /ETA /NDL /NFL /NJH /NJS " else " /ETA /xo "
+
+    robocopy <- paste0(robocopy_bin, " ", "/purge"[delDestination], opts,
+                       normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\\ ",
+                       normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E"[recursive],
+                       " ", basename(from))
+
+    useFileCopy <- if (useRobocopy && !is.na(robocopy_bin)) {
+      tryCatch(system(robocopy, intern = TRUE), error = function(x) TRUE)
     } else {
-      useFileCopy <- TRUE
+      TRUE
     }
-  } else if (os == "linux") {
-    if (silent) {
-      useFileCopy <- tryCatch(system(paste0("rsync -a ", "--delete "[delDestination], from, " ", to, "/"),
-                                     intern = TRUE), error = function(x) TRUE)
-    } else {
-      useFileCopy <- tryCatch(system(paste0("rsync -avP ", "--delete "[delDestination], from, " ", to, "/"),
-                                     intern = TRUE), error = function(x) TRUE)
-    }
-  } else if (os == "darwin") {
-    useFileCopy <- TRUE
+  } else if ((os == "linux") || (os == "darwin")) {
+    rsync_bin <- tryCatch(system("which rsync", intern = TRUE),
+                          warning = function(w) NA_character_)
+    opts <- if (silent) " -a " else " -avP "
+    rsync <- paste0(rsync_bin, " ", "--delete "[delDestination],
+                    normalizePath(from, mustWork = TRUE), " ",
+                    normalizePath(to, mustWork = FALSE), "/")
+
+    useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
   }
   if (isTRUE(useFileCopy))
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
@@ -910,21 +904,20 @@ setMethod("Copy",
           signature(object = "ANY"),
           definition = function(object, filebackedDir, ...) {
             # make an outer copy
-            if(is.environment(object)) {
+            if (is.environment(object)) {
               object <- as.list(object, all.names = TRUE)
               wasEnv <- TRUE
             } else {
               wasEnv <- FALSE
             }
 
-            if(is.list(object))
+            if (is.list(object))
               object <- lapply(object, function(x) Copy(x, filebackedDir, ...))
 
-            if(wasEnv)
+            if (wasEnv)
               object <- as.environment(object)
             return(object)
-          })
-
+})
 
 #' @rdname Copy
 setMethod("Copy",
@@ -938,9 +931,7 @@ setMethod("Copy",
           signature(object = "Raster"),
           definition = function(object, filebackedDir, ...) {
             object <- prepareFileBackedRaster(object, repoDir = filebackedDir)
-          })
-
-
+})
 
 ################################################################################
 #' Sort a any named object with dotted names first
@@ -958,9 +949,9 @@ setMethod("Copy",
 #' @rdname sortDotsUnderscoreFirst
 #' @author Eliot McIntire
 sortDotsUnderscoreFirst <- function(obj) {
-  names(obj) <- gsub(names(obj), pattern="\\.", replacement = "DOT")
-  names(obj) <- gsub(names(obj), pattern="_", replacement = "US")
-  allLower <- which(tolower(names(obj))==names(obj))
-  names(obj)[allLower] <- paste0("ALLLOWER",names(obj)[allLower])
+  names(obj) <- gsub(names(obj), pattern = "\\.", replacement = "DOT")
+  names(obj) <- gsub(names(obj), pattern = "_", replacement = "US")
+  allLower <- which(tolower(names(obj)) == names(obj))
+  names(obj)[allLower] <- paste0("ALLLOWER", names(obj)[allLower])
   obj[order(names(obj))]
 }
