@@ -246,7 +246,7 @@ getFunctionName <- function(FUN, ..., overrideCall) {
 
     methodUsed <- selectMethod(FUN, optional = TRUE,
                                signature = signatures) ## TO DO: need to get the method the dispatch correct
-    .FUN <- format(methodUsed@.Data)
+    .FUN <- methodUsed@.Data
     functionName <- FUN@generic
   } else {
     if (!missing(overrideCall)) {
@@ -271,8 +271,9 @@ getFunctionName <- function(FUN, ..., overrideCall) {
     } else {
       functionName <- ""
     }
-    .FUN <- format(FUN) # This allows copying between computers
+    .FUN <- FUN
   }
+  .FUN <- format(FUN)
   return(list(functionName = functionName, .FUN = .FUN))
 }
 

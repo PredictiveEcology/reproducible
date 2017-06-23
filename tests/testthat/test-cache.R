@@ -289,3 +289,17 @@ test_that("test asPath", {
 
   # make several unique environments
 })
+
+
+test_that("test wrong ways of calling Cache", {
+
+  tmpdir <- file.path(tempdir(), "testCache")
+  checkPath(tmpdir, create=TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  expect_error(Cache(sample(1), cacheRepo = tmpdir), "Can't understand")
+  expect_error(Cache(a <- sample(1), cacheRepo = tmpdir), "Can't understand")
+  expect_true(1==Cache(sample,1, cacheRepo = tmpdir))
+
+
+})

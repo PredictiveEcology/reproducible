@@ -177,6 +177,9 @@ setMethod(
                         algo, cacheRepo, compareRasterFileLength, userTags,
                         digestPathContent, debugCache) {
     tmpl <- list(...)
+    if(!is(FUN, "function")) stop("Can't understand the function provided to Cache. \n",
+                                   "Did you write it in the form: ",
+                                   "Cache(function, functionArguments)?")
 
     if (missing(notOlderThan)) notOlderThan <- NULL
 
