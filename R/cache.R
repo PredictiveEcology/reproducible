@@ -199,7 +199,7 @@ setMethod(
     if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
 
     # Do the digesting
-    preDigest <- lapply(tmpl, recursiveRobustDigest, objects = objects,
+    preDigest <- lapply(tmpl, robustDigest, objects = objects,
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
                         digestPathContent = digestPathContent)
@@ -379,7 +379,7 @@ setGeneric("robustDigest", function(object, objects,
 setMethod(
   "robustDigest",
   signature = "ANY",
-  definition = function(object) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
     fastdigest(object)
 })
 
@@ -392,7 +392,7 @@ setOldClass("cluster")
 setMethod(
   "robustDigest",
   signature = "cluster",
-  definition = function(object) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
     fastdigest(NULL)
 })
 
@@ -401,7 +401,7 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "function",
-  definition = function(object) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
     fastdigest(format(object))
 })
 
@@ -410,7 +410,7 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "expression",
-  definition = function(object) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
     fastdigest(format(object))
 })
 
@@ -419,7 +419,7 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "character",
-  definition = function(object, compareRasterFileLength, algo) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
 
     if (any(unlist(lapply(object, dir.exists)))) {
       unlist(lapply(object, function(x) {
@@ -476,8 +476,11 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "environment",
-  definition = function(object, objects, digestPathContent) {
-    recursiveRobustDigest(object, objects, digestPathContent=digestPathContent)
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+    robustDigest(as.list(object, all.names = TRUE),
+                 object=object, compareRasterFileLength=compareRasterFileLength,
+                 algo=algo, digestPathContent=digestPathContent) # need hidden objects too
+
 })
 
 #' @rdname robustDigest
@@ -485,9 +488,10 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "list",
-  definition = function(object, objects, digestPathContent) {
-
-    recursiveRobustDigest(object, objects, digestPathContent=digestPathContent)
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+    lapply(sortDotsUnderscoreFirst(object), robustDigest,
+           object=object, compareRasterFileLength=compareRasterFileLength,
+           algo=algo, digestPathContent=digestPathContent) # need hidden objects too
 
 })
 
@@ -496,7 +500,7 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "Raster",
-  definition = function(object, compareRasterFileLength, algo) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
 
     if (is(object, "RasterStack") | is(object, "RasterBrick")) {
       dig <- suppressWarnings(
@@ -522,7 +526,7 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "Spatial",
-  definition = function(object, compareRasterFileLength, algo) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
     if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
     } else {
@@ -834,33 +838,6 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 }
 
 
-#' Custom tools for digesting objects
-#'
-#' For reproducibility, there are many features or attributes of objects that must
-#' be removed e.g., environments have unique labels, rasters have several infrequently
-#' used slots and elements that are not perfectly maintained with manipulation.
-#' These custom digest functions attempt to deal with some of the types of problems.
-#' In conjunction with \code{\link{robustDigest}}, these are helpers to create
-#' consistent cache results.
-#'
-#' @inheritParams robustDigest
-#'
-#' @author Eliot McIntire
-#' @importFrom fastdigest fastdigest
-#' @rdname cacheHelper
-#' @seealso \code{\link{robustDigest}}
-#'
-recursiveRobustDigest <- function(object, objects, compareRasterFileLength, algo,
-                                  digestPathContent) {
-  if (is.environment(object) | is.list(object)) {
-    lapply(sortDotsUnderscoreFirst(as.list(object, all.names = TRUE)), recursiveRobustDigest,
-           objects = objects, compareRasterFileLength = compareRasterFileLength,
-           algo = algo, digestPathContent = digestPathContent) # need hidden objects too
-  } else {
-    robustDigest(object, objects, compareRasterFileLength, algo,
-                 digestPathContent = digestPathContent)
-  }
-}
 
 #' @rdname cacheHelper
 #' @importFrom raster res crs extent

@@ -3,14 +3,10 @@
 \docType{methods}
 \name{getFunctionName}
 \alias{getFunctionName}
-\alias{recursiveRobustDigest}
 \alias{digestRaster}
 \title{A set of helpers for Cache}
 \usage{
 getFunctionName(FUN, ..., overrideCall)
-
-recursiveRobustDigest(object, objects, compareRasterFileLength, algo,
-  digestPathContent)
 
 digestRaster(object, compareRasterFileLength, algo)
 }
@@ -22,45 +18,11 @@ arguments to the FUN}
 
 \item{overrideCall}{A character string indicating a different (not "Cache") function
 name to search for. Mostly so that this works with deprecated "cache".}
-
-\item{object}{an object to digest.}
-
-\item{objects}{Optional character vector indicating which objects are to
-be considered while making digestible. This is only relevant
-if the object being passed is an environment or list or the like.}
-
-\item{compareRasterFileLength}{Numeric. Optional. When there are Rasters, that
-have file-backed storage, this is passed to the length arg in \code{digest}
-when determining if the Raster file is already in the database.
-Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-Default 1e6. Passed to \code{prepareFileBackedRaster}.}
-
-\item{algo}{The algorithms to be used; currently available choices are
-    \code{md5}, which is also the default, \code{sha1}, \code{crc32},
-    \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64} and
-    \code{murmur32}.}
-
-\item{digestPathContent}{Logical. Should arguments that are of class "Path"
-(see examples below) have their name digested
-(FALSE, the default), or their
-file contents (TRUE)}
 }
 \description{
 These are internal only.
-
-For reproducibility, there are many features or attributes of objects that must
-be removed e.g., environments have unique labels, rasters have several infrequently
-used slots and elements that are not perfectly maintained with manipulation.
-These custom digest functions attempt to deal with some of the types of problems.
-In conjunction with \code{\link{robustDigest}}, these are helpers to create
-consistent cache results.
-}
-\seealso{
-\code{\link{robustDigest}}
 }
 \author{
 Eliot Mcintire
-
-Eliot McIntire
 }
 \keyword{internal}

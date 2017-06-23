@@ -18,26 +18,35 @@
 robustDigest(object, objects, compareRasterFileLength = 1e+06,
   algo = "xxhash64", digestPathContent = FALSE)
 
-\S4method{robustDigest}{ANY}(object)
+\S4method{robustDigest}{ANY}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
-\S4method{robustDigest}{cluster}(object)
+\S4method{robustDigest}{cluster}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
-\S4method{robustDigest}{`function`}(object)
+\S4method{robustDigest}{`function`}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
-\S4method{robustDigest}{expression}(object)
+\S4method{robustDigest}{expression}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
-\S4method{robustDigest}{character}(object, compareRasterFileLength, algo)
+\S4method{robustDigest}{character}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
 \S4method{robustDigest}{Path}(object, compareRasterFileLength, algo,
   digestPathContent)
 
-\S4method{robustDigest}{environment}(object, objects)
+\S4method{robustDigest}{environment}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
-\S4method{robustDigest}{list}(object)
+\S4method{robustDigest}{list}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
-\S4method{robustDigest}{Raster}(object, compareRasterFileLength, algo)
+\S4method{robustDigest}{Raster}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
-\S4method{robustDigest}{Spatial}(object, compareRasterFileLength, algo)
+\S4method{robustDigest}{Spatial}(object, compareRasterFileLength, algo,
+  digestPathContent)
 }
 \arguments{
 \item{object}{an object to digest.}
