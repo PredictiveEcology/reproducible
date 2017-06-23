@@ -253,13 +253,13 @@ test_that("test asPath", {
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
   try(clearCache(tmpdir), silent = TRUE)
-  a <- 1
+  obj <- 1:10
   origDir <- getwd()
   on.exit(setwd(origDir))
   setwd(tmpdir)
-  a1 <- capture_messages(Cache(save, list=c("a"), file="filename.rdata", cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(save, list=c("a"), file="filename.rdata", cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(save, list=c("a"), file="filename.rdata", cacheRepo = tmpdir))
+  a1 <- capture_messages(Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir))
 
   expect_true(length(a1)==0)
   expect_true(length(a2)==0)
@@ -267,18 +267,18 @@ test_that("test asPath", {
 
   unlink("filename.rdata")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(save, list=c("a"), file=asPath("filename.rdata"), cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(save, list=c("a"), file=asPath("filename.rdata"), cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(save, list=c("a"), file=asPath("filename.rdata"), cacheRepo = tmpdir))
+  a1 <- capture_messages(Cache(saveRDS, obj, file=asPath("filename.rdata"), cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file=asPath("filename.rdata"), cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file=asPath("filename.rdata"), cacheRepo = tmpdir))
   expect_true(length(a1)==0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))
 
   unlink("filename.rdata")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(save, list=c("a"), file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(save, list=c("a"), file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(save, list=c("a"), file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
+  a1 <- capture_messages(Cache(saveRDS, obj, file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
   expect_true(length(a1)==0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))

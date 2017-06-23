@@ -276,19 +276,36 @@ getFunctionName <- function(FUN, ..., overrideCall) {
   return(list(functionName = functionName, .FUN = .FUN))
 }
 
+#' @exportClass Path
+#' @rdname Path-class
 setClass("Path", slots = c(.Data="character"), contains = "character",
          prototype = NA_character_)
 
-setAs(from = "character", "path", function(from) {
-  from
-})
-
+#' Coerce a character string to a class "Path"
+#'
+#' It is often difficult to impossible do know algorithmically whether a
+#' character string is a valid path. In the case where it is en existing
+#' file, \code{file.exists} can work. But if it is not yet existing, e.g.,
+#' for a \code{save}, it is difficult to know if it is a valid path.
+#' This allows a user to specify that their character string is indeed
+#' a file path. Thus, methods that require only a file path can be
+#' dispatched correctly.
+#' @export
+#' @rdname Path-class
+#' @param obj A character string to convert to a Path
 asPath <- function(obj) {
   UseMethod("asPath", obj)
 }
 
+#' @export
+#' @rdname Path-class
 asPath.character <- function(obj) {
   class(obj) <- c("Path", is(obj))
   return(obj)
 }
 
+#' @export
+#' @importFrom methods new
+setAs(from = "character", to="Path", function(from) {
+  new("Path", from)
+})

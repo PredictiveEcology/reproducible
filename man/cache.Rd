@@ -116,6 +116,15 @@ is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
 sufficient number of calls to \code{experiment}) such that no new explorations
 of stochastic outcomes are required. It will also be very useful in a
 reproducible work flow
+
+If a function has a path argument, there is some ambiguity about what should be
+done. Possiblities: digest the string as is (this will be very system specific,
+meaning a Cache will not work if copied between systems or directories), digest
+the basename(path), or digest the contents of the file. If paths are passed in as
+is (i.e,. character string), the result will not be entirely predictable. Instead,
+one should use the wrapper function asPath(path), and one should decide whether
+one wants to digest the content of the file (\code{digestPathContent = TRUE})
+or just the filename (\code{(digestPathContent = FALSE)}). See example.
 }
 \examples{
 \dontrun{
@@ -134,65 +143,17 @@ reRun <- Cache(projectRaster, ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
 all.equal(notCached, reRun) # TRUE meaning the recovered cached version is same
                             # as notCached version
 
+#Paths -- use as character string, it will take 2 complete passes to before
+#  a cached copy is used
+tmpdir <- file.path(tempdir(), "test")
+obj <- 1:10
+Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir)
+Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir)
+Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir) # cached copy is loaded
+# vs. which takes only 1 complete time before cached copy is loaded
+Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir)
+Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir) #cached copy is loaded
 
-# if using with SpaDES
-mySim <- simInit(times = list(start = 0.0, end = 5.0),
-                 params = list(.globals = list(stackName = "landscape", burnStats = "testStats")),
-                 modules = list("randomLandscapes", "fireSpread"),
-                 paths = list(modulePath = system.file("sampleModules", package = "SpaDES")))
-
-  # This functionality can be achieved within a spades call
-  # compare caching ... run once to create cache
-  system.time(outSim <- spades(Copy(mySim), cache = TRUE, notOlderThan = Sys.time(),
-                               .plotInitialTime = NA))
-  # compare... second time is fast
-  system.time(outSimCached <- spades(Copy(mySim), cache = TRUE, .plotInitialTime = NA))
-  all.equal(outSim, outSimCached)
-
-  # Function caching
-  ras <- raster(extent(0,1e3,0,1e3),res = 1)
-  system.time(map <- Cache(gaussMap, ras, cacheRepo = cachePath(mySim),
-                           notOlderThan = Sys.time()))
-  # second time much faster
-  system.time(mapCached <- Cache(gaussMap, ras, cacheRepo = cachePath(mySim)))
-
-  # They are the same
-  all.equal(map, mapCached)
-
-  # Module-level
-  # In this example, we will use the cache on the randomLandscapes module
-  # This means that each subsequent call to spades will result in identical
-  # outputs from the randomLandscapes module (only!).
-  # This would be useful when only one random landscape is needed
-  # simply for trying something out, or putting into production code
-  # (e.g., publication, decision support, etc.)
-  params(mySim)$randomLandscapes$.useCache <- TRUE
-  system.time(randomSim <- spades(Copy(mySim), .plotInitialTime = NA,
-                                 notOlderThan = Sys.time(), debug = TRUE))
-
-  # user  system elapsed
-  # 1.26    0.25    7.00
-  # Vastly faster
-  system.time(randomSimCached <- spades(Copy(mySim), .plotInitialTime = NA,
-                                 debug = TRUE))
-   # user  system elapsed
-   # 0.22    0.00    0.24
-   # Test that only layers produced in randomLandscapes are identical, not fireSpread
-   layers <- list("DEM","forestAge", "habitatQuality", "percentPine","Fires")
-   same <- lapply(layers, function(l) identical(randomSim$landscape[[l]],
-                                        randomSimCached$landscape[[l]]))
-   names(same) <- layers
-   print(same) # Fires is not same because it is not in the randomLandscape module that was cached
-
-   # Note - one can access cached items manually (rather than simply
-   #    rerunning the same Cache function again)
-   if (requireNamespace("archivist")) {
-     # examine the cache
-     showCache(mySim)
-     # get the RasterLayer that was produced with the gaussMap function:
-     map <- showCache(mySim, userTags = "gaussMap")$artifact \%>\%
-       archivist::loadFromLocalRepo(repoDir = cachePath(mySim), value = TRUE)
-   }
 }
 
 }
