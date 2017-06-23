@@ -478,8 +478,8 @@ setMethod(
   signature = "environment",
   definition = function(object, compareRasterFileLength, algo, digestPathContent) {
     robustDigest(as.list(object, all.names = TRUE),
-                 object=object, compareRasterFileLength=compareRasterFileLength,
-                 algo=algo, digestPathContent=digestPathContent) # need hidden objects too
+                 compareRasterFileLength=compareRasterFileLength,
+                  algo=algo, digestPathContent=digestPathContent)
 
 })
 
@@ -489,9 +489,11 @@ setMethod(
   "robustDigest",
   signature = "list",
   definition = function(object, compareRasterFileLength, algo, digestPathContent) {
-    lapply(sortDotsUnderscoreFirst(object), robustDigest,
-           object=object, compareRasterFileLength=compareRasterFileLength,
-           algo=algo, digestPathContent=digestPathContent) # need hidden objects too
+    lapply(sortDotsUnderscoreFirst(object), function(x) {
+      robustDigest(object =x,
+           compareRasterFileLength=compareRasterFileLength,
+           algo=algo, digestPathContent=digestPathContent)
+      })
 
 })
 
