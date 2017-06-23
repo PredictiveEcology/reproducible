@@ -383,7 +383,6 @@ setMethod(
     fastdigest(object)
 })
 
-
 #' @import parallel
 setOldClass("cluster")
 
@@ -420,10 +419,9 @@ setMethod(
   "robustDigest",
   signature = "character",
   definition = function(object, compareRasterFileLength, algo, digestPathContent) {
-
     if (any(unlist(lapply(object, dir.exists)))) {
       unlist(lapply(object, function(x) {
-        if(dir.exists(x)) {
+        if (dir.exists(x)) {
           fastdigest::fastdigest(basename(x))
         } else {
           fastdigest::fastdigest(x)
@@ -431,22 +429,16 @@ setMethod(
       }))
     } else if (any(unlist(lapply(object, file.exists)))) {
       unlist(lapply(object, function(x) {
-        if(file.exists(x)) {
-          digest::digest(file=x,
-                         length = compareRasterFileLength,
-                         algo = algo)
+        if (file.exists(x)) {
+          digest::digest(file = x, length = compareRasterFileLength, algo = algo)
         } else {
           fastdigest::fastdigest(x)
         }
       }))
-
     } else {
       fastdigest::fastdigest(object)
     }
-
 })
-
-
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -454,22 +446,18 @@ setMethod(
   "robustDigest",
   signature = "Path",
   definition = function(object, compareRasterFileLength, algo, digestPathContent) {
-
-    if(digestPathContent) {
-      lapply(object, function(x)
-        if(file.exists(x)) {
-          digest::digest(file=x,
-                       length = compareRasterFileLength,
-                       algo = algo)
+    if (digestPathContent) {
+      lapply(object, function(x) {
+        if (file.exists(x)) {
+          digest::digest(file = x,length = compareRasterFileLength, algo = algo)
         } else {
           fastdigest::fastdigest(basename(x))
         }
-      )
+      })
     } else {
       fastdigest::fastdigest(basename(object))
     }
-
-  })
+})
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -478,9 +466,8 @@ setMethod(
   signature = "environment",
   definition = function(object, compareRasterFileLength, algo, digestPathContent) {
     robustDigest(as.list(object, all.names = TRUE),
-                 compareRasterFileLength=compareRasterFileLength,
-                  algo=algo, digestPathContent=digestPathContent)
-
+                 compareRasterFileLength = compareRasterFileLength,
+                 algo = algo, digestPathContent = digestPathContent)
 })
 
 #' @rdname robustDigest
@@ -490,11 +477,10 @@ setMethod(
   signature = "list",
   definition = function(object, compareRasterFileLength, algo, digestPathContent) {
     lapply(sortDotsUnderscoreFirst(object), function(x) {
-      robustDigest(object =x,
-           compareRasterFileLength=compareRasterFileLength,
-           algo=algo, digestPathContent=digestPathContent)
+      robustDigest(object = x,
+                   compareRasterFileLength = compareRasterFileLength,
+                   algo = algo, digestPathContent = digestPathContent)
       })
-
 })
 
 #' @rdname robustDigest
@@ -503,7 +489,6 @@ setMethod(
   "robustDigest",
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo, digestPathContent) {
-
     if (is(object, "RasterStack") | is(object, "RasterBrick")) {
       dig <- suppressWarnings(
         list(dim(object), res(object), crs(object), extent(object),
@@ -685,7 +670,7 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
       slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
     }
   } else {
-    saveFilename <- if(isRepo) {
+    saveFilename <- if (isRepo) {
       file.path(repoDir, "rasters", basename(curFilename))
     } else {
       file.path(repoDir, basename(curFilename))
@@ -796,7 +781,6 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                      overwrite = TRUE, delDestination = FALSE,
                      #copyRasterFile=TRUE, clearRepo=TRUE,
                      create = TRUE, silent = FALSE, recursive = TRUE) {
-
   origDir <- getwd()
   useFileCopy <- FALSE
 
@@ -839,8 +823,6 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   return(invisible(to))
 }
 
-
-
 #' @rdname cacheHelper
 #' @importFrom raster res crs extent
 digestRaster <- function(object, compareRasterFileLength, algo) {
@@ -863,20 +845,19 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #' needed, and sometimes, this must be recursive (i.e., environments inside
 #' environments)
 #'
-#' @author Eliot McIntire
-#' @rdname Copy
-#' @seealso \code{\link{robustDigest}}
-#'
-#' @export
-#'
 #' @param object  An R object (likely containing environments) or an environment
 #' @param filebackedDir A directory to copy any files that are backing R objects,
 #'                      currently only valid for \code{Raster} classes. Defaults
 #'                      to \code{tempdir()}, which is unlikely to be very useful.
 #' @param ... Only used for custom Methods
-#' @importFrom data.table copy
+#'
+#' @author Eliot McIntire
 #' @docType methods
+#' @export
+#' @importFrom data.table copy
 #' @rdname Copy
+#' @seealso \code{\link{robustDigest}}
+#'
 setGeneric("Copy", function(object, filebackedDir=tempdir(), ...) {
   standardGeneric("Copy")
 })
@@ -926,10 +907,11 @@ setMethod("Copy",
 #'
 #' @return The same object as \code{obj}, but sorted with .objects first.
 #'
+#' @author Eliot McIntire
 #' @docType methods
 #' @export
 #' @rdname sortDotsUnderscoreFirst
-#' @author Eliot McIntire
+#'
 sortDotsUnderscoreFirst <- function(obj) {
   names(obj) <- gsub(names(obj), pattern = "\\.", replacement = "DOT")
   names(obj) <- gsub(names(obj), pattern = "_", replacement = "US")
