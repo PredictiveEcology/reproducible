@@ -7,8 +7,8 @@ Description: Built on top of 'git2r' and 'archivist', this package aims at
     package management utilites of 'packrat' and 'checkpoint' by including tools
     for caching and accessing GitHub repositories.
 URL: https://github.com/PredictiveEcology/reproducible
-Date: 2017-06-16
-Version: 0.0.1.9001
+Date: 2017-06-23
+Version: 0.0.1.9002
 Authors@R: c(
     person(c("Eliot", "J", "B"), "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre")),
