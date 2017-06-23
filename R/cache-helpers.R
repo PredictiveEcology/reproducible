@@ -203,6 +203,7 @@ setMethod(
 #'        arguments to the FUN
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
+#' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot Mcintire
 #' @docType methods
@@ -274,6 +275,11 @@ getFunctionName <- function(FUN, ..., overrideCall) {
     .FUN <- FUN
   }
   .FUN <- format(FUN)
+
+  # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
+  if(isTRUE(grepl(functionName, pattern="\\(")))
+    functionName <- "internal"
+
   return(list(functionName = functionName, .FUN = .FUN))
 }
 
