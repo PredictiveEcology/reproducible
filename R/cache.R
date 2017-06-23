@@ -147,8 +147,8 @@ if (getRversion() >= "3.1.0") {
 #' all.equal(notCached, reRun) # TRUE meaning the recovered cached version is same
 #'                             # as notCached version
 #'
-#' #Paths -- use as character string, it will take 2 complete passes to before
-#' #  a cached copy is used
+#' #Paths -- are character strings, it will take 2 complete passes to before
+#' #  a cached copy is used when it is a save event (read or load is different)
 #' tmpdir <- file.path(tempdir(), "test")
 #' obj <- 1:10
 #' Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir)
@@ -476,8 +476,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "environment",
-  definition = function(object, objects) {
-    recursiveRobustDigest(object, objects)
+  definition = function(object, objects, digestPathContent) {
+    recursiveRobustDigest(object, objects, digestPathContent=digestPathContent)
 })
 
 #' @rdname robustDigest
@@ -485,9 +485,9 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "list",
-  definition = function(object) {
+  definition = function(object, objects, digestPathContent) {
 
-    recursiveRobustDigest(object)
+    recursiveRobustDigest(object, objects, digestPathContent=digestPathContent)
 
 })
 
