@@ -68,6 +68,10 @@ if (getRversion() >= "3.1.0") {
 #'        a subsequent call and individual items within the object
 #'        \code{attr(mySimOut, "debugCache1")} can be compared.
 #' @inheritParams digest::digest
+#' @param digestPathContent Logical. Should arguments that are of class "Path"
+#'                          (see examples below) have their name digested
+#'                          (FALSE, the default), or their
+#'                          file contents (TRUE)
 #'
 #' @return As with \code{\link[archivist]{cache}}, the return is either the return
 #' value of the function call or the cached version (i.e., the result from a previous
@@ -198,7 +202,8 @@ setGeneric("Cache", signature = "...",
            function(FUN, ..., notOlderThan = NULL,
                     objects = NULL, outputObjects = NULL, algo = "xxhash64",
                     cacheRepo = NULL, compareRasterFileLength = 1e6,
-                    userTags = c(), debugCache = FALSE) {
+                    userTags = c(), digestPathContent = FALSE,
+                    debugCache = FALSE) {
              archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
 
@@ -207,7 +212,8 @@ setGeneric("Cache", signature = "...",
 setMethod(
   "Cache",
   definition = function(FUN, ..., notOlderThan, objects, outputObjects,
-                        algo, cacheRepo, compareRasterFileLength, userTags, debugCache) {
+                        algo, cacheRepo, compareRasterFileLength, userTags,
+                        digestPathContent, debugCache) {
     tmpl <- list(...)
 
     if (missing(notOlderThan)) notOlderThan <- NULL
@@ -220,7 +226,7 @@ setMethod(
     if (is.null(cacheRepo)) cacheRepo <- .checkCacheRepo(tmpl)
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
-      archivist::createLocalRepo(cacheRepo)
+      suppressWarnings(archivist::createLocalRepo(cacheRepo))
     }
 
     # get function name and convert the contents to text so digestible
@@ -233,7 +239,8 @@ setMethod(
     # Do the digesting
     preDigest <- lapply(tmpl, recursiveRobustDigest, objects = objects,
                         compareRasterFileLength = compareRasterFileLength,
-                        algo = algo)
+                        algo = algo,
+                        digestPathContent = digestPathContent)
     outputHash <- fastdigest(preDigest)
 
     # compare outputHash to existing Cache record
@@ -252,9 +259,9 @@ setMethod(
         # Class-specific message
         .cacheMessage(out, functionDetails$functionName)
 
-        archivist::addTagsRepo(isInRepo$artifact[lastOne],
+        suppressWarnings(archivist::addTagsRepo(isInRepo$artifact[lastOne],
                                repoDir = cacheRepo,
-                               tags = paste0("accessed:", Sys.time()))
+                               tags = paste0("accessed:", Sys.time())))
 
         # This allows for any class specific things
         out <- .prepareOutput(out, cacheRepo, ...)
@@ -273,7 +280,7 @@ setMethod(
     if (nrow(isInRepo) > 0) {
       if (notOlderThan >= lastEntry) {
         # flush it if notOlderThan is violated
-        rmFromLocalRepo(isInRepo$artifact[lastOne], repoDir = cacheRepo)
+        suppressWarnings(rmFromLocalRepo(isInRepo$artifact[lastOne], repoDir = cacheRepo))
       }
     }
 
@@ -320,12 +327,12 @@ setMethod(
                     paste0("function:",functionDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()))
-      saved <- try(saveToLocalRepo(outputToSave, repoDir = cacheRepo,
+      saved <- suppressWarnings(try(saveToLocalRepo(outputToSave, repoDir = cacheRepo,
                                    artifactName = "Cache",
                                    archiveData = FALSE, archiveSessionInfo = FALSE,
                                    archiveMiniature = FALSE, rememberName = FALSE, silent = TRUE,
                                    userTags = userTags),
-                   silent = TRUE)
+                   silent = TRUE))
 
       # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
       written <- if (is(saved, "try-error")) {
@@ -398,8 +405,9 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 setGeneric("robustDigest", function(object, objects,
-                                      compareRasterFileLength = 1e6,
-                                      algo = "xxhash64") {
+                                    compareRasterFileLength = 1e6,
+                                    algo = "xxhash64",
+                                    digestPathContent = FALSE) {
   standardGeneric("robustDigest")
 })
 
@@ -450,6 +458,7 @@ setMethod(
   "robustDigest",
   signature = "character",
   definition = function(object, compareRasterFileLength, algo) {
+
     if (any(unlist(lapply(object, dir.exists)))) {
       unlist(lapply(object, function(x) {
         if(dir.exists(x)) {
@@ -472,7 +481,33 @@ setMethod(
     } else {
       fastdigest::fastdigest(object)
     }
+
 })
+
+
+
+#' @rdname robustDigest
+#' @exportMethod robustDigest
+setMethod(
+  "robustDigest",
+  signature = "Path",
+  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+
+    if(digestPathContent) {
+      lapply(object, function(x)
+        if(file.exists(x)) {
+          digest::digest(file=x,
+                       length = compareRasterFileLength,
+                       algo = algo)
+        } else {
+          fastdigest::fastdigest(basename(x))
+        }
+      )
+    } else {
+      fastdigest::fastdigest(basename(object))
+    }
+
+  })
 
 #' @rdname robustDigest
 #' @exportMethod robustDigest
@@ -490,8 +525,7 @@ setMethod(
   signature = "list",
   definition = function(object) {
 
-    rrd <- recursiveRobustDigest(object)
-    return(rrd)
+    recursiveRobustDigest(object)
 
 })
 
@@ -854,13 +888,15 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #' @rdname cacheHelper
 #' @seealso \code{\link{robustDigest}}
 #'
-recursiveRobustDigest <- function(object, objects, compareRasterFileLength, algo) {
+recursiveRobustDigest <- function(object, objects, compareRasterFileLength, algo,
+                                  digestPathContent) {
   if (is.environment(object) | is.list(object)) {
     lapply(sortDotsUnderscoreFirst(as.list(object, all.names = TRUE)), recursiveRobustDigest,
            objects = objects, compareRasterFileLength = compareRasterFileLength,
-           algo = algo) # need hidden objects too
+           algo = algo, digestPathContent = digestPathContent) # need hidden objects too
   } else {
-    robustDigest(object, objects, compareRasterFileLength, algo)
+    robustDigest(object, objects, compareRasterFileLength, algo,
+                 digestPathContent = digestPathContent)
   }
 }
 

@@ -8,6 +8,7 @@
 \alias{robustDigest,function-method}
 \alias{robustDigest,expression-method}
 \alias{robustDigest,character-method}
+\alias{robustDigest,Path-method}
 \alias{robustDigest,environment-method}
 \alias{robustDigest,list-method}
 \alias{robustDigest,Raster-method}
@@ -15,7 +16,7 @@
 \title{Create reproducible digests of objects in R}
 \usage{
 robustDigest(object, objects, compareRasterFileLength = 1e+06,
-  algo = "xxhash64")
+  algo = "xxhash64", digestPathContent = FALSE)
 
 \S4method{robustDigest}{ANY}(object)
 
@@ -26,6 +27,9 @@ robustDigest(object, objects, compareRasterFileLength = 1e+06,
 \S4method{robustDigest}{expression}(object)
 
 \S4method{robustDigest}{character}(object, compareRasterFileLength, algo)
+
+\S4method{robustDigest}{Path}(object, compareRasterFileLength, algo,
+  digestPathContent)
 
 \S4method{robustDigest}{environment}(object, objects)
 
@@ -52,6 +56,11 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64} and
     \code{murmur32}.}
+
+\item{digestPathContent}{Logical. Should arguments that are of class "Path"
+(see examples below) have their name digested
+(FALSE, the default), or their
+file contents (TRUE)}
 }
 \value{
 A hash i.e., digest of the object passed in.

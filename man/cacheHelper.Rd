@@ -9,7 +9,8 @@
 \usage{
 getFunctionName(FUN, ..., overrideCall)
 
-recursiveRobustDigest(object, objects, compareRasterFileLength, algo)
+recursiveRobustDigest(object, objects, compareRasterFileLength, algo,
+  digestPathContent)
 
 digestRaster(object, compareRasterFileLength, algo)
 }
@@ -38,6 +39,11 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64} and
     \code{murmur32}.}
+
+\item{digestPathContent}{Logical. Should arguments that are of class "Path"
+(see examples below) have their name digested
+(FALSE, the default), or their
+file contents (TRUE)}
 }
 \description{
 These are internal only.

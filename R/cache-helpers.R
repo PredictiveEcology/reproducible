@@ -259,9 +259,11 @@ getFunctionName <- function(FUN, ..., overrideCall) {
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
       for (fns in rev(functionCall)) {
         if (!missing(overrideCall)) {
-          functionName <- match.call(get(overrideCall), parse(text = fns))$FUN
+          matchedCall <- match.call(get(overrideCall), parse(text = fns))
+          functionName <- matchedCall$FUN
         } else {
-          functionName <- match.call(Cache, parse(text = fns))$FUN
+          matchedCall <- match.call(Cache, parse(text = fns))
+          functionName <- matchedCall$FUN
         }
         functionName <- deparse(functionName)
         if (functionName != "FUN") break
@@ -273,3 +275,20 @@ getFunctionName <- function(FUN, ..., overrideCall) {
   }
   return(list(functionName = functionName, .FUN = .FUN))
 }
+
+setClass("Path", slots = c(.Data="character"), contains = "character",
+         prototype = NA_character_)
+
+setAs(from = "character", "path", function(from) {
+  from
+})
+
+asPath <- function(obj) {
+  UseMethod("asPath", obj)
+}
+
+asPath.character <- function(obj) {
+  class(obj) <- c("Path", is(obj))
+  return(obj)
+}
+

@@ -131,15 +131,15 @@ setMethod(
     if (NROW(objsDT)) {
       rastersInRepo <- objsDT[grep(tagValue, pattern = "Raster")]
       if (all(!is.na(rastersInRepo$artifact))) {
-        rasters <- lapply(rastersInRepo$artifact, function(ras) {
+        suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
           loadFromLocalRepo(ras, repoDir = x, value = TRUE)
-        })
+        }))
         filesToRemove <- unlist(lapply(rasters, function(x) filename(x)))
         filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
         unlink(filesToRemove)
       }
 
-      rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE)
+      suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
     }
     return(invisible(objsDT))
 })

@@ -8,11 +8,12 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
-  userTags = c(), debugCache = FALSE)
+  userTags = c(), digestPathContent = FALSE, debugCache = FALSE)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
-  compareRasterFileLength = 1e+06, userTags = c(), debugCache = FALSE)
+  compareRasterFileLength = 1e+06, userTags = c(),
+  digestPathContent = FALSE, debugCache = FALSE)
 }
 \arguments{
 \item{FUN}{A function to be called.}
@@ -45,6 +46,11 @@ Note: uses \code{\link[digest]{digest}} for file-backed Raster.
 Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
+
+\item{digestPathContent}{Logical. Should arguments that are of class "Path"
+(see examples below) have their name digested
+(FALSE, the default), or their
+file contents (TRUE)}
 
 \item{debugCache}{Logical. If \code{TRUE}, then the returned object from the Cache
 function will have two attributes, "debugCache1" and "debugCache2" which
