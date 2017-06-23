@@ -68,3 +68,4 @@ branches:
   only:
     - master
     - development
+    - testing
