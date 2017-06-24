@@ -22,6 +22,9 @@ name to search for. Mostly so that this works with deprecated "cache".}
 \description{
 These are internal only.
 }
+\note{
+If the function cannot figure out a clean function name, it returns "internal"
+}
 \author{
 Eliot Mcintire
 }
