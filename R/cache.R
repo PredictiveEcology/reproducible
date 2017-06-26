@@ -813,7 +813,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     rsync_bin <- tryCatch(system("which rsync", intern = TRUE),
                           warning = function(w) NA_character_)
     opts <- if (silent) " -a " else " -avP "
-    rsync <- paste0(rsync_bin, " ", "--delete "[delDestination],
+    rsync <- paste0(rsync_bin, " ", opts, " --delete "[delDestination],
                     normalizePath(from, mustWork = TRUE), " ",
                     normalizePath(to, mustWork = FALSE), "/")
 
