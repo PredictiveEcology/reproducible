@@ -10,8 +10,6 @@
 #' @author Eliot McIntire
 #' @docType methods
 #' @export
-#' @importFrom methods selectMethod showMethods is
-#' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname tagsByClass
 #'
 setGeneric(".tagsByClass", function(object) {
@@ -387,7 +385,7 @@ setMethod(
 #' @export
 #' @importFrom digest digest
 #' @importFrom raster filename dataType inMemory writeRaster nlayers
-#' @importFrom methods slot is selectMethod showMethods slot<-
+#' @importFrom methods slot is selectMethod slot<-
 #' @rdname prepareFileBackedRaster
 #'
 prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {

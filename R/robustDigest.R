@@ -221,4 +221,3 @@ setMethod(
     dig <- fastdigest::fastdigest(aaa)
     return(dig)
   })
-
