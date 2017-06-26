@@ -208,6 +208,7 @@ setMethod(
 #'
 #' @author Eliot Mcintire
 #' @docType methods
+#' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
 #'
@@ -309,6 +310,7 @@ asPath <- function(obj) {
 }
 
 #' @export
+#' @importFrom methods is
 #' @rdname Path-class
 asPath.character <- function(obj) {  # nolint
   class(obj) <- c("Path", is(obj))
