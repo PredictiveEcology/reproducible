@@ -2,7 +2,6 @@ if (getRversion() >= "3.1.0") {
   utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue"))
 }
 
-
 ################################################################################
 #' Cache method that accommodates environments, S4 methods, Rasters
 #'
@@ -314,7 +313,6 @@ setMethod(
     if (isNullOutput) return(NULL) else return(output)
 })
 
-
 #' Deprecated functions
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
@@ -325,7 +323,7 @@ setGeneric("cache", signature = "...",
            function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,  # nolint
                     objects = NULL, outputObjects = NULL, algo = "xxhash64") {
              archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo)
-           })
+})
 
 #' @export
 #' @rdname reproducible-deprecated
@@ -344,5 +342,3 @@ setMethod(
     Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
 })
-
-
