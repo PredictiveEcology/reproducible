@@ -108,7 +108,7 @@ setMethod(
 #' @export
 #' @rdname addTagsToOutput
 #'
-setGeneric(".addTagsToOutput", function(object, outputObjects, FUN) {
+setGeneric(".addTagsToOutput", function(object, outputObjects, FUN) { # nolint
   standardGeneric(".addTagsToOutput")
 })
 
@@ -117,7 +117,7 @@ setGeneric(".addTagsToOutput", function(object, outputObjects, FUN) {
 setMethod(
   ".addTagsToOutput",
   signature = "ANY",
-  definition = function(object, outputObjects, FUN) {
+  definition = function(object, outputObjects, FUN) { # nolint
     object
 })
 
@@ -210,7 +210,7 @@ setMethod(
 #' @keywords internal
 #' @rdname cacheHelper
 #'
-getFunctionName <- function(FUN, ..., overrideCall) {
+getFunctionName <- function(FUN, ..., overrideCall) { # nolint
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -249,7 +249,7 @@ getFunctionName <- function(FUN, ..., overrideCall) {
 
     ## TO DO: need to get the method the dispatch correct
     methodUsed <- selectMethod(FUN, optional = TRUE, signature = signatures)
-    .FUN <- methodUsed@.Data
+    .FUN <- methodUsed@.Data  # nolint
     functionName <- FUN@generic
   } else {
     if (!missing(overrideCall)) {
@@ -275,9 +275,9 @@ getFunctionName <- function(FUN, ..., overrideCall) {
     } else {
       functionName <- ""
     }
-    .FUN <- FUN
+    .FUN <- FUN  # nolint
   }
-  .FUN <- format(FUN)
+  .FUN <- format(FUN)  # nolint
 
   # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
   if (isTRUE(grepl(functionName, pattern = "\\(")))
@@ -309,7 +309,7 @@ asPath <- function(obj) {
 
 #' @export
 #' @rdname Path-class
-asPath.character <- function(obj) {
+asPath.character <- function(obj) {  # nolint
   class(obj) <- c("Path", is(obj))
   return(obj)
 }

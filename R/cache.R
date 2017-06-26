@@ -161,7 +161,7 @@ if (getRversion() >= "3.1.0") {
 #' }
 #'
 setGeneric("Cache", signature = "...",
-           function(FUN, ..., notOlderThan = NULL,
+           function(FUN, ..., notOlderThan = NULL,  # nolint
                     objects = NULL, outputObjects = NULL, algo = "xxhash64",
                     cacheRepo = NULL, compareRasterFileLength = 1e6,
                     userTags = c(), digestPathContent = FALSE,
@@ -173,7 +173,7 @@ setGeneric("Cache", signature = "...",
 #' @rdname cache
 setMethod(
   "Cache",
-  definition = function(FUN, ..., notOlderThan, objects, outputObjects,
+  definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
                         algo, cacheRepo, compareRasterFileLength, userTags,
                         digestPathContent, debugCache) {
     tmpl <- list(...)
@@ -196,7 +196,7 @@ setMethod(
 
     # get function name and convert the contents to text so digestible
     functionDetails <- getFunctionName(FUN, ...)
-    tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting
+    tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting  # nolint
 
     # remove things in the Cache call that are not relevant to Caching
     if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
@@ -564,7 +564,9 @@ setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
     md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
-    listFiles <- dir(file.path(repoDir, "gallery")) %>% strsplit(".rda") %>% unlist()
+    listFiles <- dir(file.path(repoDir, "gallery")) %>%
+      strsplit(".rda") %>%
+      unlist()
     toRemove <- !(md5hashInBackpack %in% listFiles)
     md5hashInBackpack[toRemove] %>%
       sapply(., rmFromLocalRepo, repoDir = repoDir)
@@ -578,7 +580,7 @@ setMethod(
 #' @docType methods
 #' @rdname reproducible-deprecated
 setGeneric("cache", signature = "...",
-           function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,
+           function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,  # nolint
                     objects = NULL, outputObjects = NULL, algo = "xxhash64") {
              archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo)
            })
@@ -587,7 +589,7 @@ setGeneric("cache", signature = "...",
 #' @rdname reproducible-deprecated
 setMethod(
   "cache",
-  definition = function(cacheRepo, FUN, ..., notOlderThan, objects,
+  definition = function(cacheRepo, FUN, ..., notOlderThan, objects,  # nolint
                         outputObjects, algo) {
     .Deprecated("Cache", package = "reproducible",
                 msg = paste0(
@@ -775,30 +777,30 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
   os <- tolower(Sys.info()[["sysname"]])
   if (os == "windows") {
-    robocopy_bin <- tryCatch(system("where robocopy", intern = TRUE),
-                             warning = function(w) NA_character_)
+    robocopyBin <- tryCatch(system("where robocopy", intern = TRUE),
+                            warning = function(w) NA_character_)
 
     robocopy <-  if (silent) {
-      paste0(robocopy_bin, "", "/purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",  # nolint
+      paste0(robocopyBin, "", "/purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",  # nolint
              normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\\ ",
              normalizePath(to, mustWork = FALSE, winslash = "\\"),  " ", basename(from))
     } else {
-      paste0(robocopy_bin, " ", "/purge"[delDestination], " /ETA /xo ", # nolint
+      paste0(robocopyBin, " ", "/purge"[delDestination], " /ETA /xo ", # nolint
              normalizePath(from, mustWork = TRUE, winslash = "\\"), "\\ ",
              normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E"[recursive], " ",
              basename(from))
     }
 
-    useFileCopy <- if (useRobocopy && !is.na(robocopy_bin)) {
+    useFileCopy <- if (useRobocopy && !is.na(robocopyBin)) {
       suppressWarnings(tryCatch(system(robocopy, intern = TRUE), error = function(x) TRUE))
     } else {
       TRUE
     }
-  } else if ( (os == "linux") || (os == "darwin") ) {
-    rsync_bin <- tryCatch(system("which rsync", intern = TRUE),
+  } else if ( (os == "linux") || (os == "darwin") ) { # nolint
+    rsyncBin <- tryCatch(system("which rsync", intern = TRUE),
                           warning = function(w) NA_character_)
     opts <- if (silent) " -a " else " -avP "
-    rsync <- paste0(rsync_bin, " ", opts, " --delete "[delDestination],
+    rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
                     normalizePath(from, mustWork = TRUE), " ",
                     normalizePath(to, mustWork = FALSE), "/")
 
