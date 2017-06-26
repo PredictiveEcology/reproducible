@@ -611,38 +611,39 @@ setGeneric("Copy", function(object, filebackedDir=tempdir(), ...) {
 })
 
 #' @rdname Copy
-setMethod("Copy",
-          signature(object = "ANY"),
-          definition = function(object, filebackedDir, ...) {
-            # make an outer copy
-            if (is.environment(object)) {
-              object <- as.list(object, all.names = TRUE)
-              wasEnv <- TRUE
-            } else {
-              wasEnv <- FALSE
-            }
+setMethod(
+  "Copy",
+  signature(object = "ANY"),
+  definition = function(object, filebackedDir, ...) {
+    # make an outer copy
+    if (is.environment(object)) {
+      object <- as.list(object, all.names = TRUE)
+      wasEnv <- TRUE
+    } else {
+      wasEnv <- FALSE
+    }
 
-            if (is.list(object))
-              object <- lapply(object, function(x) Copy(x, filebackedDir, ...))
+    if (is.list(object))
+      object <- lapply(object, function(x) Copy(x, filebackedDir, ...))
 
-            if (wasEnv)
-              object <- as.environment(object)
-            return(object)
-          })
+    if (wasEnv)
+      object <- as.environment(object)
+    return(object)
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "data.table"),
           definition = function(object, ...) {
             data.table::copy(object)
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "Raster"),
           definition = function(object, filebackedDir, ...) {
             object <- prepareFileBackedRaster(object, repoDir = filebackedDir)
-          })
+})
 
 ################################################################################
 #' Sort a any named object with dotted names first
