@@ -7,8 +7,8 @@ test_that("spelling errors", {
 
   ## ensure that stats terms are included in the word list
   pkg <- "reproducible"
-  .words.file <- system.file("dict/words.rds", package = pkg)
-  .words <- readRDS(.words.file)
+  .words_file <- system.file("dict/words.rds", package = pkg)
+  .words <- readRDS(.words_file)
   .en_stats <- hunspell::en_stats
   .complete <- all(.en_stats %in% .words)
   expect_true(.complete)
@@ -16,7 +16,7 @@ test_that("spelling errors", {
   ## if needed, add any new stats words to the word list
   if (interactive() && !.complete) {
     ignore <- sort(unique(c(.en_stats, .words, pkg)))
-    saveRDS(ignore, .words.file)
+    saveRDS(ignore, .words_file)
   }
 
   pkgDir <- system.file(package = pkg)
@@ -30,6 +30,6 @@ test_that("spelling errors", {
   expect_equal(nrow(wrds_Rd), 0)
 
   ## check code files (messages, warnings, etc.)
-  #wrds_C <- aspell_package_C_files(pkgDir)
-  #expect_equal(nrow(wrds_C), 0)
+  #wrds_C <- aspell_package_C_files(pkgDir) # nolint
+  #expect_equal(nrow(wrds_C), 0) # nolint
 })

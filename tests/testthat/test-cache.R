@@ -13,7 +13,6 @@ test_that("test file-backed raster caching", {
 
   randomPolyToDisk <- function(tmpdir, tmpRasterfile) {
     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-    #r <- randomPolygons(numTypes = 30)
     writeRaster(r, tmpRasterfile, overwrite = TRUE)
     r <- raster(tmpRasterfile)
     r
@@ -46,7 +45,8 @@ test_that("test file-backed raster caching", {
 
   # confirm that the raster has the new filename in the cachePath
   expect_false(identical(strsplit(tmpRasterfile, split = "[\\/]"),
-                         strsplit(file.path(tmpdir, "rasters", basename(tmpRasterfile)), split = "[\\/]")))
+                         strsplit(file.path(tmpdir, "rasters",
+                                            basename(tmpRasterfile)), split = "[\\/]")))
   expect_true(any(grepl(pattern = basename(tmpRasterfile),
                         dir(file.path(tmpdir, "rasters")))))
 
@@ -73,7 +73,6 @@ test_that("test file-backed raster caching", {
   # Check that Caching of rasters saves them to tif file instead of rdata
   randomPolyToMemory <- function(tmpdir) {
     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-    #r <- randomPolygons(numTypes = 30)
     dataType(r) <- "INT1U"
     r
   }
@@ -88,7 +87,7 @@ test_that("test file-backed raster caching", {
   # Test that factors are saved correctly
   randomPolyToFactorInMemory <- function(tmpdir) {
     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-    levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30,replace = TRUE),
+    levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
                             vals2 <- sample(1:7, size = 30, replace = TRUE))
     dataType(r) <- "INT1U"
     r
@@ -105,7 +104,6 @@ test_that("test file-backed raster caching", {
     levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
                             vals2 = sample(1:7, size = 30, replace = TRUE))
     r <- writeRaster(r, tmpFile, overwrite = TRUE, datatype = "INT1U")
-    #r <- raster(tmpRasterfile)
     r
   }
   tf <- tempfile(fileext = ".grd")
@@ -163,8 +161,9 @@ test_that("test keepCache", {
   Cache(runif, 10, cacheRepo = tmpdir)
   Cache(round, runif(4), cacheRepo = tmpdir)
   expect_true(NROW(showCache(tmpdir)) == 24)
-  expect_true(NROW(showCache(tmpdir, c("rnorm","runif"))) == 0) # and search
+  expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))) == 0) # and search
   expect_true(NROW(keepCache(tmpdir, "rnorm")) == 8)
+
   # do it twice to make sure it can deal with repeats
   expect_true(NROW(keepCache(tmpdir, "rnorm")) == 8)
   Sys.sleep(1)
@@ -181,10 +180,18 @@ test_that("test keepCache", {
   ranNums <- Cache(runif, 4, cacheRepo = tmpdir, userTags = "objectName:a")
   ranNums <- Cache(rnorm, 4, cacheRepo = tmpdir, userTags = "objectName:a")
   showCache(tmpdir) # shows spades, runif and rnorm objects
-  expect_true(NROW(showCache(tmpdir, userTags = c("spades","rnorm"))) == 0) # shows nothing because object has both spades and rnorm
-  expect_true(length(unique(showCache(tmpdir, userTags = "spades|rnorm")$artifact)) == 2) # "or" search
-  expect_true(length(unique(keepCache(tmpdir, userTags = "spades|rnorm")$artifact)) == 2)  # keep all with spades or rnorm
-  expect_true(length(unique(showCache(tmpdir)$artifact)) == 2) # shows spades, runif and rnorm objects
+
+  # shows nothing because object has both spades and rnorm
+  expect_true(NROW(showCache(tmpdir, userTags = c("spades", "rnorm"))) == 0)
+
+  # "or" search
+  expect_true(length(unique(showCache(tmpdir, userTags = "spades|rnorm")$artifact)) == 2)
+
+  # keep all with spades or rnorm
+  expect_true(length(unique(keepCache(tmpdir, userTags = "spades|rnorm")$artifact)) == 2)
+
+  # shows spades, runif and rnorm objects
+  expect_true(length(unique(showCache(tmpdir)$artifact)) == 2)
 })
 
 test_that("test environments", {
@@ -234,10 +241,17 @@ test_that("test environments", {
   out4 <- Cache(shortFn, a = i, cacheRepo = tmpdir)
   out5 <- Cache(shortFn, a = i2, cacheRepo = tmpdir)
 
-  expect_false(identical(attributes(out), attributes(out2))) # test different values are different
-  expect_true(identical(attributes(out), attributes(out3))) # test same values but different enviros are same
-  expect_true(identical(attributes(out), attributes(out4))) # test environment is same as a list
-  expect_true(identical(attributes(out), attributes(out5))) # test environment is same as recursive list
+  # test different values are different
+  expect_false(identical(attributes(out), attributes(out2)))
+
+  # test same values but different enviros are same
+  expect_true(identical(attributes(out), attributes(out3)))
+
+  # test environment is same as a list
+  expect_true(identical(attributes(out), attributes(out4)))
+
+  # test environment is same as recursive list
+  expect_true(identical(attributes(out), attributes(out5)))
 
   df <- data.frame(a = a$a, b = LETTERS[1:10])
   out6 <- Cache(shortFn, a = df, cacheRepo = tmpdir)
@@ -257,32 +271,35 @@ test_that("test asPath", {
   origDir <- getwd()
   on.exit(setwd(origDir))
   setwd(tmpdir)
-  a1 <- capture_messages(Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir))
+  a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpdir))
 
-  expect_true(length(a1)==0)
-  expect_true(length(a2)==0)
+  expect_true(length(a1) == 0)
+  expect_true(length(a2) == 0)
   expect_true(grepl("loading cached", a3))
 
   unlink("filename.rdata")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file=asPath("filename.rdata"), cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file=asPath("filename.rdata"), cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file=asPath("filename.rdata"), cacheRepo = tmpdir))
-  expect_true(length(a1)==0)
+  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.rdata"), cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.rdata"), cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.rdata"),
+                               cacheRepo = tmpdir))
+  expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))
 
   unlink("filename.rdata")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file=as("filename.rdata", "Path"), cacheRepo = tmpdir))
-  expect_true(length(a1)==0)
+  a1 <- capture_messages(Cache(saveRDS, obj, file = as("filename.rdata", "Path"),
+                               cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = as("filename.rdata", "Path"),
+                               cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.rdata", "Path"),
+                               cacheRepo = tmpdir))
+  expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))
-
 
   setwd(origDir)
   unlink(tmpdir, recursive = TRUE)
@@ -290,16 +307,12 @@ test_that("test asPath", {
   # make several unique environments
 })
 
-
 test_that("test wrong ways of calling Cache", {
-
   tmpdir <- file.path(tempdir(), "testCache")
-  checkPath(tmpdir, create=TRUE)
+  checkPath(tmpdir, create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
   expect_error(Cache(sample(1), cacheRepo = tmpdir), "Can't understand")
   expect_error(Cache(a <- sample(1), cacheRepo = tmpdir), "Can't understand")
-  expect_true(1==Cache(sample,1, cacheRepo = tmpdir))
-
-
+  expect_true(1 == Cache(sample, 1, cacheRepo = tmpdir))
 })

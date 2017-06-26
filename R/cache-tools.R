@@ -186,13 +186,12 @@ setMethod(
     if (is(x, "simList")) x <- x@paths$cachePath
 
     objsDT <- showLocalRepo(x) %>% data.table()
-    #objsDT <- objsDT[createdDate <= before & createdDate >= after]
     setkeyv(objsDT, "md5hash")
     if (NROW(objsDT) > 0) {
       objsDT <- data.table(splitTagsLocal(x), key = "artifact")
-      objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) & (tagValue >= after)][!duplicated(artifact)]
+      objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
+                                                (tagValue >= after)][!duplicated(artifact)]
       objsDT <- objsDT[artifact %in% objsDT3$artifact]
-      #objsDT3 <- objsDT3[(createdDate <= before & createdDate >= after) ]
       if (length(userTags) > 0) {
         for (ut in userTags) {
           objsDT2 <- objsDT[
@@ -202,38 +201,7 @@ setMethod(
           setkeyv(objsDT2, "artifact")
           objsDT <- objsDT[unique(objsDT2, by = "artifact")[, artifact]] # merge each userTags
         }
-
-        # grepPattern <- paste(userTags,collapse="|")
-        # # https://stackoverflow.com/questions/7597559/grep-using-a-character-vector-with-multiple-patterns
-        # objsDT3 <- unique(objsDT[grepl(artifact, pattern=grepPattern)], by="artifact")
-        # objsDT4 <- unique(objsDT[grepl(tagKey, pattern=grepPattern)], by="tagKey")
-        # objsDT5 <- objsDT[grepl(tagValue, pattern=grepPattern)]
-        #                   # grepl(tagKey, pattern=grepPattern) |
-        #                   #   grepl(tagValue, pattern=grepPattern) ]
-        #
-        # objsDT3 <- objsDT3[unique(artifact),list(allMatched=.N==length(userTags)),by="artifact"][allMatched==TRUE]
-        # if(NROW(objsDT3)) {
-        #   setkeyv(objsDT, "artifact")
-        #   setkeyv(objsDT3, "artifact")
-        #   objsDT <- objsDT[objsDT3[!duplicated(objsDT3$artifact)]]
-        #   #set(objsDT, , "i.createdDate", NULL)
-        #   #set(objsDT, , "i.tagKey", NULL)
-        #   #set(objsDT, , "i.tagValue", NULL)
-        # } else {
-        #   objsDT <- objsDT3
-        # }
       }
-      # objsDT <- objsDT2[objsDT]
-      # if (length(userTags) > 0) {
-      #   for (ut in userTags) {
-      #     objsDT2 <- objsDT[
-      #       grepl(tagValue, pattern = ut)   |
-      #         grepl(tagKey, pattern = ut) |
-      #         grepl(artifact, pattern = ut)]
-      #     setkeyv(objsDT2, "artifact")
-      #     objsDT <- objsDT[unique(objsDT2, by = "artifact")[, artifact]] # merge each userTags
-      #   }
-      # }
     }
     objsDT
 })
@@ -269,6 +237,5 @@ setMethod(
       eliminate <- paste(eliminate, collapse = "|")
       clearCache(x, eliminate)
     }
-
     return(objsDT)
 })
