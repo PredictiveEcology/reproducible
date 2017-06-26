@@ -32,6 +32,7 @@ matrix:
           - libproj-dev
     after_success:
     - Rscript -e 'library(covr); coveralls(coverage = print(package_coverage(quiet = FALSE)))'
+    - Rscript -e 'library(lintr); lint_package(cache = TRUE)'
 
   - os: linux
     dist: trusty
@@ -56,6 +57,7 @@ r_check_args: "--as-cran"
 
 r_binary_packages:
   - covr
+  - lintr
 
 warnings_are_errors: true
 

@@ -177,7 +177,7 @@ setMethod(
                         algo, cacheRepo, compareRasterFileLength, userTags,
                         digestPathContent, debugCache) {
     tmpl <- list(...)
-    if(!is(FUN, "function")) stop("Can't understand the function provided to Cache. \n",
+    if (!is(FUN, "function")) stop("Can't understand the function provided to Cache. \n",
                                    "Did you write it in the form: ",
                                    "Cache(function, functionArguments)?")
 
@@ -210,7 +210,7 @@ setMethod(
 
     # compare outputHash to existing Cache record
     localTags <- showLocalRepo(cacheRepo, "tags")
-    isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+    isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE] # nolint
 
     # If it is in the existing record:
     if (NROW(isInRepo) > 0) {
@@ -249,7 +249,8 @@ setMethod(
       }
     }
 
-    isNullOutput <- if (is.null(output)) TRUE else FALSE # need something to attach tags to if it is actually NULL
+    # need something to attach tags to if it is actually NULL
+    isNullOutput <- if (is.null(output)) TRUE else FALSE
     if (isNullOutput) output <- "NULL"
 
     attr(output, "tags") <- paste0("cacheId:", outputHash)
@@ -271,9 +272,9 @@ setMethod(
     if (any(rasters)) {
       if (outputToSaveIsList) {
         outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-          prepareFileBackedRaster(x, repoDir = cacheRepo))#, archiveData = TRUE,
+          prepareFileBackedRaster(x, repoDir = cacheRepo))
       } else {
-        outputToSave <- prepareFileBackedRaster(outputToSave, repoDir = cacheRepo)#, archiveData = TRUE,
+        outputToSave <- prepareFileBackedRaster(outputToSave, repoDir = cacheRepo)
       }
       attr(outputToSave, "tags") <- attr(output, "tags")
       attr(outputToSave, "call") <- attr(output, "call")
@@ -289,7 +290,7 @@ setMethod(
     while (!written) {
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
-                    paste0("function:",functionDetails$functionName),
+                    paste0("function:", functionDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()))
       saved <- suppressWarnings(try(saveToLocalRepo(outputToSave, repoDir = cacheRepo,
@@ -452,7 +453,7 @@ setMethod(
     if (digestPathContent) {
       lapply(object, function(x) {
         if (file.exists(x)) {
-          digest::digest(file = x,length = compareRasterFileLength, algo = algo)
+          digest::digest(file = x, length = compareRasterFileLength, algo = algo)
         } else {
           fastdigest::fastdigest(basename(x))
         }
@@ -527,7 +528,7 @@ setMethod(
     for (i in names(aaa)) {
       if (!is.integer(aaa[, i])) {
         if (is.numeric(aaa[, i]))
-          aaa[,i] <- round(aaa[, i], 4)
+          aaa[, i] <- round(aaa[, i], 4)
       }
     }
 
@@ -589,10 +590,13 @@ setMethod(
   definition = function(cacheRepo, FUN, ..., notOlderThan, objects,
                         outputObjects, algo) {
     .Deprecated("Cache", package = "reproducible",
-                msg = paste0("cache from SpaDES and reproducible is deprecated.\n",
-                             "Use Cache with capital C if you want the robust Cache function.\n",
-                             "e.g., Cache(",getFunctionName(FUN, ..., overrideCall = "cache")$functionName,
-                             ", ", paste(list(...), collapse = ", "), ")"))
+                msg = paste0(
+                  "cache from SpaDES and reproducible is deprecated.\n",
+                  "Use Cache with capital C if you want the robust Cache function.\n",
+                  "e.g., Cache(", getFunctionName(FUN, ..., overrideCall = "cache")$functionName,
+                  ", ", paste(list(...), collapse = ", "), ")"
+                )
+    )
     Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
 })
@@ -682,25 +686,10 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
     saveFilename <- normalizePath(saveFilename, winslash = "/", mustWork = FALSE)
   }
 
-  if (any(saveFilename != curFilename)) { # filenames are not the same
+  # filenames are not the same
+  if (any(saveFilename != curFilename)) {
     if (isFilebacked) {
       shouldCopy <- rep(TRUE, length(curFilename))
-      # if (any(file.exists(saveFilename))) {
-      #   if (!(compareRasterFileLength == Inf)) {
-      #     shouldCopy <- lapply(seq_along(saveFilename), function(ind) {
-      #       if (digest(file = saveFilename[ind], length = compareRasterFileLength) ==
-      #           digest(file = curFilename[ind], length = compareRasterFileLength)) {
-      #         shouldCopy <- FALSE
-      #       }
-      #     })
-      #     if (digest(file = saveFilename, length = compareRasterFileLength) ==
-      #         digest(file = curFilename, length = compareRasterFileLength)) {
-      #       shouldCopy <- FALSE
-      #     }
-      #   } else {
-      #     shouldCopy = TRUE
-      #   }
-      # }
       if (any(shouldCopy)) {
         pathExists <- dir.exists(dirname(saveFilename))
         if (any(!pathExists)) {
@@ -721,7 +710,8 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
                                         from = curFilename[x], silent = TRUE)))
         }
       }
-      if (length(curFilename) > 1) { # for a stack with independent Raster Layers (each with own file)
+      # for a stack with independent Raster Layers (each with own file)
+      if (length(curFilename) > 1) {
         for (i in seq_along(curFilename)) {
           slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- saveFilename[i]
         }
@@ -741,11 +731,6 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
         obj <- writeRaster(obj, filename = saveFilename, datatype = dataType(obj))
       }
     }
-    # } else {
-    #   if(isStack) {
-    #     slot(obj, "filename")
-    #   }
-    #   saveFilename <- slot(slot(obj, "file"), "name")
   }
 
   return(obj)
@@ -794,13 +779,13 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                              warning = function(w) NA_character_)
 
     robocopy <-  if (silent) {
-      paste0(robocopy_bin, "", "/purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",
+      paste0(robocopy_bin, "", "/purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",  # nolint
              normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\\ ",
              normalizePath(to, mustWork = FALSE, winslash = "\\"),  " ", basename(from))
     } else {
-      paste0(robocopy_bin, " ", "/purge"[delDestination], " /ETA /xo ",
+      paste0(robocopy_bin, " ", "/purge"[delDestination], " /ETA /xo ", # nolint
              normalizePath(from, mustWork = TRUE, winslash = "\\"), "\\ ",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E"[recursive], " " ,
+             normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E"[recursive], " ",
              basename(from))
     }
 
@@ -809,7 +794,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     } else {
       TRUE
     }
-  } else if ((os == "linux") || (os == "darwin")) {
+  } else if ( (os == "linux") || (os == "darwin") ) {
     rsync_bin <- tryCatch(system("which rsync", intern = TRUE),
                           warning = function(w) NA_character_)
     opts <- if (silent) " -a " else " -avP "

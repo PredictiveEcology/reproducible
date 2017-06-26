@@ -11,7 +11,7 @@ test_that("checkPath: normPath consistency", {
   on.exit({
     setwd(cwd)
     unlink(tmpdir, recursive = TRUE)
-  }, add = TRUE)
+  }, add = TRUE) # nolint
 
   paths <- list("./aaa/zzz",
                 "./aaa/zzz/",
@@ -43,9 +43,8 @@ test_that("checkPath: checkPath consistency", {
   on.exit({
     setwd(currdir)
     unlink(tmpdir, recursive = TRUE)
-  }, add = TRUE)
+  }, add = TRUE) # nolint
   setwd(tmpdir)
-
 
   dir.create("aaa/zzz", recursive = TRUE, showWarnings = FALSE)
   paths <- list("./aaa/zzz",

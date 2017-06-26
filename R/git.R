@@ -61,16 +61,6 @@ checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
     remote_set_url(repo, "origin", url = url1)
   }
 
-  # # Get specific LandWeb version
-  # hasUncommittedFiles <- sum(sapply(status(repo), length))>0
-  # if(hasUncommittedFiles) {
-  #   lastCommit <- revparse_single(repo, "HEAD")
-  #   git2r::add(repo, unlist(status(repo)$unstaged))
-  #   tempCommit <- commit(repo, "testing")
-  # } else {
-  #   lastCommit <- NULL
-  # }
-
   if (gitHash %in% c("development", "master")) git2r::pull(repo, cred)
 
   tryCatch(git2r::checkout(lookup(repo, gitHash)), error = function(x) {

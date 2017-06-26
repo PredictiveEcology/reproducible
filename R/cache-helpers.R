@@ -243,17 +243,20 @@ getFunctionName <- function(FUN, ..., overrideCall) {
     signatures <- rep("missing", (sum(signat))) # default is "missing"
     names(signatures) <- FUN@signature[signat]
     classMatchedCall <- sapply(matchedCall, class)
-    signatures[names(classMatchedCall)] <- classMatchedCall # update "missing" with ones that aren't missing
 
-    methodUsed <- selectMethod(FUN, optional = TRUE,
-                               signature = signatures) ## TO DO: need to get the method the dispatch correct
+    # update "missing" with ones that aren't missing
+    signatures[names(classMatchedCall)] <- classMatchedCall
+
+    ## TO DO: need to get the method the dispatch correct
+    methodUsed <- selectMethod(FUN, optional = TRUE, signature = signatures)
     .FUN <- methodUsed@.Data
     functionName <- FUN@generic
   } else {
     if (!missing(overrideCall)) {
-      functionCall <- grep(sys.calls(), pattern = paste0("^",overrideCall), value = TRUE)
+      functionCall <- grep(sys.calls(), pattern = paste0("^", overrideCall), value = TRUE)
     } else {
-      functionCall <- grep(sys.calls(), pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache", value = TRUE)
+      functionCall <- grep(sys.calls(),
+                           pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache", value = TRUE)
     }
     if (length(functionCall)) {
       # for() loop is a work around for R-devel that produces a different final call in the
@@ -277,7 +280,7 @@ getFunctionName <- function(FUN, ..., overrideCall) {
   .FUN <- format(FUN)
 
   # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
-  if(isTRUE(grepl(functionName, pattern="\\(")))
+  if (isTRUE(grepl(functionName, pattern = "\\(")))
     functionName <- "internal"
 
   return(list(functionName = functionName, .FUN = .FUN))
@@ -285,7 +288,7 @@ getFunctionName <- function(FUN, ..., overrideCall) {
 
 #' @exportClass Path
 #' @rdname Path-class
-setClass("Path", slots = c(.Data="character"), contains = "character",
+setClass("Path", slots = c(.Data = "character"), contains = "character",
          prototype = NA_character_)
 
 #' Coerce a character string to a class "Path"
@@ -313,6 +316,6 @@ asPath.character <- function(obj) {
 
 #' @export
 #' @importFrom methods new
-setAs(from = "character", to="Path", function(from) {
+setAs(from = "character", to = "Path", function(from) {
   new("Path", from)
 })
