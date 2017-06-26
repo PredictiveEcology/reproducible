@@ -10,7 +10,7 @@
 #' @author Eliot McIntire
 #' @docType methods
 #' @export
-#' @importFrom method selectMethod showMethods is
+#' @importFrom methods selectMethod showMethods is
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname tagsByClass
 #'
