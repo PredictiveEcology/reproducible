@@ -23,7 +23,7 @@
 #'         \code{\link[git2r]{git_repository-class}}
 #'
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
-  .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools")
+  .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools") # nolint
   params <- .parse_git_repo(repo)
   gitHash <- if (is.null(params$ref)) "master" else params$ref
 

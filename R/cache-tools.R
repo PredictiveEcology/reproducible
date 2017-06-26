@@ -116,7 +116,7 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("spades.cachePath") )
+      message("x not specified; using ", getOption("spades.cachePath"))
       x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
@@ -178,7 +178,7 @@ setMethod(
   "showCache",
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("spades.cachePath") )
+      message("x not specified; using ", getOption("spades.cachePath"))
       x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
@@ -218,7 +218,7 @@ setMethod(
   "keepCache",
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("spades.cachePath") )
+      message("x not specified; using ", getOption("spades.cachePath"))
       x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
