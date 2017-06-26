@@ -57,6 +57,8 @@ r_check_args: "--as-cran"
 
 r_binary_packages:
   - covr
+
+r_github_packages:
   - lintr
 
 warnings_are_errors: true
