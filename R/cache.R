@@ -629,7 +629,8 @@ setMethod(
 #' @export
 #' @importFrom digest digest
 #' @importFrom raster filename dataType inMemory writeRaster nlayers
-#' @importFrom methods slot is selectMethod showMethods slot<-
+#' @importFrom methods is selectMethod showMethods slot slot<-
+#' @include consistentPaths.R
 #' @rdname prepareFileBackedRaster
 #'
 prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
