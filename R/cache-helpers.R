@@ -630,7 +630,7 @@ setMethod("Copy",
 setMethod("Copy",
           signature(object = "environment"),
           definition = function(object,  filebackedDir, ...) {
-            listVersion <- Copy(as.list(object, all.names=TRUE),  filebackedDir, ...)
+            listVersion <- Copy(as.list(object, all.names = TRUE),  filebackedDir, ...)
             as.environment(listVersion)
           })
 
