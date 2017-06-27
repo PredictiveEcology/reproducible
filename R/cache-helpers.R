@@ -125,9 +125,9 @@ setMethod(
 #'
 #' This is a generic definition that can be extended according to class. Normally,
 #' checkPath can be called directly, but does not have class-specific methods.
-0#'
+#'
 #' @param object An R object
-#' @param create Logical. If TRUE, then it will create the path for cache. 
+#' @param create Logical. If TRUE, then it will create the path for cache.
 #'
 #' @return A character string with a path to a cache repository.
 #'
