@@ -1,4 +1,4 @@
-test_that("test-cacheArguments", {
+test_that("test sideEffects makeCopy args", {
 
   outdir<-tempdir()
   setwd(outdir)
