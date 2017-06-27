@@ -36,8 +36,8 @@ setMethod(
 #' @param functionName A character string indicating the function name
 #'
 #' @author Eliot McIntire
-#' @export
 #' @docType methods
+#' @export
 #' @rdname cacheMessage
 #'
 setGeneric(".cacheMessage", function(object, functionName) {
@@ -62,10 +62,11 @@ setMethod(
 #'
 #' @param object Any R object.
 #'
-#' @export
-#' @docType methods
-#' @rdname objSizeInclEnviros
 #' @author Eliot McIntire
+#' @docType methods
+#' @export
+#' @rdname objSizeInclEnviros
+#'
 setGeneric(".objSizeInclEnviros", function(object) {
   standardGeneric(".objSizeInclEnviros")
 })
@@ -237,8 +238,8 @@ getFunctionName <- function(FUN, ..., overrideCall) { # nolint
     signat <- unlist(sigArgs[unlist(lapply(sigArgs, function(y) any(y)))])
 
     matchedCall <- as.list(
-      match.call(FUN, do.call(call, append(list(name = FUN@generic),
-                                           list(...)))))
+      match.call(FUN, do.call(call, append(list(name = FUN@generic), list(...))))
+    )
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
     matchedCall <- matchedCall[na.omit(match(names(matchedCall), FUN@signature[signat]))]
 
