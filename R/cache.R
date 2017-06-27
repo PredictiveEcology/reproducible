@@ -71,7 +71,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param sideEffect Logical. Check if files to be downloaded are found locally prior
 #'        to download and try to recover from a copy (\code{makeCopy} must have been set as
-#'        TRUE the first time cache was runned). Default is \code{FALSE}.
+#'        TRUE the first time cache was run). Default is \code{FALSE}.
 #'
 #' @param makeCopy Logical. Make a copy of downloaded files to optimize recovering.
 #'        Effective when cache operates on download. Only work when cache run for
