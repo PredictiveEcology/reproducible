@@ -69,17 +69,21 @@ if (getRversion() >= "3.1.0") {
 #'        a subsequent call and individual items within the object
 #'        \code{attr(mySimOut, "debugCache1")} can be compared.
 #'
-#' @param sideEffect Logical. Check if files to be downloaded are found locally prior
-#'        to download and try to recover from a copy (\code{makeCopy} must have been set as
-#'        TRUE the first time cache was run). Default is \code{FALSE}.
+#' @param sideEffect Logical. Check if files to be downloaded are found locally in the
+#'        cacheRepo prior to download and try to recover from a copy
+#'        (\code{makeCopy} must have been set to \code{TRUE} the first time \code{Cache}
+#'        was run). Default is \code{FALSE}.
 #'
-#' @param makeCopy Logical. Make a copy of downloaded files to optimize recovering.
-#'        Effective when cache operates on download. Only work when cache run for
-#'        the first time for now. Default is \code{FALSE}.
+#' @param makeCopy Logical. If \code{sideEffect} is \code{TRUE}, and makeCopy is \code{TRUE},
+#'        a copy of the downloaded files will be made an stored in the \code{cacheRepo}
+#'        to speed up file recovering, in the case of previous versions of downloaded files
+#'        are corrupted or missing. Currently only works when if
+#'        set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
 #'
-#' @param quick Logical. If \code{TRUE}, \code{digest} is performed using the combination of
-#'        filename and its size. If \code{FALSE} (default), \code{digest} is performed
-#'        using the object.
+#' @param quick Logical. If \code{sideEffect} is \code{TRUE}, setting this to \code{TRUE},
+#'        will cause the \code{digest} to be performed on the filename and file size.
+#'        If \code{FALSE} (default), \code{digest} is performed using the contents of the
+#'        file(s).
 #'
 #' @inheritParams digest::digest
 #' @param digestPathContent Logical. Should arguments that are of class "Path"
