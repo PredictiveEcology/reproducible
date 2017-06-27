@@ -384,11 +384,7 @@ setMethod(
                       to = file.path(repoTo), recursive = TRUE)
           })
         }
-      }# else {
-      #   cacheName <- ""
-      #   cachecurFlst <- ""
-      #   attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
-      # }
+      }
     }
 
     if (isS4(FUN)) attr(output, "function") <- FUN@generic
