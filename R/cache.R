@@ -108,20 +108,20 @@ if (getRversion() >= "3.1.0") {
 #'        in the \code{cacheRepo} prior to download and try to recover from a copy
 #'        (\code{makeCopy} must have been set to \code{TRUE} the first time \code{Cache}
 #'        was run). Default is \code{FALSE}.
-#'        \emph{NOTE: this argument is experimental and way change in future releases.}
+#'        \emph{NOTE: this argument is experimental and may change in future releases.}
 #'
 #' @param makeCopy Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
 #'        a copy of the downloaded files will be made and stored in the \code{cacheRepo}
 #'        to speed up subsequent file recovery in the case where the original copy
 #'        of the downloaded files are corrupted or missing. Currently only works when
 #'        set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
-#'        \emph{NOTE: this argument is experimental and way change in future releases.}
+#'        \emph{NOTE: this argument is experimental and may change in future releases.}
 #'
 #' @param quick Logical. If \code{sideEffect = TRUE}, setting this to \code{TRUE},
 #'        will hash the file's metadata (i.e., filename and file size) instead of
 #'        hashing the contents of the file(s). If set to \code{FALSE} (default),
 #'        the contents of the file(s) are hashed.
-#'        \emph{NOTE: this argument is experimental and way change in future releases.}
+#'        \emph{NOTE: this argument is experimental and may change in future releases.}
 #'
 #' @inheritParams digest::digest
 #'
