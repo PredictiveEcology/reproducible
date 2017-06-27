@@ -586,7 +586,7 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 }
 
 
-#' Recursive copying of nested environments
+#' Recursive copying of nested environments, and other "hard to copy" objects
 #'
 #' When copying environments and all the objects contained within them, there are
 #' no copies made: it is a pass-by-reference operation. Sometimes, a deep copy is
@@ -615,19 +615,6 @@ setMethod(
   "Copy",
   signature(object = "ANY"),
   definition = function(object, filebackedDir, ...) {
-    # make an outer copy
-    if (is.environment(object)) {
-      object <- as.list(object, all.names = TRUE)
-      wasEnv <- TRUE
-    } else {
-      wasEnv <- FALSE
-    }
-
-    if (is.list(object))
-      object <- lapply(object, function(x) Copy(x, filebackedDir, ...))
-
-    if (wasEnv)
-      object <- as.environment(object)
     return(object)
 })
 
@@ -637,6 +624,28 @@ setMethod("Copy",
           definition = function(object, ...) {
             data.table::copy(object)
 })
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "environment"),
+          definition = function(object,  filebackedDir, ...) {
+            listVersion <- Copy(as.list(object, all.names=TRUE),  filebackedDir, ...)
+            as.environment(listVersion)
+          })
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "list"),
+          definition = function(object,  filebackedDir, ...) {
+            lapply(object, function(x) Copy(x, filebackedDir, ...))
+          })
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "data.frame"),
+          definition = function(object,  filebackedDir, ...) {
+            object
+          })
 
 #' @rdname Copy
 setMethod("Copy",
