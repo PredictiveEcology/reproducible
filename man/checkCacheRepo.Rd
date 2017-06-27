@@ -6,18 +6,21 @@
 \alias{.checkCacheRepo,ANY-method}
 \title{Check for cache repository info in ...}
 \usage{
-.checkCacheRepo(object)
+.checkCacheRepo(object, create = FALSE)
 
-\S4method{.checkCacheRepo}{ANY}(object)
+\S4method{.checkCacheRepo}{ANY}(object, create = FALSE)
 }
 \arguments{
-\item{object}{A list of all elements in the call to Cache}
+\item{object}{An R object}
+
+\item{create}{Logical. If TRUE, then it will create the path for cache.}
 }
 \value{
 A character string with a path to a cache repository.
 }
 \description{
-This is a generic definition that can be extended according to class.
+This is a generic definition that can be extended according to class. Normally,
+checkPath can be called directly, but does not have class-specific methods.
 }
 \author{
 Eliot McIntire
