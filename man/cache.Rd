@@ -49,101 +49,118 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
 
-\item{digestPathContent}{Logical. Should arguments that are of class "Path"
+\item{digestPathContent}{Logical. Should arguments that are of class \code{Path}
 (see examples below) have their name digested
-(FALSE, the default), or their
-file contents (TRUE)}
+(\code{FALSE}; default), or their file contents (\code{TRUE}).}
 
 \item{debugCache}{Logical. If \code{TRUE}, then the returned object from the Cache
-function will have two attributes, "debugCache1" and "debugCache2" which
-are the entire list(...) and that same object, but
-after all "robustDigest" calls, at the moment that it is digested using
-\code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")} can
-then be compared to
-a subsequent call and individual items within the object
-\code{attr(mySimOut, "debugCache1")} can be compared.}
+function will have two attributes, \code{debugCache1} and \code{debugCache2},
+which are the entire \code{list(...)} and that same object, but after all
+\code{robustDigest} calls, at the moment that it is digested using
+\code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
+can then be compared to a subsequent call and individual items within
+the object \code{attr(mySimOut, "debugCache1")} can be compared.}
 
-\item{sideEffect}{Logical. Check if files to be downloaded are found locally in the
-cacheRepo prior to download and try to recover from a copy
+\item{sideEffect}{Logical. Check if files to be downloaded are found locally
+in the \code{cacheRepo} prior to download and try to recover from a copy
 (\code{makeCopy} must have been set to \code{TRUE} the first time \code{Cache}
-was run). Default is \code{FALSE}.}
+was run). Default is \code{FALSE}.
+\emph{NOTE: this argument is experimental and way change in future releases.}}
 
-\item{makeCopy}{Logical. If \code{sideEffect} is \code{TRUE}, and makeCopy is \code{TRUE},
-a copy of the downloaded files will be made an stored in the \code{cacheRepo}
-to speed up file recovering, in the case of previous versions of downloaded files
-are corrupted or missing. Currently only works when if
-set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.}
+\item{makeCopy}{Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
+a copy of the downloaded files will be made and stored in the \code{cacheRepo}
+to speed up subsequent file recovery in the case where the original copy
+of the downloaded files are corrupted or missing. Currently only works when
+set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
+\emph{NOTE: this argument is experimental and way change in future releases.}}
 
-\item{quick}{Logical. If \code{sideEffect} is \code{TRUE}, setting this to \code{TRUE},
-will cause the \code{digest} to be performed on the filename and file size.
-If \code{FALSE} (default), \code{digest} is performed using the contents of the
-file(s).}
+\item{quick}{Logical. If \code{sideEffect = TRUE}, setting this to \code{TRUE},
+will hash the file's metadata (i.e., filename and file size) instead of
+hashing the contents of the file(s). If set to \code{FALSE} (default),
+the contents of the file(s) are hashed.
+\emph{NOTE: this argument is experimental and way change in future releases.}}
 }
 \value{
-As with \code{\link[archivist]{cache}}, the return is either the return
-value of the function call or the cached version (i.e., the result from a previous
-call to this same cached function with identical arguments).
-
-If \code{Cache} is called within a SpaDES module, then the cached entry will automatically
-get 3 extra \code{userTags}: eventTime, eventType, and moduleName. These can then be used in
-\code{clearCache} to selectively remove cached objects by eventTime, eventType or moduleName.
-
-\code{Cache} will add a tag to the artifact in the database
-called \code{accessed} which will assign the time that it was
-accessed, either read or write. That way, artifacts can be shown (\code{showCache})
-or removed \code{clearCache} selectively based on their accessed
- dates, rather than only by their
-creation dates. See example in \code{\link{clearCache}}.
+As with \code{\link[archivist]{cache}}, returns the value of the
+function call or the cached version (i.e., the result from a previous call
+to this same cached function with identical arguments).
 }
 \description{
-This function takes elements from \code{\link[archivist]{cache}}, with
-four very critical modifications:
-1) the \code{archivist} package detects different environments as different;
-2) it also does not detect S4 methods correctly due to method inheritance;
-3) it does not detect objects that have file-base storage of information
-(specifically \code{\link[raster]{RasterLayer-class}} objects).
-4) the default hashing method is relatively slow
-This version of the \code{Cache} function accommodates those four special,
-though quite common, cases by:
-1) converting any environments into list equivalents;
-2) identifying the dispatched S4 method (including those made through
-inheritance) before \code{\link[fastdigest]{fastdigest}} is called so the correct
-method is being cached;
-and 3) by running \code{\link[digest]{digest}} on the linked file. Currently,
-only file-backed \code{Raster*} objects are digested (e.g., not \code{ff} objects,
-or any other R object where the data is in a file, rather than RAM object).
-4) We use \code{\link[fastdigest]{fastdigest}} internally when the object is
-in RAM (i.e., not for file-backed objects0) which appears to be up to
-10x faster than \code{\link[digest]{digest}}.
+Cache method that accommodates environments, S4 methods, Rasters
 }
 \details{
-\code{Cache} (uppercase C) is used here so that it is not confused with and does
-not mask the \code{archivist::cache} function.
+Caching R objects using \code{\link[archivist]{cache}} has four important limitations:
+\enumerate{
+  \item the \code{archivist} package detects different environments as different;
+  \item it also does not detect S4 methods correctly due to method inheritance;
+  \item it does not detect objects that have file-base storage of information
+        (specifically \code{\link[raster]{RasterLayer-class}} objects);
+  \item the default hashing algorithm is relatively slow.
+}
+This version of the \code{Cache} function accommodates those four special,
+though quite common, cases by:
+\enumerate{
+  \item converting any environments into list equivalents;
+  \item identifying the dispatched S4 method (including those made through
+        inheritance) before hashing so the correct method is being cached;
+  \item by hashing the linked file, rather than the Raster object.
+        Currently, only file-backed \code{Raster*} objects are digested
+        (e.g., not \code{ff} objects, or any other R object where the data
+        are on disk instead of in RAM);
+  \item using \code{\link[fastdigest]{fastdigest}} internally when the object
+        is in RAM, which can be up to ten times faster than
+        \code{\link[digest]{digest}}. Note that file-backed objects are still
+        hashed using \code{\link[digest]{digest}}.
+}
+
+If \code{Cache} is called within a SpaDES module, then the cached entry will automatically
+get 3 extra \code{userTags}: \code{eventTime}, \code{eventType}, and \code{moduleName}.
+These can then be used in \code{clearCache} to selectively remove cached objects
+by \code{eventTime}, \code{eventType} or \code{moduleName}.
+
+\code{Cache} will add a tag to the artifact in the database called \code{accessed},
+which will assign the time that it was accessed, either read or write.
+That way, artifacts can be shown (using \code{showCache}) or removed (using
+\code{clearCache}) selectively, based on their access dates, rather than only
+by their creation dates. See example in \code{\link{clearCache}}.
+\code{Cache} (uppercase C) is used here so that it is not confused with, and does
+not mask, the \code{archivist::cache} function.
 }
 \note{
 As indicated above, several objects require pre-treatment before
 caching will work as expected. The function \code{robustDigest} accommodates this.
 It is an S4 generic, meaning that developers can produce their own methods for
 different classes of objects. Currently, there are methods for several types
-of classes. See \code{\link{robustDigest}} .
+of classes. See \code{\link{robustDigest}}.
 
 See \code{\link{robustDigest}} for other specifics for other classes.
+}
+\section{Filepaths}{
+
+If a function has a path argument, there is some ambiguity about what should be
+done. Possiblities include:
+\enumerate{
+  \item hash the string as is (this will be very system specific, meaning a
+        \code{Cache} call will not work if copied between systems or directories);
+  \item hash the \code{basename(path)};
+  \item hash the contents of the file.
+}
+If paths are passed in as is (i.e,. character string), the result will not be predictable.
+Instead, one should use the wrapper function \code{asPath(path)}, which sets the
+class of the string to a \code{Path}, and one should decide whether one wants
+to digest the content of the file (using \code{digestPathContent = TRUE}),
+or just the filename (\code{(digestPathContent = FALSE)}). See examples.
+}
+
+\section{Stochasticity}{
 
 In general, it is expected that caching will only be used when stochasticity
 is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
 sufficient number of calls to \code{experiment}) such that no new explorations
 of stochastic outcomes are required. It will also be very useful in a
-reproducible work flow
-
-If a function has a path argument, there is some ambiguity about what should be
-done. Possiblities: digest the string as is (this will be very system specific,
-meaning a Cache will not work if copied between systems or directories), digest
-the basename(path), or digest the contents of the file. If paths are passed in as
-is (i.e,. character string), the result will not be entirely predictable. Instead,
-one should use the wrapper function asPath(path), and one should decide whether
-one wants to digest the content of the file (\code{digestPathContent = TRUE})
-or just the filename (\code{(digestPathContent = FALSE)}). See example.
+reproducible workflow.
 }
+
 \examples{
 \dontrun{
 
@@ -170,8 +187,7 @@ Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir)
 Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir) # cached copy is loaded
 # vs. which takes only 1 complete time before cached copy is loaded
 Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir)
-Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir) #cached copy is loaded
-
+Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir) # cached copy is loaded
 }
 
 }
