@@ -4,23 +4,16 @@
 \name{Cache}
 \alias{Cache}
 \alias{Cache,ANY-method}
-\alias{cache}
-\alias{cache,ANY-method}
 \title{Cache method that accommodates environments, S4 methods, Rasters}
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
-  userTags = c(), debugCache = FALSE)
+  userTags = c(), digestPathContent = FALSE, debugCache = FALSE)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
-  compareRasterFileLength = 1e+06, userTags = c(), debugCache = FALSE)
-
-cache(cacheRepo = NULL, FUN, ..., notOlderThan = NULL, objects = NULL,
-  outputObjects = NULL, algo = "xxhash64")
-
-\S4method{cache}{ANY}(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,
-  objects = NULL, outputObjects = NULL, algo = "xxhash64")
+  compareRasterFileLength = 1e+06, userTags = c(),
+  digestPathContent = FALSE, debugCache = FALSE)
 }
 \arguments{
 \item{FUN}{A function to be called.}
@@ -29,9 +22,11 @@ cache(cacheRepo = NULL, FUN, ..., notOlderThan = NULL, objects = NULL,
 
 \item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 
-\item{objects}{Character vector of objects within the simList that should
-be considered for caching. i.e., only use a subset of
-the simList objects. Only used if ... includes a \code{simList}.}
+\item{objects}{Character vector of objects to be digested. This is only applicable
+if there is a list, environment or simList with named objects
+within it. Only this/these objects will be considered for caching,
+i.e., only use a subset of
+the list, environment or simList objects.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for \code{simList} objects}
@@ -52,10 +47,15 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
 
+\item{digestPathContent}{Logical. Should arguments that are of class "Path"
+(see examples below) have their name digested
+(FALSE, the default), or their
+file contents (TRUE)}
+
 \item{debugCache}{Logical. If \code{TRUE}, then the returned object from the Cache
 function will have two attributes, "debugCache1" and "debugCache2" which
 are the entire list(...) and that same object, but
-after all "makeDigestible" calls, at the moment that it is digested using
+after all "robustDigest" calls, at the moment that it is digested using
 \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")} can
 then be compared to
 a subsequent call and individual items within the object
@@ -78,14 +78,14 @@ or removed \code{clearCache} selectively based on their accessed
 creation dates. See example in \code{\link{clearCache}}.
 }
 \description{
-This function is largely copied from \code{\link[archivist]{cache}}, with
+This function takes elements from \code{\link[archivist]{cache}}, with
 four very critical modifications:
 1) the \code{archivist} package detects different environments as different;
 2) it also does not detect S4 methods correctly due to method inheritance;
 3) it does not detect objects that have file-base storage of information
 (specifically \code{\link[raster]{RasterLayer-class}} objects).
 4) the default hashing method is relatively slow
-This version of the \code{Cache} function accommodates those three special,
+This version of the \code{Cache} function accommodates those four special,
 though quite common, cases by:
 1) converting any environments into list equivalents;
 2) identifying the dispatched S4 method (including those made through
@@ -97,180 +97,68 @@ or any other R object where the data is in a file, rather than RAM object).
 4) We use \code{\link[fastdigest]{fastdigest}} internally when the object is
 in RAM (i.e., not for file-backed objects0) which appears to be up to
 10x faster than \code{\link[digest]{digest}}.
-In the \code{SpaDES} context, the \code{simList} has an environment as one of
-its slots, thus using \code{archivist::cache} will not work correctly.
 }
 \details{
-Some of the details of the changes include:
-We remove all elements that have an environment as part of their attributes.
-This is generally functions that are loaded from the modules,
-but also the \code{.envir} slot in the \code{simList}.
-Functions are formatted to text before running \code{fastdigest}.
-
-Cache (capital C) is a short cut to using SpaDES::cache (which is deprecated).
-It has the added benefit that if no cacheRepo is specified, it will choose a smart option.
-If called from inside a SpaDES module, \code{Cache} will use the cacheRepo from
-a call to \code{cachePath(sim)}, taking the sim from the call stack.
-Similarly, if no \code{cacheRepo} is specified, then it will use
-\code{getOption("spades.cachePath") }, which will, by default, be a temporary
-location with no persistence between R sessions!
-To persist between sessions, use \code{SpaDES::setPaths()} every session.
-
-\code{Cache} (uppercase C) is also defined so that it is not confused with the
-\code{archivist::cache} function which will not work in a SpaDES context.
-If a user would like to use \code{cache} (lowercase c), then it must be
-always prefixed with \code{SpaDES::cache(  )} so that it does not accidentally
-call \code{archivist::cache}.
+\code{Cache} (uppercase C) is used here so that it is not confused with and does
+not mask the \code{archivist::cache} function.
 }
 \note{
-Several objects require pre-treatment before successful caching will
-work. \code{Raster*} objects have the potential for disk-backed storage. If
-the object in the R session is cached using \code{archivist::cache}, only
-the header component will be assessed for caching. Thus, objects like this
-require more work. Also, because \code{Raster*} can have a built-in representation
-for having their data content located on disk, this format will be maintained
-if the raster already is file-backed, i.e., to create .tif or .grd backed rasters,
-use writeRaster first, then Cache. The .tif or .grd will be copied to the "raster"
-subdirectory of the \code{cacheRepo}.
-Their RAM representation (as an R object) will still be in the usual "gallery" directory.
-For \code{inMemory} raster objects, they will remain as binary .rdata files.
+As indicated above, several objects require pre-treatment before
+caching will work as expected. The function \code{robustDigest} accommodates this.
+It is an S4 generic, meaning that developers can produce their own methods for
+different classes of objects. Currently, there are methods for several types
+of classes. See \code{\link{robustDigest}} .
 
-See \code{\link{makeDigestible}} for other specifics for other classes.
+See \code{\link{robustDigest}} for other specifics for other classes.
 
 In general, it is expected that caching will only be used when stochasticity
 is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
 sufficient number of calls to \code{experiment}) such that no new explorations
 of stochastic outcomes are required. It will also be very useful in a
 reproducible work flow
+
+If a function has a path argument, there is some ambiguity about what should be
+done. Possiblities: digest the string as is (this will be very system specific,
+meaning a Cache will not work if copied between systems or directories), digest
+the basename(path), or digest the contents of the file. If paths are passed in as
+is (i.e,. character string), the result will not be entirely predictable. Instead,
+one should use the wrapper function asPath(path), and one should decide whether
+one wants to digest the content of the file (\code{digestPathContent = TRUE})
+or just the filename (\code{(digestPathContent = FALSE)}). See example.
 }
-\section{Caching as part of \code{SpaDES}}{
-
-
-\code{SpaDES} has several levels of caching. Each level can be used to a modeler's
-advantage; and, all can be -- and are often -- used concurrently.
-}
-
-\section{\code{spades} or \code{experiment}}{
-
-
-An entire call to \code{spades} or \code{experiment} can be cached.
-This will have the effect of eliminating any stochasticity in the model as the
-output will simply be the cached version of the \code{simList}.
-This is likely most useful in situations where reproducibility is more
-important than "new" stochasticity (e.g., building decision support systems,
-apps, final version of a manuscript).
-}
-
-\section{Module-level caching}{
-
-
-If the parameter \code{.useCache = TRUE} in the module's metadata, then the
-\code{doEvent.moduleName} will be cached. That means that every time that module
-is called from within a spades or experiment call, \code{Cache} will be called.
-Only the objects inside the \code{simList} that correspond to the
-\code{inputObjects} of the module and the \code{outputObjects} from the module
-(as specified in the module metadata) will be assessed for caching inputs or
-output, respectively.
-
-In general use, module level caching would be mostly useful for modules that have
-no stochasticity, such as data-preparation modules, GIS modules etc.
-}
-
-\section{Event-level caching}{
-
-
-If the parameter \code{.useCache} in the module's metadata
-is set to a character or character vector,
-then that or those event(s) will be cached. That means that every time the event
-is called from within a spades or experiment call, \code{Cache} will be called.
-Only
-the objects inside the \code{simList} that correspond to the \code{inputObjects} or the
-\code{outputObjects} as defined in the module metadata  will be assessed for caching
-inputs or output, respectively. The fact that all and only the named \code{inputObjects}
-and \code{outputObjects} are cached and returned may be inefficient (i.e., it may
-cache more objects than are necessary) for individual events.
-
-Similar to module-level caching, event-level caching would be mostly useful for
-events that have no stochasticity, such as data-preparation events, GIS events etc.
-}
-
-\section{Function-level caching}{
-
-
-Any function can be cached using:
-\code{Cache(FUN = functionName, ...)}
-or
-\code{cache(cacheRepo = cacheDirectory, FUN = functionName, ...)}.
-This will be a slight change to a function call, such as:
-\code{projectRaster(raster, crs = crs(newRaster))}
-to
-\code{Cache(projectRaster, raster, crs = crs(newRaster))}.
-}
-
 \examples{
 \dontrun{
-mySim <- simInit(times = list(start = 0.0, end = 5.0),
-                 params = list(.globals = list(stackName = "landscape", burnStats = "testStats")),
-                 modules = list("randomLandscapes", "fireSpread"),
-                 paths = list(modulePath = system.file("sampleModules", package = "SpaDES")))
 
-  # This functionality can be achieved within a spades call
-  # compare caching ... run once to create cache
-  system.time(outSim <- spades(Copy(mySim), cache = TRUE, notOlderThan = Sys.time(),
-                               .plotInitialTime = NA))
-  # compare... second time is fast
-  system.time(outSimCached <- spades(Copy(mySim), cache = TRUE, .plotInitialTime = NA))
-  all.equal(outSim, outSimCached)
+library(raster)
+tmpdir <- tempdir()
+ras <- raster(extent(0,100,0,100), res = 1,
+              vals = sample(1:5, replace=TRUE, size = 1e4),
+              crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
 
-  # Function caching
-  ras <- raster(extent(0,1e3,0,1e3),res = 1)
-  system.time(map <- Cache(gaussMap, ras, cacheRepo = cachePath(mySim),
-                           notOlderThan = Sys.time()))
-  # second time much faster
-  system.time(mapCached <- Cache(gaussMap, ras, cacheRepo = cachePath(mySim)))
+# A slow operation, like GIS operation
+notCached <- projectRaster(ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
+cached <- Cache(projectRaster, ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
+# 2nd time is much faster
+reRun <- Cache(projectRaster, ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
+all.equal(notCached, reRun) # TRUE meaning the recovered cached version is same
+                            # as notCached version
 
-  # They are the same
-  all.equal(map, mapCached)
+#Paths -- are character strings, it will take 2 complete passes to before
+#  a cached copy is used when it is a save event (read or load is different)
+tmpdir <- file.path(tempdir(), "test")
+obj <- 1:10
+Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir)
+Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir)
+Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir) # cached copy is loaded
+# vs. which takes only 1 complete time before cached copy is loaded
+Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir)
+Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir) #cached copy is loaded
 
-  # Module-level
-  # In this example, we will use the cache on the randomLandscapes module
-  # This means that each subsequent call to spades will result in identical
-  # outputs from the randomLandscapes module (only!).
-  # This would be useful when only one random landscape is needed
-  # simply for trying something out, or putting into production code
-  # (e.g., publication, decision support, etc.)
-  params(mySim)$randomLandscapes$.useCache <- TRUE
-  system.time(randomSim <- spades(Copy(mySim), .plotInitialTime = NA,
-                                 notOlderThan = Sys.time(), debug = TRUE))
-
-  # user  system elapsed
-  # 1.26    0.25    7.00
-  # Vastly faster
-  system.time(randomSimCached <- spades(Copy(mySim), .plotInitialTime = NA,
-                                 debug = TRUE))
-   # user  system elapsed
-   # 0.22    0.00    0.24
-   # Test that only layers produced in randomLandscapes are identical, not fireSpread
-   layers <- list("DEM","forestAge", "habitatQuality", "percentPine","Fires")
-   same <- lapply(layers, function(l) identical(randomSim$landscape[[l]],
-                                        randomSimCached$landscape[[l]]))
-   names(same) <- layers
-   print(same) # Fires is not same because it is not in the randomLandscape module that was cached
-
-   # Note - one can access cached items manually (rather than simply
-   #    rerunning the same Cache function again)
-   if (requireNamespace("archivist")) {
-     # examine the cache
-     showCache(mySim)
-     # get the RasterLayer that was produced with the gaussMap function:
-     map <- showCache(mySim, userTags = "gaussMap")$artifact \%>\%
-       archivist::loadFromLocalRepo(repoDir = cachePath(mySim), value = TRUE)
-   }
 }
 
 }
 \seealso{
-\code{\link[archivist]{cache}}, \code{\link{makeDigestible}}
+\code{\link[archivist]{cache}}, \code{\link{robustDigest}}
 }
 \author{
 Eliot McIntire

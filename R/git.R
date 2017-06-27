@@ -23,7 +23,7 @@
 #'         \code{\link[git2r]{git_repository-class}}
 #'
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
-  .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools")
+  .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools") # nolint
   params <- .parse_git_repo(repo)
   gitHash <- if (is.null(params$ref)) "master" else params$ref
 
@@ -60,16 +60,6 @@ checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
   if (needSwitchURL) {
     remote_set_url(repo, "origin", url = url1)
   }
-
-  # # Get specific LandWeb version
-  # hasUncommittedFiles <- sum(sapply(status(repo), length))>0
-  # if(hasUncommittedFiles) {
-  #   lastCommit <- revparse_single(repo, "HEAD")
-  #   git2r::add(repo, unlist(status(repo)$unstaged))
-  #   tempCommit <- commit(repo, "testing")
-  # } else {
-  #   lastCommit <- NULL
-  # }
 
   if (gitHash %in% c("development", "master")) git2r::pull(repo, cred)
 
