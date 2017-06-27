@@ -123,9 +123,11 @@ setMethod(
 ################################################################################
 #' Check for cache repository info in ...
 #'
-#' This is a generic definition that can be extended according to class.
+#' This is a generic definition that can be extended according to class. Normally,
+#' checkPath can be called directly, but does not have class-specific methods.
 #'
-#' @param object A list of all elements in the call to Cache
+#' @param object An R object
+#' @param create Logical. If TRUE, then it will create the path for cache.
 #'
 #' @return A character string with a path to a cache repository.
 #'
@@ -135,7 +137,7 @@ setMethod(
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname checkCacheRepo
 #'
-setGeneric(".checkCacheRepo", function(object) {
+setGeneric(".checkCacheRepo", function(object, create=FALSE) {
   standardGeneric(".checkCacheRepo")
 })
 
@@ -144,8 +146,8 @@ setGeneric(".checkCacheRepo", function(object) {
 setMethod(
   ".checkCacheRepo",
   signature = "ANY",
-  definition = function(object) {
-    stop("must supply a cacheRepo argument")
+  definition = function(object, create) {
+    checkPath(object, create)
 })
 
 ################################################################################
