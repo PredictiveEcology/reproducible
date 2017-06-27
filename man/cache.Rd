@@ -8,12 +8,14 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
-  userTags = c(), digestPathContent = FALSE, debugCache = FALSE)
+  userTags = c(), digestPathContent = FALSE, debugCache = FALSE,
+  sideEffect = FALSE, makeCopy = FALSE, quick = FALSE)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   compareRasterFileLength = 1e+06, userTags = c(),
-  digestPathContent = FALSE, debugCache = FALSE)
+  digestPathContent = FALSE, debugCache = FALSE, sideEffect = FALSE,
+  makeCopy = FALSE, quick = FALSE)
 }
 \arguments{
 \item{FUN}{A function to be called.}
@@ -60,6 +62,22 @@ after all "robustDigest" calls, at the moment that it is digested using
 then be compared to
 a subsequent call and individual items within the object
 \code{attr(mySimOut, "debugCache1")} can be compared.}
+
+\item{sideEffect}{Logical. Check if files to be downloaded are found locally in the
+cacheRepo prior to download and try to recover from a copy
+(\code{makeCopy} must have been set to \code{TRUE} the first time \code{Cache}
+was run). Default is \code{FALSE}.}
+
+\item{makeCopy}{Logical. If \code{sideEffect} is \code{TRUE}, and makeCopy is \code{TRUE},
+a copy of the downloaded files will be made an stored in the \code{cacheRepo}
+to speed up file recovering, in the case of previous versions of downloaded files
+are corrupted or missing. Currently only works when if
+set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.}
+
+\item{quick}{Logical. If \code{sideEffect} is \code{TRUE}, setting this to \code{TRUE},
+will cause the \code{digest} to be performed on the filename and file size.
+If \code{FALSE} (default), \code{digest} is performed using the contents of the
+file(s).}
 }
 \value{
 As with \code{\link[archivist]{cache}}, the return is either the return

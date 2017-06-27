@@ -68,6 +68,23 @@ if (getRversion() >= "3.1.0") {
 #'        then be compared to
 #'        a subsequent call and individual items within the object
 #'        \code{attr(mySimOut, "debugCache1")} can be compared.
+#'
+#' @param sideEffect Logical. Check if files to be downloaded are found locally in the
+#'        cacheRepo prior to download and try to recover from a copy
+#'        (\code{makeCopy} must have been set to \code{TRUE} the first time \code{Cache}
+#'        was run). Default is \code{FALSE}.
+#'
+#' @param makeCopy Logical. If \code{sideEffect} is \code{TRUE}, and makeCopy is \code{TRUE},
+#'        a copy of the downloaded files will be made an stored in the \code{cacheRepo}
+#'        to speed up file recovering, in the case of previous versions of downloaded files
+#'        are corrupted or missing. Currently only works when if
+#'        set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
+#'
+#' @param quick Logical. If \code{sideEffect} is \code{TRUE}, setting this to \code{TRUE},
+#'        will cause the \code{digest} to be performed on the filename and file size.
+#'        If \code{FALSE} (default), \code{digest} is performed using the contents of the
+#'        file(s).
+#'
 #' @inheritParams digest::digest
 #' @param digestPathContent Logical. Should arguments that are of class "Path"
 #'                          (see examples below) have their name digested
@@ -166,7 +183,8 @@ setGeneric("Cache", signature = "...",
                     objects = NULL, outputObjects = NULL, algo = "xxhash64",
                     cacheRepo = NULL, compareRasterFileLength = 1e6,
                     userTags = c(), digestPathContent = FALSE,
-                    debugCache = FALSE) {
+                    debugCache = FALSE, sideEffect= FALSE,
+                    makeCopy = FALSE, quick = FALSE) {
              archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
 
@@ -176,7 +194,7 @@ setMethod(
   "Cache",
   definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
                         algo, cacheRepo, compareRasterFileLength, userTags,
-                        digestPathContent, debugCache) {
+                        digestPathContent, debugCache, sideEffect, makeCopy, quick) {
     tmpl <- list(...)
 
     if (!is(FUN, "function")) stop("Can't understand the function provided to Cache. \n",
@@ -198,6 +216,11 @@ setMethod(
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
       suppressWarnings(archivist::createLocalRepo(cacheRepo))
+    }
+
+    # List file prior to cache
+    if (sideEffect) {
+      priorRepo <-  file.path(cacheRepo, list.files(cacheRepo))
     }
 
     # get function name and convert the contents to text so digestible
@@ -234,6 +257,59 @@ setMethod(
                                repoDir = cacheRepo,
                                tags = paste0("accessed:", Sys.time())))
 
+        if (sideEffect) {
+          needDwd <- logical()
+          fromCopy <- character()
+          cachedChcksum <- attributes(out)$chcksumFiles
+
+          if (!is.null(cachedChcksum))
+            for (x in cachedChcksum){
+              chcksumName <- sub(":.*", "", x)
+              chcksumPath <- file.path(cacheRepo,basename(chcksumName))
+
+              if (file.exists(chcksumPath)) {
+                checkDigest <- TRUE
+              } else {
+                checkCopy <- file.path(cacheRepo,"gallery",basename(chcksumName))
+                if (file.exists(checkCopy)) {
+                  chcksumPath <- checkCopy
+                  checkDigest <- TRUE
+                  fromCopy <- c(fromCopy,basename(chcksumName))
+                } else {
+                  checkDigest <- FALSE
+                  needDwd <- c(needDwd, TRUE)
+                }
+              }
+              if (checkDigest) {
+                if (quick){
+                  sizeCurrent <- lapply(chcksumPath, function(x) {list(basename(x), file.size(x))})
+                  chcksumFls <- lapply(sizeCurrent, function(x) {digest::digest(x, algo = algo)})
+                } else {
+                  chcksumFls <- lapply(chcksumPath, function(x) {digest::digest(file = chcksumPath, algo = algo)})
+                }
+                # Format checksum from current file as cached checksum
+                currentChcksum <- paste0(chcksumName, ":", chcksumFls)
+
+                # List current files with divergent checksum (or checksum missing)
+                if (!currentChcksum %in% cachedChcksum) {
+                  needDwd <- c(needDwd, TRUE)
+                } else {
+                  needDwd <- c(needDwd, FALSE)
+                }
+              }
+            }
+          if (any(needDwd)) {
+            do.call(FUN, list(...))
+          }
+
+          if (NROW(fromCopy)) {
+            repoTo <- file.path(cacheRepo, "gallery")
+            lapply(fromCopy, function(x) {file.copy(file.path(repoTo,basename(x)),
+                                                    file.path(cacheRepo),
+                                                    recursive=TRUE)})
+          }
+        }
+
         # This allows for any class specific things
         out <- .prepareOutput(out, cacheRepo, ...)
 
@@ -261,6 +337,33 @@ setMethod(
 
     attr(output, "tags") <- paste0("cacheId:", outputHash)
     attr(output, "call") <- ""
+
+    if (sideEffect) {
+      outPath <- file.path(cacheRepo)
+      postRepo <- file.path(cacheRepo, list.files(cacheRepo))
+      dwdFlst <- setdiff(postRepo, priorRepo)
+      if(length(dwdFlst>0)){
+        if (quick){
+          sizecurFlst <- lapply(dwdFlst, function(x) {list(basename(x), file.size(file.path(x)))})
+          cachecurFlst <- lapply(sizecurFlst, function(x) {digest::digest(x, algo = algo)})
+        }else{
+          cachecurFlst <- lapply(dwdFlst, function(x) {digest::digest(file = x, algo = algo)})
+        }
+        cacheName<-paste0(basename(cacheRepo),"/",basename(dwdFlst))
+        attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
+        if (makeCopy) {
+          repoTo <- file.path(cacheRepo, "gallery")
+          lapply(dwdFlst, function(x) {file.copy(file.path(cacheRepo,basename(x)),
+                                                 file.path(repoTo),
+                                                 recursive=TRUE)})
+        }
+      } else {
+        cacheName <- "blabla"
+        cachecurFlst <- "c007"
+        attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
+      }
+    }
+
     if (isS4(FUN)) attr(output, "function") <- FUN@generic
 
     # Can make new methods by class to add tags to outputs
