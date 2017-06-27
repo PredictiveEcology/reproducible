@@ -18,6 +18,7 @@
 #'
 #' @export
 #' @importFrom archivist rmFromLocalRepo searchInLocalRepo
+#' @importFrom methods setGeneric setMethod
 #' @param userTags Character vector. If used, this will be used in place of the \code{after} and
 #'                 \code{before}. Specifying one or more \code{userTag} here will
 #'                 clear all objects that

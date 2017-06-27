@@ -8,7 +8,7 @@ test_that("spelling errors", {
   ## ensure that stats terms are included in the word list
   pkg <- "reproducible"
   .wordsFile <- system.file("dict/words.rds", package = pkg)
-  .words <- readRDS(.words_file)
+  .words <- readRDS(.wordsFile)
   .en_stats <- hunspell::en_stats # nolint
   .complete <- all(.en_stats %in% .words)
   expect_true(.complete)
