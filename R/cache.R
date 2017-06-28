@@ -209,6 +209,13 @@ setMethod(
                         digestPathContent, omitArgs, debugCache, sideEffect, makeCopy, quick) {
     tmpl <- list(...)
 
+    if(debugCache) {
+      on.exit({
+        if(is.null(attr(output, "debugCache1"))) {
+          try(output <- .debugCache(output, preDigest, ...), silent=TRUE)
+        }
+      })
+    }
     if (!is(FUN, "function")) stop("Can't understand the function provided to Cache.\n",
                                    "Did you write it in the form: ",
                                    "Cache(function, functionArguments)?")
