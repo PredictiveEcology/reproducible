@@ -98,13 +98,17 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
 #'
-#' @param debugCache Logical. If \code{TRUE}, then the returned object from the Cache
+#' @param debugCache Character. Either \code{"complete"} or \code{"quick"} (uses
+#'        partial matching, so "c" or "q" work).
+#'        If \code{"complete"}, then the returned object from the Cache
 #'        function will have two attributes, \code{debugCache1} and \code{debugCache2},
 #'        which are the entire \code{list(...)} and that same object, but after all
 #'        \code{robustDigest} calls, at the moment that it is digested using
 #'        \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
 #'        can then be compared to a subsequent call and individual items within
 #'        the object \code{attr(mySimOut, "debugCache1")} can be compared.
+#'        If \code{"quick"}, then it will return the same two objects directly,
+#'        without evalutating the \code{FUN(...)}.
 #'
 #' @param sideEffect Logical. Check if files to be downloaded are found locally
 #'        in the \code{cacheRepo} prior to download and try to recover from a copy
@@ -195,7 +199,7 @@ setGeneric(
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
            userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
-           debugCache = FALSE,
+           debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
@@ -209,13 +213,6 @@ setMethod(
                         digestPathContent, omitArgs, debugCache, sideEffect, makeCopy, quick) {
     tmpl <- list(...)
 
-    if(debugCache) {
-      on.exit({
-        if(is.null(attr(output, "debugCache1"))) {
-          try(output <- .debugCache(output, preDigest, ...), silent=TRUE)
-        }
-      })
-    }
     if (!is(FUN, "function")) stop("Can't understand the function provided to Cache.\n",
                                    "Did you write it in the form: ",
                                    "Cache(function, functionArguments)?")
@@ -254,9 +251,16 @@ setMethod(
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
                         digestPathContent = digestPathContent)
+
     if(!is.null(omitArgs)) {
       preDigest <- preDigest[!(names(preDigest) %in% omitArgs)]
     }
+
+    if(length(debugCache)) {
+      if(!is.na(pmatch(debugCache, "quick")))
+        return(list(hash=preDigest, content = list(...)))
+    }
+
     outputHash <- fastdigest(preDigest)
 
     # compare outputHash to existing Cache record
@@ -346,8 +350,9 @@ setMethod(
         # This allows for any class specific things
         output <- .prepareOutput(output, cacheRepo, ...)
 
-        if (debugCache) {
-          output <- .debugCache(output, preDigest, ...)
+        if(length(debugCache)) {
+          if(!is.na(pmatch(debugCache, "complete")))
+            output <- .debugCache(output, preDigest, ...)
         }
         return(output)
       }
@@ -430,9 +435,11 @@ setMethod(
         attr(outputToSave, "function") <- attr(output, "function")
       output <- outputToSave
     }
-    if (debugCache) {
-      output <- .debugCache(output, preDigest, ...)
-      outputToSave <- .debugCache(outputToSave, preDigest, ...)
+    if(length(debugCache)) {
+      if(!is.na(pmatch(debugCache, "complete"))) {
+        output <- .debugCache(output, preDigest, ...)
+        outputToSave <- .debugCache(outputToSave, preDigest, ...)
+      }
     }
 
     while (!written) {

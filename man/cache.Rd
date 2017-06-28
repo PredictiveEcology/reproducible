@@ -9,13 +9,13 @@
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
   userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
-  debugCache = FALSE, sideEffect = FALSE, makeCopy = FALSE,
+  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = FALSE)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   compareRasterFileLength = 1e+06, userTags = c(),
-  digestPathContent = FALSE, omitArgs = NULL, debugCache = FALSE,
+  digestPathContent = FALSE, omitArgs = NULL, debugCache = character(),
   sideEffect = FALSE, makeCopy = FALSE, quick = FALSE)
 }
 \arguments{
@@ -56,13 +56,17 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
-\item{debugCache}{Logical. If \code{TRUE}, then the returned object from the Cache
+\item{debugCache}{Character. Either \code{"complete"} or \code{"quick"} (uses
+partial matching, so "c" or "q" work).
+If \code{"complete"}, then the returned object from the Cache
 function will have two attributes, \code{debugCache1} and \code{debugCache2},
 which are the entire \code{list(...)} and that same object, but after all
 \code{robustDigest} calls, at the moment that it is digested using
 \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
 can then be compared to a subsequent call and individual items within
-the object \code{attr(mySimOut, "debugCache1")} can be compared.}
+the object \code{attr(mySimOut, "debugCache1")} can be compared.
+If \code{"quick"}, then it will return the same two objects directly,
+without evalutating the \code{FUN(...)}.}
 
 \item{sideEffect}{Logical. Check if files to be downloaded are found locally
 in the \code{cacheRepo} prior to download and try to recover from a copy
