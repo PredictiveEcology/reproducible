@@ -257,10 +257,10 @@ setMethod(
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-        out <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+        output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
         # Class-specific message
-        .cacheMessage(out, functionDetails$functionName)
+        .cacheMessage(output, functionDetails$functionName)
 
         suppressWarnings(
           archivist::addTagsRepo(isInRepo$artifact[lastOne],
@@ -271,7 +271,7 @@ setMethod(
         if (sideEffect) {
           needDwd <- logical(0)
           fromCopy <- character(0)
-          cachedChcksum <- attributes(out)$chcksumFiles
+          cachedChcksum <- attributes(output)$chcksumFiles
 
           if (!is.null(cachedChcksum)) {
             for (x in cachedChcksum) {
@@ -331,9 +331,13 @@ setMethod(
         }
 
         # This allows for any class specific things
-        out <- .prepareOutput(out, cacheRepo, ...)
+        output <- .prepareOutput(output, cacheRepo, ...)
 
-        return(out)
+        if (debugCache) {
+          output <- .debugCache(output, preDigest, ...)
+        }
+
+        return(output)
       }
     }
 
@@ -415,8 +419,8 @@ setMethod(
       output <- outputToSave
     }
     if (debugCache) {
-      attr(output, "debugCache1") <- attr(outputToSave, "debugCache1") <- list(...)
-      attr(output, "debugCache2") <- attr(outputToSave, "debugCache2") <- tmpl
+      output <- .debugCache(output, preDigest, ...)
+      outputToSave <- .debugCache(outputToSave, preDigest, ...)
     }
 
     while (!written) {

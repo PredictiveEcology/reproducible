@@ -148,7 +148,11 @@ setMethod(
   ".checkCacheRepo",
   signature = "ANY",
   definition = function(object, create) {
-    checkPath(object, create)
+    cacheRepo <- tryCatch(checkPath(object, create), error=function(x) {
+        message("No cacheRepo supplied. Using tempdir()")
+        tempdir()
+      })
+
 })
 
 ################################################################################
@@ -677,4 +681,25 @@ sortDotsUnderscoreFirst <- function(obj) {
   allLower <- which(tolower(names(obj)) == names(obj))
   names(obj)[allLower] <- paste0("ALLLOWER", names(obj)[allLower])
   obj[order(names(obj))]
+}
+
+################################################################################
+#' Attach debug info to return for Cache
+#'
+#' Internal use only. Attaches an attribute to the output, useable for
+#' debugging the Cache.
+#'
+#' @param obj  An arbitrary R object.
+#'
+#' @return The same object as \code{obj}, but with 2 attributes set.
+#'
+#' @author Eliot McIntire
+#' @importFrom data.table setattr
+#' @docType methods
+#' @rdname debugCache
+#'
+.debugCache <- function(obj, preDigest, ...) {
+  setattr(obj, "debugCache1", list(...))
+  setattr(obj, "debugCache2", preDigest)
+  obj
 }
