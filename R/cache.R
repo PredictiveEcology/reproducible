@@ -95,7 +95,7 @@ if (getRversion() >= "3.1.0") {
 #'        when determining if the Raster file is already in the database.
 #'        Note: uses \code{\link[digest]{digest}} for file-backed Raster.
 #'        Default 1e6. Passed to \code{prepareFileBackedRaster}.
-#'        
+#'
 #' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
 #'
 #' @param debugCache Logical. If \code{TRUE}, then the returned object from the Cache
@@ -194,7 +194,7 @@ setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = FALSE, omitArgs = NULL, 
+           userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
            debugCache = FALSE,
            sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
@@ -339,6 +339,9 @@ setMethod(
         # This allows for any class specific things
         output <- .prepareOutput(output, cacheRepo, ...)
 
+        if (debugCache) {
+          output <- .debugCache(output, preDigest, ...)
+        }
         return(output)
       }
     }
@@ -420,7 +423,11 @@ setMethod(
         attr(outputToSave, "function") <- attr(output, "function")
       output <- outputToSave
     }
-    
+    if (debugCache) {
+      output <- .debugCache(output, preDigest, ...)
+      outputToSave <- .debugCache(outputToSave, preDigest, ...)
+    }
+
     while (!written) {
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,

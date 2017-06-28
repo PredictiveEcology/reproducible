@@ -5,14 +5,23 @@
 \alias{Copy}
 \alias{Copy,ANY-method}
 \alias{Copy,data.table-method}
+\alias{Copy,environment-method}
+\alias{Copy,list-method}
+\alias{Copy,data.frame-method}
 \alias{Copy,Raster-method}
-\title{Recursive copying of nested environments}
+\title{Recursive copying of nested environments, and other "hard to copy" objects}
 \usage{
 Copy(object, filebackedDir = tempdir(), ...)
 
 \S4method{Copy}{ANY}(object, filebackedDir = tempdir(), ...)
 
 \S4method{Copy}{data.table}(object, filebackedDir = tempdir(), ...)
+
+\S4method{Copy}{environment}(object, filebackedDir = tempdir(), ...)
+
+\S4method{Copy}{list}(object, filebackedDir = tempdir(), ...)
+
+\S4method{Copy}{data.frame}(object, filebackedDir = tempdir(), ...)
 
 \S4method{Copy}{Raster}(object, filebackedDir = tempdir(), ...)
 }
