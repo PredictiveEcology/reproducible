@@ -95,6 +95,8 @@ if (getRversion() >= "3.1.0") {
 #'        when determining if the Raster file is already in the database.
 #'        Note: uses \code{\link[digest]{digest}} for file-backed Raster.
 #'        Default 1e6. Passed to \code{prepareFileBackedRaster}.
+#'        
+#' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
 #'
 #' @param debugCache Logical. If \code{TRUE}, then the returned object from the Cache
 #'        function will have two attributes, \code{debugCache1} and \code{debugCache2},
@@ -192,7 +194,8 @@ setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = FALSE, debugCache = FALSE,
+           userTags = c(), digestPathContent = FALSE, omitArgs = NULL, 
+           debugCache = FALSE,
            sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
@@ -203,7 +206,7 @@ setMethod(
   "Cache",
   definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
                         algo, cacheRepo, compareRasterFileLength, userTags,
-                        digestPathContent, debugCache, sideEffect, makeCopy, quick) {
+                        digestPathContent, omitArgs, debugCache, sideEffect, makeCopy, quick) {
     tmpl <- list(...)
 
     if (!is(FUN, "function")) stop("Can't understand the function provided to Cache.\n",
@@ -244,6 +247,9 @@ setMethod(
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
                         digestPathContent = digestPathContent)
+    if(!is.null(omitArgs)) {
+      preDigest <- preDigest[!(names(preDigest) %in% omitArgs)]
+    }
     outputHash <- fastdigest(preDigest)
 
     # compare outputHash to existing Cache record
@@ -257,10 +263,10 @@ setMethod(
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-        out <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+        output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
         # Class-specific message
-        .cacheMessage(out, functionDetails$functionName)
+        .cacheMessage(output, functionDetails$functionName)
 
         suppressWarnings(
           archivist::addTagsRepo(isInRepo$artifact[lastOne],
@@ -271,7 +277,7 @@ setMethod(
         if (sideEffect) {
           needDwd <- logical(0)
           fromCopy <- character(0)
-          cachedChcksum <- attributes(out)$chcksumFiles
+          cachedChcksum <- attributes(output)$chcksumFiles
 
           if (!is.null(cachedChcksum)) {
             for (x in cachedChcksum) {
@@ -331,9 +337,9 @@ setMethod(
         }
 
         # This allows for any class specific things
-        out <- .prepareOutput(out, cacheRepo, ...)
+        output <- .prepareOutput(output, cacheRepo, ...)
 
-        return(out)
+        return(output)
       }
     }
 
@@ -414,11 +420,7 @@ setMethod(
         attr(outputToSave, "function") <- attr(output, "function")
       output <- outputToSave
     }
-    if (debugCache) {
-      attr(output, "debugCache1") <- attr(outputToSave, "debugCache1") <- list(...)
-      attr(output, "debugCache2") <- attr(outputToSave, "debugCache2") <- tmpl
-    }
-
+    
     while (!written) {
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
