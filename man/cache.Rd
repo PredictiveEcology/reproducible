@@ -8,14 +8,15 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
-  userTags = c(), digestPathContent = FALSE, debugCache = FALSE,
-  sideEffect = FALSE, makeCopy = FALSE, quick = FALSE)
+  userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
+  debugCache = FALSE, sideEffect = FALSE, makeCopy = FALSE,
+  quick = FALSE)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   compareRasterFileLength = 1e+06, userTags = c(),
-  digestPathContent = FALSE, debugCache = FALSE, sideEffect = FALSE,
-  makeCopy = FALSE, quick = FALSE)
+  digestPathContent = FALSE, omitArgs = NULL, debugCache = FALSE,
+  sideEffect = FALSE, makeCopy = FALSE, quick = FALSE)
 }
 \arguments{
 \item{FUN}{A function to be called.}
@@ -52,6 +53,8 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 \item{digestPathContent}{Logical. Should arguments that are of class \code{Path}
 (see examples below) have their name digested
 (\code{FALSE}; default), or their file contents (\code{TRUE}).}
+
+\item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
 \item{debugCache}{Logical. If \code{TRUE}, then the returned object from the Cache
 function will have two attributes, \code{debugCache1} and \code{debugCache2},

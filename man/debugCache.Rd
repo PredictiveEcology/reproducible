@@ -9,6 +9,10 @@
 }
 \arguments{
 \item{obj}{An arbitrary R object.}
+
+\item{preDigest}{A list of hashes.}
+
+\item{...}{Dots passed from Cache}
 }
 \value{
 The same object as \code{obj}, but with 2 attributes set.

@@ -690,6 +690,8 @@ sortDotsUnderscoreFirst <- function(obj) {
 #' debugging the Cache.
 #'
 #' @param obj  An arbitrary R object.
+#' @param preDigest  A list of hashes.
+#' @param ...  Dots passed from Cache
 #'
 #' @return The same object as \code{obj}, but with 2 attributes set.
 #'
