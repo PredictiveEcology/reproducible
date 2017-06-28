@@ -56,8 +56,9 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
-\item{debugCache}{Character. Either \code{"complete"} or \code{"quick"} (uses
-partial matching, so "c" or "q" work).
+\item{debugCache}{Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
+partial matching, so "c" or "q" work). \code{TRUE} is
+equivalent to \code{"complete"}.
 If \code{"complete"}, then the returned object from the Cache
 function will have two attributes, \code{debugCache1} and \code{debugCache2},
 which are the entire \code{list(...)} and that same object, but after all
