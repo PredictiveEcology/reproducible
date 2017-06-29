@@ -195,7 +195,7 @@ setMethod(
     } else {
       dig <- suppressWarnings(digestRaster(object, compareRasterFileLength, algo))
     }
-    return(dig)
+    return(fastdigest::fastdigest(dig))
   })
 
 #' @rdname robustDigest
@@ -218,6 +218,5 @@ setMethod(
       }
     }
 
-    dig <- fastdigest::fastdigest(aaa)
-    return(dig)
+    return(fastdigest::fastdigest(aaa))
   })
