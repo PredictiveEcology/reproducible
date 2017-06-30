@@ -253,13 +253,13 @@ setMethod(
                         algo = algo,
                         digestPathContent = digestPathContent)
 
-    if(!is.null(omitArgs)) {
+    if (!is.null(omitArgs)) {
       preDigest <- preDigest[!(names(preDigest) %in% omitArgs)]
     }
 
-    if(length(debugCache)) {
-      if(!is.na(pmatch(debugCache, "quick")))
-        return(list(hash=preDigest, content = list(...)))
+    if (length(debugCache)) {
+      if (!is.na(pmatch(debugCache, "quick")))
+        return(list(hash = preDigest, content = list(...)))
     }
 
     outputHash <- fastdigest(preDigest)
@@ -351,8 +351,8 @@ setMethod(
         # This allows for any class specific things
         output <- .prepareOutput(output, cacheRepo, ...)
 
-        if(length(debugCache)) {
-          if(!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
+        if (length(debugCache)) {
+          if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
             output <- .debugCache(output, preDigest, ...)
         }
         return(output)
@@ -436,8 +436,8 @@ setMethod(
         attr(outputToSave, "function") <- attr(output, "function")
       output <- outputToSave
     }
-    if(length(debugCache)) {
-      if(!is.na(pmatch(debugCache, "complete"))) {
+    if (length(debugCache)) {
+      if (!is.na(pmatch(debugCache, "complete"))) {
         output <- .debugCache(output, preDigest, ...)
         outputToSave <- .debugCache(outputToSave, preDigest, ...)
       }

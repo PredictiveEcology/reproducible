@@ -148,7 +148,7 @@ setMethod(
   ".checkCacheRepo",
   signature = "ANY",
   definition = function(object, create) {
-    cacheRepo <- tryCatch(checkPath(object, create), error=function(x) {
+    cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
         message("No cacheRepo supplied. Using tempdir()")
         tempdir()
       })
