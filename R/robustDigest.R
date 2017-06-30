@@ -207,9 +207,13 @@ setMethod(
     if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
     } else {
-      aaa <- suppressMessages(broom::tidy(object))
+      aaa <- object
+      #aaa <- suppressMessages(broom::tidy(object))
     }
 
+    #aa <- as.data.frame(aaa); wh <- sapply(aa[!sapply(aa, is.integer)], is.numeric); nwh <- names(wh); aa[,nwh] <- round(aa[,nwh],4)
+    
+    
     # The following Rounding is necessary to make digest equal on linux and windows
     for (i in names(aaa)) {
       if (!is.integer(aaa[, i])) {
