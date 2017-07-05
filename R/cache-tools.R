@@ -121,7 +121,7 @@ setMethod(
       x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
-    if (missing(before)) before <- Sys.Date() + 1
+    if (missing(before)) before <- Sys.time() + 1e5
     if (is(x, "simList")) x <- x@paths$cachePath
 
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
@@ -183,7 +183,7 @@ setMethod(
       x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
-    if (missing(before)) before <- Sys.Date() + 1
+    if (missing(before)) before <- Sys.time() + 1e5
     if (is(x, "simList")) x <- x@paths$cachePath
 
     objsDT <- showLocalRepo(x) %>% data.table()
@@ -223,7 +223,7 @@ setMethod(
       x <- getOption("spades.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
-    if (missing(before)) before <- Sys.Date() + 1
+    if (missing(before)) before <- Sys.time() + 1e5
     if (is(x, "simList")) x <- x@paths$cachePath
 
     args <- append(list(x = x, after = after, before = before, userTags = userTags),

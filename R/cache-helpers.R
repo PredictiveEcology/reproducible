@@ -36,8 +36,8 @@ setMethod(
 #' @param functionName A character string indicating the function name
 #'
 #' @author Eliot McIntire
-#' @export
 #' @docType methods
+#' @export
 #' @rdname cacheMessage
 #'
 setGeneric(".cacheMessage", function(object, functionName) {
@@ -62,10 +62,11 @@ setMethod(
 #'
 #' @param object Any R object.
 #'
-#' @export
-#' @docType methods
-#' @rdname objSizeInclEnviros
 #' @author Eliot McIntire
+#' @docType methods
+#' @export
+#' @rdname objSizeInclEnviros
+#'
 setGeneric(".objSizeInclEnviros", function(object) {
   standardGeneric(".objSizeInclEnviros")
 })
@@ -147,7 +148,11 @@ setMethod(
   ".checkCacheRepo",
   signature = "ANY",
   definition = function(object, create) {
-    checkPath(object, create)
+    cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
+        message("No cacheRepo supplied. Using tempdir()")
+        tempdir()
+      })
+
 })
 
 ################################################################################
@@ -237,8 +242,8 @@ getFunctionName <- function(FUN, ..., overrideCall) { # nolint
     signat <- unlist(sigArgs[unlist(lapply(sigArgs, function(y) any(y)))])
 
     matchedCall <- as.list(
-      match.call(FUN, do.call(call, append(list(name = FUN@generic),
-                                           list(...)))))
+      match.call(FUN, do.call(call, append(list(name = FUN@generic), list(...))))
+    )
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
     matchedCall <- matchedCall[na.omit(match(names(matchedCall), FUN@signature[signat]))]
 
@@ -586,7 +591,7 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 }
 
 
-#' Recursive copying of nested environments
+#' Recursive copying of nested environments, and other "hard to copy" objects
 #'
 #' When copying environments and all the objects contained within them, there are
 #' no copies made: it is a pass-by-reference operation. Sometimes, a deep copy is
@@ -615,19 +620,6 @@ setMethod(
   "Copy",
   signature(object = "ANY"),
   definition = function(object, filebackedDir, ...) {
-    # make an outer copy
-    if (is.environment(object)) {
-      object <- as.list(object, all.names = TRUE)
-      wasEnv <- TRUE
-    } else {
-      wasEnv <- FALSE
-    }
-
-    if (is.list(object))
-      object <- lapply(object, function(x) Copy(x, filebackedDir, ...))
-
-    if (wasEnv)
-      object <- as.environment(object)
     return(object)
 })
 
@@ -637,6 +629,28 @@ setMethod("Copy",
           definition = function(object, ...) {
             data.table::copy(object)
 })
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "environment"),
+          definition = function(object,  filebackedDir, ...) {
+            listVersion <- Copy(as.list(object, all.names = TRUE),  filebackedDir, ...)
+            as.environment(listVersion)
+          })
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "list"),
+          definition = function(object,  filebackedDir, ...) {
+            lapply(object, function(x) Copy(x, filebackedDir, ...))
+          })
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "data.frame"),
+          definition = function(object,  filebackedDir, ...) {
+            object
+          })
 
 #' @rdname Copy
 setMethod("Copy",
@@ -667,4 +681,27 @@ sortDotsUnderscoreFirst <- function(obj) {
   allLower <- which(tolower(names(obj)) == names(obj))
   names(obj)[allLower] <- paste0("ALLLOWER", names(obj)[allLower])
   obj[order(names(obj))]
+}
+
+################################################################################
+#' Attach debug info to return for Cache
+#'
+#' Internal use only. Attaches an attribute to the output, useable for
+#' debugging the Cache.
+#'
+#' @param obj  An arbitrary R object.
+#' @param preDigest  A list of hashes.
+#' @param ...  Dots passed from Cache
+#'
+#' @return The same object as \code{obj}, but with 2 attributes set.
+#'
+#' @author Eliot McIntire
+#' @importFrom data.table setattr
+#' @docType methods
+#' @rdname debugCache
+#'
+.debugCache <- function(obj, preDigest, ...) {
+  setattr(obj, "debugCache1", list(...))
+  setattr(obj, "debugCache2", preDigest)
+  obj
 }
