@@ -97,6 +97,10 @@ if (getRversion() >= "3.1.0") {
 #'        Default 1e6. Passed to \code{prepareFileBackedRaster}.
 #'
 #' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
+#' 
+#' @param classOptions Optional list. This will pass into \code{robustDigest} for 
+#'        specific classes. Should be options that the \code{robustDigest} knows what 
+#'        to do with.
 #'
 #' @param debugCache Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
 #'        partial matching, so "c" or "q" work). \code{TRUE} is
@@ -199,7 +203,8 @@ setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
+           userTags = c(), digestPathContent = FALSE, omitArgs = NULL, 
+           classOptions = list(),
            debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
@@ -211,7 +216,8 @@ setMethod(
   "Cache",
   definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
                         algo, cacheRepo, compareRasterFileLength, userTags,
-                        digestPathContent, omitArgs, debugCache, sideEffect, makeCopy, quick) {
+                        digestPathContent, omitArgs, classOptions, 
+                        debugCache, sideEffect, makeCopy, quick) {
     tmpl <- list(...)
 
     if (!is(FUN, "function")) stop("Can't understand the function provided to Cache.\n",
@@ -248,10 +254,12 @@ setMethod(
     if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
 
     # Do the digesting
+    preDigestByClass <- lapply(seq_along(tmpl), function(x) .preDigestByClass(tmpl[[x]]))
     preDigest <- lapply(tmpl, robustDigest, objects = objects,
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
-                        digestPathContent = digestPathContent)
+                        digestPathContent = digestPathContent,
+                        classOptions = classOptions)
 
     if (!is.null(omitArgs)) {
       preDigest <- preDigest[!(names(preDigest) %in% omitArgs)]
@@ -361,7 +369,7 @@ setMethod(
 
     # RUN the function call
     output <- do.call(FUN, list(...))
-
+    
     # Delete previous version if notOlderThan violated --
     #   but do this AFTER new run on previous line, in case function call
     #   makes it crash, or user interrupts long function call and wants
@@ -412,7 +420,8 @@ setMethod(
     if (isS4(FUN)) attr(output, "function") <- FUN@generic
 
     # Can make new methods by class to add tags to outputs
-    outputToSave <- .addTagsToOutput(output, outputObjects, FUN)
+    outputToSave <- .addTagsToOutput(output, outputObjects, FUN, 
+                                     preDigestByClass)
 
     # This is for write conflicts to the SQLite database
     #   (i.e., keep trying until it is written)

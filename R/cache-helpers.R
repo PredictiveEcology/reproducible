@@ -101,6 +101,8 @@ setMethod(
 #'
 #' @param FUN A function
 #'
+#' @param preDigestByClass A list, usually from \code{.preDigestByClass}
+#'
 #' @return New object with tags attached.
 #'
 #' @author Eliot McIntire
@@ -108,7 +110,7 @@ setMethod(
 #' @export
 #' @rdname addTagsToOutput
 #'
-setGeneric(".addTagsToOutput", function(object, outputObjects, FUN) { # nolint
+setGeneric(".addTagsToOutput", function(object, outputObjects, FUN, preDigestByClass) { # nolint
   standardGeneric(".addTagsToOutput")
 })
 
@@ -117,9 +119,41 @@ setGeneric(".addTagsToOutput", function(object, outputObjects, FUN) { # nolint
 setMethod(
   ".addTagsToOutput",
   signature = "ANY",
-  definition = function(object, outputObjects, FUN) { # nolint
+  definition = function(object, outputObjects, FUN, preDigestByClass) { # nolint
     object
 })
+
+
+################################################################################
+#' Any miscellaneous things to do before robustDigest and after FUN call
+#'
+#' The default method for \code{preDigestByClass} and simply returns NULL.
+#' There may be methods in other packages.
+#'
+#' @inheritParams Cache
+#'
+#' @param object Any R object.
+#'
+#' @return A list with elements that will likely be used in \code{.postProcessing}
+#'
+#' @author Eliot McIntire
+#' @docType methods
+#' @export
+#' @rdname preDigestByClass
+#'
+setGeneric(".preDigestByClass", function(object) { # nolint
+  standardGeneric(".preDigestByClass")
+})
+
+#' @export
+#' @rdname preDigestByClass
+setMethod(
+  ".preDigestByClass",
+  signature = "ANY",
+  definition = function(object) { # nolint
+    NULL
+  })
+
 
 ################################################################################
 #' Check for cache repository info in ...

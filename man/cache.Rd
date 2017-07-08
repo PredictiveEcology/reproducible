@@ -9,14 +9,15 @@
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
   userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
-  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
-  quick = FALSE)
+  classOptions = list(), debugCache = character(), sideEffect = FALSE,
+  makeCopy = FALSE, quick = FALSE)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   compareRasterFileLength = 1e+06, userTags = c(),
-  digestPathContent = FALSE, omitArgs = NULL, debugCache = character(),
-  sideEffect = FALSE, makeCopy = FALSE, quick = FALSE)
+  digestPathContent = FALSE, omitArgs = NULL, classOptions = list(),
+  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
+  quick = FALSE)
 }
 \arguments{
 \item{FUN}{A function to be called.}
@@ -55,6 +56,10 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 (\code{FALSE}; default), or their file contents (\code{TRUE}).}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
+
+\item{classOptions}{Optional list. This will pass into \code{robustDigest} for 
+specific classes. Should be options that the \code{robustDigest} knows what 
+to do with.}
 
 \item{debugCache}{Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
 partial matching, so "c" or "q" work). \code{TRUE} is
