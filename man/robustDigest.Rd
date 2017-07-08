@@ -16,37 +16,37 @@
 \title{Create reproducible digests of objects in R}
 \usage{
 robustDigest(object, objects, compareRasterFileLength = 1e+06,
-  algo = "xxhash64", digestPathContent = FALSE)
+  algo = "xxhash64", digestPathContent = FALSE, classOptions = list())
 
 \S4method{robustDigest}{ANY}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{cluster}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{`function`}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{expression}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{character}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{Path}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{environment}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{list}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{Raster}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 
 \S4method{robustDigest}{Spatial}(object, compareRasterFileLength, algo,
-  digestPathContent)
+  digestPathContent, classOptions)
 }
 \arguments{
 \item{object}{an object to digest.}
@@ -69,6 +69,10 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 \item{digestPathContent}{Logical. Should arguments that are of class \code{Path}
 (see examples below) have their name digested
 (\code{FALSE}; default), or their file contents (\code{TRUE}).}
+
+\item{classOptions}{Optional list. This will pass into \code{robustDigest} for 
+specific classes. Should be options that the \code{robustDigest} knows what 
+to do with.}
 }
 \value{
 A hash i.e., digest of the object passed in.

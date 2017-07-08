@@ -6,9 +6,9 @@
 \alias{.addTagsToOutput,ANY-method}
 \title{Add tags to object}
 \usage{
-.addTagsToOutput(object, outputObjects, FUN)
+.addTagsToOutput(object, outputObjects, FUN, preDigestByClass)
 
-\S4method{.addTagsToOutput}{ANY}(object, outputObjects, FUN)
+\S4method{.addTagsToOutput}{ANY}(object, outputObjects, FUN, preDigestByClass)
 }
 \arguments{
 \item{object}{Any R object.}
@@ -17,6 +17,8 @@
 return. This is only relevant for \code{simList} objects}
 
 \item{FUN}{A function}
+
+\item{preDigestByClass}{A list, usually from \code{.preDigestByClass}}
 }
 \value{
 New object with tags attached.
