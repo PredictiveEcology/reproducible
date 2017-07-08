@@ -248,6 +248,7 @@ setMethod(
     if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
 
     # Do the digesting
+    preDigestByClass <- lapply(seq_along(tmpl), function(x) .preDigestByClass(tmpl[[x]]))
     preDigest <- lapply(tmpl, robustDigest, objects = objects,
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
@@ -412,7 +413,8 @@ setMethod(
     if (isS4(FUN)) attr(output, "function") <- FUN@generic
 
     # Can make new methods by class to add tags to outputs
-    outputToSave <- .addTagsToOutput(output, outputObjects, FUN)
+    outputToSave <- .addTagsToOutput(output, outputObjects, FUN, 
+                                     preDigestByClass)
 
     # This is for write conflicts to the SQLite database
     #   (i.e., keep trying until it is written)

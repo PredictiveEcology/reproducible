@@ -100,6 +100,8 @@ setMethod(
 #' @param object Any R object.
 #'
 #' @param FUN A function
+#' 
+#' @param preDigestByClass A list, usually from \code{.preDigestByClass}
 #'
 #' @return New object with tags attached.
 #'
@@ -108,7 +110,7 @@ setMethod(
 #' @export
 #' @rdname addTagsToOutput
 #'
-setGeneric(".addTagsToOutput", function(object, outputObjects, FUN) { # nolint
+setGeneric(".addTagsToOutput", function(object, outputObjects, FUN, preDigestByClass) { # nolint
   standardGeneric(".addTagsToOutput")
 })
 
@@ -117,7 +119,7 @@ setGeneric(".addTagsToOutput", function(object, outputObjects, FUN) { # nolint
 setMethod(
   ".addTagsToOutput",
   signature = "ANY",
-  definition = function(object, outputObjects, FUN) { # nolint
+  definition = function(object, outputObjects, FUN, preDigestByClass) { # nolint
     object
 })
 
