@@ -59,7 +59,8 @@
 setGeneric("robustDigest", function(object, objects,
                                     compareRasterFileLength = 1e6,
                                     algo = "xxhash64",
-                                    digestPathContent = FALSE) {
+                                    digestPathContent = FALSE,
+                                    classOptions = list()) {
   standardGeneric("robustDigest")
 })
 
@@ -69,7 +70,8 @@ setGeneric("robustDigest", function(object, objects,
 setMethod(
   "robustDigest",
   signature = "ANY",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     fastdigest(object)
   })
 
@@ -81,7 +83,8 @@ setOldClass("cluster")
 setMethod(
   "robustDigest",
   signature = "cluster",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     fastdigest(NULL)
   })
 
@@ -90,7 +93,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "function",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     fastdigest(format(object))
   })
 
@@ -99,7 +103,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "expression",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     fastdigest(format(object))
   })
 
@@ -108,7 +113,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "character",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     if (any(unlist(lapply(object, dir.exists)))) {
       unlist(lapply(object, function(x) {
         if (dir.exists(x)) {
@@ -135,7 +141,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "Path",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     if (digestPathContent) {
       lapply(object, function(x) {
         if (file.exists(x)) {
@@ -154,7 +161,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "environment",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     robustDigest(as.list(object, all.names = TRUE),
                  compareRasterFileLength = compareRasterFileLength,
                  algo = algo, digestPathContent = digestPathContent)
@@ -165,7 +173,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "list",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     lapply(sortDotsUnderscoreFirst(object), function(x) {
       robustDigest(object = x,
                    compareRasterFileLength = compareRasterFileLength,
@@ -178,7 +187,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "Raster",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     if (is(object, "RasterStack") | is(object, "RasterBrick")) {
       dig <- suppressWarnings(
         list(dim(object), res(object), crs(object), extent(object),
@@ -203,7 +213,8 @@ setMethod(
 setMethod(
   "robustDigest",
   signature = "Spatial",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent) {
+  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+                        classOptions) {
     if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
     } else {
