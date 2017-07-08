@@ -123,6 +123,40 @@ setMethod(
     object
 })
 
+
+################################################################################
+#' Any miscellaneous things to do before robustDigest and after FUN call
+#'
+#' The default method for \code{preDigestByClass} and simply returns NULL. 
+#' There may be methods in other packages. 
+#' 
+#' @inheritParams Cache
+#'
+#' @param object Any R object.
+#'
+#' @param FUN A function
+#'
+#' @return A list with elements that will likely be used in \code{.postProcessing}
+#'
+#' @author Eliot McIntire
+#' @docType methods
+#' @export
+#' @rdname preDigestByClass
+#'
+setGeneric(".preDigestByClass", function(object) { # nolint
+  standardGeneric(".preDigestByClass")
+})
+
+#' @export
+#' @rdname preDigestByClass
+setMethod(
+  ".preDigestByClass",
+  signature = "ANY",
+  definition = function(object) { # nolint
+    NULL
+  })
+
+          
 ################################################################################
 #' Check for cache repository info in ...
 #'
