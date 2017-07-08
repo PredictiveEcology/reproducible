@@ -100,7 +100,7 @@ setMethod(
 #' @param object Any R object.
 #'
 #' @param FUN A function
-#' 
+#'
 #' @param preDigestByClass A list, usually from \code{.preDigestByClass}
 #'
 #' @return New object with tags attached.
@@ -127,14 +127,12 @@ setMethod(
 ################################################################################
 #' Any miscellaneous things to do before robustDigest and after FUN call
 #'
-#' The default method for \code{preDigestByClass} and simply returns NULL. 
-#' There may be methods in other packages. 
-#' 
+#' The default method for \code{preDigestByClass} and simply returns NULL.
+#' There may be methods in other packages.
+#'
 #' @inheritParams Cache
 #'
 #' @param object Any R object.
-#'
-#' @param FUN A function
 #'
 #' @return A list with elements that will likely be used in \code{.postProcessing}
 #'
@@ -156,7 +154,7 @@ setMethod(
     NULL
   })
 
-          
+
 ################################################################################
 #' Check for cache repository info in ...
 #'

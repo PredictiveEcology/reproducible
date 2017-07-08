@@ -12,14 +12,12 @@
 }
 \arguments{
 \item{object}{Any R object.}
-
-\item{FUN}{A function}
 }
 \value{
 A list with elements that will likely be used in \code{.postProcessing}
 }
 \description{
-The default method for \code{preDigestByClass} and simply returns NULL. 
+The default method for \code{preDigestByClass} and simply returns NULL.
 There may be methods in other packages.
 }
 \author{
