@@ -57,8 +57,8 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
-\item{classOptions}{Optional list. This will pass into \code{robustDigest} for 
-specific classes. Should be options that the \code{robustDigest} knows what 
+\item{classOptions}{Optional list. This will pass into \code{robustDigest} for
+specific classes. Should be options that the \code{robustDigest} knows what
 to do with.}
 
 \item{debugCache}{Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
