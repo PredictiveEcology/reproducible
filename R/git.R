@@ -8,11 +8,6 @@
 #'
 #' @inheritParams devtools::install_github
 #'
-#' @import devtools
-#' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init
-#'                   lookup pull remote_set_url remote_url revparse_single status
-#' @importFrom utils getFromNamespace
-#'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'                      cloned, pulled, and checked out from.
 #'
@@ -21,6 +16,14 @@
 #'
 #' @return Invisibly returns a repository class object, defined in
 #'         \code{\link[git2r]{git_repository-class}}
+#'
+#' @author Eliot McIntire
+#' @export
+#' @import devtools
+#' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init
+#'                   lookup pull remote_set_url remote_url revparse_single status
+#' @importFrom utils getFromNamespace
+#' @rdname checkoutVersion
 #'
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
   .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools") # nolint
