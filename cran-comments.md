@@ -23,7 +23,7 @@ This is a spin off of an existing CRAN package (`SpaDES`), which we have split d
 * Ubuntu 14.04     (travis-ci), R 3.5.0 (2017-07-17 r72924)
 * Ubuntu 16.04         (local), R 3.5.0 (2017-07-17 r72924)
 * Windows           (appveyor), R 3.5.0 (2017-07-17 r72924)
-* Windows        (win-builder), R 3.5.0 (2017-07-09 r72907)
+* Windows        (win-builder), R 3.5.0 (2017-07-17 r72924)
 
 ## R CMD check results
 
@@ -33,11 +33,17 @@ There were 2 NOTEs:
 
 1. There are multiple parts to this note:
 
-    a. Some words were flagged as possibly mispelled, but they are not. 
+    a. This is a new package submission:
+    
+            Maintainer: 'Eliot McIntire <eliot.mcintire@canada.ca>'
+            
+            New submission
+
+    b. Some words were flagged as possibly mispelled, but they are not. 
      
             Possibly mis-spelled words in DESCRIPTION: 
-              DES (8:23) 
-              modularity (8:55) 
+                GitHub (9:38)
+                reproducibility (3:36)
 
 ## Downstream dependencies
 
@@ -46,6 +52,4 @@ However, as we submit further `SpaDES` spinoff packages, this package will becom
 
 - `SpaDES` (Imports)
 - `SpaDES.addins` (Imports)
-- `SpaDES.core` (Imports)
-- `SpaDES.shiny` (Imports)
-
+- `SpaDES.core` (Depends)

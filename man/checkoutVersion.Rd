@@ -30,3 +30,6 @@ This function allows a simple way to create an exactly copy locally of a git
 repository. It can use ssh keys (including GitHub deploy keys) or GitHub
 Personal Access Tokens.
 }
+\author{
+Eliot McIntire
+}
