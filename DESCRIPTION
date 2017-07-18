@@ -10,9 +10,9 @@ URL: https://github.com/PredictiveEcology/reproducible
 Date: 2017-07-17
 Version: 0.1.0
 Authors@R: c(
-    person(c("Eliot", "J", "B"), "McIntire", email = "eliot.mcintire@canada.ca",
+    person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre")),
-    person(c("Alex", "M"), "Chubaty", email = "alexander.chubaty@canada.ca",
+    person("Alex M", "Chubaty", email = "alexander.chubaty@canada.ca",
     role = c("aut")),
     person("Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada",
     role = "cph")
@@ -47,3 +47,4 @@ Collate:
     'cache.R'
     'consistentPaths.R'
     'git.R'
+    'reproducible-package.R'
