@@ -33,80 +33,9 @@
 #'
 #' @docType methods
 #' @rdname viewCache
-#' @examples
-#' \dontrun{
-#' clearCache(mySim)
 #'
-#' mySim <- simInit(
-#'   times = list(start = 0.0, end = 1.0, timeunit = "year"),
-#'   params = list(
-#'     .globals = list(stackName = "landscape", burnStats = "nPixelsBurned"),
-#'     # Turn off interactive plotting
-#'     fireSpread = list(.plotInitialTime = NA),
-#'     caribouMovement = list(.plotInitialTime = NA),
-#'     randomLandscapes = list(.plotInitialTime = NA, .useCache = "init")
-#'   ),
-#'   modules = list("randomLandscapes", "fireSpread", "caribouMovement"),
-#'   paths = list(modulePath = system.file("sampleModules", package = "SpaDES"),
-#'                outputPath = tmpdir,
-#'                cachePath = tmpdir),
-#'   # Save final state of landscape and caribou
-#'   outputs = data.frame(objectName = c("landscape", "caribou"),
-#'                        stringsAsFactors = FALSE)
-#' )
+#' @example inst/examples/example_Cache.R
 #'
-#' ## the caching is inside randomLandscape module
-#' sims <- spades(Copy(mySim), notOlderThan = Sys.time())
-#' showCache(mySim)
-#'
-#' ranNums <- Cache(runif, 4, cacheRepo=cachePath(mySim), userTags = "objectName:a")
-#'
-#' showCache(mySim, userTags = c("objectName"))
-#' showCache(mySim, userTags = c("^a$")) # regular expression ... "a" exactly
-#' showCache(mySim, userTags = c("eventTime")) # show only cached objects made during spades call
-#'
-#' clearCache(mySim, userTags = c("eventTime")) # remove only cached objects made during spades call
-#' showCache(mySim) # only those made during spades call they are gone
-#'
-#'# example using the "accessed" tag
-#'  clearCache(mySim)
-#'  sims <- spades(Copy(mySim), notOlderThan = Sys.time())
-#'  ranNums <- Cache(runif, 4, cacheRepo=cachePath(mySim), userTags = "objectName:a")
-#'  # access it again, but "later"
-#'  Sys.sleep(1)
-#'  sims <- spades(Copy(mySim)) # i.e., this is a "read" operation, does not create a new artifact
-#'
-#'  wholeCache <- showCache(mySim)
-#'  # keep only items accessed "recently"
-#'  onlyRecentlyAccessed <- showCache(mySim,
-#'                                    userTags = max(wholeCache[tagKey=="accessed"]$tagValue))
-#'  # inverse join with 2 data.tables ... using: a[!b]
-#'      # i.e., return all of wholeCache that was not recently accessed
-#'  toRemove <- unique(wholeCache[!onlyRecentlyAccessed], by="artifact")$artifact
-#'  clearCache(mySim, toRemove) # remove ones not recently accessed
-#'  showCache(mySim) # still has more recently accessed,
-#'                   #  based on time passed to onlyRentlyAccessed
-#'
-#'  # keepCache examples
-#'  # keep only those cached items from the last 24 hours
-#'  keepCache(mySim, after = Sys.time() - dday(1))
-#'
-#'  # Keep all Cache items that happened within a spades call
-#'  keepCache(mySim, userTags = "spades")
-#'  # Remove all Cache items that happened within a spades call
-#'  clearCache(mySim, userTags = "spades")
-#'
-#'  # Default userTags is "and" matching. For "or" matching use |
-#'  ranNums <- Cache(runif, 4, cacheRepo=cachePath(mySim), userTags = "objectName:a")
-#'  ranNums <- Cache(rnorm, 4, cacheRepo=cachePath(mySim), userTags = "objectName:a")
-#'  showCache(mySim) # shows spades, runif and rnorm objects
-#'  showCache(mySim, userTags = c("spades","rnorm")) # shows nothing because object
-#'                                                   #  has both spades and rnorm
-#'  showCache(mySim, userTags = "spades|rnorm") # "or" search
-#'  keepCache(mySim, userTags = "spades|rnorm") # keep all with spades or rnorm
-#'  showCache(mySim) # shows spades, runif and rnorm objects
-#'
-#' }
 setGeneric("clearCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("clearCache")
 })
@@ -145,30 +74,28 @@ setMethod(
     return(invisible(objsDT))
 })
 
-#' \code{showCache}, \code{clearCache} and \code{keepCache}
+#' Examining and modifying the cache
 #'
-#' These are wrappers around \code{archivist} package
-#' functions, specific to simList objects.
+#' These are convenience wrappers around \code{archivist} package functions.
 #' They allow the user a bit of control over what is being cached.
 #'
-#' \code{keepCache} can be used to pare down the cache to only keep
-#' a set of archives based on userTags or times.
-#'
-#' \code{clearCache} is the opposite, where items can be removed by
-#' userTag or times
+#' \describe{
+#'   \item{\code{clearCache}}{remove items from the cache based on their
+#'                            \code{userTag} or \code{times} values.}
+#'   \item{\code{keepCache}}{remove all cached items \emph{except} those based on
+#'                           certain \code{userTags} or \code{times} values.}
+#'   \item{\code{showCache}}{display the contents of the cache.}
+#' }
 #'
 #' @inheritParams clearCache
 #'
-#' @seealso \code{\link[archivist]{splitTagsLocal}}.
+#' @docType methods
 #' @export
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
-#' @docType methods
 #' @rdname viewCache
-#' @examples
-#' \dontrun{
-#' showCache(mySim)
-#' }
+#' @seealso \code{\link[archivist]{splitTagsLocal}}.
+#'
 setGeneric("showCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("showCache")
 })

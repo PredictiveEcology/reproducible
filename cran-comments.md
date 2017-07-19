@@ -1,6 +1,7 @@
 ## New submission
 
 This is a spin off of an existing CRAN package (`SpaDES`), which we have split due to growing package size.
+We have removed `\dontrun` from the examples so that they *do* run, and have added the examples to out tests.
 
 ## Test environments
 
