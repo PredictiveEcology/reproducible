@@ -170,34 +170,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom utils object.size
 #' @rdname cache
 #'
-#' @examples
-#' \dontrun{
-#'
-#' library(raster)
-#' tmpdir <- tempdir()
-#' ras <- raster(extent(0,100,0,100), res = 1,
-#'               vals = sample(1:5, replace=TRUE, size = 1e4),
-#'               crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
-#'
-#' # A slow operation, like GIS operation
-#' notCached <- projectRaster(ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
-#' cached <- Cache(projectRaster, ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
-#' # 2nd time is much faster
-#' reRun <- Cache(projectRaster, ras, crs=crs(ras), res = 5, cacheRepo=tmpdir) #
-#' all.equal(notCached, reRun) # TRUE meaning the recovered cached version is same
-#'                             # as notCached version
-#'
-#' #Paths -- are character strings, it will take 2 complete passes to before
-#' #  a cached copy is used when it is a save event (read or load is different)
-#' tmpdir <- file.path(tempdir(), "test")
-#' obj <- 1:10
-#' Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir)
-#' Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir)
-#' Cache(saveRDS, obj, file="filename.rdata", cacheRepo = tmpdir) # cached copy is loaded
-#' # vs. which takes only 1 complete time before cached copy is loaded
-#' Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir)
-#' Cache(saveRDS, obj, file=asPath("filename1.rdata"), cacheRepo = tmpdir) # cached copy is loaded
-#' }
+#' @example inst/examples/example_Cache.R
 #'
 setGeneric(
   "Cache", signature = "...",
