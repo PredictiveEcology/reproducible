@@ -33,8 +33,8 @@ matrix:
     r_github_packages:
       - jimhester/lintr
     after_success:
-    - Rscript -e 'library(covr); coveralls(coverage = print(package_coverage(quiet = FALSE)))'
-    - Rscript -e 'library(lintr); lint_package()'
+    - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
+    - Rscript -e 'lintr::lint_package()'
 
   - os: linux
     dist: trusty
