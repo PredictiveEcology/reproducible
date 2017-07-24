@@ -1,18 +1,8 @@
-# Sample .travis.yml for R projects.
-#
-# See README.md for instructions, or for more configuration options,
-# see the wiki:
-#   https://github.com/craigcitro/r-travis/wiki
-
 sudo: required
-
 language: r
-
 cran: https://cran.rstudio.com/
-
 matrix:
   include:
-
   - os: linux
     dist: trusty
     r: oldrel
@@ -21,7 +11,6 @@ matrix:
         packages:
           - libgdal1-dev
           - libproj-dev
-
   - os: linux
     dist: trusty
     r: release
@@ -30,12 +19,13 @@ matrix:
         packages:
           - libgdal1-dev
           - libproj-dev
+    r_binary_packages:
+      - covr
     r_github_packages:
       - jimhester/lintr
     after_success:
     - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
     - Rscript -e 'lintr::lint_package()'
-
   - os: linux
     dist: trusty
     r: devel
@@ -44,7 +34,6 @@ matrix:
         packages:
           - libgdal1-dev
           - libproj-dev
-
   - os: osx
     osx_image: xcode8.2
     latex: false
@@ -52,21 +41,13 @@ matrix:
     r_check_args: '--as-cran --ignore-vignettes --no-examples'
     before_script:
     - Rscript -e "install.packages('rgdal', type = 'source')"
-
 r_build_args: " "
-
 r_check_args: "--as-cran"
-
-r_binary_packages:
-  - covr
-
 warnings_are_errors: true
-
 notifications:
   email:
     on_success: change
     on_failure: change
-
 branches:
   only:
     - master
