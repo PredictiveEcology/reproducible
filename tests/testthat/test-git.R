@@ -35,7 +35,7 @@ test_that("git-related functions work", {
   rm(testRepo)
   unlink(tmpDir, recursive = TRUE)
 
-  ## dir exists; repo exists -- i.e., we want to fetch/checkout to update
+  ## dir exists; repo exists -- fetch/checkout to update                # nolint
   checkoutVersion("PredictiveEcology/reproducible", localRepoPath = tmpDir, progress = FALSE)
   testRepo <- git2r::repository(tmpDir)
   expect_false(git2r::is_empty(testRepo))

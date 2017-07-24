@@ -6,9 +6,11 @@
 #' @author Alex Chubaty
 #' @importFrom git2r config
 #' @keywords internal
+#' @name .checkGitConfig
+#' @rdname checkGitConfig
 #'
-check_git_config <- function() {
-  gitConfig <- git2r::config(global = FALSE)
+.checkGitConfig <- function() {
+  gitConfig <- git2r::config(global = TRUE)
   usingSSH <- any(grepl("url.ssh://git@github.com/.insteadof=https://github.com/", gitConfig))
   if (usingSSH) {
     stop("Your ~/.gitconfig file is rewriting HTTPS urls to SSH,",
@@ -74,7 +76,7 @@ check_git_config <- function() {
 #' }
 #'
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "", ...) {
-  check_git_config()
+  .checkGitConfig()
 
   localRepoPath <- normalizePath(path.expand(localRepoPath), mustWork = FALSE)
 
