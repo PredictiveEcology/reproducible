@@ -10,8 +10,8 @@
 #' @rdname checkGitConfig
 #'
 .checkGitConfig <- function() {
-  gitConfig <- git2r::config(global = TRUE)
-  usingSSH <- any(grepl("url.ssh://git@github.com/.insteadof=https://github.com/", gitConfig))
+  gitConfig <- unlist(git2r::config(global = TRUE))
+  usingSSH <- any(grepl("url.ssh://git@github.com/.insteadof", names(gitConfig)))
   if (usingSSH) {
     stop("Your ~/.gitconfig file is rewriting HTTPS urls to SSH,",
          " which breaks some functionality because 'git2r' can handle SSH remotes.\n",
