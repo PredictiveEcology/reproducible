@@ -12,14 +12,16 @@ asPath(obj)
 \method{asPath}{character}(obj)
 }
 \arguments{
-\item{obj}{A character string to convert to a Path}
+\item{obj}{A character string to convert to a \code{Path}.}
 }
 \description{
-It is often difficult to impossible do know algorithmically whether a
-character string is a valid path. In the case where it is en existing
-file, \code{file.exists} can work. But if it is not yet existing, e.g.,
-for a \code{save}, it is difficult to know if it is a valid path.
-This allows a user to specify that their character string is indeed
-a file path. Thus, methods that require only a file path can be
-dispatched correctly.
+Allows a user to specify that their character string is indeed a filepath.
+Thus, methods that require only a filepath can be dispatched correctly.
+}
+\details{
+It is often difficult or impossible to know algorithmically whether a
+character string corresponds to a valid filepath.
+In the case where it is en existing file, \code{file.exists} can work.
+But if it does not yet exist, e.g., for a \code{save}, it is difficult to know
+whether it is a valid path before attempting to save to the path.
 }

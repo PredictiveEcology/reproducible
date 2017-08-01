@@ -49,13 +49,14 @@
 #'
 #' @seealso \code{\link[archivist]{cache}}.
 #' @seealso \code{\link[fastdigest]{fastdigest}}.
-#' @importFrom digest digest
-#' @importFrom fastdigest fastdigest
-#' @docType methods
-#' @keywords internal
-#' @rdname robustDigest
+#'
 #' @author Eliot McIntire
 #' @export
+#' @importFrom digest digest
+#' @importFrom fastdigest fastdigest
+#' @keywords internal
+#' @rdname robustDigest
+#'
 setGeneric("robustDigest", function(object, objects,
                                     compareRasterFileLength = 1e6,
                                     algo = "xxhash64",

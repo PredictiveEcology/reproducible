@@ -31,7 +31,6 @@
 #'                 then matching is by `and`. For `or` matching, use | in a single character
 #'                 string. See examples.
 #'
-#' @docType methods
 #' @rdname viewCache
 #'
 #' @example inst/examples/example_Cache.R
@@ -89,7 +88,6 @@ setMethod(
 #'
 #' @inheritParams clearCache
 #'
-#' @docType methods
 #' @export
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
@@ -134,7 +132,6 @@ setMethod(
     objsDT
 })
 
-#' @docType methods
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("keepCache")

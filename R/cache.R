@@ -147,7 +147,6 @@ if (getRversion() >= "3.1.0") {
 #' @seealso \code{\link[archivist]{cache}}, \code{\link{robustDigest}}
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importClassesFrom raster RasterBrick
 #' @importClassesFrom raster RasterLayer
@@ -455,7 +454,6 @@ setMethod(
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @inheritParams Cache
-#' @docType methods
 #' @rdname reproducible-deprecated
 setGeneric("cache", signature = "...",
            function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,  # nolint

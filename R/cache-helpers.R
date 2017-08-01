@@ -8,7 +8,6 @@
 #' @param object Any R object.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname tagsByClass
 #'
@@ -36,7 +35,6 @@ setMethod(
 #' @param functionName A character string indicating the function name
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname cacheMessage
 #'
@@ -63,7 +61,6 @@ setMethod(
 #' @param object Any R object.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname objSizeInclEnviros
 #'
@@ -106,7 +103,6 @@ setMethod(
 #' @return New object with tags attached.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname addTagsToOutput
 #'
@@ -137,7 +133,6 @@ setMethod(
 #' @return A list with elements that will likely be used in \code{.postProcessing}
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname preDigestByClass
 #'
@@ -167,7 +162,6 @@ setMethod(
 #' @return A character string with a path to a cache repository.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname checkCacheRepo
@@ -201,7 +195,6 @@ setMethod(
 #' @return The object, modified
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname prepareOutput
@@ -246,7 +239,6 @@ setMethod(
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot Mcintire
-#' @docType methods
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
@@ -334,16 +326,19 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 
 #' Coerce a character string to a class "Path"
 #'
-#' It is often difficult to impossible do know algorithmically whether a
-#' character string is a valid path. In the case where it is en existing
-#' file, \code{file.exists} can work. But if it is not yet existing, e.g.,
-#' for a \code{save}, it is difficult to know if it is a valid path.
-#' This allows a user to specify that their character string is indeed
-#' a file path. Thus, methods that require only a file path can be
-#' dispatched correctly.
+#' Allows a user to specify that their character string is indeed a filepath.
+#' Thus, methods that require only a filepath can be dispatched correctly.
+#'
+#' It is often difficult or impossible to know algorithmically whether a
+#' character string corresponds to a valid filepath.
+#' In the case where it is en existing file, \code{file.exists} can work.
+#' But if it does not yet exist, e.g., for a \code{save}, it is difficult to know
+#' whether it is a valid path before attempting to save to the path.
+#'
+#' @param obj A character string to convert to a \code{Path}.
+#'
 #' @export
 #' @rdname Path-class
-#' @param obj A character string to convert to a Path
 asPath <- function(obj) {
   UseMethod("asPath", obj)
 }
@@ -362,13 +357,12 @@ setAs(from = "character", to = "Path", function(from) {
   new("Path", from)
 })
 
-
 ################################################################################
 #' Clear erroneous archivist artifacts
 #'
 #' When an archive object is being saved, if this is occurring at the same time
-#' as another process doing the same thing, a stub of an artifact may occur. This
-#' function will clear those stubs.
+#' as another process doing the same thing, a stub of an artifact may occur.
+#' This function will clear those stubs.
 #'
 #' @return Done for its side effect on the repoDir
 #'
@@ -376,11 +370,11 @@ setAs(from = "character", to = "Path", function(from) {
 #' which metadata will be returned. If it is set to NULL (by default), it
 #' will use the repoDir specified in \code{archivist::setLocalRepo}.
 #'
+#' @author Eliot McIntire
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
-#' @docType methods
 #' @rdname clearStubArtifacts
-#' @author Eliot McIntire
+#'
 setGeneric("clearStubArtifacts", function(repoDir = NULL) {
   standardGeneric("clearStubArtifacts")
 })
@@ -422,7 +416,6 @@ setMethod(
 #' If this is not a repository, then the new file location will placed in \code{repoDir}.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importFrom digest digest
 #' @importFrom raster filename dataType inMemory writeRaster nlayers
@@ -560,7 +553,6 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
 #' @inheritParams base::file.copy
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname copyFile
 #'
@@ -639,7 +631,6 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #' @param ... Only used for custom Methods
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importFrom data.table copy
 #' @rdname Copy
@@ -705,7 +696,6 @@ setMethod("Copy",
 #' @return The same object as \code{obj}, but sorted with .objects first.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname sortDotsUnderscoreFirst
 #'
@@ -731,7 +721,6 @@ sortDotsUnderscoreFirst <- function(obj) {
 #'
 #' @author Eliot McIntire
 #' @importFrom data.table setattr
-#' @docType methods
 #' @rdname debugCache
 #'
 .debugCache <- function(obj, preDigest, ...) {
