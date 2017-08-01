@@ -334,13 +334,17 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 
 #' Coerce a character string to a class "Path"
 #'
-#' It is often difficult to impossible do know algorithmically whether a
-#' character string is a valid path. In the case where it is en existing
-#' file, \code{file.exists} can work. But if it is not yet existing, e.g.,
-#' for a \code{save}, it is difficult to know if it is a valid path.
-#' This allows a user to specify that their character string is indeed
-#' a file path. Thus, methods that require only a file path can be
-#' dispatched correctly.
+#' This is primarily useful for achieving repeatability with Caching.
+#' Essentially, when Caching, it is likely that character strings should be
+#' digested verbatim, i.e., it must be an exact copy for the Cache mechanism
+#' to detect a candidate for recovery from the cache. Paths, are different. While
+#' they are character strings, there are many ways to write the same path. Examples
+#' of identical meaning, but different character strings are:
+#' path exanding of ~ vs. not, double back slash vs. single forward slash, relative
+#' path vs. absolute path. All of these should be assessed for their actual file or
+#' directory location, NOT their character string. By converting all character
+#' string that are actual file or directory paths with this function, then Cache
+#' will correctly assess the location, NOT the charcter string representation.
 #' @export
 #' @rdname Path-class
 #' @param obj A character string to convert to a Path
