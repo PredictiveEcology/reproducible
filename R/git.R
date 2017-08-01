@@ -1,4 +1,26 @@
-#' Clone, pull, & checkout from github.com repositories
+#' Check global git config file
+#'
+#' In general, interacting with remote repositories using \pkg{git2r} won't work
+#' if a users's \file{.gitconfig} file rewrites HTTPS urls to SSH.
+#'
+#' @author Alex Chubaty
+#' @importFrom git2r config
+#' @keywords internal
+#' @name .checkGitConfig
+#' @rdname checkGitConfig
+#'
+.checkGitConfig <- function() {
+  gitConfig <- unlist(git2r::config(global = TRUE))
+  usingSSH <- any(grepl("url.ssh://git@github.com/.insteadof", names(gitConfig)))
+  if (usingSSH) {
+    stop("A .gitconfig file is rewriting HTTPS urls to SSH,",
+         " which breaks some functionality because 'git2r' can handle SSH remotes.\n",
+         "Please [temporarily] disable this option.")
+  }
+  return(invisible(TRUE))
+}
+
+#' Clone, fetch, and checkout from GitHub.com repositories
 #'
 #' In reproducible research, not only do packages and R version have to be
 #' consistent, but also specific versions of version controlled scripts.
@@ -8,68 +30,115 @@
 #'
 #' @inheritParams devtools::install_github
 #'
-#' @import devtools
-#' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init
-#'                   lookup pull remote_set_url remote_url revparse_single status
-#' @importFrom utils getFromNamespace
-#'
 #' @param localRepoPath Character string. The path into which the git repo should be
-#'                      cloned, pulled, and checked out from.
+#'                      cloned, fetched, and checked out from.
 #'
 #' @param cred Character string. Either the name of the environment variable
 #'             that contains the GitHub PAT or filename of the GitHub private key file.
 #'
+#' @param ...  Additional arguments passed to \code{git2r} functions.
+#'
 #' @return Invisibly returns a repository class object, defined in
 #'         \code{\link[git2r]{git_repository-class}}
 #'
-checkoutVersion <- function(repo, localRepoPath = ".", cred = "") {
+#' @author Eliot McIntire and Alex Chubaty
+#' @export
+#' @import devtools
+#' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init lookup
+#'                   remote_add remote_set_url remote_url repository status
+#' @importFrom utils getFromNamespace
+#' @rdname checkoutVersion
+#'
+#' @examples
+#' \dontrun{
+#'   tmpDir <- tempfile("")
+#'   dir.create(tmpDir)
+#'   repo <- "PredictiveEcology/reproducible"
+#'
+#'   ## get latest from master branch
+#'   localRepo <- checkoutVersion("PredictiveEcology/reproducible",
+#'                                localRepoPath = tmpDir)
+#'   git2r::summary(localRepo)
+#'   unlink(tmpDir, recursive = TRUE)
+#'
+#'   ## get latest from development branch
+#'   localRepo <- checkoutVersion(paste0(repo, "@", "development"), localRepoPath = tmpDir)
+#'   git2r::summary(localRepo)
+#'   unlink(tmpDir, recursive = TRUE)
+#'
+#'   ## get a particular commit by sha
+#'   sha <- "8179e1910e7c617fdeacad0f9d81323e6aad57c3"
+#'   localRepo <- checkoutVersion(paste0(repo, "@", sha), localRepoPath = tmpDir)
+#'   git2r::summary(localRepo)
+#'   unlink(tmpDir, recursive = TRUE)
+#'
+#'   rm(localRepo, repo)
+#' }
+#'
+checkoutVersion <- function(repo, localRepoPath = ".", cred = "", ...) {
+  .checkGitConfig()
+
+  localRepoPath <- normalizePath(path.expand(localRepoPath), mustWork = FALSE)
+
   .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools") # nolint
   params <- .parse_git_repo(repo)
   gitHash <- if (is.null(params$ref)) "master" else params$ref
 
-  repositoryName <- params$repo
-  repositoryAccount <- params$username
+  repoName <- params$repo
+  repoAcct <- params$username
 
-  githubPrivateKeyFile <- if (file.exists(cred)) cred else NULL
+  ghPrivateKeyFile <- if (file.exists(cred)) cred else NULL
 
-   if (is.null(githubPrivateKeyFile)) {
-     cred <- cred_token(cred)
+  cred <- if (is.null(ghPrivateKeyFile)) {
+     cred_token(cred)
    } else {
-     cred <- cred_ssh_key(publickey = paste0(githubPrivateKeyFile, ".pub"),
-                          privatekey = githubPrivateKeyFile)
+     cred_ssh_key(publickey = paste0(ghPrivateKeyFile, ".pub"), privatekey = ghPrivateKeyFile)
    }
 
-  pathExists <- suppressWarnings(file.exists(normalizePath(path.expand(localRepoPath))))
-  httpsURL <- paste0("https://github.com/", repositoryAccount, "/", repositoryName, ".git")
-  sshURL <- paste0("git@github.com:", repositoryAccount, "/", repositoryName, ".git")
-
+  httpsURL <- paste0("https://github.com/", repoAcct, "/", repoName, ".git")
+  sshURL <- paste0("ssh://git@github.com:", repoAcct, "/", repoName, ".git")
   needSSH <- class(cred) == "cred_ssh_key"
   urls <- c(httpsURL, sshURL)
   url1 <- ifelse(needSSH, sshURL, httpsURL)
 
-  if (!(pathExists)) {
-    # using "~" in a path doesn't seem to work correctly. Must use path.expand to
-    #  give an absolute path in this case.
-    clone(url1, path.expand(localRepoPath), branch = gitHash, credentials = cred)
+  pathExists <- dir.exists(localRepoPath)
+  pathIsRepo <- if (pathExists) {
+    is(tryCatch(repository(localRepoPath), error = function(e) FALSE),
+       "git_repository")
+  } else {
+    FALSE
   }
 
-  # If repo is set to using ssh, git2r package doesn't work -- must change it
-  repo <- init(localRepoPath)
-  isSSH <- any(grepl(httpsURL, remote_url(repo)))
-  needSwitchURL <- xor(isSSH, needSSH)
-  if (needSwitchURL) {
-    remote_set_url(repo, "origin", url = url1)
+  if (!pathIsRepo) {
+    repo1 <- git2r::clone(url1, path.expand(localRepoPath), credentials = cred, ...)
+  } else if (pathExists && pathIsRepo) {
+    repo0 <- repository(localRepoPath, discover = TRUE)
+    if (!(remote_url(repo0) %in% urls)) {
+      stop("Local repository exists and remote URLs do not match:\n",
+           "  requested repo: ", url1, "\n",
+           "  localRepoPath: ", remote_url(repo0))
+    }
+    repo1 <- repo0
+  } else {
+    repo1 <- git2r::init(localRepoPath)
+    remote_add(repo1, name = repo, url = url1)
+
+    ## if repo's remote url uses SSH, 'git2r' wonn't work -- must change it temporarily
+    isSSH <- !any(grepl(httpsURL, remote_url(repo1)))
+    if (xor(isSSH, needSSH)) {
+      remote_set_url(repo, "origin", url = url1)
+    }
   }
 
-  if (gitHash %in% c("development", "master")) git2r::pull(repo, cred)
-
-  tryCatch(git2r::checkout(lookup(repo, gitHash)), error = function(x) {
-    checkout(repo, gitHash)
+  tryCatch(git2r::checkout(lookup(repo1, gitHash)), error = function(x) {
+    checkout(repo1, gitHash, ...)
   })
 
-  if (needSwitchURL) {
-    remote_set_url(repo, "origin", url = setdiff(urls, url1))
+  ## switch back to using SSH for remote url if it was previously set
+  isSSH <- !any(grepl(httpsURL, remote_url(repo1)))
+  if (xor(isSSH, needSSH)) {
+    remote_set_url(repo1, "origin", url = setdiff(urls, url1))
   }
 
-  return(invisible(repo))
+  return(invisible(repo1))
 }

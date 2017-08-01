@@ -2,9 +2,9 @@
 % Please edit documentation in R/git.R
 \name{checkoutVersion}
 \alias{checkoutVersion}
-\title{Clone, pull, & checkout from github.com repositories}
+\title{Clone, fetch, and checkout from GitHub.com repositories}
 \usage{
-checkoutVersion(repo, localRepoPath = ".", cred = "")
+checkoutVersion(repo, localRepoPath = ".", cred = "", ...)
 }
 \arguments{
 \item{repo}{Repository address in the format
@@ -14,10 +14,12 @@ specify \code{subdir} and/or \code{ref} using the respective parameters
 precedence.}
 
 \item{localRepoPath}{Character string. The path into which the git repo should be
-cloned, pulled, and checked out from.}
+cloned, fetched, and checked out from.}
 
 \item{cred}{Character string. Either the name of the environment variable
 that contains the GitHub PAT or filename of the GitHub private key file.}
+
+\item{...}{Additional arguments passed to \code{git2r} functions.}
 }
 \value{
 Invisibly returns a repository class object, defined in
@@ -29,4 +31,34 @@ consistent, but also specific versions of version controlled scripts.
 This function allows a simple way to create an exactly copy locally of a git
 repository. It can use ssh keys (including GitHub deploy keys) or GitHub
 Personal Access Tokens.
+}
+\examples{
+\dontrun{
+  tmpDir <- tempfile("")
+  dir.create(tmpDir)
+  repo <- "PredictiveEcology/reproducible"
+
+  ## get latest from master branch
+  localRepo <- checkoutVersion("PredictiveEcology/reproducible",
+                               localRepoPath = tmpDir)
+  git2r::summary(localRepo)
+  unlink(tmpDir, recursive = TRUE)
+
+  ## get latest from development branch
+  localRepo <- checkoutVersion(paste0(repo, "@", "development"), localRepoPath = tmpDir)
+  git2r::summary(localRepo)
+  unlink(tmpDir, recursive = TRUE)
+
+  ## get a particular commit by sha
+  sha <- "8179e1910e7c617fdeacad0f9d81323e6aad57c3"
+  localRepo <- checkoutVersion(paste0(repo, "@", sha), localRepoPath = tmpDir)
+  git2r::summary(localRepo)
+  unlink(tmpDir, recursive = TRUE)
+
+  rm(localRepo, repo)
+}
+
+}
+\author{
+Eliot McIntire and Alex Chubaty
 }
