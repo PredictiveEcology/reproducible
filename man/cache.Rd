@@ -255,14 +255,21 @@ ras <- raster(extent(0, 100, 0, 100), res = 1,
               crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
 
 # A slow operation, like GIS operation
-notCached <- suppressWarnings(projectRaster(ras, crs = crs(ras), res = 5,
-                                            cacheRepo = tmpDir))
-cached <- Cache(suppressWarnings(projectRaster), ras, crs = crs(ras), res = 5,
-                cacheRepo = tmpDir)
+notCached <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
+
+cached <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
 
 # second time is much faster
-reRun <- Cache(suppressWarnings(projectRaster), ras, crs = crs(ras), res = 5,
-               cacheRepo = tmpDir)
+reRun <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
 
 # recovered cached version is same as non-cached version
 all.equal(notCached, reRun) ## TRUE
