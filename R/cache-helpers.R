@@ -397,7 +397,7 @@ setAs(from = "character", to = "Path", function(from) {
 #' @examples
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
 #'
-#' lapply(cl, c(runif, rnorm), function(f) {
+#' lapply(c(runif, rnorm), function(f) {
 #'   reproducible::Cache(f, 10, cacheRepo = tmpDir)
 #' })
 #'

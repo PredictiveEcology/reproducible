@@ -25,7 +25,7 @@ same time as another process doing the same thing.
 \examples{
 tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
 
-lapply(cl, c(runif, rnorm), function(f) {
+lapply(c(runif, rnorm), function(f) {
   reproducible::Cache(f, 10, cacheRepo = tmpDir)
 })
 
