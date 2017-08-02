@@ -176,7 +176,7 @@ setMethod(
   signature = "list",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    lapply(sortDotsUnderscoreFirst(object), function(x) {
+    lapply(.sortDotsUnderscoreFirst(object), function(x) {
       robustDigest(object = x,
                    compareRasterFileLength = compareRasterFileLength,
                    algo = algo, digestPathContent = digestPathContent)

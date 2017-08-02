@@ -735,7 +735,11 @@ setMethod("Copy",
 #' @export
 #' @rdname sortDotsUnderscoreFirst
 #'
-sortDotsUnderscoreFirst <- function(obj) {
+#' @examples
+#' items <- c(A = "a", Z = "z", `.D` = ".d", `_W` = "_w")
+#' .sortDotsUnderscoreFirst(items)
+#'
+.sortDotsUnderscoreFirst <- function(obj) {
   names(obj) <- gsub(names(obj), pattern = "\\.", replacement = "DOT")
   names(obj) <- gsub(names(obj), pattern = "_", replacement = "US")
   allLower <- which(tolower(names(obj)) == names(obj))
