@@ -4,7 +4,7 @@
 \name{.preDigestByClass}
 \alias{.preDigestByClass}
 \alias{.preDigestByClass,ANY-method}
-\title{Any miscellaneous things to do before robustDigest and after FUN call}
+\title{Any miscellaneous things to do before \code{.robustDigest} and after \code{FUN} call}
 \usage{
 .preDigestByClass(object)
 
@@ -17,7 +17,7 @@
 A list with elements that will likely be used in \code{.postProcessing}
 }
 \description{
-The default method for \code{preDigestByClass} and simply returns NULL.
+The default method for \code{preDigestByClass} and simply returns \code{NULL}.
 There may be methods in other packages.
 }
 \author{

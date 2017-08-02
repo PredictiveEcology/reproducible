@@ -119,11 +119,10 @@ setMethod(
     object
 })
 
-
 ################################################################################
-#' Any miscellaneous things to do before robustDigest and after FUN call
+#' Any miscellaneous things to do before \code{.robustDigest} and after \code{FUN} call
 #'
-#' The default method for \code{preDigestByClass} and simply returns NULL.
+#' The default method for \code{preDigestByClass} and simply returns \code{NULL}.
 #' There may be methods in other packages.
 #'
 #' @inheritParams Cache
@@ -682,7 +681,7 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #' @export
 #' @importFrom data.table copy
 #' @rdname Copy
-#' @seealso \code{\link{robustDigest}}
+#' @seealso \code{\link{.robustDigest}}
 #'
 setGeneric("Copy", function(object, filebackedDir=tempdir(), ...) {
   standardGeneric("Copy")

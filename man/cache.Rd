@@ -57,8 +57,8 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
-\item{classOptions}{Optional list. This will pass into \code{robustDigest} for
-specific classes. Should be options that the \code{robustDigest} knows what
+\item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
+specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
 \item{debugCache}{Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
@@ -67,7 +67,7 @@ equivalent to \code{"complete"}.
 If \code{"complete"}, then the returned object from the Cache
 function will have two attributes, \code{debugCache1} and \code{debugCache2},
 which are the entire \code{list(...)} and that same object, but after all
-\code{robustDigest} calls, at the moment that it is digested using
+\code{.robustDigest} calls, at the moment that it is digested using
 \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
 can then be compared to a subsequent call and individual items within
 the object \code{attr(mySimOut, "debugCache1")} can be compared.
@@ -141,12 +141,12 @@ not mask, the \code{archivist::cache} function.
 }
 \note{
 As indicated above, several objects require pre-treatment before
-caching will work as expected. The function \code{robustDigest} accommodates this.
+caching will work as expected. The function \code{.robustDigest} accommodates this.
 It is an S4 generic, meaning that developers can produce their own methods for
 different classes of objects. Currently, there are methods for several types
-of classes. See \code{\link{robustDigest}}.
+of classes. See \code{\link{.robustDigest}}.
 
-See \code{\link{robustDigest}} for other specifics for other classes.
+See \code{\link{.robustDigest}} for other specifics for other classes.
 }
 \section{Filepaths}{
 
@@ -287,7 +287,7 @@ unlink(c("filename.rda", "filename1.rda"))
 unlink(dirname(tmpDir), recursive = TRUE)
 }
 \seealso{
-\code{\link[archivist]{cache}}, \code{\link{robustDigest}}
+\code{\link[archivist]{cache}}, \code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire

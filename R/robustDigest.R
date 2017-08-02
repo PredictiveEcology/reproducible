@@ -57,62 +57,61 @@
 #' @keywords internal
 #' @rdname robustDigest
 #'
-setGeneric("robustDigest", function(object, objects,
+setGeneric(".robustDigest", function(object, objects,
                                     compareRasterFileLength = 1e6,
                                     algo = "xxhash64",
                                     digestPathContent = FALSE,
                                     classOptions = list()) {
-  standardGeneric("robustDigest")
+  standardGeneric(".robustDigest")
 })
 
-
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "ANY",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     fastdigest(object)
-  })
+})
 
 #' @import parallel
 setOldClass("cluster")
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "cluster",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     fastdigest(NULL)
-  })
+})
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "function",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     fastdigest(format(object))
-  })
+})
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "expression",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     fastdigest(format(object))
-  })
+})
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "character",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
@@ -135,12 +134,12 @@ setMethod(
     } else {
       fastdigest::fastdigest(object)
     }
-  })
+})
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "Path",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
@@ -155,38 +154,38 @@ setMethod(
     } else {
       fastdigest::fastdigest(basename(object))
     }
-  })
+})
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "environment",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    robustDigest(as.list(object, all.names = TRUE),
+    .robustDigest(as.list(object, all.names = TRUE),
                  compareRasterFileLength = compareRasterFileLength,
                  algo = algo, digestPathContent = digestPathContent)
-  })
+})
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "list",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     lapply(.sortDotsUnderscoreFirst(object), function(x) {
-      robustDigest(object = x,
+      .robustDigest(object = x,
                    compareRasterFileLength = compareRasterFileLength,
                    algo = algo, digestPathContent = digestPathContent)
     })
-  })
+})
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
@@ -207,12 +206,12 @@ setMethod(
       dig <- suppressWarnings(digestRaster(object, compareRasterFileLength, algo))
     }
     return(fastdigest::fastdigest(dig))
-  })
+})
 
 #' @rdname robustDigest
-#' @exportMethod robustDigest
+#' @exportMethod .robustDigest
 setMethod(
-  "robustDigest",
+  ".robustDigest",
   signature = "Spatial",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {

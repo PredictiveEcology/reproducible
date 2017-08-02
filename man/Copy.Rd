@@ -41,7 +41,7 @@ needed, and sometimes, this must be recursive (i.e., environments inside
 environments)
 }
 \seealso{
-\code{\link{robustDigest}}
+\code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire
