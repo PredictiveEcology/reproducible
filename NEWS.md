@@ -4,6 +4,7 @@ version 0.1.1
 =============
 
 * cleanup examples and *do* run them (per CRAN)
+* add tests to ensure all exported (non-dot) functions have examples
 
 version 0.1.0
 =============
