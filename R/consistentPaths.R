@@ -10,10 +10,11 @@
 #'
 #' @return Character vector of cleaned up filepaths.
 #'
-#' @docType methods
 #' @export
 #' @importFrom magrittr %>%
 #' @rdname normPath
+#'
+#' @example inst/examples/example_checkPath.R
 #'
 setGeneric("normPath", function(path) {
   standardGeneric("normPath")
@@ -77,10 +78,11 @@ setMethod("normPath",
 #'
 #' @seealso \code{\link{file.exists}}, \code{\link{dir.create}}.
 #'
-#' @docType methods
 #' @export
 #' @importFrom magrittr %>%
 #' @rdname checkPath
+#'
+#' @example inst/examples/example_checkPath.R
 #'
 setGeneric("checkPath", function(path, create) {
   standardGeneric("checkPath")

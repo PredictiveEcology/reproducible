@@ -8,7 +8,6 @@
 #' @param object Any R object.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname tagsByClass
 #'
@@ -36,7 +35,6 @@ setMethod(
 #' @param functionName A character string indicating the function name
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname cacheMessage
 #'
@@ -63,7 +61,6 @@ setMethod(
 #' @param object Any R object.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname objSizeInclEnviros
 #'
@@ -106,7 +103,6 @@ setMethod(
 #' @return New object with tags attached.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname addTagsToOutput
 #'
@@ -123,11 +119,10 @@ setMethod(
     object
 })
 
-
 ################################################################################
-#' Any miscellaneous things to do before robustDigest and after FUN call
+#' Any miscellaneous things to do before \code{.robustDigest} and after \code{FUN} call
 #'
-#' The default method for \code{preDigestByClass} and simply returns NULL.
+#' The default method for \code{preDigestByClass} and simply returns \code{NULL}.
 #' There may be methods in other packages.
 #'
 #' @inheritParams Cache
@@ -137,7 +132,6 @@ setMethod(
 #' @return A list with elements that will likely be used in \code{.postProcessing}
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname preDigestByClass
 #'
@@ -167,7 +161,6 @@ setMethod(
 #' @return A character string with a path to a cache repository.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname checkCacheRepo
@@ -201,7 +194,6 @@ setMethod(
 #' @return The object, modified
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname prepareOutput
@@ -216,7 +208,7 @@ setMethod(
   ".prepareOutput",
   signature = "RasterLayer",
   definition = function(object, cacheRepo, ...) {
-    prepareFileBackedRaster(object, repoDir = cacheRepo)
+    .prepareFileBackedRaster(object, repoDir = cacheRepo)
 })
 
 #' @export
@@ -246,7 +238,6 @@ setMethod(
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot Mcintire
-#' @docType methods
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
@@ -334,16 +325,40 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 
 #' Coerce a character string to a class "Path"
 #'
-#' It is often difficult to impossible do know algorithmically whether a
-#' character string is a valid path. In the case where it is en existing
-#' file, \code{file.exists} can work. But if it is not yet existing, e.g.,
-#' for a \code{save}, it is difficult to know if it is a valid path.
-#' This allows a user to specify that their character string is indeed
-#' a file path. Thus, methods that require only a file path can be
-#' dispatched correctly.
+#' Allows a user to specify that their character string is indeed a filepath.
+#' Thus, methods that require only a filepath can be dispatched correctly.
+#'
+#' It is often difficult or impossible to know algorithmically whether a
+#' character string corresponds to a valid filepath.
+#' In the case where it is en existing file, \code{file.exists} can work.
+#' But if it does not yet exist, e.g., for a \code{save}, it is difficult to know
+#' whether it is a valid path before attempting to save to the path.
+#'
+#' This is primarily useful for achieving repeatability with Caching.
+#' Essentially, when Caching, it is likely that character strings should be
+#' digested verbatim, i.e., it must be an exact copy for the Cache mechanism
+#' to detect a candidate for recovery from the cache.
+#' Paths, are different. While they are character strings, there are many ways to
+#' write the same path. Examples of identical meaning, but different character strings are:
+#' path exanding of \code{~} vs. not, double back slash vs. single forward slash,
+#' relative path vs. absolute path.
+#' All of these should be assessed for their actual file or directory location,
+#' NOT their character string. By converting all character string that are actual
+#' file or directory paths with this function, then \code{Cache} will correctly assess
+#' the location, NOT the charcter string representation.
+#'
+#' @param obj A character string to convert to a \code{Path}.
+#'
 #' @export
 #' @rdname Path-class
-#' @param obj A character string to convert to a Path
+#'
+#' @examples
+#' tmpf <- tempfile(fileext = ".csv")
+#' file.exists(tmpf)    ## FALSE
+#' tmpfPath <- asPath(tmpf)
+#' is(tmpf, "Path")     ## FALSE
+#' is(tmpfPath, "Path") ## TRUE
+#'
 asPath <- function(obj) {
   UseMethod("asPath", obj)
 }
@@ -362,25 +377,37 @@ setAs(from = "character", to = "Path", function(from) {
   new("Path", from)
 })
 
-
 ################################################################################
 #' Clear erroneous archivist artifacts
 #'
-#' When an archive object is being saved, if this is occurring at the same time
-#' as another process doing the same thing, a stub of an artifact may occur. This
-#' function will clear those stubs.
+#' Clear stub artifacts resulting when an archive object is being saved at the
+#' same time as another process doing the same thing.
 #'
-#' @return Done for its side effect on the repoDir
+#' @return Invoked for its side effect on the \code{repoDir}.
 #'
-#' @param repoDir A character denoting an existing directory of the Repository for
-#' which metadata will be returned. If it is set to NULL (by default), it
-#' will use the repoDir specified in \code{archivist::setLocalRepo}.
+#' @param repoDir A character denoting an existing directory of the repository for
+#' which metadata will be returned. If \code{NULL} (default), it will use the
+#' \code{repoDir} specified in \code{archivist::setLocalRepo}.
 #'
+#' @author Eliot McIntire
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
-#' @docType methods
 #' @rdname clearStubArtifacts
-#' @author Eliot McIntire
+#'
+#' @examples
+#' tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
+#'
+#' lapply(c(runif, rnorm), function(f) {
+#'   reproducible::Cache(f, 10, cacheRepo = tmpDir)
+#' })
+#'
+#' # clear out any stub artifacts
+#' clearStubArtifacts(tmpDir)
+#'
+#' # cleanup
+#' clearCache(tmpDir)
+#' unlink(tmpDir, recursive = TRUE)
+#'
 setGeneric("clearStubArtifacts", function(repoDir = NULL) {
   standardGeneric("clearStubArtifacts")
 })
@@ -398,15 +425,15 @@ setMethod(
     md5hashInBackpack[toRemove] %>%
       sapply(., rmFromLocalRepo, repoDir = repoDir)
     return(invisible(md5hashInBackpack[toRemove]))
-  })
+})
 
 #' Copy the file-backing of a file-backed Raster* object
 #'
 #' Rasters are sometimes file-based, so the normal save and copy and assign
 #' mechanisms in R don't work for saving, copying and assigning.
 #' This function creates an explicit file copy of the file that is backing the raster,
-#' and changes the pointer (i.e., filename(object)) so that it is pointing to the new
-#' file.
+#' and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
+#' to the new file.
 #'
 #' @param obj The raster object to save to the repository.
 #'
@@ -416,20 +443,19 @@ setMethod(
 #'
 #' @param ... passed to \code{archivist::saveToRepo}
 #'
-#' @return A raster object and its newly located file backing. Note that if this is a
-#' legitimate archivist repository,
-#' the new location will be in a subfolder called "rasters" of \code{repoDir}.
-#' If this is not a repository, then the new file location will placed in \code{repoDir}.
+#' @return A raster object and its newly located file backing.
+#'         Note that if this is a legitimate archivist repository, the new location
+#'         will be a subfolder called \file{rasters/} of \file{repoDir/}.
+#'         If this is not a repository, the new location will be within \code{repoDir}.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importFrom digest digest
-#' @importFrom raster filename dataType inMemory writeRaster nlayers
-#' @importFrom methods slot is selectMethod slot<-
+#' @importFrom raster filename dataType inMemory nlayers writeRaster
+#' @importFrom methods is selectMethod slot slot<-
 #' @rdname prepareFileBackedRaster
 #'
-prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
+.prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
@@ -559,10 +585,23 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
 #'
 #' @inheritParams base::file.copy
 #'
-#' @author Eliot McIntire
-#' @docType methods
+#' @author Eliot McIntire and ALex Chubaty
 #' @export
 #' @rdname copyFile
+#'
+#' @examples
+#' tmpDirFrom <- file.path(tempdir(), "example_fileCopy_from")
+#' tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
+#' tmpFile <- tempfile("file", tmpDirFrom, ".csv")
+#' dir.create(tmpDirFrom)
+#'
+#' write.csv(data.frame(a = 1:10, b = runif(10), c = letters[1:10]), tmpFile)
+#' copyFile(tmpFile, file.path(tmpDirTo, basename(tmpFile)))
+#' file.exists(file.path(tmpDirTo, basename(tmpFile))) ## TRUE
+#' identical(read.csv(tmpFile), read.csv(file.path(tmpDirTo, basename(tmpFile))))
+#'
+#' unlink(tmpDirFrom, recursive = TRUE)
+#' unlink(tmpDirTo, recursive = TRUE)
 #'
 copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                      overwrite = TRUE, delDestination = FALSE,
@@ -624,28 +663,53 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
   }
 }
 
-
 #' Recursive copying of nested environments, and other "hard to copy" objects
 #'
 #' When copying environments and all the objects contained within them, there are
 #' no copies made: it is a pass-by-reference operation. Sometimes, a deep copy is
 #' needed, and sometimes, this must be recursive (i.e., environments inside
-#' environments)
+#' environments).
 #'
-#' @param object  An R object (likely containing environments) or an environment
+#' @param object  An R object (likely containing environments) or an environment.
+#'
 #' @param filebackedDir A directory to copy any files that are backing R objects,
 #'                      currently only valid for \code{Raster} classes. Defaults
 #'                      to \code{tempdir()}, which is unlikely to be very useful.
+#'
 #' @param ... Only used for custom Methods
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importFrom data.table copy
 #' @rdname Copy
-#' @seealso \code{\link{robustDigest}}
+#' @seealso \code{\link{.robustDigest}}
 #'
-setGeneric("Copy", function(object, filebackedDir=tempdir(), ...) {
+#' @examples
+#' e <- new.env()
+#' e$abc <- letters
+#' e$one <- 1L
+#' e$lst <- list(W = 1:10, X = runif(10), Y = rnorm(10), Z = LETTERS[1:10])
+#' ls(e)
+#'
+#' # 'normal' copy
+#' f <- e
+#' ls(f)
+#' f$one
+#' f$one <- 2L
+#' f$one
+#' e$one ## uh oh, e has changed!
+#'
+#' # deep copy
+#' e$one <- 1L
+#' g <- Copy(e)
+#' ls(g)
+#' g$one
+#' g$one <- 3L
+#' g$one
+#' f$one
+#' e$one
+#'
+setGeneric("Copy", function(object, filebackedDir = tempdir(), ...) {
   standardGeneric("Copy")
 })
 
@@ -670,27 +734,27 @@ setMethod("Copy",
           definition = function(object,  filebackedDir, ...) {
             listVersion <- Copy(as.list(object, all.names = TRUE),  filebackedDir, ...)
             as.environment(listVersion)
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "list"),
           definition = function(object,  filebackedDir, ...) {
             lapply(object, function(x) Copy(x, filebackedDir, ...))
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "data.frame"),
           definition = function(object,  filebackedDir, ...) {
             object
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "Raster"),
           definition = function(object, filebackedDir, ...) {
-            object <- prepareFileBackedRaster(object, repoDir = filebackedDir)
+            object <- .prepareFileBackedRaster(object, repoDir = filebackedDir)
 })
 
 ################################################################################
@@ -705,11 +769,14 @@ setMethod("Copy",
 #' @return The same object as \code{obj}, but sorted with .objects first.
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @rdname sortDotsUnderscoreFirst
 #'
-sortDotsUnderscoreFirst <- function(obj) {
+#' @examples
+#' items <- c(A = "a", Z = "z", `.D` = ".d", `_W` = "_w")
+#' .sortDotsUnderscoreFirst(items)
+#'
+.sortDotsUnderscoreFirst <- function(obj) {
   names(obj) <- gsub(names(obj), pattern = "\\.", replacement = "DOT")
   names(obj) <- gsub(names(obj), pattern = "_", replacement = "US")
   allLower <- which(tolower(names(obj)) == names(obj))
@@ -731,7 +798,6 @@ sortDotsUnderscoreFirst <- function(obj) {
 #'
 #' @author Eliot McIntire
 #' @importFrom data.table setattr
-#' @docType methods
 #' @rdname debugCache
 #'
 .debugCache <- function(obj, preDigest, ...) {

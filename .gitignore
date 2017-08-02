@@ -1,7 +1,7 @@
 .csv
 .log
 .Rapp.history
-.RData
+*.RData
 .Rhistory
 .Rproj.user
 

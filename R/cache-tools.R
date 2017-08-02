@@ -31,7 +31,6 @@
 #'                 then matching is by `and`. For `or` matching, use | in a single character
 #'                 string. See examples.
 #'
-#' @docType methods
 #' @rdname viewCache
 #'
 #' @example inst/examples/example_Cache.R
@@ -89,12 +88,13 @@ setMethod(
 #'
 #' @inheritParams clearCache
 #'
-#' @docType methods
 #' @export
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
 #' @seealso \code{\link[archivist]{splitTagsLocal}}.
+#'
+#' @example inst/examples/example_Cache.R
 #'
 setGeneric("showCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("showCache")
@@ -134,7 +134,6 @@ setMethod(
     objsDT
 })
 
-#' @docType methods
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("keepCache")

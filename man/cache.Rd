@@ -47,7 +47,7 @@ This is optional if \code{Cache} is used inside a SpaDES module.}
 have file-backed storage, this is passed to the length arg in \code{digest}
 when determining if the Raster file is already in the database.
 Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-Default 1e6. Passed to \code{prepareFileBackedRaster}.}
+Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
 
 \item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
 
@@ -57,8 +57,8 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
-\item{classOptions}{Optional list. This will pass into \code{robustDigest} for
-specific classes. Should be options that the \code{robustDigest} knows what
+\item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
+specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
 \item{debugCache}{Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
@@ -67,7 +67,7 @@ equivalent to \code{"complete"}.
 If \code{"complete"}, then the returned object from the Cache
 function will have two attributes, \code{debugCache1} and \code{debugCache2},
 which are the entire \code{list(...)} and that same object, but after all
-\code{robustDigest} calls, at the moment that it is digested using
+\code{.robustDigest} calls, at the moment that it is digested using
 \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
 can then be compared to a subsequent call and individual items within
 the object \code{attr(mySimOut, "debugCache1")} can be compared.
@@ -141,12 +141,12 @@ not mask, the \code{archivist::cache} function.
 }
 \note{
 As indicated above, several objects require pre-treatment before
-caching will work as expected. The function \code{robustDigest} accommodates this.
+caching will work as expected. The function \code{.robustDigest} accommodates this.
 It is an S4 generic, meaning that developers can produce their own methods for
 different classes of objects. Currently, there are methods for several types
-of classes. See \code{\link{robustDigest}}.
+of classes. See \code{\link{.robustDigest}}.
 
-See \code{\link{robustDigest}} for other specifics for other classes.
+See \code{\link{.robustDigest}} for other specifics for other classes.
 }
 \section{Filepaths}{
 
@@ -180,8 +180,8 @@ library(raster)
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 
 ## Example 1: basic cache use
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNums <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 showCache(tmpDir, userTags = c("objectName"))
 showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
@@ -193,12 +193,12 @@ showCache(tmpDir) # only those made during rnorm call
 clearCache(tmpDir)
 
 ## Example 2: using the "accessed" tag
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNums <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # access it again, but "later"
 Sys.sleep(1)
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 wholeCache <- showCache(tmpDir)
 
 # keep only items accessed "recently" (i.e., only objectName:a)
@@ -213,8 +213,8 @@ showCache(tmpDir) # still has more recently accessed
 clearCache(tmpDir)
 
 ## Example 3: using keepCache
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNums <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # keep only those cached items from the last 24 hours
 oneDay <- 60 * 60 * 24
@@ -231,8 +231,8 @@ showCache(tmpDir) ## empty
 ## Example 4: searching for multiple objects in the cache
 
 # default userTags is "and" matching; for "or" matching use |
-ranNums <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # show all objects (runif and rnorm in this case)
 showCache(tmpDir)
@@ -255,11 +255,21 @@ ras <- raster(extent(0, 100, 0, 100), res = 1,
               crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
 
 # A slow operation, like GIS operation
-notCached <- projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
-cached <- Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+notCached <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
+
+cached <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
 
 # second time is much faster
-reRun <- Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+reRun <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
 
 # recovered cached version is same as non-cached version
 all.equal(notCached, reRun) ## TRUE
@@ -269,21 +279,24 @@ all.equal(notCached, reRun) ## TRUE
 # if passing a character string, it will take 2 complete passes to before
 #  a cached copy is used when it is a save event (read or load is different)
 obj <- 1:10
-Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpDir) # cached copy is loaded
+fname <- tempfile(fileext = ".RData")
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir) # cached copy is loaded
 
 # however, using asPath(), cached version retrieved after being run once
-Cache(saveRDS, obj, file = asPath("filename1.rdata"), cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = asPath("filename1.rdata"), cacheRepo = tmpDir) # cached copy is loaded
+fname1 <- tempfile(fileext = ".RData")
+Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir) # cached copy is loaded
 
 clearCache(tmpDir)
 
 ## cleanup
+unlink(c("filename.rda", "filename1.rda"))
 unlink(dirname(tmpDir), recursive = TRUE)
 }
 \seealso{
-\code{\link[archivist]{cache}}, \code{\link{robustDigest}}
+\code{\link[archivist]{cache}}, \code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire

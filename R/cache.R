@@ -66,12 +66,12 @@ if (getRversion() >= "3.1.0") {
 #' reproducible workflow.
 #'
 #' @note As indicated above, several objects require pre-treatment before
-#' caching will work as expected. The function \code{robustDigest} accommodates this.
+#' caching will work as expected. The function \code{.robustDigest} accommodates this.
 #' It is an S4 generic, meaning that developers can produce their own methods for
 #' different classes of objects. Currently, there are methods for several types
-#' of classes. See \code{\link{robustDigest}}.
+#' of classes. See \code{\link{.robustDigest}}.
 #'
-#' See \code{\link{robustDigest}} for other specifics for other classes.
+#' See \code{\link{.robustDigest}} for other specifics for other classes.
 #'
 #' @inheritParams archivist::cache
 #' @inheritParams archivist::saveToLocalRepo
@@ -94,12 +94,12 @@ if (getRversion() >= "3.1.0") {
 #'        have file-backed storage, this is passed to the length arg in \code{digest}
 #'        when determining if the Raster file is already in the database.
 #'        Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-#'        Default 1e6. Passed to \code{prepareFileBackedRaster}.
+#'        Default 1e6. Passed to \code{.prepareFileBackedRaster}.
 #'
 #' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
 #'
-#' @param classOptions Optional list. This will pass into \code{robustDigest} for
-#'        specific classes. Should be options that the \code{robustDigest} knows what
+#' @param classOptions Optional list. This will pass into \code{.robustDigest} for
+#'        specific classes. Should be options that the \code{.robustDigest} knows what
 #'        to do with.
 #'
 #' @param debugCache Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
@@ -108,7 +108,7 @@ if (getRversion() >= "3.1.0") {
 #'        If \code{"complete"}, then the returned object from the Cache
 #'        function will have two attributes, \code{debugCache1} and \code{debugCache2},
 #'        which are the entire \code{list(...)} and that same object, but after all
-#'        \code{robustDigest} calls, at the moment that it is digested using
+#'        \code{.robustDigest} calls, at the moment that it is digested using
 #'        \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
 #'        can then be compared to a subsequent call and individual items within
 #'        the object \code{attr(mySimOut, "debugCache1")} can be compared.
@@ -144,10 +144,9 @@ if (getRversion() >= "3.1.0") {
 #' function call or the cached version (i.e., the result from a previous call
 #' to this same cached function with identical arguments).
 #'
-#' @seealso \code{\link[archivist]{cache}}, \code{\link{robustDigest}}
+#' @seealso \code{\link[archivist]{cache}}, \code{\link{.robustDigest}}
 #'
 #' @author Eliot McIntire
-#' @docType methods
 #' @export
 #' @importClassesFrom raster RasterBrick
 #' @importClassesFrom raster RasterLayer
@@ -193,9 +192,11 @@ setMethod(
                         debugCache, sideEffect, makeCopy, quick) {
     tmpl <- list(...)
 
-    if (!is(FUN, "function")) stop("Can't understand the function provided to Cache.\n",
-                                   "Did you write it in the form: ",
-                                   "Cache(function, functionArguments)?")
+    if (!is(FUN, "function")) {
+      stop("Can't understand the function provided to Cache.\n",
+           "Did you write it in the form: ",
+           "Cache(function, functionArguments)?")
+    }
 
     if (missing(notOlderThan)) notOlderThan <- NULL
 
@@ -228,7 +229,7 @@ setMethod(
 
     # Do the digesting
     preDigestByClass <- lapply(seq_along(tmpl), function(x) .preDigestByClass(tmpl[[x]]))
-    preDigest <- lapply(tmpl, robustDigest, objects = objects,
+    preDigest <- lapply(tmpl, .robustDigest, objects = objects,
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
                         digestPathContent = digestPathContent,
@@ -408,9 +409,9 @@ setMethod(
     if (any(rasters)) {
       if (outputToSaveIsList) {
         outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-          prepareFileBackedRaster(x, repoDir = cacheRepo))
+          .prepareFileBackedRaster(x, repoDir = cacheRepo))
       } else {
-        outputToSave <- prepareFileBackedRaster(outputToSave, repoDir = cacheRepo)
+        outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo)
       }
       attr(outputToSave, "tags") <- attr(output, "tags")
       attr(outputToSave, "call") <- attr(output, "call")
@@ -455,7 +456,6 @@ setMethod(
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @inheritParams Cache
-#' @docType methods
 #' @rdname reproducible-deprecated
 setGeneric("cache", signature = "...",
            function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,  # nolint
