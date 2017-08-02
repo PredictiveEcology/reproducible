@@ -94,7 +94,7 @@ if (getRversion() >= "3.1.0") {
 #'        have file-backed storage, this is passed to the length arg in \code{digest}
 #'        when determining if the Raster file is already in the database.
 #'        Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-#'        Default 1e6. Passed to \code{prepareFileBackedRaster}.
+#'        Default 1e6. Passed to \code{.prepareFileBackedRaster}.
 #'
 #' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
 #'
@@ -409,9 +409,9 @@ setMethod(
     if (any(rasters)) {
       if (outputToSaveIsList) {
         outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-          prepareFileBackedRaster(x, repoDir = cacheRepo))
+          .prepareFileBackedRaster(x, repoDir = cacheRepo))
       } else {
-        outputToSave <- prepareFileBackedRaster(outputToSave, repoDir = cacheRepo)
+        outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo)
       }
       attr(outputToSave, "tags") <- attr(output, "tags")
       attr(outputToSave, "call") <- attr(output, "call")

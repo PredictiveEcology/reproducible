@@ -47,7 +47,7 @@ This is optional if \code{Cache} is used inside a SpaDES module.}
 have file-backed storage, this is passed to the length arg in \code{digest}
 when determining if the Raster file is already in the database.
 Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-Default 1e6. Passed to \code{prepareFileBackedRaster}.}
+Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
 
 \item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
 

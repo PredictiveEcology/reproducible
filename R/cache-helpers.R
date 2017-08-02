@@ -208,7 +208,7 @@ setMethod(
   ".prepareOutput",
   signature = "RasterLayer",
   definition = function(object, cacheRepo, ...) {
-    prepareFileBackedRaster(object, repoDir = cacheRepo)
+    .prepareFileBackedRaster(object, repoDir = cacheRepo)
 })
 
 #' @export
@@ -432,8 +432,8 @@ setMethod(
 #' Rasters are sometimes file-based, so the normal save and copy and assign
 #' mechanisms in R don't work for saving, copying and assigning.
 #' This function creates an explicit file copy of the file that is backing the raster,
-#' and changes the pointer (i.e., \code{filename(object)}) so that it is pointing to the new
-#' file.
+#' and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
+#' to the new file.
 #'
 #' @param obj The raster object to save to the repository.
 #'
@@ -451,11 +451,11 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom raster filename dataType inMemory writeRaster nlayers
-#' @importFrom methods slot is selectMethod slot<-
+#' @importFrom raster filename dataType inMemory nlayers writeRaster
+#' @importFrom methods is selectMethod slot slot<-
 #' @rdname prepareFileBackedRaster
 #'
-prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
+.prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
@@ -663,18 +663,19 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
   }
 }
 
-
 #' Recursive copying of nested environments, and other "hard to copy" objects
 #'
 #' When copying environments and all the objects contained within them, there are
 #' no copies made: it is a pass-by-reference operation. Sometimes, a deep copy is
 #' needed, and sometimes, this must be recursive (i.e., environments inside
-#' environments)
+#' environments).
 #'
-#' @param object  An R object (likely containing environments) or an environment
+#' @param object  An R object (likely containing environments) or an environment.
+#'
 #' @param filebackedDir A directory to copy any files that are backing R objects,
 #'                      currently only valid for \code{Raster} classes. Defaults
 #'                      to \code{tempdir()}, which is unlikely to be very useful.
+#'
 #' @param ... Only used for custom Methods
 #'
 #' @author Eliot McIntire
@@ -683,7 +684,32 @@ digestRaster <- function(object, compareRasterFileLength, algo) {
 #' @rdname Copy
 #' @seealso \code{\link{.robustDigest}}
 #'
-setGeneric("Copy", function(object, filebackedDir=tempdir(), ...) {
+#' @examples
+#' e <- new.env()
+#' e$abc <- letters
+#' e$one <- 1L
+#' e$lst <- list(W = 1:10, X = runif(10), Y = rnorm(10), Z = LETTERS[1:10])
+#' ls(e)
+#'
+#' # 'normal' copy
+#' f <- e
+#' ls(f)
+#' f$one
+#' f$one <- 2L
+#' f$one
+#' e$one ## uh oh, e has changed!
+#'
+#' # deep copy
+#' e$one <- 1L
+#' g <- Copy(e)
+#' ls(g)
+#' g$one
+#' g$one <- 3L
+#' g$one
+#' f$one
+#' e$one
+#'
+setGeneric("Copy", function(object, filebackedDir = tempdir(), ...) {
   standardGeneric("Copy")
 })
 
@@ -708,27 +734,27 @@ setMethod("Copy",
           definition = function(object,  filebackedDir, ...) {
             listVersion <- Copy(as.list(object, all.names = TRUE),  filebackedDir, ...)
             as.environment(listVersion)
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "list"),
           definition = function(object,  filebackedDir, ...) {
             lapply(object, function(x) Copy(x, filebackedDir, ...))
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "data.frame"),
           definition = function(object,  filebackedDir, ...) {
             object
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "Raster"),
           definition = function(object, filebackedDir, ...) {
-            object <- prepareFileBackedRaster(object, repoDir = filebackedDir)
+            object <- .prepareFileBackedRaster(object, repoDir = filebackedDir)
 })
 
 ################################################################################
