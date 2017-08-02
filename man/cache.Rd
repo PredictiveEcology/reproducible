@@ -272,13 +272,13 @@ all.equal(notCached, reRun) ## TRUE
 # if passing a character string, it will take 2 complete passes to before
 #  a cached copy is used when it is a save event (read or load is different)
 obj <- 1:10
-Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = "filename.rdata", cacheRepo = tmpDir) # cached copy is loaded
+Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir) # cached copy is loaded
 
 # however, using asPath(), cached version retrieved after being run once
-Cache(saveRDS, obj, file = asPath("filename1.rdata"), cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = asPath("filename1.rdata"), cacheRepo = tmpDir) # cached copy is loaded
+Cache(saveRDS, obj, file = asPath("filename1.RData"), cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = asPath("filename1.RData"), cacheRepo = tmpDir) # cached copy is loaded
 
 clearCache(tmpDir)
 
