@@ -34,6 +34,21 @@ if they don't exist in the source. This is \code{/purge}.}
 This will copy an individual file faster using \code{Robocopy} on Windows,
 and using \code{rsync} on macOS and Linux.
 }
+\examples{
+tmpDirFrom <- file.path(tempdir(), "example_fileCopy_from")
+tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
+tmpFile <- tempfile("file", tmpDirFrom, ".csv")
+dir.create(tmpDirFrom)
+
+write.csv(data.frame(a = 1:10, b = runif(10), c = letters[1:10]), tmpFile)
+copyFile(tmpFile, file.path(tmpDirTo, basename(tmpFile)))
+file.exists(file.path(tmpDirTo, basename(tmpFile))) ## TRUE
+identical(read.csv(tmpFile), read.csv(file.path(tmpDirTo, basename(tmpFile))))
+
+unlink(tmpDirFrom, recursive = TRUE)
+unlink(tmpDirTo, recursive = TRUE)
+
+}
 \author{
-Eliot McIntire
+Eliot McIntire and ALex Chubaty
 }

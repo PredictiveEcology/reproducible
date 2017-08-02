@@ -21,16 +21,16 @@ Default 1e6. Passed to \code{prepareFileBackedRaster}.}
 \item{...}{passed to \code{archivist::saveToRepo}}
 }
 \value{
-A raster object and its newly located file backing. Note that if this is a
-legitimate archivist repository,
-the new location will be in a subfolder called "rasters" of \code{repoDir}.
-If this is not a repository, then the new file location will placed in \code{repoDir}.
+A raster object and its newly located file backing.
+        Note that if this is a legitimate archivist repository, the new location
+        will be a subfolder called \file{rasters/} of \file{repoDir/}.
+        If this is not a repository, the new location will be within \code{repoDir}.
 }
 \description{
 Rasters are sometimes file-based, so the normal save and copy and assign
 mechanisms in R don't work for saving, copying and assigning.
 This function creates an explicit file copy of the file that is backing the raster,
-and changes the pointer (i.e., filename(object)) so that it is pointing to the new
+and changes the pointer (i.e., \code{filename(object)}) so that it is pointing to the new
 file.
 }
 \author{

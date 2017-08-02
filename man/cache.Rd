@@ -255,11 +255,14 @@ ras <- raster(extent(0, 100, 0, 100), res = 1,
               crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
 
 # A slow operation, like GIS operation
-notCached <- projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
-cached <- Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+notCached <- suppressWarnings(projectRaster(ras, crs = crs(ras), res = 5,
+                                            cacheRepo = tmpDir))
+cached <- Cache(suppressWarnings(projectRaster), ras, crs = crs(ras), res = 5,
+                cacheRepo = tmpDir)
 
 # second time is much faster
-reRun <- Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+reRun <- Cache(suppressWarnings(projectRaster), ras, crs = crs(ras), res = 5,
+               cacheRepo = tmpDir)
 
 # recovered cached version is same as non-cached version
 all.equal(notCached, reRun) ## TRUE
@@ -280,6 +283,7 @@ Cache(saveRDS, obj, file = asPath("filename1.rdata"), cacheRepo = tmpDir) # cach
 clearCache(tmpDir)
 
 ## cleanup
+unlink(c("filename.rda", "filename1.rda"))
 unlink(dirname(tmpDir), recursive = TRUE)
 }
 \seealso{

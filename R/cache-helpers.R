@@ -339,6 +339,14 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #'
 #' @export
 #' @rdname Path-class
+#'
+#' @examples
+#' tmpf <- tempfile(fileext = ".csv")
+#' file.exists(tmpf)    ## FALSE
+#' tmpfPath <- asPath(tmpf)
+#' is(tmpf, "Path")     ## FALSE
+#' is(tmpfPath, "Path") ## TRUE
+#'
 asPath <- function(obj) {
   UseMethod("asPath", obj)
 }
@@ -360,20 +368,21 @@ setAs(from = "character", to = "Path", function(from) {
 ################################################################################
 #' Clear erroneous archivist artifacts
 #'
-#' When an archive object is being saved, if this is occurring at the same time
-#' as another process doing the same thing, a stub of an artifact may occur.
-#' This function will clear those stubs.
+#' Clear stub artifacts resulting when an archive object is being saved at the
+#' same time as another process doing the same thing.
 #'
-#' @return Done for its side effect on the repoDir
+#' @return Done for its side effect on the \code{repoDi}r
 #'
 #' @param repoDir A character denoting an existing directory of the Repository for
-#' which metadata will be returned. If it is set to NULL (by default), it
-#' will use the repoDir specified in \code{archivist::setLocalRepo}.
+#' which metadata will be returned. If \code{NULL} (default), it will use the
+#' \code{repoDir} specified in \code{archivist::setLocalRepo}.
 #'
 #' @author Eliot McIntire
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname clearStubArtifacts
+#'
+#' @examples
 #'
 setGeneric("clearStubArtifacts", function(repoDir = NULL) {
   standardGeneric("clearStubArtifacts")
@@ -392,14 +401,14 @@ setMethod(
     md5hashInBackpack[toRemove] %>%
       sapply(., rmFromLocalRepo, repoDir = repoDir)
     return(invisible(md5hashInBackpack[toRemove]))
-  })
+})
 
 #' Copy the file-backing of a file-backed Raster* object
 #'
 #' Rasters are sometimes file-based, so the normal save and copy and assign
 #' mechanisms in R don't work for saving, copying and assigning.
 #' This function creates an explicit file copy of the file that is backing the raster,
-#' and changes the pointer (i.e., filename(object)) so that it is pointing to the new
+#' and changes the pointer (i.e., \code{filename(object)}) so that it is pointing to the new
 #' file.
 #'
 #' @param obj The raster object to save to the repository.
@@ -410,10 +419,10 @@ setMethod(
 #'
 #' @param ... passed to \code{archivist::saveToRepo}
 #'
-#' @return A raster object and its newly located file backing. Note that if this is a
-#' legitimate archivist repository,
-#' the new location will be in a subfolder called "rasters" of \code{repoDir}.
-#' If this is not a repository, then the new file location will placed in \code{repoDir}.
+#' @return A raster object and its newly located file backing.
+#'         Note that if this is a legitimate archivist repository, the new location
+#'         will be a subfolder called \file{rasters/} of \file{repoDir/}.
+#'         If this is not a repository, the new location will be within \code{repoDir}.
 #'
 #' @author Eliot McIntire
 #' @export
@@ -552,9 +561,23 @@ prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength
 #'
 #' @inheritParams base::file.copy
 #'
-#' @author Eliot McIntire
+#' @author Eliot McIntire and ALex Chubaty
 #' @export
 #' @rdname copyFile
+#'
+#' @examples
+#' tmpDirFrom <- file.path(tempdir(), "example_fileCopy_from")
+#' tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
+#' tmpFile <- tempfile("file", tmpDirFrom, ".csv")
+#' dir.create(tmpDirFrom)
+#'
+#' write.csv(data.frame(a = 1:10, b = runif(10), c = letters[1:10]), tmpFile)
+#' copyFile(tmpFile, file.path(tmpDirTo, basename(tmpFile)))
+#' file.exists(file.path(tmpDirTo, basename(tmpFile))) ## TRUE
+#' identical(read.csv(tmpFile), read.csv(file.path(tmpDirTo, basename(tmpFile))))
+#'
+#' unlink(tmpDirFrom, recursive = TRUE)
+#' unlink(tmpDirTo, recursive = TRUE)
 #'
 copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                      overwrite = TRUE, delDestination = FALSE,

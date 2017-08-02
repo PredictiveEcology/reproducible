@@ -24,7 +24,7 @@ test_that("checkPath: normPath consistency", {
                 file.path(tmpdir, "aaa", "zzz"))
 
   checked <- normPath(paths)
-  expect_that(length(unique(checked)), testthat::equals(1))
+  expect_equal(length(unique(checked)), 1)
 
   # extra checks for missing/NA/NULL
   expect_equal(normPath(), character())
@@ -58,7 +58,7 @@ test_that("checkPath: checkPath consistency", {
                 file.path(tmpdir, "aaa", "zzz"))
 
   checked <- lapply(paths, checkPath, create = FALSE)
-  expect_that(length(unique(checked)), testthat::equals(1))
+  expect_equal(length(unique(checked)), 1)
   unlink(tmpdir, recursive = TRUE)
 
   # check that length(path)==1

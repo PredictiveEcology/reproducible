@@ -25,3 +25,11 @@ In the case where it is en existing file, \code{file.exists} can work.
 But if it does not yet exist, e.g., for a \code{save}, it is difficult to know
 whether it is a valid path before attempting to save to the path.
 }
+\examples{
+tmpf <- tempfile(fileext = ".csv")
+file.exists(tmpf)    ## FALSE
+tmpfPath <- asPath(tmpf)
+is(tmpf, "Path")     ## FALSE
+is(tmpfPath, "Path") ## TRUE
+
+}
