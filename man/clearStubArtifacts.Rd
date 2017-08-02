@@ -22,6 +22,9 @@ Done for its side effect on the \code{repoDi}r
 Clear stub artifacts resulting when an archive object is being saved at the
 same time as another process doing the same thing.
 }
+\examples{
+
+}
 \author{
 Eliot McIntire
 }
