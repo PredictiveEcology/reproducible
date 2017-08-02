@@ -11,18 +11,30 @@ clearStubArtifacts(repoDir = NULL)
 \S4method{clearStubArtifacts}{ANY}(repoDir = NULL)
 }
 \arguments{
-\item{repoDir}{A character denoting an existing directory of the Repository for
+\item{repoDir}{A character denoting an existing directory of the repository for
 which metadata will be returned. If \code{NULL} (default), it will use the
 \code{repoDir} specified in \code{archivist::setLocalRepo}.}
 }
 \value{
-Done for its side effect on the \code{repoDi}r
+Invoked for its side effect on the \code{repoDir}.
 }
 \description{
 Clear stub artifacts resulting when an archive object is being saved at the
 same time as another process doing the same thing.
 }
 \examples{
+tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
+
+lapply(cl, c(runif, rnorm), function(f) {
+  reproducible::Cache(f, 10, cacheRepo = tmpDir)
+})
+
+# clear out any stub artifacts
+clearStubArtifacts(tmpDir)
+
+# cleanup
+clearCache(tmpDir)
+unlink(tmpDir, recursive = TRUE)
 
 }
 \author{

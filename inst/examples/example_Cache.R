@@ -3,8 +3,8 @@ library(raster)
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 
 ## Example 1: basic cache use
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNums <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 showCache(tmpDir, userTags = c("objectName"))
 showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
@@ -16,12 +16,12 @@ showCache(tmpDir) # only those made during rnorm call
 clearCache(tmpDir)
 
 ## Example 2: using the "accessed" tag
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNums <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # access it again, but "later"
 Sys.sleep(1)
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 wholeCache <- showCache(tmpDir)
 
 # keep only items accessed "recently" (i.e., only objectName:a)
@@ -36,8 +36,8 @@ showCache(tmpDir) # still has more recently accessed
 clearCache(tmpDir)
 
 ## Example 3: using keepCache
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNums <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # keep only those cached items from the last 24 hours
 oneDay <- 60 * 60 * 24
@@ -54,8 +54,8 @@ showCache(tmpDir) ## empty
 ## Example 4: searching for multiple objects in the cache
 
 # default userTags is "and" matching; for "or" matching use |
-ranNums <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNums <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsA <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # show all objects (runif and rnorm in this case)
 showCache(tmpDir)

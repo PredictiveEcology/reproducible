@@ -384,9 +384,9 @@ setAs(from = "character", to = "Path", function(from) {
 #' Clear stub artifacts resulting when an archive object is being saved at the
 #' same time as another process doing the same thing.
 #'
-#' @return Done for its side effect on the \code{repoDi}r
+#' @return Invoked for its side effect on the \code{repoDir}.
 #'
-#' @param repoDir A character denoting an existing directory of the Repository for
+#' @param repoDir A character denoting an existing directory of the repository for
 #' which metadata will be returned. If \code{NULL} (default), it will use the
 #' \code{repoDir} specified in \code{archivist::setLocalRepo}.
 #'
@@ -396,6 +396,18 @@ setAs(from = "character", to = "Path", function(from) {
 #' @rdname clearStubArtifacts
 #'
 #' @examples
+#' tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
+#'
+#' lapply(cl, c(runif, rnorm), function(f) {
+#'   reproducible::Cache(f, 10, cacheRepo = tmpDir)
+#' })
+#'
+#' # clear out any stub artifacts
+#' clearStubArtifacts(tmpDir)
+#'
+#' # cleanup
+#' clearCache(tmpDir)
+#' unlink(tmpDir, recursive = TRUE)
 #'
 setGeneric("clearStubArtifacts", function(repoDir = NULL) {
   standardGeneric("clearStubArtifacts")
