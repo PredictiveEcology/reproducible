@@ -168,13 +168,15 @@ all.equal(notCached, reRun) ## TRUE
 # if passing a character string, it will take 2 complete passes to before
 #  a cached copy is used when it is a save event (read or load is different)
 obj <- 1:10
-Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir) # cached copy is loaded
+fname <- tempfile(fileext = ".RData")
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir) # cached copy is loaded
 
 # however, using asPath(), cached version retrieved after being run once
-Cache(saveRDS, obj, file = asPath("filename1.RData"), cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = asPath("filename1.RData"), cacheRepo = tmpDir) # cached copy is loaded
+fname1 <- tempfile(fileext = ".RData")
+Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir) # cached copy is loaded
 
 clearCache(tmpDir)
 
@@ -278,13 +280,15 @@ all.equal(notCached, reRun) ## TRUE
 # if passing a character string, it will take 2 complete passes to before
 #  a cached copy is used when it is a save event (read or load is different)
 obj <- 1:10
-Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpDir) # cached copy is loaded
+fname <- tempfile(fileext = ".RData")
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir) # cached copy is loaded
 
 # however, using asPath(), cached version retrieved after being run once
-Cache(saveRDS, obj, file = asPath("filename1.RData"), cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = asPath("filename1.RData"), cacheRepo = tmpDir) # cached copy is loaded
+fname1 <- tempfile(fileext = ".RData")
+Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir)
+Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir) # cached copy is loaded
 
 clearCache(tmpDir)
 
