@@ -14,7 +14,7 @@
   usingSSH <- any(grepl("url.ssh://git@github.com/.insteadof", names(gitConfig)))
   if (usingSSH) {
     stop("A .gitconfig file is rewriting HTTPS urls to SSH,",
-         " which breaks some functionality because 'git2r' can handle SSH remotes.\n",
+         " which breaks some functionality because 'git2r' can't handle SSH remotes.\n",
          "Please [temporarily] disable this option.")
   }
   return(invisible(TRUE))
