@@ -619,13 +619,14 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                             warning = function(w) NA_character_)
 
     robocopy <-  if (silent) {
-      paste0(robocopyBin, "", "/purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",  # nolint
-             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\\ ",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"),  " ", basename(from))
+      paste0(robocopyBin, " /purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",  # nolint
+             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), " ",
+             normalizePath(to, mustWork = FALSE, winslash = "\\"),  " /E "[recursive],  " ",
+             basename(from))
     } else {
-      paste0(robocopyBin, " ", "/purge"[delDestination], " /ETA /xo ", # nolint
-             normalizePath(from, mustWork = TRUE, winslash = "\\"), "\\ ",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E"[recursive], " ",
+      paste0(robocopyBin, " /purge"[delDestination], " /ETA /xo ", # nolint
+             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), " ",
+             normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E "[recursive], " ",
              basename(from))
     }
 
@@ -644,8 +645,9 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
     useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
   }
-  if (isTRUE(useFileCopy))
+  if (isTRUE(useFileCopy)) {
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
+  }
 
   setwd(origDir)
   return(invisible(to))
