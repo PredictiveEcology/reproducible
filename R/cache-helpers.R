@@ -523,10 +523,10 @@ setMethod(
             sapply(., dir.create, recursive = TRUE)
         }
         if (any(saveFilename %>% grepl(., pattern = "[.]grd$"))) {
-          copyFile(to = saveFilename, overwrite = TRUE, from = curFilename, silent = TRUE)
+          copyFile(from = curFilename, to = saveFilename, overwrite = TRUE, silent = TRUE)
           griFilename <- sub(saveFilename, pattern = "[.]grd$", replacement = ".gri")
           curGriFilename <- sub(curFilename, pattern = "[.]grd$", replacement = ".gri")
-          copyFile(to = griFilename, overwrite = TRUE, from = curGriFilename, silent = TRUE)
+          copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
         } else {
           suppressWarnings(
             lapply(seq_along(curFilename),
