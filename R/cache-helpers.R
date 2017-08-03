@@ -594,11 +594,13 @@ setMethod(
 #' tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
 #' tmpFile <- tempfile("file", tmpDirFrom, ".csv")
 #' dir.create(tmpDirFrom)
+#' f1 <- normalizePath(tmpFile, mustWork = FALSE)
+#' f2 <- normalizePath(file.path(tmpDirTo, basename(tmpFile)), mustWork = FALSE)
 #'
-#' write.csv(data.frame(a = 1:10, b = runif(10), c = letters[1:10]), tmpFile)
-#' copyFile(tmpFile, file.path(tmpDirTo, basename(tmpFile)))
-#' file.exists(file.path(tmpDirTo, basename(tmpFile))) ## TRUE
-#' identical(read.csv(tmpFile), read.csv(file.path(tmpDirTo, basename(tmpFile))))
+#' write.csv(data.frame(a = 1:10, b = runif(10), c = letters[1:10]), f1)
+#' copyFile(f1, f2)
+#' file.exists(f2) ## TRUE
+#' identical(read.csv(f1), read.csv(f2)) ## TRUE
 #'
 #' unlink(tmpDirFrom, recursive = TRUE)
 #' unlink(tmpDirTo, recursive = TRUE)
