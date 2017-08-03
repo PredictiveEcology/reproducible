@@ -608,7 +608,7 @@ setMethod(
 copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                      overwrite = TRUE, delDestination = FALSE,
                      #copyRasterFile=TRUE, clearRepo=TRUE,
-                     create = TRUE, silent = FALSE, recursive = TRUE) {
+                     create = TRUE, silent = FALSE) {
   origDir <- getwd()
   useFileCopy <- FALSE
 
@@ -619,14 +619,14 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                             warning = function(w) NA_character_)
 
     robocopy <-  if (silent) {
-      paste0(robocopyBin, " /purge"[delDestination], " /ETA /NDL /NFL /NJH /NJS ",  # nolint
+      paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS ",  # nolint
              normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), " ",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"),  " /E "[recursive],  " ",
+             normalizePath(to, mustWork = FALSE, winslash = "\\"),  " ",
              basename(from))
     } else {
-      paste0(robocopyBin, " /purge"[delDestination], " /ETA /xo ", # nolint
+      paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO ", # nolint
              normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), " ",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"), " /E "[recursive], " ",
+             normalizePath(to, mustWork = FALSE, winslash = "\\"), " ",
              basename(from))
     }
 
