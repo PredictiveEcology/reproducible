@@ -93,7 +93,7 @@ test_that("test file-backed raster caching", {
     r
   }
   bb <- Cache(randomPolyToFactorInMemory, tmpdir, cacheRepo = tmpdir)
-  expect_true(dataType(bb) == "INT1U")
+  expect_equal(dataType(bb),"INT1U")
   expect_true(raster::is.factor(bb))
   expect_true(is(raster::levels(bb)[[1]], "data.frame"))
   expect_true(NCOL(raster::levels(bb)[[1]]) == 3)
@@ -113,7 +113,7 @@ test_that("test file-backed raster caching", {
   # bb1 has original tmp filename
   bb1 <- randomPolyToFactorOnDisk(tmpdir, tf)
   # bb has new one, inside of cache repository, with same basename
-  bb <- Cache(randomPolyToFactorOnDisk, tmpdir, tmpFile = tf, cacheRepo = tmpdir)
+  bb <- Cache(randomPolyToFactorOnDisk, tmpDir = tmpdir, tmpFile = tf, cacheRepo = tmpdir)
   expect_true(dirname(filename(bb)) == file.path(tmpdir, "rasters"))
   expect_true(basename(filename(bb)) == basename(tf))
   expect_false(filename(bb) == tf)
