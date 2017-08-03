@@ -33,12 +33,15 @@ environment:
 
   - R_VERSION: 3.3.2
     RTOOLS_VERSION: 33
+    build_script:
+    - travis-tool.sh install_deps
+    - Rscript -e  "install.packages('igraph', type = 'source', repos = 'https://cran.rstudio.com')"
+
 
 branches:
   only:
   - master
   - development
-  - testing
 
   except:
   - gh-pages
