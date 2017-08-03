@@ -20,11 +20,11 @@ We have removed `\dontrun` from the examples so that they *do* run, and have add
 * Windows 7            (local), R 3.4.1
 
 ### Development R version
-* Debian:testing  (rocker/drd), R 3.5.0 (2017-07-09 r72907)
-* Ubuntu 14.04     (travis-ci), R 3.5.0 (2017-07-19 r72929)
-* Ubuntu 16.04         (local), R 3.5.0 (2017-07-17 r72924)
-* Windows           (appveyor), R 3.5.0 (2017-07-18 r72928)
-* Windows        (win-builder), R 3.5.0 (2017-07-18 r72928)
+* Debian:testing (rocker/r-devel), R 3.5.0 (2017-07-26 r72972)
+* Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-02 r73018)
+* Ubuntu 16.04            (local), R 3.5.0 (2017-08-02 r73018)
+* Windows              (appveyor), R 3.5.0 (2017-08-01 r73012)
+* Windows           (win-builder), R 3.5.0 (2017-08-01 r73011)
 
 ## R CMD check results
 
