@@ -3,7 +3,7 @@ test_that("git-related functions work", {
 
   ## don't bother running checks if they'll all fail due to .gitconfig SSH issue
   if (isTRUE(.checkGitConfig())) {
-    tmpDir <- file.path(tempdir(), "test-git")
+    tmpDir <- file.path(tempdir(), "test_git")
     on.exit({
       unlink(tmpDir, recursive = TRUE)
     }, add = TRUE) # nolint
@@ -19,7 +19,7 @@ test_that("git-related functions work", {
     expect_identical(git2r::remote_url(testRepo),
                      "https://github.com/PredictiveEcology/reproducible.git")
     rm(testRepo)
-    unlink(tmpDir, recursive = TRUE)
+    unlink(tmpDir, force = TRUE, recursive = TRUE)
 
     ## dir exists; repo doesn't exist -- need to checkout
     expect_true(dir.create(tmpDir))
@@ -35,7 +35,7 @@ test_that("git-related functions work", {
                      "https://github.com/PredictiveEcology/reproducible.git")
     expect_identical(git2r::head(testRepo)@sha, specificCommit)
     rm(testRepo)
-    unlink(tmpDir, recursive = TRUE)
+    unlink(tmpDir, force = TRUE, recursive = TRUE)
 
     ## dir exists; repo exists -- fetch/checkout to update                # nolint
     checkoutVersion("PredictiveEcology/reproducible", localRepoPath = tmpDir, progress = FALSE)
@@ -48,11 +48,11 @@ test_that("git-related functions work", {
                      "https://github.com/PredictiveEcology/reproducible.git")
     expect_identical(git2r::head(testRepo)@name, "master")
     rm(testRepo)
-    unlink(tmpDir, recursive = TRUE)
+    unlink(tmpDir, force = TRUE, recursive = TRUE)
 
     ## dir exists; another repo exsits -- error
     checkoutVersion("PredictiveEcology/SpaDES.addins", localRepoPath = tmpDir)
     expect_error(git2r::checkoutVersion("PredictiveEcology/reproducible", localRepoPath = tmpDir))
-    unlink(tmpDir, recursive = TRUE)
+    unlink(tmpDir, force = TRUE, recursive = TRUE)
   }
 })

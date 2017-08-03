@@ -22,7 +22,7 @@ We have removed `\dontrun` from the examples so that they *do* run, and have add
 ### Development R version
 * Debian:testing (rocker/r-devel), R 3.5.0 (2017-07-26 r72972)
 * Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-02 r73018)
-* Ubuntu 16.04            (local), R 3.5.0 (2017-08-02 r73018)
+* Ubuntu 16.04            (local), R 3.5.0 (2017-08-03 r73028)
 * Windows              (appveyor), R 3.5.0 (2017-08-01 r73012)
 * Windows           (win-builder), R 3.5.0 (2017-08-01 r73011)
 
@@ -30,7 +30,7 @@ We have removed `\dontrun` from the examples so that they *do* run, and have add
 
 There were no ERRORs or WARNINGs
 
-There were 2 NOTEs:
+There was 1 NOTE:
 
 1. There are multiple parts to this note:
 
@@ -40,11 +40,11 @@ There were 2 NOTEs:
             
             New submission
 
-    b. Some words were flagged as possibly mispelled, but they are not. 
+    b. Some words were flagged as possibly misspelled, but they are not. 
      
             Possibly mis-spelled words in DESCRIPTION: 
                 GitHub (9:38)
-                reproducibility (3:36)
+                Reproducibility (3:36)
 
 ## Downstream dependencies
 

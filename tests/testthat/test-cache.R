@@ -2,7 +2,7 @@ test_that("test file-backed raster caching", {
   library(magrittr)
   library(raster)
 
-  tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
+  tmpdir <- file.path(tempdir(), "test_Cache") %>% checkPath(create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
   tmpRasterfile <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   file.create(tmpRasterfile)
@@ -11,19 +11,18 @@ test_that("test file-backed raster caching", {
 
   nOT <- Sys.time()
 
-  randomPolyToDisk <- function(tmpdir, tmpRasterfile) {
+  randomPolyToDisk <- function(tmpRasterfile) {
     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     writeRaster(r, tmpRasterfile, overwrite = TRUE)
     r <- raster(tmpRasterfile)
     r
   }
 
-  a <- randomPolyToDisk(tmpdir, tmpRasterfile)
+  a <- randomPolyToDisk(tmpRasterfile)
   # confirm that the raster has the given tmp filename
   expect_identical(strsplit(tmpRasterfile, split = "[\\/]"),
                    strsplit(a@file@name, split = "[\\/]"))
-  aa <- Cache(randomPolyToDisk, tmpdir,
-              tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
+  aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
 
   # Test clearCache by tags
   expect_equal(NROW(showCache(tmpdir)), 9)
@@ -32,7 +31,7 @@ test_that("test file-backed raster caching", {
   clearCache(tmpdir, userTags = "something2")
   expect_equal(NROW(showCache(tmpdir)), 0)
 
-  aa <- Cache(randomPolyToDisk, tmpdir, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
+  aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
   expect_equal(NROW(showCache(tmpdir)), 9)
   clearCache(tmpdir, userTags = c("something$", "testing$"))
   expect_equal(NROW(showCache(tmpdir)), 9)
@@ -41,7 +40,7 @@ test_that("test file-backed raster caching", {
   clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"))
   expect_equal(NROW(showCache(tmpdir)), 0)
 
-  aa <- Cache(randomPolyToDisk, tmpdir, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
+  aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
 
   # confirm that the raster has the new filename in the cachePath
   expect_false(identical(strsplit(tmpRasterfile, split = "[\\/]"),
@@ -71,35 +70,35 @@ test_that("test file-backed raster caching", {
   clearCache(tmpdir)
 
   # Check that Caching of rasters saves them to tif file instead of rdata
-  randomPolyToMemory <- function(tmpdir) {
+  randomPolyToMemory <- function() {
     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     dataType(r) <- "INT1U"
     r
   }
 
-  bb <- Cache(randomPolyToMemory, tmpdir, cacheRepo = tmpdir)
+  bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
   expect_true(filename(bb) == "")
   expect_true(inMemory(bb))
 
-  bb <- Cache(randomPolyToMemory, tmpdir, cacheRepo = tmpdir)
+  bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
   expect_true(NROW(showCache(tmpdir)) == 9)
 
   # Test that factors are saved correctly
-  randomPolyToFactorInMemory <- function(tmpdir) {
+  randomPolyToFactorInMemory <- function() {
     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
                             vals2 <- sample(1:7, size = 30, replace = TRUE))
     dataType(r) <- "INT1U"
     r
   }
-  bb <- Cache(randomPolyToFactorInMemory, tmpdir, cacheRepo = tmpdir)
-  expect_true(dataType(bb) == "INT1U")
+  bb <- Cache(randomPolyToFactorInMemory, cacheRepo = tmpdir)
+  expect_equal(dataType(bb), "INT1U")
   expect_true(raster::is.factor(bb))
   expect_true(is(raster::levels(bb)[[1]], "data.frame"))
   expect_true(NCOL(raster::levels(bb)[[1]]) == 3)
   expect_true(NROW(raster::levels(bb)[[1]]) == 30)
 
-  randomPolyToFactorOnDisk <- function(tmpdir, tmpFile) {
+  randomPolyToFactorOnDisk <- function(tmpFile) {
     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
     levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
                             vals2 = sample(1:7, size = 30, replace = TRUE))
@@ -111,9 +110,9 @@ test_that("test file-backed raster caching", {
   tf <- normPath(tf)
 
   # bb1 has original tmp filename
-  bb1 <- randomPolyToFactorOnDisk(tmpdir, tf)
+  bb1 <- randomPolyToFactorOnDisk(tf)
   # bb has new one, inside of cache repository, with same basename
-  bb <- Cache(randomPolyToFactorOnDisk, tmpdir, tmpFile = tf, cacheRepo = tmpdir)
+  bb <- Cache(randomPolyToFactorOnDisk, tmpFile = tf, cacheRepo = tmpdir)
   expect_true(dirname(filename(bb)) == file.path(tmpdir, "rasters"))
   expect_true(basename(filename(bb)) == basename(tf))
   expect_false(filename(bb) == tf)
