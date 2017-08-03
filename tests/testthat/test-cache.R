@@ -92,7 +92,7 @@ test_that("test file-backed raster caching", {
     r
   }
   bb <- Cache(randomPolyToFactorInMemory, cacheRepo = tmpdir)
-  expect_equal(dataType(bb),"INT1U")
+  expect_equal(dataType(bb), "INT1U")
   expect_true(raster::is.factor(bb))
   expect_true(is(raster::levels(bb)[[1]], "data.frame"))
   expect_true(NCOL(raster::levels(bb)[[1]]) == 3)
