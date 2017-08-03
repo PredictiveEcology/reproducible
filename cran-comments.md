@@ -44,6 +44,7 @@ There was 1 NOTE:
      
             Possibly mis-spelled words in DESCRIPTION: 
                 GitHub (9:38)
+                Reproducibility (3:36)
 
 ## Downstream dependencies
 
