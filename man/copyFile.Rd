@@ -5,8 +5,7 @@
 \title{Copy a file using \code{Robocopy} on Windows and \code{rsync} on Linux/macOS}
 \usage{
 copyFile(from = NULL, to = NULL, useRobocopy = TRUE, overwrite = TRUE,
-  delDestination = FALSE, create = TRUE, silent = FALSE,
-  recursive = TRUE)
+  delDestination = FALSE, create = TRUE, silent = FALSE)
 }
 \arguments{
 \item{from}{The source file.}
@@ -25,10 +24,6 @@ if they don't exist in the source. This is \code{/purge}.}
 \item{create}{Passed to \code{checkLazyDir}.}
 
 \item{silent}{Should a progress be printed.}
-
-\item{recursive}{logical.  If \code{to} is a directory, should
-    directories in \code{from} be copied (and their contents)?  (Like
-    \command{cp -R} on POSIX OSes.)}
 }
 \description{
 This will copy an individual file faster using \code{Robocopy} on Windows,
