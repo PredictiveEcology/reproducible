@@ -21,10 +21,10 @@ We have removed `\dontrun` from the examples so that they *do* run, and have add
 
 ### Development R version
 * Debian:testing (rocker/r-devel), R 3.5.0 (2017-07-26 r72972)
-* Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-02 r73018)
+* Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-04 r73032)
 * Ubuntu 16.04            (local), R 3.5.0 (2017-08-03 r73028)
-* Windows              (appveyor), R 3.5.0 (2017-08-01 r73012)
-* Windows           (win-builder), R 3.5.0 (2017-08-01 r73011)
+* Windows              (appveyor), R 3.5.0 (2017-08-03 r73028)
+* Windows           (win-builder), R 3.5.0 (2017-08-03 r73028)
 
 ## R CMD check results
 
