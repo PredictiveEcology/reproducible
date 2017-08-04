@@ -23,7 +23,7 @@ Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
 \value{
 A raster object and its newly located file backing.
         Note that if this is a legitimate archivist repository, the new location
-        will be a subfolder called \file{rasters/} of \file{repoDir/}.
+        will be a subdirectory called \file{rasters/} of \file{repoDir/}.
         If this is not a repository, the new location will be within \code{repoDir}.
 }
 \description{

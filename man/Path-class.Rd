@@ -36,7 +36,7 @@ relative path vs. absolute path.
 All of these should be assessed for their actual file or directory location,
 NOT their character string. By converting all character string that are actual
 file or directory paths with this function, then \code{Cache} will correctly assess
-the location, NOT the charcter string representation.
+the location, NOT the character string representation.
 }
 \examples{
 tmpf <- tempfile(fileext = ".csv")

@@ -17,7 +17,7 @@
 The same object as \code{obj}, but with 2 attributes set.
 }
 \description{
-Internal use only. Attaches an attribute to the output, useable for
+Internal use only. Attaches an attribute to the output, usable for
 debugging the Cache.
 }
 \author{

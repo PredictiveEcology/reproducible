@@ -30,6 +30,6 @@ test_that("spelling errors", {
   expect_equal(nrow(wrdsRd), 0)
 
   ## check code files (messages, warnings, etc.)
-  #wrdsC <- aspell_package_C_files(pkgDir) # nolint
-  #expect_equal(nrow(wrdsC), 0) # nolint
+  wrdsC <- aspell_package_C_files(pkgDir)
+  expect_equal(nrow(wrdsC), 0)
 })

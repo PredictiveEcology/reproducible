@@ -94,16 +94,16 @@ work correctly.
 \section{Classes}{
 
 
-\code{Raster*} objects have the potential for disk-backed storage. If
-the object in the R session is cached using \code{archivist::cache}, only
+\code{Raster*} objects have the potential for disk-backed storage.
+If the object in the R session is cached using \code{archivist::cache}, only
 the header component will be assessed for caching. Thus, objects like this
 require more work. Also, because \code{Raster*} can have a built-in representation
-for having their data content located on disk, this format will be maintained
-if the raster already is file-backed, i.e., to create .tif or .grd backed rasters,
-use writeRaster first, then Cache. The .tif or .grd will be copied to the "raster"
+for having their data content located on disk, this format will be maintained if the
+raster already is file-backed, i.e., to create \code{.tif} or \code{.grd} backed rasters,
+use \code{writeRaster} first, then Cache. The .tif or .grd will be copied to the "raster"
 subdirectory of the \code{cacheRepo}.
-Their RAM representation (as an R object) will still be in the usual "gallery" directory.
-For \code{inMemory} raster objects, they will remain as binary .rdata files.
+Their RAM representation (as an R object) will still be in the usual \file{gallery/} directory.
+For \code{inMemory} raster objects, they will remain as binary \code{.RData} files.
 
 Functions (which are contained within environments) are
 converted to a text representation via a call to \code{format(FUN)}.

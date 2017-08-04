@@ -45,7 +45,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @section Filepaths:
 #' If a function has a path argument, there is some ambiguity about what should be
-#' done. Possiblities include:
+#' done. Possibilities include:
 #' \enumerate{
 #'   \item hash the string as is (this will be very system specific, meaning a
 #'         \code{Cache} call will not work if copied between systems or directories);
