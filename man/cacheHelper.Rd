@@ -25,6 +25,6 @@ These are internal only.
 If the function cannot figure out a clean function name, it returns "internal"
 }
 \author{
-Eliot Mcintire
+Eliot McIntire
 }
 \keyword{internal}

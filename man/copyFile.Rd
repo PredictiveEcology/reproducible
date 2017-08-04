@@ -47,5 +47,5 @@ unlink(tmpDirTo, recursive = TRUE)
 
 }
 \author{
-Eliot McIntire and ALex Chubaty
+Eliot McIntire and Alex Chubaty
 }

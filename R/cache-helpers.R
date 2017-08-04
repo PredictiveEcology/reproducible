@@ -237,7 +237,7 @@ setMethod(
 #'        name to search for. Mostly so that this works with deprecated "cache".
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
-#' @author Eliot Mcintire
+#' @author Eliot McIntire
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
@@ -345,7 +345,7 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #' All of these should be assessed for their actual file or directory location,
 #' NOT their character string. By converting all character string that are actual
 #' file or directory paths with this function, then \code{Cache} will correctly assess
-#' the location, NOT the charcter string representation.
+#' the location, NOT the character string representation.
 #'
 #' @param obj A character string to convert to a \code{Path}.
 #'
@@ -445,7 +445,7 @@ setMethod(
 #'
 #' @return A raster object and its newly located file backing.
 #'         Note that if this is a legitimate archivist repository, the new location
-#'         will be a subfolder called \file{rasters/} of \file{repoDir/}.
+#'         will be a subdirectory called \file{rasters/} of \file{repoDir/}.
 #'         If this is not a repository, the new location will be within \code{repoDir}.
 #'
 #' @author Eliot McIntire
@@ -585,7 +585,7 @@ setMethod(
 #'
 #' @inheritParams base::file.copy
 #'
-#' @author Eliot McIntire and ALex Chubaty
+#' @author Eliot McIntire and Alex Chubaty
 #' @export
 #' @rdname copyFile
 #'
@@ -791,7 +791,7 @@ setMethod("Copy",
 ################################################################################
 #' Attach debug info to return for Cache
 #'
-#' Internal use only. Attaches an attribute to the output, useable for
+#' Internal use only. Attaches an attribute to the output, usable for
 #' debugging the Cache.
 #'
 #' @param obj  An arbitrary R object.
