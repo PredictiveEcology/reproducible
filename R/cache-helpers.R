@@ -656,14 +656,16 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #' @rdname cacheHelper
 #' @importFrom raster res crs extent
 digestRaster <- function(object, compareRasterFileLength, algo) {
-  dig <- fastdigest::fastdigest(list(dim(object), res(object), crs(object),
-                                     extent(object), object@data))
   if (nzchar(object@file@name)) {
+    dig <- fastdigest(list(dim(object), res(object), crs(object),
+                           extent(object), object@data))
     # if the Raster is on disk, has the first compareRasterFileLength characters;
     dig <- fastdigest(
       append(dig, digest::digest(file = object@file@name,
                                  length = compareRasterFileLength,
                                  algo = algo)))
+  } else {
+    dig <- fastdigest(object)
   }
 }
 
