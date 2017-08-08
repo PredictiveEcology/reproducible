@@ -615,8 +615,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
   os <- tolower(Sys.info()[["sysname"]])
   if (os == "windows") {
-    robocopyBin <- tryCatch(system("where robocopy", intern = TRUE),
-                            warning = function(w) NA_character_)
+    robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
     robocopy <-  if (silent) {
       paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS ",  # nolint
@@ -636,14 +635,15 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       TRUE
     }
   } else if ( (os == "linux") || (os == "darwin") ) { # nolint
-    rsyncBin <- tryCatch(system("which rsync", intern = TRUE),
-                         warning = function(w) NA_character_)
+    rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
     opts <- if (silent) " -a " else " -avP "
     rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
                     normalizePath(from, mustWork = TRUE), " ",
                     normalizePath(to, mustWork = FALSE), "/")
 
     useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
+  } else {
+    useFileCopy <- TRUE
   }
   if (isTRUE(useFileCopy)) {
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
