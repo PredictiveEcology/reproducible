@@ -70,8 +70,8 @@ Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
 (see examples below) have their name digested
 (\code{FALSE}; default), or their file contents (\code{TRUE}).}
 
-\item{classOptions}{Optional list. This will pass into \code{robustDigest} for
-specific classes. Should be options that the \code{robustDigest} knows what
+\item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
+specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 }
 \value{
