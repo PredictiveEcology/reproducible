@@ -127,6 +127,31 @@ test_that("test file-backed raster caching", {
   clearCache(tmpdir)
 })
 
+test_that("test memory backed raster robustDigest", {
+  library(magrittr)
+  library(raster)
+  tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  set.seed(123)
+  r1 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+  r2 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+  set.seed(123)
+  r3 <- raster(extent(0, 20, 0, 5), vals = sample(1:30, size = 100, replace = TRUE))
+  expect_false(identical(.robustDigest(r1), .robustDigest(r2)))
+  # metadata same, content different
+  expect_false(identical(.robustDigest(r1), .robustDigest(r3)))
+  # metadata different, content same
+  expect_false(identical(.robustDigest(r1), .robustDigest(r3)))
+  expect_true(identical(r1[], r3[]))
+
+  set.seed(123)
+  r1 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+  set.seed(123)
+  r2 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+  expect_true(identical(.robustDigest(r1), .robustDigest(r2)))
+})
+
 test_that("test date-based cache removal", {
   library(magrittr)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)

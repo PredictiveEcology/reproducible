@@ -1,5 +1,12 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.1.2
+=============
+
+* fix solaris check errors
+* fix bug in `digestRaster` affecting in-memory rasters
+* move `rgdal` to Suggests
+
 version 0.1.1
 =============
 
