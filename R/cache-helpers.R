@@ -612,9 +612,9 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   origDir <- getwd()
   useFileCopy <- FALSE
 
-  if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
   os <- tolower(Sys.info()[["sysname"]])
   if (os == "windows") {
+    if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
     robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
     robocopy <-  if (silent) {
@@ -635,6 +635,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       TRUE
     }
   } else if ( (os == "linux") || (os == "darwin") ) { # nolint
+    if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
     rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
     opts <- if (silent) " -a " else " -avP "
     rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
@@ -646,6 +647,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     useFileCopy <- TRUE
   }
   if (isTRUE(useFileCopy)) {
+    dir.create(dirname(to))
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
   }
 

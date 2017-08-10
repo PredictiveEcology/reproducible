@@ -1,11 +1,8 @@
 ## Resubmission
 
-This is an update to our recent submission which addresses issues discovered during CRAN package checks:
-
-- added code branch to ensure proper handling on Solaris
-- use `Sys.which` internally instead of `system("which")`
-
-We also fixed a bug dealing with in-memory rasters.
+This is an update to our recent submission which addresses issues discovered during CRAN package checks.
+We setup a Solaris VM to test the code we previously believe had been fixed, and have now confirmed that the issue has been resolved.
+We apologize for our previous incomplete submission.
 
 ## Test environments
 
