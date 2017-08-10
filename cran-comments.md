@@ -22,10 +22,10 @@ We apologize for our previous incomplete submission.
 
 ### Development R version
 * Debian:testing (rocker/r-devel), R 3.5.0 (2017-07-26 r72972)
-* Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-08 r73064)
+* Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-10 r73083)
 * Ubuntu 16.04            (local), R 3.5.0 (2017-08-08 r73067)
-* Windows              (appveyor), R 3.5.0 (2017-08-07 r73060)
-* Windows           (win-builder), R 3.5.0 (2017-08-07 r73060)
+* Windows              (appveyor), R 3.5.0 (2017-08-09 r73082)
+* Windows           (win-builder), R 3.5.0 (2017-08-09 r73082)
 
 ## R CMD check results
 
@@ -35,11 +35,11 @@ There was 1 NOTE:
 
 1. There are multiple parts to this note:
 
-    a. This submission fixes issues discovered in our recent package update
+    a. This submission fixes issues discovered in our recent package update.
     
             Maintainer: 'Eliot J B McIntire <eliot.mcintire@canada.ca>'
             
-            Days since last update: 3
+            Days since last update: 1
 
     b. Some words were flagged as possibly misspelled, but they are false positives. 
      
