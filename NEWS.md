@@ -1,5 +1,10 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.1.3
+=============
+
+* fix R CMD check errors on Solaris that were not previously resolved
+
 version 0.1.2
 =============
 
