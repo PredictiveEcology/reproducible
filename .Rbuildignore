@@ -6,6 +6,7 @@
 ^appveyor\.yml$
 CONTRIBUTING\.md
 cran-comments\.md
+^docs$
 LICENSE
 ^travis_wait_.*\.log$
 vignettes/.*_cache$
