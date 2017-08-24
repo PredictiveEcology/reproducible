@@ -3,11 +3,12 @@
 .*\.toc$
 ^\.lintr$
 ^\.travis\.yml$
+^_pkgdown\.yml$
 ^appveyor\.yml$
 CONTRIBUTING\.md
 cran-comments\.md
 ^docs$
-LICENSE
+^LICENSE$
 ^travis_wait_.*\.log$
 vignettes/.*_cache$
 vignettes/.*\.log$
