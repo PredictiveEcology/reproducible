@@ -334,8 +334,9 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #' But if it does not yet exist, e.g., for a \code{save}, it is difficult to know
 #' whether it is a valid path before attempting to save to the path.
 #'
-#' This is primarily useful for achieving repeatability with Caching.
-#' Essentially, when Caching, it is likely that character strings should be
+#' This function can be used to remove any ambiguity about whether a character
+#' string is a path. It is primarily useful for achieving repeatability with Caching.
+#' Essentially, when Caching, arguments that are character strings should generally be
 #' digested verbatim, i.e., it must be an exact copy for the Cache mechanism
 #' to detect a candidate for recovery from the cache.
 #' Paths, are different. While they are character strings, there are many ways to
@@ -373,6 +374,7 @@ asPath.character <- function(obj) {  # nolint
 
 #' @export
 #' @importFrom methods new
+#' @rdname Path-class
 setAs(from = "character", to = "Path", function(from) {
   new("Path", from)
 })
@@ -380,8 +382,11 @@ setAs(from = "character", to = "Path", function(from) {
 ################################################################################
 #' Clear erroneous archivist artifacts
 #'
-#' Clear stub artifacts resulting when an archive object is being saved at the
-#' same time as another process doing the same thing.
+#' Stub artifacts can result from several causes. The most common being
+#' erroneous removal of a file in the sqlite database. This can be caused
+#' sometimes if an archive object is being saved multiple times by multiple
+#' threads. This function will clear entries in the sqlite database which
+#' have no actual file with data.
 #'
 #' @return Invoked for its side effect on the \code{repoDir}.
 #'
@@ -402,7 +407,15 @@ setAs(from = "character", to = "Path", function(from) {
 #' })
 #'
 #' # clear out any stub artifacts
-#' clearStubArtifacts(tmpDir)
+#' showCache(tmpDir)
+#'
+#' file2Remove <- dir(file.path(tmpDir, "gallery"), full.name = TRUE)[1]
+#' file.remove(file2Remove)
+#' showCache(tmpDir) # repository directory still thinks files are there
+#'
+#' # run clearStubArtifacts
+#' suppressWarnings(clearStubArtifacts(tmpDir))
+#' showCache(tmpDir) # stubs are removed
 #'
 #' # cleanup
 #' clearCache(tmpDir)
@@ -561,6 +574,9 @@ setMethod(
   return(obj)
 }
 
+
+#' Copy a file using \code{Robocopy} on Windows and \code{rsync} on Linux/macOS
+#'
 #' This is replacement for \code{file.copy}, but for one file at a time.
 #' The additional feature is that it will use Robocopy (on Windows) or
 #' rsync on Linux or Mac, if they exist. It will default back to \code{file.copy}
@@ -581,7 +597,8 @@ setMethod(
 #' @param overwrite Passed to \code{file.copy}
 #'
 #' @param delDestination Logical, whether the destination should have any files deleted,
-#' if they don't exist in the source. This is \code{/purge}.
+#' if they don't exist in the source. This is \code{/purge} for RoboCopy and --delete for
+#' rsync.
 #'
 #' @param create Passed to \code{checkPath}.
 #'

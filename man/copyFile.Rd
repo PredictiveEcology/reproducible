@@ -2,14 +2,7 @@
 % Please edit documentation in R/cache-helpers.R
 \name{copyFile}
 \alias{copyFile}
-\title{This is replacement for \code{file.copy}, but for one file at a time.
-The additional feature is that it will use Robocopy (on Windows) or
-rsync on Linux or Mac, if they exist. It will default back to \code{file.copy}
-if none of these exists.
-This will generally copy a large file faster using \code{Robocopy} on Windows,
-and using \code{rsync} on macOS and Linux. In particular, if there is a possibility
-that the file already exists, then this function should be very fast as it
-will do "update only", i.e., nothing.}
+\title{Copy a file using \code{Robocopy} on Windows and \code{rsync} on Linux/macOS}
 \usage{
 copyFile(from = NULL, to = NULL, useRobocopy = TRUE, overwrite = TRUE,
   delDestination = FALSE, create = TRUE, silent = FALSE)
@@ -26,7 +19,8 @@ Uses \code{/MIR} flag. Default \code{TRUE}.}
 \item{overwrite}{Passed to \code{file.copy}}
 
 \item{delDestination}{Logical, whether the destination should have any files deleted,
-if they don't exist in the source. This is \code{/purge}.}
+if they don't exist in the source. This is \code{/purge} for RoboCopy and --delete for
+rsync.}
 
 \item{create}{Passed to \code{checkPath}.}
 

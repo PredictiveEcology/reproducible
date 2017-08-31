@@ -19,8 +19,11 @@ which metadata will be returned. If \code{NULL} (default), it will use the
 Invoked for its side effect on the \code{repoDir}.
 }
 \description{
-Clear stub artifacts resulting when an archive object is being saved at the
-same time as another process doing the same thing.
+Stub artifacts can result from several causes. The most common being
+erroneous removal of a file in the sqlite database. This can be caused
+sometimes if an archive object is being saved multiple times by multiple
+threads. This function will clear entries in the sqlite database which
+have no actual file with data.
 }
 \examples{
 tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
@@ -30,7 +33,15 @@ lapply(c(runif, rnorm), function(f) {
 })
 
 # clear out any stub artifacts
-clearStubArtifacts(tmpDir)
+showCache(tmpDir)
+
+file2Remove <- dir(file.path(tmpDir, "gallery"), full.name = TRUE)[1]
+file.remove(file2Remove)
+showCache(tmpDir) # repository directory still thinks files are there
+
+# run clearStubArtifacts
+suppressWarnings(clearStubArtifacts(tmpDir))
+showCache(tmpDir) # stubs are removed
 
 # cleanup
 clearCache(tmpDir)
