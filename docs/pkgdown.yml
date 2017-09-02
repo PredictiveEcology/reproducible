@@ -1,5 +1,5 @@
 urls:
-  reference: https://predictiveecology.github.io/reproducible/reference
-  article: https://predictiveecology.github.io/reproducible/articles
+  reference: http://reproducible.predictiveecology.org/reference
+  article: http://reproducible.predictiveecology.org/articles
 articles: {}
 
