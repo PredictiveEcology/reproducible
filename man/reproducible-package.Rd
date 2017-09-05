@@ -15,6 +15,7 @@ tools for caching, and accessing GitHub repositories.
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://predictiveecology.github.io/reproducible/}
   \item \url{https://github.com/PredictiveEcology/reproducible}
   \item Report bugs at \url{https://github.com/PredictiveEcology/reproducible/issues}
 }

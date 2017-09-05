@@ -11,8 +11,8 @@
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
+<link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
@@ -293,10 +293,8 @@ reproducible workflow.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>library</span>(<span class='no'>raster</span>)</div><div class='output co'>#&gt; <span class='message'>Loading required package: sp</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>Attaching package: ‘raster’</span></div><div class='output co'>#&gt; <span class='message'>The following object is masked from ‘package:reproducible’:</span>
-#&gt; <span class='message'></span>
-#&gt; <span class='message'>    init</span></div><div class='input'>
+    <pre class="examples"><div class='input'><span class='fu'>library</span>(<span class='no'>raster</span>)
+
 <span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"Cache"</span>)
 
 <span class='co'>## Example 1: basic cache use</span>
@@ -323,24 +321,24 @@ reproducible workflow.</p>
 #&gt; 17: decbe2d8d61894d086362ed4536cf4df    accessed
 #&gt; 18: decbe2d8d61894d086362ed4536cf4df     cacheId
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-08-23 14:41:33
-#&gt;  2:                            Cache 2017-08-23 14:41:33
-#&gt;  3:                          numeric 2017-08-23 14:41:33
-#&gt;  4:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt;  5:                                a 2017-08-23 14:41:33
-#&gt;  6:                            rnorm 2017-08-23 14:41:33
-#&gt;  7:                              528 2017-08-23 14:41:33
-#&gt;  8:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:33
-#&gt; 10:                              rda 2017-08-23 14:41:33
-#&gt; 11:                            Cache 2017-08-23 14:41:33
-#&gt; 12:                          numeric 2017-08-23 14:41:33
-#&gt; 13:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt; 14:                                b 2017-08-23 14:41:33
-#&gt; 15:                            runif 2017-08-23 14:41:33
-#&gt; 16:                              528 2017-08-23 14:41:33
-#&gt; 17:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-08-23 14:41:33</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"^a$"</span>)) <span class='co'># regular expression ... "a" exactly</span></div><div class='output co'>#&gt;                            artifact      tagKey
+#&gt;  1:                              rda 2017-09-02 13:22:29
+#&gt;  2:                            Cache 2017-09-02 13:22:29
+#&gt;  3:                          numeric 2017-09-02 13:22:29
+#&gt;  4:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt;  5:                                a 2017-09-02 13:22:29
+#&gt;  6:                            rnorm 2017-09-02 13:22:29
+#&gt;  7:                              528 2017-09-02 13:22:29
+#&gt;  8:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:29
+#&gt; 10:                              rda 2017-09-02 13:22:29
+#&gt; 11:                            Cache 2017-09-02 13:22:29
+#&gt; 12:                          numeric 2017-09-02 13:22:29
+#&gt; 13:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt; 14:                                b 2017-09-02 13:22:29
+#&gt; 15:                            runif 2017-09-02 13:22:29
+#&gt; 16:                              528 2017-09-02 13:22:29
+#&gt; 17:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-09-02 13:22:29</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"^a$"</span>)) <span class='co'># regular expression ... "a" exactly</span></div><div class='output co'>#&gt;                            artifact      tagKey
 #&gt; 1: 5d791310603a3579e3a1753f89e4da70      format
 #&gt; 2: 5d791310603a3579e3a1753f89e4da70        name
 #&gt; 3: 5d791310603a3579e3a1753f89e4da70       class
@@ -351,15 +349,15 @@ reproducible workflow.</p>
 #&gt; 8: 5d791310603a3579e3a1753f89e4da70    accessed
 #&gt; 9: 5d791310603a3579e3a1753f89e4da70     cacheId
 #&gt;                            tagValue         createdDate
-#&gt; 1:                              rda 2017-08-23 14:41:33
-#&gt; 2:                            Cache 2017-08-23 14:41:33
-#&gt; 3:                          numeric 2017-08-23 14:41:33
-#&gt; 4:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt; 5:                                a 2017-08-23 14:41:33
-#&gt; 6:                            rnorm 2017-08-23 14:41:33
-#&gt; 7:                              528 2017-08-23 14:41:33
-#&gt; 8:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:33</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># show only cached objects made during runif call</span></div><div class='output co'>#&gt;                            artifact      tagKey
+#&gt; 1:                              rda 2017-09-02 13:22:29
+#&gt; 2:                            Cache 2017-09-02 13:22:29
+#&gt; 3:                          numeric 2017-09-02 13:22:29
+#&gt; 4:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt; 5:                                a 2017-09-02 13:22:29
+#&gt; 6:                            rnorm 2017-09-02 13:22:29
+#&gt; 7:                              528 2017-09-02 13:22:29
+#&gt; 8:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:29</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># show only cached objects made during runif call</span></div><div class='output co'>#&gt;                            artifact      tagKey
 #&gt; 1: decbe2d8d61894d086362ed4536cf4df      format
 #&gt; 2: decbe2d8d61894d086362ed4536cf4df        name
 #&gt; 3: decbe2d8d61894d086362ed4536cf4df       class
@@ -370,15 +368,15 @@ reproducible workflow.</p>
 #&gt; 8: decbe2d8d61894d086362ed4536cf4df    accessed
 #&gt; 9: decbe2d8d61894d086362ed4536cf4df     cacheId
 #&gt;                            tagValue         createdDate
-#&gt; 1:                              rda 2017-08-23 14:41:33
-#&gt; 2:                            Cache 2017-08-23 14:41:33
-#&gt; 3:                          numeric 2017-08-23 14:41:33
-#&gt; 4:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt; 5:                                b 2017-08-23 14:41:33
-#&gt; 6:                            runif 2017-08-23 14:41:33
-#&gt; 7:                              528 2017-08-23 14:41:33
-#&gt; 8:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt; 9: 9dd2494a488858266cd45d230f45a144 2017-08-23 14:41:33</div><div class='input'>
+#&gt; 1:                              rda 2017-09-02 13:22:29
+#&gt; 2:                            Cache 2017-09-02 13:22:29
+#&gt; 3:                          numeric 2017-09-02 13:22:29
+#&gt; 4:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt; 5:                                b 2017-09-02 13:22:29
+#&gt; 6:                            runif 2017-09-02 13:22:29
+#&gt; 7:                              528 2017-09-02 13:22:29
+#&gt; 8:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt; 9: 9dd2494a488858266cd45d230f45a144 2017-09-02 13:22:29</div><div class='input'>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># remove only cached objects made during runif call</span>
 <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># only those made during rnorm call</span></div><div class='output co'>#&gt;                            artifact      tagKey
 #&gt; 1: 5d791310603a3579e3a1753f89e4da70      format
@@ -391,15 +389,15 @@ reproducible workflow.</p>
 #&gt; 8: 5d791310603a3579e3a1753f89e4da70    accessed
 #&gt; 9: 5d791310603a3579e3a1753f89e4da70     cacheId
 #&gt;                            tagValue         createdDate
-#&gt; 1:                              rda 2017-08-23 14:41:33
-#&gt; 2:                            Cache 2017-08-23 14:41:33
-#&gt; 3:                          numeric 2017-08-23 14:41:33
-#&gt; 4:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt; 5:                                a 2017-08-23 14:41:33
-#&gt; 6:                            rnorm 2017-08-23 14:41:33
-#&gt; 7:                              528 2017-08-23 14:41:33
-#&gt; 8:              2017-08-23 14:41:33 2017-08-23 14:41:33
-#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:33</div><div class='input'>
+#&gt; 1:                              rda 2017-09-02 13:22:29
+#&gt; 2:                            Cache 2017-09-02 13:22:29
+#&gt; 3:                          numeric 2017-09-02 13:22:29
+#&gt; 4:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt; 5:                                a 2017-09-02 13:22:29
+#&gt; 6:                            rnorm 2017-09-02 13:22:29
+#&gt; 7:                              528 2017-09-02 13:22:29
+#&gt; 8:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:29</div><div class='input'>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
 
 <span class='co'>## Example 2: using the "accessed" tag</span>
@@ -429,16 +427,16 @@ reproducible workflow.</p>
 #&gt;  9: 1859dfdf3198d6377afbb546cdc9723c     cacheId
 #&gt; 10: 1859dfdf3198d6377afbb546cdc9723c    accessed
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-08-23 14:41:34
-#&gt;  2:                            Cache 2017-08-23 14:41:34
-#&gt;  3:                          numeric 2017-08-23 14:41:34
-#&gt;  4:              2017-08-23 14:41:34 2017-08-23 14:41:34
-#&gt;  5:                                a 2017-08-23 14:41:34
-#&gt;  6:                            rnorm 2017-08-23 14:41:34
-#&gt;  7:                              528 2017-08-23 14:41:34
-#&gt;  8:              2017-08-23 14:41:34 2017-08-23 14:41:34
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:34
-#&gt; 10:              2017-08-23 14:41:35 2017-08-23 14:41:35</div><div class='input'>
+#&gt;  1:                              rda 2017-09-02 13:22:29
+#&gt;  2:                            Cache 2017-09-02 13:22:29
+#&gt;  3:                          numeric 2017-09-02 13:22:29
+#&gt;  4:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt;  5:                                a 2017-09-02 13:22:29
+#&gt;  6:                            rnorm 2017-09-02 13:22:29
+#&gt;  7:                              528 2017-09-02 13:22:29
+#&gt;  8:              2017-09-02 13:22:29 2017-09-02 13:22:29
+#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:29
+#&gt; 10:              2017-09-02 13:22:30 2017-09-02 13:22:30</div><div class='input'>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
 
 <span class='co'>## Example 3: using keepCache</span>
@@ -467,24 +465,24 @@ reproducible workflow.</p>
 #&gt; 17: 8f71a97709b2d4630bfc1e9051803cc6    accessed
 #&gt; 18: 8f71a97709b2d4630bfc1e9051803cc6     cacheId
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-08-23 14:41:35
-#&gt;  2:                            Cache 2017-08-23 14:41:35
-#&gt;  3:                          numeric 2017-08-23 14:41:35
-#&gt;  4:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt;  5:                                b 2017-08-23 14:41:35
-#&gt;  6:                            runif 2017-08-23 14:41:35
-#&gt;  7:                              528 2017-08-23 14:41:35
-#&gt;  8:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt;  9: 9dd2494a488858266cd45d230f45a144 2017-08-23 14:41:35
-#&gt; 10:                              rda 2017-08-23 14:41:35
-#&gt; 11:                            Cache 2017-08-23 14:41:35
-#&gt; 12:                          numeric 2017-08-23 14:41:35
-#&gt; 13:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 14:                                a 2017-08-23 14:41:35
-#&gt; 15:                            rnorm 2017-08-23 14:41:35
-#&gt; 16:                              528 2017-08-23 14:41:35
-#&gt; 17:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 18: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:35</div><div class='input'>
+#&gt;  1:                              rda 2017-09-02 13:22:30
+#&gt;  2:                            Cache 2017-09-02 13:22:30
+#&gt;  3:                          numeric 2017-09-02 13:22:30
+#&gt;  4:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt;  5:                                b 2017-09-02 13:22:30
+#&gt;  6:                            runif 2017-09-02 13:22:30
+#&gt;  7:                              528 2017-09-02 13:22:30
+#&gt;  8:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt;  9: 9dd2494a488858266cd45d230f45a144 2017-09-02 13:22:30
+#&gt; 10:                              rda 2017-09-02 13:22:30
+#&gt; 11:                            Cache 2017-09-02 13:22:30
+#&gt; 12:                          numeric 2017-09-02 13:22:30
+#&gt; 13:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 14:                                a 2017-09-02 13:22:30
+#&gt; 15:                            rnorm 2017-09-02 13:22:30
+#&gt; 16:                              528 2017-09-02 13:22:30
+#&gt; 17:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 18: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:30</div><div class='input'>
 <span class='co'># Keep all Cache items created with an rnorm() call</span>
 <span class='fu'><a href='viewCache.html'>keepCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"rnorm"</span>)</div><div class='output co'>#&gt;                            artifact      tagKey
 #&gt; 1: 8f71a97709b2d4630bfc1e9051803cc6      format
@@ -497,15 +495,15 @@ reproducible workflow.</p>
 #&gt; 8: 8f71a97709b2d4630bfc1e9051803cc6    accessed
 #&gt; 9: 8f71a97709b2d4630bfc1e9051803cc6     cacheId
 #&gt;                            tagValue         createdDate
-#&gt; 1:                              rda 2017-08-23 14:41:35
-#&gt; 2:                            Cache 2017-08-23 14:41:35
-#&gt; 3:                          numeric 2017-08-23 14:41:35
-#&gt; 4:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 5:                                a 2017-08-23 14:41:35
-#&gt; 6:                            rnorm 2017-08-23 14:41:35
-#&gt; 7:                              528 2017-08-23 14:41:35
-#&gt; 8:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:35</div><div class='input'>
+#&gt; 1:                              rda 2017-09-02 13:22:30
+#&gt; 2:                            Cache 2017-09-02 13:22:30
+#&gt; 3:                          numeric 2017-09-02 13:22:30
+#&gt; 4:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 5:                                a 2017-09-02 13:22:30
+#&gt; 6:                            rnorm 2017-09-02 13:22:30
+#&gt; 7:                              528 2017-09-02 13:22:30
+#&gt; 8:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:30</div><div class='input'>
 <span class='co'># Remove all Cache items that happened within a rnorm() call</span>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"rnorm"</span>)
 
@@ -537,24 +535,24 @@ reproducible workflow.</p>
 #&gt; 17: f0832b8cd870cc65eea28f97be3c4f15    accessed
 #&gt; 18: f0832b8cd870cc65eea28f97be3c4f15     cacheId
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-08-23 14:41:35
-#&gt;  2:                            Cache 2017-08-23 14:41:35
-#&gt;  3:                          numeric 2017-08-23 14:41:35
-#&gt;  4:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt;  5:                                b 2017-08-23 14:41:35
-#&gt;  6:                            rnorm 2017-08-23 14:41:35
-#&gt;  7:                              528 2017-08-23 14:41:35
-#&gt;  8:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:35
-#&gt; 10:                              rda 2017-08-23 14:41:35
-#&gt; 11:                            Cache 2017-08-23 14:41:35
-#&gt; 12:                          numeric 2017-08-23 14:41:35
-#&gt; 13:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 14:                                a 2017-08-23 14:41:35
-#&gt; 15:                            runif 2017-08-23 14:41:35
-#&gt; 16:                              528 2017-08-23 14:41:35
-#&gt; 17:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-08-23 14:41:35</div><div class='input'>
+#&gt;  1:                              rda 2017-09-02 13:22:30
+#&gt;  2:                            Cache 2017-09-02 13:22:30
+#&gt;  3:                          numeric 2017-09-02 13:22:30
+#&gt;  4:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt;  5:                                b 2017-09-02 13:22:30
+#&gt;  6:                            rnorm 2017-09-02 13:22:30
+#&gt;  7:                              528 2017-09-02 13:22:30
+#&gt;  8:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:30
+#&gt; 10:                              rda 2017-09-02 13:22:30
+#&gt; 11:                            Cache 2017-09-02 13:22:30
+#&gt; 12:                          numeric 2017-09-02 13:22:30
+#&gt; 13:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 14:                                a 2017-09-02 13:22:30
+#&gt; 15:                            runif 2017-09-02 13:22:30
+#&gt; 16:                              528 2017-09-02 13:22:30
+#&gt; 17:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-09-02 13:22:30</div><div class='input'>
 <span class='co'># show objects that are both runif and rnorm</span>
 <span class='co'># (i.e., none in this case, because objecs are either or, not both)</span>
 <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>, <span class='st'>"rnorm"</span>)) <span class='co'>## empty</span></div><div class='output co'>#&gt; Empty data.table (0 rows) of 4 cols: artifact,tagKey,tagValue,createdDate</div><div class='input'>
@@ -579,24 +577,24 @@ reproducible workflow.</p>
 #&gt; 17: f0832b8cd870cc65eea28f97be3c4f15    accessed
 #&gt; 18: f0832b8cd870cc65eea28f97be3c4f15     cacheId
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-08-23 14:41:35
-#&gt;  2:                            Cache 2017-08-23 14:41:35
-#&gt;  3:                          numeric 2017-08-23 14:41:35
-#&gt;  4:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt;  5:                                b 2017-08-23 14:41:35
-#&gt;  6:                            rnorm 2017-08-23 14:41:35
-#&gt;  7:                              528 2017-08-23 14:41:35
-#&gt;  8:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:35
-#&gt; 10:                              rda 2017-08-23 14:41:35
-#&gt; 11:                            Cache 2017-08-23 14:41:35
-#&gt; 12:                          numeric 2017-08-23 14:41:35
-#&gt; 13:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 14:                                a 2017-08-23 14:41:35
-#&gt; 15:                            runif 2017-08-23 14:41:35
-#&gt; 16:                              528 2017-08-23 14:41:35
-#&gt; 17:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-08-23 14:41:35</div><div class='input'>
+#&gt;  1:                              rda 2017-09-02 13:22:30
+#&gt;  2:                            Cache 2017-09-02 13:22:30
+#&gt;  3:                          numeric 2017-09-02 13:22:30
+#&gt;  4:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt;  5:                                b 2017-09-02 13:22:30
+#&gt;  6:                            rnorm 2017-09-02 13:22:30
+#&gt;  7:                              528 2017-09-02 13:22:30
+#&gt;  8:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:30
+#&gt; 10:                              rda 2017-09-02 13:22:30
+#&gt; 11:                            Cache 2017-09-02 13:22:30
+#&gt; 12:                          numeric 2017-09-02 13:22:30
+#&gt; 13:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 14:                                a 2017-09-02 13:22:30
+#&gt; 15:                            runif 2017-09-02 13:22:30
+#&gt; 16:                              528 2017-09-02 13:22:30
+#&gt; 17:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-09-02 13:22:30</div><div class='input'>
 <span class='co'># keep only objects that are either runif or rnorm ("or" search)</span>
 <span class='fu'><a href='viewCache.html'>keepCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"runif|rnorm"</span>)</div><div class='output co'>#&gt;                             artifact      tagKey
 #&gt;  1: 272069fa0f28e15171fc3970210c7526      format
@@ -618,24 +616,24 @@ reproducible workflow.</p>
 #&gt; 17: f0832b8cd870cc65eea28f97be3c4f15    accessed
 #&gt; 18: f0832b8cd870cc65eea28f97be3c4f15     cacheId
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-08-23 14:41:35
-#&gt;  2:                            Cache 2017-08-23 14:41:35
-#&gt;  3:                          numeric 2017-08-23 14:41:35
-#&gt;  4:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt;  5:                                b 2017-08-23 14:41:35
-#&gt;  6:                            rnorm 2017-08-23 14:41:35
-#&gt;  7:                              528 2017-08-23 14:41:35
-#&gt;  8:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-08-23 14:41:35
-#&gt; 10:                              rda 2017-08-23 14:41:35
-#&gt; 11:                            Cache 2017-08-23 14:41:35
-#&gt; 12:                          numeric 2017-08-23 14:41:35
-#&gt; 13:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 14:                                a 2017-08-23 14:41:35
-#&gt; 15:                            runif 2017-08-23 14:41:35
-#&gt; 16:                              528 2017-08-23 14:41:35
-#&gt; 17:              2017-08-23 14:41:35 2017-08-23 14:41:35
-#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-08-23 14:41:35</div><div class='input'>
+#&gt;  1:                              rda 2017-09-02 13:22:30
+#&gt;  2:                            Cache 2017-09-02 13:22:30
+#&gt;  3:                          numeric 2017-09-02 13:22:30
+#&gt;  4:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt;  5:                                b 2017-09-02 13:22:30
+#&gt;  6:                            rnorm 2017-09-02 13:22:30
+#&gt;  7:                              528 2017-09-02 13:22:30
+#&gt;  8:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-02 13:22:30
+#&gt; 10:                              rda 2017-09-02 13:22:30
+#&gt; 11:                            Cache 2017-09-02 13:22:30
+#&gt; 12:                          numeric 2017-09-02 13:22:30
+#&gt; 13:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 14:                                a 2017-09-02 13:22:30
+#&gt; 15:                            runif 2017-09-02 13:22:30
+#&gt; 16:                              528 2017-09-02 13:22:30
+#&gt; 17:              2017-09-02 13:22:30 2017-09-02 13:22:30
+#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-09-02 13:22:30</div><div class='input'>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
 
 <span class='co'>## Example 5: using caching to speed up rerunning expensive computations</span>
@@ -676,7 +674,7 @@ reproducible workflow.</p>
 <span class='no'>fname1</span> <span class='kw'>&lt;-</span> <span class='fu'>tempfile</span>(<span class='kw'>fileext</span> <span class='kw'>=</span> <span class='st'>".RData"</span>)
 <span class='fu'>Cache</span>(<span class='no'>saveRDS</span>, <span class='no'>obj</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>fname1</span>), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; NULL</div><div class='input'><span class='fu'>Cache</span>(<span class='no'>saveRDS</span>, <span class='no'>obj</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>fname1</span>), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># cached copy is loaded</span></div><div class='output co'>#&gt; <span class='message'>loading cached result from previous saveRDS call.</span></div><div class='output co'>#&gt; [1] "NULL"
 #&gt; attr(,"tags")
-#&gt; [1] "cacheId:a62c4d15f21b9caf77c39d7deae70245"
+#&gt; [1] "cacheId:e3a719cf749852a3bef71f8b98d70b87"
 #&gt; attr(,"call")
 #&gt; [1] ""</div><div class='input'>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)

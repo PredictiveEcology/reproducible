@@ -11,8 +11,8 @@
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
+<link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
@@ -87,8 +87,11 @@
     </div>
 
     
-    <p>Clear stub artifacts resulting when an archive object is being saved at the
-same time as another process doing the same thing.</p>
+    <p>Stub artifacts can result from several causes. The most common being
+erroneous removal of a file in the sqlite database. This can be caused
+sometimes if an archive object is being saved multiple times by multiple
+threads. This function will clear entries in the sqlite database which
+have no actual file with data.</p>
     
 
     <pre class="usage"><span class='fu'>clearStubArtifacts</span>(<span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
@@ -134,8 +137,95 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; [1] ""
 #&gt; </div><div class='input'>
 <span class='co'># clear out any stub artifacts</span>
-<span class='fu'>clearStubArtifacts</span>(<span class='no'>tmpDir</span>)
-
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt;                             artifact      tagKey
+#&gt;  1: 6256d0e43e0b8490a2b36c6e7a4b69b8      format
+#&gt;  2: 6256d0e43e0b8490a2b36c6e7a4b69b8        name
+#&gt;  3: 6256d0e43e0b8490a2b36c6e7a4b69b8       class
+#&gt;  4: 6256d0e43e0b8490a2b36c6e7a4b69b8        date
+#&gt;  5: 6256d0e43e0b8490a2b36c6e7a4b69b8    function
+#&gt;  6: 6256d0e43e0b8490a2b36c6e7a4b69b8 object.size
+#&gt;  7: 6256d0e43e0b8490a2b36c6e7a4b69b8    accessed
+#&gt;  8: 6256d0e43e0b8490a2b36c6e7a4b69b8     cacheId
+#&gt;  9: e7eeecfcaae30139e1ebd76c20fdbea0      format
+#&gt; 10: e7eeecfcaae30139e1ebd76c20fdbea0        name
+#&gt; 11: e7eeecfcaae30139e1ebd76c20fdbea0       class
+#&gt; 12: e7eeecfcaae30139e1ebd76c20fdbea0        date
+#&gt; 13: e7eeecfcaae30139e1ebd76c20fdbea0    function
+#&gt; 14: e7eeecfcaae30139e1ebd76c20fdbea0 object.size
+#&gt; 15: e7eeecfcaae30139e1ebd76c20fdbea0    accessed
+#&gt; 16: e7eeecfcaae30139e1ebd76c20fdbea0     cacheId
+#&gt;                             tagValue         createdDate
+#&gt;  1:                              rda 2017-09-02 13:22:32
+#&gt;  2:                            Cache 2017-09-02 13:22:32
+#&gt;  3:                          numeric 2017-09-02 13:22:32
+#&gt;  4:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt;  5:                                f 2017-09-02 13:22:32
+#&gt;  6:                              624 2017-09-02 13:22:32
+#&gt;  7:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt;  8: 2bbb84ec118e7aaca79ce6eabdfa6f92 2017-09-02 13:22:32
+#&gt;  9:                              rda 2017-09-02 13:22:32
+#&gt; 10:                            Cache 2017-09-02 13:22:32
+#&gt; 11:                          numeric 2017-09-02 13:22:32
+#&gt; 12:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt; 13:                                f 2017-09-02 13:22:32
+#&gt; 14:                              624 2017-09-02 13:22:32
+#&gt; 15:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt; 16: f955149ae1e51f7251308f1aa624e612 2017-09-02 13:22:32</div><div class='input'>
+<span class='no'>file2Remove</span> <span class='kw'>&lt;-</span> <span class='fu'>dir</span>(<span class='fu'>file.path</span>(<span class='no'>tmpDir</span>, <span class='st'>"gallery"</span>), <span class='kw'>full.name</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>]
+<span class='fu'>file.remove</span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt;                             artifact      tagKey
+#&gt;  1: 6256d0e43e0b8490a2b36c6e7a4b69b8      format
+#&gt;  2: 6256d0e43e0b8490a2b36c6e7a4b69b8        name
+#&gt;  3: 6256d0e43e0b8490a2b36c6e7a4b69b8       class
+#&gt;  4: 6256d0e43e0b8490a2b36c6e7a4b69b8        date
+#&gt;  5: 6256d0e43e0b8490a2b36c6e7a4b69b8    function
+#&gt;  6: 6256d0e43e0b8490a2b36c6e7a4b69b8 object.size
+#&gt;  7: 6256d0e43e0b8490a2b36c6e7a4b69b8    accessed
+#&gt;  8: 6256d0e43e0b8490a2b36c6e7a4b69b8     cacheId
+#&gt;  9: e7eeecfcaae30139e1ebd76c20fdbea0      format
+#&gt; 10: e7eeecfcaae30139e1ebd76c20fdbea0        name
+#&gt; 11: e7eeecfcaae30139e1ebd76c20fdbea0       class
+#&gt; 12: e7eeecfcaae30139e1ebd76c20fdbea0        date
+#&gt; 13: e7eeecfcaae30139e1ebd76c20fdbea0    function
+#&gt; 14: e7eeecfcaae30139e1ebd76c20fdbea0 object.size
+#&gt; 15: e7eeecfcaae30139e1ebd76c20fdbea0    accessed
+#&gt; 16: e7eeecfcaae30139e1ebd76c20fdbea0     cacheId
+#&gt;                             tagValue         createdDate
+#&gt;  1:                              rda 2017-09-02 13:22:32
+#&gt;  2:                            Cache 2017-09-02 13:22:32
+#&gt;  3:                          numeric 2017-09-02 13:22:32
+#&gt;  4:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt;  5:                                f 2017-09-02 13:22:32
+#&gt;  6:                              624 2017-09-02 13:22:32
+#&gt;  7:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt;  8: 2bbb84ec118e7aaca79ce6eabdfa6f92 2017-09-02 13:22:32
+#&gt;  9:                              rda 2017-09-02 13:22:32
+#&gt; 10:                            Cache 2017-09-02 13:22:32
+#&gt; 11:                          numeric 2017-09-02 13:22:32
+#&gt; 12:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt; 13:                                f 2017-09-02 13:22:32
+#&gt; 14:                              624 2017-09-02 13:22:32
+#&gt; 15:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt; 16: f955149ae1e51f7251308f1aa624e612 2017-09-02 13:22:32</div><div class='input'>
+<span class='co'># run clearStubArtifacts</span>
+<span class='fu'>suppressWarnings</span>(<span class='fu'>clearStubArtifacts</span>(<span class='no'>tmpDir</span>))
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># stubs are removed</span></div><div class='output co'>#&gt;                            artifact      tagKey
+#&gt; 1: e7eeecfcaae30139e1ebd76c20fdbea0      format
+#&gt; 2: e7eeecfcaae30139e1ebd76c20fdbea0        name
+#&gt; 3: e7eeecfcaae30139e1ebd76c20fdbea0       class
+#&gt; 4: e7eeecfcaae30139e1ebd76c20fdbea0        date
+#&gt; 5: e7eeecfcaae30139e1ebd76c20fdbea0    function
+#&gt; 6: e7eeecfcaae30139e1ebd76c20fdbea0 object.size
+#&gt; 7: e7eeecfcaae30139e1ebd76c20fdbea0    accessed
+#&gt; 8: e7eeecfcaae30139e1ebd76c20fdbea0     cacheId
+#&gt;                            tagValue         createdDate
+#&gt; 1:                              rda 2017-09-02 13:22:32
+#&gt; 2:                            Cache 2017-09-02 13:22:32
+#&gt; 3:                          numeric 2017-09-02 13:22:32
+#&gt; 4:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt; 5:                                f 2017-09-02 13:22:32
+#&gt; 6:                              624 2017-09-02 13:22:32
+#&gt; 7:              2017-09-02 13:22:32 2017-09-02 13:22:32
+#&gt; 8: f955149ae1e51f7251308f1aa624e612 2017-09-02 13:22:32</div><div class='input'>
 <span class='co'># cleanup</span>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
 <span class='fu'>unlink</span>(<span class='no'>tmpDir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>

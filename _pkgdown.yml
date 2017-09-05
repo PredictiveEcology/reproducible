@@ -1,0 +1,6 @@
+url: http://reproducible.predictiveecology.org
+
+template:
+  params:
+    bootswatch: flatly
+
