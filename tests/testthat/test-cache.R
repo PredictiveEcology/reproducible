@@ -346,20 +346,22 @@ test_that("test pipe for Cache", {
   checkPath(tmpdir, create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
-  a <- rnorm(10, 16) %>% mean() %>% prod(., 6)
-  b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
-  d <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
-  expect_true(all.equal(b,d))
-  expect_false(isTRUE(all.equal(a,b)))
-  d1 <- rnorm(10, 6) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
-  expect_false(isTRUE(all.equal(d1,d)))
+  a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
+  b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
+  d <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
+  expect_true(all.equal(b, d))
+  expect_false(isTRUE(all.equal(a, b)))
+  d1 <- rnorm(10, 6) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
+  expect_false(isTRUE(all.equal(d1, d)))
 
-  d1 <- rnorm(10, 16) %>% mean() %>% prod(., 16) %>% Cache(cacheRepo = tmpdir)
-  expect_false(isTRUE(all.equal(d1,d)))
+  d1 <- rnorm(10, 16) %>% mean() %>% prod(., 16) %>% Cache(cacheRepo = tmpdir) # nolint
+  expect_false(isTRUE(all.equal(d1, d)))
 
-  d2 <- rnorm(10, 16) %>% mean() %>% prod(., 16) %>% Cache(cacheRepo = tmpdir, notOlderThan = Sys.time())
-  expect_false(isTRUE(all.equal(d1,d2)))
-
+  d2 <- rnorm(10, 16) %>%
+    mean() %>%
+    prod(., 16) %>%
+    Cache(cacheRepo = tmpdir, notOlderThan = Sys.time())
+  expect_false(isTRUE(all.equal(d1, d2)))
 })
 
 test_that("test quoted FUN in Cache", {
@@ -367,14 +369,16 @@ test_that("test quoted FUN in Cache", {
   checkPath(tmpdir, create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
-  A <- Cache(rnorm, 10, 16, cacheRepo = tmpdir)
-  B <- Cache(rnorm, 10, 16, cacheRepo = tmpdir) # recovers cached copy
-  C <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpdir) # recovers cached copy
-  D <- rnorm(10, 16) %>% Cache(cacheRepo = tmpdir) # recovers cached copy
+  A <- Cache(rnorm, 10, 16, cacheRepo = tmpdir) # nolint
+
+  ## recover cached copies:
+  B <- Cache(rnorm, 10, 16, cacheRepo = tmpdir) # nolint
+  C <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpdir) # nolint
+  D <- rnorm(10, 16) %>% Cache(cacheRepo = tmpdir) # nolint
+
   expect_true(all.equal(A, B))
   expect_true(all.equal(A, C))
   expect_true(all.equal(A, D))
-
 })
 
 test_that("test multiple pipe Cache calls", {
@@ -384,7 +388,7 @@ test_that("test multiple pipe Cache calls", {
 
   d <- list()
   mess <- list()
-  for(i in 1:2) {
+  for (i in 1:2) {
     mess[[i]] <- capture_messages(d[[i]] <- rnorm(10, 16) %>%
       mean() %>%
       Cache(cacheRepo = tmpdir) %>%
@@ -394,8 +398,8 @@ test_that("test multiple pipe Cache calls", {
       Cache(cacheRepo = tmpdir))
   }
   expect_identical(d[[1]], d[[2]])
-  expect_true(length(mess[[1]])==0)
-  expect_true(length(mess[[2]])==3)
+  expect_true(length(mess[[1]]) == 0)
+  expect_true(length(mess[[2]]) == 3)
 
   # Removed last step and Cache
   mess <- capture_messages(
@@ -404,14 +408,14 @@ test_that("test multiple pipe Cache calls", {
       Cache(cacheRepo = tmpdir) %>%
       prod(., 6) %>%
       Cache(cacheRepo = tmpdir))
-  expect_true(NROW(mess)==2)
+  expect_true(NROW(mess) == 2)
 
   # Removed last several steps
   mess <- capture_messages(
     b <- rnorm(10, 16) %>%
       mean() %>%
       Cache(cacheRepo = tmpdir))
-  expect_true(NROW(mess)==1)
+  expect_true(NROW(mess) == 1)
 
   # Changed intermediate step
   mess <- capture_messages(rnorm(10, 16) %>%
@@ -422,7 +426,7 @@ test_that("test multiple pipe Cache calls", {
     runif(4, 0, .) %>%
     Cache(cacheRepo = tmpdir)
   )
-  expect_true(NROW(mess)==1)
+  expect_true(NROW(mess) == 1)
 
   # Removed intermediate Cache
   mess <- capture_messages(rnorm(10, 16) %>%
@@ -433,6 +437,4 @@ test_that("test multiple pipe Cache calls", {
     Cache(cacheRepo = tmpdir)
   )
   expect_length(mess, 1)
-
 })
-
