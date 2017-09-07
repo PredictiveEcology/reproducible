@@ -13,7 +13,8 @@ lhs \%>\% rhs
 \item{rhs}{A function call using the magrittr semantics.}
 }
 \description{
-A pipe that works with Cache.
+A pipe that works with Cache. The code for this is built on a verbatim copy from
+\url{https://github.com/tidyverse/magrittr/blob/master/R/pipe.R} on Sep 8, 2017.
 This is a drop-in replacement for \code{\link[magrittr]{\%>\%}} and will
 work identically when there is no Cache. To use this, simply add \code{\%>\% Cache()}
 to a pipe sequence. This can be in the middle or at the end. See examples.
@@ -29,6 +30,9 @@ is an identical pipe sequence in the Cache respository, then it will return
 the final result of the entire pipe up to the Cache call. If there is no
 identical copy in the cache repository, then it will evaluate the pipe as per
 normal, caching the final return value to the cache repository for later use.
+}
+\note{
+Having >1 Cache call in a pipe will not work as expected.
 }
 \examples{
 tmpdir <- file.path(tempdir(), "testCache")

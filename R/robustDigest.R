@@ -36,7 +36,8 @@
 #'
 #' Character strings are first assessed with \code{dir.exists} and \code{file.exists}
 #' to check for paths. If they are found to be paths, then the path is hashed with
-#' only its filename via \code{basename(filename)}.
+#' only its filename via \code{basename(filename)}. If it is actually a path, we suggest
+#' using \code{asPath(thePath)}
 #'
 #' @param object an object to digest.
 #'
