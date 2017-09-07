@@ -211,14 +211,11 @@ setMethod(
       functionDetails <- list(functionName = as.character(parsedFun[[1]]))
     } else {
       functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
-      if(functionDetails$functionName!="internal") { # means it couldn't extract the name
-        #parseName <- parse(text = functionDetails$functionName)
-        #evalParseName <- eval(parseName)
+      if(functionDetails$functionName!="internal") { # i.e., if it did extract the name
         if(is.primitive(FUN)) {
           tmpl <- list(...)
         } else {
           tmpl <- as.list(
-            #match.call(FUN, as.call(list(evalParseName, ...))))[-1]
             match.call(FUN, as.call(list(FUN, ...))))[-1]
         }
       }
