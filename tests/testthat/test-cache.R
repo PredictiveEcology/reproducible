@@ -376,3 +376,63 @@ test_that("test quoted FUN in Cache", {
   expect_true(all.equal(A, D))
 
 })
+
+test_that("test multiple pipe Cache calls", {
+  tmpdir <- file.path(tempdir(), "testCache")
+  checkPath(tmpdir, create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  d <- list()
+  mess <- list()
+  for(i in 1:2) {
+    mess[[i]] <- capture_messages(d[[i]] <- rnorm(10, 16) %>%
+      mean() %>%
+      Cache(cacheRepo = tmpdir) %>%
+      prod(., 6) %>%
+      Cache(cacheRepo = tmpdir) %>%
+      runif(4, 0, .) %>%
+      Cache(cacheRepo = tmpdir))
+  }
+  expect_identical(d[[1]], d[[2]])
+  expect_true(length(mess[[1]])==0)
+  expect_true(length(mess[[2]])==3)
+
+  # Removed last step and Cache
+  mess <- capture_messages(
+    b <- rnorm(10, 16) %>%
+      mean() %>%
+      Cache(cacheRepo = tmpdir) %>%
+      prod(., 6) %>%
+      Cache(cacheRepo = tmpdir))
+  expect_true(NROW(mess)==2)
+
+  # Removed last several steps
+  mess <- capture_messages(
+    b <- rnorm(10, 16) %>%
+      mean() %>%
+      Cache(cacheRepo = tmpdir))
+  expect_true(NROW(mess)==1)
+
+  # Changed intermediate step
+  mess <- capture_messages(rnorm(10, 16) %>%
+    mean() %>%
+    Cache(cacheRepo = tmpdir) %>%
+    prod(., 16) %>%
+    Cache(cacheRepo = tmpdir) %>%
+    runif(4, 0, .) %>%
+    Cache(cacheRepo = tmpdir)
+  )
+  expect_true(NROW(mess)==1)
+
+  # Removed intermediate Cache
+  mess <- capture_messages(rnorm(10, 16) %>%
+    mean() %>%
+    Cache(cacheRepo = tmpdir) %>%
+    prod(., 6) %>%
+    runif(4, 0, .) %>%
+    Cache(cacheRepo = tmpdir)
+  )
+  expect_length(mess, 1)
+
+})
+

@@ -225,15 +225,23 @@ setMethod(
     functionDetails$.FUN <- format(FUN)
 
     if(isPipe) { # Pipe
+      if(!is.call(tmpl$._lhs)) { # usually means it is the result of a pipe
+        tmpl$._pipeFn <- "constant"
+      }
+
       pipeFns <- paste(lapply(tmpl$._rhss, function(x) x[[1]]), collapse = ", ") %>%
         paste(tmpl$._pipeFn, ., sep = ", ") %>%
         gsub(., pattern = ", $", replacement = "") %>%
         paste0("'", ., "' pipe sequence")
 
       functionDetails$functionName <- pipeFns
-      firstCall <- match.call(FUN, tmpl$._lhs)
+      if(is.function(FUN)) {
+        firstCall <- match.call(FUN, tmpl$._lhs)
+        tmpl <- append(tmpl, as.list(firstCall[-1]))
+      } else {
+        tmpl <- append(tmpl, as.list(FUN))
+      }
 
-      tmpl <- append(tmpl, lapply(firstCall[nzchar(names(firstCall))], function(x) x))
       for(fns in seq_along(tmpl$._rhss)) {
         functionName <- as.character(tmpl$._rhss[[fns]][[1]])
         FUN <- eval(parse(text = functionName))
@@ -554,7 +562,8 @@ setMethod(
 #' \url{https://github.com/tidyverse/magrittr/blob/master/R/pipe.R} on Sep 8, 2017.
 #' This is a drop-in replacement for \code{\link[magrittr]{\%>\%}} and will
 #' work identically when there is no Cache. To use this, simply add \code{\%>\% Cache()}
-#' to a pipe sequence. This can be in the middle or at the end. See examples.
+#' to a pipe sequence. This can be in the middle or at the end. See examples. It has
+#' been tested with multiple Cache calls within the same (long) pipe.
 #'
 #' If there is a Cache in the pipe,
 #' the behaviour of the pipe is altered. In the magrittr pipe, each step of the
@@ -566,8 +575,6 @@ setMethod(
 #' the final result of the entire pipe up to the Cache call. If there is no
 #' identical copy in the cache repository, then it will evaluate the pipe as per
 #' normal, caching the final return value to the cache repository for later use.
-#'
-#' @note Having >1 Cache call in a pipe will not work as expected.
 #'
 #' @name pipe
 #' @importFrom utils getFromNamespace
@@ -612,8 +619,9 @@ setMethod(
   }
   else {
     whCache <- startsWith(as.character(rhss), "Cache")
-    #unlist(lapply(rhss, function(x) any(startsWith(as.character(x), "Cache"))))
+
     if(any(whCache)) {
+      if(sum(whCache)>1) whCache[-min(which(whCache))] <- FALSE
       whPreCache <- whCache
       whPreCache[seq(which(whCache), length(whCache))] <- TRUE
 
@@ -626,13 +634,13 @@ setMethod(
         ._pipeFn = as.character(lhs[[1]]),
         ._lhs = quote(lhs),
         ._rhss = quote(rhss[!whPreCache]))
-      args <- append(args, lapply(cacheArgs, eval, envir = parent))
+      args <- append(args, lapply(cacheArgs, eval, envir = parent, enclos = parent))
 
       result <- withVisible(do.call("Cache", args))
 
       if(!identical(whPreCache, whCache)) { # If Cache call is not at the end of the pipe
         postCacheCall <- parse(text = paste(c(result$value, rhss[(!whCache) & whPreCache]), collapse = " %>% "))
-        result <- withVisible(eval(postCacheCall))
+        result <- withVisible(eval(postCacheCall, envir = parent, enclos = parent))
       }
 
     } else {
