@@ -13,9 +13,11 @@ lhs \%>\% rhs
 \item{rhs}{A function call using the magrittr semantics.}
 }
 \description{
-A pipe that works with Cache. The code for this is built on a verbatim copy from
-\url{https://github.com/tidyverse/magrittr/blob/master/R/pipe.R} on Sep 8, 2017.
-This is a drop-in replacement for \code{\link[magrittr]{\%>\%}} and will
+A pipe that works with Cache. The code for this is based on a verbatim copy from
+\url{https://github.com/tidyverse/magrittr/blob/master/R/pipe.R} on Sep 8, 2017,
+based on commit 81c2e2410ebb7c560a2b4a8384ef5c20946373c3, with enhancements
+to make it Cache-aware.
+This version is a drop-in replacement for \code{\link[magrittr]{\%>\%}} and will
 work identically when there is no Cache. To use this, simply add \code{\%>\% Cache()}
 to a pipe sequence. This can be in the middle or at the end. See examples. It has
 been tested with multiple Cache calls within the same (long) pipe.
@@ -26,11 +28,12 @@ the behaviour of the pipe is altered. In the magrittr pipe, each step of the
 pipe chain is evaluated one at a time, in sequence. This will not allow any useful
 type of caching. Here, if there is a call to \code{Cache} in the pipe sequence,
 the entire pipe chain before the call to \code{Cache} will have its arguments
-evaluated and digested. This is compared to the cache repository database. If there
-is an identical pipe sequence in the Cache respository, then it will return
+examined and digested. This digest is compared to the cache repository database.
+If there is an identical pipe sequence in the Cache respository, then it will return
 the final result of the entire pipe up to the Cache call. If there is no
-identical copy in the cache repository, then it will evaluate the pipe as per
-normal, caching the final return value to the cache repository for later use.
+identical copy in the cache repository, then it will evaluate the pipe sequence as per
+normal, caching the return value at the point of the \code{Cache} call
+into the cache repository for later use.
 }
 \examples{
 tmpdir <- file.path(tempdir(), "testCache")
