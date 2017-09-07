@@ -1,5 +1,4 @@
 test_that("test file-backed raster caching", {
-  library(magrittr)
   library(raster)
 
   tmpdir <- file.path(tempdir(), "test_Cache") %>% checkPath(create = TRUE)
@@ -128,7 +127,6 @@ test_that("test file-backed raster caching", {
 })
 
 test_that("test memory backed raster robustDigest", {
-  library(magrittr)
   library(raster)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
@@ -153,7 +151,6 @@ test_that("test memory backed raster robustDigest", {
 })
 
 test_that("test date-based cache removal", {
-  library(magrittr)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
@@ -174,7 +171,6 @@ test_that("test date-based cache removal", {
 })
 
 test_that("test keepCache", {
-  library(magrittr)
   library(raster)
 
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
@@ -219,7 +215,6 @@ test_that("test keepCache", {
 })
 
 test_that("test environments", {
-  library(magrittr)
   library(raster)
 
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
@@ -284,7 +279,6 @@ test_that("test environments", {
 })
 
 test_that("test asPath", {
-  library(magrittr)
   library(raster)
 
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
@@ -437,4 +431,35 @@ test_that("test multiple pipe Cache calls", {
     Cache(cacheRepo = tmpdir)
   )
   expect_length(mess, 1)
+})
+
+
+test_that("test masking of %>% error message", {
+  tmpdir <- file.path(tempdir(), "testCache")
+  checkPath(tmpdir, create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  on.exit(try(detach("package:magrittr"), silent = TRUE), add = TRUE)
+
+  mess <- capture_messages(library(magrittr))
+
+  expect_length(grep("package:reproducible", mess, value = TRUE), 1)
+
+  srch <- search()
+  whereRepro <- which(endsWith(srch, "reproducible")) - 1
+  if (whereRepro > 1) {
+    srchNum <- seq_len(whereRepro)
+    for(sr in srchNum) {
+      masker <- exists("%>%", srch[sr], inherits = FALSE)
+      if(masker) break
+    }
+  }
+  expect_true(masker)
+  if(interactive()) { #somehow, in a non-interactive session, R is finding reproducible::`%>%`
+    # even though it is after magrittr on the search path -- somehow reproducible is
+    # being kept on top... i.e,. overriding search()
+    expect_error(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
+    detach("package:magrittr")
+    expect_silent(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
+  }
+
 })
