@@ -361,3 +361,18 @@ test_that("test pipe for Cache", {
   expect_false(isTRUE(all.equal(d1,d2)))
 
 })
+
+test_that("test quoted FUN in Cache", {
+  tmpdir <- file.path(tempdir(), "testCache")
+  checkPath(tmpdir, create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  A <- Cache(rnorm, 10, 16, cacheRepo = tmpdir)
+  B <- Cache(rnorm, 10, 16, cacheRepo = tmpdir) # recovers cached copy
+  C <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpdir) # recovers cached copy
+  D <- rnorm(10, 16) %>% Cache(cacheRepo = tmpdir) # recovers cached copy
+  expect_true(all.equal(A, B))
+  expect_true(all.equal(A, C))
+  expect_true(all.equal(A, D))
+
+})

@@ -78,6 +78,9 @@ if (getRversion() >= "3.1.0") {
 #' @include cache-helpers.R
 #' @include robustDigest.R
 #'
+#' @param FUN Either a function or an unevaluated function call (e.g., using
+#'            \code{quote}.
+#'
 #' @param objects Character vector of objects to be digested. This is only applicable
 #'                if there is a list, environment or simList with named objects
 #'                within it. Only this/these objects will be considered for caching,
@@ -194,8 +197,34 @@ setMethod(
     originalDots <- tmpl
     isPipe <- isTRUE(!is.null(tmpl$._pipe))
 
+    # If passed with 'quote'
+    if(!is.function(FUN)) {
+      parsedFun <- parse(text = FUN)
+      evaledParsedFun <- eval(parsedFun[[1]])
+      if(is.function(evaledParsedFun)) {
+        tmpFUN <- evaledParsedFun
+        mc <- match.call(tmpFUN, FUN)
+        FUN <- tmpFUN
+        originalDots <- append(originalDots, as.list(mc[-1]))
+        tmpl <- append(tmpl, as.list(mc[-1]))
+      }
+      functionDetails <- list(functionName = as.character(parsedFun[[1]]))
+    } else {
+      functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
+      if(functionDetails$functionName!="internal") { # means it couldn't extract the name
+        #parseName <- parse(text = functionDetails$functionName)
+        #evalParseName <- eval(parseName)
+        if(is.primitive(FUN)) {
+          tmpl <- list(...)
+        } else {
+          tmpl <- as.list(
+            #match.call(FUN, as.call(list(evalParseName, ...))))[-1]
+            match.call(FUN, as.call(list(FUN, ...))))[-1]
+        }
+      }
+    }
+
     # get function name and convert the contents to text so digestible
-    functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
     functionDetails$.FUN <- format(FUN)
 
     if(isPipe) { # Pipe

@@ -8,6 +8,7 @@ ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 # All same
 ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
 ranNumsC <- rnorm(10, 16) %>% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 
 # Any minor change makes it different
 ranNumsE <- rnorm(10, 6) %>% Cache(cacheRepo = tmpDir) # different
