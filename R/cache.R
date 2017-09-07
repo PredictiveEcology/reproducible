@@ -198,21 +198,23 @@ setMethod(
     isPipe <- isTRUE(!is.null(tmpl$._pipe))
 
     # If passed with 'quote'
-    if(!is.function(FUN)) {
+    if (!is.function(FUN)) {
       parsedFun <- parse(text = FUN)
       evaledParsedFun <- eval(parsedFun[[1]])
-      if(is.function(evaledParsedFun)) {
+      if (is.function(evaledParsedFun)) {
         tmpFUN <- evaledParsedFun
         mc <- match.call(tmpFUN, FUN)
-        FUN <- tmpFUN
+        FUN <- tmpFUN # nolint
         originalDots <- append(originalDots, as.list(mc[-1]))
         tmpl <- append(tmpl, as.list(mc[-1]))
       }
       functionDetails <- list(functionName = as.character(parsedFun[[1]]))
     } else {
       functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
-      if(functionDetails$functionName!="internal") { # i.e., if it did extract the name
-        if(is.primitive(FUN)) {
+
+      # i.e., if it did extract the name
+      if (functionDetails$functionName != "internal") {
+        if (is.primitive(FUN)) {
           tmpl <- list(...)
         } else {
           tmpl <- as.list(
@@ -222,11 +224,12 @@ setMethod(
     }
 
     # get function name and convert the contents to text so digestible
-    functionDetails$.FUN <- format(FUN)
+    functionDetails$.FUN <- format(FUN) # nolint
 
-    if(isPipe) { # Pipe
-      if(!is.call(tmpl$._lhs)) { # usually means it is the result of a pipe
-        tmpl$._pipeFn <- "constant"
+    if (isPipe) {
+      if (!is.call(tmpl$._lhs)) {
+        # usually means it is the result of a pipe
+        tmpl$._pipeFn <- "constant" # nolint
       }
 
       pipeFns <- paste(lapply(tmpl$._rhss, function(x) x[[1]]), collapse = ", ") %>%
@@ -235,24 +238,24 @@ setMethod(
         paste0("'", ., "' pipe sequence")
 
       functionDetails$functionName <- pipeFns
-      if(is.function(FUN)) {
+      if (is.function(FUN)) {
         firstCall <- match.call(FUN, tmpl$._lhs)
         tmpl <- append(tmpl, as.list(firstCall[-1]))
       } else {
         tmpl <- append(tmpl, as.list(FUN))
       }
 
-      for(fns in seq_along(tmpl$._rhss)) {
+      for (fns in seq_along(tmpl$._rhss)) {
         functionName <- as.character(tmpl$._rhss[[fns]][[1]])
-        FUN <- eval(parse(text = functionName))
-        if(is.primitive(FUN)) {
+        FUN <- eval(parse(text = functionName)) # nolint
+        if (is.primitive(FUN)) {
           otherCall <- tmpl$._rhss[[fns]]
         } else {
           otherCall <- match.call(definition = FUN, tmpl$._rhss[[fns]])
         }
-        tmpl[[paste0("functionName",fns)]] <- as.character(tmpl$._rhss[[fns]][[1]])
-        tmpl[[paste0(".FUN",fns)]] <-
-          eval(parse(text = tmpl[[paste0("functionName",fns)]]))
+        tmpl[[paste0("functionName", fns)]] <- as.character(tmpl$._rhss[[fns]][[1]])
+        tmpl[[paste0(".FUN", fns)]] <-
+          eval(parse(text = tmpl[[paste0("functionName", fns)]]))
         tmpl <- append(tmpl, as.list(otherCall[-1]))
       }
     }
@@ -260,7 +263,7 @@ setMethod(
     tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting  # nolint
 
     if (!is(FUN, "function")) {
-      if(any(startsWith(as.character(sys.calls()), "function_list[[k"))) {
+      if (any(startsWith(as.character(sys.calls()), "function_list[[k"))) {
         stop("Can't understand the function provided to Cache.\n",
              "Is the %>% from reproducible masked?")
       } else {
@@ -298,7 +301,9 @@ setMethod(
     # Do the digesting
     dotPipe <- startsWith(names(tmpl), "._") # don't digest the dotPipe elements as they are already
                                              # extracted individually into tmpl list elements
-    preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) .preDigestByClass(tmpl[!dotPipe][[x]]))
+    preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) {
+      .preDigestByClass(tmpl[!dotPipe][[x]])
+    })
     preDigest <- lapply(tmpl[!dotPipe], .robustDigest, objects = objects,
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
@@ -412,7 +417,7 @@ setMethod(
     }
 
     # RUN the function call
-    if(isPipe) {
+    if (isPipe) {
       output <- eval(tmpl$._pipe)
     } else {
       output <- do.call(FUN, originalDots)
@@ -603,34 +608,34 @@ setMethod(
 #'
 #' unlink(tmpdir, recursive = TRUE)
 #'
-`%>%` <- function (lhs, rhs)
-{
+`%>%` <- function(lhs, rhs) {
   parent <- parent.frame()
   env <- new.env(parent = parent)
   mc <- match.call()
-  chain_parts <- getFromNamespace("split_chain", ns = "magrittr")(mc, env = env)
+  chain_parts <- getFromNamespace("split_chain", ns = "magrittr")(mc, env = env) # nolint
   pipes <- chain_parts[["pipes"]]
   rhss <- chain_parts[["rhss"]]
   lhs <- chain_parts[["lhs"]]
-  env[["_function_list"]] <- lapply(1:length(rhss), function(i)
-    getFromNamespace("wrap_function", ns = "magrittr")(rhss[[i]], pipes[[i]], parent))
-  env[["_fseq"]] <- `class<-`(eval(quote(function(value) freduce(value,
-                                                                 `_function_list`)), env, env), c("fseq", "function"))
+  env[["_function_list"]] <- lapply(1:length(rhss), function(i) {
+    getFromNamespace("wrap_function", ns = "magrittr")(rhss[[i]], pipes[[i]], parent)
+  })
+  env[["_fseq"]] <- `class<-`(eval(quote(function(value) {
+    freduce(value, `_function_list`)
+  }), env, env), c("fseq", "function"))
   env[["freduce"]] <- freduce
   if (getFromNamespace("is_placeholder", ns = "magrittr")(lhs)) {
     env[["_fseq"]]
-  }
-  else {
+  } else {
     whCache <- startsWith(as.character(rhss), "Cache")
 
-    if(any(whCache)) {
-      if(sum(whCache)>1) whCache[-min(which(whCache))] <- FALSE
+    if (any(whCache)) {
+      if (sum(whCache) > 1) whCache[-min(which(whCache))] <- FALSE
       whPreCache <- whCache
       whPreCache[seq(which(whCache), length(whCache))] <- TRUE
 
       cacheCall <- match.call(Cache, rhss[whCache][[1]])
       cacheArgs <- lapply(cacheCall, function(x) x)
-      cacheArgs <- cacheArgs[names(cacheArgs)!="FUN"][-1] # remove FUN and Cache (i.e., the -1)
+      cacheArgs <- cacheArgs[names(cacheArgs) != "FUN"][-1] # remove FUN and Cache (i.e., the -1)
 
       args <- list(eval(lhs[[1]]),
         ._pipe = parse(text = paste(c(lhs, rhss[!whPreCache]), collapse = " %>% ")),
@@ -641,21 +646,21 @@ setMethod(
 
       result <- withVisible(do.call("Cache", args))
 
-      if(!identical(whPreCache, whCache)) { # If Cache call is not at the end of the pipe
-        postCacheCall <- parse(text = paste(c(result$value, rhss[(!whCache) & whPreCache]), collapse = " %>% "))
+      if (!identical(whPreCache, whCache)) {
+        # If Cache call is not at the end of the pipe
+        postCacheCall <- parse(text = paste(c(result$value, rhss[(!whCache) & whPreCache]),
+                                            collapse = " %>% "))
         result <- withVisible(eval(postCacheCall, envir = parent, enclos = parent))
       }
-
     } else {
       env[["_lhs"]] <- eval(lhs, parent, parent)
-      result <- withVisible(eval(quote(`_fseq`(`_lhs`)), env,
-                                 env))
+      result <- withVisible(eval(quote(`_fseq`(`_lhs`)), env, env))
     }
+
     if (getFromNamespace("is_compound_pipe", ns = "magrittr")(pipes[[1L]])) {
       eval(call("<-", lhs, result[["value"]]), parent,
            parent)
-    }
-    else {
+    } else {
       if (result[["visible"]])
         result[["value"]]
       else invisible(result[["value"]])

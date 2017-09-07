@@ -267,13 +267,13 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     })
     signat <- unlist(sigArgs[unlist(lapply(sigArgs, function(y) any(y)))])
 
-    if(isPipe) {
+    if (isPipe) {
       matchedCall <- as.list(
         match.call(FUN, list(...)$._lhs) # already a call
       )
     } else {
       matchedCall <- as.list(
-        match.call(FUN, call(name=FUN@generic, list(...)))
+        match.call(FUN, call(name = FUN@generic, list(...)))
       )
     }
 
@@ -318,10 +318,10 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     }
     .FUN <- FUN  # nolint
   }
-  if(is(FUN, "function")) {
+  if (is(FUN, "function")) {
     .FUN <- format(FUN)  # nolint
   } else {
-    .FUN <- NULL
+    .FUN <- NULL # nolint
   }
 
   # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
