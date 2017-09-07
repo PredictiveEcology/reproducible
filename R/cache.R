@@ -268,12 +268,12 @@ setMethod(
         whereRepro <- which(endsWith(srch, "reproducible")) - 1
         if (whereRepro > 1) {
           srchNum <- seq_len(whereRepro)
-          for(sr in srchNum) {
+          for (sr in srchNum) {
             masker <- exists("%>%", srch[sr], inherits = FALSE)
-            if(masker) break
+            if (masker) break
           }
         }
-        if(masker) {
+        if (masker) {
           stop("It looks like the pipe (%>%) from package:reproducible is masked by ", srch[sr],
                ". Please make sure library(reproducible) is after library(",
                gsub(srch[sr], pattern = "package:", replacement = ""), ")",
