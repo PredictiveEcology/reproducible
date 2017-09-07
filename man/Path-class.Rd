@@ -5,6 +5,7 @@
 \alias{Path-class}
 \alias{asPath}
 \alias{asPath.character}
+\alias{asPath}
 \title{Coerce a character string to a class "Path"}
 \usage{
 asPath(obj)

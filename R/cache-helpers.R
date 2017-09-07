@@ -235,14 +235,15 @@ setMethod(
 #'        arguments to the FUN
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
+#' @param isPipe Logical. If the call to getFunctionName is coming from a pipe, there is more
+#'               information available. Specifically, ._lhs which is already a call.
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot McIntire
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
-#'
-getFunctionName <- function(FUN, ..., overrideCall) { # nolint
+getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -266,11 +267,19 @@ getFunctionName <- function(FUN, ..., overrideCall) { # nolint
     })
     signat <- unlist(sigArgs[unlist(lapply(sigArgs, function(y) any(y)))])
 
-    matchedCall <- as.list(
-      match.call(FUN, do.call(call, append(list(name = FUN@generic), list(...))))
-    )
+    if(isPipe) {
+      matchedCall <- as.list(
+        match.call(FUN, list(...)$._lhs) # already a call
+      )
+    } else {
+      matchedCall <- as.list(
+        match.call(FUN, call(name=FUN@generic, list(...)))
+      )
+    }
+
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
     matchedCall <- matchedCall[na.omit(match(names(matchedCall), FUN@signature[signat]))]
+    matchedCall <- lapply(matchedCall, eval)
 
     signatures <- rep("missing", (sum(signat))) # default is "missing"
     names(signatures) <- FUN@signature[signat]
@@ -281,8 +290,8 @@ getFunctionName <- function(FUN, ..., overrideCall) { # nolint
 
     ## TO DO: need to get the method the dispatch correct
     methodUsed <- selectMethod(FUN, optional = TRUE, signature = signatures)
-    .FUN <- methodUsed@.Data  # nolint
     functionName <- FUN@generic
+    FUN <- methodUsed@.Data  # nolint
   } else {
     if (!missing(overrideCall)) {
       functionCall <- grep(sys.calls(), pattern = paste0("^", overrideCall), value = TRUE)
@@ -302,14 +311,18 @@ getFunctionName <- function(FUN, ..., overrideCall) { # nolint
           functionName <- matchedCall$FUN
         }
         functionName <- deparse(functionName)
-        if (functionName != "FUN") break
+        if (all(functionName != "FUN")) break
       }
     } else {
       functionName <- ""
     }
     .FUN <- FUN  # nolint
   }
-  .FUN <- format(FUN)  # nolint
+  if(is(FUN, "function")) {
+    .FUN <- format(FUN)  # nolint
+  } else {
+    .FUN <- NULL
+  }
 
   # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
   if (isTRUE(grepl(functionName, pattern = "\\(")))
@@ -375,6 +388,7 @@ asPath.character <- function(obj) {  # nolint
 #' @export
 #' @importFrom methods new
 #' @rdname Path-class
+#' @name asPath
 setAs(from = "character", to = "Path", function(from) {
   new("Path", from)
 })

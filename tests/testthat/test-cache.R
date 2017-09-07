@@ -340,3 +340,24 @@ test_that("test wrong ways of calling Cache", {
   expect_error(Cache(a <- sample(1), cacheRepo = tmpdir), "Can't understand")
   expect_true(1 == Cache(sample, 1, cacheRepo = tmpdir))
 })
+
+test_that("test pipe for Cache", {
+  tmpdir <- file.path(tempdir(), "testCache")
+  checkPath(tmpdir, create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  a <- rnorm(10, 16) %>% mean() %>% prod(., 6)
+  b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
+  d <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
+  expect_true(all.equal(b,d))
+  expect_false(isTRUE(all.equal(a,b)))
+  d1 <- rnorm(10, 6) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
+  expect_false(isTRUE(all.equal(d1,d)))
+
+  d1 <- rnorm(10, 16) %>% mean() %>% prod(., 16) %>% Cache(cacheRepo = tmpdir)
+  expect_false(isTRUE(all.equal(d1,d)))
+
+  d2 <- rnorm(10, 16) %>% mean() %>% prod(., 16) %>% Cache(cacheRepo = tmpdir, notOlderThan = Sys.time())
+  expect_false(isTRUE(all.equal(d1,d2)))
+
+})
