@@ -1,3 +1,4 @@
+/revdep/.cache.rds
 .csv
 .log
 .Rapp.history
@@ -7,7 +8,6 @@
 
 #################
 ## LaTeX
-#################
 *.acn
 *.acr
 *.alg
@@ -40,3 +40,4 @@
 *.vrb
 *.xdy
 *.tdo
+
