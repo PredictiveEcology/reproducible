@@ -16,7 +16,8 @@ cache(cacheRepo = NULL, FUN, ..., notOlderThan = NULL, objects = NULL,
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
-\item{FUN}{A function to be called.}
+\item{FUN}{Either a function or an unevaluated function call (e.g., using
+\code{quote}.}
 
 \item{...}{Arguments of \code{FUN} function .}
 

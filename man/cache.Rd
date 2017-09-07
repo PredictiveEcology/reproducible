@@ -20,7 +20,8 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   quick = FALSE)
 }
 \arguments{
-\item{FUN}{A function to be called.}
+\item{FUN}{Either a function or an unevaluated function call (e.g., using
+\code{quote}.}
 
 \item{...}{Arguments of \code{FUN} function .}
 
@@ -179,7 +180,18 @@ library(raster)
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 
-## Example 1: basic cache use
+# Basic use
+ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+
+# All same
+ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- rnorm(10, 16) \%>\% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+
+# Any minor change makes it different
+ranNumsE <- rnorm(10, 6) \%>\% Cache(cacheRepo = tmpDir) # different
+
+## Example 1: basic cache use with tags
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
