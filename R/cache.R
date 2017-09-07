@@ -264,8 +264,24 @@ setMethod(
 
     if (!is(FUN, "function")) {
       if (any(startsWith(as.character(sys.calls()), "function_list[[k"))) {
-        stop("Can't understand the function provided to Cache.\n",
-             "Is the %>% from reproducible masked?")
+        srch <- search()
+        whereRepro <- which(endsWith(srch, "reproducible")) - 1
+        if (whereRepro > 1) {
+          srchNum <- seq_len(whereRepro)
+          for(sr in srchNum) {
+            masker <- exists("%>%", srch[sr], inherits = FALSE)
+            if(masker) break
+          }
+        }
+        if(masker) {
+          stop("It looks like the pipe (%>%) from package:reproducible is masked by ", srch[sr],
+               ". Please make sure library(reproducible) is after library(",
+               gsub(srch[sr], pattern = "package:", replacement = ""), ")",
+               call. = FALSE)
+        } else {
+          stop("Is the %>% from reproducible masked?")
+        }
+
       } else {
         stop("Can't understand the function provided to Cache.\n",
              "Did you write it in the form: ",
@@ -609,6 +625,7 @@ setMethod(
 #' unlink(tmpdir, recursive = TRUE)
 #'
 `%>%` <- function(lhs, rhs) {
+  # magrittr code below
   parent <- parent.frame()
   env <- new.env(parent = parent)
   mc <- match.call()
@@ -626,6 +643,8 @@ setMethod(
   if (getFromNamespace("is_placeholder", ns = "magrittr")(lhs)) {
     env[["_fseq"]]
   } else {
+
+    # reproducible package code here until end of if statement
     whCache <- startsWith(as.character(rhss), "Cache")
 
     if (any(whCache)) {
@@ -653,6 +672,9 @@ setMethod(
         result <- withVisible(eval(postCacheCall, envir = parent, enclos = parent))
       }
     } else {
+      # end reproducible package code
+
+      # magrittr code below
       env[["_lhs"]] <- eval(lhs, parent, parent)
       result <- withVisible(eval(quote(`_fseq`(`_lhs`)), env, env))
     }
