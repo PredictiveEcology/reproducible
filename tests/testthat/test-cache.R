@@ -448,18 +448,18 @@ test_that("test masking of %>% error message", {
   whereRepro <- which(endsWith(srch, "reproducible")) - 1
   if (whereRepro > 1) {
     srchNum <- seq_len(whereRepro)
-    for(sr in srchNum) {
+    for (sr in srchNum) {
       masker <- exists("%>%", srch[sr], inherits = FALSE)
-      if(masker) break
+      if (masker) break
     }
   }
   expect_true(masker)
-  if(interactive()) { #somehow, in a non-interactive session, R is finding reproducible::`%>%`
+  if (interactive()) {
+    # somehow, in a non-interactive session, R is finding reproducible::`%>%`
     # even though it is after magrittr on the search path -- somehow reproducible is
     # being kept on top... i.e,. overriding search()
     expect_error(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
     detach("package:magrittr")
     expect_silent(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
   }
-
 })
