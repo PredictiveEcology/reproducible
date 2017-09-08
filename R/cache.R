@@ -210,16 +210,20 @@ setMethod(
       }
       functionDetails <- list(functionName = as.character(parsedFun[[1]]))
     } else {
-      functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
+      if(!isPipe) {
+        functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
 
-      # i.e., if it did extract the name
-      if (functionDetails$functionName != "internal") {
-        if (is.primitive(FUN)) {
-          tmpl <- list(...)
-        } else {
-          tmpl <- as.list(
-            match.call(FUN, as.call(list(FUN, ...))))[-1]
+        # i.e., if it did extract the name
+        if (functionDetails$functionName != "internal") {
+          if (is.primitive(FUN)) {
+            tmpl <- list(...)
+          } else {
+            tmpl <- as.list(
+              match.call(FUN, as.call(list(FUN, ...))))[-1]
+          }
         }
+      } else {
+        functionDetails <- list()
       }
     }
 
@@ -240,7 +244,7 @@ setMethod(
       functionDetails$functionName <- pipeFns
       if (is.function(FUN)) {
         firstCall <- match.call(FUN, tmpl$._lhs)
-        tmpl <- append(tmpl, as.list(firstCall[-1]))
+        tmpl <- append(tmpl, lapply(as.list(firstCall[-1]), function(x) eval(x, envir = tmpl$._envir)))
       } else {
         tmpl <- append(tmpl, as.list(FUN))
       }
@@ -434,7 +438,7 @@ setMethod(
 
     # RUN the function call
     if (isPipe) {
-      output <- eval(tmpl$._pipe)
+      output <- eval(tmpl$._pipe, envir = tmpl$._envir)
     } else {
       output <- do.call(FUN, originalDots)
     }
@@ -660,7 +664,8 @@ setMethod(
         ._pipe = parse(text = paste(c(lhs, rhss[!whPreCache]), collapse = " %>% ")),
         ._pipeFn = as.character(lhs[[1]]),
         ._lhs = quote(lhs),
-        ._rhss = quote(rhss[!whPreCache]))
+        ._rhss = quote(rhss[!whPreCache]),
+        ._envir = parent)
       args <- append(args, lapply(cacheArgs, eval, envir = parent, enclos = parent))
 
       result <- withVisible(do.call("Cache", args))
