@@ -210,7 +210,7 @@ setMethod(
       }
       functionDetails <- list(functionName = as.character(parsedFun[[1]]))
     } else {
-      if(!isPipe) {
+      if (!isPipe) {
         functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
 
         # i.e., if it did extract the name
@@ -244,7 +244,9 @@ setMethod(
       functionDetails$functionName <- pipeFns
       if (is.function(FUN)) {
         firstCall <- match.call(FUN, tmpl$._lhs)
-        tmpl <- append(tmpl, lapply(as.list(firstCall[-1]), function(x) eval(x, envir = tmpl$._envir)))
+        tmpl <- append(tmpl, lapply(as.list(firstCall[-1]), function(x) {
+          eval(x, envir = tmpl$._envir)
+        }))
       } else {
         tmpl <- append(tmpl, as.list(FUN))
       }
