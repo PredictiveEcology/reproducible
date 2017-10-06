@@ -223,9 +223,11 @@ setMethod(
     }
     # The following Rounding is necessary to make digest equal on linux and windows
     for (i in names(aaa)) {
-      if (!is.integer(aaa[, i])) {
-        if (is.numeric(aaa[, i]))
-          aaa[, i] <- round(aaa[, i], 4)
+      if(is(aaa, "SpatialPolygonsDataFrame")){
+        if (!is.integer(aaa[, i])) {
+          if (is.numeric(aaa[, i]))
+            aaa[, i] <- round(aaa[, i], 4)
+        }
       }
     }
 
