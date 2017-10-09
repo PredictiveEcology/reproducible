@@ -4,7 +4,7 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.1.4
 =============
 
-* 
+* Cache arg `sideEffect` can now be a path
 
 version 0.1.3
 =============
