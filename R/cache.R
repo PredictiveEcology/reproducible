@@ -65,6 +65,25 @@ if (getRversion() >= "3.1.0") {
 #' of stochastic outcomes are required. It will also be very useful in a
 #' reproducible workflow.
 #'
+#' @section \code{sideEffect}:
+#' If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
+#' added to \code{sideEffect} will be added as an attribute to the cached copy.
+#' Subsequent calls to this function
+#'        will assess for the presence of the new files in the \code{sideEffect} location.
+#'        If the files are identical (\code{quick = FALSE}) or their file size is
+#'        identical (\code{quick = TRUE}), then the cached copy of the function will
+#'        be returned (and no files changed). If there are missing or incorrect files,
+#'        then the function will re-run. This will accommodate the situation where the
+#'        function call is identical, but somehow the side effect files were modified.
+#'        If \code{sideEffect} is logical, then the function will check the
+#'        \code{cacheRepo}; if it is a path, then it will check the path. The function will
+#'        assess whether the files to be downloaded are found locally
+#'        prior to download. If it fails the local test, then it will try to recover from a
+#'        local copy if (\code{makeCopy} had been set to \code{TRUE} the first time
+#'        the function was run. Currently, local recovery will only work if\code{makeCOpy} was
+#'        set to \code{TRUE} the first time \code{Cache}
+#'        was run). Default is \code{FALSE}.
+#'
 #' @note As indicated above, several objects require pre-treatment before
 #' caching will work as expected. The function \code{.robustDigest} accommodates this.
 #' It is an S4 generic, meaning that developers can produce their own methods for
@@ -118,14 +137,8 @@ if (getRversion() >= "3.1.0") {
 #'        If \code{"quick"}, then it will return the same two objects directly,
 #'        without evalutating the \code{FUN(...)}.
 #'
-#' @param sideEffect Logical or path. If Logical, then the function will check the
-#'        \code{cacheRepo}, if a path, then it will check the path. The function will
-#'        assess whether the files to be downloaded are found locally
-#'        prior to download. If it fails the local test, then it will try to recover from a
-#'        local copy if (\code{makeCopy} had been set to \code{TRUE} the first time
-#'        the function was run. Currently, local recovery will only work if\code{makeCOpy} was
-#'        set to \code{TRUE} the first time \code{Cache}
-#'        was run). Default is \code{FALSE}.
+#' @param sideEffect Logical or path. Deteremines where the function will look for
+#'        new files following function completion. See Details.
 #'        \emph{NOTE: this argument is experimental and may change in future releases.}
 #'
 #' @param makeCopy Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
@@ -481,28 +494,29 @@ setMethod(
       } else {
         postRepo <-  list.files(sideEffect, full.names = TRUE)
       }
-      #dwdFlst <- setdiff(postRepo, priorRepo)
-      if (length(postRepo > 0)) {
+      dwdFlst <- setdiff(postRepo, priorRepo)
+      if (length(dwdFlst > 0)) {
         if (quick) {
-          sizecurFlst <- lapply(postRepo, function(x) {
+          sizecurFlst <- lapply(dwdFlst, function(x) {
             list(basename(x), file.size(file.path(x)))
           })
           cachecurFlst <- lapply(sizecurFlst, function(x) {
             digest::digest(x, algo = algo)
           })
         } else {
-          cachecurFlst <- lapply(postRepo, function(x) {
+          cachecurFlst <- lapply(dwdFlst, function(x) {
             digest::digest(file = x, algo = algo)
           })
         }
-        cacheName <- basename(postRepo)
+
+        cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep= "/")
         attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
 
         if (makeCopy) {
           repoTo <- file.path(cacheRepo, "gallery")
           checkPath(repoTo, create = TRUE)
-          lapply(postRepo, function(x) {
-            file.copy(from = postRepo,
+          lapply(dwdFlst, function(x) {
+            file.copy(from = x,
                       to = file.path(repoTo), recursive = TRUE)
           })
         }

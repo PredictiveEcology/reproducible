@@ -75,10 +75,8 @@ the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
 without evalutating the \code{FUN(...)}.}
 
-\item{sideEffect}{Logical. Check if files to be downloaded are found locally
-in the \code{cacheRepo} prior to download and try to recover from a copy
-(\code{makeCopy} must have been set to \code{TRUE} the first time \code{Cache}
-was run). Default is \code{FALSE}.
+\item{sideEffect}{Logical or path. Deteremines where the function will look for
+new files following function completion. See Details.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
 \item{makeCopy}{Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
@@ -173,6 +171,27 @@ is not relevant, or if a user has achieved sufficient stochasticity (e.g., via
 sufficient number of calls to \code{experiment}) such that no new explorations
 of stochastic outcomes are required. It will also be very useful in a
 reproducible workflow.
+}
+
+\section{\code{sideEffect}}{
+
+If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
+added to \code{sideEffect} will be added as an attribute to the cached copy.
+Subsequent calls to this function
+       will assess for the presence of the new files in the \code{sideEffect} location.
+       If the files are identical (\code{quick = FALSE}) or their file size is
+       identical (\code{quick = TRUE}), then the cached copy of the function will
+       be returned (and no files changed). If there are missing or incorrect files,
+       then the function will re-run. This will accommodate the situation where the
+       function call is identical, but somehow the side effect files were modified.
+       If \code{sideEffect} is logical, then the function will check the
+       \code{cacheRepo}; if it is a path, then it will check the path. The function will
+       assess whether the files to be downloaded are found locally
+       prior to download. If it fails the local test, then it will try to recover from a
+       local copy if (\code{makeCopy} had been set to \code{TRUE} the first time
+       the function was run. Currently, local recovery will only work if\code{makeCOpy} was
+       set to \code{TRUE} the first time \code{Cache}
+       was run). Default is \code{FALSE}.
 }
 
 \examples{
