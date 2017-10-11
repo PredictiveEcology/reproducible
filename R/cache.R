@@ -438,6 +438,8 @@ setMethod(
                 }
               }
             #}
+            } else {
+            message("There was no record of files in sideEffects")
           }
           if (any(needDwd)) {
             do.call(FUN, list(...))
