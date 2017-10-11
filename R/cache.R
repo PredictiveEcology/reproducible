@@ -213,7 +213,6 @@ setMethod(
     tmpl <- list(...)
     originalDots <- tmpl
     isPipe <- isTRUE(!is.null(tmpl$._pipe))
-    if(sideEffect!=FALSE) if(isTRUE(sideEffect)) {sideEffect <- cacheRepo}
 
     # If passed with 'quote'
     if (!is.function(FUN)) {
@@ -326,12 +325,14 @@ setMethod(
       cacheRepo <- checkPath(cacheRepo, create = TRUE)
     }
 
+    if (sideEffect != FALSE) if(isTRUE(sideEffect)) {sideEffect <- cacheRepo}
+
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
       suppressWarnings(archivist::createLocalRepo(cacheRepo))
     }
 
     # List file prior to cache
-    if (sideEffect!=FALSE) {
+    if (sideEffect != FALSE) {
       if(isTRUE(sideEffect)) {
         priorRepo <-  list.files(cacheRepo, full.names = TRUE)
       } else {
@@ -388,7 +389,7 @@ setMethod(
                                  tags = paste0("accessed:", Sys.time()))
         )
 
-        if (sideEffect!=FALSE) {
+        if (sideEffect != FALSE) {
           #if(isTRUE(sideEffect)) {
             needDwd <- logical(0)
             fromCopy <- character(0)
@@ -439,7 +440,7 @@ setMethod(
               }
             #}
             } else {
-            message("There was no record of files in sideEffects")
+            message("  There was no record of files in sideEffects")
           }
           if (any(needDwd)) {
             do.call(FUN, list(...))
@@ -490,7 +491,7 @@ setMethod(
     attr(output, "tags") <- paste0("cacheId:", outputHash)
     attr(output, "call") <- ""
 
-    if (sideEffect!=FALSE) {
+    if (sideEffect != FALSE) {
       if(isTRUE(sideEffect)) {
         postRepo <-  list.files(cacheRepo, full.names = TRUE)
       } else {
