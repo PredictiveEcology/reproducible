@@ -24,6 +24,7 @@ Depends:
 Imports:
     archivist (>= 2.1.2),
     data.table (>= 1.10.4),
+    desc,
     devtools,
     digest,
     fastdigest,
@@ -31,22 +32,27 @@ Imports:
     magrittr,
     methods,
     raster,
-    sp
+    Rcpp (>= 0.12.13.1),
+    sp,
+    versions
 Suggests:
     hunspell,
     knitr,
     rgdal,
     rmarkdown,
     testthat
+LinkingTo: Rcpp
 License: GPL-3
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 6.0.1
 Collate: 
+    'RcppExports.R'
     'cache-helpers.R'
     'cache-tools.R'
     'robustDigest.R'
     'cache.R'
     'consistentPaths.R'
     'git.R'
+    'packages.R'
     'reproducible-package.R'
