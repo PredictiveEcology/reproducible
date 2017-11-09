@@ -2,7 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{compareNA}
 \alias{compareNA}
-\title{NA-aware Comparison of two vectors}
+\title{NA-aware comparison of two vectors}
 \usage{
 compareNA(v1, v2)
 }

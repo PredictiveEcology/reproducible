@@ -1,48 +1,96 @@
-#' Install and load packages
+#' Install and load packages, optionally with specific package versions
 #'
 #' This is an "all in one" function that will run \code{install.packages} for
-#' CRAN packages and \code{devtools::install_github} for GitHub.com packages, plus
-#' all their dependencies with \code{unique(dependencies)} so the same package is
-#' not installed multiple times, and finally \code{library} is called on the
-#' \code{packages}.
+#' CRAN packages, \code{devtools::install_github} for GitHub.com packages and
+#' \code{versions::install.versions} if there is a \code{packageVersionFile} supplied.
+#' Plus, when \code{packages} is provided as a character vector, or a
+#' \code{packageVersionFile} is supplied, all package dependencies
+#' will be first assessed for \code{unique(dependencies)} so the same package is
+#' not installed multiple times. Finally \code{library} is called on the
+#' \code{packages}. If packages are already installed (\code{packages} supplied),
+#' and their version numbers are exact (when \code{packageVersionFile} is supplied),
+#' then the "install" component will be skipped very quickly with a message.
+#'
+#' @note This function will use \code{Cache} internally to determine the dependencies
+#' of all \code{packages}. The cache repository will be inside the \code{libPath},
+#' and will be named \code{.cache}. This will speed up subsequent calls to \code{Require}
+#' dramatically.
+#' It will not take into account version numbers for this
+#' caching step. If package versions are updated manually by the user, then this cached
+#' element should be wiped, using \code{notOlderThan = Sys.time()}.
 #'
 #' @export
 #' @importFrom tools package_dependencies
 #' @importFrom desc desc_get
+#' @importFrom devtools install_github
 #' @param packages Character vector of packages to install via
 #'        \code{install.packages}, then load (i.e., with \code{library})
-Require <- function(packages, forceInstall = FALSE, ...) {
+#' @param packageVersionFile If provided, then this will override all \code{install.package}
+#'        calls with \code{versions::install.versions}
+#' @param libPath The library path where all packages should be installed, and looked for to load
+#'        (i.e., call \code{library})
+#' @inheritParams Cache
+#' @param install_githubArgs List of optional named arguments, passed to install_github
+#' @param install.packagesArgs List of optional named arguments, passed to install.packages
+Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
+                    notOlderThan = NULL, install_githubArgs = list(),
+                    install.packagesArgs = list()) {
   githubPkgs <- grep("\\/", packages, value = TRUE)
   githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@" ), function(x) x[2])
   if(length(githubPkgs)) {
     packages[packages %in% githubPkgs] <- githubPkgNames
   }
-  cacheRepo <- file.path(.libPaths()[1], ".cache")
-  deps <- unlist(Cache(tools::package_dependencies, packages, recursive = TRUE,
-                       cacheRepo = cacheRepo, notOlderThan = list(...)$notOlderThan))
+  if(!missing(packageVersionFile)) {
+    aa <- instPkgs(githubPkgs, packageVersionFile = packageVersionFile,
+                           libPath = libPath)
+  } else {
+    cacheRepo <- file.path(libPath, ".cache")
+    deps <- unlist(Cache(tools::package_dependencies, packages, recursive = TRUE,
+                         cacheRepo = cacheRepo, notOlderThan = notOlderThan))
 
-  if(length(githubPkgs)) {
-    gitPkgDeps <- unlist(Cache(lapply, file.path(.libPaths()[1], githubPkgNames), function(p) {
-      lapply(c("Imports", "Suggests", "Depends"), function(type) {
-        strsplit(desc::desc_get(key=type,  p), split = ",.{0,2} +")
-      })
-    }, cacheRepo = cacheRepo, notOlderThan = list(...)$notOlderThan))
-    gitPkgDeps <- unname(unlist(lapply(strsplit(gitPkgDeps, split = "\n| "), function(x) x[1])))
-    deps <- unique(c(deps, gitPkgDeps))
-    deps <- deps[deps != "R"]
-  }
-  allPkgsNeeded <- unique(c(deps, packages))
-  installedPkgs <- sapply(.libPaths(), dir)
-  needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(unlist(installedPkgs)))]
-  if(length(needInstall)) {
-    gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
-    if(length(gitPkgs)) {
-      sapply(gitPkgs, install_github, dependencies = FALSE)
-      Require(unlist(needInstall))#[!(needInstall %in% githubPkgNames[githubPkgNames %in% needInstall])])
-      return(NULL)
+    if(length(githubPkgs)) {
+      pkgPaths <- file.path(libPath, githubPkgNames)
+      fileExists <- file.exists(pkgPaths)
+      if(any(fileExists)) {
+        gitPkgDeps <- unlist(Cache(lapply, pkgPaths[fileExists], function(p) {
+          lapply(c("Imports", "Suggests", "Depends"), function(type) {
+            strsplit(desc::desc_get(key=type,  p), split = ",.{0,2} +")
+          })
+        }, cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+        gitPkgDeps <- unname(unlist(lapply(strsplit(gitPkgDeps, split = "\n| "), function(x) x[1])))
+        deps <- unique(c(deps, gitPkgDeps))
+        deps <- deps[deps != "R"]
+      }
     }
-    install.packages(needInstall, dependencies = FALSE)
+    allPkgsNeeded <- unique(c(deps, packages))
+    installedPkgs <- sapply(libPath, dir)
+    basePkgs <- sapply(.libPaths()[length(.libPaths())], dir)
+    needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(unlist(installedPkgs)))]
+    needInstall <- needInstall[!(needInstall %in% basePkgs)]
+    if(length(needInstall)) {
+      gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
+      if(length(gitPkgs)) {
+
+        oldLibPaths <- .libPaths()
+        .libPaths(c(libPath, oldLibPaths))
+        sapply(gitPkgs, function(pk) {
+          args <- append(install_githubArgs,list(pk, dependencies = FALSE, upgrade_dependencies = FALSE))
+          args <- args[!duplicated(names(args))]
+          do.call(install_github, args)
+          # with_libpaths doesn't work because it will look for ALL packages there; can't download without curl
+        })
+        .libPaths(oldLibPaths)
+        Require(unlist(gitPkgs), libPath = libPath, notOlderThan = notOlderThan,
+                install_githubArgs = install_githubArgs,
+                install.packagesArgs = install.packagesArgs) # This sends it back in with all the install_github calls completed
+        return(NULL)
+      }
+      do.call(install.packages, append(list(needInstall, lib = libPath, dependencies = FALSE), install.packagesArgs))
+      #install.packages(needInstall, lib = libPath, dependencies = FALSE)
+    }
+
   }
+
 
   packagesLoaded <- lapply(packages, library, character.only = TRUE)
   return(invisible(packagesLoaded))
@@ -50,7 +98,7 @@ Require <- function(packages, forceInstall = FALSE, ...) {
 
 
 
-#' NA-aware Comparison of two vectors
+#' NA-aware comparison of two vectors
 #'
 #' Copied from \link{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.
 #' This function returns TRUE wherever elements are the same, including NA's,
@@ -67,7 +115,7 @@ compareNA <- function(v1,v2) {
   return(same)
 }
 
-#' A shortcut to create a .libPaths() with 2 folders
+#' A shortcut to create a .libPaths() with only 2 folders
 #'
 #' This will remove all but the top level of .libPaths(), which should be the base packages
 #' installed with R, and adds a second directory, the \code{libPath}.
@@ -89,9 +137,11 @@ newLibPaths <- function(libPath) {
 #' This code is taken very directly from the \code{installed.versions} function in the
 #' \code{versions} package, but uses an \code{Rcpp} alternative
 #' to readLines for speed. It will be anywhere from 2x to 10x faster than the \code{installed.versions}
-#' \code{versions} function
+#' \code{versions} function. This is also many times faster (1000x ? for the 1 package
+#' case) than \code{utils::installed.packages}
+#' especially if only a subset of "all" packages in libPath are desired.
 #' @export
-installedVersions <- function (pkgs, libPath) {
+installedVersions <- function (pkgs, libPath, notOlderThan = NULL) {
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()[1L]
     if (length(.libPaths()) > 1L)
@@ -100,7 +150,8 @@ installedVersions <- function (pkgs, libPath) {
                       sQuote(libPath), sQuote("libPath")), domain = NA)
   }
   if (length(pkgs) > 1) {
-    ans <- lapply(pkgs, installedVersions, libPath)
+    ans <- Cache(lapply, pkgs, installedVersions, libPath, cacheRepo = file.path(libPath, ".cache"),
+                 notOlderThan = notOlderThan)
     names(ans) <- pkgs
     return(ans)
   }
@@ -124,19 +175,22 @@ installedVersions <- function (pkgs, libPath) {
 }
 
 #' Install exact package versions from a package version text file & GitHub
+#'
+#' This uses MRAN for remote repository, accessed via \code{versions::install.versions}.
+#' This will attempt to install all packages in the \code{packageVersionFile},
+#' with their exact version described in that file. For GitHub packages, it will
+#' use \code{\link[devtools]{install_github}}
+#'
 #' @export
 #' @param gitHubPackages Character vectors indicating repository/packageName@branch
+#' @inheritParams Require
 #' @param packageVersionFile Path to the package version file, defaults to
 #'        the \code{.packageVersions.txt}.
-#' @param libPath A folder in which all packages should be installed. Default is the first package in
-#'        \code{.libPaths()}
 #' @importFrom versions install.versions
 instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
                      libPath = .libPaths()[1]) {
-  libPath <- if(missing(libPath)) .libPaths()[1] else libPath
-  #if(missing(packageVersionFile)) packageVersionFile <- ".packageVersions.txt"
-  # packageVersionFile <- file.path(libPath, packageVersionFile)
   if(file.exists(packageVersionFile)) {
+    message("Reading ", packageVersionFile)
     instPkgs <- dir(libPath)
     instVers <- installedVersions(instPkgs, libPath)
     inst <- data.frame(instPkgs, instVers=unlist(instVers), stringsAsFactors = FALSE)
@@ -154,9 +208,12 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
 
       whPkgsNeededFromCran <- whPkgsNeeded[!(packages %in% ghPackages)]
       whPkgsNeededGH <- gitHubPackages[pkgsOmitted]
-      if(length(whPkgsNeededFromCran))
+      message("Needing to install ", length(whPkgsNeededGH), " packages from GitHub.com")
+      message("Needing to install ", length(supposedToBe$instPkgs[whPkgsNeededFromCran]), " packages from CRAN.")
+      if(length(whPkgsNeededFromCran)) {
         install.versions(supposedToBe$instPkgs[whPkgsNeededFromCran],
                          supposedToBe$instVers[whPkgsNeededFromCran], dependencies = FALSE)
+      }
       if(length(whPkgsNeededGH)) {
         whPkgsNeededGHNames <- ghPackages[pkgsOmitted]
         lapply(whPkgsNeededGH, function(pkg) {

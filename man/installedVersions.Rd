@@ -4,11 +4,13 @@
 \alias{installedVersions}
 \title{Determine versions all installed pacakges}
 \usage{
-installedVersions(pkgs, libPath)
+installedVersions(pkgs, libPath, notOlderThan = NULL)
 }
 \description{
 This code is taken very directly from the \code{installed.versions} function in the
 \code{versions} package, but uses an \code{Rcpp} alternative
 to readLines for speed. It will be anywhere from 2x to 10x faster than the \code{installed.versions}
-\code{versions} function
+\code{versions} function. This is also many times faster (1000x ? for the 1 package
+case) than \code{utils::installed.packages}
+especially if only a subset of "all" packages in libPath are desired.
 }

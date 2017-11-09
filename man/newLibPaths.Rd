@@ -2,7 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{newLibPaths}
 \alias{newLibPaths}
-\title{A shortcut to create a .libPaths() with 2 folders}
+\title{A shortcut to create a .libPaths() with only 2 folders}
 \usage{
 newLibPaths(libPath)
 }

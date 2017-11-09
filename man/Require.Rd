@@ -2,18 +2,46 @@
 % Please edit documentation in R/packages.R
 \name{Require}
 \alias{Require}
-\title{Install and load packages}
+\title{Install and load packages, optionally with specific package versions}
 \usage{
-Require(packages, forceInstall = FALSE, ...)
+Require(packages, packageVersionFile, libPath = .libPaths()[1],
+  notOlderThan = NULL, install_githubArgs = list(),
+  install.packagesArgs = list())
 }
 \arguments{
 \item{packages}{Character vector of packages to install via
 \code{install.packages}, then load (i.e., with \code{library})}
+
+\item{packageVersionFile}{If provided, then this will override all \code{install.package}
+calls with \code{versions::install.versions}}
+
+\item{libPath}{The library path where all packages should be installed, and looked for to load
+(i.e., call \code{library})}
+
+\item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
+
+\item{install_githubArgs}{List of optional named arguments, passed to install_github}
+
+\item{install.packagesArgs}{List of optional named arguments, passed to install.packages}
 }
 \description{
 This is an "all in one" function that will run \code{install.packages} for
-CRAN packages and \code{devtools::install_github} for GitHub.com packages, plus
-all their dependencies with \code{unique(dependencies)} so the same package is
-not installed multiple times, and finally \code{library} is called on the
-\code{packages}.
+CRAN packages, \code{devtools::install_github} for GitHub.com packages and
+\code{versions::install.versions} if there is a \code{packageVersionFile} supplied.
+Plus, when \code{packages} is provided as a character vector, or a
+\code{packageVersionFile} is supplied, all package dependencies
+will be first assessed for \code{unique(dependencies)} so the same package is
+not installed multiple times. Finally \code{library} is called on the
+\code{packages}. If packages are already installed (\code{packages} supplied),
+and their version numbers are exact (when \code{packageVersionFile} is supplied),
+then the "install" component will be skipped very quickly with a message.
+}
+\note{
+This function will use \code{Cache} internally to determine the dependencies
+of all \code{packages}. The cache repository will be inside the \code{libPath},
+and will be named \code{.cache}. This will speed up subsequent calls to \code{Require}
+dramatically.
+It will not take into account version numbers for this
+caching step. If package versions are updated manually by the user, then this cached
+element should be wiped, using \code{notOlderThan = Sys.time()}.
 }

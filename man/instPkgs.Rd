@@ -13,9 +13,12 @@ instPkgs(gitHubPackages, packageVersionFile = ".packageVersions.txt",
 \item{packageVersionFile}{Path to the package version file, defaults to
 the \code{.packageVersions.txt}.}
 
-\item{libPath}{A folder in which all packages should be installed. Default is the first package in
-\code{.libPaths()}}
+\item{libPath}{The library path where all packages should be installed, and looked for to load
+(i.e., call \code{library})}
 }
 \description{
-Install exact package versions from a package version text file & GitHub
+This uses MRAN for remote repository, accessed via \code{versions::install.versions}.
+This will attempt to install all packages in the \code{packageVersionFile},
+with their exact version described in that file. For GitHub packages, it will
+use \code{\link[devtools]{install_github}}
 }
