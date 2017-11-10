@@ -32,7 +32,7 @@ Imports:
     magrittr,
     methods,
     raster,
-    Rcpp (>= 0.12.13.1),
+    Rcpp (>= 0.12.13),
     sp,
     versions
 Suggests:
