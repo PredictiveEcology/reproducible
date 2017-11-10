@@ -40,6 +40,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   if(length(githubPkgs)) {
     packages[packages %in% githubPkgs] <- githubPkgNames
   }
+  if(!dir.exists(libPath)) dir.create(libPath)
   if(!missing(packageVersionFile)) {
     aa <- instPkgs(githubPkgs, packageVersionFile = packageVersionFile,
                            libPath = libPath)
@@ -74,7 +75,11 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
         oldLibPaths <- .libPaths()
         .libPaths(c(libPath, oldLibPaths))
         sapply(gitPkgs, function(pk) {
-          args <- append(install_githubArgs,list(pk, dependencies = FALSE, upgrade_dependencies = FALSE))
+          args <- append(install_githubArgs,list(pk, dependencies = FALSE, upgrade_dependencies = FALSE,
+                                                 force = TRUE, local = FALSE)) # use force = TRUE because we have already eliminated
+                                    # the cases where we have the correct version; install_github uses a
+                                    # local database hidden somewhere that won't let the same package be installed
+                                    # twice, even if in different libPaths
           args <- args[!duplicated(names(args))]
           do.call(install_github, args)
           # with_libpaths doesn't work because it will look for ALL packages there; can't download without curl
@@ -154,6 +159,8 @@ installedVersions <- function (pkgs, libPath, notOlderThan = NULL) {
                  notOlderThan = notOlderThan)
     names(ans) <- pkgs
     return(ans)
+  } else if (length(pkgs)==0)  {
+    return(character())
   }
   desc_path <- sprintf("%s/%s/DESCRIPTION", libPath, pkgs)
   if (!file.exists(desc_path)) {
@@ -208,16 +215,56 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
 
       whPkgsNeededFromCran <- whPkgsNeeded[!(packages %in% ghPackages)]
       whPkgsNeededGH <- gitHubPackages[pkgsOmitted]
-      message("Needing to install ", length(whPkgsNeededGH), " packages from GitHub.com")
-      message("Needing to install ", length(supposedToBe$instPkgs[whPkgsNeededFromCran]), " packages from CRAN.")
+      message("Needing to install ", length(whPkgsNeededGH), " packages from GitHub.com:\n",
+              "  ", paste(whPkgsNeededGH, collapse = ", "))
+      message("Needing to install ", length(supposedToBe$instPkgs[whPkgsNeededFromCran]),
+              " packages from MRAN or CRAN:\n",
+              "  ", paste(supposedToBe$instPkgs[whPkgsNeededFromCran], collapse = ", "))
       if(length(whPkgsNeededFromCran)) {
-        install.versions(supposedToBe$instPkgs[whPkgsNeededFromCran],
-                         supposedToBe$instVers[whPkgsNeededFromCran], dependencies = FALSE)
+          message("Installing from MRAN failed.\n",
+                  "Trying source installs from CRAN Archives")
+          avail <- available.packages()
+          browser()
+          wh <- avail[,"Package"] %in% supposedToBe[whPkgsNeededFromCran,"instPkgs"]
+          canInstDirectFromCRAN <- merge(
+            data.frame(avail[wh,c("Package", "Version"), drop = FALSE], stringsAsFactors = FALSE),
+            supposedToBe[whPkgsNeededFromCran,],
+            by.x = c("Package", "Version"), by.y = c("instPkgs", "instVers"))
+
+
+          if(nrow(canInstDirectFromCRAN)) {
+            install.packages(canInstDirectFromCRAN$Package,
+                             dependencies = FALSE, lib = libPath)
+          }
+
+          stillNotYet <- supposedToBe[whPkgsNeededFromCran,][!canInstDirectFromCRAN,]
+          packageURLs <- file.path(options()$repos[length(options()$repos)],"src/contrib/Archive",
+                                   stillNotYet[,"instPkgs"],
+                                   paste0(stillNotYet[,"instPkgs"],"_",
+                                          stillNotYet[,"instVers"],".tar.gz"))
+
+          lapply(packageURLs, function(pack) {
+            install.packages(pack, repos = NULL, type = "source", lib = libPath,
+                                      dependencies = FALSE)
+          })
+
+          # instReport <- tryCatch(install.versions(supposedToBe$instPkgs[whPkgsNeededFromCran],
+          #                  supposedToBe$instVers[whPkgsNeededFromCran], dependencies = FALSE),
+          #     error = function(x) FALSE)
+          # if(!instReport) {
+
+         # return(supposedToBe[whPkgsNeededFromCran,"Package"])
+        #}
       }
       if(length(whPkgsNeededGH)) {
         whPkgsNeededGHNames <- ghPackages[pkgsOmitted]
         lapply(whPkgsNeededGH, function(pkg) {
-          devtools::install_github(pkg, upgrade_dependencies = FALSE)
+          oldLibPaths <- .libPaths()
+          .libPaths(c(libPath, oldLibPaths))
+          devtools::install_github(pkg, upgrade_dependencies = FALSE, local = FALSE,
+                                   force = TRUE)
+          .libPaths(oldLibPaths)
+
         })
       }
     } else {
@@ -237,11 +284,12 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
 #'        installed version numbers. Defaults to \code{".packageVersions.txt"}.
 #' @param libPath The path to the local library where packages are installed.
 #'        Defaults to the .libPaths()[1]
-pkgSnapshot <- function(packageVersionFile, libPath) {
+#' @inheritParams Require
+pkgSnapshot <- function(packageVersionFile, libPath, notOlderThan = NULL) {
   if(missing(libPath)) libPath <- .libPaths()[1]
   if(missing(packageVersionFile)) packageVersionFile <- ".packageVersions.txt"
   instPkgs <- dir(libPath)
-  instVers <- installedVersions(instPkgs, libPath)
+  instVers <- installedVersions(instPkgs, libPath, notOlderThan = notOlderThan)
   # shas <- lapply(instVers, function(vers) {
   #   attr(vers, "SHA")
   # })
