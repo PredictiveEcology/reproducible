@@ -224,7 +224,6 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
           message("Installing from MRAN failed.\n",
                   "Trying source installs from CRAN Archives")
           avail <- available.packages()
-          browser()
           wh <- avail[,"Package"] %in% supposedToBe[whPkgsNeededFromCran,"instPkgs"]
           canInstDirectFromCRAN <- merge(
             data.frame(avail[wh,c("Package", "Version"), drop = FALSE], stringsAsFactors = FALSE),
@@ -237,11 +236,14 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
                              dependencies = FALSE, lib = libPath)
           }
 
-          stillNotYet <- supposedToBe[whPkgsNeededFromCran,][!canInstDirectFromCRAN,]
-          packageURLs <- file.path(options()$repos[length(options()$repos)],"src/contrib/Archive",
-                                   stillNotYet[,"instPkgs"],
-                                   paste0(stillNotYet[,"instPkgs"],"_",
-                                          stillNotYet[,"instVers"],".tar.gz"))
+          stillNotYet <- dplyr::anti_join(supposedToBe[whPkgsNeededFromCran,], canInstDirectFromCRAN,
+                                          by = c("instPkgs"="Package", "instVers"="Version"))
+          if(nrow(stillNotYet)) {
+            packageURLs <- file.path(options()$repos[length(options()$repos)],"src/contrib/Archive",
+                                     stillNotYet[,"instPkgs"],
+                                     paste0(stillNotYet[,"instPkgs"],"_",
+                                            stillNotYet[,"instVers"],".tar.gz"))
+          }
 
           lapply(packageURLs, function(pack) {
             install.packages(pack, repos = NULL, type = "source", lib = libPath,
