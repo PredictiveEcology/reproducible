@@ -41,9 +41,12 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
     packages[packages %in% githubPkgs] <- githubPkgNames
   }
   if(!dir.exists(libPath)) dir.create(libPath)
+
+  # Two parts -- one if there is a packageVersionFile -- This calls the external file installVersions
+  #           -- two if there is no packageVersionFile
   if(!missing(packageVersionFile)) {
     Sys.setlocale("LC_ALL", "C") # required to deal with non English characters in Author names
-    aa <- instPkgs(githubPkgs, packageVersionFile = packageVersionFile,
+    aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
                            libPath = libPath)
   } else {
     cacheRepo <- file.path(libPath, ".cache")
@@ -195,13 +198,14 @@ installedVersions <- function (pkgs, libPath, notOlderThan = NULL) {
 #' @param packageVersionFile Path to the package version file, defaults to
 #'        the \code{.packageVersions.txt}.
 #' @importFrom versions install.versions
-instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
+installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
                      libPath = .libPaths()[1]) {
+
   if(file.exists(packageVersionFile)) {
     message("Reading ", packageVersionFile)
-    instPkgs <- dir(libPath)
-    instVers <- installedVersions(instPkgs, libPath)
-    inst <- data.frame(instPkgs, instVers=unlist(instVers), stringsAsFactors = FALSE)
+    installVersions <- dir(libPath)
+    instVers <- installedVersions(installVersions, libPath)
+    inst <- data.frame(instPkgs=installVersions, instVers=unlist(instVers), stringsAsFactors = FALSE)
     supposedToBe <- read.table(packageVersionFile, header = TRUE, stringsAsFactors = FALSE)
     together <- merge(supposedToBe, inst, by="instPkgs")
     needInst1 <- setdiff(supposedToBe$instPkgs,inst$instPkgs)
@@ -233,7 +237,7 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
           tryCRANarchive <- dplyr::anti_join(data.frame(avail[wh,c("Package", "Version"), drop = FALSE], stringsAsFactors = FALSE),
                                              supposedToBe[whPkgsNeededFromCran,],
                                              by=c("Package"="instPkgs", "Version"="instVers"))
-          
+
 
           if(nrow(canInstDirectFromCRAN)) {
             install.packages(canInstDirectFromCRAN$Package,
@@ -242,7 +246,7 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
             actuallyInstalled <- data.frame(AP[(AP[,"Package"] %in% canInstDirectFromCRAN[,"Package"]),], stringsAsFactors = FALSE)
             failed <- rbind(failed, dplyr::anti_join(canInstDirectFromCRAN, actuallyInstalled, by = c("Package", "Version")))
           }
-          
+
           if(nrow(tryCRANarchive)) {
             packageURLs <- file.path(options()$repos[length(options()$repos)],"src/contrib/Archive",
                                      stillToInstall[,"Package"],
@@ -256,9 +260,12 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
             actuallyInstalled <- data.frame(AP[(AP[,"Package"] %in% canInstDirectFromCRAN[,"Package"]),], stringsAsFactors = FALSE)
             failed <- rbind(failed, dplyr::anti_join(canInstDirectFromCRAN, actuallyInstalled, by = c("Package", "Version")))
           }
-          
-          
-          
+
+          })
+                                      dependencies = FALSE)
+            install.packages(pack, repos = NULL, type = "source", lib = libPath,
+          lapply(packageURLs, function(pack) {
+
           # instReport <- tryCatch(install.versions(supposedToBe$instPkgs[whPkgsNeededFromCran],
           #                  supposedToBe$instVers[whPkgsNeededFromCran], dependencies = FALSE),
           #     error = function(x) FALSE)
@@ -288,7 +295,7 @@ instPkgs <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt"
 
 #' Take a snapshot of all the packages and version numbers
 #'
-#' This can be used later by \code{instPkgs} to install or re-install the correct versions.
+#' This can be used later by \code{installVersions} to install or re-install the correct versions.
 #'
 #' @export
 #' @param packageVersionFile A filename to save the packages and their currently

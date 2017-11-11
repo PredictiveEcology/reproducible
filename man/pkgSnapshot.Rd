@@ -4,7 +4,7 @@
 \alias{pkgSnapshot}
 \title{Take a snapshot of all the packages and version numbers}
 \usage{
-pkgSnapshot(packageVersionFile, libPath)
+pkgSnapshot(packageVersionFile, libPath, notOlderThan = NULL)
 }
 \arguments{
 \item{packageVersionFile}{A filename to save the packages and their currently
@@ -12,7 +12,9 @@ installed version numbers. Defaults to \code{".packageVersions.txt"}.}
 
 \item{libPath}{The path to the local library where packages are installed.
 Defaults to the .libPaths()[1]}
+
+\item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 }
 \description{
-This can be used later by \code{instPkgs} to install or re-install the correct versions.
+This can be used later by \code{installVersions} to install or re-install the correct versions.
 }
