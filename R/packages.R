@@ -42,6 +42,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   }
   if(!dir.exists(libPath)) dir.create(libPath)
   if(!missing(packageVersionFile)) {
+    Sys.setlocale("LC_ALL", "C") # required to deal with non English characters in Author names
     aa <- instPkgs(githubPkgs, packageVersionFile = packageVersionFile,
                            libPath = libPath)
   } else {
