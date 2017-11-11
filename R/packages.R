@@ -261,10 +261,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
             failed <- rbind(failed, dplyr::anti_join(canInstDirectFromCRAN, actuallyInstalled, by = c("Package", "Version")))
           }
 
-          })
-                                      dependencies = FALSE)
-            install.packages(pack, repos = NULL, type = "source", lib = libPath,
-          lapply(packageURLs, function(pack) {
 
           # instReport <- tryCatch(install.versions(supposedToBe$instPkgs[whPkgsNeededFromCran],
           #                  supposedToBe$instVers[whPkgsNeededFromCran], dependencies = FALSE),
