@@ -52,19 +52,22 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
     cacheRepo <- file.path(libPath, ".cache")
     deps <- unlist(Cache(tools::package_dependencies, packages, recursive = TRUE,
                          cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-
     if(length(githubPkgs)) {
       pkgPaths <- file.path(libPath, githubPkgNames)
       fileExists <- file.exists(pkgPaths)
       if(any(fileExists)) {
-        gitPkgDeps <- unlist(Cache(lapply, pkgPaths[fileExists], function(p) {
-          lapply(c("Imports", "Suggests", "Depends"), function(type) {
-            strsplit(desc::desc_get(key=type,  p), split = ",.{0,2} +")
-          })
-        }, cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-        gitPkgDeps <- unname(unlist(lapply(strsplit(gitPkgDeps, split = "\n| "), function(x) x[1])))
-        deps <- unique(c(deps, gitPkgDeps))
-        deps <- deps[deps != "R"]
+        if(!is.null(install_githubArgs$dependencies)) {
+          if(isTRUE(install_githubArgs$dependencies)) {
+            gitPkgDeps <- unlist(Cache(lapply, pkgPaths[fileExists], function(p) {
+              lapply(c("Imports", "Suggests", "Depends"), function(type) {
+                strsplit(desc::desc_get(key=type,  p), split = ",.{0,2} +")
+              })
+            }, cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+            gitPkgDeps <- unname(unlist(lapply(strsplit(gitPkgDeps, split = "\n| "), function(x) x[1])))
+            deps <- unique(c(deps, gitPkgDeps))
+            deps <- deps[deps != "R"]
+          }
+        }
       }
     }
     allPkgsNeeded <- unique(c(deps, packages))
@@ -78,9 +81,10 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
 
         oldLibPaths <- .libPaths()
         .libPaths(c(libPath, oldLibPaths))
+        args <- append(install_githubArgs,list(dependencies = FALSE, upgrade_dependencies = FALSE,
+                                               force = TRUE, local = FALSE)) # use force = TRUE because we have already eliminated
         sapply(gitPkgs, function(pk) {
-          args <- append(install_githubArgs,list(pk, dependencies = FALSE, upgrade_dependencies = FALSE,
-                                                 force = TRUE, local = FALSE)) # use force = TRUE because we have already eliminated
+          args <- append(args, list(pk))
           # the cases where we have the correct version; install_github uses a
           # local database hidden somewhere that won't let the same package be installed
           # twice, even if in different libPaths
@@ -104,8 +108,10 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
 
   }
 
-
+  oldLibPath <- .libPaths()
+  .libPaths(libPath)
   packagesLoaded <- lapply(packages, library, character.only = TRUE)
+  .libPaths(oldLibPath)
   return(invisible(packagesLoaded))
 }
 
@@ -217,6 +223,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     needInstalledVersions <- FALSE
     installedVersionsFile <- file.path(libPath, ".installedVersions.RDS")
     if (!file.exists(installedVersionsFile)) {
+      needSnapshot <- TRUE
       needInstalledVersions <- TRUE
     }
     if (file.exists(.snap)) {
@@ -239,6 +246,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       instVers <- readRDS(file = installedVersionsFile)
     }
 
+    instVers <- lapply(instVers, sub, pattern="\\r|\\n", replacement = "")
+    if(length(instVers)!=length(libPathListFiles)) stop("Package folder, ", .libPaths()[1],
+                                                        " has become corrupt. Please manually delete .snapshot.RDS and .installedVersions.RDS")
     inst <- data.frame(havePkgs=libPathListFiles, haveVers=unlist(instVers), stringsAsFactors = FALSE)
     supposedToBe <- read.table(packageVersionFile, header = TRUE, stringsAsFactors = FALSE)
     together <- merge(supposedToBe, inst, by.x="instPkgs",by.y="havePkgs")
@@ -249,7 +259,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     whPkgsNeeded <- rbind(wh1, wh2[,c("instPkgs","instVers")]) #sort(unique(c(wh1[,"instPkgs"],wh2[,"instPkgs"])))
     if(nrow(whPkgsNeeded)) {
       packages <- whPkgsNeeded[,"instPkgs"]
-      ghPackages <- sapply(strsplit(sapply(strsplit(gitHubPackages, split="/"), function(x) x[2]), split = "@"),function(x) x[1])
+      if(length(gitHubPackages)) {
+        ghPackages <- sapply(strsplit(sapply(strsplit(gitHubPackages, split="/"), function(x) x[2]), split = "@"),function(x) x[1])
+      } else {
+        ghPackages <- character(0)
+      }
       pkgsOmitted <- (ghPackages %in% packages)
 
       whPkgsNeededFromCran <- whPkgsNeeded[!(packages %in% ghPackages),]

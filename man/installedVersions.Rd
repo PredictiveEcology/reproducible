@@ -4,7 +4,7 @@
 \alias{installedVersions}
 \title{Determine versions all installed pacakges}
 \usage{
-installedVersions(pkgs, libPath, notOlderThan = NULL)
+installedVersions(pkgs, libPath)
 }
 \description{
 This code is taken very directly from the \code{installed.versions} function in the

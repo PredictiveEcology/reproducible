@@ -5,7 +5,7 @@
 \title{Install exact package versions from a package version text file & GitHub}
 \usage{
 installVersions(gitHubPackages, packageVersionFile = ".packageVersions.txt",
-  libPath = .libPaths()[1])
+  libPath = .libPaths()[1], notOlderThan = NULL)
 }
 \arguments{
 \item{gitHubPackages}{Character vectors indicating repository/packageName@branch}
@@ -15,10 +15,17 @@ the \code{.packageVersions.txt}.}
 
 \item{libPath}{The library path where all packages should be installed, and looked for to load
 (i.e., call \code{library})}
+
+\item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 }
 \description{
-This uses MRAN for remote repository, accessed via \code{versions::install.versions}.
+This uses CRAN, CRAN archives, or MRAN (accessed via \code{versions::install.versions})
+for remote repositories.
 This will attempt to install all packages in the \code{packageVersionFile},
 with their exact version described in that file. For GitHub packages, it will
 use \code{\link[devtools]{install_github}}
+}
+\details{
+Because of potential conflicts with loaded packages, this function will run
+\code{install.packages} in a separate R process.
 }
