@@ -1,5 +1,11 @@
 test_that("package-related functions work", {
 
+  repos <- getOption("repos")
+  if ( is.null(repos) | any(repos == "") ) {
+    repos <- "https://cran.rstudio.com"
+    options(repos = repos)
+  }
+
   packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
   Require("crayon", libPath = packageDir)
   expect_true(any(grepl(pattern = "package:crayon", search())))
