@@ -62,7 +62,6 @@
 #' Require(c("cranlogs", "covr"), libPath = tempPkgFolder)
 #'
 #' }
-#'
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
                     notOlderThan = NULL, install_githubArgs = list(),
                     install.packagesArgs = list()) {
