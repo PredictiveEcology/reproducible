@@ -288,36 +288,49 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
               " packages from MRAN or CRAN:\n",
               "  ", neededCRANpkgs)
       }
-      failed <- data.frame(Package = character(), Version = character())
+      failed <- data.frame(instPkgs = character(), instVers = character())
       if(nrow(whPkgsNeededFromCran)) {
         avail <- available.packages()
         wh <- avail[,"Package"] %in% whPkgsNeededFromCran[,"instPkgs"]
-        canInstDirectFromCRAN <- merge(
-          data.frame(avail[wh,c("Package", "Version"), drop = FALSE], stringsAsFactors = FALSE),
-          whPkgsNeededFromCran,
-          by.x = c("Package", "Version"), by.y = c("instPkgs", "instVers"))
+        whPkgsAvailFromCran <- data.frame(avail[wh,c("Package", "Version"), drop = FALSE], stringsAsFactors = FALSE)
 
-        tryCRANarchive <- dplyr::anti_join(whPkgsNeededFromCran,
-                                           data.frame(avail[wh,c("Package", "Version"), drop = FALSE], stringsAsFactors = FALSE),
-                                           by=c("instPkgs"="Package", "instVers"="Version"))
+        colnames(whPkgsAvailFromCran) <- c("instPkgs", "instVers")
+
+        setDT(whPkgsAvailFromCran)
+        setDT(whPkgsNeededFromCran)
+
+        tryCRANarchive <- whPkgsNeededFromCran[!whPkgsAvailFromCran, on = c("instPkgs", "instVers")]
+        canInstDirectFromCRAN <- whPkgsAvailFromCran[whPkgsNeededFromCran, nomatch=0, on = c("instPkgs", "instVers")]
 
         if(nrow(canInstDirectFromCRAN)) {
-          lapply(canInstDirectFromCRAN$Package, function(pkg){
+          repos <- getOption("repos")
+          if ( is.null(repos) | any(repos == "") ) {
+            repos <- "https://cran.rstudio.com"
+          }
+          lapply(canInstDirectFromCRAN$instPkgs, function(pkg){
             system(paste0(file.path(R.home(), "bin", "R"), " --vanilla -e do.call(install.packages,list('",pkg,
-                          "',lib='",libPath,"',dependencies=FALSE,repos='",options()$repos,"'))"), wait=TRUE)
+                          "',lib='",libPath,"',dependencies=FALSE,repos='",repos,"'))"), wait=TRUE)
 
           })
 
           AP <- installed.packages(lib.loc = libPath)
-          actuallyInstalled <- data.frame(AP[(AP[,"Package"] %in% canInstDirectFromCRAN[,"Package"]),,drop=FALSE], stringsAsFactors = FALSE)
-          failed <- rbind(failed, dplyr::anti_join(canInstDirectFromCRAN, actuallyInstalled, by = c("Package", "Version")))
+          actuallyInstalled <- data.table(AP[(AP[,"Package"] %in% canInstDirectFromCRAN$instPkgs),
+                                             c("Package", "Version"),drop=FALSE])
+          setnames(actuallyInstalled, old = c("Package", "Version"), new= c("instPkgs", "instVers"))
+
+          setDT(actuallyInstalled)
+          failed <- rbind(failed, canInstDirectFromCRAN[actuallyInstalled, nomatch=0, on = c("instPkgs", "instVers")])
         }
 
         if(nrow(tryCRANarchive)) {
-          packageURLs <- file.path(options()$repos[length(options()$repos)],"src/contrib/Archive",
-                                   tryCRANarchive[,"instPkgs"],
-                                   paste0(tryCRANarchive[,"instPkgs"],"_",
-                                          tryCRANarchive[,"instVers"],".tar.gz"))
+          repos <- getOption("repos")
+          if ( is.null(repos) | any(repos == "") ) {
+            repos <- "https://cran.rstudio.com"
+          }
+          packageURLs <- file.path(repos[length(repos)],"src/contrib/Archive",
+                                   tryCRANarchive$instPkgs,
+                                   paste0(tryCRANarchive$instPkgs,"_",
+                                          tryCRANarchive$instVers,".tar.gz"))
 
           lapply(packageURLs, function(pkg){
             system(paste0(file.path(R.home(), "bin", "R"), " --vanilla -e install.packages('",pkg,
@@ -326,8 +339,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           })
 
           AP <- installed.packages(lib.loc = libPath)
-          actuallyInstalled <- data.frame(AP[(AP[,"Package"] %in% tryCRANarchive[,"instPkgs"]),,drop=FALSE], stringsAsFactors = FALSE)
-          failed <- rbind(failed, dplyr::anti_join(tryCRANarchive, actuallyInstalled, by = c("instPkgs"="Package", "instVers"="Version")))
+          actuallyInstalled <- data.table(AP[(AP[,"Package"] %in% tryCRANarchive$instPkgs),c("Package", "Version"),drop=FALSE])
+          setnames(actuallyInstalled, old = c("Package", "Version"), new = c("instPkgs", "instVers"))
+          failed <- rbind(failed, tryCRANarchive[!actuallyInstalled, on = c("instPkgs", "instVers")])
         }
 
         if(nrow(failed)) {
