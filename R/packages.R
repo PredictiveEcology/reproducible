@@ -1,8 +1,9 @@
-#' Install and load packages, optionally with specific package versions
+#' Repeatability-safe install and load packages, optionally with specific versions
 #'
 #' This is an "all in one" function that will run \code{install.packages} for
 #' CRAN packages, \code{devtools::install_github} for GitHub.com packages and
-#' \code{versions::install.versions} if there is a \code{packageVersionFile} supplied.
+#' will install specific versions of each package if
+#' there is a \code{packageVersionFile} supplied.
 #' Plus, when \code{packages} is provided as a character vector, or a
 #' \code{packageVersionFile} is supplied, all package dependencies
 #' will be first assessed for \code{unique(dependencies)} so the same package is
@@ -30,8 +31,38 @@
 #' @param libPath The library path where all packages should be installed, and looked for to load
 #'        (i.e., call \code{library})
 #' @inheritParams Cache
+#' @param notOlderThan Time or Date. The \code{Cache} is used internally for
+#'                     \code{tools::package_dependencies} and for already installed packages that
+#'                     came from github. To purge the cache: \code{notOlderThan = Sys.time()}
 #' @param install_githubArgs List of optional named arguments, passed to install_github
 #' @param install.packagesArgs List of optional named arguments, passed to install.packages
+#'
+#' @examples
+#' \dontrun{
+#'
+#' # simple usage, like conditional install.packages then library
+#' Require("stats") # analogous to require(stats), but slower because it checks for
+#'                  #   pkg dependencies, and installs them, if missing
+#' tempPkgFolder <- file.path(tempdir(), "Packages")
+#' Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
+#'
+#' # make a package version snapshot
+#' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
+#' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+#'
+#' Require("crayon", packageVersionFile = packageVersionFile)
+#'
+#' # Create mismatching versions -- desired version is older than current installed
+#' # This will install the older version, overwriting the newer version
+#' desiredVersion <- data.frame(instPkgs="crayon", instVers = "1.3.2", stringsAsFactors = FALSE)
+#' write.table(file = packageVersionFile, desiredVersion, row.names = FALSE)
+#' Require("crayon", packageVersionFile = packageVersionFile)
+#'
+#' # Mutual dependencies, only installs once -- e.g., httr
+#' Require(c("cranlogs", "covr"), libPath = tempPkgFolder)
+#'
+#' }
+#'
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
                     notOlderThan = NULL, install_githubArgs = list(),
                     install.packagesArgs = list()) {
@@ -41,13 +72,14 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
     packages[packages %in% githubPkgs] <- githubPkgNames
   }
   if(!dir.exists(libPath)) dir.create(libPath)
+  libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
 
   # Two parts -- one if there is a packageVersionFile -- This calls the external file installVersions
   #           -- two if there is no packageVersionFile
   if(!missing(packageVersionFile)) {
     Sys.setlocale("LC_ALL", "C") # required to deal with non English characters in Author names
     aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
-                          libPath = libPath, notOlderThan = notOlderThan)
+                          libPath = libPath)
   } else {
     cacheRepo <- file.path(libPath, ".cache")
     deps <- unlist(Cache(tools::package_dependencies, packages, recursive = TRUE,
@@ -82,7 +114,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
         oldLibPaths <- .libPaths()
         .libPaths(c(libPath, oldLibPaths))
         args <- append(install_githubArgs,list(dependencies = FALSE, upgrade_dependencies = FALSE,
-                                               force = TRUE, local = FALSE)) # use force = TRUE because we have already eliminated
+                                               force = TRUE, local = FALSE)) # use xforce = TRUE because we have already eliminated
         sapply(gitPkgs, function(pk) {
           args <- append(args, list(pk))
           # the cases where we have the correct version; install_github uses a
@@ -100,7 +132,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
       }
       # RSTudio won't install packages if they are loaded. THe algorithm is faulty and it won't let things install even when they are not loaded.
       #do.call(install.packages, append(list(needInstall, lib = libPath, dependencies = FALSE), install.packagesArgs))
-      repos <- getOption("repos")
+      repos <- getOption("repos")[1]
       if ( is.null(repos) | any(repos == "") ) {
         repos <- "https://cran.rstudio.com"
       }
@@ -116,8 +148,19 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
 
   oldLibPath <- .libPaths()
   .libPaths(libPath)
-  packagesLoaded <- lapply(packages, library, character.only = TRUE)
+  packagesLoaded <- suppressMessages(unlist(lapply(packages, function(p) {
+    try(require(p, character.only = TRUE), silent = TRUE)
+    })))
   .libPaths(oldLibPath)
+  if(any(!packagesLoaded)) {
+    message("Simultaneous package versions being used. Can only load first version(s) loaded in this session:\n",
+            packages[!packagesLoaded])
+    packagesLoaded2 <- unlist(lapply(packages[!packagesLoaded], function(p) {
+      try(require(p, character.only = TRUE))
+    }))
+
+
+  }
   return(invisible(packagesLoaded))
 }
 
@@ -133,7 +176,10 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
 #' @param v1 A vector
 #' @param v2 A vector
 #'
-#' @export
+#' @examples
+#' a <- c(NA, 1, 2, NA)
+#' b <- c(1, NA, 2, NA)
+#' compareNA(a,b)
 compareNA <- function(v1,v2) {
   same <- (v1 == v2)  |  (is.na(v1) & is.na(v2))
   same[is.na(same)] <- FALSE
@@ -149,6 +195,11 @@ compareNA <- function(v1,v2) {
 #' Invisibly the new \code{.libPaths()}
 #' @param libPath A path that will be the new .libPaths()[1]
 #' @export
+#' @examples
+#' \dontrun{
+#' newLibPaths("testPackages")
+#' .libPaths() # new .libPaths
+#' }
 newLibPaths <- function(libPath) {
   .libPaths(.libPaths()[length(.libPaths())])
   suppressWarnings(dir.create(libPath))
@@ -168,6 +219,8 @@ newLibPaths <- function(libPath) {
 #' @export
 #' @param pkgs Character vector of packages to determine which version is installed in the \code{libPath}.
 #' @inheritParams installVersions
+#' @examples
+#' installedVersions("reproducible", .libPaths()[1])
 installedVersions <- function (pkgs, libPath) {
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()[1L]
@@ -192,12 +245,6 @@ installedVersions <- function (pkgs, libPath) {
     lines <- strsplit(lines, split = "\n")[[1]];
     vers_line <- lines[grep("^Version: *", lines)]
     vers <- gsub("Version: ", "", vers_line)
-
-    # sha_line <- lines[grep("^RemoteSha: *", lines)]
-    # if(length(sha_line)) {
-    #   sha <- gsub("RemoteSha: ", "", sha_line)
-    #   attr(vers, "SHA") <- sha
-    # }
     return(vers)
   }
 }
@@ -208,7 +255,8 @@ installedVersions <- function (pkgs, libPath) {
 #' for remote repositories.
 #' This will attempt to install all packages in the \code{packageVersionFile},
 #' with their exact version described in that file. For GitHub packages, it will
-#' use \code{\link[devtools]{install_github}}
+#' use \code{\link[devtools]{install_github}}. This will be called internally by
+#' \code{Require}, and so often doesn't need to be used by a user.
 #'
 #' Because of potential conflicts with loaded packages, this function will run
 #' \code{install.packages} in a separate R process.
@@ -221,10 +269,30 @@ installedVersions <- function (pkgs, libPath) {
 #' @importFrom versions install.versions
 #' @importFrom data.table setDT data.table setnames
 #' @importFrom utils read.table available.packages installed.packages
+#' @examples
+#' \dontrun{
+#' # requires the packageVersionFile -- this doesn't work -- safer to use Require
+#' installVersions("PredictiveEcology/reproducible@development")
+#'
+#' # make a package version snapshot
+#' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
+#' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+#'
+#' tempPkgFolder <- file.path(tempdir(), "Packages")
+#' Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
+#'
+#' # install a specific version
+#' # make a package version snapshot
+#' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
+#' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+#'
+#' installVersions("crayon", packageVersionFile = packageVersionFile)
+#'
+#' }
 installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
-                            libPath = .libPaths()[1], notOlderThan = NULL) {
-
+                            libPath = .libPaths()[1]) {
   if(file.exists(packageVersionFile)) {
+    libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
     message("Reading ", packageVersionFile)
     libPathListFiles <- dir(libPath)
     allPkgsDESC <- file.info(file.path(libPath, libPathListFiles, "DESCRIPTION"))
@@ -303,7 +371,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         canInstDirectFromCRAN <- whPkgsAvailFromCran[whPkgsNeededFromCran, nomatch=0, on = c("instPkgs", "instVers")]
 
         if(nrow(canInstDirectFromCRAN)) {
-          repos <- getOption("repos")
+          repos <- getOption("repos")[1]
           if ( is.null(repos) | any(repos == "") ) {
             repos <- "https://cran.rstudio.com"
           }
@@ -323,7 +391,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         }
 
         if(nrow(tryCRANarchive)) {
-          repos <- getOption("repos")
+          repos <- getOption("repos")[1]
           if ( is.null(repos) | any(repos == "") ) {
             repos <- "https://cran.rstudio.com"
           }
@@ -345,8 +413,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         }
 
         if(nrow(failed)) {
-          message("Trying MRAN install of ",failed[,"Package"])
-          multiSource <- paste0(file.path(R.home(), "bin", "R"), " --vanilla -e versions::install.versions('",failed[,"Package"],"','",failed[,"Version"],
+          message("Trying MRAN install of ",failed$Package)
+          multiSource <- paste0(file.path(R.home(), "bin", "R"), " --vanilla -e versions::install.versions('",
+                                failed$Package,"','",failed$Version,
                                 "',lib='",libPath,"',dependencies=FALSE,type='source')")
           lapply(multiSource, system, wait=TRUE)
         }
@@ -368,7 +437,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       message("All packages are correct versions")
     }
   } else {
-    message("There is no package version file named ", packageVersionFile)
+    message("There is no package version file named ", packageVersionFile, ".\n",
+            "No package versions installed.")
   }
 }
 
@@ -381,20 +451,22 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'        installed version numbers. Defaults to \code{".packageVersions.txt"}.
 #' @param libPath The path to the local library where packages are installed.
 #'        Defaults to the .libPaths()[1]
+#' @details
+#' A file is written with the package names and versions of all packages within \code{libPath}.
+#' This can later be passed to \code{Require}.
+#'
 #' @inheritParams Require
 #' @importFrom utils write.table
-pkgSnapshot <- function(packageVersionFile, libPath, notOlderThan = NULL) {
+#' @examples
+#' pkgSnapFile <- tempfile()
+#' pkgSnapshot(pkgSnapFile, .libPaths()[1])
+#' data.table::fread(pkgSnapFile)
+#'
+pkgSnapshot <- function(packageVersionFile, libPath) {
   if(missing(libPath)) libPath <- .libPaths()[1]
   if(missing(packageVersionFile)) packageVersionFile <- ".packageVersions.txt"
   instPkgs <- dir(libPath)
-  instVers <- installedVersions(instPkgs)
-  # shas <- lapply(instVers, function(vers) {
-  #   attr(vers, "SHA")
-  # })
-  # shas <- shas[!unlist(lapply(shas, is.null))]
-  # if(length(shas)) {
-  #   instVers[names(shas)] <- shas
-  # }
+  instVers <- installedVersions(instPkgs, libPath = libPath)
   inst <- data.frame(instPkgs, instVers=unlist(instVers), stringsAsFactors = FALSE)
   write.table(inst, file = packageVersionFile, row.names = FALSE)
 }

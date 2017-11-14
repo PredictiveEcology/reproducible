@@ -5,7 +5,7 @@
 \title{Install exact package versions from a package version text file & GitHub}
 \usage{
 installVersions(gitHubPackages, packageVersionFile = ".packageVersions.txt",
-  libPath = .libPaths()[1], notOlderThan = NULL)
+  libPath = .libPaths()[1])
 }
 \arguments{
 \item{gitHubPackages}{Character vectors indicating repository/packageName@branch}
@@ -15,17 +15,37 @@ the \code{.packageVersions.txt}.}
 
 \item{libPath}{The library path where all packages should be installed, and looked for to load
 (i.e., call \code{library})}
-
-\item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 }
 \description{
 This uses CRAN, CRAN archives, or MRAN (accessed via \code{versions::install.versions})
 for remote repositories.
 This will attempt to install all packages in the \code{packageVersionFile},
 with their exact version described in that file. For GitHub packages, it will
-use \code{\link[devtools]{install_github}}
+use \code{\link[devtools]{install_github}}. This will be called internally by
+\code{Require}, and so often doesn't need to be used by a user.
 }
 \details{
 Because of potential conflicts with loaded packages, this function will run
 \code{install.packages} in a separate R process.
+}
+\examples{
+\dontrun{
+# requires the packageVersionFile -- this doesn't work -- safer to use Require
+installVersions("PredictiveEcology/reproducible@development")
+
+# make a package version snapshot
+packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
+pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+
+tempPkgFolder <- file.path(tempdir(), "Packages")
+Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
+
+# install a specific version
+# make a package version snapshot
+packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
+pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+
+installVersions("crayon", packageVersionFile = packageVersionFile)
+
+}
 }

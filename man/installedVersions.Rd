@@ -20,3 +20,6 @@ to readLines for speed. It will be anywhere from 2x to 10x faster than the \code
 case) than \code{utils::installed.packages}
 especially if only a subset of "all" packages in libPath are desired.
 }
+\examples{
+installedVersions("reproducible", .libPaths()[1])
+}

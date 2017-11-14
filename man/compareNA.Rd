@@ -16,3 +16,8 @@ Copied from \url{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_o
 This function returns TRUE wherever elements are the same, including NA's,
 and false everywhere else.
 }
+\examples{
+a <- c(NA, 1, 2, NA)
+b <- c(1, NA, 2, NA)
+compareNA(a,b)
+}

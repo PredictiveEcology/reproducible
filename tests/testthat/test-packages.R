@@ -1,6 +1,6 @@
 test_that("package-related functions work", {
 
-  repos <- getOption("repos")
+  repos <- getOption("repos")[1]
   if ( is.null(repos) | any(repos == "") ) {
     repos <- "https://cran.rstudio.com"
     options(repos = repos)
@@ -19,6 +19,7 @@ test_that("package-related functions work", {
   pkgSnapshot(libPath=packageDir, packageVersionFile)
   expect_true(file.exists(packageVersionFile))
 
+  # test wrong version
   aa <- data.frame(instPkgs="crayon", instVers = "1.3.2", stringsAsFactors = FALSE)
   write.table(file = packageVersionFile, aa, row.names = FALSE)
 

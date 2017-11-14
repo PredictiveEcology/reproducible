@@ -2,7 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{Require}
 \alias{Require}
-\title{Install and load packages, optionally with specific package versions}
+\title{Repeatability-safe install and load packages, optionally with specific versions}
 \usage{
 Require(packages, packageVersionFile, libPath = .libPaths()[1],
   notOlderThan = NULL, install_githubArgs = list(),
@@ -18,7 +18,9 @@ calls with \code{versions::install.versions}}
 \item{libPath}{The library path where all packages should be installed, and looked for to load
 (i.e., call \code{library})}
 
-\item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
+\item{notOlderThan}{Time or Date. The \code{Cache} is used internally for
+\code{tools::package_dependencies} and for already installed packages that
+came from github. To purge the cache: \code{notOlderThan = Sys.time()}}
 
 \item{install_githubArgs}{List of optional named arguments, passed to install_github}
 
@@ -27,7 +29,8 @@ calls with \code{versions::install.versions}}
 \description{
 This is an "all in one" function that will run \code{install.packages} for
 CRAN packages, \code{devtools::install_github} for GitHub.com packages and
-\code{versions::install.versions} if there is a \code{packageVersionFile} supplied.
+will install specific versions of each package if
+there is a \code{packageVersionFile} supplied.
 Plus, when \code{packages} is provided as a character vector, or a
 \code{packageVersionFile} is supplied, all package dependencies
 will be first assessed for \code{unique(dependencies)} so the same package is
@@ -44,4 +47,31 @@ dramatically.
 It will not take into account version numbers for this
 caching step. If package versions are updated manually by the user, then this cached
 element should be wiped, using \code{notOlderThan = Sys.time()}.
+}
+\examples{
+\dontrun{
+
+# simple usage, like conditional install.packages then library
+Require("stats") # analogous to require(stats), but slower because it checks for
+                 #   pkg dependencies, and installs them, if missing
+tempPkgFolder <- file.path(tempdir(), "Packages")
+Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
+
+# make a package version snapshot
+packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
+pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+
+Require("crayon", packageVersionFile = packageVersionFile)
+
+# Create mismatching versions -- desired version is older than current installed
+# This will install the older version, overwriting the newer version
+desiredVersion <- data.frame(instPkgs="crayon", instVers = "1.3.2", stringsAsFactors = FALSE)
+write.table(file = packageVersionFile, desiredVersion, row.names = FALSE)
+Require("crayon", packageVersionFile = packageVersionFile)
+
+# Mutual dependencies, only installs once -- e.g., httr
+Require(c("cranlogs", "covr"), libPath = tempPkgFolder)
+
+}
+
 }

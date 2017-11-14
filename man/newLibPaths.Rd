@@ -16,3 +16,9 @@ Invisibly the new \code{.libPaths()}
 This will remove all but the top level of .libPaths(), which should be the base packages
 installed with R, and adds a second directory, the \code{libPath}.
 }
+\examples{
+\dontrun{
+newLibPaths("testPackages")
+.libPaths() # new .libPaths
+}
+}
