@@ -12,7 +12,7 @@ compareNA(v1, v2)
 \item{v2}{A vector}
 }
 \description{
-Copied from \link{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.
+Copied from \url{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.
 This function returns TRUE wherever elements are the same, including NA's,
 and false everywhere else.
 }

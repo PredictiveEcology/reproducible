@@ -100,8 +100,14 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
       }
       # RSTudio won't install packages if they are loaded. THe algorithm is faulty and it won't let things install even when they are not loaded.
       #do.call(install.packages, append(list(needInstall, lib = libPath, dependencies = FALSE), install.packagesArgs))
+      repos <- getOption("repos")
+      if ( is.null(repos) | any(repos == "") ) {
+        repos <- "https://cran.rstudio.com"
+      }
       lapply(needInstall, function(pkg){
-        system(paste0(file.path(R.home(), "bin", "R"), " --vanilla -e do.call(install.packages,list('",pkg,"',lib='",libPath,"',dependencies=FALSE,repos='",options()$repos,"'))"), wait=TRUE)
+        system(paste0(file.path(R.home(), "bin", "R"),
+                      " --vanilla -e do.call(install.packages,list('",pkg,"',lib='",
+                      libPath,"',dependencies=FALSE,repos='",repos,"'))"), wait=TRUE)
 
       })
     }
@@ -119,7 +125,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
 
 #' NA-aware comparison of two vectors
 #'
-#' Copied from \link{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.
+#' Copied from \url{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.
 #' This function returns TRUE wherever elements are the same, including NA's,
 #' and false everywhere else.
 #'
@@ -160,6 +166,8 @@ newLibPaths <- function(libPath) {
 #' case) than \code{utils::installed.packages}
 #' especially if only a subset of "all" packages in libPath are desired.
 #' @export
+#' @param pkgs Character vector of packages to determine which version is installed in the \code{libPath}.
+#' @inheritParams installVersions
 installedVersions <- function (pkgs, libPath) {
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()[1L]
@@ -211,6 +219,8 @@ installedVersions <- function (pkgs, libPath) {
 #' @param packageVersionFile Path to the package version file, defaults to
 #'        the \code{.packageVersions.txt}.
 #' @importFrom versions install.versions
+#' @importFrom data.table setDT data.table setnames
+#' @importFrom utils read.table available.packages installed.packages
 installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
                             libPath = .libPaths()[1], notOlderThan = NULL) {
 
@@ -358,6 +368,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #' @param libPath The path to the local library where packages are installed.
 #'        Defaults to the .libPaths()[1]
 #' @inheritParams Require
+#' @importFrom utils write.table
 pkgSnapshot <- function(packageVersionFile, libPath, notOlderThan = NULL) {
   if(missing(libPath)) libPath <- .libPaths()[1]
   if(missing(packageVersionFile)) packageVersionFile <- ".packageVersions.txt"

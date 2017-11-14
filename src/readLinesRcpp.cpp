@@ -8,14 +8,14 @@ using namespace Rcpp;
 //' @title
 //' Alternative to readLines that is faster
 //' @description
-//' This alternative is from \link{https://gist.github.com/hadley/6353939}
+//' This alternative is from \url{https://gist.github.com/hadley/6353939}
 //'
-//' @param x Integer Vector
+//' @param path Path to text file to read.
 //' @return
-//' A logical vector, as per \code{duplicated}
+//' Similar to \code{readLines}, except with explicit \code{\\n} embedded.
 //'
 //' @export
-//' @rdname duplicated
+//' @rdname readLinesRcpp
 // [[Rcpp::export]]
 CharacterVector readLinesRcpp(std::string path) {
   std::ifstream in(path.c_str());

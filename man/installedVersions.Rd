@@ -6,6 +6,12 @@
 \usage{
 installedVersions(pkgs, libPath)
 }
+\arguments{
+\item{pkgs}{Character vector of packages to determine which version is installed in the \code{libPath}.}
+
+\item{libPath}{The library path where all packages should be installed, and looked for to load
+(i.e., call \code{library})}
+}
 \description{
 This code is taken very directly from the \code{installed.versions} function in the
 \code{versions} package, but uses an \code{Rcpp} alternative

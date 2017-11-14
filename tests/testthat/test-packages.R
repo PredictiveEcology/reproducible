@@ -1,10 +1,5 @@
 test_that("package-related functions work", {
 
-  # These tests don't work on Rstudio, but they do work in R
-  ## don't bother running checks if they'll all fail due to .gitconfig SSH issue
-  # .libPaths(c(tempdir(), .libPaths()))
-  # .libPaths(tempdir())
-  #newLibPaths("C:/Eliot/R/win-library/3.4")
   packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
   Require("crayon", libPath = packageDir)
   expect_true(any(grepl(pattern = "package:crayon", search())))

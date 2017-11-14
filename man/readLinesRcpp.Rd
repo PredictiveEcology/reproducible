@@ -7,11 +7,11 @@
 readLinesRcpp(path)
 }
 \arguments{
-\item{x}{Integer Vector}
+\item{path}{Path to text file to read.}
 }
 \value{
-A logical vector, as per \code{duplicated}
+Similar to \code{readLines}, except with explicit \code{\\n} embedded.
 }
 \description{
-This alternative is from \link{https://gist.github.com/hadley/6353939}
+This alternative is from \url{https://gist.github.com/hadley/6353939}
 }
