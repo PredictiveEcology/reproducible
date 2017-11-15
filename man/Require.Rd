@@ -73,5 +73,4 @@ Require("crayon", packageVersionFile = packageVersionFile)
 Require(c("cranlogs", "covr"), libPath = tempPkgFolder)
 
 }
-
 }

@@ -137,7 +137,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
       }
       lapply(needInstall, function(pkg){
         system(paste0(file.path(R.home(), "bin", "R"),
-                      " --vanilla -e \"do.call(install.packages,list('",pkg,"',lib='",
+                      " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,"',lib='",
                       libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
 
       })
@@ -375,7 +375,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
             repos <- "https://cran.rstudio.com"
           }
           lapply(canInstDirectFromCRAN$instPkgs, function(pkg){
-            system(paste0(file.path(R.home(), "bin", "R"), " --vanilla -e \"do.call(install.packages,list('",pkg,
+            system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,
                           "',lib='",libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
 
           })
@@ -400,7 +400,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                           tryCRANarchive$instVers,".tar.gz"))
 
           lapply(packageURLs, function(pkg){
-            system(paste0(file.path(R.home(), "bin", "R"), " --vanilla -e \"install.packages('",pkg,
+            system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"install.packages('",pkg,
                           "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
 
           })
@@ -413,7 +413,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
         if(nrow(failed)) {
           message("Trying MRAN install of ",paste(failed$instPkgs, collapse=", "))
-          multiSource <- paste0(file.path(R.home(), "bin", "R"), " --vanilla -e \"versions::install.versions('",
+          multiSource <- paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"versions::install.versions('",
                                 failed$instPkgs,"','",failed$instVers,
                                 "',lib='",libPath,"',dependencies=FALSE,type='source')\"")
           lapply(multiSource, system, wait=TRUE)
