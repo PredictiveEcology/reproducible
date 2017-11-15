@@ -386,11 +386,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           setnames(actuallyInstalled, old = c("Package", "Version"), new= c("instPkgs", "instVers"))
 
           setDT(actuallyInstalled)
-          failed <- rbind(failed, canInstDirectFromCRAN[actuallyInstalled, nomatch=0, on = c("instPkgs", "instVers")])
+          failed <- rbind(failed, canInstDirectFromCRAN[!actuallyInstalled, on = c("instPkgs", "instVers")])
         }
 
         if(nrow(tryCRANarchive)) {
-          repos <- getOption("repos")[1]
+          repos <- getOption("repos")
           if ( is.null(repos) | any(repos == "") ) {
             repos <- "https://cran.rstudio.com"
           }
@@ -412,10 +412,10 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         }
 
         if(nrow(failed)) {
-          message("Trying MRAN install of ",failed$Package)
-          multiSource <- paste0(file.path(R.home(), "bin", "R"), " --vanilla -e versions::install.versions('",
-                                failed$Package,"','",failed$Version,
-                                "',lib='",libPath,"',dependencies=FALSE,type='source')")
+          message("Trying MRAN install of ",paste(failed$instPkgs, collapse=", "))
+          multiSource <- paste0(file.path(R.home(), "bin", "R"), " --vanilla -e \"versions::install.versions('",
+                                failed$instPkgs,"','",failed$instVers,
+                                "',lib='",libPath,"',dependencies=FALSE,type='source')\"")
           lapply(multiSource, system, wait=TRUE)
         }
 
