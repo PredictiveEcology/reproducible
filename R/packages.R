@@ -331,6 +331,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     together <- merge(supposedToBe, inst, by.x="instPkgs",by.y="havePkgs")
     needPkgs <- setdiff(supposedToBe$instPkgs,inst$havePkgs)
     needVers <- which(!compareNA(together$instVers, together$haveVers))
+    needVers <- needVers[together$instVers[needVers] >= together$haveVers[needVers]]
     wh1 <- supposedToBe[which(supposedToBe$instPkgs %in% needPkgs),]
     wh2 <- together[needVers,]
     whPkgsNeeded <- rbind(wh1, wh2[,c("instPkgs","instVers")]) #sort(unique(c(wh1[,"instPkgs"],wh2[,"instPkgs"])))
@@ -394,7 +395,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           if ( is.null(repos) | any(repos == "") ) {
             repos <- "https://cran.rstudio.com"
           }
-          packageURLs <- file.path(repos[length(repos)],"src/contrib/Archive",
+          packageURLs <- file.path(repos["CRAN"],"src/contrib/Archive",
                                    tryCRANarchive$instPkgs,
                                    paste0(tryCRANarchive$instPkgs,"_",
                                           tryCRANarchive$instVers,".tar.gz"))
@@ -412,9 +413,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
         if(nrow(failed)) {
           message("Trying MRAN install of ",paste(failed$instPkgs, collapse=", "))
-          browser()
           type <- if(.Platform$OS.type=="windows") "win.binary" else "source"
-          #suffix <- if(.Platform$OS.type=="windows") ".zip" else ".tar.gz"
 
           multiSource <- paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"versions::install.versions('",
                                 failed$instPkgs,"','",failed$instVers,
