@@ -398,7 +398,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                    tryCRANarchive$instPkgs,
                                    paste0(tryCRANarchive$instPkgs,"_",
                                           tryCRANarchive$instVers,".tar.gz"))
-
           lapply(packageURLs, function(pkg){
             system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"install.packages('",pkg,
                           "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
@@ -413,9 +412,13 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
         if(nrow(failed)) {
           message("Trying MRAN install of ",paste(failed$instPkgs, collapse=", "))
+          browser()
+          type <- if(.Platform$OS.type=="windows") "win.binary" else "source"
+          #suffix <- if(.Platform$OS.type=="windows") ".zip" else ".tar.gz"
+
           multiSource <- paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"versions::install.versions('",
                                 failed$instPkgs,"','",failed$instVers,
-                                "',lib='",libPath,"',dependencies=FALSE,type='source')\"")
+                                "',lib='",libPath,"',dependencies=FALSE,type='",type,"')\"")
           lapply(multiSource, system, wait=TRUE)
         }
 
