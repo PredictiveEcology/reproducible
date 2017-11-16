@@ -330,8 +330,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     supposedToBe <- read.table(packageVersionFile, header = TRUE, stringsAsFactors = FALSE)
     together <- merge(supposedToBe, inst, by.x="instPkgs",by.y="havePkgs")
     needPkgs <- setdiff(supposedToBe$instPkgs,inst$havePkgs)
-    needVers <- which(!compareNA(together$instVers, together$haveVers))
-    needVers <- needVers[together$instVers[needVers] >= together$haveVers[needVers]]
+    needVersEqual <- which(!compareNA(together$instVers, together$haveVers))
+    needVers <- needVersEqual[together$instVers[needVersEqual] >= together$haveVers[needVersEqual]]
     wh1 <- supposedToBe[which(supposedToBe$instPkgs %in% needPkgs),]
     wh2 <- together[needVers,]
     whPkgsNeeded <- rbind(wh1, wh2[,c("instPkgs","instVers")]) #sort(unique(c(wh1[,"instPkgs"],wh2[,"instPkgs"])))
@@ -435,7 +435,20 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         })
       }
     } else {
-      message("All packages are correct versions")
+      if(length(needVersEqual)) {
+        tog <- together[needVersEqual,]
+        message("All packages except ",paste(tog$instPkgs, collapse = ", ")," are correct versions")
+        message("Keeping installed version")
+        colnames(tog) <- c("Package", "Requested Version", "Installed Version")
+        rownames(tog) <- NULL
+        print(tog)
+        message("If this version is ok, you can update ", packageVersionFile," using pkgSnapshot()")
+
+      } else {
+        message("All packages are correct versions")
+      }
+      message("")
+
     }
   } else {
     message("There is no package version file named ", packageVersionFile, ".\n",
