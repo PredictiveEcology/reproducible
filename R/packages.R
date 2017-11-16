@@ -147,9 +147,9 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
 
   oldLibPath <- .libPaths()
   .libPaths(libPath)
-  packagesLoaded <- suppressMessages(unlist(lapply(packages, function(p) {
-    try(require(p, character.only = TRUE), silent = TRUE)
-    })))
+  packagesLoaded <- unlist(lapply(packages, function(p) {
+    try(require(p, character.only = TRUE))
+    }))
   .libPaths(oldLibPath)
   if(any(!packagesLoaded)) {
     message("Simultaneous package versions being used. Can only load first version(s) loaded in this session:\n",
