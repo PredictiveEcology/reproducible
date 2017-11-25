@@ -6,7 +6,7 @@
 \usage{
 Require(packages, packageVersionFile, libPath = .libPaths()[1],
   notOlderThan = NULL, install_githubArgs = list(),
-  install.packagesArgs = list())
+  install.packagesArgs = list(), standAlone = FALSE)
 }
 \arguments{
 \item{packages}{Character vector of packages to install via
@@ -25,6 +25,14 @@ came from github. To purge the cache: \code{notOlderThan = Sys.time()}}
 \item{install_githubArgs}{List of optional named arguments, passed to install_github}
 
 \item{install.packagesArgs}{List of optional named arguments, passed to install.packages}
+
+\item{standAlone}{Logical. If \code{TRUE}, all packages will be installed and loaded strictly
+from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
+be used to find the correct versions. This can be create dramatically faster
+installs if the user has a substantial number of the packages already in their
+personal library. In the case of \code{TRUE}, there will be a hidden file
+place in the \code{libPath} directory that lists all the packages that were needed
+during the Require call.}
 }
 \description{
 This is an "all in one" function that will run \code{install.packages} for

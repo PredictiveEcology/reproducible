@@ -36,6 +36,14 @@
 #'                     came from github. To purge the cache: \code{notOlderThan = Sys.time()}
 #' @param install_githubArgs List of optional named arguments, passed to install_github
 #' @param install.packagesArgs List of optional named arguments, passed to install.packages
+#' @param standAlone Logical. If \code{TRUE}, all packages will be installed and loaded strictly
+#'                   from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
+#'                   be used to find the correct versions. This can be create dramatically faster
+#'                   installs if the user has a substantial number of the packages already in their
+#'                   personal library. In the case of \code{TRUE}, there will be a hidden file
+#'                   place in the \code{libPath} directory that lists all the packages that were needed
+#'                   during the Require call.
+#'
 #'
 #' @examples
 #' \dontrun{
@@ -64,7 +72,7 @@
 #' }
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
                     notOlderThan = NULL, install_githubArgs = list(),
-                    install.packagesArgs = list()) {
+                    install.packagesArgs = list(), standAlone = FALSE) {
   githubPkgs <- grep("\\/", packages, value = TRUE)
   githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@" ), function(x) x[2])
   if(length(githubPkgs)) {
@@ -73,16 +81,33 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   if(!dir.exists(libPath)) dir.create(libPath)
   libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
 
+  if(standAlone) { # include only base if standAlone
+    nonLibPathPaths <- .libPaths()[length(.libPaths())]
+    nonLibPathPkgs <- unlist(lapply(nonLibPathPaths, dir))
+  } else {
+    nonLibPathPaths <- setdiff(.libPaths(), libPath)
+    nonLibPathPkgs <- unique(unlist(lapply(nonLibPathPaths, dir)))
+  }
+
+
   # Two parts -- one if there is a packageVersionFile -- This calls the external file installVersions
   #           -- two if there is no packageVersionFile
   if(!missing(packageVersionFile)) {
-    Sys.setlocale("LC_ALL", "C") # required to deal with non English characters in Author names
+    oldLocale <- Sys.getlocale()
+    Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
                           libPath = libPath)
+    Sys.setlocale(local = oldLocale)
+    allPkgsNeeded <- aa$instPkgs
   } else {
     cacheRepo <- file.path(libPath, ".cache")
     deps <- unlist(Cache(tools::package_dependencies, packages, recursive = TRUE,
                          cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+    allPkgsNeeded <- unique(c(deps, packages))
+    names(deps) <- deps
+    currentVersions <- na.omit(unlist(lapply(unique(c(libPath, .libPaths())),
+                                             function(pk)
+                                               installedVersions(deps, libPath = pk))))
     if(length(githubPkgs)) {
       pkgPaths <- file.path(libPath, githubPkgNames)
       fileExists <- file.exists(pkgPaths)
@@ -101,11 +126,9 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
         }
       }
     }
-    allPkgsNeeded <- unique(c(deps, packages))
-    installedPkgs <- sapply(libPath, dir)
-    basePkgs <- sapply(.libPaths()[length(.libPaths())], dir)
-    needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(unlist(installedPkgs)))]
-    needInstall <- needInstall[!(needInstall %in% basePkgs)]
+    libPathPkgs <- sapply(libPath, dir)
+    needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(unlist(libPathPkgs)))]
+    needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
     if(length(needInstall)) {
       gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
       if(length(gitPkgs)) {
@@ -144,9 +167,23 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
     }
 
   }
+  currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
+                                           function(pk)
+                                             installedVersions(allPkgsNeeded, libPath = pk))))
+  if(length(currentVersions)==1) names(currentVersions) <- allPkgsNeeded
+  autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
+  if(NROW(currentVersions)) {
+    pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
+
+    # if(file.exists(autoFile)) {
+    #   aaa <- data.table::fread(autoFile, header = TRUE)
+    #   pkgsToSnapshot <- unique(data.table::rbindlist(list(pkgsToSnapshot, aaa)), by = "instPkgs")
+    # }
+    .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+  }
 
   oldLibPath <- .libPaths()
-  .libPaths(libPath)
+  if(standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
   packagesLoaded <- unlist(lapply(packages, function(p) {
     try(require(p, character.only = TRUE))
     }))
@@ -324,14 +361,18 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     }
 
     instVers <- lapply(instVers, sub, pattern="\\r|\\n", replacement = "")
-    if(length(instVers)!=length(libPathListFiles)) stop("Package folder, ", .libPaths()[1],
+    if(length(instVers)!=length(libPathListFiles)) stop("Package folder, ", libPath,
                                                         " has become corrupt. Please manually delete .snapshot.RDS and .installedVersions.RDS")
     inst <- data.frame(havePkgs=libPathListFiles, haveVers=unlist(instVers), stringsAsFactors = FALSE)
     supposedToBe <- read.table(packageVersionFile, header = TRUE, stringsAsFactors = FALSE)
     together <- merge(supposedToBe, inst, by.x="instPkgs",by.y="havePkgs")
     needPkgs <- setdiff(supposedToBe$instPkgs,inst$havePkgs)
     needVersEqual <- which(!compareNA(together$instVers, together$haveVers))
-    needVers <- needVersEqual[together$instVers[needVersEqual] >= together$haveVers[needVersEqual]]
+
+    # Here test that the installed version is greater than required one
+    #eq <- together$instVers[needVersEqual] == together$haveVers[needVersEqual]
+    gte <- together$instVers[needVersEqual] >= together$haveVers[needVersEqual]
+    needVers <- needVersEqual[gte]
     wh1 <- supposedToBe[which(supposedToBe$instPkgs %in% needPkgs),]
     wh2 <- together[needVers,]
     whPkgsNeeded <- rbind(wh1, wh2[,c("instPkgs","instVers")]) #sort(unique(c(wh1[,"instPkgs"],wh2[,"instPkgs"])))
@@ -476,11 +517,22 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #' pkgSnapshot(pkgSnapFile, .libPaths()[1])
 #' data.table::fread(pkgSnapFile)
 #'
-pkgSnapshot <- function(packageVersionFile, libPath) {
-  if(missing(libPath)) libPath <- .libPaths()[1]
+pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
+  if(missing(libPath)) if(standAlone) libPath <- .libPaths()[1] else libpath <- .libPaths()
   if(missing(packageVersionFile)) packageVersionFile <- ".packageVersions.txt"
-  instPkgs <- dir(libPath)
-  instVers <- installedVersions(instPkgs, libPath = libPath)
+
+  autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
+  if(file.exists(autoFile)) {
+    file.copy(autoFile, packageVersionFile, overwrite = TRUE)
+  } else {
+    instPkgs <- dir(libPath)
+    instVers <- installedVersions(instPkgs, libPath = libPath)
+    .pkgSnapshot(instPkgs, instVers, packageVersionFile)
+  }
+}
+
+
+.pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
   inst <- data.frame(instPkgs, instVers=unlist(instVers), stringsAsFactors = FALSE)
   write.table(inst, file = packageVersionFile, row.names = FALSE)
 }
