@@ -47,6 +47,25 @@ not installed multiple times. Finally \code{library} is called on the
 and their version numbers are exact (when \code{packageVersionFile} is supplied),
 then the "install" component will be skipped very quickly with a message.
 }
+\details{
+\code{standAlone} will either put the \code{Require}d packages and their dependencies
+\emph{all} within the libPath (if \code{TRUE}) or if \code{FALSE} will only install
+packages and their dependencies that are otherwise
+not installed in \code{.libPaths()}, i.e., the personal or base library paths. Any
+packages or dependencies that are not yet installed will be installed in \code{libPath}.
+Importantly, a small hidden file (named \code{._packageVersionsAuto.txt})
+will be saved in \code{libPath} that will store the \emph{information}
+about the packages and their dependencies, even if they were already installed in
+\code{.libPaths()}. This hidden file will be used if a user runs \code{pkgSnapshot}, enabling
+a new user to rebuild the entire dependency chain, without having to install all packages
+in an isolated directory (as does packrat). This will save potentially a lot of time and
+disk space, and yet maintain reproducibility.
+
+This function works best if all required packages are called within one \code{Require}
+call, as all dependencies can identified together, and all package versions will be saved
+automatically (with \code{standAlone = TRUE} or \code{standAlone = FALSE}),
+allowing a call to \code{pkgSnapshot} when a more permanent record of versions can be made.
+}
 \note{
 This function will use \code{Cache} internally to determine the dependencies
 of all \code{packages}. The cache repository will be inside the \code{libPath},

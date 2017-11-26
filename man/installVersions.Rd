@@ -5,7 +5,7 @@
 \title{Install exact package versions from a package version text file & GitHub}
 \usage{
 installVersions(gitHubPackages, packageVersionFile = ".packageVersions.txt",
-  libPath = .libPaths()[1])
+  libPath = .libPaths()[1], standAlone = FALSE)
 }
 \arguments{
 \item{gitHubPackages}{Character vectors indicating repository/packageName@branch}
@@ -15,6 +15,14 @@ the \code{.packageVersions.txt}.}
 
 \item{libPath}{The library path where all packages should be installed, and looked for to load
 (i.e., call \code{library})}
+
+\item{standAlone}{Logical. If \code{TRUE}, all packages will be installed and loaded strictly
+from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
+be used to find the correct versions. This can be create dramatically faster
+installs if the user has a substantial number of the packages already in their
+personal library. In the case of \code{TRUE}, there will be a hidden file
+place in the \code{libPath} directory that lists all the packages that were needed
+during the Require call.}
 }
 \description{
 This uses CRAN, CRAN archives, or MRAN (accessed via \code{versions::install.versions})

@@ -12,6 +12,24 @@
 #' and their version numbers are exact (when \code{packageVersionFile} is supplied),
 #' then the "install" component will be skipped very quickly with a message.
 #'
+#' \code{standAlone} will either put the \code{Require}d packages and their dependencies
+#' \emph{all} within the libPath (if \code{TRUE}) or if \code{FALSE} will only install
+#' packages and their dependencies that are otherwise
+#' not installed in \code{.libPaths()}, i.e., the personal or base library paths. Any
+#' packages or dependencies that are not yet installed will be installed in \code{libPath}.
+#' Importantly, a small hidden file (named \code{._packageVersionsAuto.txt})
+#' will be saved in \code{libPath} that will store the \emph{information}
+#' about the packages and their dependencies, even if they were already installed in
+#' \code{.libPaths()}. This hidden file will be used if a user runs \code{pkgSnapshot}, enabling
+#' a new user to rebuild the entire dependency chain, without having to install all packages
+#' in an isolated directory (as does packrat). This will save potentially a lot of time and
+#' disk space, and yet maintain reproducibility.
+#'
+#' This function works best if all required packages are called within one \code{Require}
+#' call, as all dependencies can identified together, and all package versions will be saved
+#' automatically (with \code{standAlone = TRUE} or \code{standAlone = FALSE}),
+#' allowing a call to \code{pkgSnapshot} when a more permanent record of versions can be made.
+#'
 #' @note This function will use \code{Cache} internally to determine the dependencies
 #' of all \code{packages}. The cache repository will be inside the \code{libPath},
 #' and will be named \code{.cache}. This will speed up subsequent calls to \code{Require}
@@ -93,11 +111,10 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   # Two parts -- one if there is a packageVersionFile -- This calls the external file installVersions
   #           -- two if there is no packageVersionFile
   if(!missing(packageVersionFile)) {
-    oldLocale <- Sys.getlocale()
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
-                          libPath = libPath)
-    Sys.setlocale(local = oldLocale)
+                          libPath = libPath, standAlone = standAlone)
+    Sys.setlocale(local = "")
     allPkgsNeeded <- aa$instPkgs
   } else {
     cacheRepo <- file.path(libPath, ".cache")
@@ -266,7 +283,11 @@ installedVersions <- function (pkgs, libPath) {
                       sQuote(libPath), sQuote("libPath")), domain = NA)
   }
   if (length(pkgs) > 1) {
-    ans <- lapply(pkgs, installedVersions, libPath)
+    if(length(pkgs)==length(libPath)) {
+      ans <- lapply(seq_along(pkgs), function(x) installedVersions(pkgs[x], libPath[x]))
+    } else {
+      ans <- lapply(pkgs, installedVersions, libPath)
+    }
     names(ans) <- pkgs
     return(ans)
   } else if (length(pkgs)==0)  {
@@ -326,12 +347,17 @@ installedVersions <- function (pkgs, libPath) {
 #'
 #' }
 installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
-                            libPath = .libPaths()[1]) {
+                            libPath = .libPaths()[1], standAlone = FALSE) {
   if(file.exists(packageVersionFile)) {
     libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
     message("Reading ", packageVersionFile)
-    libPathListFiles <- dir(libPath)
-    allPkgsDESC <- file.info(file.path(libPath, libPathListFiles, "DESCRIPTION"))
+    if(standAlone) {
+      libPathListFiles <- dir(libPath, full.names = TRUE)
+    } else {
+      libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
+    }
+    libPathListFilesBase <- basename(libPathListFiles)
+    allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
     .snap <- file.path(libPath, ".snapshot.RDS")
     needSnapshot <- FALSE
     needInstalledVersions <- FALSE
@@ -354,27 +380,38 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     }
 
     if(needInstalledVersions) {
-      instVers <- installedVersions(libPathListFiles, libPath)
+      if(standAlone) {
+        instVers <- installedVersions(libPathListFilesBase, libPath)
+      } else {
+        instVers <- installedVersions(libPathListFilesBase, dirname(libPathListFiles))
+      }
       saveRDS(instVers, file = installedVersionsFile)
     } else {
       instVers <- readRDS(file = installedVersionsFile)
     }
 
     instVers <- lapply(instVers, sub, pattern="\\r|\\n", replacement = "")
-    if(length(instVers)!=length(libPathListFiles)) stop("Package folder, ", libPath,
+    if(length(instVers)!=length(libPathListFilesBase)) stop("Package folder, ", libPath,
                                                         " has become corrupt. Please manually delete .snapshot.RDS and .installedVersions.RDS")
-    inst <- data.frame(havePkgs=libPathListFiles, haveVers=unlist(instVers), stringsAsFactors = FALSE)
+    inst <- data.frame(havePkgs=libPathListFilesBase, haveVers=unlist(instVers), stringsAsFactors = FALSE)
     supposedToBe <- read.table(packageVersionFile, header = TRUE, stringsAsFactors = FALSE)
     together <- merge(supposedToBe, inst, by.x="instPkgs",by.y="havePkgs")
     needPkgs <- setdiff(supposedToBe$instPkgs,inst$havePkgs)
     needVersEqual <- which(!compareNA(together$instVers, together$haveVers))
 
     # Here test that the installed version is greater than required one
-    #eq <- together$instVers[needVersEqual] == together$haveVers[needVersEqual]
+    eq <- together$instVers[needVersEqual] == together$haveVers[needVersEqual]
+    isLoaded <- unlist(lapply(together$instPkgs[needVersEqual], isNamespaceLoaded))
+    canInstall <- together[needVersEqual[!eq][!isLoaded],]
+
     gte <- together$instVers[needVersEqual] >= together$haveVers[needVersEqual]
+
     needVers <- needVersEqual[gte]
     wh1 <- supposedToBe[which(supposedToBe$instPkgs %in% needPkgs),]
     wh2 <- together[needVers,]
+    if(NROW(canInstall)) {
+      wh2 <- merge(canInstall, wh2, all.x = TRUE)
+    }
     whPkgsNeeded <- rbind(wh1, wh2[,c("instPkgs","instVers")]) #sort(unique(c(wh1[,"instPkgs"],wh2[,"instPkgs"])))
     if(nrow(whPkgsNeeded)) {
       packages <- whPkgsNeeded[,"instPkgs"]
@@ -436,7 +473,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           if ( is.null(repos) | any(repos == "") ) {
             repos <- "https://cran.rstudio.com"
           }
-          packageURLs <- file.path(repos["CRAN"],"src/contrib/Archive",
+
+          if(length(repos)>1) repos <- repos[["CRAN"]]
+          packageURLs <- file.path(repos[length(repos)],"src/contrib/Archive",
                                    tryCRANarchive$instPkgs,
                                    paste0(tryCRANarchive$instPkgs,"_",
                                           tryCRANarchive$instVers,".tar.gz"))
@@ -518,11 +557,15 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #' data.table::fread(pkgSnapFile)
 #'
 pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
-  if(missing(libPath)) if(standAlone) libPath <- .libPaths()[1] else libpath <- .libPaths()
+  if(missing(libPath)) {
+    if(standAlone) libPath <- .libPaths()[1] else libpath <- .libPaths()
+  } else {
+    if(!standAlone) libPath <- unique(c(libPath, .libPaths()))
+  }
   if(missing(packageVersionFile)) packageVersionFile <- ".packageVersions.txt"
 
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
-  if(file.exists(autoFile)) {
+  if(!standAlone & file.exists(autoFile)) {
     file.copy(autoFile, packageVersionFile, overwrite = TRUE)
   } else {
     instPkgs <- dir(libPath)
