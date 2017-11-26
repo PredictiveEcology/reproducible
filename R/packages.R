@@ -114,7 +114,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
                           libPath = libPath, standAlone = standAlone)
-    Sys.setlocale(local = "")
+    Sys.setlocale(locale = "")
     allPkgsNeeded <- aa$instPkgs
   } else {
     cacheRepo <- file.path(libPath, ".cache")
@@ -171,10 +171,12 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
       }
       # RSTudio won't install packages if they are loaded. THe algorithm is faulty and it won't let things install even when they are not loaded.
       #do.call(install.packages, append(list(needInstall, lib = libPath, dependencies = FALSE), install.packagesArgs))
-      repos <- getOption("repos")[1]
+      repos <- getOption("repos")
       if ( is.null(repos) | any(repos == "") ) {
         repos <- "https://cran.rstudio.com"
       }
+
+      if(length(repos)>1) repos <- repos[["CRAN"]]
       lapply(needInstall, function(pkg){
         system(paste0(file.path(R.home(), "bin", "R"),
                       " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,"',lib='",
@@ -449,10 +451,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         canInstDirectFromCRAN <- whPkgsAvailFromCran[whPkgsNeededFromCran, nomatch=0, on = c("instPkgs", "instVers")]
 
         if(nrow(canInstDirectFromCRAN)) {
-          repos <- getOption("repos")[1]
+          repos <- getOption("repos")
           if ( is.null(repos) | any(repos == "") ) {
             repos <- "https://cran.rstudio.com"
           }
+
+          if(length(repos)>1) repos <- repos[["CRAN"]]
           lapply(canInstDirectFromCRAN$instPkgs, function(pkg){
             system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,
                           "',lib='",libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
@@ -564,7 +568,7 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
   }
   if(missing(packageVersionFile)) packageVersionFile <- ".packageVersions.txt"
 
-  autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
+  autoFile <- file.path(libPath[1], "._packageVersionsAuto.txt")
   if(!standAlone & file.exists(autoFile)) {
     file.copy(autoFile, packageVersionFile, overwrite = TRUE)
   } else {
