@@ -59,7 +59,9 @@ about the packages and their dependencies, even if they were already installed i
 \code{.libPaths()}. This hidden file will be used if a user runs \code{pkgSnapshot}, enabling
 a new user to rebuild the entire dependency chain, without having to install all packages
 in an isolated directory (as does packrat). This will save potentially a lot of time and
-disk space, and yet maintain reproducibility.
+disk space, and yet maintain reproducibility. \emph{NOTE}: since there is only one hidden file in a
+\code{libPath}, any call to \code{pkgSnapshot} will make a snapshot of the most recent call
+to \code{Require}.
 
 This function works best if all required packages are called within one \code{Require}
 call, as all dependencies can identified together, and all package versions will be saved

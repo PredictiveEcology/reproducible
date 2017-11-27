@@ -3,8 +3,9 @@ Type: Package
 Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
 Description: Built on top of 'git2r' and 'archivist', this package aims at
     making high-level, robust, machine and OS independent tools for making
-    deeply reproducible and reusable content in R. This extends beyond the
-    package management utilities of 'packrat' and 'checkpoint' by including
+    deeply reproducible and reusable content in R. This includes light weight
+    package management (similar to 'packrat' and 'checkpoint', but more flexible,
+    lighterweight and simpler than both), plus it includes
     tools for caching, and accessing GitHub repositories.
 URL: 
     https://predictiveecology.github.io/reproducible/,
@@ -20,7 +21,7 @@ Authors@R: c(
     role = "cph")
     )
 Depends:
-    R (>= 3.3.2)
+    R (>= 3.4.2)
 Imports:
     archivist (>= 2.1.2),
     data.table (>= 1.10.4),

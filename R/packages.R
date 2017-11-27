@@ -23,7 +23,9 @@
 #' \code{.libPaths()}. This hidden file will be used if a user runs \code{pkgSnapshot}, enabling
 #' a new user to rebuild the entire dependency chain, without having to install all packages
 #' in an isolated directory (as does packrat). This will save potentially a lot of time and
-#' disk space, and yet maintain reproducibility.
+#' disk space, and yet maintain reproducibility. \emph{NOTE}: since there is only one hidden file in a
+#' \code{libPath}, any call to \code{pkgSnapshot} will make a snapshot of the most recent call
+#' to \code{Require}.
 #'
 #' This function works best if all required packages are called within one \code{Require}
 #' call, as all dependencies can identified together, and all package versions will be saved
@@ -177,12 +179,26 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
       }
 
       if(length(repos)>1) repos <- repos[["CRAN"]]
-      lapply(needInstall, function(pkg){
-        system(paste0(file.path(R.home(), "bin", "R"),
-                      " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,"',lib='",
-                      libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
+      saveRDS(search(), file = paste0("c:\\Eliot\\Line180_",paste(sample(LETTERS, 4), collapse=""),".rds"))
 
-      })
+      rpath <- file.path(R.home(), "bin", "R")
+      save(needInstall, rpath, libPath, repos, file = file.path("C:/Eliot/", paste0("rpath_",paste(sample(LETTERS, 4), collapse = ""), ".rdata")))
+
+      #if("tools:rstudio" %in% search()) {
+        lapply(needInstall, function(pkg){
+          system(paste0(file.path(R.home(), "bin", "R"),
+                        " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,"',lib='",
+                        libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
+
+        })
+      # } else {
+      #   saveRDS(search(), file = paste0("c:\\Eliot\\Line190_",paste(sample(LETTERS, 4), collapse=""),".rds"))
+      #   lapply(needInstall, function(pkg) {
+      #     install.packages(pkg, lib = libPath, dependencies = FALSE, repos = repos)
+      #   })
+      #
+      # }
+
     }
 
   }
@@ -327,7 +343,7 @@ installedVersions <- function (pkgs, libPath) {
 #'        the \code{.packageVersions.txt}.
 #' @importFrom versions install.versions
 #' @importFrom data.table setDT data.table setnames
-#' @importFrom utils read.table available.packages installed.packages
+#' @importFrom utils read.table available.packages installed.packages install.packages
 #' @examples
 #' \dontrun{
 #' # requires the packageVersionFile -- this doesn't work -- safer to use Require
@@ -404,7 +420,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     # Here test that the installed version is greater than required one
     eq <- together$instVers[needVersEqual] == together$haveVers[needVersEqual]
     isLoaded <- unlist(lapply(together$instPkgs[needVersEqual], isNamespaceLoaded))
-    canInstall <- together[needVersEqual[!eq][!isLoaded],]
+    if(!is.null(isLoaded)) {
+      canInstall <- together[needVersEqual[!eq & !isLoaded],]
+    } else {
+      canInstall <- together[0,]
+    }
+    save(isLoaded, together, needVersEqual, eq, file = file.path("C:/Eliot/", paste0(paste(sample(LETTERS, 4), collapse = ""), ".rdata")))
 
     gte <- together$instVers[needVersEqual] >= together$haveVers[needVersEqual]
 
@@ -447,21 +468,35 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         setDT(whPkgsAvailFromCran)
         setDT(whPkgsNeededFromCran)
 
+
         tryCRANarchive <- whPkgsNeededFromCran[!whPkgsAvailFromCran, on = c("instPkgs", "instVers")]
         canInstDirectFromCRAN <- whPkgsAvailFromCran[whPkgsNeededFromCran, nomatch=0, on = c("instPkgs", "instVers")]
+        save(tryCRANarchive, canInstDirectFromCRAN, whPkgsAvailFromCran, whPkgsNeededFromCran,
+             avail, wh, file = "C:/Eliot/tryCranArchive.rdata")
 
-        if(nrow(canInstDirectFromCRAN)) {
+        if(NROW(canInstDirectFromCRAN)) {
           repos <- getOption("repos")
           if ( is.null(repos) | any(repos == "") ) {
             repos <- "https://cran.rstudio.com"
           }
 
           if(length(repos)>1) repos <- repos[["CRAN"]]
-          lapply(canInstDirectFromCRAN$instPkgs, function(pkg){
-            system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,
-                          "',lib='",libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
 
-          })
+          rpath <- file.path(R.home(), "bin", "R")
+          save(canInstDirectFromCRAN, rpath, libPath, repos, file = file.path("C:/Eliot/rpath_", paste0(paste(sample(LETTERS, 4), collapse = ""), ".rdata")))
+
+          #if("tools:rstudio" %in% search()) {
+            lapply(canInstDirectFromCRAN$instPkgs, function(pkg){
+              system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,
+                            "',lib='",libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
+
+            })
+          # } else {
+          #   lapply(canInstDirectFromCRAN$instPkgs, function(pkg){
+          #     install.packages(pkg, lib = libPath, dependencies = FALSE, repos = repos)
+          #   })
+          # }
+
 
           AP <- installed.packages(lib.loc = libPath)
           actuallyInstalled <- data.table(AP[(AP[,"Package"] %in% canInstDirectFromCRAN$instPkgs),
@@ -472,7 +507,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           failed <- rbind(failed, canInstDirectFromCRAN[!actuallyInstalled, on = c("instPkgs", "instVers")])
         }
 
-        if(nrow(tryCRANarchive)) {
+        if(NROW(tryCRANarchive)>0 & all(!is.na(tryCRANarchive$instPkgs))) {
           repos <- getOption("repos")
           if ( is.null(repos) | any(repos == "") ) {
             repos <- "https://cran.rstudio.com"
@@ -483,11 +518,17 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                    tryCRANarchive$instPkgs,
                                    paste0(tryCRANarchive$instPkgs,"_",
                                           tryCRANarchive$instVers,".tar.gz"))
-          lapply(packageURLs, function(pkg){
-            system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"install.packages('",pkg,
-                          "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
+          #if("tools:rstudio" %in% search()) {
+            lapply(packageURLs, function(pkg){
+              system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"install.packages('",pkg,
+                            "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
 
-          })
+            })
+          # } else {
+          #   lapply(packageURLs, function(pkg) {
+          #     install.packages(pkg, lib = libPath, dependencies = FALSE, repos = NULL, type = "source")
+          #   })
+          # }
 
           AP <- installed.packages(lib.loc = libPath)
           actuallyInstalled <- data.table(AP[(AP[,"Package"] %in% tryCRANarchive$instPkgs),c("Package", "Version"),drop=FALSE])

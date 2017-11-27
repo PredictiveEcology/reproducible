@@ -6,7 +6,7 @@ test_that("package-related functions work", {
 
   packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
   suppressWarnings(Require("crayon", libPath = packageDir, standAlone = TRUE))
-  a <- dir(packageDir)
+  a <- getOption("repos")
   saveRDS(a, file = paste0("c:/Eliot/",paste(sample(LETTERS,3),collapse=""),".rds"))
   expect_true(any(grepl(pattern = "package:crayon", search())))
   expect_true(require("crayon", lib.loc = packageDir))
@@ -38,6 +38,7 @@ test_that("package-related functions work", {
           standAlone = FALSE)
   iv <- data.frame(installed.packages(lib.loc = packageDir), stringsAsFactors = FALSE)
   #expect_true(iv[iv$Package=="crayon","Version"]=="1.3.4")
+  save(iv, versionCovr, packageDir, packageVersionFile, file = "c:/Eliot/Line41.rdata")
   expect_true(iv[iv$Package=="covr","Version"]==versionCovr)
 
 
@@ -47,20 +48,24 @@ test_that("package-related functions work", {
   expect_true(any(grepl(pattern = "package:meow", search())))
 
 
-  detach("package:covr", unload = TRUE)
-  detach("package:meow", unload = TRUE)
+  try(detach("package:covr", unload = TRUE))
+  try(detach("package:meow", unload = TRUE))
 
   # zTree is a random small package that has 1 dependency that is NOT in base -- plyr
   Require("plyr") # make sure it is installed in personal library -- not packageDir -- THis should install Rcpp too, if needed
   suppressWarnings(Require("zTree", libPath = packageDir, standAlone = FALSE))
   expect_true(is.na(installedVersions("Rcpp", packageDir))) # should
 
+  srch <- search()
+  save(srch, file = "c:/Eliot/SearchPath.rdata")
   Require("zTree", libPath = packageDir, standAlone = TRUE) # with standAlone TRUE, both plyr & Rcpp need to be installed in packageDir
   expect_true(!is.na(installedVersions("Rcpp", packageDir)))
 
   packageVersionFile <- file.path(packageDir, ".packageVersion2.txt")
   pkgSnapshot(libPath=packageDir, packageVersionFile, standAlone = FALSE)
   installed <- data.table::fread(packageVersionFile)
+  pkgDeps <- tools::package_dependencies("zTree", recursive = TRUE)
+  save(installed, versionCovr, packageDir, packageVersionFile, pkgDeps, file = "c:/Eliot/Line68.rdata")
   expect_true(NROW(installed)==(1 + length(unlist(tools::package_dependencies("zTree", recursive = TRUE)))))
 
 
@@ -91,7 +96,7 @@ test_that("package-related functions work", {
   try(detach("package:meow", unload = TRUE))
   try(detach("package:zTree", unload = TRUE))
   try(detach("package:plyr", unload = TRUE))
-  try(detach("package:crayon", unload = TRUE))
+  suppressWarnings(try(detach("package:crayon", unload = TRUE)))
 
   unlink(packageDir, recursive = TRUE, force = TRUE)
 
