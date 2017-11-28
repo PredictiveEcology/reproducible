@@ -93,6 +93,7 @@
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
                     notOlderThan = NULL, install_githubArgs = list(),
                     install.packagesArgs = list(), standAlone = FALSE) {
+
   githubPkgs <- grep("\\/", packages, value = TRUE)
   githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@" ), function(x) x[2])
   if(length(githubPkgs)) {
@@ -120,87 +121,8 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
     allPkgsNeeded <- aa$instPkgs
   } else {
     cacheRepo <- file.path(libPath, ".cache")
-    deps <- unlist(Cache(tools::package_dependencies, packages, recursive = TRUE,
-                         cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-    allPkgsNeeded <- unique(c(deps, packages))
-    names(deps) <- deps
-    currentVersions <- na.omit(unlist(lapply(unique(c(libPath, .libPaths())),
-                                             function(pk)
-                                               installedVersions(deps, libPath = pk))))
-    if(length(githubPkgs)) {
-      pkgPaths <- file.path(libPath, githubPkgNames)
-      fileExists <- file.exists(pkgPaths)
-      if(any(fileExists)) {
-        if(!is.null(install_githubArgs$dependencies)) {
-          if(isTRUE(install_githubArgs$dependencies)) {
-            gitPkgDeps <- unlist(Cache(lapply, pkgPaths[fileExists], function(p) {
-              lapply(c("Imports", "Suggests", "Depends"), function(type) {
-                strsplit(desc::desc_get(key=type,  p), split = ",.{0,2} +")
-              })
-            }, cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-            gitPkgDeps <- unname(unlist(lapply(strsplit(gitPkgDeps, split = "\n| "), function(x) x[1])))
-            deps <- unique(c(deps, gitPkgDeps))
-            deps <- deps[deps != "R"]
-          }
-        }
-      }
-    }
-    libPathPkgs <- sapply(libPath, dir)
-    needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(unlist(libPathPkgs)))]
-    needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
-    if(length(needInstall)) {
-      gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
-      if(length(gitPkgs)) {
-
-        oldLibPaths <- .libPaths()
-        .libPaths(c(libPath, oldLibPaths))
-        args <- append(install_githubArgs,list(dependencies = FALSE, upgrade_dependencies = FALSE,
-                                               force = TRUE, local = FALSE)) # use xforce = TRUE because we have already eliminated
-        sapply(gitPkgs, function(pk) {
-          args <- append(args, list(pk))
-          # the cases where we have the correct version; install_github uses a
-          # local database hidden somewhere that won't let the same package be installed
-          # twice, even if in different libPaths
-          args <- args[!duplicated(names(args))]
-          do.call(install_github, args)
-          # with_libpaths doesn't work because it will look for ALL packages there; can't download without curl
-        })
-        .libPaths(oldLibPaths)
-        Require(unlist(gitPkgs), libPath = libPath, notOlderThan = notOlderThan,
-                install_githubArgs = install_githubArgs,
-                install.packagesArgs = install.packagesArgs) # This sends it back in with all the install_github calls completed
-        return(NULL)
-      }
-      # RSTudio won't install packages if they are loaded. THe algorithm is faulty and it won't let things install even when they are not loaded.
-      #do.call(install.packages, append(list(needInstall, lib = libPath, dependencies = FALSE), install.packagesArgs))
-      repos <- getOption("repos")
-      if ( is.null(repos) | any(repos == "") ) {
-        repos <- "https://cran.rstudio.com"
-      }
-
-      if(length(repos)>1) repos <- repos[["CRAN"]]
-      saveRDS(search(), file = paste0("c:\\Eliot\\Line180_",paste(sample(LETTERS, 4), collapse=""),".rds"))
-
-      rpath <- file.path(R.home(), "bin", "R")
-      save(needInstall, rpath, libPath, repos, file = file.path("C:/Eliot/", paste0("rpath_",paste(sample(LETTERS, 4), collapse = ""), ".rdata")))
-
-      #if("tools:rstudio" %in% search()) {
-        lapply(needInstall, function(pkg){
-          system(paste0(file.path(R.home(), "bin", "R"),
-                        " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,"',lib='",
-                        libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
-
-        })
-      # } else {
-      #   saveRDS(search(), file = paste0("c:\\Eliot\\Line190_",paste(sample(LETTERS, 4), collapse=""),".rds"))
-      #   lapply(needInstall, function(pkg) {
-      #     install.packages(pkg, lib = libPath, dependencies = FALSE, repos = repos)
-      #   })
-      #
-      # }
-
-    }
-
+    installPackages(packages, githubPkgs, libPath = libPath, cacheRepo = cacheRepo,
+                    notOlderThan = notOlderThan)
   }
   currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
                                            function(pk)
@@ -483,7 +405,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           if(length(repos)>1) repos <- repos[["CRAN"]]
 
           rpath <- file.path(R.home(), "bin", "R")
-          save(canInstDirectFromCRAN, rpath, libPath, repos, file = file.path("C:/Eliot/rpath_", paste0(paste(sample(LETTERS, 4), collapse = ""), ".rdata")))
+          save(canInstDirectFromCRAN, rpath, libPath, repos, file = file.path("C:/Eliot/rpath_487_", paste0(paste(sample(LETTERS, 4), collapse = ""), ".rdata")))
 
           #if("tools:rstudio" %in% search()) {
             lapply(canInstDirectFromCRAN$instPkgs, function(pkg){
@@ -580,6 +502,99 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
             "No package versions installed.")
   }
 }
+
+
+#' @export
+#' @param gitHubPackages Character vectors indicating repository/packageName@branch
+#' @inheritParams Require
+#' @param packageVersionFile Path to the package version file, defaults to
+#'        the \code{.packageVersions.txt}.
+#' @importFrom versions install.versions
+#' @importFrom data.table setDT data.table setnames
+#' @importFrom utils read.table available.packages installed.packages install.packages
+#' @examples
+#' \dontrun{
+#'   installPackages("crayon")
+#' }
+installPackages <- function(packages, gitHubPkgs, githubPkgNames, libPath = .libPaths()[1],
+                            cacheRepo = cacheRepo, notOlderThan = notOlderThan) {
+  browser()
+  deps <- unlist(Cache(tools::package_dependencies, packages, recursive = TRUE,
+                       cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+  allPkgsNeeded <- unique(c(deps, packages))
+  names(deps) <- deps
+  if(missing(githubPkgNames)) githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@" ), function(x) x[2])
+
+  if(length(githubPkgs)) {
+    pkgPaths <- file.path(libPath, githubPkgNames)
+    fileExists <- file.exists(pkgPaths)
+    if(any(fileExists)) {
+      if(!is.null(install_githubArgs$dependencies)) {
+        if(isTRUE(install_githubArgs$dependencies)) {
+          gitPkgDeps <- unlist(Cache(lapply, pkgPaths[fileExists], function(p) {
+            lapply(c("Imports", "Suggests", "Depends"), function(type) {
+              strsplit(desc::desc_get(key=type,  p), split = ",.{0,2} +")
+            })
+          }, cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+          gitPkgDeps <- unname(unlist(lapply(strsplit(gitPkgDeps, split = "\n| "), function(x) x[1])))
+          deps <- unique(c(deps, gitPkgDeps))
+          deps <- deps[deps != "R"]
+        }
+      }
+    }
+  }
+  libPathPkgs <- sapply(libPath, dir)
+  needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(unlist(libPathPkgs)))]
+  needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
+  if(length(needInstall)) {
+    gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
+    if(length(gitPkgs)) {
+
+      oldLibPaths <- .libPaths()
+      .libPaths(c(libPath, oldLibPaths))
+      args <- append(install_githubArgs,list(dependencies = FALSE, upgrade_dependencies = FALSE,
+                                             force = TRUE, local = FALSE)) # use xforce = TRUE because we have already eliminated
+      sapply(gitPkgs, function(pk) {
+        args <- append(args, list(pk))
+        # the cases where we have the correct version; install_github uses a
+        # local database hidden somewhere that won't let the same package be installed
+        # twice, even if in different libPaths
+        args <- args[!duplicated(names(args))]
+        do.call(install_github, args)
+        # with_libpaths doesn't work because it will look for ALL packages there; can't download without curl
+      })
+      .libPaths(oldLibPaths)
+      Require(unlist(gitPkgs), libPath = libPath, notOlderThan = notOlderThan,
+              install_githubArgs = install_githubArgs,
+              install.packagesArgs = install.packagesArgs) # This sends it back in with all the install_github calls completed
+      return(NULL)
+    }
+    # RSTudio won't install packages if they are loaded. THe algorithm is faulty and it won't let things install even when they are not loaded.
+    #do.call(install.packages, append(list(needInstall, lib = libPath, dependencies = FALSE), install.packagesArgs))
+    repos <- getOption("repos")
+    if ( is.null(repos) | any(repos == "") ) {
+      repos <- "https://cran.rstudio.com"
+    }
+
+    if(length(repos)>1) repos <- repos[["CRAN"]]
+    rpath <- file.path(R.home(), "bin", "R")
+    #if("tools:rstudio" %in% search()) {
+    # lapply(needInstall, function(pkg){
+    #   system(paste0(file.path(R.home(), "bin", "R"),
+    #                 " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,"',lib='",
+    #                 libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
+    # })
+    aa <- lapply(needInstall, function(pkg){
+      syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('",pkg,
+                        "',dependencies=FALSE,lib='",libPath,"',repos='",repos,"')\"")
+      system2(file.path(R.home(), "bin", "R"), syscall, stdout=TRUE, stderr=TRUE,
+              wait=TRUE, minimized=FALSE, invisible=FALSE)
+    })
+
+  }
+
+}
+
 
 #' Take a snapshot of all the packages and version numbers
 #'
