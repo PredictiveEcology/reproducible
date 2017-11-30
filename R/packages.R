@@ -663,38 +663,18 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                              cacheRepo = cacheRepo, notOlderThan = notOlderThan) {
   deps <- unlist(installedPkgDeps(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
   if(any(is.na(deps)) & all(!(packages %in% basename(githubPkgs)))) {# means we don't have a local copy yet
+    # These package_dependencies and installedPkdDeps will differ under the following circumstances
+    # 1. github packages are not detected using tools::package_dependencies
+    # 2. package_dependencies does not detect the dependencies of base packages, e.g,. methods depends on stats and graphics
     deps <- unlist(Cache(tools::package_dependencies, names(deps[is.na(deps)]), recursive = TRUE,
                           cacheRepo = cacheRepo, notOlderThan = notOlderThan))
   }
-  # deps1 <- unlist(Cache(tools::package_dependencies, packages, recursive = TRUE,
-  #                       cacheRepo = cacheRepo, notOlderThan = notOlderThan))
 
   if(length(deps)==0) deps <- NULL
-  # These are different under the following circumstances
-  # 1. github packages are not detected using tools::package_dependencies
-  # 2. package_dependencies does not detect the dependencies of base packages, e.g,. methods depends on stats and graphics
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
   names(deps) <- deps
   if(missing(githubPkgNames)) githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@" ), function(x) x[2])
 
-  # if(length(githubPkgs)) {
-  #   pkgPaths <- file.path(libPath, githubPkgNames)
-  #   fileExists <- file.exists(pkgPaths)
-  #   if(any(fileExists)) {
-  #     if(!is.null(install_githubArgs$dependencies)) {
-  #       if(isTRUE(install_githubArgs$dependencies)) {
-  #         # gitPkgDeps <- unlist(Cache(lapply, pkgPaths[fileExists], function(p) {
-  #         #   lapply(c("Imports", "Suggests", "Depends"), function(type) {
-  #         #     strsplit(desc::desc_get(key=type,  p), split = ",.{0,2} +")
-  #         #   })
-  #         # }, cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-  #         # gitPkgDeps <- installedPkgDeps(githubPkgNames[fileExists], libPath = unique(c(libPath, .libPaths())))
-  #         # #gitPkgDeps <- unname(unlist(lapply(strsplit(gitPkgDeps, split = "\n| "), function(x) x[1])))
-  #         # deps <- na.omit(unique(c(deps, gitPkgDeps)))
-  #       }
-  #     }
-  #   }
-  # }
   libPathPkgs <- unlist(lapply(libPath, dir))
   needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(unlist(libPathPkgs)))]
   needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
@@ -740,10 +720,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('",pkg,
                         "',dependencies=FALSE,lib='",libPath,"',repos=c('",paste(repos, collapse = "','"),"'))\"")
       system(paste(rpath, syscall), wait = TRUE)
-      #" --quiet --vanilla -e \"do.call(install.packages,list('",pkg,
-      #"',lib='",libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
-      # system2(rpath, syscall, stdout=TRUE, stderr=TRUE,
-      #         wait=TRUE, minimized=TRUE, invisible=TRUE)
     })
   }
   return(invisible(list(instPkgs = needInstall, allPkgsNeeded = allPkgsNeeded)))
