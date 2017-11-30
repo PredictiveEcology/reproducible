@@ -495,8 +495,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     # Here test that the installed version is greater than required one
     isLoaded <- unlist(lapply(together$instPkgs[needVersEqual], isNamespaceLoaded))
     if(!is.null(isLoaded)) {
-      canInstall <- together[needVersEqual[!eq],]
-      #canInstall <- together[needVersEqual[!eq & !isLoaded],]
+      #canInstall <- together[needVersEqual[!eq],]
+      canInstall <- together[needVersEqual[!eq & !isLoaded],]
     } else {
       canInstall <- together[0,]
     }
