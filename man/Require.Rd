@@ -84,7 +84,7 @@ element should be wiped, using \code{notOlderThan = Sys.time()}.
 Require("stats") # analogous to require(stats), but slower because it checks for
                  #   pkg dependencies, and installs them, if missing
 tempPkgFolder <- file.path(tempdir(), "Packages")
-Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
+Require("crayon", libPath = tempPkgFolder, standAlone = TRUE) # install.packages first, then library
 
 # make a package version snapshot
 packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")

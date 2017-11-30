@@ -42,7 +42,6 @@
 #'
 #' @export
 #' @importFrom tools package_dependencies
-#' @importFrom desc desc_get
 #' @importFrom devtools install_github
 #' @param packages Character vector of packages to install via
 #'        \code{install.packages}, then load (i.e., with \code{library})
@@ -72,7 +71,7 @@
 #' Require("stats") # analogous to require(stats), but slower because it checks for
 #'                  #   pkg dependencies, and installs them, if missing
 #' tempPkgFolder <- file.path(tempdir(), "Packages")
-#' Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
+#' Require("crayon", libPath = tempPkgFolder, standAlone = TRUE) # install.packages first, then library
 #'
 #' # make a package version snapshot
 #' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
@@ -213,30 +212,30 @@ newLibPaths <- function(libPath) {
 #' case) than \code{utils::installed.packages}
 #' especially if only a subset of "all" packages in libPath are desired.
 #' @export
-#' @param pkgs Character vector of packages to determine which version is installed in the \code{libPath}.
+#' @param packages Character vector of packages to determine which version is installed in the \code{libPath}.
 #' @inheritParams installVersions
 #' @examples
 #' installedVersions("reproducible", .libPaths()[1])
-installedVersions <- function (pkgs, libPath) {
+installedVersions <- function (packages, libPath) {
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()[1L]
     if (length(.libPaths()) > 1L)
-      message(sprintf(ngettext(length(pkgs), "Checking package in %s\n(as %s is unspecified)",
+      message(sprintf(ngettext(length(packages), "Checking package in %s\n(as %s is unspecified)",
                                "Checking packages in %s\n(as %s is unspecified)"),
                       sQuote(libPath), sQuote("libPath")), domain = NA)
   }
-  if (length(pkgs) > 1) {
-    if(length(pkgs)==length(libPath)) {
-      ans <- lapply(seq_along(pkgs), function(x) installedVersions(pkgs[x], libPath[x]))
+  if (length(packages) > 1) {
+    if(length(packages)==length(libPath)) {
+      ans <- lapply(seq_along(packages), function(x) installedVersions(packages[x], libPath[x]))
     } else {
-      ans <- lapply(pkgs, installedVersions, libPath)
+      ans <- lapply(packages, installedVersions, libPath)
     }
-    names(ans) <- pkgs
+    names(ans) <- packages
     return(ans)
-  } else if (length(pkgs)==0)  {
+  } else if (length(packages)==0)  {
     return(character())
   }
-  desc_path <- sprintf("%s/%s/DESCRIPTION", libPath, pkgs)
+  desc_path <- sprintf("%s/%s/DESCRIPTION", libPath, packages)
   if (!file.exists(desc_path)) {
     return(NA)
   }
@@ -249,35 +248,47 @@ installedVersions <- function (pkgs, libPath) {
   }
 }
 
-#' @rdname installPackages
-#' @export
-installedPkgDeps <- function (pkgs, libPath, recursive = TRUE, depends = TRUE, imports = TRUE, suggests = FALSE) {
+#' Determine package dependencies, first looking at local filesystem
+#'
+#' This is intended to replace \code{\link[tools]{package_dependencies}} or
+#' \code{\link[miniCRAN]{pkgDep}}, but with modfications for speed. It will first check
+#' local package directory(ies) in \code{libPath}, and it if the function cannont find
+#' the packages there, then it will use \code{\link[tools]{package_dependencies}}.
+#'
+#' @inheritParams tools::package_dependencies
+#' @inheritParams Require
+#' @param depends Logical. Include packages listed in "Depends". Default TRUE.
+#' @param imports Logical. Include packages listed in "Imports". Default TRUE.
+#' @param suggests Logical. Include packages listed in "Suggests". Default FALSE.
+#' @param recursive Logical. Should dependencies of dependencies be searched, recursively.
+#'                  NOTE Dependencies of suggests will not be recursive. Default TRUE.
+#' @rdname pkgDep
+#' @examples
+#' pkgDep("crayon")
+pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, imports = TRUE, suggests = FALSE) {
   if (missing(libPath) || is.null(libPath)) {
-    libPath <- .libPaths()[1L]
-    if (length(.libPaths()) > 1L) {
-      message(sprintf(ngettext(length(pkgs), "Checking package in %s\n(as %s is unspecified)",
-                               "Checking packages in %s\n(as %s is unspecified)"),
-                      sQuote(libPath), sQuote("libPath")), domain = NA)
-    }
-  }
-  if (length(libPath) > 1) {
-    # ans <- list()
-    # whHave <- rep(FALSE, length(pkgs))
-    # for(lp in libPath) {
-    #   browser()#expr=any(c("crayon", "covr") %in% pkgs))
-    #   if(length(pkgs)) {
-    #     ans <- append(ans, installedPkgDeps(pkgs[!whHave], lp))
-    #     whHave <- unlist(lapply(ans, function(x) all(!is.na(x))))
-    #     if(!is.null(whHave)) {
-    #       ans[!whHave] <- NULL
-    #       if(all(whHave)) {
-    #         break
-    #       }
-    #     }
-    #   }
+    libPath <- .libPaths()#[1L]
+    # if (length(.libPaths()) > 1L) {
+    #   message(sprintf(ngettext(length(packages), "Checking package in %s\n(as %s is unspecified)",
+    #                            "Checking packages in %s\n(as %s is unspecified)"),
+    #                   sQuote(libPath), sQuote("libPath")), domain = NA)
     # }
-    ans <- lapply(libPath, function(lp) installedPkgDeps(pkgs, lp))
-    if(length(pkgs)==1) {
+  }
+
+  if (length(libPath) > 1) {
+    ans <- list()
+    for(lp in libPath) {
+       ans1 <- pkgDep(packages, lp)
+       ans <- append(ans, list(ans1))
+       if(all(unlist(lapply(ans, function(x) all(unlist(lapply(x, is.character))))))) {
+         break
+       }
+    }
+    # This next line is the 1 liner to replace above... but above allows the ability to break out of search
+    #  if initial .libPaths have the package
+    #ans <- lapply(libPath, function(lp) pkgDep(packages, lp))
+
+    if(length(packages)==1) {
       ans <- list(ans)
     } else {
       #invert the list, so by package name
@@ -285,7 +296,7 @@ installedPkgDeps <- function (pkgs, libPath, recursive = TRUE, depends = TRUE, i
         ll2 <- lapply(ans, function(x) x[[nam]])
       })
     }
-    names(ans) <- pkgs
+    names(ans) <- packages
 
     ll2 <- lapply(ans, function(x) {
       ll1 <- unique(na.omit(unlist(x)))
@@ -296,24 +307,29 @@ installedPkgDeps <- function (pkgs, libPath, recursive = TRUE, depends = TRUE, i
 
     notInstalled <- unlist(lapply(ll2, function(y) length(y)==0 & is.logical(y)))
     ll2[notInstalled] <- NA
-
+    if(any(notInstalled)) {
+      message(paste(names(ll2[notInstalled]), collapse = ", "),
+              " not installed locally, checking on CRAN for dependencies.")
+      ll3 <- tools::package_dependencies(names(ll2[notInstalled]), recursive = TRUE)
+      ll2[notInstalled] <- ll3
+    }
     return(ll2)
   }
 
-  if (length(pkgs) > 1) {
-    if(length(pkgs)==length(libPath)) {
-      ans <- lapply(seq_along(pkgs), function(x) installedPkgDeps(pkgs[x], libPath[x]))
+  if (length(packages) > 1) {
+    if(length(packages)==length(libPath)) {
+      ans <- lapply(seq_along(packages), function(x) pkgDep(packages[x], libPath[x]))
     } else {
-      ans <- lapply(pkgs, installedPkgDeps, libPath)
+      ans <- lapply(packages, pkgDep, libPath)
     }
-    names(ans) <- pkgs
+    names(ans) <- packages
     return(ans)
-  } else if (length(pkgs)==0)  {
+  } else if (length(packages)==0)  {
     return(character())
   }
 
 
-  desc_path <- sprintf("%s/%s/DESCRIPTION", libPath, pkgs)
+  desc_path <- sprintf("%s/%s/DESCRIPTION", libPath, packages)
   if (!file.exists(desc_path)) {
     return(NA)
   }
@@ -361,14 +377,14 @@ installedPkgDeps <- function (pkgs, libPath, recursive = TRUE, depends = TRUE, i
         for(pat in hasVersionNumber) {
           needed <- sub(pattern = pat, needed, replacement = "")
         }
-        needed <- gsub(needed, pattern = " \\(\\)", replacement = "")
+        needed <- gsub(needed, pattern = " *\\(\\)", replacement = "")
       }
     }
 
     if(recursive) {
       # note that recursive searching must search in all libPaths, not just current one
-      needed2 <- installedPkgDeps(needed, libPath = unique(c(libPath, .libPaths())),
-                                  depends = depends, imports = imports, suggests = suggests)
+      needed2 <- pkgDep(needed, libPath = unique(c(libPath, .libPaths())),
+                                  depends = depends, imports = imports, suggests = FALSE) # like miniCRAN::pkgDep not recursive on Suggests
       needed <- na.omit(unique(c(needed, unlist(needed2))))
       attr(needed, "na.action") <- NULL
       attr(needed, "class") <- NULL
@@ -377,10 +393,10 @@ installedPkgDeps <- function (pkgs, libPath, recursive = TRUE, depends = TRUE, i
   }
 }
 
-# @rdname installPackages
-# @export
-# @import memoise memoise
-#installedPkgDeps <- memoise::memoise(installedPkgDepsRaw)
+#' @rdname pkgDep
+#' @export
+#' @import memoise memoise
+pkgDep <- memoise::memoise(pkgDepRaw)
 
 #' Install exact package versions from a package version text file & GitHub
 #'
@@ -479,7 +495,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     # Here test that the installed version is greater than required one
     isLoaded <- unlist(lapply(together$instPkgs[needVersEqual], isNamespaceLoaded))
     if(!is.null(isLoaded)) {
-      canInstall <- together[needVersEqual[!eq & !isLoaded],]
+      canInstall <- together[needVersEqual[!eq],]
+      #canInstall <- together[needVersEqual[!eq & !isLoaded],]
     } else {
       canInstall <- together[0,]
     }
@@ -517,7 +534,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       }
       failed <- data.frame(instPkgs = character(), instVers = character())
       if(nrow(whPkgsNeededFromCran)) {
-        repos <- getOption("repos")
+        #repos <- getOption("repos")
         if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
           options("repos" = "https://cran.rstudio.com")
         }
@@ -537,9 +554,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         canInstDirectFromCRAN <- whPkgsAvailFromCran[whPkgsNeededFromCran, nomatch=0, on = c("instPkgs", "instVers")]
 
         if(NROW(canInstDirectFromCRAN)) {
-          repos <- getOption("repos")
+          #repos <- getOption("repos")
           if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-            repos <- "http://132.156.148.172"# "https://cran.rstudio.com"
+            repos <- "https://cran.rstudio.com"
           }
 
           if(length(repos)>1) repos <- repos[["CRAN"]]
@@ -568,10 +585,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         }
 
         if(NROW(tryCRANarchive)>0 & all(!is.na(tryCRANarchive$instPkgs))) {
-          repos <- getOption("repos")
+          #repos <- getOption("repos")
           if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-            repos <- "http://132.156.148.172"# "https://cran.rstudio.com"
+            repos <- "https://cran.rstudio.com"
           }
+          if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
 
           rtests <- Sys.getenv("R_TESTS")
           isEmptyRtests <- nchar(rtests)==0
@@ -622,7 +640,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     } else {
       if(length(needVersEqual)) {
         tog <- together[needVersEqual,]
-        message("All packages except ",paste(tog$instPkgs, collapse = ", ")," are correct versions")
+        message(paste(tog$instPkgs, collapse = ", ")," version incorrect, but wrong version loaded. Cannot install.")
         message("Keeping installed version")
         colnames(tog) <- c("Package", "Requested Version", "Installed Version")
         rownames(tog) <- NULL
@@ -631,6 +649,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
       } else {
         message("All packages are correct versions")
+        if(!is.null(isLoaded)) {
+          message("However, because a package was already loaded in the namespace, the desired version",
+                  "may not be correctly loaded")
+        }
+
       }
       message("")
 
@@ -643,10 +666,17 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
 #' Internal function to install packages
 #'
-#' @param gitHubPackages Character vectors indicating repository/packageName@branch
 #' @inheritParams Require
-#' @param packageVersionFile Path to the package version file, defaults to
-#'        the \code{.packageVersions.txt}.
+#' @param repos The remote repository (e.g., a CRAN mirror), passed to \code{install.packages}
+#' @param githubPkgs Character vector of github repositoriess and packages, given in the form of
+#'                   repository/package@branch, with branch being optional.
+#' @param githubPkgNames Character vector of the package names, i.e., just the R package name.
+#' @param nonLibPathPkgs Character vector of all installed packages that are in .libPaths, but
+#'                       not in \code{libPath}. This would normally include a listing of
+#'                       base packages, but may also include other library paths if \code{standAlone}
+#'                       if \code{FALSE}
+#' @param cacheRepo A path to a cache repository to create or use. Used solely internally while
+#'                  running \code{pkgDep}.
 #' @importFrom versions install.versions
 #' @importFrom data.table setDT data.table setnames
 #' @importFrom utils read.table available.packages installed.packages install.packages
@@ -661,14 +691,18 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                              install.packagesArgs = list(),
                              libPath = .libPaths()[1], standAlone = standAlone,
                              cacheRepo = cacheRepo, notOlderThan = notOlderThan) {
-  deps <- unlist(installedPkgDeps(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
-  if(any(is.na(deps)) & all(!(packages %in% basename(githubPkgs)))) {# means we don't have a local copy yet
-    # These package_dependencies and installedPkdDeps will differ under the following circumstances
-    # 1. github packages are not detected using tools::package_dependencies
-    # 2. package_dependencies does not detect the dependencies of base packages, e.g,. methods depends on stats and graphics
-    deps <- unlist(Cache(tools::package_dependencies, names(deps[is.na(deps)]), recursive = TRUE,
-                          cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-  }
+  memoise::forget(pkgDep)
+  deps <- unlist(Cache(pkgDep, packages, unique(c(libPath, .libPaths())), recursive = TRUE,
+                 cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+  # browser()
+  # if(any(is.na(deps)) & all(!(packages %in% basename(githubPkgs)))) {# means we don't have a local copy yet
+  #   browser()
+  #   # These package_dependencies and installedPkdDeps will differ under the following circumstances
+  #   # 1. github packages are not detected using tools::package_dependencies
+  #   # 2. package_dependencies does not detect the dependencies of base packages, e.g,. methods depends on stats and graphics
+  #   deps <- unlist(Cache(tools::package_dependencies, names(deps[is.na(deps)]), recursive = TRUE,
+  #                         cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+  # }
 
   if(length(deps)==0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
@@ -697,7 +731,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         # with_libpaths doesn't work because it will look for ALL packages there; can't download without curl
       })
       .libPaths(oldLibPaths)
-      Require(unlist(gitPkgs), libPath = libPath, notOlderThan = notOlderThan,
+      Require(unlist(gitPkgs), libPath = libPath, notOlderThan = Sys.time(),
               install_githubArgs = install_githubArgs, standAlone = standAlone,
               install.packagesArgs = install.packagesArgs) # This sends it back in with all the install_github calls completed
       return(NULL)

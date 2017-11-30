@@ -25,12 +25,12 @@ Depends:
 Imports:
     archivist (>= 2.1.2),
     data.table (>= 1.10.4),
-    desc,
     devtools,
     digest,
     fastdigest,
     git2r (>= 0.18),
     magrittr,
+    memoise,
     methods,
     raster,
     Rcpp (>= 0.12.13),

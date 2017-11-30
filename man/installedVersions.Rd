@@ -4,10 +4,10 @@
 \alias{installedVersions}
 \title{Determine versions all installed pacakges}
 \usage{
-installedVersions(pkgs, libPath)
+installedVersions(packages, libPath)
 }
 \arguments{
-\item{pkgs}{Character vector of packages to determine which version is installed in the \code{libPath}.}
+\item{packages}{Character vector of packages to determine which version is installed in the \code{libPath}.}
 
 \item{libPath}{The library path where all packages should be installed, and looked for to load
 (i.e., call \code{library})}
