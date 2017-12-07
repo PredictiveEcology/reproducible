@@ -5,7 +5,8 @@
 \title{Install exact package versions from a package version text file & GitHub}
 \usage{
 installVersions(gitHubPackages, packageVersionFile = ".packageVersions.txt",
-  libPath = .libPaths()[1], standAlone = FALSE)
+  libPath = .libPaths()[1], standAlone = FALSE,
+  repos = getOption("repos"))
 }
 \arguments{
 \item{gitHubPackages}{Character vectors indicating repository/packageName@branch}
@@ -23,6 +24,9 @@ installs if the user has a substantial number of the packages already in their
 personal library. In the case of \code{TRUE}, there will be a hidden file
 place in the \code{libPath} directory that lists all the packages that were needed
 during the Require call.}
+
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either \code{install.packages},
+\code{install_github} or \code{installVersions}.}
 }
 \description{
 This uses CRAN, CRAN archives, or MRAN (accessed via \code{versions::install.versions})

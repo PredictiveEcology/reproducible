@@ -43,6 +43,7 @@
 #' @export
 #' @importFrom tools package_dependencies
 #' @importFrom devtools install_github
+#' @importFrom utils install.packages
 #' @param packages Character vector of packages to install via
 #'        \code{install.packages}, then load (i.e., with \code{library})
 #' @param packageVersionFile If provided, then this will override all \code{install.package}
@@ -50,6 +51,8 @@
 #' @param libPath The library path where all packages should be installed, and looked for to load
 #'        (i.e., call \code{library})
 #' @inheritParams Cache
+#' @param repos The remote repository (e.g., a CRAN mirror), passed to either \code{install.packages},
+#'              \code{install_github} or \code{installVersions}.
 #' @param notOlderThan Time or Date. The \code{Cache} is used internally for
 #'                     \code{tools::package_dependencies} and for already installed packages that
 #'                     came from github. To purge the cache: \code{notOlderThan = Sys.time()}
@@ -91,7 +94,8 @@
 #' }
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
                     notOlderThan = NULL, install_githubArgs = list(),
-                    install.packagesArgs = list(), standAlone = FALSE) {
+                    install.packagesArgs = list(), standAlone = FALSE,
+                    repos = getOption("repos")) {
 
   githubPkgs <- grep("\\/", packages, value = TRUE)
   githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@" ), function(x) x[2])
@@ -115,7 +119,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   if(!missing(packageVersionFile)) {
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
-                          libPath = libPath, standAlone = standAlone)
+                          libPath = libPath, standAlone = standAlone, repos = repos)
     Sys.setlocale(locale = "")
     allPkgsNeeded <- aa$instPkgs
   } else {
@@ -129,10 +133,12 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
                                            function(pk)
                                              installedVersions(allPkgsNeeded, libPath = pk))))
-  if(length(currentVersions)==1) names(currentVersions) <- allPkgsNeeded
+  #browser()
+  #if(length(currentVersions)==1) names(currentVersions) <- allPkgsNeeded
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
   if(NROW(currentVersions)) {
     pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
+    browser()
 
     # if(file.exists(autoFile)) {
     #   aaa <- data.table::fread(autoFile, header = TRUE)
@@ -205,12 +211,13 @@ newLibPaths <- function(libPath) {
 
 #' Determine versions all installed pacakges
 #'
-#' This code is taken very directly from the \code{installed.versions} function in the
-#' \code{versions} package, but uses an \code{Rcpp} alternative
-#' to readLines for speed. It will be anywhere from 2x to 10x faster than the \code{installed.versions}
-#' \code{versions} function. This is also many times faster (1000x ? for the 1 package
-#' case) than \code{utils::installed.packages}
-#' especially if only a subset of "all" packages in libPath are desired.
+#' This code is adapted from \code{\link[versions]{installed.versions}},
+#' but uses an \code{Rcpp} alternative to readLines for speed.
+#' It will be anywhere from 2x to 10x faster than the
+#' \code{\link[versions]{installed.versions}} function. This is also many times faster
+#' than \code{utils::installed.packages}
+#' especially if only a subset of "all" packages in libPath are desired
+#' (1000x ? for the 1 package case).
 #' @export
 #' @param packages Character vector of packages to determine which version is installed in the \code{libPath}.
 #' @inheritParams installVersions
@@ -255,6 +262,10 @@ installedVersions <- function (packages, libPath) {
 #' local package directory(ies) in \code{libPath}, and it if the function cannont find
 #' the packages there, then it will use \code{\link[tools]{package_dependencies}}.
 #'
+#' @note \code{package_dependencies} and \code{pkgDep} will differ under the following circumstances:
+#' 1. github packages are not detected using \code{tools::package_dependencies}, and
+#' 2. \code{tools::package_dependencies} does not detect the dependencies of base
+#' packages among themselves, e.g,. methods depends on stats and graphics
 #' @inheritParams tools::package_dependencies
 #' @inheritParams Require
 #' @param depends Logical. Include packages listed in "Depends". Default TRUE.
@@ -266,6 +277,7 @@ installedVersions <- function (packages, libPath) {
 #' @examples
 #' pkgDep("crayon")
 pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, imports = TRUE, suggests = FALSE) {
+
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()#[1L]
     # if (length(.libPaths()) > 1L) {
@@ -305,6 +317,9 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
       ll1
     })
 
+    # package_dependencies and PkgDep will differ under the following circumstances
+    # 1. github packages are not detected using tools::package_dependencies
+    # 2. package_dependencies does not detect the dependencies of base packages, e.g,. methods depends on stats and graphics
     notInstalled <- unlist(lapply(ll2, function(y) length(y)==0 & is.logical(y)))
     ll2[notInstalled] <- NA
     if(any(notInstalled)) {
@@ -439,7 +454,8 @@ pkgDep <- memoise::memoise(pkgDepRaw)
 #'
 #' }
 installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
-                            libPath = .libPaths()[1], standAlone = FALSE) {
+                            libPath = .libPaths()[1], standAlone = FALSE, repos = getOption("repos")) {
+
   if(file.exists(packageVersionFile)) {
     libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
     message("Reading ", packageVersionFile)
@@ -533,13 +549,25 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
               "  ", neededCRANpkgs)
       }
       failed <- data.frame(instPkgs = character(), instVers = character())
-      if(nrow(whPkgsNeededFromCran)) {
-        #repos <- getOption("repos")
-        if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-          options("repos" = "https://cran.rstudio.com")
-        }
 
-        avail <- available.packages()
+      if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
+        repos <- "https://cran.rstudio.com"
+      }
+      if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+
+      rpath <- file.path(R.home(), "bin", "R")
+
+      rtests <- Sys.getenv("R_TESTS")
+      isEmptyRtests <- nchar(rtests)==0
+      if(!isEmptyRtests) {
+        Sys.setenv(R_TESTS="")
+        on.exit(Sys.setenv(R_TESTS=rtests), add = TRUE)
+      }
+
+
+      if(nrow(whPkgsNeededFromCran)) {
+
+        avail <- available.packages(repos = repos)
 
         wh <- avail[,"Package"] %in% whPkgsNeededFromCran[,"instPkgs"]
         whPkgsAvailFromCran <- data.frame(avail[wh,c("Package", "Version"), drop = FALSE], stringsAsFactors = FALSE)
@@ -554,23 +582,15 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         canInstDirectFromCRAN <- whPkgsAvailFromCran[whPkgsNeededFromCran, nomatch=0, on = c("instPkgs", "instVers")]
 
         if(NROW(canInstDirectFromCRAN)) {
-          #repos <- getOption("repos")
-          if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-            repos <- "https://cran.rstudio.com"
-          }
+          # #repos <- getOption("repos")
+          # if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
+          #   repos <- "https://cran.rstudio.com"
+          # }
+          #
+          # if(length(repos)>1) repos <- repos[["CRAN"]]
 
-          if(length(repos)>1) repos <- repos[["CRAN"]]
-
-          rpath <- file.path(R.home(), "bin", "R")
-
-          rtests <- Sys.getenv("R_TESTS")
-          isEmptyRtests <- nchar(rtests)==0
-          if(!isEmptyRtests) {
-            Sys.setenv(R_TESTS="")
-            on.exit(Sys.setenv(R_TESTS=rtests), add = TRUE)
-          }
           lapply(canInstDirectFromCRAN$instPkgs, function(pkg){
-              system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,
+              system(paste0(rpath, " --quiet --vanilla -e \"do.call(install.packages,list('",pkg,
                             "',lib='",libPath,"',dependencies=FALSE,repos='",repos,"'))\""), wait=TRUE)
 
           })
@@ -585,25 +605,25 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         }
 
         if(NROW(tryCRANarchive)>0 & all(!is.na(tryCRANarchive$instPkgs))) {
-          #repos <- getOption("repos")
-          if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-            repos <- "https://cran.rstudio.com"
-          }
-          if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+          # #repos <- getOption("repos")
+          # if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
+          #   repos <- "https://cran.rstudio.com"
+          # }
+          # if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
 
-          rtests <- Sys.getenv("R_TESTS")
-          isEmptyRtests <- nchar(rtests)==0
-          if(!isEmptyRtests) {
-            Sys.setenv(R_TESTS="")
-            on.exit(Sys.setenv(R_TESTS=rtests), add = TRUE)
-          }
+          # rtests <- Sys.getenv("R_TESTS")
+          # isEmptyRtests <- nchar(rtests)==0
+          # if(!isEmptyRtests) {
+          #   Sys.setenv(R_TESTS="")
+          #   on.exit(Sys.setenv(R_TESTS=rtests), add = TRUE)
+          # }
 
-          packageURLs <- file.path(repos[length(repos)],"src/contrib/Archive",
+          packageURLs <- file.path(repos,"src/contrib/Archive",
                                    tryCRANarchive$instPkgs,
                                    paste0(tryCRANarchive$instPkgs,"_",
                                           tryCRANarchive$instVers,".tar.gz"))
           lapply(packageURLs, function(pkg){
-            system(paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"install.packages('",pkg,
+            system(paste0(rpath, " --quiet --vanilla -e \"install.packages('",pkg,
                           "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
 
           })
@@ -618,7 +638,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           message("Trying MRAN install of ",paste(failed$instPkgs, collapse=", "))
           type <- if(.Platform$OS.type=="windows") "win.binary" else "source"
 
-          multiSource <- paste0(file.path(R.home(), "bin", "R"), " --quiet --vanilla -e \"versions::install.versions('",
+          multiSource <- paste0(rpath, " --quiet --vanilla -e \"versions::install.versions('",
                                 failed$instPkgs,"','",failed$instVers,
                                 "',lib='",libPath,"',dependencies=FALSE,type='",type,"')\"")
           lapply(multiSource, system, wait=TRUE)
@@ -694,15 +714,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   memoise::forget(pkgDep)
   deps <- unlist(Cache(pkgDep, packages, unique(c(libPath, .libPaths())), recursive = TRUE,
                  cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-  # browser()
-  # if(any(is.na(deps)) & all(!(packages %in% basename(githubPkgs)))) {# means we don't have a local copy yet
-  #   browser()
-  #   # These package_dependencies and installedPkdDeps will differ under the following circumstances
-  #   # 1. github packages are not detected using tools::package_dependencies
-  #   # 2. package_dependencies does not detect the dependencies of base packages, e.g,. methods depends on stats and graphics
-  #   deps <- unlist(Cache(tools::package_dependencies, names(deps[is.na(deps)]), recursive = TRUE,
-  #                         cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-  # }
 
   if(length(deps)==0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
@@ -737,10 +748,10 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       return(NULL)
     }
     # RSTudio won't install packages if they are loaded. THe algorithm is faulty and it won't let things install even when they are not loaded.
-    repos <- getOption("repos")
     if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
       repos <- "https://cran.rstudio.com"
     }
+    if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
 
     rpath <- file.path(R.home(), "bin", "R")
     rtests <- Sys.getenv("R_TESTS")

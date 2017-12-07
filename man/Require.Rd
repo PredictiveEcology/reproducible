@@ -6,7 +6,8 @@
 \usage{
 Require(packages, packageVersionFile, libPath = .libPaths()[1],
   notOlderThan = NULL, install_githubArgs = list(),
-  install.packagesArgs = list(), standAlone = FALSE)
+  install.packagesArgs = list(), standAlone = FALSE,
+  repos = getOption("repos"))
 }
 \arguments{
 \item{packages}{Character vector of packages to install via
@@ -33,6 +34,9 @@ installs if the user has a substantial number of the packages already in their
 personal library. In the case of \code{TRUE}, there will be a hidden file
 place in the \code{libPath} directory that lists all the packages that were needed
 during the Require call.}
+
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either \code{install.packages},
+\code{install_github} or \code{installVersions}.}
 }
 \description{
 This is an "all in one" function that will run \code{install.packages} for

@@ -63,7 +63,7 @@ test_that("package-related functions work", {
   pkgDeps <- tools::package_dependencies("zTree", recursive = TRUE)
 
   expect_true(NROW(installed)==
-                (1 + length(unlist(reproducible::installedPkgDeps("zTree", recursive = TRUE, libPath = packageDir)))))
+                (1 + length(unlist(tools::package_dependencies("zTree", recursive = TRUE)))))
 
 
   # Check that the snapshot works even if packages aren't in packageDir, i.e., standAlone is FALSE, or there are base packages
@@ -75,7 +75,7 @@ test_that("package-related functions work", {
   installed <- data.table::fread(packageVersionFile)
   expect_true(NROW(unique(installed, by="instPkgs")) ==
                    length(unique(c(allInstalledNames,
-                                   unlist(reproducible::installedPkgDeps(allInstalledNames, recursive = TRUE,
+                                   unlist(reproducible::pkgDep(allInstalledNames, recursive = TRUE,
                                                                          libPath = c(packageDir, .libPaths())))))))
 
   packageDirList <- dir(packageDir)

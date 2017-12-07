@@ -32,6 +32,12 @@ This is intended to replace \code{\link[tools]{package_dependencies}} or
 local package directory(ies) in \code{libPath}, and it if the function cannont find
 the packages there, then it will use \code{\link[tools]{package_dependencies}}.
 }
+\note{
+\code{package_dependencies} and \code{pkgDep} will differ under the following circumstances:
+1. github packages are not detected using \code{tools::package_dependencies}, and
+2. \code{tools::package_dependencies} does not detect the dependencies of base
+packages among themselves, e.g,. methods depends on stats and graphics
+}
 \examples{
 pkgDep("crayon")
 }
