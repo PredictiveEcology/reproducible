@@ -41,3 +41,5 @@
 *.xdy
 *.tdo
 
+
+src/reproducible\.dll

@@ -222,13 +222,22 @@ setMethod(
       aaa <- object
     }
     # The following Rounding is necessary to make digest equal on linux and windows
-    for (i in names(aaa)) {
-      if(is(aaa, "SpatialPolygonsDataFrame")){
-        if (!is.integer(aaa[, i])) {
-          if (is.numeric(aaa[, i]))
-            aaa[, i] <- round(aaa[, i], 4)
+    if(inherits(aaa, "SpatialPolygonsDataFrame")){
+
+      bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
+      if(sum(bbb)) {
+        for(i in names(aaa)[bbb]) {
+          aaa[[i]] <- round(aaa[[i]], 4)
         }
       }
+
+      # for (i in names(aaa)) {
+      #   if (!is.integer(aaa[, i])) {
+      #     if (is.numeric(aaa[, i])) {
+      #       aaa[, i] <- round(aaa[, i], 4)
+      #     }
+      #   }
+      # }
     }
 
     return(fastdigest::fastdigest(aaa))
