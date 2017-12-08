@@ -194,7 +194,7 @@ setMethod(
       dig <- suppressWarnings(
         list(dim(object), res(object), crs(object), extent(object),
              lapply(object@layers, function(yy) {
-               digestRaster(yy, compareRasterFileLength, algo)
+               .digestRaster(yy, compareRasterFileLength, algo)
              })
         )
       )
@@ -204,7 +204,7 @@ setMethod(
         dig <- append(dig, digest(file = object@filename, length = compareRasterFileLength))
       }
     } else {
-      dig <- suppressWarnings(digestRaster(object, compareRasterFileLength, algo))
+      dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
     }
     return(fastdigest::fastdigest(dig))
 })
