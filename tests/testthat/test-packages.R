@@ -47,7 +47,6 @@ test_that("package-related functions work", {
   expect_true(any(grepl(pattern = "package:meow", search())))
 
 
-  try(detach("package:covr", unload = TRUE))
   try(detach("package:meow", unload = TRUE))
 
   # zTree is a random small package that has 1 dependency that is NOT in base -- plyr
@@ -75,10 +74,12 @@ test_that("package-related functions work", {
   packageVersionFile <- file.path(packageDir, ".packageVersion3.txt")
   pkgSnapshot(libPath=packageDir, packageVersionFile, standAlone = FALSE)
   installed <- data.table::fread(packageVersionFile)
+
+  availablePkgMatrix <- available.packages(repos = repos)
+  pkgDeps <- tools::package_dependencies(allInstalledNames, db = availablePkgMatrix, recursive = TRUE)
+
   expect_true(NROW(unique(installed, by="instPkgs")) ==
-                   length(unique(c(allInstalledNames,
-                                   unlist(reproducible::pkgDep(allInstalledNames, recursive = TRUE,
-                                                                         libPath = c(packageDir, .libPaths())))))))
+                   1 + length(unique(unlist(pkgDeps))))
 
   packageDirList <- dir(packageDir)
   expect_true(all(packageDirList %in% installed$instPkgs))
@@ -93,7 +94,6 @@ test_that("package-related functions work", {
   #   which is the ones that were used when looking for the dependencies of covr during Require call
   expect_true(identical(merged, unique(merged)))
 
-  try(detach("package:covr", unload = TRUE))
   try(detach("package:meow", unload = TRUE))
   try(detach("package:zTree", unload = TRUE))
   try(detach("package:plyr", unload = TRUE), silent = TRUE)

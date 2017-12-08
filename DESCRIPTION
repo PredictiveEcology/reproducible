@@ -21,7 +21,7 @@ Authors@R: c(
     role = "cph")
     )
 Depends:
-    R (>= 3.4.2)
+    R (>= 3.3.3)
 Imports:
     archivist (>= 2.1.2),
     data.table (>= 1.10.4),

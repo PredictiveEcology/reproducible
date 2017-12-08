@@ -32,13 +32,12 @@
 #' automatically (with \code{standAlone = TRUE} or \code{standAlone = FALSE}),
 #' allowing a call to \code{pkgSnapshot} when a more permanent record of versions can be made.
 #'
-#' @note This function will use \code{Cache} internally to determine the dependencies
-#' of all \code{packages}. The cache repository will be inside the \code{libPath},
-#' and will be named \code{.cache}. This will speed up subsequent calls to \code{Require}
-#' dramatically.
-#' It will not take into account version numbers for this
-#' caching step. If package versions are updated manually by the user, then this cached
-#' element should be wiped, using \code{notOlderThan = Sys.time()}.
+#' @note This function will use \code{memoise::memoise} internally for speed to determine the dependencies
+#' of all \code{packages}. The the memoised results could be stale if packages are installed
+#' outside of \code{Require}. This can be rectified with \code{forget(pkgDep)} or restarting R.
+#' Similarly, it will not take into account version numbers for this
+#' memoise step. If package versions are updated manually by the user, then this memoised
+#' element should be wiped, using \code{forget(pkgDep)}.
 #'
 #' @export
 #' @importFrom tools package_dependencies
@@ -251,7 +250,7 @@ installedVersions <- function (packages, libPath) {
 #' Determine package dependencies, first looking at local filesystem
 #'
 #' This is intended to replace \code{\link[tools]{package_dependencies}} or
-#' \code{\link[miniCRAN]{pkgDep}}, but with modfications for speed. It will first check
+#' \code{pkgDep} in the miniCRAN package, but with modfications for speed. It will first check
 #' local package directory(ies) in \code{libPath}, and it if the function cannont find
 #' the packages there, then it will use \code{\link[tools]{package_dependencies}}.
 #'
@@ -712,9 +711,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                              install.packagesArgs = list(),
                              libPath = .libPaths()[1], standAlone = standAlone,
                              cacheRepo = cacheRepo, notOlderThan = notOlderThan) {
-  memoise::forget(pkgDep)
-  deps <- unlist(Cache(pkgDep, packages, unique(c(libPath, .libPaths())), recursive = TRUE,
-                 cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+  #memoise::forget(pkgDep)
+  deps <- unlist(pkgDep(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
 
   if(length(deps)==0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
