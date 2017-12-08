@@ -133,17 +133,10 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
                                            function(pk)
                                              installedVersions(allPkgsNeeded, libPath = pk))))
-  #browser()
   #if(length(currentVersions)==1) names(currentVersions) <- allPkgsNeeded
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
   if(NROW(currentVersions)) {
     pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
-    browser()
-
-    # if(file.exists(autoFile)) {
-    #   aaa <- data.table::fread(autoFile, header = TRUE)
-    #   pkgsToSnapshot <- unique(data.table::rbindlist(list(pkgsToSnapshot, aaa)), by = "instPkgs")
-    # }
     .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
   }
 
@@ -276,7 +269,8 @@ installedVersions <- function (packages, libPath) {
 #' @rdname pkgDep
 #' @examples
 #' pkgDep("crayon")
-pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, imports = TRUE, suggests = FALSE) {
+pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, imports = TRUE, suggests = FALSE,
+                       repos = getOption("repos")) {
 
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()#[1L]
@@ -325,7 +319,14 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
     if(any(notInstalled)) {
       message(paste(names(ll2[notInstalled]), collapse = ", "),
               " not installed locally, checking on CRAN for dependencies.")
-      ll3 <- tools::package_dependencies(names(ll2[notInstalled]), recursive = TRUE)
+
+      if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
+        repos <- "https://cran.rstudio.com"
+      }
+      if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+
+      availPackagesDb<- available.packages(repos = repos)
+      ll3 <- tools::package_dependencies(names(ll2[notInstalled]), db = availPackagesDb, recursive = TRUE)
       ll2[notInstalled] <- ll3
     }
     return(ll2)
