@@ -13,12 +13,13 @@ installedVersions(packages, libPath)
 (i.e., call \code{library})}
 }
 \description{
-This code is taken very directly from the \code{installed.versions} function in the
-\code{versions} package, but uses an \code{Rcpp} alternative
-to readLines for speed. It will be anywhere from 2x to 10x faster than the \code{installed.versions}
-\code{versions} function. This is also many times faster (1000x ? for the 1 package
-case) than \code{utils::installed.packages}
-especially if only a subset of "all" packages in libPath are desired.
+This code is adapted from \code{\link[versions]{installed.versions}},
+but uses an \code{Rcpp} alternative to readLines for speed.
+It will be anywhere from 2x to 10x faster than the
+\code{\link[versions]{installed.versions}} function. This is also many times faster
+than \code{utils::installed.packages}
+especially if only a subset of "all" packages in libPath are desired
+(1000x ? for the 1 package case).
 }
 \examples{
 installedVersions("reproducible", .libPaths()[1])

@@ -1,9 +1,10 @@
 test_that("package-related functions work", {
 
-  repos <- oldRepos <- getOption("repos")
-  if ( is.null(repos) | any(repos == "") ) {
-    options(repos="https://cran.rstudio.com")
+  repos <- getOption("repos")
+  if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
+    repos <- "https://cran.rstudio.com"
   }
+  if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
 
   packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
   suppressWarnings(Require("crayon", libPath = packageDir, standAlone = TRUE))
@@ -60,10 +61,11 @@ test_that("package-related functions work", {
   packageVersionFile <- file.path(packageDir, ".packageVersion2.txt")
   pkgSnapshot(libPath=packageDir, packageVersionFile, standAlone = FALSE)
   installed <- data.table::fread(packageVersionFile)
-  pkgDeps <- tools::package_dependencies("zTree", recursive = TRUE)
+  availablePkgMatrix <- available.packages(repos = repos)
+  pkgDeps <- tools::package_dependencies("zTree", db = availablePkgMatrix, recursive = TRUE)
 
   expect_true(NROW(installed)==
-                (1 + length(unlist(tools::package_dependencies("zTree", recursive = TRUE)))))
+                (1 + length(unlist(pkgDeps))))
 
 
   # Check that the snapshot works even if packages aren't in packageDir, i.e., standAlone is FALSE, or there are base packages

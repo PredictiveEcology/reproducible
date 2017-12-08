@@ -6,10 +6,10 @@
 \title{Determine package dependencies, first looking at local filesystem}
 \usage{
 pkgDepRaw(packages, libPath, recursive = TRUE, depends = TRUE,
-  imports = TRUE, suggests = FALSE)
+  imports = TRUE, suggests = FALSE, repos = getOption("repos"))
 
 pkgDep(packages, libPath, recursive = TRUE, depends = TRUE,
-  imports = TRUE, suggests = FALSE)
+  imports = TRUE, suggests = FALSE, repos = getOption("repos"))
 }
 \arguments{
 \item{packages}{a character vector of package names.}
@@ -25,6 +25,9 @@ NOTE Dependencies of suggests will not be recursive. Default TRUE.}
 \item{imports}{Logical. Include packages listed in "Imports". Default TRUE.}
 
 \item{suggests}{Logical. Include packages listed in "Suggests". Default FALSE.}
+
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either \code{install.packages},
+\code{install_github} or \code{installVersions}.}
 }
 \description{
 This is intended to replace \code{\link[tools]{package_dependencies}} or
