@@ -115,6 +115,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
 
   # Two parts -- one if there is a packageVersionFile -- This calls the external file installVersions
   #           -- two if there is no packageVersionFile
+  #browser()
   if(!missing(packageVersionFile)) {
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
@@ -132,8 +133,9 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
                                            function(pk)
                                              installedVersions(allPkgsNeeded, libPath = pk))))
-  #if(length(currentVersions)==1) names(currentVersions) <- allPkgsNeeded
+  if(is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
+  #browser()
   if(NROW(currentVersions)) {
     pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
     .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
@@ -711,7 +713,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                              install.packagesArgs = list(),
                              libPath = .libPaths()[1], standAlone = standAlone,
                              cacheRepo = cacheRepo, notOlderThan = notOlderThan) {
-  #memoise::forget(pkgDep)
+  memoise::forget(pkgDep)
   deps <- unlist(pkgDep(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
 
   if(length(deps)==0) deps <- NULL
@@ -740,6 +742,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         do.call(install_github, args)
         # with_libpaths doesn't work because it will look for ALL packages there; can't download without curl
       })
+      #browser()
       .libPaths(oldLibPaths)
       Require(unlist(gitPkgs), libPath = libPath, notOlderThan = Sys.time(),
               install_githubArgs = install_githubArgs, standAlone = standAlone,

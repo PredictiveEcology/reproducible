@@ -62,9 +62,10 @@ test_that("package-related functions work", {
   installed <- data.table::fread(packageVersionFile)
   availablePkgMatrix <- available.packages(repos = repos)
   pkgDeps <- tools::package_dependencies("zTree", db = availablePkgMatrix, recursive = TRUE)
+  pkgDeps <- sort(c("zTree", unique(unlist(pkgDep(c(names(pkgDeps), unlist(pkgDeps)), recursive = TRUE)))))
 
-  expect_true(NROW(installed)==
-                (1 + length(unlist(pkgDeps))))
+  expect_true(all(sort(installed$instPkgs)==
+                pkgDeps))
 
 
   # Check that the snapshot works even if packages aren't in packageDir, i.e., standAlone is FALSE, or there are base packages
@@ -76,10 +77,13 @@ test_that("package-related functions work", {
   installed <- data.table::fread(packageVersionFile)
 
   availablePkgMatrix <- available.packages(repos = repos)
-  pkgDeps <- tools::package_dependencies(allInstalledNames, db = availablePkgMatrix, recursive = TRUE)
+  # pkgDeps <- tools::package_dependencies(allInstalledNames, db = availablePkgMatrix, recursive = TRUE)
+  pkgDeps <- sort(c(allInstalledNames, unique(unlist(pkgDep(libPath = packageDir,
+                                                            allInstalledNames,
+                                                            recursive = TRUE)))))
 
-  expect_true(NROW(unique(installed, by="instPkgs")) ==
-                   1 + length(unique(unlist(pkgDeps))))
+  expect_true(all(sort(unique(installed$instPkgs))==
+                    sort(unique(pkgDeps))))
 
   packageDirList <- dir(packageDir)
   expect_true(all(packageDirList %in% installed$instPkgs))
