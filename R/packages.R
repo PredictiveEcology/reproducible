@@ -32,12 +32,13 @@
 #' automatically (with \code{standAlone = TRUE} or \code{standAlone = FALSE}),
 #' allowing a call to \code{pkgSnapshot} when a more permanent record of versions can be made.
 #'
-#' @note This function will use \code{memoise::memoise} internally for speed to determine the dependencies
-#' of all \code{packages}. The the memoised results could be stale if packages are installed
-#' outside of \code{Require}. This can be rectified with \code{forget(pkgDep)} or restarting R.
-#' Similarly, it will not take into account version numbers for this
-#' memoise step. If package versions are updated manually by the user, then this memoised
-#' element should be wiped, using \code{forget(pkgDep)}.
+#' @note This function will use \code{Cache} internally to determine the dependencies
+#' of all \code{packages}. The cache repository will be inside the \code{libPath},
+#' and will be named \code{.cache}. This will speed up subsequent calls to \code{Require}
+#' dramatically.
+#' It will not take into account version numbers for this
+#' caching step. If package versions are updated manually by the user, then this cached
+#' element should be wiped, using \code{notOlderThan = Sys.time()}.
 #'
 #' @export
 #' @importFrom tools package_dependencies
@@ -711,8 +712,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                              install.packagesArgs = list(),
                              libPath = .libPaths()[1], standAlone = standAlone,
                              cacheRepo = cacheRepo, notOlderThan = notOlderThan) {
-  #memoise::forget(pkgDep)
-  deps <- unlist(pkgDep(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
+  memoise::forget(pkgDep)
+  deps <- unlist(Cache(pkgDep, packages, unique(c(libPath, .libPaths())), recursive = TRUE,
+                       cacheRepo = cacheRepo, notOlderThan = notOlderThan))
 
   if(length(deps)==0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
