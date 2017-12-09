@@ -242,7 +242,7 @@ installedVersions <- function (packages, libPath) {
   }
   else {
     lines <- readLinesRcpp(desc_path);
-    lines <- strsplit(lines, split = "\n")[[1]];
+    #lines <- strsplit(lines, split = "\n")[[1]];
     vers_line <- lines[grep("^Version: *", lines)]
     vers <- gsub("Version: ", "", vers_line)
     return(vers)
@@ -352,7 +352,7 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
   }
   else {
     lines <- readLinesRcpp(desc_path)
-    lines <- strsplit(lines, split = "\n")[[1]];
+    #lines <- strsplit(lines, split = "\n")[[1]];
     deps_line <- grep("^Depends: *", lines)
     sugg_line <- grep("^Suggests: *", lines)
     imports_line <- grep("^Imports: *", lines)

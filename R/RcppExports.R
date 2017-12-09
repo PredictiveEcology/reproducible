@@ -10,9 +10,10 @@
 #' @return
 #' Similar to \code{readLines}, except with explicit \code{\\n} embedded.
 #'
-#' @export
-#' @rdname readLinesRcpp
-readLinesRcpp <- function(path) {
-    .Call('_reproducible_readLinesRcpp', PACKAGE = 'reproducible', path)
+#' @examples
+#' readLinesRcpp(system.file(package = "reproducible", "DESCRIPTION"))
+#' @rdname readLinesRcppInternal
+readLinesRcppInternal <- function(path) {
+    .Call('_reproducible_readLinesRcppInternal', PACKAGE = 'reproducible', path)
 }
 

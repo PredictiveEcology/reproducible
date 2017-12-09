@@ -14,10 +14,11 @@ using namespace Rcpp;
 //' @return
 //' Similar to \code{readLines}, except with explicit \code{\\n} embedded.
 //'
-//' @export
-//' @rdname readLinesRcpp
+//' @examples
+//' readLinesRcpp(system.file(package = "reproducible", "DESCRIPTION"))
+//' @rdname readLinesRcppInternal
 // [[Rcpp::export]]
-CharacterVector readLinesRcpp(std::string path) {
+CharacterVector readLinesRcppInternal(std::string path) {
   std::ifstream in(path.c_str());
   std::string contents;
   in.seekg(0, std::ios::end);

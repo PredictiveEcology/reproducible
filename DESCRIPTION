@@ -55,5 +55,6 @@ Collate:
     'cache.R'
     'consistentPaths.R'
     'git.R'
+    'helpers.R'
     'packages.R'
     'reproducible-package.R'
