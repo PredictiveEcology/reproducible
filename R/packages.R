@@ -113,7 +113,6 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
     nonLibPathPkgs <- unique(unlist(lapply(nonLibPathPaths, dir)))
   }
 
-
   # Two parts -- one if there is a packageVersionFile -- This calls the external file installVersions
   #           -- two if there is no packageVersionFile
   if(!missing(packageVersionFile)) {
@@ -325,6 +324,9 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
 
       availPackagesDb<- available.packages(repos = repos)
       ll3 <- tools::package_dependencies(names(ll2[notInstalled]), db = availPackagesDb, recursive = TRUE)
+      # the previous line will miss base packages
+      ll3 <- lapply(ll3, function(x) unique(c(x, unlist(pkgDep(x, libPath=unique(c(libPath, .libPaths())), recursive = TRUE)))))
+
       ll2[notInstalled] <- ll3
     }
     return(ll2)

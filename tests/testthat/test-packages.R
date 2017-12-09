@@ -61,8 +61,8 @@ test_that("package-related functions work", {
   pkgSnapshot(libPath=packageDir, packageVersionFile, standAlone = FALSE)
   installed <- data.table::fread(packageVersionFile)
   availablePkgMatrix <- available.packages(repos = repos)
-  pkgDeps <- tools::package_dependencies("zTree", db = availablePkgMatrix, recursive = TRUE)
-  pkgDeps <- sort(c("zTree", unique(unlist(pkgDep(c(names(pkgDeps), unlist(pkgDeps)), recursive = TRUE)))))
+  #pkgDeps <- tools::package_dependencies("zTree", db = availablePkgMatrix, recursive = TRUE)
+  pkgDeps <- sort(c("zTree", unique(unlist(pkgDep("zTree", recursive = TRUE, libPath = packageDir)))))
 
   expect_true(all(sort(installed$instPkgs)==
                 pkgDeps))
