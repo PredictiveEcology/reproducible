@@ -115,7 +115,6 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
 
   # Two parts -- one if there is a packageVersionFile -- This calls the external file installVersions
   #           -- two if there is no packageVersionFile
-  #browser()
   if(!missing(packageVersionFile)) {
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
@@ -321,10 +320,7 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
       message(paste(names(ll2[notInstalled]), collapse = ", "),
               " not installed locally, checking on CRAN for dependencies.")
 
-      if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-        repos <- "https://cran.rstudio.com"
-      }
-      if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+      repos <- getCRANrepos(repos)
 
       availPackagesDb<- available.packages(repos = repos)
       ll3 <- tools::package_dependencies(names(ll2[notInstalled]), db = availPackagesDb, recursive = TRUE)
@@ -552,10 +548,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       }
       failed <- data.frame(instPkgs = character(), instVers = character())
 
-      if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-        repos <- "https://cran.rstudio.com"
-      }
-      if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+      repos <- getCRANrepos(repos)
 
       rpath <- file.path(R.home(), "bin", "R")
 
@@ -607,28 +600,28 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         }
 
         if(NROW(tryCRANarchive)>0 & all(!is.na(tryCRANarchive$instPkgs))) {
-          # #repos <- getOption("repos")
-          # if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-          #   repos <- "https://cran.rstudio.com"
-          # }
-          # if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
-
-          # rtests <- Sys.getenv("R_TESTS")
-          # isEmptyRtests <- nchar(rtests)==0
-          # if(!isEmptyRtests) {
-          #   Sys.setenv(R_TESTS="")
-          #   on.exit(Sys.setenv(R_TESTS=rtests), add = TRUE)
-          # }
-
-          packageURLs <- file.path(repos,"src/contrib/Archive",
+          archiveReposAttempts <- 0
+          archiveReposSuccess <- FALSE
+          while(any(!archiveReposSuccess)) {
+            packageURLs <- file.path(repos,"src/contrib/Archive",
                                    tryCRANarchive$instPkgs,
                                    paste0(tryCRANarchive$instPkgs,"_",
                                           tryCRANarchive$instVers,".tar.gz"))
-          lapply(packageURLs, function(pkg){
-            system(paste0(rpath, " --quiet --vanilla -e \"install.packages('",pkg,
-                          "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
-
-          })
+            for(pkg in packageURLs) {
+              if(RCurl::url.exists(pkg)) {
+                system(paste0(rpath, " --quiet --vanilla -e \"install.packages('",pkg,
+                              "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
+                archiveReposSuccess <- TRUE
+                break
+              }
+            }
+            if(!any(archiveReposSuccess)) {
+              archiveReposAttempts <- archiveReposAttempts + 1
+              repos <- getCRANrepos()
+            }
+            if(archiveReposAttempts>1)
+              archiveReposSuccess <- TRUE
+          }
 
           AP <- installed.packages(lib.loc = libPath)
           actuallyInstalled <- data.table(AP[(AP[,"Package"] %in% tryCRANarchive$instPkgs),c("Package", "Version"),drop=FALSE])
@@ -750,10 +743,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       return(NULL)
     }
     # RSTudio won't install packages if they are loaded. THe algorithm is faulty and it won't let things install even when they are not loaded.
-    if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-      repos <- "https://cran.rstudio.com"
-    }
-    if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+    repos <- getCRANrepos(repos)
 
     rpath <- file.path(R.home(), "bin", "R")
     rtests <- Sys.getenv("R_TESTS")
@@ -812,17 +802,6 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
 }
 
 
-.pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
-  inst <- data.frame(instPkgs, instVers=unlist(instVers), stringsAsFactors = FALSE)
-  write.table(inst, file = packageVersionFile, row.names = FALSE)
-}
 
 
 
-invertList <- function(ls) { # @Josh O'Brien
-  # get sub-elements in same order
-  x <- lapply(ls, `[`, names(ls[[1]]))
-  # stack and reslice
-  ll <- apply(do.call(rbind, x), 2, as.list)
-  lapply(ll, function(xx) unique(unlist(xx)))
-}
