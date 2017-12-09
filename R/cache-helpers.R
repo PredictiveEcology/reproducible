@@ -693,8 +693,10 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 }
 
 #' @rdname cacheHelper
+#' @importFrom fastdigest fastdigest
+#' @importFrom digest digest
 #' @importFrom raster res crs extent
-digestRaster <- function(object, compareRasterFileLength, algo) {
+.digestRaster <- function(object, compareRasterFileLength, algo) {
   if (nzchar(object@file@name)) {
     dig <- fastdigest(list(dim(object), res(object), crs(object),
                            extent(object), object@data))

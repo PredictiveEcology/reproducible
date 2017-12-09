@@ -133,8 +133,9 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
   currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
                                            function(pk)
                                              installedVersions(allPkgsNeeded, libPath = pk))))
-  #if(length(currentVersions)==1) names(currentVersions) <- allPkgsNeeded
+  if(is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
+  #browser()
   if(NROW(currentVersions)) {
     pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
     .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
@@ -241,7 +242,7 @@ installedVersions <- function (packages, libPath) {
   }
   else {
     lines <- readLinesRcpp(desc_path);
-    lines <- strsplit(lines, split = "\n")[[1]];
+    #lines <- strsplit(lines, split = "\n")[[1]];
     vers_line <- lines[grep("^Version: *", lines)]
     vers <- gsub("Version: ", "", vers_line)
     return(vers)
@@ -320,10 +321,7 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
       message(paste(names(ll2[notInstalled]), collapse = ", "),
               " not installed locally, checking on CRAN for dependencies.")
 
-      if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-        repos <- "https://cran.rstudio.com"
-      }
-      if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+      repos <- getCRANrepos(repos)
 
       availPackagesDb<- available.packages(repos = repos)
       ll3 <- tools::package_dependencies(names(ll2[notInstalled]), db = availPackagesDb, recursive = TRUE)
@@ -351,7 +349,7 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
   }
   else {
     lines <- readLinesRcpp(desc_path)
-    lines <- strsplit(lines, split = "\n")[[1]];
+    #lines <- strsplit(lines, split = "\n")[[1]];
     deps_line <- grep("^Depends: *", lines)
     sugg_line <- grep("^Suggests: *", lines)
     imports_line <- grep("^Imports: *", lines)
@@ -432,6 +430,7 @@ pkgDep <- memoise::memoise(pkgDepRaw)
 #' @param packageVersionFile Path to the package version file, defaults to
 #'        the \code{.packageVersions.txt}.
 #' @importFrom versions install.versions
+#' @importFrom RCurl url.exists
 #' @importFrom data.table setDT data.table setnames
 #' @importFrom utils read.table available.packages installed.packages install.packages
 #' @examples
@@ -551,10 +550,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       }
       failed <- data.frame(instPkgs = character(), instVers = character())
 
-      if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-        repos <- "https://cran.rstudio.com"
-      }
-      if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+      repos <- getCRANrepos(repos)
 
       rpath <- file.path(R.home(), "bin", "R")
 
@@ -606,28 +602,28 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         }
 
         if(NROW(tryCRANarchive)>0 & all(!is.na(tryCRANarchive$instPkgs))) {
-          # #repos <- getOption("repos")
-          # if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-          #   repos <- "https://cran.rstudio.com"
-          # }
-          # if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
-
-          # rtests <- Sys.getenv("R_TESTS")
-          # isEmptyRtests <- nchar(rtests)==0
-          # if(!isEmptyRtests) {
-          #   Sys.setenv(R_TESTS="")
-          #   on.exit(Sys.setenv(R_TESTS=rtests), add = TRUE)
-          # }
-
-          packageURLs <- file.path(repos,"src/contrib/Archive",
+          archiveReposAttempts <- 0
+          archiveReposSuccess <- FALSE
+          while(any(!archiveReposSuccess)) {
+            packageURLs <- file.path(repos,"src/contrib/Archive",
                                    tryCRANarchive$instPkgs,
                                    paste0(tryCRANarchive$instPkgs,"_",
                                           tryCRANarchive$instVers,".tar.gz"))
-          lapply(packageURLs, function(pkg){
-            system(paste0(rpath, " --quiet --vanilla -e \"install.packages('",pkg,
-                          "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
-
-          })
+            for(pkg in packageURLs) {
+              if(url.exists(pkg)) {
+                system(paste0(rpath, " --quiet --vanilla -e \"install.packages('",pkg,
+                              "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
+                archiveReposSuccess <- TRUE
+                break
+              }
+            }
+            if(!any(archiveReposSuccess)) {
+              archiveReposAttempts <- archiveReposAttempts + 1
+              repos <- getCRANrepos()
+            }
+            if(archiveReposAttempts>1)
+              archiveReposSuccess <- TRUE
+          }
 
           AP <- installed.packages(lib.loc = libPath)
           actuallyInstalled <- data.table(AP[(AP[,"Package"] %in% tryCRANarchive$instPkgs),c("Package", "Version"),drop=FALSE])
@@ -742,6 +738,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         do.call(install_github, args)
         # with_libpaths doesn't work because it will look for ALL packages there; can't download without curl
       })
+      #browser()
       .libPaths(oldLibPaths)
       Require(unlist(gitPkgs), libPath = libPath, notOlderThan = Sys.time(),
               install_githubArgs = install_githubArgs, standAlone = standAlone,
@@ -749,10 +746,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       return(NULL)
     }
     # RSTudio won't install packages if they are loaded. THe algorithm is faulty and it won't let things install even when they are not loaded.
-    if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-      repos <- "https://cran.rstudio.com"
-    }
-    if(length(repos)>1) repos <- repos[(names(repos) %in% "CRAN")]
+    repos <- getCRANrepos(repos)
 
     rpath <- file.path(R.home(), "bin", "R")
     rtests <- Sys.getenv("R_TESTS")
@@ -811,17 +805,6 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
 }
 
 
-.pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
-  inst <- data.frame(instPkgs, instVers=unlist(instVers), stringsAsFactors = FALSE)
-  write.table(inst, file = packageVersionFile, row.names = FALSE)
-}
 
 
 
-invertList <- function(ls) { # @Josh O'Brien
-  # get sub-elements in same order
-  x <- lapply(ls, `[`, names(ls[[1]]))
-  # stack and reslice
-  ll <- apply(do.call(rbind, x), 2, as.list)
-  lapply(ll, function(xx) unique(unlist(xx)))
-}

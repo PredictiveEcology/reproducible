@@ -645,6 +645,7 @@ setMethod(
 #' @inheritParams magrittr::`%>%`
 #' @importFrom magrittr freduce
 #' @export
+#' @rdname pipe
 #' @examples
 #' tmpdir <- file.path(tempdir(), "testCache")
 #' checkPath(tmpdir, create = TRUE)

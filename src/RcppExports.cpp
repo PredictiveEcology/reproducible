@@ -5,20 +5,20 @@
 
 using namespace Rcpp;
 
-// readLinesRcpp
-CharacterVector readLinesRcpp(std::string path);
-RcppExport SEXP _reproducible_readLinesRcpp(SEXP pathSEXP) {
+// readLinesRcppInternal
+CharacterVector readLinesRcppInternal(std::string path);
+RcppExport SEXP _reproducible_readLinesRcppInternal(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
-    rcpp_result_gen = Rcpp::wrap(readLinesRcpp(path));
+    rcpp_result_gen = Rcpp::wrap(readLinesRcppInternal(path));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_reproducible_readLinesRcpp", (DL_FUNC) &_reproducible_readLinesRcpp, 1},
+    {"_reproducible_readLinesRcppInternal", (DL_FUNC) &_reproducible_readLinesRcppInternal, 1},
     {NULL, NULL, 0}
 };
 
