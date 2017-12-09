@@ -34,6 +34,7 @@ Imports:
     methods,
     raster,
     Rcpp (>= 0.12.13),
+    RCurl,
     sp,
     versions
 Suggests:

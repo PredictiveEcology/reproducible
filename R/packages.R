@@ -429,6 +429,7 @@ pkgDep <- memoise::memoise(pkgDepRaw)
 #' @param packageVersionFile Path to the package version file, defaults to
 #'        the \code{.packageVersions.txt}.
 #' @importFrom versions install.versions
+#' @importFrom RCurl url.exists
 #' @importFrom data.table setDT data.table setnames
 #' @importFrom utils read.table available.packages installed.packages install.packages
 #' @examples
@@ -608,7 +609,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                    paste0(tryCRANarchive$instPkgs,"_",
                                           tryCRANarchive$instVers,".tar.gz"))
             for(pkg in packageURLs) {
-              if(RCurl::url.exists(pkg)) {
+              if(url.exists(pkg)) {
                 system(paste0(rpath, " --quiet --vanilla -e \"install.packages('",pkg,
                               "',lib='",libPath,"',dependencies=FALSE,repos=NULL,type='source')\""), wait=TRUE)
                 archiveReposSuccess <- TRUE
