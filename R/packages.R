@@ -299,6 +299,7 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
       message(paste(names(ll2[notInstalled]), collapse = ", "),
               " not installed locally, checking on CRAN for dependencies.")
 
+      paste(names(ll2[notInstalled]), collapse = ", ")
       repos <- getCRANrepos(repos)
 
       availPackagesDb<- available.packagesMem(repos = repos)
@@ -371,9 +372,9 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
       hasVersionNumber <- unlist(lapply(needed, function(x) regmatches(x, gregexpr(pattern = "(?<=\\().*?(?=\\))", x, perl = TRUE))[[1]]))
       if(length(hasVersionNumber)) {
         for(pat in hasVersionNumber) {
-          needed <- sub(pattern = pat, needed, replacement = "")
+          needed <- sub(pattern = paste0("\\(", pat,"\\)"), needed, replacement = "")
         }
-        needed <- gsub(needed, pattern = " *\\(\\)", replacement = "")
+        needed <- gsub(needed, pattern = " *", replacement = "")
       }
     }
 
