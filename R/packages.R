@@ -134,9 +134,9 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1],
                                              installedVersions(allPkgsNeeded, libPath = pk))))
   if(is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
-  #browser()
   if(NROW(currentVersions)) {
     pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
+    pkgsToSnapshot <- unique(pkgsToSnapshot, by = c("instPkgs", "instVers"))
     .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
   }
 
@@ -241,7 +241,8 @@ installedVersions <- function (packages, libPath) {
   }
   else {
     lines <- readLinesRcpp(desc_path);
-    #lines <- strsplit(lines, split = "\n")[[1]];
+    Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
+    on.exit(Sys.setlocale(locale = ""))
     vers_line <- lines[grep("^Version: *", lines)]
     vers <- gsub("Version: ", "", vers_line)
     return(vers)
@@ -351,7 +352,8 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
   }
   else {
     lines <- readLinesRcpp(desc_path)
-    #lines <- strsplit(lines, split = "\n")[[1]];
+    Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
+    on.exit(Sys.setlocale(locale = ""))
     deps_line <- grep("^Depends: *", lines)
     sugg_line <- grep("^Suggests: *", lines)
     imports_line <- grep("^Imports: *", lines)
@@ -740,7 +742,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         do.call(install_github, args)
         # with_libpaths doesn't work because it will look for ALL packages there; can't download without curl
       })
-      #browser()
       .libPaths(oldLibPaths)
       Require(unlist(gitPkgs), libPath = libPath, notOlderThan = Sys.time(),
               install_githubArgs = install_githubArgs, standAlone = standAlone,

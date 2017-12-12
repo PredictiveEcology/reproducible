@@ -12,7 +12,10 @@
 #' readLinesRcpp(system.file(package = "reproducible", "DESCRIPTION"))
 #' @rdname readLinesRcpp
 readLinesRcpp <- function(path) {
+  Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
+  on.exit(Sys.setlocale(locale = ""))
   strsplit(readLinesRcppInternal(path)  , split = "\n")[[1]]
+
 }
 
 
