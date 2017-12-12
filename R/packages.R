@@ -41,7 +41,6 @@
 #' element should be wiped, using \code{notOlderThan = Sys.time()}.
 #'
 #' @export
-#' @importFrom tools package_dependencies
 #' @importFrom devtools install_github
 #' @importFrom utils install.packages
 #' @param packages Character vector of packages to install via
@@ -303,7 +302,7 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
       repos <- getCRANrepos(repos)
 
       availPackagesDb<- available.packagesMem(repos = repos)
-      ll3 <- tools::package_dependencies(names(ll2[notInstalled]), db = availPackagesDb, recursive = TRUE)
+      ll3 <- package_dependenciesMem(names(ll2[notInstalled]), db = availPackagesDb, recursive = TRUE)
       # the previous line will miss base packages
       ll3 <- lapply(ll3, function(x) unique(c(x, unlist(pkgDep(x, libPath=unique(c(libPath, .libPaths())), recursive = TRUE)))))
 
@@ -415,12 +414,21 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
 #' @importFrom memoise memoise
 pkgDep <- memoise(pkgDepRaw)
 
-#' Memoised version of available.packages
+#' Memoised versions of package tools
 #'
-#' This has a 60 second timeout.
+#' These have a 6 minute memory time window.
 #' @importFrom memoise memoise timeout
+#' @rdname memoisedPackageTools
+#' @importFrom tools package_dependencies
+#' @inheritParams tools::package_dependencies
+package_dependenciesMem <- memoise(tools::package_dependencies, ~timeout(360))
+
+#' @importFrom memoise memoise timeout
+#' @rdname memoisedPackageTools
+#' @importFrom utils available.packages
 #' @inheritParams utils::available.packages
-available.packagesMem <- memoise(available.packages, ~timeout(60))
+available.packagesMem <- memoise(available.packages, ~timeout(360))
+
 
 #' Install exact package versions from a package version text file & GitHub
 #'
