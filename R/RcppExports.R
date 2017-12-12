@@ -14,5 +14,6 @@
 #' readLinesRcpp(system.file(package = "reproducible", "DESCRIPTION"))
 #' @rdname readLinesRcppInternal
 readLinesRcppInternal <- function(path) {
-    .Call("_reproducible_readLinesRcppInternal", PACKAGE = "reproducible", path)
+    .Call('_reproducible_readLinesRcppInternal', PACKAGE = 'reproducible', path)
 }
+
