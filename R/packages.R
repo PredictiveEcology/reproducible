@@ -249,27 +249,6 @@ installedVersions <- function (packages, libPath) {
   }
 }
 
-#' Determine package dependencies, first looking at local filesystem
-#'
-#' This is intended to replace \code{\link[tools]{package_dependencies}} or
-#' \code{pkgDep} in the miniCRAN package, but with modfications for speed. It will first check
-#' local package directory(ies) in \code{libPath}, and it if the function cannont find
-#' the packages there, then it will use \code{\link[tools]{package_dependencies}}.
-#'
-#' @note \code{package_dependencies} and \code{pkgDep} will differ under the following circumstances:
-#' 1. github packages are not detected using \code{tools::package_dependencies}, and
-#' 2. \code{tools::package_dependencies} does not detect the dependencies of base
-#' packages among themselves, e.g,. methods depends on stats and graphics
-#' @inheritParams tools::package_dependencies
-#' @inheritParams Require
-#' @param depends Logical. Include packages listed in "Depends". Default TRUE.
-#' @param imports Logical. Include packages listed in "Imports". Default TRUE.
-#' @param suggests Logical. Include packages listed in "Suggests". Default FALSE.
-#' @param recursive Logical. Should dependencies of dependencies be searched, recursively.
-#'                  NOTE Dependencies of suggests will not be recursive. Default TRUE.
-#' @rdname pkgDep
-#' @examples
-#' pkgDep("crayon")
 pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, imports = TRUE, suggests = FALSE,
                        repos = getOption("repos")) {
 
@@ -323,7 +302,7 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
 
       repos <- getCRANrepos(repos)
 
-      availPackagesDb<- available.packages(repos = repos)
+      availPackagesDb<- available.packagesMem(repos = repos)
       ll3 <- tools::package_dependencies(names(ll2[notInstalled]), db = availPackagesDb, recursive = TRUE)
       # the previous line will miss base packages
       ll3 <- lapply(ll3, function(x) unique(c(x, unlist(pkgDep(x, libPath=unique(c(libPath, .libPaths())), recursive = TRUE)))))
@@ -387,7 +366,7 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
       needed <- c(needed, sugg[[1]])
       }}
 
-    needed <- grep("^R ", needed, value = TRUE, invert = TRUE)
+    needed <- grep("^R[\\( ]", needed, value = TRUE, invert = TRUE)
     if(length(needed)) {
       #hasVersionNumber <- regmatches(needed, gregexpr(pattern = "(?<=\\().*?(?=\\))", needed, perl = TRUE))[[1]]
       hasVersionNumber <- unlist(lapply(needed, function(x) regmatches(x, gregexpr(pattern = "(?<=\\().*?(?=\\))", x, perl = TRUE))[[1]]))
@@ -411,10 +390,37 @@ pkgDepRaw <- function (packages, libPath, recursive = TRUE, depends = TRUE, impo
   }
 }
 
+#' Determine package dependencies, first looking at local filesystem
+#'
+#' This is intended to replace \code{\link[tools]{package_dependencies}} or
+#' \code{pkgDep} in the miniCRAN package, but with modfications for speed. It will first check
+#' local package directory(ies) in \code{libPath}, and it if the function cannont find
+#' the packages there, then it will use \code{\link[tools]{package_dependencies}}.
+#'
+#' @note \code{package_dependencies} and \code{pkgDep} will differ under the following circumstances:
+#' 1. github packages are not detected using \code{tools::package_dependencies}, and
+#' 2. \code{tools::package_dependencies} does not detect the dependencies of base
+#' packages among themselves, e.g,. methods depends on stats and graphics
+#' @inheritParams tools::package_dependencies
+#' @inheritParams Require
+#' @param depends Logical. Include packages listed in "Depends". Default TRUE.
+#' @param imports Logical. Include packages listed in "Imports". Default TRUE.
+#' @param suggests Logical. Include packages listed in "Suggests". Default FALSE.
+#' @param recursive Logical. Should dependencies of dependencies be searched, recursively.
+#'                  NOTE Dependencies of suggests will not be recursive. Default TRUE.
+#' @examples
+#' pkgDep("crayon")
 #' @rdname pkgDep
 #' @export
-#' @import memoise memoise
-pkgDep <- memoise::memoise(pkgDepRaw)
+#' @importFrom memoise memoise
+pkgDep <- memoise(pkgDepRaw)
+
+#' Memoised version of available.packages
+#'
+#' This has a 60 second timeout.
+#' @importFrom memoise memoise timeout
+#' @inheritParams utils::available.packages
+available.packagesMem <- memoise(available.packages, ~timeout(60))
 
 #' Install exact package versions from a package version text file & GitHub
 #'
