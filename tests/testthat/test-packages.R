@@ -30,18 +30,15 @@ test_that("package-related functions work", {
   expect_true(iv[iv$Package=="crayon","Version"]==version)
 
 
-  versionkza <- "3.2.0"
-  aa <- data.frame(instPkgs="kza", instVers = versionkza, stringsAsFactors = FALSE)
+  versionlatdiag <- "0.2-2"
+  aa <- data.frame(instPkgs="latdiag", instVers = versionlatdiag, stringsAsFactors = FALSE)
   write.table(file = packageVersionFile, aa, row.names = FALSE)
 
-  Require("kza", libPath = packageDir, packageVersionFile = packageVersionFile,
+  Require("latdiag", libPath = packageDir, packageVersionFile = packageVersionFile,
           standAlone = FALSE)
   iv <- data.frame(installed.packages(lib.loc = packageDir), stringsAsFactors = FALSE)
   #expect_true(iv[iv$Package=="crayon","Version"]=="1.3.4")
-  expect_true(iv[iv$Package=="kza","Version"]==versionkza)
-  b <- mget(ls())
-  save(b, file = paste0("~/tmp/afterkza",paste(collapse = "", sample(LETTERS,5)),".rdata"))
-
+  expect_true(iv[iv$Package=="latdiag","Version"]==versionlatdiag)
 
   Require("achubaty/meow", libPath = packageDir,
           install_githubArgs = list(force = TRUE, dependencies = TRUE),
@@ -71,7 +68,7 @@ test_that("package-related functions work", {
 
 
   # Check that the snapshot works even if packages aren't in packageDir, i.e., standAlone is FALSE, or there are base packages
-  allInstalled <- c("Holidays", "achubaty/meow", "crayon", "kza")
+  allInstalled <- c("Holidays", "achubaty/meow", "crayon", "latdiag")
   allInstalledNames <- unlist(lapply(strsplit(allInstalled, "/"), function(x) x[length(x)]))
   Require(allInstalled, libPath = packageDir)
   packageVersionFile <- file.path(packageDir, ".packageVersion3.txt")
@@ -84,8 +81,6 @@ test_that("package-related functions work", {
                                                             allInstalledNames,
                                                             recursive = TRUE)))))
 
-  b <- mget(ls())
-  save(b, file = paste0("~/tmp/afterPkgDeps",paste(collapse = "", sample(LETTERS,5)),".rdata"))
   expect_true(all(sort(unique(installed$instPkgs))==
                     sort(unique(pkgDeps))))
 
@@ -99,7 +94,7 @@ test_that("package-related functions work", {
   merged <- installed[inBaseDT, on = c("instPkgs", "instVers"), nomatch=0]
 
   # This test that the installed versions in Base are the same as the ones that are expected in packageVersionFile,
-  #   which is the ones that were used when looking for the dependencies of kza during Require call
+  #   which is the ones that were used when looking for the dependencies of latdiag during Require call
   expect_true(identical(merged, unique(merged)))
 
   try(detach("package:meow", unload = TRUE))
