@@ -325,7 +325,7 @@ setMethod(
       cacheRepo <- checkPath(cacheRepo, create = TRUE)
     }
 
-    if (sideEffect != FALSE) if(isTRUE(sideEffect)) {sideEffect <- cacheRepo}
+    if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
       suppressWarnings(archivist::createLocalRepo(cacheRepo))
@@ -333,12 +333,11 @@ setMethod(
 
     # List file prior to cache
     if (sideEffect != FALSE) {
-      if(isTRUE(sideEffect)) {
-        priorRepo <-  list.files(cacheRepo, full.names = TRUE)
+      if (isTRUE(sideEffect)) {
+        priorRepo <- list.files(cacheRepo, full.names = TRUE)
       } else {
-        priorRepo <-  list.files(sideEffect, full.names = TRUE)
+        priorRepo <- list.files(sideEffect, full.names = TRUE)
       }
-
     }
 
     # remove things in the Cache call that are not relevant to Caching
@@ -492,10 +491,10 @@ setMethod(
     attr(output, "call") <- ""
 
     if (sideEffect != FALSE) {
-      if(isTRUE(sideEffect)) {
-        postRepo <-  list.files(cacheRepo, full.names = TRUE)
+      if (isTRUE(sideEffect)) {
+        postRepo <- list.files(cacheRepo, full.names = TRUE)
       } else {
-        postRepo <-  list.files(sideEffect, full.names = TRUE)
+        postRepo <- list.files(sideEffect, full.names = TRUE)
       }
       dwdFlst <- setdiff(postRepo, priorRepo)
       if (length(dwdFlst > 0)) {
@@ -512,7 +511,7 @@ setMethod(
           })
         }
 
-        cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep= "/")
+        cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep = "/")
         attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
 
         if (makeCopy) {

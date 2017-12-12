@@ -222,11 +222,10 @@ setMethod(
       aaa <- object
     }
     # The following Rounding is necessary to make digest equal on linux and windows
-    if(inherits(aaa, "SpatialPolygonsDataFrame")){
-
+    if (inherits(aaa, "SpatialPolygonsDataFrame")) {
       bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
-      if(sum(bbb)) {
-        for(i in names(aaa)[bbb]) {
+      if (sum(bbb)) {
+        for (i in names(aaa)[bbb]) {
           aaa[[i]] <- round(aaa[[i]], 4)
         }
       }
