@@ -149,9 +149,9 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
   if (any(!packagesLoaded)) {
     message("Simultaneous package versions being used.",
             " Can only load first version(s) loaded in this session:\n",
-            packages[!packagesLoaded])
+            paste(packages[!packagesLoaded], collapse = ", "))
     packagesLoaded2 <- unlist(lapply(packages[!packagesLoaded], function(p) {
-      try(require(p, character.only = TRUE))
+      try(require(p, character.only = TRUE, quietly = TRUE))
     }))
 
 
