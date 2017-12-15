@@ -254,7 +254,8 @@ installedVersions <- function(packages, libPath) {
 }
 
 pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
-                      imports = TRUE, suggests = FALSE, repos = getOption("repos")) {
+                      imports = TRUE, suggests = FALSE, linkingTo = TRUE,
+                      repos = getOption("repos")) {
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()#[1L]
     # if (length(.libPaths()) > 1L) {
@@ -344,6 +345,7 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
     deps_line <- grep("^Depends: *", lines) # nolint
     sugg_line <- grep("^Suggests: *", lines) # nolint
     imports_line <- grep("^Imports: *", lines) # nolint
+    linkingTo_line <- grep("^LinkingTo: *", lines) # nolint
     colon_line <- grep(": *", lines) # nolint
 
     needed <- character()
@@ -373,6 +375,15 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
       sugg <- strsplit(sugg, split = ", *")
       needed <- c(needed, sugg[[1]])
     }}
+
+    if (linkingTo) {
+      if (length(linkingTo_line)) {
+        linkingTo_lines <- linkingTo_line:(colon_line[which(colon_line %in% linkingTo_line) + 1] - 1) # nolint
+        link <- paste(lines[linkingTo_lines], collapse = "")
+        link <- gsub("LinkingTo: ", "", link)
+        link <- strsplit(link, split = ", *")
+        needed <- c(needed, link[[1]])
+      }}
 
     needed <- grep("^R[\\( ]", needed, value = TRUE, invert = TRUE)
     if (length(needed)) {
@@ -422,6 +433,7 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 #' @param depends Logical. Include packages listed in "Depends". Default TRUE.
 #' @param imports Logical. Include packages listed in "Imports". Default TRUE.
 #' @param suggests Logical. Include packages listed in "Suggests". Default FALSE.
+#' @param linkingTo Logical. Include packages listed in "LinkingTo". Default TRUE.
 #' @param recursive Logical. Should dependencies of dependencies be searched, recursively.
 #'                  NOTE Dependencies of suggests will not be recursive. Default TRUE.
 #' @examples
