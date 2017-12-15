@@ -762,6 +762,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   memoise::forget(pkgDep)
   deps <- unlist(Cache(pkgDep, packages, unique(c(libPath, .libPaths())), recursive = TRUE,
                        cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+  # sometimes weird /r and spaces enter
+  deps <- gsub(pattern = "[ {\r}]*", deps, replacement = "")
 
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
@@ -770,18 +772,18 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
   }
 
-  libPathPkgs <- unlist(lapply(libPath, dir))
-  needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(unlist(libPathPkgs)))]
+    libPathPkgs <- unlist(lapply(libPath, dir))
+  needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(libPathPkgs))]
   needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
   if (length(needInstall)) {
     gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
     if (length(gitPkgs)) {
       oldLibPaths <- .libPaths()
-      .libPaths(c(libPath, oldLibPaths))
+      .libPaths(unique(c(libPath, oldLibPaths)))
 
       # use xforce = TRUE because we have already eliminated
-      args <- append(install_githubArgs, list(dependencies = FALSE, upgrade_dependencies = FALSE,
-                                              force = TRUE, local = FALSE))
+      args <- append(install_githubArgs, list(#dependencies = NA, upgrade_dependencies = TRUE,
+                                              force = TRUE))#, local = FALSE))
       sapply(gitPkgs, function(pk) {
         args <- append(args, list(pk))
         # the cases where we have the correct version; install_github uses a
@@ -795,11 +797,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       })
       .libPaths(oldLibPaths)
 
-      # This sends it back in with all the install_github calls completed
-      Require(unlist(gitPkgs), libPath = libPath, notOlderThan = Sys.time(),
-              install_githubArgs = install_githubArgs, standAlone = standAlone,
-              install.packagesArgs = install.packagesArgs)
-      return(NULL)
+      # This sends it back in with all the install_github calls completed, will install dependencies of
+      # Require(unique(c(needInstall[!(needInstall %in% githubPkgNames)], gitPkgs)),
+      #         libPath = libPath, notOlderThan = Sys.time(),
+      #         install_githubArgs = install_githubArgs, standAlone = standAlone,
+      #         install.packagesArgs = install.packagesArgs)
+      # return(NULL)
     }
     # RStudio won't install packages if they are loaded. The algorithm is faulty
     # and it won't let things install even when they are not loaded.
@@ -813,7 +816,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       on.exit(Sys.setenv(R_TESTS = rtests), add = TRUE)
     }
 
-    aa <- lapply(needInstall, function(pkg) {
+    aa <- lapply(needInstall[!(needInstall %in% githubPkgNames)], function(pkg) {
       syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('", pkg,
                         "',dependencies=FALSE,lib='", libPath, "',repos=c('",
                         paste(repos, collapse = "','"), "'))\"")
