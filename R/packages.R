@@ -764,6 +764,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                        cacheRepo = cacheRepo, notOlderThan = notOlderThan))
   # sometimes weird /r and spaces enter
   deps <- gsub(pattern = "[ {\r}]*", deps, replacement = "")
+  deps <- deps[nzchar(deps)]
 
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
@@ -772,7 +773,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
   }
 
-    libPathPkgs <- unlist(lapply(libPath, dir))
+  libPathPkgs <- unlist(lapply(libPath, dir))
   needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(libPathPkgs))]
   needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
   if (length(needInstall)) {
