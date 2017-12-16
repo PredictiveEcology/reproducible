@@ -386,9 +386,6 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
       }}
 
     needed <- grep("^R[\\( ]", needed, value = TRUE, invert = TRUE)
-    # sometimes weird /r and spaces enter
-    needed <- gsub(pattern = "[ {\r}]*", needed, replacement = "")
-    needed <- needed[nzchar(needed)]
 
     if (length(needed)) {
       # hasVersionNumber <- regmatches(needed, gregexpr(pattern = "(?<=\\().*?(?=\\))",

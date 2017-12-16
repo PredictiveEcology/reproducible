@@ -14,7 +14,7 @@
 readLinesRcpp <- function(path) {
   Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
   on.exit(Sys.setlocale(locale = ""))
-  strsplit(readLinesRcppInternal(path), split = "\n")[[1]]
+  strsplit(readLinesRcppInternal(path), split = "[{\r}]*\n")[[1]]
 }
 
 .pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
