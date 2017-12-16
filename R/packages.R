@@ -386,6 +386,10 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
       }}
 
     needed <- grep("^R[\\( ]", needed, value = TRUE, invert = TRUE)
+    # sometimes weird /r and spaces enter
+    needed <- gsub(pattern = "[ {\r}]*", needed, replacement = "")
+    needed <- needed[nzchar(needed)]
+
     if (length(needed)) {
       # hasVersionNumber <- regmatches(needed, gregexpr(pattern = "(?<=\\().*?(?=\\))",
       #                                                 needed, perl = TRUE))[[1]]
@@ -762,10 +766,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   memoise::forget(pkgDep)
   deps <- unlist(Cache(pkgDep, packages, unique(c(libPath, .libPaths())), recursive = TRUE,
                        cacheRepo = cacheRepo, notOlderThan = notOlderThan))
-  # sometimes weird /r and spaces enter
-  deps <- gsub(pattern = "[ {\r}]*", deps, replacement = "")
-  deps <- deps[nzchar(deps)]
-
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
   names(deps) <- deps
