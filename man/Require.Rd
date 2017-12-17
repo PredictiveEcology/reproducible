@@ -32,11 +32,11 @@ from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
 be used to find the correct versions. This can be create dramatically faster
 installs if the user has a substantial number of the packages already in their
 personal library. In the case of \code{TRUE}, there will be a hidden file
-place in the \code{libPath} directory that lists all the packages that were needed
-during the Require call.}
+place in the \code{libPath} directory that lists all the packages
+that were needed during the \code{Require} call.}
 
-\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either \code{install.packages},
-\code{install_github} or \code{installVersions}.}
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
+\code{install.packages}, \code{install_github} or \code{installVersions}.}
 }
 \description{
 This is an "all in one" function that will run \code{install.packages} for
@@ -58,14 +58,14 @@ packages and their dependencies that are otherwise
 not installed in \code{.libPaths()}, i.e., the personal or base library paths. Any
 packages or dependencies that are not yet installed will be installed in \code{libPath}.
 Importantly, a small hidden file (named \code{._packageVersionsAuto.txt})
-will be saved in \code{libPath} that will store the \emph{information}
-about the packages and their dependencies, even if they were already installed in
-\code{.libPaths()}. This hidden file will be used if a user runs \code{pkgSnapshot}, enabling
-a new user to rebuild the entire dependency chain, without having to install all packages
-in an isolated directory (as does packrat). This will save potentially a lot of time and
-disk space, and yet maintain reproducibility. \emph{NOTE}: since there is only one hidden file in a
-\code{libPath}, any call to \code{pkgSnapshot} will make a snapshot of the most recent call
-to \code{Require}.
+will be saved in \code{libPath} that will store the \emph{information} about
+the packages and their dependencies, even if they were already installed in
+\code{.libPaths()}. This hidden file will be used if a user runs \code{pkgSnapshot},
+enabling a new user to rebuild the entire dependency chain, without having to
+install all packages in an isolated directory (as does packrat).
+This will save potentially a lot of time and disk space, and yet maintain reproducibility.
+\emph{NOTE}: since there is only one hidden file in a \code{libPath}, any call to
+\code{pkgSnapshot} will make a snapshot of the most recent call to \code{Require}.
 
 This function works best if all required packages are called within one \code{Require}
 call, as all dependencies can identified together, and all package versions will be saved
@@ -88,7 +88,7 @@ element should be wiped, using \code{notOlderThan = Sys.time()}.
 Require("stats") # analogous to require(stats), but slower because it checks for
                  #   pkg dependencies, and installs them, if missing
 tempPkgFolder <- file.path(tempdir(), "Packages")
-Require("crayon", libPath = tempPkgFolder, standAlone = TRUE) # install.packages first, then library
+Require("crayon", libPath = tempPkgFolder, standAlone = TRUE)
 
 # make a package version snapshot
 packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")

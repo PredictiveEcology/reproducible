@@ -22,11 +22,11 @@ from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
 be used to find the correct versions. This can be create dramatically faster
 installs if the user has a substantial number of the packages already in their
 personal library. In the case of \code{TRUE}, there will be a hidden file
-place in the \code{libPath} directory that lists all the packages that were needed
-during the Require call.}
+place in the \code{libPath} directory that lists all the packages
+that were needed during the \code{Require} call.}
 
-\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either \code{install.packages},
-\code{install_github} or \code{installVersions}.}
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
+\code{install.packages}, \code{install_github} or \code{installVersions}.}
 }
 \description{
 This uses CRAN, CRAN archives, or MRAN (accessed via \code{versions::install.versions})

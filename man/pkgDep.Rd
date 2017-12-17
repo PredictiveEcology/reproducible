@@ -5,7 +5,8 @@
 \title{Determine package dependencies, first looking at local filesystem}
 \usage{
 pkgDep(packages, libPath, recursive = TRUE, depends = TRUE,
-  imports = TRUE, suggests = FALSE, repos = getOption("repos"))
+  imports = TRUE, suggests = FALSE, linkingTo = TRUE,
+  repos = getOption("repos"))
 }
 \arguments{
 \item{packages}{a character vector of package names.}
@@ -22,8 +23,10 @@ NOTE Dependencies of suggests will not be recursive. Default TRUE.}
 
 \item{suggests}{Logical. Include packages listed in "Suggests". Default FALSE.}
 
-\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either \code{install.packages},
-\code{install_github} or \code{installVersions}.}
+\item{linkingTo}{Logical. Include packages listed in "LinkingTo". Default TRUE.}
+
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
+\code{install.packages}, \code{install_github} or \code{installVersions}.}
 }
 \description{
 This is intended to replace \code{\link[tools]{package_dependencies}} or
@@ -32,10 +35,13 @@ local package directory(ies) in \code{libPath}, and it if the function cannont f
 the packages there, then it will use \code{\link[tools]{package_dependencies}}.
 }
 \note{
-\code{package_dependencies} and \code{pkgDep} will differ under the following circumstances:
-1. github packages are not detected using \code{tools::package_dependencies}, and
-2. \code{tools::package_dependencies} does not detect the dependencies of base
-packages among themselves, e.g,. methods depends on stats and graphics
+\code{package_dependencies} and \code{pkgDep} will differ under the following
+circumstances:
+\enumerate{
+  \item GitHub packages are not detected using \code{tools::package_dependencies};
+  \item \code{tools::package_dependencies} does not detect the dependencies of base packages
+    among themselves, \emph{e.g.}, \code{methods} depends on \code{stats} and \code{graphics}.
+}
 }
 \examples{
 pkgDep("crayon")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{compareNA}
 \alias{compareNA}
-\title{NA-aware comparison of two vectors}
+\title{\code{NA}-aware comparison of two vectors}
 \usage{
 compareNA(v1, v2)
 }
@@ -12,12 +12,14 @@ compareNA(v1, v2)
 \item{v2}{A vector}
 }
 \description{
-Copied from \url{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.
-This function returns TRUE wherever elements are the same, including NA's,
-and false everywhere else.
+Copied from
+\url{http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/}.
+This function returns \code{TRUE} wherever elements are the same, including \code{NA}'s,
+and \code{FALSE} everywhere else.
 }
 \examples{
 a <- c(NA, 1, 2, NA)
 b <- c(1, NA, 2, NA)
-compareNA(a,b)
+compareNA(a, b)
+
 }

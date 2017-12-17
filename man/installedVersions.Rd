@@ -7,7 +7,8 @@
 installedVersions(packages, libPath)
 }
 \arguments{
-\item{packages}{Character vector of packages to determine which version is installed in the \code{libPath}.}
+\item{packages}{Character vector of packages to determine which version is
+installed in the \code{libPath}.}
 
 \item{libPath}{The library path where all packages should be installed, and looked for to load
 (i.e., call \code{library})}
@@ -16,11 +17,12 @@ installedVersions(packages, libPath)
 This code is adapted from \code{\link[versions]{installed.versions}},
 but uses an \code{Rcpp} alternative to readLines for speed.
 It will be anywhere from 2x to 10x faster than the
-\code{\link[versions]{installed.versions}} function. This is also many times faster
-than \code{utils::installed.packages}
-especially if only a subset of "all" packages in libPath are desired
+\code{\link[versions]{installed.versions}} function.
+This is also many times faster than \code{utils::installed.packages},
+especially if only a subset of "all" packages in \code{libPath} are desired
 (1000x ? for the 1 package case).
 }
 \examples{
 installedVersions("reproducible", .libPaths()[1])
+
 }

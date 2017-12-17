@@ -848,7 +848,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'
 #' @inheritParams Require
 #' @importFrom utils write.table
-#' @importFrom R.utils isAbsolutePath
 #' @examples
 #' pkgSnapFile <- tempfile()
 #' pkgSnapshot(pkgSnapFile, .libPaths()[1])
@@ -862,12 +861,35 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
   }
   if (missing(packageVersionFile)) packageVersionFile <- ".packageVersions.txt"
 
+  isAbsolute <-
+    if (regexpr("^~", packageVersionFile) != -1L) {
+      TRUE
+    } else if (regexpr("^.:(/|\\\\)", packageVersionFile) != -1L) {
+      TRUE
+    } else {
+      components <- strsplit(packageVersionFile, split = "[/\\]")[[1L]]
+      if (length(components) == 0L) {
+        FALSE
+      } else {
+      (components[1L] == "")
+      }
+    }
+
+  if(!isAbsolute) packageVersionFile <- file.path(libPath[1], basename(packageVersionFile))
+
   autoFile <- file.path(libPath[1], "._packageVersionsAuto.txt")
-  if (!standAlone & file.exists(autoFile)) {
-    file.copy(autoFile, file.path(libPath[1], basename(packageVersionFile)), overwrite = TRUE)
+  if (!standAlone & file.exists(autoFile)){
+      file.copy(autoFile, packageVersionFile, overwrite = TRUE)
+      out <- data.table::fread(autoFile)
   } else {
+    if(!file.exists(autoFile)) {
+      message("There is no ", autoFile, " and standAlone is FALSE. This snapshot will not be accurate",
+              " because it will include all packages in ", paste(libPath, collapse = ", "))
+    }
     instPkgs <- dir(libPath)
-    instVers <- installedVersions(instPkgs, libPath = libPath)
-    .pkgSnapshot(instPkgs, instVers, packageVersionFile)
+    instVers <- unlist(lapply(libPath, function(lib) na.omit(unlist(installedVersions(instPkgs, libPath = lib)))))
+
+    out <- .pkgSnapshot(names(instVers), instVers, packageVersionFile)
   }
+  out
 }
