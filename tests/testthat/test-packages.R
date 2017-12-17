@@ -7,27 +7,28 @@ test_that("package-related functions work", {
   if (length(repos) > 1) repos <- repos[(names(repos) %in% "CRAN")]
 
   packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
-  suppressWarnings(Require("crayon", libPath = packageDir, standAlone = TRUE))
-  expect_true(any(grepl(pattern = "package:crayon", search())))
-  expect_true(require("crayon", lib.loc = packageDir))
+  packageDir1 <- normalizePath(file.path(tempdir(), "test6"), winslash = "/", mustWork = FALSE)
+  suppressWarnings(Require("TimeWarp", libPath = packageDir1, standAlone = TRUE))
+  expect_true(any(grepl(pattern = "package:TimeWarp", search())))
+  expect_true(require("TimeWarp", lib.loc = packageDir1))
 
-  vers <- readLines(file.path(packageDir, "crayon", "DESCRIPTION"))
+  vers <- readLines(file.path(packageDir1, "TimeWarp", "DESCRIPTION"))
   vers <- vers[grepl(vers, pattern = "^Version: ")]
   version <- sub(vers, pattern = "^Version: ", replacement = "")
 
-  packageVersionFile <- file.path(packageDir, ".packageVersion.txt")
-  pkgSnapshot(libPath = packageDir, packageVersionFile)
+  packageVersionFile <- file.path(packageDir1, ".packageVersion.txt")
+  pkgSnapshot(libPath = packageDir1, packageVersionFile)
   expect_true(file.exists(packageVersionFile))
 
   # keep wrong version that is already installed, and loaded
-  aa <- data.frame(instPkgs = "crayon", instVers = "1.3.2", stringsAsFactors = FALSE)
+  aa <- data.frame(instPkgs = "TimeWarp", instVers = "1.3.2", stringsAsFactors = FALSE)
   write.table(file = packageVersionFile, aa, row.names = FALSE)
 
-  Require("crayon", libPath = packageDir, packageVersionFile = packageVersionFile,
+  Require("TimeWarp", libPath = packageDir1, packageVersionFile = packageVersionFile,
           standAlone = TRUE)
-  iv <- data.frame(installed.packages(lib.loc = packageDir), stringsAsFactors = FALSE)
-  #expect_true(iv[iv$Package == "crayon", "Version"] == "1.3.4")
-  expect_true(iv[iv$Package == "crayon", "Version"] == version)
+  iv <- data.frame(installed.packages(lib.loc = packageDir1), stringsAsFactors = FALSE)
+  #expect_true(iv[iv$Package == "TimeWarp", "Version"] == "1.3.4")
+  expect_true(iv[iv$Package == "TimeWarp", "Version"] == version)
 
   versionlatdiag <- "0.2-2"
   aa <- data.frame(instPkgs = "latdiag", instVers = versionlatdiag, stringsAsFactors = FALSE)
@@ -36,7 +37,7 @@ test_that("package-related functions work", {
   suppressWarnings(Require("latdiag", libPath = packageDir, packageVersionFile = packageVersionFile,
           standAlone = FALSE))
   iv <- data.frame(installed.packages(lib.loc = packageDir), stringsAsFactors = FALSE)
-  #expect_true(iv[iv$Package == "crayon", "Version"] == "1.3.4")
+  #expect_true(iv[iv$Package == "TimeWarp", "Version"] == "1.3.4")
   expect_true(iv[iv$Package == "latdiag", "Version"] == versionlatdiag)
 
   Require("achubaty/meow", libPath = packageDir,
@@ -68,7 +69,7 @@ test_that("package-related functions work", {
 
   # Check that the snapshot works even if packages aren't in packageDir,
   # i.e., standAlone is FALSE, or there are base packages
-  allInstalled <- c("Holidays", "achubaty/meow", "crayon", "latdiag")
+  allInstalled <- c("Holidays", "achubaty/meow", "latdiag")
   allInstalledNames <- unlist(lapply(strsplit(allInstalled, "/"), function(x) x[length(x)]))
   Require(allInstalled, libPath = packageDir)
   packageVersionFile <- file.path(packageDir, ".packageVersion3.txt")
@@ -102,7 +103,6 @@ test_that("package-related functions work", {
   try(detach("package:meow", unload = TRUE))
   try(detach("package:Holidays", unload = TRUE))
   #try(detach("package:TimeWarp", unload = TRUE), silent = TRUE)
-  suppressWarnings(try(detach("package:crayon", unload = TRUE)))
 
   unlink(packageDir, recursive = TRUE, force = TRUE)
 })
