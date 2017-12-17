@@ -33,8 +33,8 @@ test_that("package-related functions work", {
   aa <- data.frame(instPkgs = "latdiag", instVers = versionlatdiag, stringsAsFactors = FALSE)
   write.table(file = packageVersionFile, aa, row.names = FALSE)
 
-  Require("latdiag", libPath = packageDir, packageVersionFile = packageVersionFile,
-          standAlone = FALSE)
+  suppressWarnings(Require("latdiag", libPath = packageDir, packageVersionFile = packageVersionFile,
+          standAlone = FALSE))
   iv <- data.frame(installed.packages(lib.loc = packageDir), stringsAsFactors = FALSE)
   #expect_true(iv[iv$Package == "crayon", "Version"] == "1.3.4")
   expect_true(iv[iv$Package == "latdiag", "Version"] == versionlatdiag)

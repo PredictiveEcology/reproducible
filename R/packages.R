@@ -128,15 +128,24 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
                            libPath = libPath, standAlone = standAlone, cacheRepo = cacheRepo,
                            notOlderThan = notOlderThan)
     allPkgsNeeded <- aa$allPkgsNeeded
+    currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
+                                             function(pk)
+                                               installedVersions(allPkgsNeeded, libPath = pk))))
+    if (is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
   }
-  currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
-                                           function(pk)
-                                             installedVersions(allPkgsNeeded, libPath = pk))))
-  if (is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
-  if (NROW(currentVersions)) {
-    .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
-  }
+  #if (NROW(currentVersions)) {
+    if(is.null(aa$haveVers)) {
+      # from .installPackages -- don't have versions during the install process,
+      pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
+      pkgsToSnapshot <- unique(pkgsToSnapshot, by = c("instPkgs", "instVers"))
+      .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+
+    } else {
+      .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
+      pkgSnapshot <- aa
+    }
+  #}
 
   oldLibPath <- .libPaths()
   if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
@@ -789,7 +798,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       .libPaths(unique(c(libPath, oldLibPaths)))
 
       # use xforce = TRUE because we have already eliminated
-      args <- append(install_githubArgs, list(#dependencies = NA, upgrade_dependencies = TRUE,
+      args <- append(install_githubArgs, list(#dependencies = NA,
+                                              upgrade_dependencies = TRUE,
                                               force = TRUE))#, local = FALSE))
       sapply(gitPkgs, function(pk) {
         args <- append(args, list(pk))
@@ -804,32 +814,42 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       })
       .libPaths(oldLibPaths)
 
-      # This sends it back in with all the install_github calls completed, will install dependencies of
-      # Require(unique(c(needInstall[!(needInstall %in% githubPkgNames)], gitPkgs)),
-      #         libPath = libPath, notOlderThan = Sys.time(),
-      #         install_githubArgs = install_githubArgs, standAlone = standAlone,
-      #         install.packagesArgs = install.packagesArgs)
-      # return(NULL)
-    }
-    # RStudio won't install packages if they are loaded. The algorithm is faulty
-    # and it won't let things install even when they are not loaded.
-    repos <- getCRANrepos(repos)
+      # This sends it back in with all the install_github calls which may or may not
+      #   include dependencies correctly -- especially with standAlone = TRUE
+      #   Basically, install_github needs packages like curl, which will likely be
+      #   in the user's personal library, so, we can't omit personal library from
+      #   .libPath(), but that means that dependencies may not be installed in
+      #   libPath if they exist in the personal library. Sending it back into function
+      #   will work
+      ret1 <- Require(unique(c(needInstall[!(needInstall %in% githubPkgNames)], gitPkgs)),
+              libPath = libPath, notOlderThan = Sys.time(),
+              install_githubArgs = install_githubArgs, standAlone = standAlone,
+              install.packagesArgs = install.packagesArgs)
+      #browser()
+      #return(invisible(ret1))
+    } else {
+      # RStudio won't install packages if they are loaded. The algorithm is faulty
+      # and it won't let things install even when they are not loaded.
+      repos <- getCRANrepos(repos)
 
-    rpath <- file.path(R.home(), "bin", "R")
-    rtests <- Sys.getenv("R_TESTS")
-    isEmptyRtests <- nchar(rtests) == 0
-    if (!isEmptyRtests) {
-      Sys.setenv(R_TESTS = "")
-      on.exit(Sys.setenv(R_TESTS = rtests), add = TRUE)
-    }
+      rpath <- file.path(R.home(), "bin", "R")
+      rtests <- Sys.getenv("R_TESTS")
+      isEmptyRtests <- nchar(rtests) == 0
+      if (!isEmptyRtests) {
+        Sys.setenv(R_TESTS = "")
+        on.exit(Sys.setenv(R_TESTS = rtests), add = TRUE)
+      }
 
-    aa <- lapply(needInstall[!(needInstall %in% githubPkgNames)], function(pkg) {
-      syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('", pkg,
-                        "',dependencies=FALSE,lib='", libPath, "',repos=c('",
-                        paste(repos, collapse = "','"), "'))\"")
-      system(paste(rpath, syscall), wait = TRUE)
-    })
+      aa <- lapply(needInstall[!(needInstall %in% githubPkgNames)], function(pkg) {
+        syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('", pkg,
+                          "',dependencies=FALSE,lib='", libPath, "',repos=c('",
+                          paste(repos, collapse = "','"), "'))\"")
+        system(paste(rpath, syscall), wait = TRUE)
+      })
+
+    }
   }
+
   return(invisible(list(instPkgs = needInstall, allPkgsNeeded = allPkgsNeeded)))
 }
 
@@ -888,6 +908,7 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
     }
     instPkgs <- dir(libPath)
     instVers <- unlist(lapply(libPath, function(lib) na.omit(unlist(installedVersions(instPkgs, libPath = lib)))))
+    if(length(instVers)==1) names(instVers) <- instPkgs
 
     out <- .pkgSnapshot(names(instVers), instVers, packageVersionFile)
   }
