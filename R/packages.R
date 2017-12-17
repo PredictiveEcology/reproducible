@@ -135,9 +135,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
   if (is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
   if (NROW(currentVersions)) {
-    pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
-    pkgsToSnapshot <- unique(pkgsToSnapshot, by = c("instPkgs", "instVers"))
-    .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+    .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
   }
 
   oldLibPath <- .libPaths()
@@ -552,12 +550,22 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       stop("Package folder, ", libPath, " has become corrupt.",
            " Please manually delete .snapshot.RDS and .installedVersions.RDS")
     }
-    inst <- data.frame(havePkgs = libPathListFilesBase, haveVers = unlist(instVers),
+    inst <- data.frame(instPkgs = libPathListFilesBase, haveVers = unlist(instVers),
                        stringsAsFactors = FALSE)
-    supposedToBe <- read.table(packageVersionFile, header = TRUE, stringsAsFactors = FALSE)
-    together <- merge(supposedToBe, inst, by.x = "instPkgs", by.y = "havePkgs")
-    needPkgs <- setdiff(supposedToBe$instPkgs, inst$havePkgs)
-    eq <- compareNA(together$instVers, together$haveVers)
+    inst <- unique(data.table(inst), by = c("instPkgs", "haveVers"))
+    inst <- inst[,.SD[1],by="instPkgs"] # pick one in libPath, because that is the one used, if there are more than 1 copy
+    data.table::setkeyv(inst, c("instPkgs", "haveVers"))
+
+    supposedToBe <- data.table::fread(packageVersionFile, header = TRUE)
+    supposedToBe <- unique(supposedToBe, by = c("instPkgs", "instVers"))
+    data.table::setkeyv(supposedToBe, c("instPkgs", "instVers"))
+    supposedToBe <- supposedToBe[, list(instVers=max(instVers)), by = "instPkgs"]
+
+    together <- inst[supposedToBe, on = c(instPkgs="instPkgs")]
+
+    needPkgs <- setdiff(supposedToBe$instPkgs, inst$instPkgs)
+
+    eq <- compareNA(together$instVers, together$instVers)
     needVersEqual <- which(!eq)
 
     # Here test that the installed version is greater than required one
@@ -569,7 +577,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       canInstall <- together[0, ]
     }
 
-    gte <- together$instVers[needVersEqual] >= together$haveVers[needVersEqual]
+    gte <- together$instVers[needVersEqual] >= together$instVers[needVersEqual]
     gte <- is.na(gte) | gte
 
     needVers <- needVersEqual[gte]
@@ -578,7 +586,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     if (NROW(canInstall)) {
       wh2 <- merge(canInstall, wh2, all.x = TRUE)
     }
-    whPkgsNeeded <- rbind(wh1, wh2[, c("instPkgs", "instVers")])
+    whPkgsNeeded <- rbind(wh1, wh2[, list(instPkgs, instVers)], fill = TRUE)
     if (nrow(whPkgsNeeded)) {
       packages <- whPkgsNeeded[, "instPkgs"]
       if (length(gitHubPackages)) {
@@ -731,6 +739,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     message("There is no package version file named ", packageVersionFile, ".\n",
             "No package versions installed.")
   }
+  return(together)
 }
 
 #' Internal function to install packages
@@ -839,6 +848,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'
 #' @inheritParams Require
 #' @importFrom utils write.table
+#' @importFrom R.utils isAbsolutePath
 #' @examples
 #' pkgSnapFile <- tempfile()
 #' pkgSnapshot(pkgSnapFile, .libPaths()[1])
@@ -854,7 +864,7 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
 
   autoFile <- file.path(libPath[1], "._packageVersionsAuto.txt")
   if (!standAlone & file.exists(autoFile)) {
-    file.copy(autoFile, packageVersionFile, overwrite = TRUE)
+    file.copy(autoFile, file.path(libPath[1], basename(packageVersionFile)), overwrite = TRUE)
   } else {
     instPkgs <- dir(libPath)
     instVers <- installedVersions(instPkgs, libPath = libPath)
