@@ -140,13 +140,15 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
   #if (NROW(currentVersions)) {
     if(is.null(aa$haveVers)) {
+      pkgsToSnapshot <- pickFirstVersion(names(currentVersions), currentVersions)
       # from .installPackages -- don't have versions during the install process,
-      pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
-      pkgsToSnapshot <- unique(pkgsToSnapshot, by = c("instPkgs", "instVers"))
-      .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+      #pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
+      #pkgsToSnapshot <- unique(pkgsToSnapshot, by = c("instPkgs", "instVers"))
+      #pkgsToSnapshot <- pkgsToSnapshot[,.SD[1],by="instPkgs"] # pick one in libPath, because that is the one used, if there are more than 1 copy
+      #.pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
 
     } else {
-      .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
+      #.pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
       pkgSnapshot <- aa
     }
   #}
@@ -524,7 +526,17 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     } else {
       libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
     }
+
+    supposedToBe <- data.table::fread(packageVersionFile, header = TRUE)
+    supposedToBe <- unique(supposedToBe, by = c("instPkgs", "instVers"))
+    data.table::setkeyv(supposedToBe, c("instPkgs", "instVers"))
+    supposedToBe <- supposedToBe[, list(instVers=max(instVers)), by = "instPkgs"]
+
+    uniqued <- !duplicated(basename(libPathListFiles))
+    libPathListFilesUniqued <- libPathListFiles[uniqued];
+    libPathListFiles <- libPathListFilesUniqued[basename(libPathListFilesUniqued) %in% supposedToBe$instPkgs]
     libPathListFilesBase <- basename(libPathListFiles)
+
     allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
     .snap <- file.path(libPath, ".snapshot.RDS")
     needSnapshot <- FALSE
@@ -558,46 +570,50 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       instVers <- readRDS(file = installedVersionsFile)
     }
 
-    instVers <- lapply(instVers, sub, pattern = "\\r|\\n", replacement = "")
+    #instVers <- lapply(instVers, sub, pattern = "\\r|\\n", replacement = "")
     if (length(instVers) != length(libPathListFilesBase)) {
       stop("Package folder, ", libPath, " has become corrupt.",
            " Please manually delete .snapshot.RDS and .installedVersions.RDS")
     }
-    inst <- data.frame(instPkgs = libPathListFilesBase, haveVers = unlist(instVers),
-                       stringsAsFactors = FALSE)
-    inst <- unique(data.table(inst), by = c("instPkgs", "haveVers"))
-    inst <- inst[,.SD[1],by="instPkgs"] # pick one in libPath, because that is the one used, if there are more than 1 copy
-    data.table::setkeyv(inst, c("instPkgs", "haveVers"))
 
-    supposedToBe <- data.table::fread(packageVersionFile, header = TRUE)
-    supposedToBe <- unique(supposedToBe, by = c("instPkgs", "instVers"))
-    data.table::setkeyv(supposedToBe, c("instPkgs", "instVers"))
-    supposedToBe <- supposedToBe[, list(instVers=max(instVers)), by = "instPkgs"]
+    inst <- pickFirstVersion(libPathListFilesBase, unlist(instVers))
+    data.table::setnames(inst, "instVers", "haveVers")
 
     together <- inst[supposedToBe, on = c(instPkgs="instPkgs")]
 
     needPkgs <- setdiff(supposedToBe$instPkgs, inst$instPkgs)
 
-    eq <- compareNA(together$instVers, together$instVers)
+    eq <- compareNA(together$haveVers, together$instVers)
     needVersEqual <- which(!eq)
 
     # Here test that the installed version is greater than required one
     isLoaded <- unlist(lapply(together$instPkgs[needVersEqual], isNamespaceLoaded))
     if (!is.null(isLoaded)) {
       #canInstall <- together[needVersEqual[!eq],]
-      canInstall <- together[needVersEqual[!eq & !isLoaded], ]
+      canInstall <- together[needVersEqual[!isLoaded], ]
+      cantInstall <- together[needVersEqual[isLoaded], ]
     } else {
       canInstall <- together[0, ]
+      cantInstall <- together[needVersEqual, ]
     }
 
-    gte <- together$instVers[needVersEqual] >= together$instVers[needVersEqual]
+    gte <- together$haveVers[needVersEqual] < together$instVers[needVersEqual]
     gte <- is.na(gte) | gte
 
     needVers <- needVersEqual[gte]
     wh1 <- supposedToBe[which(supposedToBe$instPkgs %in% needPkgs), ]
     wh2 <- together[needVers, ]
     if (NROW(canInstall)) {
+      message("Already have ", paste(canInstall$instPkgs, collapse = ", "), " version(s) ",
+              paste(canInstall$haveVers, collapse = ", "),
+              ". Trying to install requested version(s) ", paste(canInstall$instVers, collapse = ", "))
       wh2 <- merge(canInstall, wh2, all.x = TRUE)
+    }
+    if (NROW(cantInstall)) {
+      warning("Can't install ", paste(cantInstall$instPkgs, collapse = ", "), " version(s) ",
+              paste(cantInstall$instVers, collapse = ", "),
+              " because version(s) ", paste(cantInstall$haveVers, collapse = ", "), " is already loaded.",
+              " Try restarting R or unloading that package.")
     }
     whPkgsNeeded <- rbind(wh1, wh2[, list(instPkgs, instVers)], fill = TRUE)
     if (nrow(whPkgsNeeded)) {
@@ -825,12 +841,10 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       #   .libPath(), but that means that dependencies may not be installed in
       #   libPath if they exist in the personal library. Sending it back into function
       #   will work
-      ret1 <- Require(unique(c(needInstall[!(needInstall %in% githubPkgNames)], gitPkgs)),
+      Require(unique(c(needInstall[!(needInstall %in% githubPkgNames)], gitPkgs)),
               libPath = libPath, notOlderThan = Sys.time(),
               install_githubArgs = install_githubArgs, standAlone = standAlone,
               install.packagesArgs = install.packagesArgs)
-      #browser()
-      #return(invisible(ret1))
     } else {
       # RStudio won't install packages if they are loaded. The algorithm is faulty
       # and it won't let things install even when they are not loaded.
@@ -916,5 +930,12 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
 
     out <- .pkgSnapshot(names(instVers), instVers, packageVersionFile)
   }
+  out
+}
+
+pickFirstVersion <- function(instPkgs, instVers) {
+  out <- data.table(instPkgs = instPkgs, instVers = instVers)
+  out <- unique(out, by = c("instPkgs", "instVers"))
+  out <- out[,.SD[1],by="instPkgs"] # pick one in libPath, because that is the one used, if there are more than 1 copy
   out
 }
