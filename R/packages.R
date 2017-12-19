@@ -518,6 +518,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                             libPath = .libPaths()[1], standAlone = FALSE,
                             repos = getOption("repos")) {
 
+  internetExists <- url.exists("www.google.com")
+
   if (file.exists(packageVersionFile)) {
     libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
     message("Reading ", packageVersionFile)
@@ -653,7 +655,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       }
 
       if (nrow(whPkgsNeededFromCran)) {
-        avail <- available.packages(repos = repos)
+        if (internetExists) {
+          avail <- available.packages(repos = repos)
+        } else {
+          avail <- cbind(Package = character(), Version = character())
+        }
 
         wh <- avail[, "Package"] %in% whPkgsNeededFromCran[, "instPkgs"]
         whPkgsAvailFromCran <- data.frame(avail[wh, c("Package", "Version"), drop = FALSE],
@@ -675,12 +681,15 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           # }
           #
           # if(length(repos)>1) repos <- repos[["CRAN"]]
-
-          lapply(canInstDirectFromCRAN$instPkgs, function(pkg) {
-            system(paste0(rpath, " --quiet --vanilla -e \"do.call(install.packages,list('",
-                          pkg, "',lib='", libPath, "',dependencies=FALSE,repos='", repos,
-                          "'))\""), wait = TRUE)
-          })
+          if (internetExists) {
+            lapply(canInstDirectFromCRAN$instPkgs, function(pkg) {
+              system(paste0(rpath, " --quiet --vanilla -e \"do.call(install.packages,list('",
+                            pkg, "',lib='", libPath, "',dependencies=FALSE,repos='", repos,
+                            "'))\""), wait = TRUE)
+            })
+          } else {
+            message("No connection to the internet. Can't install packages.")
+          }
 
           AP <- installed.packages(lib.loc = libPath) # nolint
           actuallyInstalled <- data.table(AP[(AP[, "Package"] %in% canInstDirectFromCRAN$instPkgs),
@@ -726,13 +735,18 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         }
 
         if (nrow(failed)) {
-          message("Trying MRAN install of ", paste(failed$instPkgs, collapse = ", "))
-          type <- if (.Platform$OS.type == "windows") "win.binary" else "source"
+          if (internetExists) {
 
-          multiSource <- paste0(rpath, " --quiet --vanilla -e \"versions::install.versions('",
-                                failed$instPkgs, "','", failed$instVers,
-                                "',lib='", libPath, "',dependencies=FALSE,type='", type, "')\"")
-          lapply(multiSource, system, wait = TRUE)
+            message("Trying MRAN install of ", paste(failed$instPkgs, collapse = ", "))
+            type <- if (.Platform$OS.type == "windows") "win.binary" else "source"
+
+            multiSource <- paste0(rpath, " --quiet --vanilla -e \"versions::install.versions('",
+                                  failed$instPkgs, "','", failed$instVers,
+                                  "',lib='", libPath, "',dependencies=FALSE,type='", type, "')\"")
+            lapply(multiSource, system, wait = TRUE)
+          } else {
+            message("No connection to the internet. Can't install packages.")
+          }
         }
       }
 
@@ -798,6 +812,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                              install.packagesArgs = list(), # nolint
                              libPath = .libPaths()[1], standAlone = standAlone,
                              cacheRepo = cacheRepo, notOlderThan = notOlderThan) {
+
   memoise::forget(pkgDep)
   deps <- unlist(Cache(pkgDep, packages, unique(c(libPath, .libPaths())), recursive = TRUE,
                        cacheRepo = cacheRepo, notOlderThan = notOlderThan))
@@ -812,6 +827,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(libPathPkgs))]
   needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
   if (length(needInstall)) {
+    internetExists <- url.exists("www.google.com")
     gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
     if (length(gitPkgs)) {
       oldLibPaths <- .libPaths()
@@ -821,7 +837,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       args <- append(install_githubArgs, list(#dependencies = NA,
                                               upgrade_dependencies = TRUE,
                                               force = TRUE))#, local = FALSE))
-      sapply(gitPkgs, function(pk) {
+      if (internetExists) {
+        sapply(gitPkgs, function(pk) {
         args <- append(args, list(pk))
         # the cases where we have the correct version; install_github uses a
         # local database hidden somewhere that won't let the same package be installed
@@ -832,6 +849,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         # with_libpaths doesn't work because it will look for ALL packages there;
         # can't download without curl
       })
+      } else {
+        message("No connection to the internet. Can't install packages.")
+      }
       .libPaths(oldLibPaths)
 
       # This sends it back in with all the install_github calls which may or may not
@@ -858,12 +878,16 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         on.exit(Sys.setenv(R_TESTS = rtests), add = TRUE)
       }
 
-      aa <- lapply(needInstall[!(needInstall %in% githubPkgNames)], function(pkg) {
-        syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('", pkg,
-                          "',dependencies=FALSE,lib='", libPath, "',repos=c('",
-                          paste(repos, collapse = "','"), "'))\"")
-        system(paste(rpath, syscall), wait = TRUE)
-      })
+      if (internetExists) {
+        aa <- lapply(needInstall[!(needInstall %in% githubPkgNames)], function(pkg) {
+          syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('", pkg,
+                            "',dependencies=FALSE,lib='", libPath, "',repos=c('",
+                            paste(repos, collapse = "','"), "'))\"")
+          system(paste(rpath, syscall), wait = TRUE)
+        })
+      } else {
+        message("No connection to the internet. Can't install packages.")
+      }
 
     }
   }
