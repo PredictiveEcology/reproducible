@@ -21,15 +21,17 @@ test_that("package-related functions work", {
   expect_true(file.exists(packageVersionFile))
 
   # keep wrong version that is already installed, and loaded
-  aa <- data.frame(instPkgs = "TimeWarp", instVers = "1.3.2", stringsAsFactors = FALSE)
+  aa <- data.frame(instPkgs = "TimeWarp", instVers = "1.0.12", stringsAsFactors = FALSE)
   write.table(file = packageVersionFile, aa, row.names = FALSE)
 
-  Require("TimeWarp", libPath = packageDir1, packageVersionFile = packageVersionFile,
-          standAlone = TRUE)
+  aa <- capture_warnings(Require("TimeWarp", libPath = packageDir1, packageVersionFile = packageVersionFile,
+          standAlone = TRUE))
   iv <- data.frame(installed.packages(lib.loc = packageDir1), stringsAsFactors = FALSE)
   #expect_true(iv[iv$Package == "TimeWarp", "Version"] == "1.3.4")
   expect_true(iv[iv$Package == "TimeWarp", "Version"] == version)
+  expect_true(startsWith(prefix = "Can't install", aa))
 
+  # Load a different package
   versionlatdiag <- "0.2-2"
   aa <- data.frame(instPkgs = "latdiag", instVers = versionlatdiag, stringsAsFactors = FALSE)
   write.table(file = packageVersionFile, aa, row.names = FALSE)
@@ -41,7 +43,7 @@ test_that("package-related functions work", {
   expect_true(iv[iv$Package == "latdiag", "Version"] == versionlatdiag)
 
   Require("achubaty/meow", libPath = packageDir,
-          install_githubArgs = list(force = TRUE, dependencies = TRUE),
+          install_githubArgs = list(force = TRUE, dependencies = c("Depends", "Imports")),
           standAlone = TRUE)
   expect_true(any(grepl(pattern = "package:meow", search())))
 

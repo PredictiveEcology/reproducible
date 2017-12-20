@@ -137,18 +137,20 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
                                                installedVersions(allPkgsNeeded, libPath = pk))))
     if (is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
   }
+
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
   #if (NROW(currentVersions)) {
-    if(is.null(aa$haveVers)) {
+  if(is.null(aa$haveVers)) {
+
       pkgsToSnapshot <- pickFirstVersion(names(currentVersions), currentVersions)
       # from .installPackages -- don't have versions during the install process,
       #pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
       #pkgsToSnapshot <- unique(pkgsToSnapshot, by = c("instPkgs", "instVers"))
       #pkgsToSnapshot <- pkgsToSnapshot[,.SD[1],by="instPkgs"] # pick one in libPath, because that is the one used, if there are more than 1 copy
-      #.pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+      .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
 
     } else {
-      #.pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
+      .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
       pkgSnapshot <- aa
     }
   #}
@@ -585,7 +587,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
     needPkgs <- setdiff(supposedToBe$instPkgs, inst$instPkgs)
 
-    eq <- compareNA(together$haveVers, together$instVers)
+    eq <- together$haveVers == together$instVers
     needVersEqual <- which(!eq)
 
     # Here test that the installed version is greater than required one
@@ -618,6 +620,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
               " Try restarting R or unloading that package.")
     }
     whPkgsNeeded <- rbind(wh1, wh2[, list(instPkgs, instVers)], fill = TRUE)
+    whPkgsNeeded <- unique(whPkgsNeeded, by = c("instPkgs", "instVers"))
     if (nrow(whPkgsNeeded)) {
       packages <- whPkgsNeeded[, "instPkgs"]
       if (length(gitHubPackages)) {
@@ -765,10 +768,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         message(paste(tog$instPkgs, collapse = ", "),
                 " version incorrect, but wrong version loaded. Cannot install.")
         message("Keeping installed version.")
-        colnames(tog) <- c("Package", "Requested Version", "Installed Version")
+        colnames(tog) <- c("Package", "Installed Version", "Requested Version")
         rownames(tog) <- NULL
         print(tog)
-        message("If this version is ok, you can update ", packageVersionFile, " using pkgSnapshot()") # nolint
+        message("If this version is ok, you can update ", packageVersionFile, " using pkgSnapshot().",
+                " If not ok, unload ", paste(tog$Package, collapse = ", "), ", uninstall the newer version(s),",
+                " or restart R, ensuring package(s) don't load") # nolint
       } else {
         message("All packages are correct versions.")
         if (!is.null(isLoaded)) {
@@ -834,7 +839,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       .libPaths(unique(c(libPath, oldLibPaths)))
 
       # use xforce = TRUE because we have already eliminated
-      args <- append(install_githubArgs, list(#dependencies = NA,
+      args <- append(install_githubArgs, list(dependencies = NA,
                                               upgrade_dependencies = TRUE,
                                               force = TRUE))#, local = FALSE))
       if (internetExists) {
@@ -944,7 +949,7 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
       file.copy(autoFile, packageVersionFile, overwrite = TRUE)
       out <- data.table::fread(autoFile)
   } else {
-    if(!file.exists(autoFile)) {
+    if(!file.exists(autoFile) & !standAlone) {
       message("There is no ", autoFile, " and standAlone is FALSE. This snapshot will not be accurate",
               " because it will include all packages in ", paste(libPath, collapse = ", "))
     }
