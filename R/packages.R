@@ -111,9 +111,9 @@ if (getRversion() >= "3.1.0") {
 #'
 #' }
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # nolint
-                    notOlderThan = NULL, install_githubArgs = list(),       # nolint
+                    install_githubArgs = list(),       # nolint
                     install.packagesArgs = list(), standAlone = FALSE,      # nolint
-                    repos = getOption("repos")) {
+                    repos = getOption("repos"), forget = FALSE) {
 
   githubPkgs <- grep("\\/", packages, value = TRUE)
   githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
@@ -141,21 +141,25 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     Sys.setlocale(locale = "")
     allPkgsNeeded <- aa$instPkgs
   } else {
-    cacheRepo <- file.path(libPath, ".cache")
     aa <- .installPackages(packages, githubPkgs = githubPkgs, githubPkgNames = githubPkgNames,
                            install_githubArgs = install_githubArgs, nonLibPathPkgs = nonLibPathPkgs,
-                           libPath = libPath, standAlone = standAlone, cacheRepo = cacheRepo,
-                           notOlderThan = notOlderThan)
+                           libPath = libPath, standAlone = standAlone, forget = forget)
     allPkgsNeeded <- aa$allPkgsNeeded
-    currentVersions <- na.omit(unlist(lapply(unique(c(libPath, nonLibPathPaths)),
-                                             function(pk)
-                                               installedVersions(allPkgsNeeded, libPath = pk))))
+    if (standAlone) {
+      libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths()[length(.libPaths())])),
+                                        dir, full.names = TRUE))
+    } else {
+      libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
+    }
+    libPathListFiles <- libPathListFiles[basename(libPathListFiles) %in% allPkgsNeeded]
+    currentVersions <- installedVersionsQuick(libPathListFiles, libPath, standAlone = standAlone,
+                           basename(libPathListFiles))
     if (is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
   }
 
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
   if (is.null(aa$haveVers)) {
-    pkgsToSnapshot <- pickFirstVersion(names(currentVersions), currentVersions)
+    pkgsToSnapshot <- pickFirstVersion(names(currentVersions), unlist(currentVersions))
     .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
   } else {
     .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
@@ -273,6 +277,7 @@ installedVersions <- function(packages, libPath) {
     vers <- gsub("Version: ", "", vers_line)
     return(vers)
   }
+
 }
 
 pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
@@ -280,11 +285,6 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
                       repos = getOption("repos")) {
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()#[1L]
-    # if (length(.libPaths()) > 1L) {
-    #   message(sprintf(ngettext(length(packages), "Checking package in %s\n(as %s is unspecified)",
-    #                            "Checking packages in %s\n(as %s is unspecified)"),
-    #                   sQuote(libPath), sQuote("libPath")), domain = NA)
-    # }
   }
 
   if (length(libPath) > 1) {
@@ -330,11 +330,11 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 
       availPackagesDb <- available.packagesMem(repos = repos)
       ll3 <- package_dependenciesMem(names(ll2[notInstalled]), db = availPackagesDb,
-                                     recursive = TRUE)
+                                     recursive = recursive)
       # the previous line will miss base packages
       ll3 <- lapply(ll3, function(x) {
         unique(c(x, unlist(pkgDep(x, libPath = unique(c(libPath, .libPaths())),
-                                  recursive = TRUE))))
+                                  recursive = recursive))))
       })
 
       ll2[notInstalled] <- ll3
@@ -463,6 +463,8 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 #' @importFrom memoise memoise
 pkgDep <- memoise(pkgDepRaw)
 
+pkgDep2 <- memoise(pkgDepRaw)
+
 #' Memoised versions of package tools
 #'
 #' These have a 6 minute memory time window.
@@ -498,24 +500,25 @@ available.packagesMem <- memoise(available.packages, ~timeout(360)) # nolint
 #'        the \code{.packageVersions.txt}.
 #' @importFrom versions install.versions
 #' @importFrom RCurl url.exists
-#' @importFrom data.table setDT data.table setnames
+#' @importFrom data.table setDT data.table setnames rbindlist
 #' @importFrom utils read.table available.packages installed.packages install.packages
 #' @examples
 #' \dontrun{
 #' # requires the packageVersionFile -- this doesn't work -- safer to use Require
 #' installVersions("PredictiveEcology/reproducible@development")
 #'
-#' # make a package version snapshot
+#' # make a package version snapshot -- this will be empty because no packages in directory
+#' tempPkgFolder <- file.path(tempdir(), "Packages")
+#' dir.create(tempPkgFolder)
 #' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
 #' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
 #'
-#' tempPkgFolder <- file.path(tempdir(), "Packages")
 #' Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
 #'
 #' # install a specific version
 #' # make a package version snapshot
 #' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
-#' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+#' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile, standAlone = FALSE)
 #'
 #' installVersions("crayon", packageVersionFile = packageVersionFile)
 #'
