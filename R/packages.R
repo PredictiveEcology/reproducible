@@ -527,8 +527,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                             libPath = .libPaths()[1], standAlone = FALSE,
                             repos = getOption("repos")) {
 
-  internetExists <- url.exists("www.google.com")
-
   if (file.exists(packageVersionFile)) {
     libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
     message("Reading ", packageVersionFile)
@@ -630,6 +628,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     whPkgsNeeded <- rbind(wh1, wh2[, list(instPkgs, instVers)], fill = TRUE)
     whPkgsNeeded <- unique(whPkgsNeeded, by = c("instPkgs", "instVers"))
     if (nrow(whPkgsNeeded)) {
+      internetExists <- url.exists("www.google.com")
       packages <- whPkgsNeeded[, "instPkgs"]
       if (length(gitHubPackages)) {
         ghPackages <- sapply(strsplit(sapply(strsplit(gitHubPackages, split = "/"),
