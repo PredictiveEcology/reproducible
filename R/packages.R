@@ -547,38 +547,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                                   supposedToBe$instPkgs]
     libPathListFilesBase <- basename(libPathListFiles)
 
-    allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
-    .snap <- file.path(libPath, ".snapshot.RDS")
-    needSnapshot <- FALSE
-    needInstalledVersions <- FALSE
-    installedVersionsFile <- file.path(libPath, ".installedVersions.RDS")
-    if (!file.exists(installedVersionsFile)) {
-      needSnapshot <- TRUE
-      needInstalledVersions <- TRUE
-    }
-    if (file.exists(.snap)) {
-      if (!(identical(readRDS(file = .snap), allPkgsDESC))) {
-        needSnapshot <- TRUE
-        needInstalledVersions <- TRUE
-      }
-    } else {
-      needSnapshot <- TRUE
-      needInstalledVersions <- TRUE
-    }
-    if (needSnapshot) {
-      saveRDS(allPkgsDESC, file = .snap)
-    }
-
-    if (needInstalledVersions) {
-      if (standAlone) {
-        instVers <- installedVersions(libPathListFilesBase, libPath)
-      } else {
-        instVers <- installedVersions(libPathListFilesBase, dirname(libPathListFiles))
-      }
-      saveRDS(instVers, file = installedVersionsFile)
-    } else {
-      instVers <- readRDS(file = installedVersionsFile)
-    }
+    instVers <- installedVersionsQuick(libPathListFiles, libPath, standAlone,
+                                               libPathListFilesBase)
 
     if (length(instVers) != length(libPathListFilesBase)) {
       stop("Package folder, ", libPath, " has become corrupt.",
@@ -625,10 +595,13 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
               " is already loaded.",
               " Try restarting R or unloading that package.")
     }
-    whPkgsNeeded <- rbind(wh1, wh2[, list(instPkgs, instVers)], fill = TRUE)
+
+    whPkgsNeeded <- rbindlist(list(wh1, wh2[, list(instPkgs, instVers)]))
     whPkgsNeeded <- unique(whPkgsNeeded, by = c("instPkgs", "instVers"))
+
     if (nrow(whPkgsNeeded)) {
       internetExists <- url.exists("www.google.com")
+
       packages <- whPkgsNeeded[, "instPkgs"]
       if (length(gitHubPackages)) {
         ghPackages <- sapply(strsplit(sapply(strsplit(gitHubPackages, split = "/"),
@@ -804,8 +777,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'                       but not in \code{libPath}. This would normally include a listing of
 #'                       base packages, but may also include other library paths if
 #'                       \code{standAlone} if \code{FALSE}
-#' @param cacheRepo A path to a cache repository to create or use. Used solely
-#'                  internally while running \code{pkgDep}.
 #' @importFrom versions install.versions
 #' @importFrom data.table setDT data.table setnames
 #' @importFrom utils read.table available.packages installed.packages install.packages
@@ -819,11 +790,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                              nonLibPathPkgs = character(0), install_githubArgs, # nolint
                              install.packagesArgs = list(), # nolint
                              libPath = .libPaths()[1], standAlone = standAlone,
-                             cacheRepo = cacheRepo, notOlderThan = notOlderThan) {
+                             forget = FALSE) {
 
   memoise::forget(pkgDep)
-  deps <- unlist(Cache(pkgDep, packages, unique(c(libPath, .libPaths())), recursive = TRUE,
-                       cacheRepo = cacheRepo, notOlderThan = notOlderThan))
+  if (forget) memoise::forget(pkgDep2)
+  deps <- unlist(pkgDep2(packages, unique(c(libPath, .libPaths())),
+                                              recursive = TRUE))
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
   names(deps) <- deps
@@ -870,7 +842,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       #   libPath if they exist in the personal library. Sending it back into function
       #   will work
       Require(unique(c(needInstall[!(needInstall %in% githubPkgNames)], gitPkgs)),
-              libPath = libPath, notOlderThan = Sys.time(),
+              libPath = libPath, forget = TRUE,
               install_githubArgs = install_githubArgs, standAlone = standAlone,
               install.packagesArgs = install.packagesArgs)
     } else {
@@ -923,7 +895,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #' pkgSnapshot(pkgSnapFile, .libPaths()[1])
 #' data.table::fread(pkgSnapFile)
 #'
-pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
+pkgSnapshot <- function(packageVersionFile, libPath, standAlone = FALSE) {
   if (missing(libPath)) {
     if (standAlone) libPath <- .libPaths()[1] else libpath <- .libPaths()
   } else {
@@ -974,4 +946,42 @@ pickFirstVersion <- function(instPkgs, instVers) {
   out <- out[, .SD[1], by = "instPkgs"] # pick one in libPath, because that is
                                         # the one used, if there are more than 1 copy
   out
+}
+
+installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE,
+                                   libPathListFilesBase) {
+  allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
+  .snap <- file.path(libPath, ".snapshot.RDS")
+  needSnapshot <- FALSE
+  needInstalledVersions <- FALSE
+  installedVersionsFile <- file.path(libPath, ".installedVersions.RDS")
+  if (!file.exists(installedVersionsFile)) {
+    needSnapshot <- TRUE
+    needInstalledVersions <- TRUE
+  }
+  if (file.exists(.snap)) {
+    if (!(identical(readRDS(file = .snap), allPkgsDESC))) {
+      needSnapshot <- TRUE
+      needInstalledVersions <- TRUE
+    }
+  } else {
+    needSnapshot <- TRUE
+    needInstalledVersions <- TRUE
+  }
+  if (needSnapshot) {
+    saveRDS(allPkgsDESC, file = .snap)
+  }
+
+  if (needInstalledVersions) {
+    if (standAlone) {
+      instVers <- installedVersions(libPathListFilesBase, libPath)
+    } else {
+      instVers <- installedVersions(libPathListFilesBase, dirname(libPathListFiles))
+    }
+    saveRDS(instVers, file = installedVersionsFile)
+  } else {
+    instVers <- readRDS(file = installedVersionsFile)
+  }
+
+  return(instVers)
 }
