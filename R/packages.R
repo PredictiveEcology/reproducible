@@ -23,26 +23,29 @@ if (getRversion() >= "3.1.0") {
 #' packages or dependencies that are not yet installed will be installed in \code{libPath}.
 #' Importantly, a small hidden file (named \code{._packageVersionsAuto.txt})
 #' will be saved in \code{libPath} that will store the \emph{information} about
-#' the packages and their dependencies, even if they were already installed in
-#' \code{.libPaths()}. This hidden file will be used if a user runs \code{pkgSnapshot},
+#' the packages and their dependencies, even if the version used is located in
+#' \code{.libPaths()}, i.e., not the \code{libPath} provided.
+#' This hidden file will be used if a user runs \code{pkgSnapshot},
 #' enabling a new user to rebuild the entire dependency chain, without having to
 #' install all packages in an isolated directory (as does packrat).
 #' This will save potentially a lot of time and disk space, and yet maintain reproducibility.
 #' \emph{NOTE}: since there is only one hidden file in a \code{libPath}, any call to
 #' \code{pkgSnapshot} will make a snapshot of the most recent call to \code{Require}.
 #'
+#' To build a snapshot of the desired packages and their versions, first run \code{Require}
+#' with all packages, then \code{pkgSnapshot}. If a \code{libPath} is used, it must be used
+#' in both functions.
+#'
 #' This function works best if all required packages are called within one \code{Require}
-#' call, as all dependencies can identified together, and all package versions will be saved
+#' call, as all dependencies can be identified together, and all package versions will be saved
 #' automatically (with \code{standAlone = TRUE} or \code{standAlone = FALSE}),
 #' allowing a call to \code{pkgSnapshot} when a more permanent record of versions can be made.
 #'
-#' @note This function will use \code{Cache} internally to determine the dependencies
-#' of all \code{packages}. The cache repository will be inside the \code{libPath},
-#' and will be named \code{.cache}. This will speed up subsequent calls to \code{Require}
-#' dramatically.
-#' It will not take into account version numbers for this
-#' caching step. If package versions are updated manually by the user, then this cached
-#' element should be wiped, using \code{notOlderThan = Sys.time()}.
+#' @note This function will use \code{memoise} internally to determine the dependencies
+#' of all \code{packages}. This will speed up subsequent calls to \code{Require}
+#' dramatically. However, it will not take into account version numbers for this
+#' memoised step. If package versions are updated manually by the user, then this cached
+#' element should be wiped, using \code{forget = TRUE}.
 #'
 #' @export
 #' @importFrom devtools install_github
@@ -53,12 +56,8 @@ if (getRversion() >= "3.1.0") {
 #'        calls with \code{versions::install.versions}
 #' @param libPath The library path where all packages should be installed, and looked for to load
 #'        (i.e., call \code{library})
-#' @inheritParams Cache
 #' @param repos The remote repository (e.g., a CRAN mirror), passed to either
 #'              \code{install.packages}, \code{install_github} or \code{installVersions}.
-#' @param notOlderThan Time or Date. The \code{Cache} is used internally for
-#'                     \code{tools::package_dependencies} and for already installed packages that
-#'                     came from github. To purge the cache: \code{notOlderThan = Sys.time()}
 #' @param install_githubArgs List of optional named arguments, passed to install_github
 #' @param install.packagesArgs List of optional named arguments, passed to install.packages
 #' @param standAlone Logical. If \code{TRUE}, all packages will be installed and loaded strictly
@@ -67,7 +66,12 @@ if (getRversion() >= "3.1.0") {
 #'                   installs if the user has a substantial number of the packages already in their
 #'                   personal library. In the case of \code{TRUE}, there will be a hidden file
 #'                   place in the \code{libPath} directory that lists all the packages
-#'                   that were needed during the \code{Require} call.
+#'                   that were needed during the \code{Require} call. Default \code{FALSE} to
+#'                   minimize package installing.
+#' @param forget Internally, this function identifies package dependencies using a memoised
+#'               function for speed on reuse. But, it may be inaccurate in some cases,
+#'               if packages were installed manually by a user. Set this to \code{TRUE} to
+#'               refresh that dependency calculation.
 #'
 #'
 #' @examples
@@ -77,18 +81,29 @@ if (getRversion() >= "3.1.0") {
 #' Require("stats") # analogous to require(stats), but slower because it checks for
 #'                  #   pkg dependencies, and installs them, if missing
 #' tempPkgFolder <- file.path(tempdir(), "Packages")
+#'
+#' # use standAlone, means it will put it in libPath, even if it already exists in another local
+#' #   library (e.g., personal library)
 #' Require("crayon", libPath = tempPkgFolder, standAlone = TRUE)
 #'
 #' # make a package version snapshot
 #' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
 #' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
 #'
+#' # confirms that correct version is installed
 #' Require("crayon", packageVersionFile = packageVersionFile)
 #'
 #' # Create mismatching versions -- desired version is older than current installed
-#' # This will install the older version, overwriting the newer version
+#' # This will try to install the older version, overwriting the newer version
 #' desiredVersion <- data.frame(instPkgs="crayon", instVers = "1.3.2", stringsAsFactors = FALSE)
 #' write.table(file = packageVersionFile, desiredVersion, row.names = FALSE)
+#' # won't work because newer crayon is loaded
+#' Require("crayon", packageVersionFile = packageVersionFile)
+#'
+#' # unload it first
+#' detach("package:crayon", unload = TRUE)
+#'
+#' # run again, this time, correct "older" version installs in place of newer one
 #' Require("crayon", packageVersionFile = packageVersionFile)
 #'
 #' # Mutual dependencies, only installs once -- e.g., httr

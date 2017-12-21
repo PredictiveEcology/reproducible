@@ -7,8 +7,7 @@
 .installPackages(packages, repos = getOption("repos"),
   githubPkgs = character(0), githubPkgNames, nonLibPathPkgs = character(0),
   install_githubArgs, install.packagesArgs = list(),
-  libPath = .libPaths()[1], standAlone = standAlone,
-  cacheRepo = cacheRepo, notOlderThan = notOlderThan)
+  libPath = .libPaths()[1], standAlone = standAlone, forget = FALSE)
 }
 \arguments{
 \item{packages}{Character vector of packages to install via
@@ -39,14 +38,13 @@ be used to find the correct versions. This can be create dramatically faster
 installs if the user has a substantial number of the packages already in their
 personal library. In the case of \code{TRUE}, there will be a hidden file
 place in the \code{libPath} directory that lists all the packages
-that were needed during the \code{Require} call.}
+that were needed during the \code{Require} call. Default \code{FALSE} to
+minimize package installing.}
 
-\item{cacheRepo}{A path to a cache repository to create or use. Used solely
-internally while running \code{pkgDep}.}
-
-\item{notOlderThan}{Time or Date. The \code{Cache} is used internally for
-\code{tools::package_dependencies} and for already installed packages that
-came from github. To purge the cache: \code{notOlderThan = Sys.time()}}
+\item{forget}{Internally, this function identifies package dependencies using a memoised
+function for speed on reuse. But, it may be inaccurate in some cases,
+if packages were installed manually by a user. Set this to \code{TRUE} to
+refresh that dependency calculation.}
 }
 \description{
 Internal function to install packages
