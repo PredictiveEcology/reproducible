@@ -73,7 +73,6 @@ test_that("package-related functions work", {
   pkgSnapshot(libPath = packageDir, packageVersionFile, standAlone = FALSE)
   installed <- data.table::fread(packageVersionFile)
 
-  # availablePkgMatrix <- available.packages(repos = repos)
   pkgDeps <- sort(c(allInstalledNames, unique(unlist(pkgDep(libPath = packageDir,
                                                             allInstalledNames,
                                                             recursive = TRUE)))))
