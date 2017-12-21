@@ -24,10 +24,10 @@ test_that("package-related functions work", {
   aa <- data.frame(instPkgs = "TimeWarp", instVers = "1.0.12", stringsAsFactors = FALSE)
   write.table(file = packageVersionFile, aa, row.names = FALSE)
 
-  aa <- capture_warnings(Require("TimeWarp", libPath = packageDir1, packageVersionFile = packageVersionFile,
-          standAlone = TRUE))
+  aa <- capture_warnings(Require("TimeWarp", libPath = packageDir1,
+                                 packageVersionFile = packageVersionFile,
+                                 standAlone = TRUE))
   iv <- data.frame(installed.packages(lib.loc = packageDir1), stringsAsFactors = FALSE)
-  #expect_true(iv[iv$Package == "TimeWarp", "Version"] == "1.3.4")
   expect_true(iv[iv$Package == "TimeWarp", "Version"] == version)
   expect_true(startsWith(prefix = "Can't install", aa))
 
@@ -39,15 +39,12 @@ test_that("package-related functions work", {
   suppressWarnings(Require("latdiag", libPath = packageDir, packageVersionFile = packageVersionFile,
           standAlone = FALSE))
   iv <- data.frame(installed.packages(lib.loc = packageDir), stringsAsFactors = FALSE)
-  #expect_true(iv[iv$Package == "TimeWarp", "Version"] == "1.3.4")
   expect_true(iv[iv$Package == "latdiag", "Version"] == versionlatdiag)
 
   Require("achubaty/meow", libPath = packageDir,
           install_githubArgs = list(force = TRUE, dependencies = c("Depends", "Imports")),
           standAlone = TRUE)
   expect_true(any(grepl(pattern = "package:meow", search())))
-
-  #try(detach("package:meow", unload = TRUE))
 
   # Holidays is a random small package that has 1 dependency that is NOT in base -- TimeWarp
   # make sure it is installed in personal library -- not packageDir;
@@ -63,8 +60,6 @@ test_that("package-related functions work", {
   packageVersionFile <- file.path(packageDir, ".packageVersion2.txt")
   pkgSnapshot(libPath = packageDir, packageVersionFile, standAlone = FALSE)
   installed <- data.table::fread(packageVersionFile)
-  # availablePkgMatrix <- available.packages(repos = repos)
-  # pkgDeps <- tools::package_dependencies("Holidays", db = availablePkgMatrix, recursive = TRUE)
   pkgDeps <- sort(c("Holidays", unique(unlist(pkgDep("Holidays", recursive = TRUE,
                                                      libPath = packageDir)))))
   expect_true(all(sort(installed$instPkgs) == pkgDeps))
@@ -79,8 +74,6 @@ test_that("package-related functions work", {
   installed <- data.table::fread(packageVersionFile)
 
   # availablePkgMatrix <- available.packages(repos = repos)
-  # pkgDeps <- tools::package_dependencies(allInstalledNames, db = availablePkgMatrix,
-  #                                        recursive = TRUE)
   pkgDeps <- sort(c(allInstalledNames, unique(unlist(pkgDep(libPath = packageDir,
                                                             allInstalledNames,
                                                             recursive = TRUE)))))
@@ -104,7 +97,6 @@ test_that("package-related functions work", {
 
   try(detach("package:meow", unload = TRUE))
   try(detach("package:Holidays", unload = TRUE))
-  #try(detach("package:TimeWarp", unload = TRUE), silent = TRUE)
 
   unlink(packageDir, recursive = TRUE, force = TRUE)
 })

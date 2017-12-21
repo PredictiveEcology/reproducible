@@ -139,21 +139,13 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
   }
 
   autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
-  #if (NROW(currentVersions)) {
-  if(is.null(aa$haveVers)) {
-
-      pkgsToSnapshot <- pickFirstVersion(names(currentVersions), currentVersions)
-      # from .installPackages -- don't have versions during the install process,
-      #pkgsToSnapshot <- data.table(instPkgs = names(currentVersions), instVers = currentVersions)
-      #pkgsToSnapshot <- unique(pkgsToSnapshot, by = c("instPkgs", "instVers"))
-      #pkgsToSnapshot <- pkgsToSnapshot[,.SD[1],by="instPkgs"] # pick one in libPath, because that is the one used, if there are more than 1 copy
-      .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
-
-    } else {
-      .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
-      pkgSnapshot <- aa
-    }
-  #}
+  if (is.null(aa$haveVers)) {
+    pkgsToSnapshot <- pickFirstVersion(names(currentVersions), currentVersions)
+    .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+  } else {
+    .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
+    pkgSnapshot <- aa
+  }
 
   oldLibPath <- .libPaths()
   if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
@@ -282,6 +274,8 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 
   if (length(libPath) > 1) {
     ans <- list()
+    # Using loop next allows the ability to break out of search
+    #  if initial .libPaths have the package
     for (lp in libPath) {
        ans1 <- pkgDep(packages, lp)
        ans <- append(ans, list(ans1))
@@ -289,11 +283,6 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
          break
        }
     }
-    # This next line is the 1 liner to replace above...
-    # but above allows the ability to break out of search
-    #  if initial .libPaths have the package
-    #ans <- lapply(libPath, function(lp) pkgDep(packages, lp))
-
     if (length(packages) == 1) {
       ans <- list(ans)
     } else {
@@ -534,11 +523,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     supposedToBe <- data.table::fread(packageVersionFile, header = TRUE)
     supposedToBe <- unique(supposedToBe, by = c("instPkgs", "instVers"))
     data.table::setkeyv(supposedToBe, c("instPkgs", "instVers"))
-    supposedToBe <- supposedToBe[, list(instVers=max(instVers)), by = "instPkgs"]
+    supposedToBe <- supposedToBe[, list(instVers = max(instVers)), by = "instPkgs"]
 
     uniqued <- !duplicated(basename(libPathListFiles))
     libPathListFilesUniqued <- libPathListFiles[uniqued];
-    libPathListFiles <- libPathListFilesUniqued[basename(libPathListFilesUniqued) %in% supposedToBe$instPkgs]
+    libPathListFiles <- libPathListFilesUniqued[basename(libPathListFilesUniqued) %in%
+                                                  supposedToBe$instPkgs]
     libPathListFilesBase <- basename(libPathListFiles)
 
     allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
@@ -574,7 +564,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       instVers <- readRDS(file = installedVersionsFile)
     }
 
-    #instVers <- lapply(instVers, sub, pattern = "\\r|\\n", replacement = "")
     if (length(instVers) != length(libPathListFilesBase)) {
       stop("Package folder, ", libPath, " has become corrupt.",
            " Please manually delete .snapshot.RDS and .installedVersions.RDS")
@@ -583,7 +572,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     inst <- pickFirstVersion(libPathListFilesBase, unlist(instVers))
     data.table::setnames(inst, "instVers", "haveVers")
 
-    together <- inst[supposedToBe, on = c(instPkgs="instPkgs")]
+    together <- inst[supposedToBe, on = c(instPkgs = "instPkgs")]
 
     needPkgs <- setdiff(supposedToBe$instPkgs, inst$instPkgs)
 
@@ -593,7 +582,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     # Here test that the installed version is greater than required one
     isLoaded <- unlist(lapply(together$instPkgs[needVersEqual], isNamespaceLoaded))
     if (!is.null(isLoaded)) {
-      #canInstall <- together[needVersEqual[!eq],]
       canInstall <- together[needVersEqual[!isLoaded], ]
       cantInstall <- together[needVersEqual[isLoaded], ]
     } else {
@@ -610,13 +598,15 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     if (NROW(canInstall)) {
       message("Already have ", paste(canInstall$instPkgs, collapse = ", "), " version(s) ",
               paste(canInstall$haveVers, collapse = ", "),
-              ". Trying to install requested version(s) ", paste(canInstall$instVers, collapse = ", "))
+              ". Trying to install requested version(s) ", paste(canInstall$instVers,
+                                                                 collapse = ", "))
       wh2 <- merge(canInstall, wh2, all.x = TRUE)
     }
     if (NROW(cantInstall)) {
       warning("Can't install ", paste(cantInstall$instPkgs, collapse = ", "), " version(s) ",
               paste(cantInstall$instVers, collapse = ", "),
-              " because version(s) ", paste(cantInstall$haveVers, collapse = ", "), " is already loaded.",
+              " because version(s) ", paste(cantInstall$haveVers, collapse = ", "),
+              " is already loaded.",
               " Try restarting R or unloading that package.")
     }
     whPkgsNeeded <- rbind(wh1, wh2[, list(instPkgs, instVers)], fill = TRUE)
@@ -678,12 +668,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                                      on = c("instPkgs", "instVers")]
 
         if (NROW(canInstDirectFromCRAN)) {
-          # #repos <- getOption("repos")
-          # if ( is.null(repos) | any(repos == "" | "@CRAN@" %in% repos) ) {
-          #   repos <- "https://cran.rstudio.com"
-          # }
-          #
-          # if(length(repos)>1) repos <- repos[["CRAN"]]
           if (internetExists) {
             lapply(canInstDirectFromCRAN$instPkgs, function(pkg) {
               system(paste0(rpath, " --quiet --vanilla -e \"do.call(install.packages,list('",
@@ -771,8 +755,10 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         colnames(tog) <- c("Package", "Installed Version", "Requested Version")
         rownames(tog) <- NULL
         print(tog)
-        message("If this version is ok, you can update ", packageVersionFile, " using pkgSnapshot().",
-                " If not ok, unload ", paste(tog$Package, collapse = ", "), ", uninstall the newer version(s),",
+        message("If this version is ok, you can update ", packageVersionFile,
+                " using pkgSnapshot().",
+                " If not ok, unload ", paste(tog$Package, collapse = ", "),
+                ", uninstall the newer version(s),",
                 " or restart R, ensuring package(s) don't load") # nolint
       } else {
         message("All packages are correct versions.")
@@ -942,20 +928,23 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
       }
     }
 
-  if(!isAbsolute) packageVersionFile <- file.path(libPath[1], basename(packageVersionFile))
+  if (!isAbsolute) packageVersionFile <- file.path(libPath[1], basename(packageVersionFile))
 
   autoFile <- file.path(libPath[1], "._packageVersionsAuto.txt")
   if (!standAlone & file.exists(autoFile)){
       file.copy(autoFile, packageVersionFile, overwrite = TRUE)
       out <- data.table::fread(autoFile)
   } else {
-    if(!file.exists(autoFile) & !standAlone) {
-      message("There is no ", autoFile, " and standAlone is FALSE. This snapshot will not be accurate",
-              " because it will include all packages in ", paste(libPath, collapse = ", "))
+    if (!file.exists(autoFile) & !standAlone) {
+      message("There is no ", autoFile,
+              " and standAlone is FALSE. This snapshot will not be accurate",
+              " because it will include all packages in ",
+              paste(libPath, collapse = ", "))
     }
     instPkgs <- dir(libPath)
-    instVers <- unlist(lapply(libPath, function(lib) na.omit(unlist(installedVersions(instPkgs, libPath = lib)))))
-    if(length(instVers)==1) names(instVers) <- instPkgs
+    instVers <- unlist(lapply(libPath, function(lib)
+                    na.omit(unlist(installedVersions(instPkgs, libPath = lib)))))
+    if (length(instVers) == 1) names(instVers) <- instPkgs
 
     out <- .pkgSnapshot(names(instVers), instVers, packageVersionFile)
   }
@@ -965,6 +954,7 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = TRUE) {
 pickFirstVersion <- function(instPkgs, instVers) {
   out <- data.table(instPkgs = instPkgs, instVers = instVers)
   out <- unique(out, by = c("instPkgs", "instVers"))
-  out <- out[,.SD[1],by="instPkgs"] # pick one in libPath, because that is the one used, if there are more than 1 copy
+  out <- out[, .SD[1], by = "instPkgs"] # pick one in libPath, because that is
+                                        # the one used, if there are more than 1 copy
   out
 }

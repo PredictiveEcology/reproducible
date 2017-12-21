@@ -43,3 +43,5 @@
 
 
 src/reproducible\.dll
+
+*.o

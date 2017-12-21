@@ -27,6 +27,5 @@ getCRANrepos <- function(repos = NULL) {
   if (is.null(repos) | any(repos == "" | "@CRAN@" %in% repos)) {
     repos <- "https://cran.rstudio.com"
   }
-  #if (length(repos) > 1) repos <- repos[(names(repos) %in% "CRAN")]
   return(repos)
 }
