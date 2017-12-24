@@ -310,7 +310,7 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
           matchedCall <- match.call(Cache, parse(text = fns))
           functionName <- matchedCall$FUN
         }
-        functionName <- deparse(functionName)
+        functionName <- deparse(functionName, width.cutoff = 300)
         if (all(functionName != "FUN")) break
       }
     } else {
