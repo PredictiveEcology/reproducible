@@ -115,73 +115,79 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
                     install.packagesArgs = list(), standAlone = FALSE,      # nolint
                     repos = getOption("repos"), forget = FALSE) {
 
-  githubPkgs <- grep("\\/", packages, value = TRUE)
-  githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
-  if (length(githubPkgs)) {
-    packages[packages %in% githubPkgs] <- githubPkgNames
-  }
-  if (!dir.exists(libPath)) dir.create(libPath)
-  libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
+  if(!is.null(packages)) {
 
-  if (standAlone) {
-    # include only base if standAlone
-    nonLibPathPaths <- .libPaths()[length(.libPaths())]
-    nonLibPathPkgs <- unlist(lapply(nonLibPathPaths, dir))
-  } else {
-    nonLibPathPaths <- setdiff(.libPaths(), libPath)
-    nonLibPathPkgs <- unique(unlist(lapply(nonLibPathPaths, dir)))
-  }
-
-  # Two parts: 1) if there is a packageVersionFile (this calls the external file installVersions)
-  #            2) if there is no packageVersionFile
-  if (!missing(packageVersionFile)) {
-    Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
-    aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
-                          libPath = libPath, standAlone = standAlone, repos = repos)
-    Sys.setlocale(locale = "")
-    allPkgsNeeded <- aa$instPkgs
-  } else {
-    aa <- .installPackages(packages, githubPkgs = githubPkgs, githubPkgNames = githubPkgNames,
-                           install_githubArgs = install_githubArgs, nonLibPathPkgs = nonLibPathPkgs,
-                           libPath = libPath, standAlone = standAlone, forget = forget)
-    allPkgsNeeded <- aa$allPkgsNeeded
-    if (standAlone) {
-      libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths()[length(.libPaths())])),
-                                        dir, full.names = TRUE))
-    } else {
-      libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
+    githubPkgs <- grep("\\/", packages, value = TRUE)
+    githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
+    if (length(githubPkgs)) {
+      packages[packages %in% githubPkgs] <- githubPkgNames
     }
-    libPathListFiles <- libPathListFiles[basename(libPathListFiles) %in% allPkgsNeeded]
-    currentVersions <- installedVersionsQuick(libPathListFiles, libPath, standAlone = standAlone,
-                           basename(libPathListFiles))
-    if (is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
-  }
+    if (!dir.exists(libPath)) dir.create(libPath)
+    libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
 
-  autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
-  if (is.null(aa$haveVers)) {
-    pkgsToSnapshot <- pickFirstVersion(names(currentVersions), unlist(currentVersions))
-    .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
-  } else {
-    .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
-    pkgSnapshot <- aa
-  }
+    if (standAlone) {
+      # include only base if standAlone
+      nonLibPathPaths <- .libPaths()[length(.libPaths())]
+      nonLibPathPkgs <- unlist(lapply(nonLibPathPaths, dir))
+    } else {
+      nonLibPathPaths <- setdiff(.libPaths(), libPath)
+      nonLibPathPkgs <- unique(unlist(lapply(nonLibPathPaths, dir)))
+    }
 
-  oldLibPath <- .libPaths()
-  if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
-  packagesLoaded <- unlist(lapply(packages, function(p) {
-    try(require(p, character.only = TRUE))
-  }))
-  .libPaths(oldLibPath)
-  if (any(!packagesLoaded)) {
-    message("Simultaneous package versions being used.",
-            " Can only load first version(s) loaded in this session:\n",
-            paste(packages[!packagesLoaded], collapse = ", "))
-    packagesLoaded2 <- unlist(lapply(packages[!packagesLoaded], function(p) {
-      try(require(p, character.only = TRUE, quietly = TRUE))
+    # Two parts: 1) if there is a packageVersionFile (this calls the external file installVersions)
+    #            2) if there is no packageVersionFile
+    if (!missing(packageVersionFile)) {
+      Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
+      aa <- installVersions(githubPkgs, packageVersionFile = packageVersionFile,
+                            libPath = libPath, standAlone = standAlone, repos = repos)
+      Sys.setlocale(locale = "")
+      allPkgsNeeded <- aa$instPkgs
+    } else {
+      aa <- .installPackages(packages, githubPkgs = githubPkgs, githubPkgNames = githubPkgNames,
+                             install_githubArgs = install_githubArgs, nonLibPathPkgs = nonLibPathPkgs,
+                             libPath = libPath, standAlone = standAlone, forget = forget)
+      allPkgsNeeded <- aa$allPkgsNeeded
+      if (standAlone) {
+        libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths()[length(.libPaths())])),
+                                          dir, full.names = TRUE))
+      } else {
+        libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
+      }
+      libPathListFiles <- libPathListFiles[basename(libPathListFiles) %in% allPkgsNeeded]
+      currentVersions <- installedVersionsQuick(libPathListFiles, libPath, standAlone = standAlone,
+                             basename(libPathListFiles))
+      if (is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
+    }
+
+    autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
+    if (is.null(aa$haveVers)) {
+      pkgsToSnapshot <- pickFirstVersion(names(currentVersions), unlist(currentVersions))
+      .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+    } else {
+      .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
+      pkgSnapshot <- aa
+    }
+
+    oldLibPath <- .libPaths()
+    if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
+    packagesLoaded <- unlist(lapply(packages, function(p) {
+      try(require(p, character.only = TRUE))
     }))
+    .libPaths(oldLibPath)
+    if (any(!packagesLoaded)) {
+      message("Simultaneous package versions being used.",
+              " Can only load first version(s) loaded in this session:\n",
+              paste(packages[!packagesLoaded], collapse = ", "))
+      packagesLoaded2 <- unlist(lapply(packages[!packagesLoaded], function(p) {
+        try(require(p, character.only = TRUE, quietly = TRUE))
+      }))
 
 
+    }
+  } else {
+    packagesLoaded <- NULL
   }
+
   return(invisible(packagesLoaded))
 }
 
@@ -798,7 +804,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                               recursive = TRUE))
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
-  names(deps) <- deps
+  #names(deps) <- deps
   if (missing(githubPkgNames)) {
     githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
   }
