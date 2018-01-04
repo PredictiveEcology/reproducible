@@ -48,7 +48,8 @@ setMethod(
   ".cacheMessage",
   signature = "ANY",
   definition = function(object, functionName) {
-    message("loading cached result from previous ", functionName, " call.")
+    message(crayon::blue("  loading cached result from previous ", functionName, " call.",
+                         sep = ""))
 })
 
 ################################################################################
