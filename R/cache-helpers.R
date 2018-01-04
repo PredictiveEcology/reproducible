@@ -853,3 +853,5 @@ setMethod("Copy",
   setattr(obj, "debugCache2", preDigest)
   obj
 }
+
+loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)

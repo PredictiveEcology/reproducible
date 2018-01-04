@@ -377,7 +377,7 @@ setMethod(
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-        output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+        output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
         # Class-specific message
         .cacheMessage(output, functionDetails$functionName)
