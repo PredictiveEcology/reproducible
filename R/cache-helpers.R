@@ -482,7 +482,7 @@ setMethod(
 #' @importFrom methods is selectMethod slot slot<-
 #' @rdname prepareFileBackedRaster
 #'
-.prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
+.prepareFileBackedRaster <- function(obj, repoDir = NULL) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
