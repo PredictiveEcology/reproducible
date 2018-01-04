@@ -328,8 +328,6 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
     notInstalled <- unlist(lapply(ll2, function(y) length(y) == 0 & is.logical(y)))
     ll2[notInstalled] <- NA
     if (any(notInstalled)) {
-      # message(paste(names(ll2[notInstalled]), collapse = ", "),
-      #         " not installed locally, checking on CRAN for dependencies.")
 
       paste(names(ll2[notInstalled]), collapse = ", ")
       repos <- getCRANrepos(repos)
