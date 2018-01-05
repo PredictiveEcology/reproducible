@@ -806,10 +806,12 @@ setMethod("Copy",
 })
 
 ################################################################################
-#' Sort a any named object with dotted names first
+#' Sort or order any named object with dotted names and underscores first
 #'
-#' Internal use only. This exists so Windows and Linux machines can have
-#' the same order after a sort.
+#' Internal use only. This exists so Windows, *nux, Mac machines can have
+#' the same order after a sort. It will put dots and underscores first
+#' (with the sort key based on their second character, see examples. It also
+#' sorts lower case before upper case
 #'
 #' @param obj  An arbitrary R object for which a \code{names} function
 #'              returns a character vector.
@@ -821,15 +823,38 @@ setMethod("Copy",
 #' @rdname sortDotsUnderscoreFirst
 #'
 #' @examples
-#' items <- c(A = "a", Z = "z", `.D` = ".d", `_W` = "_w")
+#' items <- c(A = "a", Z = "z", `.D` = ".d", `_C` = "_C")
 #' .sortDotsUnderscoreFirst(items)
 #'
+#' # dots & underscore (using 2nd character), then all lower then all upper
+#' items <- c(B = "Upper", b = "lower", A = "a", `.D` = ".d", `_C` = "_C")
+#' .sortDotsUnderscoreFirst(items)
+#'
+#' # with a vector
+#' .sortDotsUnderscoreFirst(c(".C", "_B", "A")) # _B is first
+#'
 .sortDotsUnderscoreFirst <- function(obj) {
-  names(obj) <- gsub(names(obj), pattern = "\\.", replacement = "DOT")
-  names(obj) <- gsub(names(obj), pattern = "_", replacement = "US")
-  allLower <- which(tolower(names(obj)) == names(obj))
-  names(obj)[allLower] <- paste0("ALLLOWER", names(obj)[allLower])
-  obj[order(names(obj))]
+  obj[.orderDotsUnderscoreFirst(obj)]
+}
+
+#' @export
+#' @rdname sortDotsUnderscoreFirst
+.orderDotsUnderscoreFirst <- function(obj) {
+
+  if (!is.null(names(obj))) {
+    namesObj <- names(obj)
+  } else {
+    namesObj <- obj
+  }
+
+  namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
+  allLower <- tolower(namesObj) == namesObj
+  namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
+
+  onesChanged <- startsWith(namesObj, prefix = "a")
+  namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
+
+  order(namesObj)
 }
 
 ################################################################################
