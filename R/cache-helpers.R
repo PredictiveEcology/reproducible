@@ -886,9 +886,10 @@ loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
   if (is.null(scalls)) {
     scalls <- sys.calls()
   }
-
+  
   otherFns <- grepl(scalls, pattern = c("(test_code)|(with_reporter)|(force)|(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|(Cache)|(tryCatch)|(doTryCatch)"))
-  otherFns <- unlist(lapply(scalls[!otherFns], function(x) as.character(x[[1]])))
+  otherFns <- unlist(lapply(scalls[!otherFns], function(x) tryCatch(as.character(x[[1]]), error = function(y) "")))
+  otherFns <- otherFns[nzchar(otherFns)]
   tags <- paste0("otherFunctions:", otherFns)
 
   # FIgure out if it is in a .parseModule call, if yes, then extract the module
