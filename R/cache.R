@@ -286,7 +286,8 @@ setMethod(
     tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting  # nolint
 
     if (!is(FUN, "function")) {
-      if (any(startsWith(as.character(sys.calls()), "function_list[[k"))) {
+      scalls <- sys.calls()
+      if (any(startsWith(as.character(scalls), "function_list[[k"))) {
         srch <- search()
         whereRepro <- which(endsWith(srch, "reproducible")) - 1
         if (whereRepro > 1) {
@@ -310,6 +311,8 @@ setMethod(
              "Did you write it in the form: ",
              "Cache(function, functionArguments)?")
       }
+    } else {
+      scalls <- NULL
     }
 
     if (missing(notOlderThan)) notOlderThan <- NULL
@@ -531,6 +534,10 @@ setMethod(
     outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
                                      preDigestByClass)
 
+
+    # extract other function names that are not the ones the focus of the Cache call
+    otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
+
     # This is for write conflicts to the SQLite database
     #   (i.e., keep trying until it is written)
     written <- FALSE
@@ -565,7 +572,8 @@ setMethod(
       userTags <- c(userTags,
                     paste0("function:", functionDetails$functionName),
                     paste0("object.size:", objSize),
-                    paste0("accessed:", Sys.time()))
+                    paste0("accessed:", Sys.time()),
+                    paste0("otherFunctions:", otherFns))
       saved <- suppressWarnings(try(
         saveToLocalRepo(outputToSave, repoDir = cacheRepo, artifactName = "Cache",
                         archiveData = FALSE, archiveSessionInfo = FALSE,
