@@ -192,7 +192,6 @@ setMethod(
                         classOptions) {
     if (is(object, "RasterStack") ) {
       dig <- suppressWarnings(
-        list(dim(object), res(object), crs(object), extent(object),
              lapply(object@layers, function(yy) {
                .digestRaster(yy, compareRasterFileLength, algo)
              })
