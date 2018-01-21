@@ -148,6 +148,53 @@ test_that("test memory backed raster robustDigest", {
   set.seed(123)
   r2 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
   expect_true(identical(.robustDigest(r1), .robustDigest(r2)))
+
+  # Brick
+  r <- raster(matrix(1:10, 2, 5))
+  b <- brick(r, r)
+  dig <- reproducible:::.robustDigest(b)
+
+  r1 <- raster(matrix(1:10, 2, 5))
+  b1 <- brick(r1, r1)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical(dig, dig1)
+
+  b <- writeRaster(b, file = "test", overwrite = TRUE)
+  dig <- reproducible:::.robustDigest(b)
+
+  r <- raster(matrix(1:10, 2, 5))
+  b <- brick(r, r)
+  b <- writeRaster(b, file = "test", overwrite = TRUE)
+  dig1 <- reproducible:::.robustDigest(b)
+
+  expect_identical( dig, dig1)
+
+  # Stacks
+  dimA <- 100
+  r <- raster(matrix(1:dimA, round(sqrt(dimA)), round(sqrt(dimA))))
+  b <- raster::stack(r, r)
+  dig <- reproducible:::.robustDigest(b)
+
+  r1 <- raster(matrix(1:dimA, round(sqrt(dimA)), round(sqrt(dimA))))
+  b1 <- raster::stack(r1, r1)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical(dig, dig1)
+
+  r4 <- writeRaster(r, file = "test", overwrite = TRUE)
+  r5 <- writeRaster(r, file = "test1", overwrite = TRUE)
+  b <- raster::stack(r4, r5)
+  dig <- reproducible:::.robustDigest(b)
+
+  r2 <- writeRaster(r1, file = "test", overwrite = TRUE)
+  r3 <- writeRaster(r1, file = "test1", overwrite = TRUE)
+  b1 <- raster::stack(r2, r3)
+  #b1 <- writeRaster(b1, file = "test", overwrite = TRUE)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical( dig, dig1)
+
 })
 
 test_that("test date-based cache removal", {
