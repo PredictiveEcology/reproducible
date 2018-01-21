@@ -190,19 +190,13 @@ setMethod(
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (is(object, "RasterStack") | is(object, "RasterBrick")) {
+    if (is(object, "RasterStack") ) {
       dig <- suppressWarnings(
         list(dim(object), res(object), crs(object), extent(object),
              lapply(object@layers, function(yy) {
                .digestRaster(yy, compareRasterFileLength, algo)
              })
-        )
       )
-      if (nzchar(object@filename, keepNA = TRUE)) {
-        # if the Raster is on disk, has the first compareRasterFileLength characters;
-        # uses digest::digest on the file
-        dig <- append(dig, digest(file = object@filename, length = compareRasterFileLength))
-      }
     } else {
       dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
     }
