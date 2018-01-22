@@ -146,10 +146,16 @@ setMethod(
                         classOptions) {
     if (digestPathContent) {
       lapply(object, function(x) {
+        isExistentFile <- FALSE
         if (file.exists(x)) {
+          if (!dir.exists(x)) {
+            isExistentFile <- TRUE
+          }
+        }
+        if (isExistentFile) {
           digest::digest(file = x, length = compareRasterFileLength, algo = algo)
         } else {
-          fastdigest::fastdigest(basename(x))
+          fastdigest::fastdigest(basename(x)) # just do file basename as a character string, if file does not exist
         }
       })
     } else {
