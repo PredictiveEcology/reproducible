@@ -148,6 +148,53 @@ test_that("test memory backed raster robustDigest", {
   set.seed(123)
   r2 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
   expect_true(identical(.robustDigest(r1), .robustDigest(r2)))
+
+  # Brick
+  r <- raster(matrix(1:10, 2, 5))
+  b <- brick(r, r)
+  dig <- reproducible:::.robustDigest(b)
+
+  r1 <- raster(matrix(1:10, 2, 5))
+  b1 <- brick(r1, r1)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical(dig, dig1)
+
+  b <- writeRaster(b, file = "test", overwrite = TRUE)
+  dig <- reproducible:::.robustDigest(b)
+
+  r <- raster(matrix(1:10, 2, 5))
+  b <- brick(r, r)
+  b <- writeRaster(b, file = "test", overwrite = TRUE)
+  dig1 <- reproducible:::.robustDigest(b)
+
+  expect_identical( dig, dig1)
+
+  # Stacks
+  dimA <- 100
+  r <- raster(matrix(1:dimA, round(sqrt(dimA)), round(sqrt(dimA))))
+  b <- raster::stack(r, r)
+  dig <- reproducible:::.robustDigest(b)
+
+  r1 <- raster(matrix(1:dimA, round(sqrt(dimA)), round(sqrt(dimA))))
+  b1 <- raster::stack(r1, r1)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical(dig, dig1)
+
+  r4 <- writeRaster(r, file = "test", overwrite = TRUE)
+  r5 <- writeRaster(r, file = "test1", overwrite = TRUE)
+  b <- raster::stack(r4, r5)
+  dig <- reproducible:::.robustDigest(b)
+
+  r2 <- writeRaster(r1, file = "test", overwrite = TRUE)
+  r3 <- writeRaster(r1, file = "test1", overwrite = TRUE)
+  b1 <- raster::stack(r2, r3)
+  #b1 <- writeRaster(b1, file = "test", overwrite = TRUE)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical( dig, dig1)
+
 })
 
 test_that("test date-based cache removal", {
@@ -289,8 +336,11 @@ test_that("test asPath", {
   origDir <- getwd()
   on.exit(setwd(origDir))
   setwd(tmpdir)
+  # First -- has no filename.RData
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
+  # Second -- has a filename.RData, and passing a character string, it tries to see if it is a file, if yes, it digests it
   a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
+  # Third -- finally has all same as second time
   a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
 
   expect_true(length(a1) == 0)
@@ -299,9 +349,9 @@ test_that("test asPath", {
 
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), digestPathContent = FALSE, cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), digestPathContent = FALSE, cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), digestPathContent = FALSE,
                                cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
@@ -309,11 +359,11 @@ test_that("test asPath", {
 
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+  a1 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"), digestPathContent = FALSE,
                                cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+  a2 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"), digestPathContent = FALSE,
                                cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+  a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"), digestPathContent = FALSE,
                                cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))

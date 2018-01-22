@@ -158,7 +158,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param digestPathContent Logical. Should arguments that are of class \code{Path}
 #'                          (see examples below) have their name digested
-#'                          (\code{FALSE}; default), or their file contents (\code{TRUE}).
+#'                          (\code{FALSE}), or their file contents (\code{TRUE}; default).
 #'
 #' @return As with \code{\link[archivist]{cache}}, returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
@@ -195,7 +195,7 @@ setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
+           userTags = c(), digestPathContent = TRUE, omitArgs = NULL,
            classOptions = list(),
            debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {

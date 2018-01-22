@@ -146,10 +146,16 @@ setMethod(
                         classOptions) {
     if (digestPathContent) {
       lapply(object, function(x) {
+        isExistentFile <- FALSE
         if (file.exists(x)) {
+          if (!dir.exists(x)) {
+            isExistentFile <- TRUE
+          }
+        }
+        if (isExistentFile) {
           digest::digest(file = x, length = compareRasterFileLength, algo = algo)
         } else {
-          fastdigest::fastdigest(basename(x))
+          fastdigest::fastdigest(basename(x)) # just do file basename as a character string, if file does not exist
         }
       })
     } else {
@@ -190,20 +196,13 @@ setMethod(
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (is(object, "RasterStack") | is(object, "RasterBrick")) {
+    if (is(object, "RasterStack") ) { # have to do one file at a time with Stack
       dig <- suppressWarnings(
-        list(dim(object), res(object), crs(object), extent(object),
              lapply(object@layers, function(yy) {
                .digestRaster(yy, compareRasterFileLength, algo)
              })
-        )
       )
-      if (nzchar(object@filename, keepNA = TRUE)) {
-        # if the Raster is on disk, has the first compareRasterFileLength characters;
-        # uses digest::digest on the file
-        dig <- append(dig, digest(file = object@filename, length = compareRasterFileLength))
-      }
-    } else {
+    } else { # Brick and Layers have only one file
       dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
     }
     return(fastdigest::fastdigest(dig))

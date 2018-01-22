@@ -704,8 +704,12 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     dig <- fastdigest(list(dim(object), res(object), crs(object),
                            extent(object), object@data))
     # if the Raster is on disk, has the first compareRasterFileLength characters;
+    if (endsWith(basename(object@file@name), suffix = ".grd"))
+      filename <- sub(object@file@name, pattern = ".grd$", replacement = ".gri")
+    else
+      filename <- object@file@name
     dig <- fastdigest(
-      append(dig, digest::digest(file = object@file@name,
+      append(dig, digest::digest(file = filename,
                                  length = compareRasterFileLength,
                                  algo = algo)))
   } else {
