@@ -4,6 +4,7 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.1.4
 =============
 
+* Cached pipe operator %C% -- use to begin a pipe sequence, e.g., Cache() %C% ... 
 * Cache arg `sideEffect` can now be a path
 * Cache arg `digestPathContent` default changed from FALSE (was for speed) to TRUE (for content accuracy)
 * New function, `searchFull`, which shows the full search path, known alternatively as "scope", or "binding environments". It is where R will search for a function when requested by a user.

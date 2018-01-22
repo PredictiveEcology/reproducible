@@ -2,6 +2,7 @@
 
 S3method(asPath,character)
 export("%>%")
+export("%C%")
 export(.addTagsToOutput)
 export(.cacheMessage)
 export(.checkCacheRepo)

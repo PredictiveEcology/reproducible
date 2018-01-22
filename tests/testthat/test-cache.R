@@ -406,6 +406,29 @@ test_that("test pipe for Cache", {
     prod(., 16) %>%
     Cache(cacheRepo = tmpdir, notOlderThan = Sys.time())
   expect_false(isTRUE(all.equal(d1, d2)))
+
+
+  # New Pipe
+  clearCache(tmpdir)
+  a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
+  b <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
+  d <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
+  expect_true(all.equal(b, d))
+  expect_false(isTRUE(all.equal(a, b)))
+  d1 <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 6) %>% mean() %>% prod(., 6) # nolint
+  expect_false(isTRUE(all.equal(d1, d)))
+
+  d1 <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 16) # nolint
+  expect_false(isTRUE(all.equal(d1, d)))
+
+  d2 <- Cache(cacheRepo = tmpdir, notOlderThan = Sys.time()) %C%
+    rnorm(10, 16) %>%
+    mean() %>%
+    prod(., 16)
+
+  expect_false(isTRUE(all.equal(d1, d2)))
+
+
 })
 
 test_that("test quoted FUN in Cache", {
