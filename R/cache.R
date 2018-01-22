@@ -285,6 +285,7 @@ setMethod(
 
     tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting  # nolint
 
+    # This is for Pipe operator -- needs special consideration
     if (!is(FUN, "function")) {
       scalls <- sys.calls()
       if (any(startsWith(as.character(scalls), "function_list[[k"))) {

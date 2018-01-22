@@ -517,15 +517,17 @@ setMethod(
     trySaveFilename <- if (length(splittedFilenames) == 1) {
       normalizePath(
         file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
-        winslash = "/")
+        winslash = "/", mustWork = FALSE)
     } else {
       normalizePath(
         file.path(repoDir, splittedFilenames),
-        winslash = "/")
+        winslash = "/", mustWork = FALSE)
     }
     if (any(!file.exists(trySaveFilename))) {
-      stop("please rename raster that thinks is on disk with this or these filename(s) ",
-           curFilename, " or rerun cache.")
+      stop("The raster that is supposed to be on disk with this or these filename(s) ",
+           curFilename, " has been deleted. It must be recreated e.g.,",
+           "try showCache(userTags = \"writeRaster\"), examine that and possibly -- with",
+           "caution -- clearCache(userTags = \"writeRaster\")")
     } else {
       slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
     }
