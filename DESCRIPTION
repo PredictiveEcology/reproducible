@@ -21,7 +21,7 @@ Authors@R: c(
     role = "cph")
     )
 Depends:
-    R (>= 3.3.3)
+    R (>= 3.3.0)
 Imports:
     archivist (>= 2.1.2),
     crayon,
