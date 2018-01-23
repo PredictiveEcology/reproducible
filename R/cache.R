@@ -231,7 +231,7 @@ setMethod(
         functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
 
         # i.e., if it did extract the name
-        if (functionDetails$functionName != "internal") {
+        if (!is.na(functionDetails$functionName)) {
           if (is.primitive(FUN)) {
             tmpl <- list(...)
           } else {
@@ -571,7 +571,8 @@ setMethod(
     while (!written) {
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
-                    paste0("function:", functionDetails$functionName),
+                    if (!is.na(functionDetails$functionName))
+                      paste0("function:", functionDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0("otherFunctions:", otherFns))

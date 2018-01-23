@@ -327,7 +327,7 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
 
   # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
   if (isTRUE(grepl(functionName, pattern = "\\(")))
-    functionName <- "internal"
+    functionName <- NA_character_
 
   return(list(functionName = functionName, .FUN = .FUN))
 }
