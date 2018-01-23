@@ -40,37 +40,23 @@ available.packagesMem(contriburl = contrib.url(repos, type), method,
 \item{verbose}{logical indicating if output should monitor the package
     search cycles.}
 
-\item{contriburl}{
-    URL(s) of the \file{contrib} sections of the repositories.
-    Specify this argument only if your repository mirror is incomplete,
-    e.g., because you burned only the \file{contrib} section on a CD.
-  }
+\item{contriburl}{URL(s) of the \file{contrib} sections of the repositories.
+Specify this argument only if your repository mirror is
+incomplete, e.g., because you burned only the \file{contrib} section on a CD.}
 
-\item{method}{
-    download method, see \code{\link{download.file}}.
-  }
+\item{method}{download method, see \code{\link{download.file}}.}
 
-\item{fields}{
-    a character vector giving the fields to extract from
-    the \file{PACKAGES} file(s) in addition to the default ones, or
-    \code{NULL} (default).  Unavailable fields result in \code{NA}
-    values.
-  }
+\item{fields}{a character vector giving the fields to extract from the
+\file{PACKAGES} file(s) in addition to the default ones,
+or \code{NULL} (default). Unavailable fields result in \code{NA} values.}
 
-\item{type}{
-    character string, indicate which type of packages: see
-    \code{\link{install.packages}}.
-  
-    If \code{type = "both"} this will use the source repository.
-  }
+\item{type}{character string, indicate which type of packages: see
+\code{\link{install.packages}}.
+ If \code{type = "both"} this will use the source repository.}
 
-\item{filters}{
-    a character vector or list or \code{NULL} (default). See \sQuote{Details}.
-  }
+\item{filters}{a character vector or list or \code{NULL} (default). See \sQuote{Details}.}
 
-\item{repos}{
-    character vector, the base URL(s) of the repositories to use.
-  }
+\item{repos}{character vector, the base URL(s) of the repositories to use.}
 }
 \description{
 These have a 6 minute memory time window.
