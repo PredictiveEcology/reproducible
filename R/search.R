@@ -31,8 +31,8 @@
 searchFull <- function(env = parent.frame(), simplify = TRUE) {
   envs <- list()
   counter <- 0
-  while(!identical(parent.env(env), emptyenv())) {
-    counter = counter + 1
+  while (!identical(parent.env(env), emptyenv())) {
+    counter <- counter + 1
     envs[[counter]] <- parent.env(env)
     env <- envs[[counter]]
   }

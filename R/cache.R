@@ -623,4 +623,3 @@ setMethod(
     Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
 })
-
