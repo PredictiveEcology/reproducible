@@ -893,18 +893,21 @@ loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
     scalls <- sys.calls()
   }
 
-  otherFns <- grepl(scalls, pattern = c("(test_code)|(with_reporter)|(force)|(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|(Cache)|(tryCatch)|(doTryCatch)"))
-  otherFns <- unlist(lapply(scalls[!otherFns], function(x) tryCatch(as.character(x[[1]]), error = function(y) "")))
+  otherFns <- grepl(scalls, pattern = paste0("(test_code)|(with_reporter)|(force)|",
+                                             "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
+                                             "(Cache)|(tryCatch)|(doTryCatch)"))
+  otherFns <- unlist(lapply(scalls[!otherFns], function(x) {
+    tryCatch(as.character(x[[1]]), error = function(y) "")
+  }))
   otherFns <- otherFns[nzchar(otherFns)]
   otherFns <- otherFns[!startsWith(otherFns, prefix = ".")]
   otherFns <- paste0("otherFunctions:", otherFns)
 
-  # FIgure out if it is in a .parseModule call, if yes, then extract the module
+  # Figure out if it is in a .parseModule call, if yes, then extract the module
   doEventFrameNum <- which(startsWith(as.character(scalls), prefix = ".parseModule"))
   if (length(doEventFrameNum)) {
     module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
-    otherFns <- c(paste0("module:",module), otherFns)
+    otherFns <- c(paste0("module:", module), otherFns)
   }
   unique(otherFns)
 }
-

@@ -168,7 +168,7 @@ test_that("test memory backed raster robustDigest", {
   b <- writeRaster(b, file = "test", overwrite = TRUE)
   dig1 <- reproducible:::.robustDigest(b)
 
-  expect_identical( dig, dig1)
+  expect_identical(dig, dig1)
 
   # Stacks
   dimA <- 100
@@ -193,8 +193,7 @@ test_that("test memory backed raster robustDigest", {
   #b1 <- writeRaster(b1, file = "test", overwrite = TRUE)
   dig1 <- reproducible:::.robustDigest(b1)
 
-  expect_identical( dig, dig1)
-
+  expect_identical(dig, dig1)
 })
 
 test_that("test date-based cache removal", {
@@ -338,7 +337,8 @@ test_that("test asPath", {
   setwd(tmpdir)
   # First -- has no filename.RData
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
-  # Second -- has a filename.RData, and passing a character string, it tries to see if it is a file, if yes, it digests it
+  # Second -- has a filename.RData, and passing a character string,
+  #           it tries to see if it is a file, if yes, it digests it
   a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
   # Third -- finally has all same as second time
   a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
@@ -349,22 +349,24 @@ test_that("test asPath", {
 
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), digestPathContent = FALSE, cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), digestPathContent = FALSE, cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), digestPathContent = FALSE,
-                               cacheRepo = tmpdir))
+  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))
 
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"), digestPathContent = FALSE,
-                               cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"), digestPathContent = FALSE,
-                               cacheRepo = tmpdir))
-  a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"), digestPathContent = FALSE,
-                               cacheRepo = tmpdir))
+  a1 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
+  a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))

@@ -184,7 +184,8 @@
   whPipeCall <- unlist(lapply(mcs, function(elem) as.character(elem[[1]]) %in% c("%C%", "%>%")))
   # Take the first one, which will be one with the whole pipe sequence
   mc <- mcs[whPipeCall][[1]]
-  mc[[2]][[2]] <- parse(text = gsub(deparse(mc[[2]][[2]]), pattern = "%C%", replacement = "%>%"))[[1]]
+  mc[[2]][[2]] <- parse(text = gsub(deparse(mc[[2]][[2]]), pattern = "%C%",
+                                    replacement = "%>%"))[[1]]
   chain_parts <- getFromNamespace("split_chain", ns = "magrittr")(mc, env = env) # nolint
   pipes <- chain_parts[["pipes"]][-1]
   rhss <- chain_parts[["rhss"]][-1]

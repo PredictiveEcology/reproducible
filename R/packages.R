@@ -115,8 +115,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
                     install.packagesArgs = list(), standAlone = FALSE,      # nolint
                     repos = getOption("repos"), forget = FALSE) {
 
-  if(!is.null(packages)) {
-
+  if (!is.null(packages)) {
     githubPkgs <- grep("\\/", packages, value = TRUE)
     githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
     if (length(githubPkgs)) {
@@ -144,8 +143,9 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       allPkgsNeeded <- aa$instPkgs
     } else {
       aa <- .installPackages(packages, githubPkgs = githubPkgs, githubPkgNames = githubPkgNames,
-                             install_githubArgs = install_githubArgs, nonLibPathPkgs = nonLibPathPkgs,
-                             libPath = libPath, standAlone = standAlone, forget = forget)
+                             install_githubArgs = install_githubArgs,
+                             nonLibPathPkgs = nonLibPathPkgs, libPath = libPath,
+                             standAlone = standAlone, forget = forget)
       allPkgsNeeded <- aa$allPkgsNeeded
       if (standAlone) {
         libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths()[length(.libPaths())])),
@@ -802,7 +802,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                               recursive = TRUE))
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
-  #names(deps) <- deps
+
   if (missing(githubPkgNames)) {
     githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
   }
