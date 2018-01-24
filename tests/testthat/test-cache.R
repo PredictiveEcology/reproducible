@@ -129,6 +129,8 @@ test_that("test file-backed raster caching", {
 test_that("test memory backed raster robustDigest", {
   library(raster)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
+  tmpFile <- tempfile()
+  tmpFile1 <- tempfile()
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
   set.seed(123)
@@ -160,12 +162,12 @@ test_that("test memory backed raster robustDigest", {
 
   expect_identical(dig, dig1)
 
-  b <- writeRaster(b, file = "test", overwrite = TRUE)
+  b <- writeRaster(b, file = tmpFile, overwrite = TRUE)
   dig <- reproducible:::.robustDigest(b)
 
   r <- raster(matrix(1:10, 2, 5))
   b <- brick(r, r)
-  b <- writeRaster(b, file = "test", overwrite = TRUE)
+  b <- writeRaster(b, file = tmpFile, overwrite = TRUE)
   dig1 <- reproducible:::.robustDigest(b)
 
   expect_identical(dig, dig1)
@@ -182,15 +184,15 @@ test_that("test memory backed raster robustDigest", {
 
   expect_identical(dig, dig1)
 
-  r4 <- writeRaster(r, file = "test", overwrite = TRUE)
-  r5 <- writeRaster(r, file = "test1", overwrite = TRUE)
+  r4 <- writeRaster(r, file = tmpFile, overwrite = TRUE)
+  r5 <- writeRaster(r, file = tmpFile1, overwrite = TRUE)
   b <- raster::stack(r4, r5)
   dig <- reproducible:::.robustDigest(b)
 
-  r2 <- writeRaster(r1, file = "test", overwrite = TRUE)
-  r3 <- writeRaster(r1, file = "test1", overwrite = TRUE)
+  r2 <- writeRaster(r1, file = tmpFile, overwrite = TRUE)
+  r3 <- writeRaster(r1, file = tmpFile1, overwrite = TRUE)
   b1 <- raster::stack(r2, r3)
-  #b1 <- writeRaster(b1, file = "test", overwrite = TRUE)
+  #b1 <- writeRaster(b1, file = tmpFile, overwrite = TRUE)
   dig1 <- reproducible:::.robustDigest(b1)
 
   expect_identical(dig, dig1)
