@@ -469,32 +469,50 @@ pkgDep <- memoise(pkgDepRaw)
 
 pkgDep2 <- memoise(pkgDepRaw)
 
-#' Memoised versions of package tools
+#' Memoised version of package_dependencies
 #'
-#' These have a 6 minute memory time window.
+#' This have a 6 minute memory time window.
 #'
 #' @importFrom memoise memoise timeout
 #' @importFrom tools package_dependencies
 #' @inheritParams tools::package_dependencies
-#' @rdname memoisedPackageTools
+#' @rdname package_dependenciesMem
 package_dependenciesMem <- memoise(tools::package_dependencies, ~timeout(360)) # nolint
 
+#' Memoised version of available.packages
+#'
+#' This have a 6 minute memory time window.
+#'
 #' @importFrom memoise memoise timeout
 #' @importFrom utils available.packages
-## @inheritParams utils::available.packages
-#' @param contriburl URL(s) of the \file{contrib} sections of the repositories.
-#'                   Specify this argument only if your repository mirror is
-#'                   incomplete, e.g., because you burned only the \file{contrib} section on a CD.
-#' @param method download method, see \code{\link{download.file}}.
-#' @param type character string, indicate which type of packages: see
-#'             \code{\link{install.packages}}.
-#'              If \code{type = "both"} this will use the source repository.
-#' @param fields a character vector giving the fields to extract from the
-#'               \file{PACKAGES} file(s) in addition to the default ones,
-#'               or \code{NULL} (default). Unavailable fields result in \code{NA} values.
-#' @param filters a character vector or list or \code{NULL} (default). See \sQuote{Details}.
-#' @param repos	character vector, the base URL(s) of the repositories to use.
-#' @rdname memoisedPackageTools
+#' @rdname available.packagesMem
+#' @evalRd {
+#' paste("
+#' \\arguments{
+#' \\item{contriburl}{URL(s) of the \\file{contrib} sections of the repositories.
+#'   Specify this argument only if your repository mirror is
+#'   incomplete, e.g., because you burned only the \\file{contrib} section on a CD.}
+#'
+#' \\item{method}{download method, see \\code{\\link{download.file}}.}
+#'
+#' \\item{fields}{a character vector giving the fields to extract from the
+#'   \\file{PACKAGES} file(s) in addition to the default ones,
+#'   or \\code{NULL} (default). Unavailable fields result in \\code{NA} values.}
+#'
+#' \\item{type}{character string, indicate which type of packages: see
+#'   \\code{\\link{install.packages}}.
+#'   If \\code{type = 'both'} this will use the source repository.}
+#'
+#' \\item{filters}{a character vector or list or \\code{NULL} (default). See \\sQuote{Details}.}
+#'
+#' \\item{repos}{character vector, the base URL(s) of the repositories to use.}
+#' ", if (getRversion() >= "3.5.0") {
+#' "
+#' \\item{ignore_repo_cache	}{logical. If true, the repository cache is never used (see \\sQuote{Details}).}
+#' \\item{max_repo_cache_age}{any cached values older than this in seconds will be ignored. See \\sQuote{Details}).}
+#' \\item{...}{allow additional arguments to be passed from callers (which might be arguments to future versions of this function)}
+#' "}, "}"
+#' )}
 available.packagesMem <- memoise(available.packages, ~timeout(360)) # nolint
 
 #' Install exact package versions from a package version text file & GitHub

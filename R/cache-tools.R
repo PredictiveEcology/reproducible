@@ -94,8 +94,6 @@ setMethod(
 #' @rdname viewCache
 #' @seealso \code{\link[archivist]{splitTagsLocal}}.
 #'
-#' @example inst/examples/example_Cache.R
-#'
 setGeneric("showCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("showCache")
 })

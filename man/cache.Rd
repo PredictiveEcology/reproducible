@@ -198,6 +198,7 @@ Subsequent calls to this function
 library(raster)
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
 
 # Basic use
 ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
