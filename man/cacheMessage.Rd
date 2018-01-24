@@ -21,6 +21,11 @@ Nothing; called for its messaging side effect.
 \description{
 This is a generic definition that can be extended according to class.
 }
+\examples{
+a <- 1
+.cacheMessage(a, "mean")
+
+}
 \author{
 Eliot McIntire
 }

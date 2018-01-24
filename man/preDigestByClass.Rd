@@ -20,6 +20,11 @@ A list with elements that will likely be used in \code{.postProcessing}
 The default method for \code{preDigestByClass} and simply returns \code{NULL}.
 There may be methods in other packages.
 }
+\examples{
+a <- 1
+.preDigestByClass(a) # returns NULL in the simple case here.
+
+}
 \author{
 Eliot McIntire
 }

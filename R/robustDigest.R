@@ -57,6 +57,49 @@
 #' @importFrom fastdigest fastdigest
 #' @keywords internal
 #' @rdname robustDigest
+#' @examples
+#'
+#' a <- 2
+#' tmpfile1 <- tempfile()
+#' tmpfile2 <- tempfile()
+#' save(a, file = tmpfile1)
+#' save(a, file = tmpfile2)
+#'
+#' # treats as character string, so 2 filenames are different
+#' fastdigest::fastdigest(tmpfile1)
+#' fastdigest::fastdigest(tmpfile2)
+#'
+#' # tests to see whether character string is representing a file
+#' .robustDigest(tmpfile1)
+#' .robustDigest(tmpfile2) # same
+#'
+#' # if you tell it that it is a path, then you can decide if you want it to be
+#' #  treated as a character string or as a file path
+#' .robustDigest(asPath(tmpfile1))
+#' .robustDigest(asPath(tmpfile2)) # different because you have a choice
+#'
+#' .robustDigest(asPath(tmpfile1), digestPathContent = TRUE)
+#' .robustDigest(asPath(tmpfile2), digestPathContent = TRUE) # same
+#'
+#' # Rasters are interesting because it is not know a priori if it
+#' #   it has a file name associated with it.
+#' library(raster)
+#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#'
+#' # write to disk
+#' r1 <- writeRaster(r, file = tmpfile1)
+#' r2 <- writeRaster(r, file = tmpfile2)
+#'
+#' digest::digest(r1)
+#' digest::digest(r2) # different
+#' fastdigest::fastdigest(r1)
+#' fastdigest::fastdigest(r2) # different
+#' .robustDigest(r1)
+#' .robustDigest(r2) # same... data are the same in the file
+#'
+#' # note, this is not true for comparing memory and file-backed rasters
+#' .robustDigest(r)
+#' .robustDigest(r1) # different
 #'
 setGeneric(".robustDigest", function(object, objects,
                                     compareRasterFileLength = 1e6,

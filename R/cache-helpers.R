@@ -10,6 +10,8 @@
 #' @author Eliot McIntire
 #' @export
 #' @rdname tagsByClass
+#' @examples
+#' .tagsByClass(character()) # Nothing interesting. Other packages will make methods
 #'
 setGeneric(".tagsByClass", function(object) {
   standardGeneric(".tagsByClass")
@@ -37,6 +39,9 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @rdname cacheMessage
+#' @examples
+#' a <- 1
+#' .cacheMessage(a, "mean")
 #'
 setGeneric(".cacheMessage", function(object, functionName) {
   standardGeneric(".cacheMessage")
@@ -64,6 +69,11 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @rdname objSizeInclEnviros
+#' @examples
+#' a <- new.env()
+#' a$b <- 1:10
+#' object.size(a)
+#' .objSizeInclEnviros(a) # much larger
 #'
 setGeneric(".objSizeInclEnviros", function(object) {
   standardGeneric(".objSizeInclEnviros")
@@ -135,6 +145,9 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @rdname preDigestByClass
+#' @examples
+#' a <- 1
+#' .preDigestByClass(a) # returns NULL in the simple case here.
 #'
 setGeneric(".preDigestByClass", function(object) { # nolint
   standardGeneric(".preDigestByClass")
@@ -165,6 +178,9 @@ setMethod(
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname checkCacheRepo
+#' @examples
+#' a <- "test"
+#' .checkCacheRepo(a) # no cache repository supplied
 #'
 setGeneric(".checkCacheRepo", function(object, create=FALSE) {
   standardGeneric(".checkCacheRepo")
@@ -198,7 +214,24 @@ setMethod(
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname prepareOutput
+#' @examples
+#' a <- 1
+#' .prepareOutput(a) # does nothing
 #'
+#' b <- "Null"
+#' .prepareOutput(b) # converts to NULL
+#'
+#' # For rasters, it is same as .prepareFileBackedRaster
+#' try(archivist::createLocalRepo(tempdir()))
+#'
+#' library(raster)
+#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#'
+#' # write to disk manually -- will be in tempdir()
+#' r <- writeRaster(r, file = tempfile())
+#'
+#' # copy it to the cache repository
+#' r <- .prepareOutput(r, tempdir())
 setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
   standardGeneric(".prepareOutput")
 })
@@ -482,6 +515,20 @@ setMethod(
 #' @importFrom raster filename dataType inMemory nlayers writeRaster
 #' @importFrom methods is selectMethod slot slot<-
 #' @rdname prepareFileBackedRaster
+#' @examples
+#' library(raster)
+#' archivist::createLocalRepo(tempdir())
+#'
+#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#'
+#' # write to disk manually -- will be in tempdir()
+#' r <- writeRaster(r, file = tempfile())
+#'
+#' # copy it to the cache repository
+#' r <- .prepareFileBackedRaster(r, tempdir())
+#'
+#' r # now in "rasters" subfolder of tempdir()
+#'
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL) {
   isRasterLayer <- TRUE

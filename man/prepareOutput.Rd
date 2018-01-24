@@ -27,6 +27,25 @@ The object, modified
 \description{
 This is a generic definition that can be extended according to class.
 }
+\examples{
+a <- 1
+.prepareOutput(a) # does nothing
+
+b <- "Null"
+.prepareOutput(b) # converts to NULL
+
+# For rasters, it is same as .prepareFileBackedRaster
+try(archivist::createLocalRepo(tempdir()))
+
+library(raster)
+r <- raster(extent(0,10,0,10), vals = 1:100)
+
+# write to disk manually -- will be in tempdir()
+r <- writeRaster(r, file = tempfile())
+
+# copy it to the cache repository
+r <- .prepareOutput(r, tempdir())
+}
 \author{
 Eliot McIntire
 }
