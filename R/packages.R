@@ -141,7 +141,8 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     if (standAlone) {
       # include only base if standAlone
       nonLibPathPaths <- .libPaths()[length(.libPaths())]
-      nonLibPathPkgs <- unlist(lapply(nonLibPathPaths, dir))
+      ips <- unname(installed.packages(priority = "high")[, "Package"])
+      nonLibPathPkgs <- ips # unlist(lapply(nonLibPathPaths, dir))
     } else {
       nonLibPathPaths <- setdiff(.libPaths(), libPath)
       nonLibPathPkgs <- unique(unlist(lapply(nonLibPathPaths, dir)))
