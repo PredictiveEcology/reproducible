@@ -28,6 +28,7 @@
 #' into the cache repository for later use.
 #'
 #' @name pipe2
+#' @aliases %>%
 #' @importFrom utils getFromNamespace
 #' @inheritParams magrittr::`%>%`
 #' @importFrom magrittr freduce
@@ -144,6 +145,7 @@
 #' @inheritParams magrittr::`%>%`
 #' @importFrom magrittr freduce
 #' @seealso pipe2
+#' @aliases %C%
 #' @export
 #' @examples
 #' tmpdir <- file.path(tempdir(), "testCache")
