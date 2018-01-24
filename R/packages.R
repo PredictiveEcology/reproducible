@@ -482,38 +482,13 @@ package_dependenciesMem <- memoise(tools::package_dependencies, ~timeout(360)) #
 #' Memoised version of available.packages
 #'
 #' This have a 6 minute memory time window.
-#'
-#' @importFrom memoise memoise timeout
-#' @importFrom utils available.packages
-#' @rdname available.packagesMem
-#' @evalRd {
-#' paste("
-#' \\arguments{
-#' \\item{contriburl}{URL(s) of the \\file{contrib} sections of the repositories.
-#'   Specify this argument only if your repository mirror is
-#'   incomplete, e.g., because you burned only the \\file{contrib} section on a CD.}
-#'
-#' \\item{method}{download method, see \\code{\\link{download.file}}.}
-#'
-#' \\item{fields}{a character vector giving the fields to extract from the
-#'   \\file{PACKAGES} file(s) in addition to the default ones,
-#'   or \\code{NULL} (default). Unavailable fields result in \\code{NA} values.}
-#'
-#' \\item{type}{character string, indicate which type of packages: see
-#'   \\code{\\link{install.packages}}.
-#'   If \\code{type = 'both'} this will use the source repository.}
-#'
-#' \\item{filters}{a character vector or list or \\code{NULL} (default). See \\sQuote{Details}.}
-#'
-#' \\item{repos}{character vector, the base URL(s) of the repositories to use.}
-#' ", if (getRversion() >= "3.5.0") {
-#' "
-#' \\item{ignore_repo_cache	}{logical. If true, the repository cache is never used (see \\sQuote{Details}).}
-#' \\item{max_repo_cache_age}{any cached values older than this in seconds will be ignored. See \\sQuote{Details}).}
-#' \\item{...}{allow additional arguments to be passed from callers (which might be arguments to future versions of this function)}
-#' "}, "}"
-#' )}
-available.packagesMem <- memoise(available.packages, ~timeout(360)) # nolint
+#' @inheritParams utils::available.packages
+#' @keywords internal
+available.packagesMem <- function(contriburl, method, fields, type, filters, repos) {# This will be replaced upon first calls to
+  stop("This function is for internal use only")
+  return(invisible(NULL))
+}
+
 
 #' Install exact package versions from a package version text file & GitHub
 #'
@@ -812,8 +787,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'                       base packages, but may also include other library paths if
 #'                       \code{standAlone} if \code{FALSE}
 #' @importFrom versions install.versions
+#' @importFrom memoise is.memoised memoise forget
 #' @importFrom data.table setDT data.table setnames
-#' @importFrom utils read.table available.packages installed.packages install.packages
+#' @importFrom utils read.table available.packages installed.packages install.packages assignInMyNamespace
 #' @rdname installPackages
 #' @examples
 #' \dontrun{
@@ -826,8 +802,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                              libPath = .libPaths()[1], standAlone = standAlone,
                              forget = FALSE) {
 
-  memoise::forget(pkgDep)
-  if (forget) memoise::forget(pkgDep2)
+  if (!is.memoised(available.packagesMem)) {
+    assignInMyNamespace("available.packagesMem", memoise(available.packages, ~timeout(360))) # nolint
+  }
+
+  forget(pkgDep)
+  if (forget) forget(pkgDep2)
   deps <- unlist(pkgDep2(packages, unique(c(libPath, .libPaths())),
                                               recursive = TRUE))
   if (length(deps) == 0) deps <- NULL
