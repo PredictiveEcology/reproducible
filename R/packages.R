@@ -51,7 +51,8 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom devtools install_github
 #' @importFrom utils install.packages
 #' @param packages Character vector of packages to install via
-#'        \code{install.packages}, then load (i.e., with \code{library})
+#'        \code{install.packages}, then load (i.e., with \code{library}). If it is
+#'        one package, it can be unquoted (as in \code{require})
 #' @param packageVersionFile If provided, then this will override all \code{install.package}
 #'        calls with \code{versions::install.versions}
 #' @param libPath The library path where all packages should be installed, and looked for to load
@@ -114,6 +115,19 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
                     install_githubArgs = list(),       # nolint
                     install.packagesArgs = list(), standAlone = FALSE,      # nolint
                     repos = getOption("repos"), forget = FALSE) {
+
+  # Convert a single name to a character
+  subpackages <- substitute(packages)
+  if (is.name(subpackages)) { # single, non quoted object
+    subpackages <- deparse(subpackages)
+    if (!exists(subpackages, envir = parent.frame())) # if it does exist, then it is not a name, but an object
+      packages <- subpackages
+  }
+
+
+  if (!is.character(packages)) {
+    stop("packages should be a character vector or a name")
+  }
 
   if (!is.null(packages)) {
     githubPkgs <- grep("\\/", packages, value = TRUE)

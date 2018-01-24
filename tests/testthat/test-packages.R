@@ -97,5 +97,11 @@ test_that("package-related functions work", {
   try(detach("package:meow", unload = TRUE))
   try(detach("package:Holidays", unload = TRUE))
 
+
+  ## Test passing package as unquoted name
+  expect_silent(Require(TimeWarp, libPath = packageDir1, standAlone = TRUE))
+
   unlink(packageDir, recursive = TRUE, force = TRUE)
 })
+
+

@@ -10,7 +10,8 @@ Require(packages, packageVersionFile, libPath = .libPaths()[1],
 }
 \arguments{
 \item{packages}{Character vector of packages to install via
-\code{install.packages}, then load (i.e., with \code{library})}
+\code{install.packages}, then load (i.e., with \code{library}). If it is
+one package, it can be unquoted (as in \code{require})}
 
 \item{packageVersionFile}{If provided, then this will override all \code{install.package}
 calls with \code{versions::install.versions}}
