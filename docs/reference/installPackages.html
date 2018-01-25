@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a custom cache message by class — .cacheMessage â€¢ reproducible</title>
+<title>Internal function to install packages — .installPackages â€¢ reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -95,54 +95,93 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a custom cache message by class</h1>
+    <h1>Internal function to install packages</h1>
     </div>
 
     
-    <p>This is a generic definition that can be extended according to class.</p>
+    <p>Internal function to install packages</p>
     
 
-    <pre class="usage"><span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)
-
-<span class='co'># S4 method for ANY</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)</pre>
+    <pre class="usage"><span class='fu'>.installPackages</span>(<span class='no'>packages</span>, <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"repos"</span>),
+  <span class='kw'>githubPkgs</span> <span class='kw'>=</span> <span class='fu'>character</span>(<span class='fl'>0</span>), <span class='no'>githubPkgNames</span>, <span class='kw'>nonLibPathPkgs</span> <span class='kw'>=</span> <span class='fu'>character</span>(<span class='fl'>0</span>),
+  <span class='no'>install_githubArgs</span>, <span class='kw'>install.packagesArgs</span> <span class='kw'>=</span> <span class='fu'>list</span>(),
+  <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='fu'>.libPaths</span>()[<span class='fl'>1</span>], <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='no'>standAlone</span>, <span class='kw'>forget</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>object</th>
-      <td><p>Any R object.</p></td>
+      <th>packages</th>
+      <td><p>Character vector of packages to install via
+<code>install.packages</code>, then load (i.e., with <code>library</code>). If it is
+one package, it can be unquoted (as in <code>require</code>)</p></td>
     </tr>
     <tr>
-      <th>functionName</th>
-      <td><p>A character string indicating the function name</p></td>
+      <th>repos</th>
+      <td><p>The remote repository (e.g., a CRAN mirror), passed to <code>install.packages</code>,</p></td>
+    </tr>
+    <tr>
+      <th>githubPkgs</th>
+      <td><p>Character vector of github repositoriess and packages, in the
+form <code>repository/package@branch</code>, with branch being optional.</p></td>
+    </tr>
+    <tr>
+      <th>githubPkgNames</th>
+      <td><p>Character vector of the package names, i.e., just the R package name.</p></td>
+    </tr>
+    <tr>
+      <th>nonLibPathPkgs</th>
+      <td><p>Character vector of all installed packages that are in <code>.libPaths</code>,
+but not in <code>libPath</code>. This would normally include a listing of
+base packages, but may also include other library paths if
+<code>standAlone</code> if <code>FALSE</code></p></td>
+    </tr>
+    <tr>
+      <th>install_githubArgs</th>
+      <td><p>List of optional named arguments, passed to install_github</p></td>
+    </tr>
+    <tr>
+      <th>install.packagesArgs</th>
+      <td><p>List of optional named arguments, passed to install.packages</p></td>
+    </tr>
+    <tr>
+      <th>libPath</th>
+      <td><p>The library path where all packages should be installed, and looked for to load
+(i.e., call <code>library</code>)</p></td>
+    </tr>
+    <tr>
+      <th>standAlone</th>
+      <td><p>Logical. If <code>TRUE</code>, all packages will be installed and loaded strictly
+from the <code>libPaths</code> only. If <code>FALSE</code>, all <code>.libPaths</code> will
+be used to find the correct versions. This can be create dramatically faster
+installs if the user has a substantial number of the packages already in their
+personal library. In the case of <code>TRUE</code>, there will be a hidden file
+place in the <code>libPath</code> directory that lists all the packages
+that were needed during the <code>Require</code> call. Default <code>FALSE</code> to
+minimize package installing.</p></td>
+    </tr>
+    <tr>
+      <th>forget</th>
+      <td><p>Internally, this function identifies package dependencies using a memoised
+function for speed on reuse. But, it may be inaccurate in some cases,
+if packages were installed manually by a user. Set this to <code>TRUE</code> to
+refresh that dependency calculation.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p>Nothing; called for its messaging side effect.</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>a</span>, <span class='st'>"mean"</span>)</div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous mean call.</span></div><div class='input'>
-</div></pre>
+    <pre class="examples"><span class='co'># NOT RUN {</span>
+  <span class='fu'>.installPackages</span>(<span class='st'>"crayon"</span>)
+<span class='co'># }</span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-      
+            
       <li><a href="#examples">Examples</a></li>
     </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire
 
   </div>
 </div>

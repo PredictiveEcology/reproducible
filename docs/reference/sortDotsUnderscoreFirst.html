@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Sort a any named object with dotted names first — .sortDotsUnderscoreFirst • reproducible</title>
+<title>Sort or order any named object with dotted names and underscores first � .sortDotsUnderscoreFirst • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -34,6 +34,18 @@
 <![endif]-->
 
 
+<!-- Google analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-58633549-5', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
   </head>
 
   <body>
@@ -52,7 +64,7 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="..//index.html">
+  <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
      
   </a>
@@ -83,15 +95,19 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Sort a any named object with dotted names first</h1>
+    <h1>Sort or order any named object with dotted names and underscores first</h1>
     </div>
 
     
-    <p>Internal use only. This exists so Windows and Linux machines can have
-the same order after a sort.</p>
+    <p>Internal use only. This exists so Windows, *nux, Mac machines can have
+the same order after a sort. It will put dots and underscores first
+(with the sort key based on their second character, see examples. It also
+sorts lower case before upper case</p>
     
 
-    <pre class="usage"><span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='no'>obj</span>)</pre>
+    <pre class="usage"><span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='no'>obj</span>)
+
+<span class='fu'>.orderDotsUnderscoreFirst</span>(<span class='no'>obj</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
@@ -109,9 +125,15 @@ returns a character vector.</p></td>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>items</span> <span class='kw'>&lt;-</span> <span class='fu'>c</span>(<span class='kw'>A</span> <span class='kw'>=</span> <span class='st'>"a"</span>, <span class='kw'>Z</span> <span class='kw'>=</span> <span class='st'>"z"</span>, <span class='kw'>`.D`</span> <span class='kw'>=</span> <span class='st'>".d"</span>, <span class='kw'>`_W`</span> <span class='kw'>=</span> <span class='st'>"_w"</span>)
-<span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='no'>items</span>)</div><div class='output co'>#&gt;    A DOTD  USW    Z 
-#&gt;  "a" ".d" "_w"  "z" </div><div class='input'>
+    <pre class="examples"><div class='input'><span class='no'>items</span> <span class='kw'>&lt;-</span> <span class='fu'>c</span>(<span class='kw'>A</span> <span class='kw'>=</span> <span class='st'>"a"</span>, <span class='kw'>Z</span> <span class='kw'>=</span> <span class='st'>"z"</span>, <span class='kw'>`.D`</span> <span class='kw'>=</span> <span class='st'>".d"</span>, <span class='kw'>`_C`</span> <span class='kw'>=</span> <span class='st'>"_C"</span>)
+<span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='no'>items</span>)</div><div class='output co'>#&gt;   _C   .D    A    Z 
+#&gt; "_C" ".d"  "a"  "z" </div><div class='input'>
+<span class='co'># dots &amp; underscore (using 2nd character), then all lower then all upper</span>
+<span class='no'>items</span> <span class='kw'>&lt;-</span> <span class='fu'>c</span>(<span class='kw'>B</span> <span class='kw'>=</span> <span class='st'>"Upper"</span>, <span class='kw'>b</span> <span class='kw'>=</span> <span class='st'>"lower"</span>, <span class='kw'>A</span> <span class='kw'>=</span> <span class='st'>"a"</span>, <span class='kw'>`.D`</span> <span class='kw'>=</span> <span class='st'>".d"</span>, <span class='kw'>`_C`</span> <span class='kw'>=</span> <span class='st'>"_C"</span>)
+<span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='no'>items</span>)</div><div class='output co'>#&gt;      _C      .D       b       A       B 
+#&gt;    "_C"    ".d" "lower"     "a" "Upper" </div><div class='input'>
+<span class='co'># with a vector</span>
+<span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='fu'>c</span>(<span class='st'>".C"</span>, <span class='st'>"_B"</span>, <span class='st'>"A"</span>)) <span class='co'># _B is first</span></div><div class='output co'>#&gt; [1] "_B" ".C" "A" </div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -137,7 +159,7 @@ Eliot McIntire
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="http://hadley.github.io/pkgdown/">pkgdown</a>.</p>
+  <p>Site built with <a href="http://pkgdown.r-lib.org/">pkgdown</a>.</p>
 </div>
 
       </footer>

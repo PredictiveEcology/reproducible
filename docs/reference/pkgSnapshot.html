@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a custom cache message by class — .cacheMessage â€¢ reproducible</title>
+<title>Take a snapshot of all the packages and version numbers — pkgSnapshot â€¢ reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -95,39 +95,72 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a custom cache message by class</h1>
+    <h1>Take a snapshot of all the packages and version numbers</h1>
     </div>
 
     
-    <p>This is a generic definition that can be extended according to class.</p>
+    <p>This can be used later by <code>installVersions</code> to install or re-install the correct versions.</p>
     
 
-    <pre class="usage"><span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)
-
-<span class='co'># S4 method for ANY</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)</pre>
+    <pre class="usage"><span class='fu'>pkgSnapshot</span>(<span class='no'>packageVersionFile</span>, <span class='no'>libPath</span>, <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>object</th>
-      <td><p>Any R object.</p></td>
+      <th>packageVersionFile</th>
+      <td><p>A filename to save the packages and their currently
+installed version numbers. Defaults to <code>".packageVersions.txt"</code>.</p></td>
     </tr>
     <tr>
-      <th>functionName</th>
-      <td><p>A character string indicating the function name</p></td>
+      <th>libPath</th>
+      <td><p>The path to the local library where packages are installed.
+Defaults to the .libPaths()[1]</p></td>
+    </tr>
+    <tr>
+      <th>standAlone</th>
+      <td><p>Logical. If <code>TRUE</code>, all packages will be installed and loaded strictly
+from the <code>libPaths</code> only. If <code>FALSE</code>, all <code>.libPaths</code> will
+be used to find the correct versions. This can be create dramatically faster
+installs if the user has a substantial number of the packages already in their
+personal library. In the case of <code>TRUE</code>, there will be a hidden file
+place in the <code>libPath</code> directory that lists all the packages
+that were needed during the <code>Require</code> call. Default <code>FALSE</code> to
+minimize package installing.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Nothing; called for its messaging side effect.</p>
+    <p>A file is written with the package names and versions of all packages within <code>libPath</code>.
+This can later be passed to <code>Require</code>.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>a</span>, <span class='st'>"mean"</span>)</div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous mean call.</span></div><div class='input'>
+    <pre class="examples"><div class='input'><span class='no'>pkgSnapFile</span> <span class='kw'>&lt;-</span> <span class='fu'>tempfile</span>()
+<span class='fu'>pkgSnapshot</span>(<span class='no'>pkgSnapFile</span>, <span class='fu'>.libPaths</span>()[<span class='fl'>1</span>])</div><div class='output co'>#&gt;        instPkgs instVers
+#&gt;   1:  archivist      2.2
+#&gt;   2: assertthat    0.2.0
+#&gt;   3:  backports    1.1.2
+#&gt;   4:         BH 1.65.0-1
+#&gt;   5:      bindr      0.1
+#&gt;  ---                    
+#&gt; 108:   parallel    3.4.3
+#&gt; 109:      stats    3.4.3
+#&gt; 110:      tcltk    3.4.3
+#&gt; 111:      tools    3.4.3
+#&gt; 112:      utils    3.4.3</div><div class='input'><span class='kw pkg'>data.table</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/data.table/topics/fread'>fread</a></span>(<span class='no'>pkgSnapFile</span>)</div><div class='output co'>#&gt;        instPkgs instVers
+#&gt;   1:  archivist      2.2
+#&gt;   2: assertthat    0.2.0
+#&gt;   3:  backports    1.1.2
+#&gt;   4:         BH 1.65.0-1
+#&gt;   5:      bindr      0.1
+#&gt;  ---                    
+#&gt; 108:   parallel    3.4.3
+#&gt; 109:      stats    3.4.3
+#&gt; 110:      tcltk    3.4.3
+#&gt; 111:      tools    3.4.3
+#&gt; 112:      utils    3.4.3</div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -135,14 +168,10 @@
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#value">Value</a></li>
+      <li><a href="#details">Details</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire
 
   </div>
 </div>

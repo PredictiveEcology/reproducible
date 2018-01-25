@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a custom cache message by class — .cacheMessage â€¢ reproducible</title>
+<title>A shortcut to create a .libPaths() with only 2 folders — newLibPaths â€¢ reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -95,40 +95,35 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a custom cache message by class</h1>
+    <h1>A shortcut to create a .libPaths() with only 2 folders</h1>
     </div>
 
     
-    <p>This is a generic definition that can be extended according to class.</p>
+    <p>This will remove all but the top level of .libPaths(), which should be the base packages
+installed with R, and adds a second directory, the <code>libPath</code>.</p>
     
 
-    <pre class="usage"><span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)
-
-<span class='co'># S4 method for ANY</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)</pre>
+    <pre class="usage"><span class='fu'>newLibPaths</span>(<span class='no'>libPath</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>object</th>
-      <td><p>Any R object.</p></td>
-    </tr>
-    <tr>
-      <th>functionName</th>
-      <td><p>A character string indicating the function name</p></td>
+      <th>libPath</th>
+      <td><p>A path that will be the new .libPaths()[1]</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Nothing; called for its messaging side effect.</p>
+    <p>Invisibly the new <code>.libPaths()</code></p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>a</span>, <span class='st'>"mean"</span>)</div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous mean call.</span></div><div class='input'>
-</div></pre>
+    <pre class="examples"><span class='co'># NOT RUN {</span>
+<span class='fu'>newLibPaths</span>(<span class='st'>"testPackages"</span>)
+<span class='fu'>.libPaths</span>() <span class='co'># new .libPaths</span>
+<span class='co'># }</span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -139,10 +134,6 @@
       
       <li><a href="#examples">Examples</a></li>
     </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire
 
   </div>
 </div>

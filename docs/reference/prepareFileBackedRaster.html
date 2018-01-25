@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Copy the file-backing of a file-backed Raster* object — .prepareFileBackedRaster • reproducible</title>
+<title>Copy the file-backing of a file-backed Raster* object � .prepareFileBackedRaster • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -34,6 +34,18 @@
 <![endif]-->
 
 
+<!-- Google analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-58633549-5', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
   </head>
 
   <body>
@@ -52,7 +64,7 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="..//index.html">
+  <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
      
   </a>
@@ -94,8 +106,7 @@ and changes the pointer (i.e., <code>filename(object)</code>) so that it is poin
 to the new file.</p>
     
 
-    <pre class="usage"><span class='fu'>.prepareFileBackedRaster</span>(<span class='no'>obj</span>, <span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>compareRasterFileLength</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>.prepareFileBackedRaster</span>(<span class='no'>obj</span>, <span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
@@ -107,14 +118,6 @@ to the new file.</p>
     <tr>
       <th>repoDir</th>
       <td><p>Character denoting an existing directory in which an artifact will be saved.</p></td>
-    </tr>
-    <tr>
-      <th>compareRasterFileLength</th>
-      <td><p>Numeric. Optional. When there are Rasters, that
-have file-backed storage, this is passed to the length arg in <code>digest</code>
-when determining if the Raster file is already in the database.
-Note: uses <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></code> for file-backed Raster.
-Default 1e6. Passed to <code>.prepareFileBackedRaster</code>.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -130,6 +133,29 @@ Default 1e6. Passed to <code>.prepareFileBackedRaster</code>.</p></td>
         If this is not a repository, the new location will be within <code>repoDir</code>.</p>
     
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>library</span>(<span class='no'>raster</span>)
+<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/archivist/topics/createEmptyRepo'>createLocalRepo</a></span>(<span class='fu'>tempdir</span>())
+
+<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/extent'>extent</a></span>(<span class='fl'>0</span>,<span class='fl'>10</span>,<span class='fl'>0</span>,<span class='fl'>10</span>), <span class='kw'>vals</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>100</span>)
+
+<span class='co'># write to disk manually -- will be in tempdir()</span>
+<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='fu'>tempfile</span>())
+
+<span class='co'># copy it to the cache repository</span>
+<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'>.prepareFileBackedRaster</span>(<span class='no'>r</span>, <span class='fu'>tempdir</span>())
+
+<span class='no'>r</span> <span class='co'># now in "rasters" subfolder of tempdir()</span></div><div class='output co'>#&gt; class       : RasterLayer 
+#&gt; dimensions  : 10, 10, 100  (nrow, ncol, ncell)
+#&gt; resolution  : 1, 1  (x, y)
+#&gt; extent      : 0, 10, 0, 10  (xmin, xmax, ymin, ymax)
+#&gt; coord. ref. : NA 
+#&gt; data source : C:/Temp/RtmpUbQdxF/rasters/file4d0c5ac071a.grd 
+#&gt; names       : layer 
+#&gt; values      : 1, 100  (min, max)
+#&gt; </div><div class='input'>
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -137,7 +163,9 @@ Default 1e6. Passed to <code>.prepareFileBackedRaster</code>.</p></td>
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
-          </ul>
+      
+      <li><a href="#examples">Examples</a></li>
+    </ul>
 
     <h2>Author</h2>
     
@@ -152,7 +180,7 @@ Eliot McIntire
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="http://hadley.github.io/pkgdown/">pkgdown</a>.</p>
+  <p>Site built with <a href="http://pkgdown.r-lib.org/">pkgdown</a>.</p>
 </div>
 
       </footer>

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a custom cache message by class — .cacheMessage â€¢ reproducible</title>
+<title>Determine package dependencies, first looking at local filesystem — pkgDep â€¢ reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -95,54 +95,84 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a custom cache message by class</h1>
+    <h1>Determine package dependencies, first looking at local filesystem</h1>
     </div>
 
     
-    <p>This is a generic definition that can be extended according to class.</p>
+    <p>This is intended to replace <code><a href='http://www.rdocumentation.org/packages/tools/topics/package_dependencies'>package_dependencies</a></code> or
+<code>pkgDep</code> in the miniCRAN package, but with modfications for speed. It will first check
+local package directory(ies) in <code>libPath</code>, and it if the function cannont find
+the packages there, then it will use <code><a href='http://www.rdocumentation.org/packages/tools/topics/package_dependencies'>package_dependencies</a></code>.</p>
     
 
-    <pre class="usage"><span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)
-
-<span class='co'># S4 method for ANY</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)</pre>
+    <pre class="usage"><span class='fu'>pkgDep</span>(<span class='no'>packages</span>, <span class='no'>libPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>depends</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>imports</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>suggests</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>linkingTo</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"repos"</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>object</th>
-      <td><p>Any R object.</p></td>
+      <th>packages</th>
+      <td><p>a character vector of package names.</p></td>
     </tr>
     <tr>
-      <th>functionName</th>
-      <td><p>A character string indicating the function name</p></td>
+      <th>libPath</th>
+      <td><p>The library path where all packages should be installed, and looked for to load
+(i.e., call <code>library</code>)</p></td>
+    </tr>
+    <tr>
+      <th>recursive</th>
+      <td><p>Logical. Should dependencies of dependencies be searched, recursively.
+NOTE Dependencies of suggests will not be recursive. Default TRUE.</p></td>
+    </tr>
+    <tr>
+      <th>depends</th>
+      <td><p>Logical. Include packages listed in "Depends". Default TRUE.</p></td>
+    </tr>
+    <tr>
+      <th>imports</th>
+      <td><p>Logical. Include packages listed in "Imports". Default TRUE.</p></td>
+    </tr>
+    <tr>
+      <th>suggests</th>
+      <td><p>Logical. Include packages listed in "Suggests". Default FALSE.</p></td>
+    </tr>
+    <tr>
+      <th>linkingTo</th>
+      <td><p>Logical. Include packages listed in "LinkingTo". Default TRUE.</p></td>
+    </tr>
+    <tr>
+      <th>repos</th>
+      <td><p>The remote repository (e.g., a CRAN mirror), passed to either
+<code>install.packages</code>, <code>install_github</code> or <code>installVersions</code>.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
-    <p>Nothing; called for its messaging side effect.</p>
+    <p><code>package_dependencies</code> and <code>pkgDep</code> will differ under the following
+circumstances:</p><ol>
+<li><p>GitHub packages are not detected using <code><a href='http://www.rdocumentation.org/packages/tools/topics/package_dependencies'>tools::package_dependencies</a></code>;</p></li>
+<li><p><code><a href='http://www.rdocumentation.org/packages/tools/topics/package_dependencies'>tools::package_dependencies</a></code> does not detect the dependencies of base packages
+    among themselves, <em>e.g.</em>, <code>methods</code> depends on <code>stats</code> and <code>graphics</code>.</p></li>
+</ol>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>a</span>, <span class='st'>"mean"</span>)</div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous mean call.</span></div><div class='input'>
-</div></pre>
+    <pre class="examples"><div class='input'><span class='fu'>pkgDep</span>(<span class='st'>"crayon"</span>)</div><div class='output co'>#&gt; $crayon
+#&gt; [1] "grDevices" "methods"   "utils"     "stats"     "graphics" 
+#&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#value">Value</a></li>
+      <li><a href="#note">Note</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire
 
   </div>
 </div>

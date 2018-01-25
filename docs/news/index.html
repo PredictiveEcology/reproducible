@@ -34,6 +34,18 @@
 <![endif]-->
 
 
+<!-- Google analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-58633549-5', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
   </head>
 
   <body>
@@ -52,7 +64,7 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="..//index.html">
+  <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
      
   </a>
@@ -88,6 +100,27 @@
     </div>
 
     <div class="contents">
+    <div id="version-0-1-4" class="section level1">
+<h1 class="hasAnchor">
+<a href="#version-0-1-4" class="anchor"></a>version 0.1.4</h1>
+<ul>
+<li>Cached pipe operator %C% – use to begin a pipe sequence, e.g., Cache() %C% …</li>
+<li>Cache arg <code>sideEffect</code> can now be a path</li>
+<li>Cache arg <code>digestPathContent</code> default changed from FALSE (was for speed) to TRUE (for content accuracy)</li>
+<li>New function, <code>searchFull</code>, which shows the full search path, known alternatively as “scope”, or “binding environments”. It is where R will search for a function when requested by a user.</li>
+<li>Uses memoise::memoise for several functions (<code>loadFromLocalRepo</code>, <code>pkgDep</code>, <code>package_dependencies</code>, <code>available.packages</code>) for speed – will impact memory at the expense of speed</li>
+<li>
+<p>New <code>Require</code> function</p>
+<ul>
+<li>attempts to create a lighter weight package reproducibility chain. This function is usable in a reproducible workflow: it includes both installing and loading of packages, it can maintain version numbers, and uses smart caching for speed. In tests, it can evaluate whether 20 packages and their dependencies (~130 packages) are installed and loaded quickly (i.e., if all TRUE, ~0.1 seconds). This is much slower than running <code>require</code> on those 20 packages, but <code>require</code> does not check for dependencies and deal with them if missing: it just errors. This speed should be fast enough for many purposes.</li>
+<li>can accept uncommented name, if length 1.</li>
+</ul>
+</li>
+<li>remove dplyr from Imports</li>
+<li>Add RCurl to Imports</li>
+<li><p>change name of digestRaster to .digestRaster</p></li>
+</ul>
+</div>
     <div id="version-0-1-3" class="section level1">
 <h1 class="hasAnchor">
 <a href="#version-0-1-3" class="anchor"></a>version 0.1.3</h1>
@@ -126,6 +159,7 @@
     <div id="tocnav">
       <h2>Contents</h2>
       <ul class="nav nav-pills nav-stacked">
+        <li><a href="#version-0-1-4">0.1.4</a></li>
         <li><a href="#version-0-1-3">0.1.3</a></li>
         <li><a href="#version-0-1-2">0.1.2</a></li>
         <li><a href="#version-0-1-1">0.1.1</a></li>
@@ -142,7 +176,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="http://hadley.github.io/pkgdown/">pkgdown</a>.</p>
+  <p>Site built with <a href="http://pkgdown.r-lib.org/">pkgdown</a>.</p>
 </div>
 
       </footer>

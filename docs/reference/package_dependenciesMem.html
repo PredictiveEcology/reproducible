@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a custom cache message by class — .cacheMessage â€¢ reproducible</title>
+<title>Memoised version of package_dependencies — package_dependenciesMem â€¢ reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -95,54 +95,65 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a custom cache message by class</h1>
+    <h1>Memoised version of package_dependencies</h1>
     </div>
 
     
-    <p>This is a generic definition that can be extended according to class.</p>
+    <p>This have a 6 minute memory time window.</p>
     
 
-    <pre class="usage"><span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)
-
-<span class='co'># S4 method for ANY</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>object</span>, <span class='no'>functionName</span>)</pre>
+    <pre class="usage"><span class='fu'>package_dependenciesMem</span>(<span class='kw'>packages</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>db</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>which</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"Depends"</span>,
+  <span class='st'>"Imports"</span>, <span class='st'>"LinkingTo"</span>), <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>reverse</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"verbose"</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>object</th>
-      <td><p>Any R object.</p></td>
+      <th>packages</th>
+      <td><p>a character vector of package names.</p></td>
     </tr>
     <tr>
-      <th>functionName</th>
-      <td><p>A character string indicating the function name</p></td>
+      <th>db</th>
+      <td><p>character matrix as from <code>available.packages()</code>
+    (with the default <code>NULL</code> the results of this call)
+    or data frame variants thereof.  Alternatively, a package database
+    like the one available from
+    <a href='https://cran.r-project.org/web/packages/packages.rds'>https://cran.r-project.org/web/packages/packages.rds</a>.</p></td>
+    </tr>
+    <tr>
+      <th>which</th>
+      <td><p>a character vector listing the types of
+    dependencies, a subset of
+    <code>c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")</code>.
+    Character string <code>"all"</code> is shorthand for that vector,
+    character string <code>"most"</code> for the same vector without
+    <code>"Enhances"</code>.</p></td>
+    </tr>
+    <tr>
+      <th>recursive</th>
+      <td><p>logical: should (reverse) dependencies of (reverse)
+    dependencies (and so on) be included?</p></td>
+    </tr>
+    <tr>
+      <th>reverse</th>
+      <td><p>logical: if <code>FALSE</code> (default), regular
+    dependencies are calculated, otherwise reverse dependencies.</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>logical indicating if output should monitor the package
+    search cycles.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Nothing; called for its messaging side effect.</p>
-    
-
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>a</span>, <span class='st'>"mean"</span>)</div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous mean call.</span></div><div class='input'>
-</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-      
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire
+                </ul>
 
   </div>
 </div>

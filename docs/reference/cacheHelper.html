@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A set of helpers for Cache — getFunctionName • reproducible</title>
+<title>A set of helpers for Cache � getFunctionName • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -34,6 +34,18 @@
 <![endif]-->
 
 
+<!-- Google analytics -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-58633549-5', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
   </head>
 
   <body>
@@ -52,7 +64,7 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="..//index.html">
+  <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
      
   </a>
@@ -90,9 +102,9 @@
     <p>These are internal only.</p>
     
 
-    <pre class="usage"><span class='fu'>getFunctionName</span>(<span class='no'>FUN</span>, <span class='no'>...</span>, <span class='no'>overrideCall</span>)
+    <pre class="usage"><span class='fu'>getFunctionName</span>(<span class='no'>FUN</span>, <span class='no'>...</span>, <span class='no'>overrideCall</span>, <span class='no'>isPipe</span>)
 
-<span class='fu'>digestRaster</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>)</pre>
+<span class='fu'>.digestRaster</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <table class="ref-arguments">
@@ -110,6 +122,11 @@ arguments to the FUN</p></td>
       <th>overrideCall</th>
       <td><p>A character string indicating a different (not "Cache") function
 name to search for. Mostly so that this works with deprecated "cache".</p></td>
+    </tr>
+    <tr>
+      <th>isPipe</th>
+      <td><p>Logical. If the call to getFunctionName is coming from a pipe, there is more
+information available. Specifically, ._lhs which is already a call.</p></td>
     </tr>
     </table>
     
@@ -140,7 +157,7 @@ Eliot McIntire
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="http://hadley.github.io/pkgdown/">pkgdown</a>.</p>
+  <p>Site built with <a href="http://pkgdown.r-lib.org/">pkgdown</a>.</p>
 </div>
 
       </footer>
