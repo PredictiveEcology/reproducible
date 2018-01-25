@@ -1,4 +1,6 @@
-vignettes <- list(control = c("--master=en_US", "--add-extra-dicts=en_GB"), personal = "words.pws")
-Rd_files <- list(control = c("--master=en_US", "--add-extra-dicts=en_GB"), personal = "words.pws")
-R_files <- list(control = c("--master=en_US", "--add-extra-dicts=en_GB"), personal = "words.pws")
-C_files <- list(control = c("--master=en_US", "--add-extra-dicts=en_GB"), personal = "words.pws")
+description <- C_files <- R_files <- Rd_files <- vignettes <- list(
+  control = c("--master=en_US", "--add-extra-dicts=en_GB"),
+  encoding = "UTF-8",
+  language = "en",
+  dictionaries = c("en_stats", "SpaDES.tools")
+)

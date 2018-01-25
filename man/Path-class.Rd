@@ -5,6 +5,7 @@
 \alias{Path-class}
 \alias{asPath}
 \alias{asPath.character}
+\alias{asPath}
 \title{Coerce a character string to a class "Path"}
 \usage{
 asPath(obj)
@@ -25,8 +26,9 @@ In the case where it is en existing file, \code{file.exists} can work.
 But if it does not yet exist, e.g., for a \code{save}, it is difficult to know
 whether it is a valid path before attempting to save to the path.
 
-This is primarily useful for achieving repeatability with Caching.
-Essentially, when Caching, it is likely that character strings should be
+This function can be used to remove any ambiguity about whether a character
+string is a path. It is primarily useful for achieving repeatability with Caching.
+Essentially, when Caching, arguments that are character strings should generally be
 digested verbatim, i.e., it must be an exact copy for the Cache mechanism
 to detect a candidate for recovery from the cache.
 Paths, are different. While they are character strings, there are many ways to

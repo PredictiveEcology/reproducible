@@ -65,6 +65,25 @@ if (getRversion() >= "3.1.0") {
 #' of stochastic outcomes are required. It will also be very useful in a
 #' reproducible workflow.
 #'
+#' @section \code{sideEffect}:
+#' If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
+#' added to \code{sideEffect} will be added as an attribute to the cached copy.
+#' Subsequent calls to this function
+#'        will assess for the presence of the new files in the \code{sideEffect} location.
+#'        If the files are identical (\code{quick = FALSE}) or their file size is
+#'        identical (\code{quick = TRUE}), then the cached copy of the function will
+#'        be returned (and no files changed). If there are missing or incorrect files,
+#'        then the function will re-run. This will accommodate the situation where the
+#'        function call is identical, but somehow the side effect files were modified.
+#'        If \code{sideEffect} is logical, then the function will check the
+#'        \code{cacheRepo}; if it is a path, then it will check the path. The function will
+#'        assess whether the files to be downloaded are found locally
+#'        prior to download. If it fails the local test, then it will try to recover from a
+#'        local copy if (\code{makeCopy} had been set to \code{TRUE} the first time
+#'        the function was run. Currently, local recovery will only work if\code{makeCOpy} was
+#'        set to \code{TRUE} the first time \code{Cache}
+#'        was run). Default is \code{FALSE}.
+#'
 #' @note As indicated above, several objects require pre-treatment before
 #' caching will work as expected. The function \code{.robustDigest} accommodates this.
 #' It is an S4 generic, meaning that developers can produce their own methods for
@@ -77,6 +96,9 @@ if (getRversion() >= "3.1.0") {
 #' @inheritParams archivist::saveToLocalRepo
 #' @include cache-helpers.R
 #' @include robustDigest.R
+#'
+#' @param FUN Either a function or an unevaluated function call (e.g., using
+#'            \code{quote}.
 #'
 #' @param objects Character vector of objects to be digested. This is only applicable
 #'                if there is a list, environment or simList with named objects
@@ -115,10 +137,8 @@ if (getRversion() >= "3.1.0") {
 #'        If \code{"quick"}, then it will return the same two objects directly,
 #'        without evalutating the \code{FUN(...)}.
 #'
-#' @param sideEffect Logical. Check if files to be downloaded are found locally
-#'        in the \code{cacheRepo} prior to download and try to recover from a copy
-#'        (\code{makeCopy} must have been set to \code{TRUE} the first time \code{Cache}
-#'        was run). Default is \code{FALSE}.
+#' @param sideEffect Logical or path. Deteremines where the function will look for
+#'        new files following function completion. See Details.
 #'        \emph{NOTE: this argument is experimental and may change in future releases.}
 #'
 #' @param makeCopy Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
@@ -138,7 +158,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param digestPathContent Logical. Should arguments that are of class \code{Path}
 #'                          (see examples below) have their name digested
-#'                          (\code{FALSE}; default), or their file contents (\code{TRUE}).
+#'                          (\code{FALSE}), or their file contents (\code{TRUE}; default).
 #'
 #' @return As with \code{\link[archivist]{cache}}, returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
@@ -175,7 +195,7 @@ setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
+           userTags = c(), digestPathContent = TRUE, omitArgs = NULL,
            classOptions = list(),
            debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {
@@ -191,11 +211,109 @@ setMethod(
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick) {
     tmpl <- list(...)
+    originalDots <- tmpl
+    isPipe <- isTRUE(!is.null(tmpl$._pipe))
 
+    # If passed with 'quote'
+    if (!is.function(FUN)) {
+      parsedFun <- parse(text = FUN)
+      evaledParsedFun <- eval(parsedFun[[1]])
+      if (is.function(evaledParsedFun)) {
+        tmpFUN <- evaledParsedFun
+        mc <- match.call(tmpFUN, FUN)
+        FUN <- tmpFUN # nolint
+        originalDots <- append(originalDots, as.list(mc[-1]))
+        tmpl <- append(tmpl, as.list(mc[-1]))
+      }
+      functionDetails <- list(functionName = as.character(parsedFun[[1]]))
+    } else {
+      if (!isPipe) {
+        functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
+
+        # i.e., if it did extract the name
+        if (!is.na(functionDetails$functionName)) {
+          if (is.primitive(FUN)) {
+            tmpl <- list(...)
+          } else {
+            tmpl <- as.list(
+              match.call(FUN, as.call(list(FUN, ...))))[-1]
+          }
+        }
+      } else {
+        functionDetails <- list()
+      }
+    }
+
+    # get function name and convert the contents to text so digestible
+    functionDetails$.FUN <- format(FUN) # nolint
+
+    if (isPipe) {
+      if (!is.call(tmpl$._lhs)) {
+        # usually means it is the result of a pipe
+        tmpl$._pipeFn <- "constant" # nolint
+      }
+
+      pipeFns <- paste(lapply(tmpl$._rhss, function(x) x[[1]]), collapse = ", ") %>%
+        paste(tmpl$._pipeFn, ., sep = ", ") %>%
+        gsub(., pattern = ", $", replacement = "") %>%
+        paste0("'", ., "' pipe sequence")
+
+      functionDetails$functionName <- pipeFns
+      if (is.function(FUN)) {
+        firstCall <- match.call(FUN, tmpl$._lhs)
+        tmpl <- append(tmpl, lapply(as.list(firstCall[-1]), function(x) {
+          eval(x, envir = tmpl$._envir)
+        }))
+      } else {
+        tmpl <- append(tmpl, as.list(FUN))
+      }
+
+      for (fns in seq_along(tmpl$._rhss)) {
+        functionName <- as.character(tmpl$._rhss[[fns]][[1]])
+        FUN <- eval(parse(text = functionName)) # nolint
+        if (is.primitive(FUN)) {
+          otherCall <- tmpl$._rhss[[fns]]
+        } else {
+          otherCall <- match.call(definition = FUN, tmpl$._rhss[[fns]])
+        }
+        tmpl[[paste0("functionName", fns)]] <- as.character(tmpl$._rhss[[fns]][[1]])
+        tmpl[[paste0(".FUN", fns)]] <-
+          eval(parse(text = tmpl[[paste0("functionName", fns)]]))
+        tmpl <- append(tmpl, as.list(otherCall[-1]))
+      }
+    }
+
+    tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting  # nolint
+
+    # This is for Pipe operator -- needs special consideration
     if (!is(FUN, "function")) {
-      stop("Can't understand the function provided to Cache.\n",
-           "Did you write it in the form: ",
-           "Cache(function, functionArguments)?")
+      scalls <- sys.calls()
+      if (any(startsWith(as.character(scalls), "function_list[[k"))) {
+        srch <- search()
+        whereRepro <- which(endsWith(srch, "reproducible")) - 1
+        if (whereRepro > 1) {
+          srchNum <- seq_len(whereRepro)
+          for (sr in srchNum) {
+            masker <- exists("%>%", srch[sr], inherits = FALSE)
+            if (masker) break
+          }
+        }
+        if (masker) {
+          stop("It looks like the pipe (%>%) from package:reproducible is masked by ", srch[sr],
+               ". Please make sure library(reproducible) is after library(",
+               gsub(srch[sr], pattern = "package:", replacement = ""), ")",
+               call. = FALSE)
+        } else {
+          stop("Is the %>% from reproducible masked?")
+        }
+
+      } else {
+        stop("Can't understand the function provided to Cache.\n",
+             "Did you write it in the form: ",
+             "Cache(function, functionArguments)?")
+      }
+    } else {
+      scalls <- NULL
     }
 
     if (missing(notOlderThan)) notOlderThan <- NULL
@@ -211,25 +329,31 @@ setMethod(
       cacheRepo <- checkPath(cacheRepo, create = TRUE)
     }
 
+    if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
+
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
       suppressWarnings(archivist::createLocalRepo(cacheRepo))
     }
 
     # List file prior to cache
-    if (sideEffect) {
-      priorRepo <-  file.path(cacheRepo, list.files(cacheRepo))
+    if (sideEffect != FALSE) {
+      if (isTRUE(sideEffect)) {
+        priorRepo <- list.files(cacheRepo, full.names = TRUE)
+      } else {
+        priorRepo <- list.files(sideEffect, full.names = TRUE)
+      }
     }
-
-    # get function name and convert the contents to text so digestible
-    functionDetails <- getFunctionName(FUN, ...)
-    tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting  # nolint
 
     # remove things in the Cache call that are not relevant to Caching
     if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
 
     # Do the digesting
-    preDigestByClass <- lapply(seq_along(tmpl), function(x) .preDigestByClass(tmpl[[x]]))
-    preDigest <- lapply(tmpl, .robustDigest, objects = objects,
+    dotPipe <- startsWith(names(tmpl), "._") # don't digest the dotPipe elements as they are already
+                                             # extracted individually into tmpl list elements
+    preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) {
+      .preDigestByClass(tmpl[!dotPipe][[x]])
+    })
+    preDigest <- lapply(tmpl[!dotPipe], .robustDigest, objects = objects,
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
                         digestPathContent = digestPathContent,
@@ -257,7 +381,7 @@ setMethod(
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-        output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+        output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
         # Class-specific message
         .cacheMessage(output, functionDetails$functionName)
@@ -268,54 +392,58 @@ setMethod(
                                  tags = paste0("accessed:", Sys.time()))
         )
 
-        if (sideEffect) {
-          needDwd <- logical(0)
-          fromCopy <- character(0)
-          cachedChcksum <- attributes(output)$chcksumFiles
+        if (sideEffect != FALSE) {
+          #if(isTRUE(sideEffect)) {
+            needDwd <- logical(0)
+            fromCopy <- character(0)
+            cachedChcksum <- attributes(output)$chcksumFiles
 
-          if (!is.null(cachedChcksum)) {
-            for (x in cachedChcksum) {
-              chcksumName <- sub(":.*", "", x)
-              chcksumPath <- file.path(cacheRepo, basename(chcksumName))
+            if (!is.null(cachedChcksum)) {
+              for (x in cachedChcksum) {
+                chcksumName <- sub(":.*", "", x)
+                chcksumPath <- file.path(sideEffect, basename(chcksumName))
 
-              if (file.exists(chcksumPath)) {
-                checkDigest <- TRUE
-              } else {
-                checkCopy <- file.path(cacheRepo, "gallery", basename(chcksumName))
-                if (file.exists(checkCopy)) {
-                  chcksumPath <- checkCopy
+                if (file.exists(chcksumPath)) {
                   checkDigest <- TRUE
-                  fromCopy <- c(fromCopy, basename(chcksumName))
                 } else {
-                  checkDigest <- FALSE
-                  needDwd <- c(needDwd, TRUE)
+                  checkCopy <- file.path(cacheRepo, "gallery", basename(chcksumName))
+                  if (file.exists(checkCopy)) {
+                    chcksumPath <- checkCopy
+                    checkDigest <- TRUE
+                    fromCopy <- c(fromCopy, basename(chcksumName))
+                  } else {
+                    checkDigest <- FALSE
+                    needDwd <- c(needDwd, TRUE)
+                  }
+                }
+
+                if (checkDigest) {
+                  if (quick) {
+                    sizeCurrent <- lapply(chcksumPath, function(z) {
+                      list(basename(z), file.size(z))
+                    })
+                    chcksumFls <- lapply(sizeCurrent, function(z) {
+                      digest::digest(z, algo = algo)
+                    })
+                  } else {
+                    chcksumFls <- lapply(chcksumPath, function(z) {
+                      digest::digest(file = z, algo = algo)
+                    })
+                  }
+                  # Format checksum from current file as cached checksum
+                  currentChcksum <- paste0(chcksumName, ":", chcksumFls)
+
+                  # List current files with divergent checksum (or checksum missing)
+                  if (!currentChcksum %in% cachedChcksum) {
+                    needDwd <- c(needDwd, TRUE)
+                  } else {
+                    needDwd <- c(needDwd, FALSE)
+                  }
                 }
               }
-
-              if (checkDigest) {
-                if (quick) {
-                  sizeCurrent <- lapply(chcksumPath, function(z) {
-                    list(basename(z), file.size(z))
-                  })
-                  chcksumFls <- lapply(sizeCurrent, function(z) {
-                    digest::digest(z, algo = algo)
-                  })
-                } else {
-                  chcksumFls <- lapply(chcksumPath, function(z) {
-                    digest::digest(file = z, algo = algo)
-                  })
-                }
-                # Format checksum from current file as cached checksum
-                currentChcksum <- paste0(chcksumName, ":", chcksumFls)
-
-                # List current files with divergent checksum (or checksum missing)
-                if (!currentChcksum %in% cachedChcksum) {
-                  needDwd <- c(needDwd, TRUE)
-                } else {
-                  needDwd <- c(needDwd, FALSE)
-                }
-              }
-            }
+            #}
+            } else {
+            message("  There was no record of files in sideEffects")
           }
           if (any(needDwd)) {
             do.call(FUN, list(...))
@@ -342,7 +470,11 @@ setMethod(
     }
 
     # RUN the function call
-    output <- do.call(FUN, list(...))
+    if (isPipe) {
+      output <- eval(tmpl$._pipe, envir = tmpl$._envir)
+    } else {
+      output <- do.call(FUN, originalDots)
+    }
 
     # Delete previous version if notOlderThan violated --
     #   but do this AFTER new run on previous line, in case function call
@@ -362,8 +494,12 @@ setMethod(
     attr(output, "tags") <- paste0("cacheId:", outputHash)
     attr(output, "call") <- ""
 
-    if (sideEffect) {
-      postRepo <- file.path(cacheRepo, list.files(cacheRepo))
+    if (sideEffect != FALSE) {
+      if (isTRUE(sideEffect)) {
+        postRepo <- list.files(cacheRepo, full.names = TRUE)
+      } else {
+        postRepo <- list.files(sideEffect, full.names = TRUE)
+      }
       dwdFlst <- setdiff(postRepo, priorRepo)
       if (length(dwdFlst > 0)) {
         if (quick) {
@@ -378,13 +514,15 @@ setMethod(
             digest::digest(file = x, algo = algo)
           })
         }
-        cacheName <- file.path(basename(cacheRepo), basename(dwdFlst), fsep = "/")
+
+        cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep = "/")
         attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
 
         if (makeCopy) {
           repoTo <- file.path(cacheRepo, "gallery")
+          checkPath(repoTo, create = TRUE)
           lapply(dwdFlst, function(x) {
-            file.copy(from = file.path(cacheRepo, basename(x)),
+            file.copy(from = x,
                       to = file.path(repoTo), recursive = TRUE)
           })
         }
@@ -396,6 +534,10 @@ setMethod(
     # Can make new methods by class to add tags to outputs
     outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
                                      preDigestByClass)
+
+
+    # extract other function names that are not the ones the focus of the Cache call
+    otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
 
     # This is for write conflicts to the SQLite database
     #   (i.e., keep trying until it is written)
@@ -429,9 +571,11 @@ setMethod(
     while (!written) {
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
-                    paste0("function:", functionDetails$functionName),
+                    if (!is.na(functionDetails$functionName))
+                      paste0("function:", functionDetails$functionName),
                     paste0("object.size:", objSize),
-                    paste0("accessed:", Sys.time()))
+                    paste0("accessed:", Sys.time()),
+                    paste0("otherFunctions:", otherFns))
       saved <- suppressWarnings(try(
         saveToLocalRepo(outputToSave, repoDir = cacheRepo, artifactName = "Cache",
                         archiveData = FALSE, archiveSessionInfo = FALSE,

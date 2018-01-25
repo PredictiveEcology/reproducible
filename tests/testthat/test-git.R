@@ -1,8 +1,10 @@
 test_that("git-related functions work", {
   skip_on_cran()
 
+  gitConfigOK <- tryCatch(.checkGitConfig(), error = function(e) FALSE)
+
   ## don't bother running checks if they'll all fail due to .gitconfig SSH issue
-  if (isTRUE(.checkGitConfig())) {
+  if (gitConfigOK) {
     tmpDir <- file.path(tempdir(), "test_git")
     on.exit({
       unlink(tmpDir, recursive = TRUE)

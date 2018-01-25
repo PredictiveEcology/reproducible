@@ -10,6 +10,8 @@
 #' @author Eliot McIntire
 #' @export
 #' @rdname tagsByClass
+#' @examples
+#' .tagsByClass(character()) # Nothing interesting. Other packages will make methods
 #'
 setGeneric(".tagsByClass", function(object) {
   standardGeneric(".tagsByClass")
@@ -37,6 +39,9 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @rdname cacheMessage
+#' @examples
+#' a <- 1
+#' .cacheMessage(a, "mean")
 #'
 setGeneric(".cacheMessage", function(object, functionName) {
   standardGeneric(".cacheMessage")
@@ -48,7 +53,8 @@ setMethod(
   ".cacheMessage",
   signature = "ANY",
   definition = function(object, functionName) {
-    message("loading cached result from previous ", functionName, " call.")
+    message(crayon::blue("  loading cached result from previous ", functionName, " call.",
+                         sep = ""))
 })
 
 ################################################################################
@@ -63,6 +69,11 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @rdname objSizeInclEnviros
+#' @examples
+#' a <- new.env()
+#' a$b <- 1:10
+#' object.size(a)
+#' .objSizeInclEnviros(a) # much larger
 #'
 setGeneric(".objSizeInclEnviros", function(object) {
   standardGeneric(".objSizeInclEnviros")
@@ -134,6 +145,9 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @rdname preDigestByClass
+#' @examples
+#' a <- 1
+#' .preDigestByClass(a) # returns NULL in the simple case here.
 #'
 setGeneric(".preDigestByClass", function(object) { # nolint
   standardGeneric(".preDigestByClass")
@@ -164,6 +178,9 @@ setMethod(
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname checkCacheRepo
+#' @examples
+#' a <- "test"
+#' .checkCacheRepo(a) # no cache repository supplied
 #'
 setGeneric(".checkCacheRepo", function(object, create=FALSE) {
   standardGeneric(".checkCacheRepo")
@@ -197,7 +214,24 @@ setMethod(
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
 #' @rdname prepareOutput
+#' @examples
+#' a <- 1
+#' .prepareOutput(a) # does nothing
 #'
+#' b <- "Null"
+#' .prepareOutput(b) # converts to NULL
+#'
+#' # For rasters, it is same as .prepareFileBackedRaster
+#' try(archivist::createLocalRepo(tempdir()))
+#'
+#' library(raster)
+#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#'
+#' # write to disk manually -- will be in tempdir()
+#' r <- writeRaster(r, file = tempfile())
+#'
+#' # copy it to the cache repository
+#' r <- .prepareOutput(r, tempdir())
 setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
   standardGeneric(".prepareOutput")
 })
@@ -235,14 +269,15 @@ setMethod(
 #'        arguments to the FUN
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
+#' @param isPipe Logical. If the call to getFunctionName is coming from a pipe, there is more
+#'               information available. Specifically, ._lhs which is already a call.
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot McIntire
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
-#'
-getFunctionName <- function(FUN, ..., overrideCall) { # nolint
+getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -266,11 +301,19 @@ getFunctionName <- function(FUN, ..., overrideCall) { # nolint
     })
     signat <- unlist(sigArgs[unlist(lapply(sigArgs, function(y) any(y)))])
 
-    matchedCall <- as.list(
-      match.call(FUN, do.call(call, append(list(name = FUN@generic), list(...))))
-    )
+    if (isPipe) {
+      matchedCall <- as.list(
+        match.call(FUN, list(...)$._lhs) # already a call
+      )
+    } else {
+      matchedCall <- as.list(
+        match.call(FUN, call(name = FUN@generic, list(...)))
+      )
+    }
+
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
     matchedCall <- matchedCall[na.omit(match(names(matchedCall), FUN@signature[signat]))]
+    matchedCall <- lapply(matchedCall, eval)
 
     signatures <- rep("missing", (sum(signat))) # default is "missing"
     names(signatures) <- FUN@signature[signat]
@@ -281,8 +324,8 @@ getFunctionName <- function(FUN, ..., overrideCall) { # nolint
 
     ## TO DO: need to get the method the dispatch correct
     methodUsed <- selectMethod(FUN, optional = TRUE, signature = signatures)
-    .FUN <- methodUsed@.Data  # nolint
     functionName <- FUN@generic
+    FUN <- methodUsed@.Data  # nolint
   } else {
     if (!missing(overrideCall)) {
       functionCall <- grep(sys.calls(), pattern = paste0("^", overrideCall), value = TRUE)
@@ -301,19 +344,23 @@ getFunctionName <- function(FUN, ..., overrideCall) { # nolint
           matchedCall <- match.call(Cache, parse(text = fns))
           functionName <- matchedCall$FUN
         }
-        functionName <- deparse(functionName)
-        if (functionName != "FUN") break
+        functionName <- deparse(functionName, width.cutoff = 300)
+        if (all(functionName != "FUN")) break
       }
     } else {
       functionName <- ""
     }
     .FUN <- FUN  # nolint
   }
-  .FUN <- format(FUN)  # nolint
+  if (is(FUN, "function")) {
+    .FUN <- format(FUN)  # nolint
+  } else {
+    .FUN <- NULL # nolint
+  }
 
   # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
   if (isTRUE(grepl(functionName, pattern = "\\(")))
-    functionName <- "internal"
+    functionName <- NA_character_
 
   return(list(functionName = functionName, .FUN = .FUN))
 }
@@ -334,8 +381,9 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #' But if it does not yet exist, e.g., for a \code{save}, it is difficult to know
 #' whether it is a valid path before attempting to save to the path.
 #'
-#' This is primarily useful for achieving repeatability with Caching.
-#' Essentially, when Caching, it is likely that character strings should be
+#' This function can be used to remove any ambiguity about whether a character
+#' string is a path. It is primarily useful for achieving repeatability with Caching.
+#' Essentially, when Caching, arguments that are character strings should generally be
 #' digested verbatim, i.e., it must be an exact copy for the Cache mechanism
 #' to detect a candidate for recovery from the cache.
 #' Paths, are different. While they are character strings, there are many ways to
@@ -373,6 +421,8 @@ asPath.character <- function(obj) {  # nolint
 
 #' @export
 #' @importFrom methods new
+#' @rdname Path-class
+#' @name asPath
 setAs(from = "character", to = "Path", function(from) {
   new("Path", from)
 })
@@ -380,8 +430,11 @@ setAs(from = "character", to = "Path", function(from) {
 ################################################################################
 #' Clear erroneous archivist artifacts
 #'
-#' Clear stub artifacts resulting when an archive object is being saved at the
-#' same time as another process doing the same thing.
+#' Stub artifacts can result from several causes. The most common being
+#' erroneous removal of a file in the sqlite database. This can be caused
+#' sometimes if an archive object is being saved multiple times by multiple
+#' threads. This function will clear entries in the sqlite database which
+#' have no actual file with data.
 #'
 #' @return Invoked for its side effect on the \code{repoDir}.
 #'
@@ -402,7 +455,15 @@ setAs(from = "character", to = "Path", function(from) {
 #' })
 #'
 #' # clear out any stub artifacts
-#' clearStubArtifacts(tmpDir)
+#' showCache(tmpDir)
+#'
+#' file2Remove <- dir(file.path(tmpDir, "gallery"), full.name = TRUE)[1]
+#' file.remove(file2Remove)
+#' showCache(tmpDir) # repository directory still thinks files are there
+#'
+#' # run clearStubArtifacts
+#' suppressWarnings(clearStubArtifacts(tmpDir))
+#' showCache(tmpDir) # stubs are removed
 #'
 #' # cleanup
 #' clearCache(tmpDir)
@@ -454,8 +515,22 @@ setMethod(
 #' @importFrom raster filename dataType inMemory nlayers writeRaster
 #' @importFrom methods is selectMethod slot slot<-
 #' @rdname prepareFileBackedRaster
+#' @examples
+#' library(raster)
+#' archivist::createLocalRepo(tempdir())
 #'
-.prepareFileBackedRaster <- function(obj, repoDir = NULL, compareRasterFileLength = 1e6, ...) {
+#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#'
+#' # write to disk manually -- will be in tempdir()
+#' r <- writeRaster(r, file = tempfile())
+#'
+#' # copy it to the cache repository
+#' r <- .prepareFileBackedRaster(r, tempdir())
+#'
+#' r # now in "rasters" subfolder of tempdir()
+#'
+#'
+.prepareFileBackedRaster <- function(obj, repoDir = NULL) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
@@ -489,15 +564,17 @@ setMethod(
     trySaveFilename <- if (length(splittedFilenames) == 1) {
       normalizePath(
         file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
-        winslash = "/")
+        winslash = "/", mustWork = FALSE)
     } else {
       normalizePath(
         file.path(repoDir, splittedFilenames),
-        winslash = "/")
+        winslash = "/", mustWork = FALSE)
     }
     if (any(!file.exists(trySaveFilename))) {
-      stop("please rename raster that thinks is on disk with this or these filename(s) ",
-           curFilename, " or rerun cache.")
+      stop("The raster that is supposed to be on disk with this or these filename(s) ",
+           curFilename, " has been deleted. It must be recreated e.g.,",
+           "try showCache(userTags = \"writeRaster\"), examine that and possibly -- with",
+           "caution -- clearCache(userTags = \"writeRaster\")")
     } else {
       slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
     }
@@ -561,10 +638,17 @@ setMethod(
   return(obj)
 }
 
+
 #' Copy a file using \code{Robocopy} on Windows and \code{rsync} on Linux/macOS
 #'
-#' This will copy an individual file faster using \code{Robocopy} on Windows,
-#' and using \code{rsync} on macOS and Linux.
+#' This is replacement for \code{file.copy}, but for one file at a time.
+#' The additional feature is that it will use Robocopy (on Windows) or
+#' rsync on Linux or Mac, if they exist. It will default back to \code{file.copy}
+#' if none of these exists.
+#' This will generally copy a large file faster using \code{Robocopy} on Windows,
+#' and using \code{rsync} on macOS and Linux. In particular, if there is a possibility
+#' that the file already exists, then this function should be very fast as it
+#' will do "update only", i.e., nothing.
 #'
 #' @param from The source file.
 #'
@@ -577,9 +661,10 @@ setMethod(
 #' @param overwrite Passed to \code{file.copy}
 #'
 #' @param delDestination Logical, whether the destination should have any files deleted,
-#' if they don't exist in the source. This is \code{/purge}.
+#' if they don't exist in the source. This is \code{/purge} for RoboCopy and --delete for
+#' rsync.
 #'
-#' @param create Passed to \code{checkLazyDir}.
+#' @param create Passed to \code{checkPath}.
 #'
 #' @param silent Should a progress be printed.
 #'
@@ -612,11 +697,12 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   origDir <- getwd()
   useFileCopy <- FALSE
 
-  if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
+  checkPath(dirname(to), create = create)
+
   os <- tolower(Sys.info()[["sysname"]])
   if (os == "windows") {
-    robocopyBin <- tryCatch(system("where robocopy", intern = TRUE),
-                            warning = function(w) NA_character_)
+    if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
+    robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
     robocopy <-  if (silent) {
       paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS ",  # nolint
@@ -636,16 +722,19 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       TRUE
     }
   } else if ( (os == "linux") || (os == "darwin") ) { # nolint
-    rsyncBin <- tryCatch(system("which rsync", intern = TRUE),
-                         warning = function(w) NA_character_)
+    if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
+    rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
     opts <- if (silent) " -a " else " -avP "
     rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
                     normalizePath(from, mustWork = TRUE), " ",
                     normalizePath(to, mustWork = FALSE), "/")
 
     useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
+  } else {
+    useFileCopy <- TRUE
   }
   if (isTRUE(useFileCopy)) {
+    dir.create(dirname(to))
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
   }
 
@@ -654,16 +743,24 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 }
 
 #' @rdname cacheHelper
+#' @importFrom fastdigest fastdigest
+#' @importFrom digest digest
 #' @importFrom raster res crs extent
-digestRaster <- function(object, compareRasterFileLength, algo) {
-  dig <- fastdigest::fastdigest(list(dim(object), res(object), crs(object),
-                                     extent(object), object@data))
+.digestRaster <- function(object, compareRasterFileLength, algo) {
   if (nzchar(object@file@name)) {
+    dig <- fastdigest(list(dim(object), res(object), crs(object),
+                           extent(object), object@data))
     # if the Raster is on disk, has the first compareRasterFileLength characters;
+    if (endsWith(basename(object@file@name), suffix = ".grd"))
+      filename <- sub(object@file@name, pattern = ".grd$", replacement = ".gri")
+    else
+      filename <- object@file@name
     dig <- fastdigest(
-      append(dig, digest::digest(file = object@file@name,
+      append(dig, digest::digest(file = filename,
                                  length = compareRasterFileLength,
                                  algo = algo)))
+  } else {
+    dig <- fastdigest(object)
   }
 }
 
@@ -762,10 +859,12 @@ setMethod("Copy",
 })
 
 ################################################################################
-#' Sort a any named object with dotted names first
+#' Sort or order any named object with dotted names and underscores first
 #'
-#' Internal use only. This exists so Windows and Linux machines can have
-#' the same order after a sort.
+#' Internal use only. This exists so Windows, *nux, Mac machines can have
+#' the same order after a sort. It will put dots and underscores first
+#' (with the sort key based on their second character, see examples. It also
+#' sorts lower case before upper case
 #'
 #' @param obj  An arbitrary R object for which a \code{names} function
 #'              returns a character vector.
@@ -777,15 +876,38 @@ setMethod("Copy",
 #' @rdname sortDotsUnderscoreFirst
 #'
 #' @examples
-#' items <- c(A = "a", Z = "z", `.D` = ".d", `_W` = "_w")
+#' items <- c(A = "a", Z = "z", `.D` = ".d", `_C` = "_C")
 #' .sortDotsUnderscoreFirst(items)
 #'
+#' # dots & underscore (using 2nd character), then all lower then all upper
+#' items <- c(B = "Upper", b = "lower", A = "a", `.D` = ".d", `_C` = "_C")
+#' .sortDotsUnderscoreFirst(items)
+#'
+#' # with a vector
+#' .sortDotsUnderscoreFirst(c(".C", "_B", "A")) # _B is first
+#'
 .sortDotsUnderscoreFirst <- function(obj) {
-  names(obj) <- gsub(names(obj), pattern = "\\.", replacement = "DOT")
-  names(obj) <- gsub(names(obj), pattern = "_", replacement = "US")
-  allLower <- which(tolower(names(obj)) == names(obj))
-  names(obj)[allLower] <- paste0("ALLLOWER", names(obj)[allLower])
-  obj[order(names(obj))]
+  obj[.orderDotsUnderscoreFirst(obj)]
+}
+
+#' @export
+#' @rdname sortDotsUnderscoreFirst
+.orderDotsUnderscoreFirst <- function(obj) {
+
+  if (!is.null(names(obj))) {
+    namesObj <- names(obj)
+  } else {
+    namesObj <- obj
+  }
+
+  namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
+  allLower <- tolower(namesObj) == namesObj
+  namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
+
+  onesChanged <- startsWith(namesObj, prefix = "a")
+  namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
+
+  order(namesObj)
 }
 
 ################################################################################
@@ -808,4 +930,31 @@ setMethod("Copy",
   setattr(obj, "debugCache1", list(...))
   setattr(obj, "debugCache2", preDigest)
   obj
+}
+
+loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
+
+
+.getOtherFnNamesAndTags <- function(scalls) {
+  if (is.null(scalls)) {
+    scalls <- sys.calls()
+  }
+
+  otherFns <- grepl(scalls, pattern = paste0("(test_code)|(with_reporter)|(force)|",
+                                             "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
+                                             "(Cache)|(tryCatch)|(doTryCatch)"))
+  otherFns <- unlist(lapply(scalls[!otherFns], function(x) {
+    tryCatch(as.character(x[[1]]), error = function(y) "")
+  }))
+  otherFns <- otherFns[nzchar(otherFns)]
+  otherFns <- otherFns[!startsWith(otherFns, prefix = ".")]
+  otherFns <- paste0("otherFunctions:", otherFns)
+
+  # Figure out if it is in a .parseModule call, if yes, then extract the module
+  doEventFrameNum <- which(startsWith(as.character(scalls), prefix = ".parseModule"))
+  if (length(doEventFrameNum)) {
+    module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
+    otherFns <- c(paste0("module:", module), otherFns)
+  }
+  unique(otherFns)
 }

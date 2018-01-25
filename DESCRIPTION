@@ -3,12 +3,15 @@ Type: Package
 Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
 Description: Built on top of 'git2r' and 'archivist', this package aims at
     making high-level, robust, machine and OS independent tools for making
-    deeply reproducible and reusable content in R. This extends beyond the
-    package management utilities of 'packrat' and 'checkpoint' by including
+    deeply reproducible and reusable content in R. This includes light weight
+    package management (similar to 'packrat' and 'checkpoint', but more flexible,
+    lighterweight and simpler than both), plus it includes
     tools for caching, and accessing GitHub repositories.
-URL: https://github.com/PredictiveEcology/reproducible
-Date: 2017-08-04
-Version: 0.1.1
+URL: 
+    https://predictiveecology.github.io/reproducible/,
+    https://github.com/PredictiveEcology/reproducible
+Date: 2018-01-24
+Version: 0.1.3.9016
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre")),
@@ -18,33 +21,44 @@ Authors@R: c(
     role = "cph")
     )
 Depends:
-    R (>= 3.3.2)
+    R (>= 3.3.0)
 Imports:
     archivist (>= 2.1.2),
+    crayon,
     data.table (>= 1.10.4),
     devtools,
     digest,
     fastdigest,
     git2r (>= 0.18),
     magrittr,
+    memoise,
     methods,
     raster,
-    rgdal,
-    sp
+    Rcpp (>= 0.12.13),
+    RCurl,
+    sp,
+    versions
 Suggests:
     hunspell,
     knitr,
+    rgdal,
     rmarkdown,
     testthat
+LinkingTo: Rcpp
 License: GPL-3
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 6.0.1
 Collate: 
+    'RcppExports.R'
     'cache-helpers.R'
     'cache-tools.R'
     'robustDigest.R'
     'cache.R'
     'consistentPaths.R'
     'git.R'
+    'helpers.R'
+    'packages.R'
+    'pipe.R'
     'reproducible-package.R'
+    'search.R'

@@ -2,12 +2,12 @@
 % Please edit documentation in R/cache-helpers.R
 \name{getFunctionName}
 \alias{getFunctionName}
-\alias{digestRaster}
+\alias{.digestRaster}
 \title{A set of helpers for Cache}
 \usage{
-getFunctionName(FUN, ..., overrideCall)
+getFunctionName(FUN, ..., overrideCall, isPipe)
 
-digestRaster(object, compareRasterFileLength, algo)
+.digestRaster(object, compareRasterFileLength, algo)
 }
 \arguments{
 \item{FUN}{A function}
@@ -17,6 +17,9 @@ arguments to the FUN}
 
 \item{overrideCall}{A character string indicating a different (not "Cache") function
 name to search for. Mostly so that this works with deprecated "cache".}
+
+\item{isPipe}{Logical. If the call to getFunctionName is coming from a pipe, there is more
+information available. Specifically, ._lhs which is already a call.}
 }
 \description{
 These are internal only.

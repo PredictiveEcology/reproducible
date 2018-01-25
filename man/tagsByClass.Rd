@@ -19,6 +19,10 @@ A character vector of new tags.
 \description{
 This is a generic definition that can be extended according to class.
 }
+\examples{
+.tagsByClass(character()) # Nothing interesting. Other packages will make methods
+
+}
 \author{
 Eliot McIntire
 }

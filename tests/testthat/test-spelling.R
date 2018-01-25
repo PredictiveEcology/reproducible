@@ -1,25 +1,19 @@
 test_that("spelling errors", {
+  skip_on_appveyor() ## no suitable spellchecker installed
+  skip_on_travis()   ## no suitable spellchecker installed
   skip_on_cran()
-  skip_on_appveyor()    ## no suitable spellchecker installed
-  skip_on_travis()      ## no suitable spellchecker installed
-  skip_on_os("windows") ## no suitable spellchecker installed
+  skip_on_os("windows")
   skip_if_not_installed("hunspell")
 
-  ## ensure that stats terms are included in the word list
   pkg <- "reproducible"
-  .wordsFile <- system.file("dict/words.rds", package = pkg)
-  .words <- readRDS(.wordsFile)
-  .en_stats <- hunspell::en_stats # nolint
-  .complete <- all(.en_stats %in% .words)
-  expect_true(.complete)
-
-  ## if needed, add any new stats words to the word list
-  if (interactive() && !.complete) {
-    ignore <- sort(unique(c(.en_stats, .words, pkg)))
-    saveRDS(ignore, .wordsFile)
-  }
-
   pkgDir <- system.file(package = pkg)
+  wordsFile <- file.path(".aspell", paste0(pkg, ".rds"))
+
+  if (interactive()) {
+    ## add custom words to package dictionary
+    words <- c("GitHub", "Reproducibility", "SpaDES")
+    saveRDS(words, wordsFile)
+  }
 
   ## check vignettes
   wrdsRmd <- aspell_package_vignettes(pkgDir)

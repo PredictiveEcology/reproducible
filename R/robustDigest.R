@@ -36,7 +36,8 @@
 #'
 #' Character strings are first assessed with \code{dir.exists} and \code{file.exists}
 #' to check for paths. If they are found to be paths, then the path is hashed with
-#' only its filename via \code{basename(filename)}.
+#' only its filename via \code{basename(filename)}. If it is actually a path, we suggest
+#' using \code{asPath(thePath)}
 #'
 #' @param object an object to digest.
 #'
@@ -56,6 +57,49 @@
 #' @importFrom fastdigest fastdigest
 #' @keywords internal
 #' @rdname robustDigest
+#' @examples
+#'
+#' a <- 2
+#' tmpfile1 <- tempfile()
+#' tmpfile2 <- tempfile()
+#' save(a, file = tmpfile1)
+#' save(a, file = tmpfile2)
+#'
+#' # treats as character string, so 2 filenames are different
+#' fastdigest::fastdigest(tmpfile1)
+#' fastdigest::fastdigest(tmpfile2)
+#'
+#' # tests to see whether character string is representing a file
+#' .robustDigest(tmpfile1)
+#' .robustDigest(tmpfile2) # same
+#'
+#' # if you tell it that it is a path, then you can decide if you want it to be
+#' #  treated as a character string or as a file path
+#' .robustDigest(asPath(tmpfile1))
+#' .robustDigest(asPath(tmpfile2)) # different because you have a choice
+#'
+#' .robustDigest(asPath(tmpfile1), digestPathContent = TRUE)
+#' .robustDigest(asPath(tmpfile2), digestPathContent = TRUE) # same
+#'
+#' # Rasters are interesting because it is not know a priori if it
+#' #   it has a file name associated with it.
+#' library(raster)
+#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#'
+#' # write to disk
+#' r1 <- writeRaster(r, file = tmpfile1)
+#' r2 <- writeRaster(r, file = tmpfile2)
+#'
+#' digest::digest(r1)
+#' digest::digest(r2) # different
+#' fastdigest::fastdigest(r1)
+#' fastdigest::fastdigest(r2) # different
+#' .robustDigest(r1)
+#' .robustDigest(r2) # same... data are the same in the file
+#'
+#' # note, this is not true for comparing memory and file-backed rasters
+#' .robustDigest(r)
+#' .robustDigest(r1) # different
 #'
 setGeneric(".robustDigest", function(object, objects,
                                     compareRasterFileLength = 1e6,
@@ -145,9 +189,16 @@ setMethod(
                         classOptions) {
     if (digestPathContent) {
       lapply(object, function(x) {
+        isExistentFile <- FALSE
         if (file.exists(x)) {
+          if (!dir.exists(x)) {
+            isExistentFile <- TRUE
+          }
+        }
+        if (isExistentFile) {
           digest::digest(file = x, length = compareRasterFileLength, algo = algo)
         } else {
+          # just do file basename as a character string, if file does not exist
           fastdigest::fastdigest(basename(x))
         }
       })
@@ -189,21 +240,16 @@ setMethod(
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (is(object, "RasterStack") | is(object, "RasterBrick")) {
+    if (is(object, "RasterStack")) {
+      # have to do one file at a time with Stack
       dig <- suppressWarnings(
-        list(dim(object), res(object), crs(object), extent(object),
              lapply(object@layers, function(yy) {
-               digestRaster(yy, compareRasterFileLength, algo)
+               .digestRaster(yy, compareRasterFileLength, algo)
              })
-        )
       )
-      if (nzchar(object@filename, keepNA = TRUE)) {
-        # if the Raster is on disk, has the first compareRasterFileLength characters;
-        # uses digest::digest on the file
-        dig <- append(dig, digest(file = object@filename, length = compareRasterFileLength))
-      }
     } else {
-      dig <- suppressWarnings(digestRaster(object, compareRasterFileLength, algo))
+      # Brick and Layers have only one file
+      dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
     }
     return(fastdigest::fastdigest(dig))
 })
@@ -220,11 +266,14 @@ setMethod(
     } else {
       aaa <- object
     }
+
     # The following Rounding is necessary to make digest equal on linux and windows
-    for (i in names(aaa)) {
-      if (!is.integer(aaa[, i])) {
-        if (is.numeric(aaa[, i]))
-          aaa[, i] <- round(aaa[, i], 4)
+    if (inherits(aaa, "SpatialPolygonsDataFrame")) {
+      bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
+      if (sum(bbb)) {
+        for (i in names(aaa)[bbb]) {
+          aaa[[i]] <- round(aaa[[i]], 4)
+        }
       }
     }
 

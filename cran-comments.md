@@ -1,7 +1,8 @@
-## New submission
+## Resubmission
 
-This is a spin off of an existing CRAN package (`SpaDES`), which we have split due to growing package size.
-We have removed `\dontrun` from the examples so that they *do* run, and have added the examples to out tests.
+This is an update to our recent submission which addresses issues discovered during CRAN package checks.
+We setup a Solaris VM to test the code we previously believe had been fixed, and have now confirmed that the issue has been resolved.
+We apologize for our previous incomplete submission.
 
 ## Test environments
 
@@ -21,10 +22,10 @@ We have removed `\dontrun` from the examples so that they *do* run, and have add
 
 ### Development R version
 * Debian:testing (rocker/r-devel), R 3.5.0 (2017-07-26 r72972)
-* Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-04 r73032)
-* Ubuntu 16.04            (local), R 3.5.0 (2017-08-03 r73028)
-* Windows              (appveyor), R 3.5.0 (2017-08-03 r73028)
-* Windows           (win-builder), R 3.5.0 (2017-08-03 r73028)
+* Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-10 r73083)
+* Ubuntu 16.04            (local), R 3.5.0 (2017-08-08 r73067)
+* Windows              (appveyor), R 3.5.0 (2017-08-09 r73082)
+* Windows           (win-builder), R 3.5.0 (2017-08-09 r73082)
 
 ## R CMD check results
 
@@ -34,13 +35,13 @@ There was 1 NOTE:
 
 1. There are multiple parts to this note:
 
-    a. This is a new package submission:
+    a. This submission fixes issues discovered in our recent package update.
     
-            Maintainer: 'Eliot McIntire <eliot.mcintire@canada.ca>'
+            Maintainer: 'Eliot J B McIntire <eliot.mcintire@canada.ca>'
             
-            New submission
+            Days since last update: 1
 
-    b. Some words were flagged as possibly misspelled, but they are not. 
+    b. Some words were flagged as possibly misspelled, but they are false positives. 
      
             Possibly mis-spelled words in DESCRIPTION: 
                 GitHub (9:38)
