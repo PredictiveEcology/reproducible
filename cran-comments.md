@@ -1,56 +1,36 @@
-## Resubmission
+## resubmission
 
-This is an update to our recent submission which addresses issues discovered during CRAN package checks.
-We setup a Solaris VM to test the code we previously believe had been fixed, and have now confirmed that the issue has been resolved.
-We apologize for our previous incomplete submission.
+This is a major update to our package.
 
 ## Test environments
 
 ### Previous R versions
-* Ubuntu 14.04        (travis-ci), R 3.3.3
+* Ubuntu 14.04.5      (travis-ci), R 3.3.3
+* Windows              (appveyor), R 3.3.2
 * Windows              (appveyor), R 3.3.3
 * Windows 7               (local), R 3.3.3
 
 ### Current R versions
-* macOS Sierra         (local), R 3.4.1
-* OS X El Capitan  (travis-ci), R 3.4.1
-* Ubuntu 14.04     (travis-ci), R 3.4.1
-* Ubuntu 16.04         (local), R 3.4.1
-* Windows           (appveyor), R 3.4.1
-* Windows        (win-builder), R 3.4.1
-* Windows 7            (local), R 3.4.1
+* macOS High Sierra    (local), R 3.4.3
+* Ubuntu 16.0          (local), R 3.4.3
+* Ubuntu 14.04.5   (travis-ci), R 3.4.2
+* Debian 4.9.51        (local), R 3.4.3
+* Windows           (appveyor), R 3.4.3
+* Windows        (win-builder), R 3.4.3
+* Windows 7            (local), R 3.4.3
 
 ### Development R version
-* Debian:testing (rocker/r-devel), R 3.5.0 (2017-07-26 r72972)
-* Ubuntu 14.04        (travis-ci), R 3.5.0 (2017-08-10 r73083)
-* Ubuntu 16.04            (local), R 3.5.0 (2017-08-08 r73067)
-* Windows              (appveyor), R 3.5.0 (2017-08-09 r73082)
-* Windows           (win-builder), R 3.5.0 (2017-08-09 r73082)
+* Ubuntu 14.04        (travis-ci), R 3.5.0 (2018-01-24 r74157)
+* Windows                 (local), R 3.5.0 (2018-01-24 r74157)
+* Windows           (win-builder), R 3.5.0 (2018-01-24 r74157)
 
 ## R CMD check results
 
-There were no ERRORs or WARNINGs
-
-There was 1 NOTE:
-
-1. There are multiple parts to this note:
-
-    a. This submission fixes issues discovered in our recent package update.
-    
-            Maintainer: 'Eliot J B McIntire <eliot.mcintire@canada.ca>'
-            
-            Days since last update: 1
-
-    b. Some words were flagged as possibly misspelled, but they are false positives. 
-     
-            Possibly mis-spelled words in DESCRIPTION: 
-                GitHub (9:38)
-                Reproducibility (3:36)
+There are no errors, warnings, or notes in any of the above.
 
 ## Downstream dependencies
 
-There are currently no downstream dependencies of this package.
-However, as we submit further `SpaDES` spinoff packages, this package will become a dependency for the following packages:
+There are several 3 downstream dependencies of this package. I am a co-developer of these 3 packages. These packages are about to be updated with CRAN. We checked against current CRAN versions of all 3 and current development versions of all 3. There were 2 failed tests on SpaDES.core on CRAN and 2 failed tests currently on the development version. These have been noted, are easy to change. Changes to those packages will be will be submitted soon (within 2 weeks) to CRAN.
 
 - `SpaDES` (Imports)
 - `SpaDES.addins` (Imports)
