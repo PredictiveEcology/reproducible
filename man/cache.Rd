@@ -8,19 +8,20 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
-  userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
+  userTags = c(), digestPathContent = TRUE, omitArgs = NULL,
   classOptions = list(), debugCache = character(), sideEffect = FALSE,
   makeCopy = FALSE, quick = FALSE)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   compareRasterFileLength = 1e+06, userTags = c(),
-  digestPathContent = FALSE, omitArgs = NULL, classOptions = list(),
+  digestPathContent = TRUE, omitArgs = NULL, classOptions = list(),
   debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = FALSE)
 }
 \arguments{
-\item{FUN}{A function to be called.}
+\item{FUN}{Either a function or an unevaluated function call (e.g., using
+\code{quote}.}
 
 \item{...}{Arguments of \code{FUN} function .}
 
@@ -53,7 +54,7 @@ Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
 
 \item{digestPathContent}{Logical. Should arguments that are of class \code{Path}
 (see examples below) have their name digested
-(\code{FALSE}; default), or their file contents (\code{TRUE}).}
+(\code{FALSE}), or their file contents (\code{TRUE}; default).}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
@@ -74,10 +75,8 @@ the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
 without evalutating the \code{FUN(...)}.}
 
-\item{sideEffect}{Logical. Check if files to be downloaded are found locally
-in the \code{cacheRepo} prior to download and try to recover from a copy
-(\code{makeCopy} must have been set to \code{TRUE} the first time \code{Cache}
-was run). Default is \code{FALSE}.
+\item{sideEffect}{Logical or path. Deteremines where the function will look for
+new files following function completion. See Details.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
 \item{makeCopy}{Logical. If \code{sideEffect = TRUE}, and \code{makeCopy = TRUE},
@@ -174,12 +173,45 @@ of stochastic outcomes are required. It will also be very useful in a
 reproducible workflow.
 }
 
+\section{\code{sideEffect}}{
+
+If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
+added to \code{sideEffect} will be added as an attribute to the cached copy.
+Subsequent calls to this function
+       will assess for the presence of the new files in the \code{sideEffect} location.
+       If the files are identical (\code{quick = FALSE}) or their file size is
+       identical (\code{quick = TRUE}), then the cached copy of the function will
+       be returned (and no files changed). If there are missing or incorrect files,
+       then the function will re-run. This will accommodate the situation where the
+       function call is identical, but somehow the side effect files were modified.
+       If \code{sideEffect} is logical, then the function will check the
+       \code{cacheRepo}; if it is a path, then it will check the path. The function will
+       assess whether the files to be downloaded are found locally
+       prior to download. If it fails the local test, then it will try to recover from a
+       local copy if (\code{makeCopy} had been set to \code{TRUE} the first time
+       the function was run. Currently, local recovery will only work if\code{makeCOpy} was
+       set to \code{TRUE} the first time \code{Cache}
+       was run). Default is \code{FALSE}.
+}
+
 \examples{
 library(raster)
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
 
-## Example 1: basic cache use
+# Basic use
+ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+
+# All same
+ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- rnorm(10, 16) \%>\% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+
+# Any minor change makes it different
+ranNumsE <- rnorm(10, 6) \%>\% Cache(cacheRepo = tmpDir) # different
+
+## Example 1: basic cache use with tags
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
@@ -196,8 +228,7 @@ clearCache(tmpDir)
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
-# access it again, but "later"
-Sys.sleep(1)
+# access it again, from Cache
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 wholeCache <- showCache(tmpDir)
 
@@ -250,8 +281,8 @@ keepCache(tmpDir, userTags = "runif|rnorm")
 clearCache(tmpDir)
 
 ## Example 5: using caching to speed up rerunning expensive computations
-ras <- raster(extent(0, 100, 0, 100), res = 1,
-              vals = sample(1:5, replace = TRUE, size = 1e4),
+ras <- raster(extent(0, 10, 0, 10), res = 1,
+              vals = sample(1:5, replace = TRUE, size = 1e2),
               crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
 
 # A slow operation, like GIS operation

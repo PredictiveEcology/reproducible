@@ -1,8 +1,20 @@
 library(raster)
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
 
-## Example 1: basic cache use
+# Basic use
+ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+
+# All same
+ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- rnorm(10, 16) %>% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+
+# Any minor change makes it different
+ranNumsE <- rnorm(10, 6) %>% Cache(cacheRepo = tmpDir) # different
+
+## Example 1: basic cache use with tags
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
@@ -19,8 +31,7 @@ clearCache(tmpDir)
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
-# access it again, but "later"
-Sys.sleep(1)
+# access it again, from Cache
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 wholeCache <- showCache(tmpDir)
 
@@ -73,8 +84,8 @@ keepCache(tmpDir, userTags = "runif|rnorm")
 clearCache(tmpDir)
 
 ## Example 5: using caching to speed up rerunning expensive computations
-ras <- raster(extent(0, 100, 0, 100), res = 1,
-              vals = sample(1:5, replace = TRUE, size = 1e4),
+ras <- raster(extent(0, 10, 0, 10), res = 1,
+              vals = sample(1:5, replace = TRUE, size = 1e2),
               crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
 
 # A slow operation, like GIS operation

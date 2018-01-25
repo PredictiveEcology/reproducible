@@ -22,6 +22,11 @@ A character string with a path to a cache repository.
 This is a generic definition that can be extended according to class. Normally,
 checkPath can be called directly, but does not have class-specific methods.
 }
+\examples{
+a <- "test"
+.checkCacheRepo(a) # no cache repository supplied
+
+}
 \author{
 Eliot McIntire
 }

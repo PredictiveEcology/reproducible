@@ -2,9 +2,12 @@
 % Please edit documentation in R/cache-helpers.R
 \name{.sortDotsUnderscoreFirst}
 \alias{.sortDotsUnderscoreFirst}
-\title{Sort a any named object with dotted names first}
+\alias{.orderDotsUnderscoreFirst}
+\title{Sort or order any named object with dotted names and underscores first}
 \usage{
 .sortDotsUnderscoreFirst(obj)
+
+.orderDotsUnderscoreFirst(obj)
 }
 \arguments{
 \item{obj}{An arbitrary R object for which a \code{names} function
@@ -14,12 +17,21 @@ returns a character vector.}
 The same object as \code{obj}, but sorted with .objects first.
 }
 \description{
-Internal use only. This exists so Windows and Linux machines can have
-the same order after a sort.
+Internal use only. This exists so Windows, *nux, Mac machines can have
+the same order after a sort. It will put dots and underscores first
+(with the sort key based on their second character, see examples. It also
+sorts lower case before upper case
 }
 \examples{
-items <- c(A = "a", Z = "z", `.D` = ".d", `_W` = "_w")
+items <- c(A = "a", Z = "z", `.D` = ".d", `_C` = "_C")
 .sortDotsUnderscoreFirst(items)
+
+# dots & underscore (using 2nd character), then all lower then all upper
+items <- c(B = "Upper", b = "lower", A = "a", `.D` = ".d", `_C` = "_C")
+.sortDotsUnderscoreFirst(items)
+
+# with a vector
+.sortDotsUnderscoreFirst(c(".C", "_B", "A")) # _B is first
 
 }
 \author{

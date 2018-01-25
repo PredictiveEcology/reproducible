@@ -6,4 +6,6 @@
 #' management utilities of \code{packrat} and \code{checkpoint} by including
 #' tools for caching, and accessing GitHub repositories.
 #'
+#' @importFrom Rcpp evalCpp
+#' @useDynLib reproducible
 "_PACKAGE"

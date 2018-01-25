@@ -9,6 +9,8 @@ CONTRIBUTING\.md
 cran-comments\.md
 ^docs$
 ^LICENSE$
+^revdep$
 ^travis_wait_.*\.log$
 vignettes/.*_cache$
 vignettes/.*\.log$
+
