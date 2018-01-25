@@ -94,8 +94,6 @@ setMethod(
 #' @rdname viewCache
 #' @seealso \code{\link[archivist]{splitTagsLocal}}.
 #'
-#' @example inst/examples/example_Cache.R
-#'
 setGeneric("showCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("showCache")
 })
@@ -127,7 +125,8 @@ setMethod(
               grepl(tagKey, pattern = ut) |
               grepl(artifact, pattern = ut)]
           setkeyv(objsDT2, "artifact")
-          objsDT <- objsDT[unique(objsDT2, by = "artifact")[, artifact]] # merge each userTags
+          shortDT <- unique(objsDT2, by = "artifact")[, artifact]
+          objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
         }
       }
     }

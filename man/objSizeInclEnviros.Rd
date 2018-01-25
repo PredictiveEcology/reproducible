@@ -22,6 +22,13 @@ A numeric, the result of object.size for all objects in environments.
 \description{
 This is a generic definition that can be extended according to class.
 }
+\examples{
+a <- new.env()
+a$b <- 1:10
+object.size(a)
+.objSizeInclEnviros(a) # much larger
+
+}
 \author{
 Eliot McIntire
 }

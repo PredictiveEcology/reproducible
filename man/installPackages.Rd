@@ -7,24 +7,24 @@
 .installPackages(packages, repos = getOption("repos"),
   githubPkgs = character(0), githubPkgNames, nonLibPathPkgs = character(0),
   install_githubArgs, install.packagesArgs = list(),
-  libPath = .libPaths()[1], standAlone = standAlone,
-  cacheRepo = cacheRepo, notOlderThan = notOlderThan)
+  libPath = .libPaths()[1], standAlone = standAlone, forget = FALSE)
 }
 \arguments{
 \item{packages}{Character vector of packages to install via
-\code{install.packages}, then load (i.e., with \code{library})}
+\code{install.packages}, then load (i.e., with \code{library}). If it is
+one package, it can be unquoted (as in \code{require})}
 
-\item{repos}{The remote repository (e.g., a CRAN mirror), passed to \code{install.packages}}
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},}
 
-\item{githubPkgs}{Character vector of github repositoriess and packages, given in the form of
-repository/package@branch, with branch being optional.}
+\item{githubPkgs}{Character vector of github repositoriess and packages, in the
+form \code{repository/package@branch}, with branch being optional.}
 
 \item{githubPkgNames}{Character vector of the package names, i.e., just the R package name.}
 
-\item{nonLibPathPkgs}{Character vector of all installed packages that are in .libPaths, but
-not in \code{libPath}. This would normally include a listing of
-base packages, but may also include other library paths if \code{standAlone}
-if \code{FALSE}}
+\item{nonLibPathPkgs}{Character vector of all installed packages that are in \code{.libPaths},
+but not in \code{libPath}. This would normally include a listing of
+base packages, but may also include other library paths if
+\code{standAlone} if \code{FALSE}}
 
 \item{install_githubArgs}{List of optional named arguments, passed to install_github}
 
@@ -38,15 +38,14 @@ from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
 be used to find the correct versions. This can be create dramatically faster
 installs if the user has a substantial number of the packages already in their
 personal library. In the case of \code{TRUE}, there will be a hidden file
-place in the \code{libPath} directory that lists all the packages that were needed
-during the Require call.}
+place in the \code{libPath} directory that lists all the packages
+that were needed during the \code{Require} call. Default \code{FALSE} to
+minimize package installing.}
 
-\item{cacheRepo}{A path to a cache repository to create or use. Used solely internally while
-running \code{pkgDep}.}
-
-\item{notOlderThan}{Time or Date. The \code{Cache} is used internally for
-\code{tools::package_dependencies} and for already installed packages that
-came from github. To purge the cache: \code{notOlderThan = Sys.time()}}
+\item{forget}{Internally, this function identifies package dependencies using a memoised
+function for speed on reuse. But, it may be inaccurate in some cases,
+if packages were installed manually by a user. Set this to \code{TRUE} to
+refresh that dependency calculation.}
 }
 \description{
 Internal function to install packages

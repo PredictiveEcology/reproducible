@@ -43,3 +43,11 @@
 
 
 src/reproducible\.dll
+
+*.o
+
+src-i386/
+
+src-x64/
+
+src/

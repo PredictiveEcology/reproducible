@@ -24,18 +24,18 @@ test_that("test file-backed raster caching", {
   aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
 
   # Test clearCache by tags
-  expect_equal(NROW(showCache(tmpdir)), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
   clearCache(tmpdir, userTags = "something$")
-  expect_equal(NROW(showCache(tmpdir)), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
   clearCache(tmpdir, userTags = "something2")
   expect_equal(NROW(showCache(tmpdir)), 0)
 
   aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
-  expect_equal(NROW(showCache(tmpdir)), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
   clearCache(tmpdir, userTags = c("something$", "testing$"))
-  expect_equal(NROW(showCache(tmpdir)), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
   clearCache(tmpdir, userTags = c("something2$", "testing$"))
-  expect_equal(NROW(showCache(tmpdir)), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
   clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"))
   expect_equal(NROW(showCache(tmpdir)), 0)
 
@@ -80,7 +80,7 @@ test_that("test file-backed raster caching", {
   expect_true(inMemory(bb))
 
   bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir)) == 9)
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 9)
 
   # Test that factors are saved correctly
   randomPolyToFactorInMemory <- function() {
@@ -129,6 +129,8 @@ test_that("test file-backed raster caching", {
 test_that("test memory backed raster robustDigest", {
   library(raster)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
+  tmpFile <- tempfile()
+  tmpFile1 <- tempfile()
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
   set.seed(123)
@@ -148,6 +150,52 @@ test_that("test memory backed raster robustDigest", {
   set.seed(123)
   r2 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
   expect_true(identical(.robustDigest(r1), .robustDigest(r2)))
+
+  # Brick
+  r <- raster(matrix(1:10, 2, 5))
+  b <- brick(r, r)
+  dig <- reproducible:::.robustDigest(b)
+
+  r1 <- raster(matrix(1:10, 2, 5))
+  b1 <- brick(r1, r1)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical(dig, dig1)
+
+  b <- writeRaster(b, file = tmpFile, overwrite = TRUE)
+  dig <- reproducible:::.robustDigest(b)
+
+  r <- raster(matrix(1:10, 2, 5))
+  b <- brick(r, r)
+  b <- writeRaster(b, file = tmpFile, overwrite = TRUE)
+  dig1 <- reproducible:::.robustDigest(b)
+
+  expect_identical(dig, dig1)
+
+  # Stacks
+  dimA <- 100
+  r <- raster(matrix(1:dimA, round(sqrt(dimA)), round(sqrt(dimA))))
+  b <- raster::stack(r, r)
+  dig <- reproducible:::.robustDigest(b)
+
+  r1 <- raster(matrix(1:dimA, round(sqrt(dimA)), round(sqrt(dimA))))
+  b1 <- raster::stack(r1, r1)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical(dig, dig1)
+
+  r4 <- writeRaster(r, file = tmpFile, overwrite = TRUE)
+  r5 <- writeRaster(r, file = tmpFile1, overwrite = TRUE)
+  b <- raster::stack(r4, r5)
+  dig <- reproducible:::.robustDigest(b)
+
+  r2 <- writeRaster(r1, file = tmpFile, overwrite = TRUE)
+  r3 <- writeRaster(r1, file = tmpFile1, overwrite = TRUE)
+  b1 <- raster::stack(r2, r3)
+  #b1 <- writeRaster(b1, file = tmpFile, overwrite = TRUE)
+  dig1 <- reproducible:::.robustDigest(b1)
+
+  expect_identical(dig, dig1)
 })
 
 test_that("test date-based cache removal", {
@@ -180,12 +228,12 @@ test_that("test keepCache", {
   Cache(rnorm, 10, cacheRepo = tmpdir)
   Cache(runif, 10, cacheRepo = tmpdir)
   Cache(round, runif(4), cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir)) == 24)
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 24)
   expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))) == 0) # and search
-  expect_true(NROW(keepCache(tmpdir, "rnorm")) == 8)
+  expect_true(NROW(keepCache(tmpdir, "rnorm")[tagKey != "otherFunctions"]) == 8)
 
   # do it twice to make sure it can deal with repeats
-  expect_true(NROW(keepCache(tmpdir, "rnorm")) == 8)
+  expect_true(NROW(keepCache(tmpdir, "rnorm")[tagKey != "otherFunctions"]) == 8)
   Sys.sleep(1)
   st <- Sys.time()
   Sys.sleep(1)
@@ -193,9 +241,9 @@ test_that("test keepCache", {
   Cache(length, 10, cacheRepo = tmpdir)
   Cache(sum, runif(4), cacheRepo = tmpdir)
   showCache(tmpdir, after = st)
-  expect_true(NROW(showCache(tmpdir, before = st)) == 8)
-  expect_true(NROW(keepCache(tmpdir, before = st)) == 8)
-  expect_true(NROW(showCache(tmpdir)) == 8)
+  expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 8)
+  expect_true(NROW(keepCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 8)
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 8)
 
   ranNums <- Cache(runif, 4, cacheRepo = tmpdir, userTags = "objectName:a")
   ranNums <- Cache(rnorm, 4, cacheRepo = tmpdir, userTags = "objectName:a")
@@ -289,8 +337,12 @@ test_that("test asPath", {
   origDir <- getwd()
   on.exit(setwd(origDir))
   setwd(tmpdir)
+  # First -- has no filename.RData
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
+  # Second -- has a filename.RData, and passing a character string,
+  #           it tries to see if it is a file, if yes, it digests it
   a2 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
+  # Third -- finally has all same as second time
   a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
 
   expect_true(length(a1) == 0)
@@ -299,10 +351,12 @@ test_that("test asPath", {
 
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
-  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), cacheRepo = tmpdir))
-  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"), cacheRepo = tmpdir))
+  a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
+  a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
   a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
-                               cacheRepo = tmpdir))
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))
@@ -310,11 +364,11 @@ test_that("test asPath", {
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
   a1 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
-                               cacheRepo = tmpdir))
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
   a2 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
-                               cacheRepo = tmpdir))
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
   a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
-                               cacheRepo = tmpdir))
+                               digestPathContent = FALSE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))
@@ -356,6 +410,29 @@ test_that("test pipe for Cache", {
     prod(., 16) %>%
     Cache(cacheRepo = tmpdir, notOlderThan = Sys.time())
   expect_false(isTRUE(all.equal(d1, d2)))
+
+
+  # New Pipe
+  clearCache(tmpdir)
+  a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
+  b <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
+  d <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
+  expect_true(all.equal(b, d))
+  expect_false(isTRUE(all.equal(a, b)))
+  d1 <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 6) %>% mean() %>% prod(., 6) # nolint
+  expect_false(isTRUE(all.equal(d1, d)))
+
+  d1 <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 16) # nolint
+  expect_false(isTRUE(all.equal(d1, d)))
+
+  d2 <- Cache(cacheRepo = tmpdir, notOlderThan = Sys.time()) %C%
+    rnorm(10, 16) %>%
+    mean() %>%
+    prod(., 16)
+
+  expect_false(isTRUE(all.equal(d1, d2)))
+
+
 })
 
 test_that("test quoted FUN in Cache", {

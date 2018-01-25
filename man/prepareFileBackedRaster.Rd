@@ -4,19 +4,12 @@
 \alias{.prepareFileBackedRaster}
 \title{Copy the file-backing of a file-backed Raster* object}
 \usage{
-.prepareFileBackedRaster(obj, repoDir = NULL,
-  compareRasterFileLength = 1e+06, ...)
+.prepareFileBackedRaster(obj, repoDir = NULL)
 }
 \arguments{
 \item{obj}{The raster object to save to the repository.}
 
 \item{repoDir}{Character denoting an existing directory in which an artifact will be saved.}
-
-\item{compareRasterFileLength}{Numeric. Optional. When there are Rasters, that
-have file-backed storage, this is passed to the length arg in \code{digest}
-when determining if the Raster file is already in the database.
-Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
 
 \item{...}{passed to \code{archivist::saveToRepo}}
 }
@@ -32,6 +25,22 @@ mechanisms in R don't work for saving, copying and assigning.
 This function creates an explicit file copy of the file that is backing the raster,
 and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
 to the new file.
+}
+\examples{
+library(raster)
+archivist::createLocalRepo(tempdir())
+
+r <- raster(extent(0,10,0,10), vals = 1:100)
+
+# write to disk manually -- will be in tempdir()
+r <- writeRaster(r, file = tempfile())
+
+# copy it to the cache repository
+r <- .prepareFileBackedRaster(r, tempdir())
+
+r # now in "rasters" subfolder of tempdir()
+
+
 }
 \author{
 Eliot McIntire

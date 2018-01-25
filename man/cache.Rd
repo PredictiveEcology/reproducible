@@ -8,14 +8,14 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
-  userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
+  userTags = c(), digestPathContent = TRUE, omitArgs = NULL,
   classOptions = list(), debugCache = character(), sideEffect = FALSE,
   makeCopy = FALSE, quick = FALSE)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   compareRasterFileLength = 1e+06, userTags = c(),
-  digestPathContent = FALSE, omitArgs = NULL, classOptions = list(),
+  digestPathContent = TRUE, omitArgs = NULL, classOptions = list(),
   debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = FALSE)
 }
@@ -54,7 +54,7 @@ Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
 
 \item{digestPathContent}{Logical. Should arguments that are of class \code{Path}
 (see examples below) have their name digested
-(\code{FALSE}; default), or their file contents (\code{TRUE}).}
+(\code{FALSE}), or their file contents (\code{TRUE}; default).}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
@@ -198,6 +198,7 @@ Subsequent calls to this function
 library(raster)
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
 
 # Basic use
 ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)

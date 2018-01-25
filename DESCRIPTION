@@ -10,8 +10,8 @@ Description: Built on top of 'git2r' and 'archivist', this package aims at
 URL: 
     https://predictiveecology.github.io/reproducible/,
     https://github.com/PredictiveEcology/reproducible
-Date: 2017-12-08
-Version: 0.1.3.9008
+Date: 2018-01-24
+Version: 0.1.3.9016
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre")),
@@ -21,9 +21,10 @@ Authors@R: c(
     role = "cph")
     )
 Depends:
-    R (>= 3.3.3)
+    R (>= 3.3.0)
 Imports:
     archivist (>= 2.1.2),
+    crayon,
     data.table (>= 1.10.4),
     devtools,
     digest,
@@ -58,4 +59,6 @@ Collate:
     'git.R'
     'helpers.R'
     'packages.R'
+    'pipe.R'
     'reproducible-package.R'
+    'search.R'

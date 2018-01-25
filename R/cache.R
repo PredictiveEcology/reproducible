@@ -158,7 +158,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param digestPathContent Logical. Should arguments that are of class \code{Path}
 #'                          (see examples below) have their name digested
-#'                          (\code{FALSE}; default), or their file contents (\code{TRUE}).
+#'                          (\code{FALSE}), or their file contents (\code{TRUE}; default).
 #'
 #' @return As with \code{\link[archivist]{cache}}, returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
@@ -195,7 +195,7 @@ setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = FALSE, omitArgs = NULL,
+           userTags = c(), digestPathContent = TRUE, omitArgs = NULL,
            classOptions = list(),
            debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {
@@ -231,7 +231,7 @@ setMethod(
         functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
 
         # i.e., if it did extract the name
-        if (functionDetails$functionName != "internal") {
+        if (!is.na(functionDetails$functionName)) {
           if (is.primitive(FUN)) {
             tmpl <- list(...)
           } else {
@@ -285,8 +285,10 @@ setMethod(
 
     tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting  # nolint
 
+    # This is for Pipe operator -- needs special consideration
     if (!is(FUN, "function")) {
-      if (any(startsWith(as.character(sys.calls()), "function_list[[k"))) {
+      scalls <- sys.calls()
+      if (any(startsWith(as.character(scalls), "function_list[[k"))) {
         srch <- search()
         whereRepro <- which(endsWith(srch, "reproducible")) - 1
         if (whereRepro > 1) {
@@ -310,6 +312,8 @@ setMethod(
              "Did you write it in the form: ",
              "Cache(function, functionArguments)?")
       }
+    } else {
+      scalls <- NULL
     }
 
     if (missing(notOlderThan)) notOlderThan <- NULL
@@ -325,7 +329,7 @@ setMethod(
       cacheRepo <- checkPath(cacheRepo, create = TRUE)
     }
 
-    if (sideEffect != FALSE) if(isTRUE(sideEffect)) {sideEffect <- cacheRepo}
+    if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
       suppressWarnings(archivist::createLocalRepo(cacheRepo))
@@ -333,12 +337,11 @@ setMethod(
 
     # List file prior to cache
     if (sideEffect != FALSE) {
-      if(isTRUE(sideEffect)) {
-        priorRepo <-  list.files(cacheRepo, full.names = TRUE)
+      if (isTRUE(sideEffect)) {
+        priorRepo <- list.files(cacheRepo, full.names = TRUE)
       } else {
-        priorRepo <-  list.files(sideEffect, full.names = TRUE)
+        priorRepo <- list.files(sideEffect, full.names = TRUE)
       }
-
     }
 
     # remove things in the Cache call that are not relevant to Caching
@@ -378,7 +381,7 @@ setMethod(
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-        output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+        output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
         # Class-specific message
         .cacheMessage(output, functionDetails$functionName)
@@ -492,10 +495,10 @@ setMethod(
     attr(output, "call") <- ""
 
     if (sideEffect != FALSE) {
-      if(isTRUE(sideEffect)) {
-        postRepo <-  list.files(cacheRepo, full.names = TRUE)
+      if (isTRUE(sideEffect)) {
+        postRepo <- list.files(cacheRepo, full.names = TRUE)
       } else {
-        postRepo <-  list.files(sideEffect, full.names = TRUE)
+        postRepo <- list.files(sideEffect, full.names = TRUE)
       }
       dwdFlst <- setdiff(postRepo, priorRepo)
       if (length(dwdFlst > 0)) {
@@ -512,7 +515,7 @@ setMethod(
           })
         }
 
-        cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep= "/")
+        cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep = "/")
         attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
 
         if (makeCopy) {
@@ -531,6 +534,10 @@ setMethod(
     # Can make new methods by class to add tags to outputs
     outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
                                      preDigestByClass)
+
+
+    # extract other function names that are not the ones the focus of the Cache call
+    otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
 
     # This is for write conflicts to the SQLite database
     #   (i.e., keep trying until it is written)
@@ -564,9 +571,11 @@ setMethod(
     while (!written) {
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
-                    paste0("function:", functionDetails$functionName),
+                    if (!is.na(functionDetails$functionName))
+                      paste0("function:", functionDetails$functionName),
                     paste0("object.size:", objSize),
-                    paste0("accessed:", Sys.time()))
+                    paste0("accessed:", Sys.time()),
+                    paste0("otherFunctions:", otherFns))
       saved <- suppressWarnings(try(
         saveToLocalRepo(outputToSave, repoDir = cacheRepo, artifactName = "Cache",
                         archiveData = FALSE, archiveSessionInfo = FALSE,
@@ -615,119 +624,3 @@ setMethod(
     Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
 })
-
-
-#' Pipe that is Cache-aware
-#'
-#' A pipe that works with Cache. The code for this is based on a verbatim copy from
-#' \url{https://github.com/tidyverse/magrittr/blob/master/R/pipe.R} on Sep 8, 2017,
-#' based on commit 81c2e2410ebb7c560a2b4a8384ef5c20946373c3, with enhancements
-#' to make it Cache-aware.
-#' This version is a drop-in replacement for \code{\link[magrittr]{\%>\%}} and will
-#' work identically when there is no Cache. To use this, simply add \code{\%>\% Cache()}
-#' to a pipe sequence. This can be in the middle or at the end. See examples. It has
-#' been tested with multiple Cache calls within the same (long) pipe.
-#'
-#' If there is a Cache in the pipe,
-#' the behaviour of the pipe is altered. In the magrittr pipe, each step of the
-#' pipe chain is evaluated one at a time, in sequence. This will not allow any useful
-#' type of caching. Here, if there is a call to \code{Cache} in the pipe sequence,
-#' the entire pipe chain before the call to \code{Cache} will have its arguments
-#' examined and digested. This digest is compared to the cache repository database.
-#' If there is an identical pipe sequence in the Cache respository, then it will return
-#' the final result of the entire pipe up to the Cache call. If there is no
-#' identical copy in the cache repository, then it will evaluate the pipe sequence as per
-#' normal, caching the return value at the point of the \code{Cache} call
-#' into the cache repository for later use.
-#'
-#' @name pipe
-#' @importFrom utils getFromNamespace
-#' @inheritParams magrittr::`%>%`
-#' @importFrom magrittr freduce
-#' @export
-#' @rdname pipe
-#' @examples
-#' tmpdir <- file.path(tempdir(), "testCache")
-#' checkPath(tmpdir, create = TRUE)
-#' a <- rnorm(10, 16) %>% mean() %>% prod(., 6)
-#' b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
-#' d <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
-#' all.equal(b,d) # TRUE
-#' all.equal(a,d) # different because 'a' uses a unique rnorm, 'd' uses the Cached rnorm
-#'
-#' # Can put Cache in the middle of a pipe -- f2 and f4 use "cached result" until Cache
-#' f1 <- rnorm(10, 16) %>% mean() %>% prod(., runif(1)) %>% Cache(cacheRepo = tmpdir)
-#' f2 <- rnorm(10, 16) %>% mean() %>% prod(., runif(1)) %>% Cache(cacheRepo = tmpdir)
-#' f3 <- rnorm(10, 16) %>% mean() %>% Cache(cacheRepo = tmpdir) %>% prod(., runif(1))
-#' f4 <- rnorm(10, 16) %>% mean() %>% Cache(cacheRepo = tmpdir) %>% prod(., runif(1))
-#' all.equal(f1, f2) # TRUE because the runif is before the Cache
-#' all.equal(f3, f4) # different because the runif is after the Cache
-#'
-#' unlink(tmpdir, recursive = TRUE)
-#'
-`%>%` <- function(lhs, rhs) {
-  # magrittr code below
-  parent <- parent.frame()
-  env <- new.env(parent = parent)
-  mc <- match.call()
-  chain_parts <- getFromNamespace("split_chain", ns = "magrittr")(mc, env = env) # nolint
-  pipes <- chain_parts[["pipes"]]
-  rhss <- chain_parts[["rhss"]]
-  lhs <- chain_parts[["lhs"]]
-  env[["_function_list"]] <- lapply(1:length(rhss), function(i) {
-    getFromNamespace("wrap_function", ns = "magrittr")(rhss[[i]], pipes[[i]], parent)
-  })
-  env[["_fseq"]] <- `class<-`(eval(quote(function(value) {
-    freduce(value, `_function_list`)
-  }), env, env), c("fseq", "function"))
-  env[["freduce"]] <- freduce
-  if (getFromNamespace("is_placeholder", ns = "magrittr")(lhs)) {
-    env[["_fseq"]]
-  } else {
-
-    # reproducible package code here until end of if statement
-    whCache <- startsWith(as.character(rhss), "Cache")
-
-    if (any(whCache)) {
-      if (sum(whCache) > 1) whCache[-min(which(whCache))] <- FALSE
-      whPreCache <- whCache
-      whPreCache[seq(which(whCache), length(whCache))] <- TRUE
-
-      cacheCall <- match.call(Cache, rhss[whCache][[1]])
-      cacheArgs <- lapply(cacheCall, function(x) x)
-      cacheArgs <- cacheArgs[names(cacheArgs) != "FUN"][-1] # remove FUN and Cache (i.e., the -1)
-
-      args <- list(eval(lhs[[1]]),
-        ._pipe = parse(text = paste(c(lhs, rhss[!whPreCache]), collapse = " %>% ")),
-        ._pipeFn = as.character(lhs[[1]]),
-        ._lhs = quote(lhs),
-        ._rhss = quote(rhss[!whPreCache]),
-        ._envir = parent)
-      args <- append(args, lapply(cacheArgs, eval, envir = parent, enclos = parent))
-
-      result <- withVisible(do.call("Cache", args))
-
-      if (!identical(whPreCache, whCache)) {
-        # If Cache call is not at the end of the pipe
-        postCacheCall <- parse(text = paste(c(result$value, rhss[(!whCache) & whPreCache]),
-                                            collapse = " %>% "))
-        result <- withVisible(eval(postCacheCall, envir = parent, enclos = parent))
-      }
-    } else {
-      # end reproducible package code
-
-      # magrittr code below
-      env[["_lhs"]] <- eval(lhs, parent, parent)
-      result <- withVisible(eval(quote(`_fseq`(`_lhs`)), env, env))
-    }
-
-    if (getFromNamespace("is_compound_pipe", ns = "magrittr")(pipes[[1L]])) {
-      eval(call("<-", lhs, result[["value"]]), parent,
-           parent)
-    } else {
-      if (result[["visible"]])
-        result[["value"]]
-      else invisible(result[["value"]])
-    }
-  }
-}
