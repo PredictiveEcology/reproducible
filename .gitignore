@@ -40,3 +40,9 @@
 *.vrb
 *.xdy
 *.tdo
+
+src-i386/
+
+src-x64/
+
+src/
