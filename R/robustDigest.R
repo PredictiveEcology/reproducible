@@ -240,16 +240,20 @@ setMethod(
   signature = "Raster",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (is(object, "RasterStack")) {
-      # have to do one file at a time with Stack
-      dig <- suppressWarnings(
-             lapply(object@layers, function(yy) {
-               .digestRaster(yy, compareRasterFileLength, algo)
-             })
-      )
+    if (digestPathContent) {
+      if (is(object, "RasterStack")) {
+        # have to do one file at a time with Stack
+        dig <- suppressWarnings(
+               lapply(object@layers, function(yy) {
+                 .digestRaster(yy, compareRasterFileLength, algo)
+               })
+        )
+      } else {
+        # Brick and Layers have only one file
+        dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
+      }
     } else {
-      # Brick and Layers have only one file
-      dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
+      dig <- object
     }
     return(fastdigest::fastdigest(dig))
 })

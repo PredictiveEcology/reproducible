@@ -196,6 +196,55 @@ test_that("test memory backed raster robustDigest", {
   dig1 <- reproducible:::.robustDigest(b1)
 
   expect_identical(dig, dig1)
+
+})
+
+
+
+test_that("test digestPathContent", {
+
+  library(raster)
+  tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  ### Make raster using Cache
+  set.seed(123)
+  r1 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+  #r2 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+  tmpFile1 <- tempfile(fileext = ".tif")
+  #tmpFile2 <- tempfile()
+  r1 <- writeRaster(r1, filename = tmpFile1, overwrite = TRUE)
+  #r2 <- writeRaster(r2, filename = tmpFile2, overwrite = TRUE)
+  quickFun <- function(rasFile) {
+    ras <- raster(rasFile)
+    ras[sample(ncell(ras), size = 1)]
+  }
+  fn <- filename(r1)
+  out1a <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir)
+  out1b <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, digestPathContent = FALSE)
+  r1[4] <- r1[4] + 1
+  r1 <- writeRaster(r1, filename = tmpFile1, overwrite = TRUE)
+  mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
+                                          cacheRepo = tmpdir, digestPathContent = FALSE))
+  expect_true(grepl("loading cached result from previous quickFun call\\.", mess1 ))
+  mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
+                                          cacheRepo = tmpdir, digestPathContent = TRUE))
+  expect_null(mess1)
+
+  # Using Raster directly -- not file
+  quickFun <- function(ras) {
+    ras[sample(ncell(ras), size = 1)]
+  }
+  out1a <- Cache(quickFun, r1, cacheRepo = tmpdir)
+  out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, digestPathContent = FALSE)
+  r1[4] <- r1[4] + 1
+  r1 <- writeRaster(r1, filename = tmpFile1, overwrite = TRUE)
+  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, digestPathContent = FALSE))
+  expect_true(grepl("loading cached result from previous quickFun call\\.", mess1 ))
+  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, digestPathContent = TRUE))
+  expect_null(mess1)
+
+
 })
 
 test_that("test date-based cache removal", {
