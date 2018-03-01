@@ -62,3 +62,4 @@ Collate:
     'pipe.R'
     'reproducible-package.R'
     'search.R'
+    'zzz.R'

@@ -195,10 +195,9 @@ setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = TRUE, omitArgs = NULL,
-           classOptions = list(),
-           debugCache = character(),
-           sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {
+           userTags = c(), digestPathContent = !getOption("reproducible.quick"),
+           omitArgs = NULL, classOptions = list(), debugCache = character(),
+           sideEffect = FALSE, makeCopy = FALSE, quick = getOption("reproducible.quick")) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
 
