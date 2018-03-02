@@ -216,7 +216,7 @@ setMethod(
     } else {
       cacheRepo <- checkPath(cacheRepo, create = TRUE)
     }
-    
+
     # memoised part -- NA comes from next few lines -- if quick is NA, then it is a memoise event
     if (!is.na(quick)) {
       if (getOption("reproducible.useMemoise")) {
@@ -247,7 +247,7 @@ setMethod(
                                      tags = c(paste0("MemAccessed:", Sys.time())))
               )
               .cacheMessage("", paste("Memoised",rawFunName))
-            } 
+            }
           }
           return(out)
         }
@@ -412,7 +412,7 @@ setMethod(
     # compare outputHash to existing Cache record
     localTags <- showLocalRepo(cacheRepo, "tags")
     isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE] # nolint
-    
+
     # If it is in the existing record:
     if (NROW(isInRepo) > 0) {
       lastEntry <- max(isInRepo$createdDate)
@@ -422,7 +422,7 @@ setMethod(
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
         output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
-        
+
         # Class-specific message
         .cacheMessage(output, functionDetails$functionName)
 
@@ -506,7 +506,7 @@ setMethod(
             output <- .debugCache(output, preDigest, ...)
         }
         attr(output, "newCache") <- FALSE
-        
+
         return(output)
       }
     } else {
@@ -520,11 +520,11 @@ setMethod(
             older <- attr(similarObjs, "debugCache2")
             if (!is.null(older)) {
               setdiff(preDigest, older)
-              
+
             }
-            
+
           }
-        
+
       }
     }
 
@@ -534,7 +534,7 @@ setMethod(
     } else {
       output <- do.call(FUN, originalDots)
     }
-    
+
     # Delete previous version if notOlderThan violated --
     #   but do this AFTER new run on previous line, in case function call
     #   makes it crash, or user interrupts long function call and wants
@@ -544,10 +544,10 @@ setMethod(
       if (notOlderThan >= lastEntry) {
         browser()
         fn <- unique(objsDT[tagKey == "memoisedFunction", tagValue])
-        forgetResults <- lapply(fn, function(f) 
+        forgetResults <- lapply(fn, function(f)
           forget(.memoisedCacheFuns[[f]])
-        ) 
-        
+        )
+
         suppressWarnings(rmFromLocalRepo(isInRepo$artifact[lastOne], repoDir = cacheRepo))
       }
     }
