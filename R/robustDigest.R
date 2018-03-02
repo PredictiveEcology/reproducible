@@ -104,7 +104,7 @@
 setGeneric(".robustDigest", function(object, objects,
                                     compareRasterFileLength = 1e6,
                                     algo = "xxhash64",
-                                    digestPathContent = FALSE,
+                                    digestPathContent = !getOption("reproducible.quick"),
                                     classOptions = list()) {
   standardGeneric(".robustDigest")
 })
@@ -159,24 +159,28 @@ setMethod(
   signature = "character",
   definition = function(object, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (any(unlist(lapply(object, dir.exists)))) {
-      unlist(lapply(object, function(x) {
-        if (dir.exists(x)) {
-          fastdigest::fastdigest(basename(x))
-        } else {
-          fastdigest::fastdigest(x)
-        }
-      }))
-    } else if (any(unlist(lapply(object, file.exists)))) {
-      unlist(lapply(object, function(x) {
-        if (file.exists(x)) {
-          digest::digest(file = x, length = compareRasterFileLength, algo = algo)
-        } else {
-          fastdigest::fastdigest(x)
-        }
-      }))
+    if (digestPathContent) {
+      if (any(unlist(lapply(object, dir.exists)))) {
+        unlist(lapply(object, function(x) {
+          if (dir.exists(x)) {
+            fastdigest(basename(x))
+          } else {
+            fastdigest(x)
+          }
+        }))
+      } else if (any(unlist(lapply(object, file.exists)))) {
+        unlist(lapply(object, function(x) {
+          if (file.exists(x)) {
+            digest::digest(file = x, length = compareRasterFileLength, algo = algo)
+          } else {
+            fastdigest(x)
+          }
+        }))
+      } else {
+        fastdigest(object)
+      }
     } else {
-      fastdigest::fastdigest(object)
+      fastdigest(object)
     }
 })
 
@@ -199,11 +203,11 @@ setMethod(
           digest::digest(file = x, length = compareRasterFileLength, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          fastdigest::fastdigest(basename(x))
+          fastdigest(basename(x))
         }
       })
     } else {
-      fastdigest::fastdigest(basename(object))
+      fastdigest(basename(object))
     }
 })
 
@@ -255,7 +259,7 @@ setMethod(
     } else {
       dig <- object
     }
-    return(fastdigest::fastdigest(dig))
+    return(fastdigest(dig))
 })
 
 #' @rdname robustDigest
@@ -281,5 +285,5 @@ setMethod(
       }
     }
 
-    return(fastdigest::fastdigest(aaa))
+    return(fastdigest(aaa))
   })

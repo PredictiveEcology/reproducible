@@ -7,7 +7,8 @@
   opts <- options()
   opts.reproducible <- list( # nolint
     reproducible.cachePath = file.path(.reproducibleTempDir, "cache"),
-    reproducible.digestPathContent = !reproducible.quick,
+    #reproducible.digestPathContent = !reproducible.quick,
+    reproducible.useMemoise = TRUE,
     reproducible.quick = reproducible.quick
   )
   toset <- !(names(opts.reproducible) %in% names(opts))
