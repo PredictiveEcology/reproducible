@@ -2,6 +2,9 @@ test_that("test cached downloads", {
   outdir <- file.path(tempdir(), "test-cached-downloads")
   expect_true(dir.create(outdir))
 
+  on.exit({
+    unlink(outdir, recursive = TRUE)
+  })
   setwd(outdir)
   url <- "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/archive/vector/cli_itc_50k/land_use/L040J03.zip" # nolint
 

@@ -1,6 +1,6 @@
 test_that("git-related functions work", {
-  skip_on_cran()
-
+  skip_on_os("windows")
+  skip_on_os("mac")
   gitConfigOK <- tryCatch(.checkGitConfig(), error = function(e) FALSE)
 
   ## don't bother running checks if they'll all fail due to .gitconfig SSH issue

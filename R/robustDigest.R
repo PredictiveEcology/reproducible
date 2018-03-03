@@ -42,8 +42,11 @@
 #' @param object an object to digest.
 #'
 #' @param objects Optional character vector indicating which objects are to
-#'                be considered while making digestible. This is only relevant
-#'                if the object being passed is an environment or list or the like.
+#'                be considered while making digestible. This argument is not used
+#'                in the default cases; the only known method that uses this
+#'                in the default cases; the only known method that uses this
+#'                argument is the \code{simList} class from \code{SpaDES.core}.
+#'
 #' @inheritParams Cache
 #'
 #' @return A hash i.e., digest of the object passed in.
@@ -104,7 +107,7 @@
 setGeneric(".robustDigest", function(object, objects,
                                     compareRasterFileLength = 1e6,
                                     algo = "xxhash64",
-                                    digestPathContent = FALSE,
+                                    digestPathContent = !getOption("reproducible.quick"),
                                     classOptions = list()) {
   standardGeneric(".robustDigest")
 })
@@ -114,7 +117,7 @@ setGeneric(".robustDigest", function(object, objects,
 setMethod(
   ".robustDigest",
   signature = "ANY",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     fastdigest(object)
 })
@@ -127,7 +130,7 @@ setOldClass("cluster")
 setMethod(
   ".robustDigest",
   signature = "cluster",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     fastdigest(NULL)
 })
@@ -137,7 +140,7 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "function",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     fastdigest(format(object))
 })
@@ -147,7 +150,7 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "expression",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
     fastdigest(format(object))
 })
@@ -157,26 +160,30 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "character",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (any(unlist(lapply(object, dir.exists)))) {
-      unlist(lapply(object, function(x) {
-        if (dir.exists(x)) {
-          fastdigest::fastdigest(basename(x))
-        } else {
-          fastdigest::fastdigest(x)
-        }
-      }))
-    } else if (any(unlist(lapply(object, file.exists)))) {
-      unlist(lapply(object, function(x) {
-        if (file.exists(x)) {
-          digest::digest(file = x, length = compareRasterFileLength, algo = algo)
-        } else {
-          fastdigest::fastdigest(x)
-        }
-      }))
+  if (digestPathContent) {
+      if (any(unlist(lapply(object, dir.exists)))) {
+        unlist(lapply(object, function(x) {
+          if (dir.exists(x)) {
+            fastdigest(basename(x))
+          } else {
+            fastdigest(x)
+          }
+        }))
+      } else if (any(unlist(lapply(object, file.exists)))) {
+        unlist(lapply(object, function(x) {
+          if (file.exists(x)) {
+            digest::digest(file = x, length = compareRasterFileLength, algo = algo)
+          } else {
+            fastdigest(x)
+          }
+        }))
+      } else {
+        fastdigest(object)
+      }
     } else {
-      fastdigest::fastdigest(object)
+      fastdigest(object)
     }
 })
 
@@ -185,9 +192,9 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Path",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (digestPathContent) {
+  if (digestPathContent) {
       lapply(object, function(x) {
         isExistentFile <- FALSE
         if (file.exists(x)) {
@@ -199,11 +206,11 @@ setMethod(
           digest::digest(file = x, length = compareRasterFileLength, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          fastdigest::fastdigest(basename(x))
+          fastdigest(basename(x))
         }
       })
     } else {
-      fastdigest::fastdigest(basename(object))
+      fastdigest(basename(object))
     }
 })
 
@@ -212,9 +219,9 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "environment",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    .robustDigest(as.list(object, all.names = TRUE),
+  .robustDigest(as.list(object, all.names = TRUE), objects = objects,
                  compareRasterFileLength = compareRasterFileLength,
                  algo = algo, digestPathContent = digestPathContent)
 })
@@ -224,10 +231,10 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "list",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    lapply(.sortDotsUnderscoreFirst(object), function(x) {
-      .robustDigest(object = x,
+  lapply(.sortDotsUnderscoreFirst(object), function(x) {
+      .robustDigest(object = x, objects = objects,
                    compareRasterFileLength = compareRasterFileLength,
                    algo = algo, digestPathContent = digestPathContent)
     })
@@ -238,20 +245,24 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Raster",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (is(object, "RasterStack")) {
-      # have to do one file at a time with Stack
-      dig <- suppressWarnings(
-             lapply(object@layers, function(yy) {
-               .digestRaster(yy, compareRasterFileLength, algo)
-             })
-      )
+  if (digestPathContent) {
+      if (is(object, "RasterStack")) {
+        # have to do one file at a time with Stack
+        dig <- suppressWarnings(
+               lapply(object@layers, function(yy) {
+                 .digestRaster(yy, compareRasterFileLength, algo)
+               })
+        )
+      } else {
+        # Brick and Layers have only one file
+        dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
+      }
     } else {
-      # Brick and Layers have only one file
-      dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
+      dig <- object
     }
-    return(fastdigest::fastdigest(dig))
+    return(fastdigest(dig))
 })
 
 #' @rdname robustDigest
@@ -259,9 +270,9 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Spatial",
-  definition = function(object, compareRasterFileLength, algo, digestPathContent,
+  definition = function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (is(object, "SpatialPoints")) {
+  if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
     } else {
       aaa <- object
@@ -277,5 +288,5 @@ setMethod(
       }
     }
 
-    return(fastdigest::fastdigest(aaa))
+    return(fastdigest(aaa))
   })

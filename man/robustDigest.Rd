@@ -16,44 +16,67 @@
 \title{Create reproducible digests of objects in R}
 \usage{
 .robustDigest(object, objects, compareRasterFileLength = 1e+06,
-  algo = "xxhash64", digestPathContent = FALSE, classOptions = list())
+  algo = "xxhash64", digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{ANY}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{ANY}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{cluster}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{cluster}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{`function`}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{`function`}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{expression}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{expression}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{character}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{character}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{Path}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{Path}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{environment}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{environment}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{list}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{list}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{Raster}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{Raster}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 
-\S4method{.robustDigest}{Spatial}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{Spatial}(object, objects,
+  compareRasterFileLength = 1e+06, algo = "xxhash64",
+  digestPathContent = !getOption("reproducible.quick"),
+  classOptions = list())
 }
 \arguments{
 \item{object}{an object to digest.}
 
 \item{objects}{Optional character vector indicating which objects are to
-be considered while making digestible. This is only relevant
-if the object being passed is an environment or list or the like.}
+be considered while making digestible. This argument is not used
+in the default cases; the only known method that uses this
+in the default cases; the only known method that uses this
+argument is the \code{simList} class from \code{SpaDES.core}.}
 
 \item{compareRasterFileLength}{Numeric. Optional. When there are Rasters, that
 have file-backed storage, this is passed to the length arg in \code{digest}

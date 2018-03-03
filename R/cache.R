@@ -1,5 +1,5 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue"))
+  utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue", ".SD", "tag"))
 }
 
 ################################################################################
@@ -183,6 +183,7 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom digest digest
+#' @importFrom data.table setDT
 #' @importFrom fastdigest fastdigest
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
@@ -195,10 +196,9 @@ setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = TRUE, omitArgs = NULL,
-           classOptions = list(),
-           debugCache = character(),
-           sideEffect = FALSE, makeCopy = FALSE, quick = FALSE) {
+           userTags = c(), digestPathContent = !getOption("reproducible.quick"),
+           omitArgs = NULL, classOptions = list(), debugCache = character(),
+           sideEffect = FALSE, makeCopy = FALSE, quick = getOption("reproducible.quick")) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
 
@@ -211,6 +211,53 @@ setMethod(
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick) {
     tmpl <- list(...)
+    # get cacheRepo if not supplied
+    if (is.null(cacheRepo)) {
+      cacheRepo <- .checkCacheRepo(tmpl, create = TRUE)
+    } else {
+      cacheRepo <- checkPath(cacheRepo, create = TRUE)
+    }
+    
+    # memoised part -- NA comes from next few lines -- if quick is NA, then it is a memoise event
+    # if (!is.na(quick)) {
+    #   if (getOption("reproducible.useMemoise")) {
+    #     if (quick) {
+    #       rawFunName <- deparse(substitute(FUN, env = whereInStack("Cache")))
+    #       funName <- paste0("Cache_", rawFunName)
+    #       if (!is.memoised(.memoisedCacheFuns[[funName]])) {
+    #         .memoisedCacheFuns[[funName]] <- CacheMem
+    #       }
+    #       if (!is.null(notOlderThan)) {
+    #         if (Sys.time() > notOlderThan) {
+    #           forget(.memoisedCacheFuns[[funName]])
+    #         }
+    #       }
+    #       mc <- match.call(expand.dots = TRUE)
+    #       mc[[1]] <- as.name(funName)
+    #       mc <- as.list(mc)
+    #       mc$quick <- NA
+    #       mc[[1]] <- NULL
+    #       mc$userTags <- c(paste0("memoisedFunction:",funName), mc$userTags)
+    #       out <- do.call(.memoisedCacheFuns[[funName]], mc)#)
+    #       if (!is.null(out)) {
+    #         if (!attr(out, "newCache")) {
+    #           md5Hash <- searchInLocalRepo(pattern = attr(out, "tags"), repoDir = cacheRepo)
+    #           suppressWarnings( # warning is about time zone
+    #             archivist::addTagsRepo(md5Hash,
+    #                                  repoDir = cacheRepo,
+    #                                  tags = c(paste0("MemAccessed:", Sys.time())))
+    #           )
+    #           .cacheMessage("", paste("Memoised",rawFunName))
+    #         }
+    #       }
+    #       return(out)
+    #     }
+    #   }
+    # } else {
+    #   # if it was NA, then it means TRUE, but memoised too
+    #   quick <- TRUE
+    # }
+
     originalDots <- tmpl
     isPipe <- isTRUE(!is.null(tmpl$._pipe))
 
@@ -322,13 +369,6 @@ setMethod(
     # userTags added based on object class
     userTags <- c(userTags, unlist(lapply(tmpl, .tagsByClass)))
 
-    # get cacheRepo if not supplied
-    if (is.null(cacheRepo)) {
-      cacheRepo <- .checkCacheRepo(tmpl, create = TRUE)
-    } else {
-      cacheRepo <- checkPath(cacheRepo, create = TRUE)
-    }
-
     if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
@@ -373,7 +413,7 @@ setMethod(
     # compare outputHash to existing Cache record
     localTags <- showLocalRepo(cacheRepo, "tags")
     isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE] # nolint
-
+    
     # If it is in the existing record:
     if (NROW(isInRepo) > 0) {
       lastEntry <- max(isInRepo$createdDate)
@@ -383,6 +423,7 @@ setMethod(
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
         output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+        
         # Class-specific message
         .cacheMessage(output, functionDetails$functionName)
 
@@ -465,7 +506,30 @@ setMethod(
           if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
             output <- .debugCache(output, preDigest, ...)
         }
+        attr(output, "newCache") <- FALSE
+        
         return(output)
+      }
+    } else {
+      # find similar -- in progress
+      if (FALSE) {
+        if (!identical(debugCache, FALSE)) {
+          setDT(localTags)
+          if (!is.null(userTags)) {
+            similar <- localTags[all(userTags %in% tag), .SD, by = artifact]
+            if (NROW(similar)) {
+              similarObjs <- loadFromLocalRepoMem(similar[1,artifact],
+                                             repoDir = cacheRepo, value = TRUE)
+              older <- attr(similarObjs, "debugCache2")
+              if (!is.null(older)) {
+                return(setdiff(preDigest, older))
+
+              }
+
+            }
+          }
+
+        }
       }
     }
 
@@ -475,7 +539,7 @@ setMethod(
     } else {
       output <- do.call(FUN, originalDots)
     }
-
+    
     # Delete previous version if notOlderThan violated --
     #   but do this AFTER new run on previous line, in case function call
     #   makes it crash, or user interrupts long function call and wants
@@ -483,7 +547,7 @@ setMethod(
     if (nrow(isInRepo) > 0) {
       # flush it if notOlderThan is violated
       if (notOlderThan >= lastEntry) {
-        suppressWarnings(rmFromLocalRepo(isInRepo$artifact[lastOne], repoDir = cacheRepo))
+        clearCache(userTags = isInRepo$artifact[lastOne], x = cacheRepo)
       }
     }
 
@@ -492,6 +556,7 @@ setMethod(
     if (isNullOutput) output <- "NULL"
 
     attr(output, "tags") <- paste0("cacheId:", outputHash)
+    attr(output, "newCache") <- TRUE
     attr(output, "call") <- ""
 
     if (sideEffect != FALSE) {
@@ -557,6 +622,7 @@ setMethod(
       }
       attr(outputToSave, "tags") <- attr(output, "tags")
       attr(outputToSave, "call") <- attr(output, "call")
+      attr(outputToSave, "newCache") <- attr(output, "newCache")
       if (isS4(FUN))
         attr(outputToSave, "function") <- attr(output, "function")
       output <- outputToSave
@@ -624,3 +690,6 @@ setMethod(
     Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
 })
+
+# .memoisedCacheFuns <- new.env(parent = asNamespace("reproducible"))
+# CacheMem <- memoise::memoise(Cache)
