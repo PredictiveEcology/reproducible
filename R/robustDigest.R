@@ -252,12 +252,12 @@ setMethod(
         # have to do one file at a time with Stack
         dig <- suppressWarnings(
                lapply(object@layers, function(yy) {
-                 .digestRaster(yy, objects, compareRasterFileLength, algo)
+                 .digestRaster(yy, compareRasterFileLength, algo)
                })
         )
       } else {
         # Brick and Layers have only one file
-        dig <- suppressWarnings(.digestRaster(object, objects, compareRasterFileLength, algo))
+        dig <- suppressWarnings(.digestRaster(object, compareRasterFileLength, algo))
       }
     } else {
       dig <- object

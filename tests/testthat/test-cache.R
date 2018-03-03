@@ -60,6 +60,8 @@ test_that("test file-backed raster caching", {
     nOT <- Sys.time() - 100
   }
 
+  attr(a1, "newCache") <- NULL
+  attr(a2, "newCache") <- NULL
   # test that they are identical
   expect_equal(a1, a2)
 
@@ -447,21 +449,19 @@ test_that("test pipe for Cache", {
   a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
   b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
   d <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
-  attr(b, "newCache") <- NULL
-  attr(d, "newCache") <- NULL
-  expect_true(all.equal(b, d))
-  expect_false(isTRUE(all.equal(a, b)))
+  expect_true(all.equalWONewCache(b, d))
+  expect_false(isTRUE(all.equalWONewCache(a, b)))
   d1 <- rnorm(10, 6) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
-  expect_false(isTRUE(all.equal(d1, d)))
+  expect_false(isTRUE(all.equalWONewCache(d1, d)))
 
   d1 <- rnorm(10, 16) %>% mean() %>% prod(., 16) %>% Cache(cacheRepo = tmpdir) # nolint
-  expect_false(isTRUE(all.equal(d1, d)))
+  expect_false(isTRUE(all.equalWONewCache(d1, d)))
 
   d2 <- rnorm(10, 16) %>%
     mean() %>%
     prod(., 16) %>%
     Cache(cacheRepo = tmpdir, notOlderThan = Sys.time())
-  expect_false(isTRUE(all.equal(d1, d2)))
+  expect_false(isTRUE(all.equalWONewCache(d1, d2)))
 
 
   # New Pipe
@@ -469,20 +469,20 @@ test_that("test pipe for Cache", {
   a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
   b <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
   d <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
-  expect_true(all.equal(b, d))
-  expect_false(isTRUE(all.equal(a, b)))
+  expect_true(all.equalWONewCache(b, d))
+  expect_false(isTRUE(all.equalWONewCache(a, b)))
   d1 <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 6) %>% mean() %>% prod(., 6) # nolint
-  expect_false(isTRUE(all.equal(d1, d)))
+  expect_false(isTRUE(all.equalWONewCache(d1, d)))
 
   d1 <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() %>% prod(., 16) # nolint
-  expect_false(isTRUE(all.equal(d1, d)))
+  expect_false(isTRUE(all.equalWONewCache(d1, d)))
 
   d2 <- Cache(cacheRepo = tmpdir, notOlderThan = Sys.time()) %C%
     rnorm(10, 16) %>%
     mean() %>%
     prod(., 16)
 
-  expect_false(isTRUE(all.equal(d1, d2)))
+  expect_false(isTRUE(all.equalWONewCache(d1, d2)))
 
 
 })
@@ -499,9 +499,9 @@ test_that("test quoted FUN in Cache", {
   C <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpdir) # nolint
   D <- rnorm(10, 16) %>% Cache(cacheRepo = tmpdir) # nolint
 
-  expect_true(all.equal(A, B))
-  expect_true(all.equal(A, C))
-  expect_true(all.equal(A, D))
+  expect_true(all.equalWONewCache(A,B))
+  expect_true(all.equalWONewCache(A, C))
+  expect_true(all.equalWONewCache(A, D))
 })
 
 test_that("test multiple pipe Cache calls", {
@@ -520,7 +520,8 @@ test_that("test multiple pipe Cache calls", {
       runif(4, 0, .) %>%
       Cache(cacheRepo = tmpdir))
   }
-  expect_identical(d[[1]], d[[2]])
+
+  expect_true(all.equalWONewCache(d[[1]], d[[2]]))
   expect_true(length(mess[[1]]) == 0)
   expect_true(length(mess[[2]]) == 3)
 
