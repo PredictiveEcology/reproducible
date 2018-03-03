@@ -68,11 +68,12 @@ setMethod(
         unlink(filesToRemove)
       }
 
-      fn <- unique(objsDT[tagKey == "memoisedFunction", tagValue])
-      forgetResults <- lapply(fn, function(f) 
-        forget(.memoisedCacheFuns[[f]])
-      ) 
-        
+      # memoise
+      # fn <- unique(objsDT[tagKey == "memoisedFunction", tagValue])
+      # forgetResults <- lapply(fn, function(f)
+      #   forget(.memoisedCacheFuns[[f]])
+      # )
+
       suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
     }
     return(invisible(objsDT))

@@ -218,44 +218,44 @@ setMethod(
     }
 
     # memoised part -- NA comes from next few lines -- if quick is NA, then it is a memoise event
-    if (!is.na(quick)) {
-      if (getOption("reproducible.useMemoise")) {
-        if (quick) {
-          rawFunName <- deparse(substitute(FUN, env = whereInStack("Cache")))
-          funName <- paste0("Cache_", rawFunName)
-          if (!is.memoised(.memoisedCacheFuns[[funName]])) {
-            .memoisedCacheFuns[[funName]] <- CacheMem
-          }
-          if (!is.null(notOlderThan)) {
-            if (Sys.time() > notOlderThan) {
-              forget(.memoisedCacheFuns[[funName]])
-            }
-          }
-          mc <- match.call(expand.dots = TRUE)
-          mc[[1]] <- as.name(funName)
-          mc <- as.list(mc)
-          mc$quick <- NA
-          mc[[1]] <- NULL
-          mc$userTags <- c(paste0("memoisedFunction:",funName), mc$userTags)
-          out <- do.call(.memoisedCacheFuns[[funName]], mc)#)
-          if (!is.null(out)) {
-            if (!attr(out, "newCache")) {
-              md5Hash <- searchInLocalRepo(pattern = attr(out, "tags"), repoDir = cacheRepo)
-              suppressWarnings( # warning is about time zone
-                archivist::addTagsRepo(md5Hash,
-                                     repoDir = cacheRepo,
-                                     tags = c(paste0("MemAccessed:", Sys.time())))
-              )
-              .cacheMessage("", paste("Memoised",rawFunName))
-            }
-          }
-          return(out)
-        }
-      }
-    } else {
-      # if it was NA, then it means TRUE, but memoised too
-      quick <- TRUE
-    }
+    # if (!is.na(quick)) {
+    #   if (getOption("reproducible.useMemoise")) {
+    #     if (quick) {
+    #       rawFunName <- deparse(substitute(FUN, env = whereInStack("Cache")))
+    #       funName <- paste0("Cache_", rawFunName)
+    #       if (!is.memoised(.memoisedCacheFuns[[funName]])) {
+    #         .memoisedCacheFuns[[funName]] <- CacheMem
+    #       }
+    #       if (!is.null(notOlderThan)) {
+    #         if (Sys.time() > notOlderThan) {
+    #           forget(.memoisedCacheFuns[[funName]])
+    #         }
+    #       }
+    #       mc <- match.call(expand.dots = TRUE)
+    #       mc[[1]] <- as.name(funName)
+    #       mc <- as.list(mc)
+    #       mc$quick <- NA
+    #       mc[[1]] <- NULL
+    #       mc$userTags <- c(paste0("memoisedFunction:",funName), mc$userTags)
+    #       out <- do.call(.memoisedCacheFuns[[funName]], mc)#)
+    #       if (!is.null(out)) {
+    #         if (!attr(out, "newCache")) {
+    #           md5Hash <- searchInLocalRepo(pattern = attr(out, "tags"), repoDir = cacheRepo)
+    #           suppressWarnings( # warning is about time zone
+    #             archivist::addTagsRepo(md5Hash,
+    #                                  repoDir = cacheRepo,
+    #                                  tags = c(paste0("MemAccessed:", Sys.time())))
+    #           )
+    #           .cacheMessage("", paste("Memoised",rawFunName))
+    #         }
+    #       }
+    #       return(out)
+    #     }
+    #   }
+    # } else {
+    #   # if it was NA, then it means TRUE, but memoised too
+    #   quick <- TRUE
+    # }
 
     originalDots <- tmpl
     isPipe <- isTRUE(!is.null(tmpl$._pipe))
@@ -692,5 +692,5 @@ setMethod(
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
 })
 
-.memoisedCacheFuns <- new.env(parent = asNamespace("reproducible"))
-CacheMem <- memoise::memoise(Cache)
+# .memoisedCacheFuns <- new.env(parent = asNamespace("reproducible"))
+# CacheMem <- memoise::memoise(Cache)
