@@ -339,8 +339,9 @@ test_that("test environments", {
   out <- Cache(shortFn, a = a, cacheRepo = tmpdir)
   out2 <- Cache(shortFn, a = b, cacheRepo = tmpdir)
   out3 <- Cache(shortFn, a = g, cacheRepo = tmpdir)
-  expect_true(identical(attributes(out), attributes(out2)))
-  expect_true(identical(attributes(out), attributes(out3)))
+  attr(out2, "newCache") <- TRUE
+  expect_true(identical(attributes(out)["tags"], attributes(out2)["tags"]))
+  expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
 
   # put 2 different values, 1 and 2 ... a's and g's envirs are same value, but
   #    different environment .. b's envir is different value
@@ -361,18 +362,18 @@ test_that("test environments", {
   expect_false(identical(attributes(out), attributes(out2)))
 
   # test same values but different enviros are same
-  expect_true(identical(attributes(out), attributes(out3)))
+  expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
 
   # test environment is same as a list
-  expect_true(identical(attributes(out), attributes(out4)))
+  expect_true(identical(attributes(out)["tags"], attributes(out4)["tags"]))
 
   # test environment is same as recursive list
-  expect_true(identical(attributes(out), attributes(out5)))
+  expect_true(identical(attributes(out)["tags"], attributes(out5)["tags"]))
 
   df <- data.frame(a = a$a, b = LETTERS[1:10])
   out6 <- Cache(shortFn, a = df, cacheRepo = tmpdir)
   out7 <- Cache(shortFn, a = df, cacheRepo = tmpdir)
-  expect_true(identical(attributes(out6), attributes(out7))) # test data.frame
+  expect_true(identical(attributes(out6)["tags"], attributes(out7)["tags"])) # test data.frame
 })
 
 test_that("test asPath", {
@@ -446,6 +447,8 @@ test_that("test pipe for Cache", {
   a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
   b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
   d <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
+  attr(b, "newCache") <- NULL
+  attr(d, "newCache") <- NULL
   expect_true(all.equal(b, d))
   expect_false(isTRUE(all.equal(a, b)))
   d1 <- rnorm(10, 6) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
