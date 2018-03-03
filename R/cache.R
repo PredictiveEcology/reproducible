@@ -547,13 +547,7 @@ setMethod(
     if (nrow(isInRepo) > 0) {
       # flush it if notOlderThan is violated
       if (notOlderThan >= lastEntry) {
-        browser()
-        fn <- unique(objsDT[tagKey == "memoisedFunction", tagValue])
-        forgetResults <- lapply(fn, function(f)
-          forget(.memoisedCacheFuns[[f]])
-        )
-
-        suppressWarnings(rmFromLocalRepo(isInRepo$artifact[lastOne], repoDir = cacheRepo))
+        clearCache(userTags = isInRepo$artifact[lastOne], x = cacheRepo)
       }
     }
 
