@@ -42,8 +42,11 @@
 #' @param object an object to digest.
 #'
 #' @param objects Optional character vector indicating which objects are to
-#'                be considered while making digestible. This is only relevant
-#'                if the object being passed is an environment or list or the like.
+#'                be considered while making digestible. This argument is not used
+#'                in the default cases; the only known method that uses this
+#'                in the default cases; the only known method that uses this
+#'                argument is the \code{simList} class from \code{SpaDES.core}.
+#'
 #' @inheritParams Cache
 #'
 #' @return A hash i.e., digest of the object passed in.
@@ -142,14 +145,14 @@ setOldClass("cluster")
 #' @export
 .robustDigest.expression <- function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    fastdigest(format(object))
+  fastdigest(format(object))
 }
 
 #' @rdname robustDigest
 #' @export
 .robustDigest.character <- function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (digestPathContent) {
+  if (digestPathContent) {
       if (any(unlist(lapply(object, dir.exists)))) {
         unlist(lapply(object, function(x) {
           if (dir.exists(x)) {
@@ -178,7 +181,7 @@ setOldClass("cluster")
 #' @export
 .robustDigest.Path <- function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (digestPathContent) {
+  if (digestPathContent) {
       lapply(object, function(x) {
         isExistentFile <- FALSE
         if (file.exists(x)) {
@@ -202,7 +205,7 @@ setOldClass("cluster")
 #' @export
 .robustDigest.environment <- function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    .robustDigest(as.list(object, all.names = TRUE),
+  .robustDigest(as.list(object, all.names = TRUE), objects = objects,
                  compareRasterFileLength = compareRasterFileLength,
                  algo = algo, digestPathContent = digestPathContent)
 }
@@ -211,8 +214,8 @@ setOldClass("cluster")
 #' @export
 .robustDigest.list <- function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    lapply(.sortDotsUnderscoreFirst(object), function(x) {
-      .robustDigest(object = x,
+  lapply(.sortDotsUnderscoreFirst(object), function(x) {
+      .robustDigest(object = x, objects = objects,
                    compareRasterFileLength = compareRasterFileLength,
                    algo = algo, digestPathContent = digestPathContent)
     })
@@ -222,7 +225,7 @@ setOldClass("cluster")
 #' @export
 .robustDigest.Raster <- function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (digestPathContent) {
+  if (digestPathContent) {
       if (is(object, "RasterStack")) {
         # have to do one file at a time with Stack
         dig <- suppressWarnings(
@@ -244,7 +247,7 @@ setOldClass("cluster")
 #' @export
 .robustDigest.Spatial <- function(object, objects, compareRasterFileLength, algo, digestPathContent,
                         classOptions) {
-    if (is(object, "SpatialPoints")) {
+  if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
     } else {
       aaa <- object

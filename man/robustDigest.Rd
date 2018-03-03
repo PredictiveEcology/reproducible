@@ -52,8 +52,10 @@
 \item{object}{an object to digest.}
 
 \item{objects}{Optional character vector indicating which objects are to
-be considered while making digestible. This is only relevant
-if the object being passed is an environment or list or the like.}
+be considered while making digestible. This argument is not used
+in the default cases; the only known method that uses this
+in the default cases; the only known method that uses this
+argument is the \code{simList} class from \code{SpaDES.core}.}
 
 \item{compareRasterFileLength}{Numeric. Optional. When there are Rasters, that
 have file-backed storage, this is passed to the length arg in \code{digest}
