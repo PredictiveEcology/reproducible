@@ -1,5 +1,5 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue"))
+  utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue", ".SD", "tag"))
 }
 
 ################################################################################
@@ -183,6 +183,7 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom digest digest
+#' @importFrom data.table setDT
 #' @importFrom fastdigest fastdigest
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
@@ -510,21 +511,25 @@ setMethod(
         return(output)
       }
     } else {
-      # find similar
-      if (!identical(debugCache, FALSE)) {
+      # find similar -- in progress
+      if (FALSE) {
+        if (!identical(debugCache, FALSE)) {
           setDT(localTags)
-          similar <- localTags[all(userTags %in% tag), .SD, by = artifact]
-          if (NROW(similar)) {
-            similarObjs <- loadFromLocalRepoMem(similar[1,artifact],
-                                           repoDir = cacheRepo, value = TRUE)
-            older <- attr(similarObjs, "debugCache2")
-            if (!is.null(older)) {
-              setdiff(preDigest, older)
+          if (!is.null(userTags)) {
+            similar <- localTags[all(userTags %in% tag), .SD, by = artifact]
+            if (NROW(similar)) {
+              similarObjs <- loadFromLocalRepoMem(similar[1,artifact],
+                                             repoDir = cacheRepo, value = TRUE)
+              older <- attr(similarObjs, "debugCache2")
+              if (!is.null(older)) {
+                return(setdiff(preDigest, older))
+
+              }
 
             }
-
           }
 
+        }
       }
     }
 
