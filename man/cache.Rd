@@ -8,17 +8,18 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
-  userTags = c(), digestPathContent = !getOption("reproducible.quick"),
-  omitArgs = NULL, classOptions = list(), debugCache = character(),
-  sideEffect = FALSE, makeCopy = FALSE,
-  quick = getOption("reproducible.quick"))
+  userTags = c(), digestPathContent = !getOption("reproducible.quick",
+  FALSE), omitArgs = NULL, classOptions = list(),
+  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
+  quick = getOption("reproducible.quick", FALSE))
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   compareRasterFileLength = 1e+06, userTags = c(),
-  digestPathContent = !getOption("reproducible.quick"), omitArgs = NULL,
-  classOptions = list(), debugCache = character(), sideEffect = FALSE,
-  makeCopy = FALSE, quick = getOption("reproducible.quick"))
+  digestPathContent = !getOption("reproducible.quick", FALSE),
+  omitArgs = NULL, classOptions = list(), debugCache = character(),
+  sideEffect = FALSE, makeCopy = FALSE,
+  quick = getOption("reproducible.quick", FALSE))
 }
 \arguments{
 \item{FUN}{Either a function or an unevaluated function call (e.g., using

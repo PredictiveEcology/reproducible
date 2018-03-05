@@ -1,6 +1,6 @@
 test_that("package-related functions work", {
 
-  repos <- getOption("repos")
+  repos <- getOption("repos", "https://cran.rstudio.com")
   if (is.null(repos) | any(repos == "" | "@CRAN@" %in% repos)) {
     repos <- "https://cran.rstudio.com"
   }
