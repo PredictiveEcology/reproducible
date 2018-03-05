@@ -3,13 +3,12 @@
 ##
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
-  reproducible.quick <- FALSE
   opts <- options()
   opts.reproducible <- list( # nolint
     reproducible.cachePath = file.path(.reproducibleTempDir, "cache"),
     #reproducible.digestPathContent = !reproducible.quick,
     #reproducible.useMemoise = FALSE, #memoise
-    reproducible.quick = reproducible.quick
+    reproducible.quick = FALSE
   )
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
