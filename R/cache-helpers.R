@@ -571,10 +571,12 @@ setMethod(
         winslash = "/", mustWork = FALSE)
     }
     if (any(!file.exists(trySaveFilename))) {
-      stop("The raster that is supposed to be on disk with this or these filename(s) ",
-           curFilename, " has been deleted. It must be recreated e.g.,",
-           "try showCache(userTags = \"writeRaster\"), examine that and possibly -- with",
-           "caution -- clearCache(userTags = \"writeRaster\")")
+      stop("The following rasters are supposed to be on disk but appear to have been deleted:\n",
+           paste("    ", curFilename, collapse = "\n"),
+           "\n\nThese files must be recreated, e.g., try:\n",
+           "  showCache(userTags = \"writeRaster\").\n",
+           "\nExamine that and possibly [with caution!]:\n",
+           "  reproducible::clearCache(userTags = \"writeRaster\")")
     } else {
       slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
     }
