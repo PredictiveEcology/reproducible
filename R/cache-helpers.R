@@ -534,13 +534,17 @@ setMethod(
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- if (!all(c("backpack.db", "gallery") %in% list.files(repoDir))) {
-    FALSE
-  } else {
-    TRUE
-  }
+  isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
 
-  if (!inMemory(obj)) {
+  if (inMemory(obj)) {
+    isFilebacked <- FALSE
+    if (is.factor(obj)) {
+      fileExt <- ".grd"
+    } else {
+      fileExt <- ".tif"
+    }
+    curFilename <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
+  } else {
     isFilebacked <- TRUE
     if (is(obj, "RasterLayer")) {
       curFilename <- normalizePath(filename(obj), winslash = "/", mustWork = FALSE)
@@ -549,14 +553,6 @@ setMethod(
         normalizePath(filename(x), winslash = "/", mustWork = FALSE)))
       curFilename <- unique(curFilenames)
     }
-  } else {
-    isFilebacked <- FALSE
-    if (is.factor(obj)) {
-      fileExt <- ".grd"
-    } else {
-      fileExt <- ".tif"
-    }
-    curFilename <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
   }
 
   if (any(!file.exists(curFilename)) & isFilebacked & isRasterLayer) {
@@ -566,9 +562,11 @@ setMethod(
         file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
         winslash = "/", mustWork = FALSE)
     } else {
-      normalizePath(
-        file.path(repoDir, splittedFilenames),
-        winslash = "/", mustWork = FALSE)
+      splittedFilenames2 <- lapply(splittedFilenames, function(x) {
+        ifelse(length(x), x[length(x)], "")
+      })
+
+      normalizePath(file.path(repoDir, splittedFilenames2), winslash = "/", mustWork = FALSE)
     }
     if (any(!file.exists(trySaveFilename))) {
       stop("The following rasters are supposed to be on disk but appear to have been deleted:\n",
