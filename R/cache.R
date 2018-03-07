@@ -393,11 +393,15 @@ setMethod(
     preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) {
       .preDigestByClass(tmpl[!dotPipe][[x]])
     })
-    preDigest <- lapply(tmpl[!dotPipe], .robustDigest, objects = objects,
+    preDigest <- lapply(tmpl[!dotPipe], function(x) {
+      # remove the "newCache" attribute, which is irrelevant for digest
+      if (!is.null(attr(x, "newCache"))) attr(x, "newCache") <- NULL
+      .robustDigest(x, objects = objects,
                         compareRasterFileLength = compareRasterFileLength,
                         algo = algo,
                         digestPathContent = digestPathContent,
                         classOptions = classOptions)
+    })
 
     if (!is.null(omitArgs)) {
       preDigest <- preDigest[!(names(preDigest) %in% omitArgs)]
