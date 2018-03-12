@@ -425,7 +425,7 @@ setMethod(
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-        output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
+        output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
 
         # Class-specific message
@@ -522,7 +522,7 @@ setMethod(
           if (!is.null(userTags)) {
             similar <- localTags[all(userTags %in% tag), .SD, by = artifact]
             if (NROW(similar)) {
-              similarObjs <- loadFromLocalRepoMem(similar[1,artifact],
+              similarObjs <- loadFromLocalRepo(similar[1,artifact],
                                              repoDir = cacheRepo, value = TRUE)
               older <- attr(similarObjs, "debugCache2")
               if (!is.null(older)) {

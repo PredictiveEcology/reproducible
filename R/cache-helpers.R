@@ -932,7 +932,7 @@ setMethod("Copy",
   obj
 }
 
-loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
+# loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
 
 
 .getOtherFnNamesAndTags <- function(scalls) {
