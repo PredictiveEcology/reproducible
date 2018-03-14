@@ -593,3 +593,125 @@ test_that("test masking of %>% error message", {
     expect_silent(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
   }
 })
+
+
+test_that("test Cache argument inheritance to inner functions", {
+  cacheDir <- paste(sample(letters, 5), collapse = "")
+  tmpdir <- file.path(tempdir(), cacheDir)
+  checkPath(tmpdir, create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+
+  outer <- function(n) {
+    Cache(rnorm, n)
+  }
+  expect_silent(Cache(outer, n = 2, cacheRepo = tmpdir))
+  clearCache(tmpdir)
+
+  out <- capture_messages(Cache(outer, n = 2))
+  expect_true(all(unlist(lapply(c("No cacheRepo supplied. Using tempdir",
+                                  "No cacheRepo supplied. Using tempdir"),
+         function(mess) any(grepl(mess, out))))))
+
+  # does Sys.time() propagate to outer ones
+  out <- capture_messages(Cache(outer, n = 2, notOlderThan = Sys.time()))
+  expect_true(all(grepl("No cacheRepo supplied. Using tempdir", out)))
+
+  # does Sys.time() propagate to outer ones -- no message about cacheRepo being tempdir()
+  out <- expect_silent(Cache(outer, n = 2, notOlderThan = Sys.time(),
+                                cacheRepo = tmpdir))
+
+  # does cacheRepo propagate to outer ones -- no message about cacheRepo being tempdir()
+  out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
+  expect_true(length(out)==1)
+  expect_true(all(grepl("loading cached result from previous outer call", out)))
+
+  # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
+  outer <- function(n) {
+    a <- 1
+    Cache(rnorm, n)
+  }
+  out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
+  expect_true(length(out)==1)
+  expect_true(all(grepl("loading cached result from previous rnorm call", out)))
+
+  # Override with explicit argument
+  outer <- function(n) {
+    a <- 1
+    Cache(rnorm, n, notOlderThan = Sys.time())
+  }
+  out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
+  expect_true(length(out)==0)
+
+  # change the outer function, so no cache on that, & have notOlderThan on rnorm,
+  #    so no Cache on that
+  outer <- function(n) {
+    b <- 1
+    Cache(rnorm, n, notOlderThan = Sys.time())
+  }
+  out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
+  expect_true(length(out)==0)
+  # Second time will get a cache on outer
+  out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
+  expect_true(length(out)==1)
+  expect_true(all(grepl("loading cached result from previous outer call", out)))
+
+  # doubly nested
+  inner <- function(mean) {
+    d <- 1
+    Cache(rnorm, n = 3, mean = mean)
+  }
+  outer <- function(n) {
+    Cache(inner, 0.1)
+  }
+  out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
+  expect_true(all(grepl("loading cached result from previous outer call", out)))
+
+  outer <- function(n) {
+    Cache(inner, 0.1, notOlderThan = Sys.time() - 1e4)
+  }
+
+  out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir, notOlderThan = Sys.time()))
+  expect_true(all(grepl("loading cached result from previous inner call", out)))
+
+  outer <- function(n) {
+    Cache(inner, 0.1, notOlderThan = Sys.time())
+  }
+  inner <- function(mean) {
+    d <- 1
+    Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5)
+  }
+
+  out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir, notOlderThan = Sys.time()))
+  expect_true(all(grepl("loading cached result from previous rnorm call", out)))
+
+  # Check userTags -- all items have it
+  clearCache(tmpdir)
+  outerTag <- "howdie"
+  aa <- Cache(outer, n = 2, cacheRepo = tmpdir, userTags = outerTag)
+  bb <- showCache(tmpdir, userTags = outerTag)
+  cc <- showCache(tmpdir)
+  expect_true(identical(bb, cc))
+
+  # Check userTags -- all items have the outer tag propagate, plus inner ones only have inner ones
+  innerTag <- "notHowdie"
+  inner <- function(mean) {
+    d <- 1
+    Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5, userTags = innerTag)
+  }
+
+  clearCache(tmpdir)
+  aa <- Cache(outer, n = 2, cacheRepo = tmpdir, userTags = outerTag)
+  bb <- showCache(tmpdir, userTags = outerTag)
+  cc <- showCache(tmpdir)
+  expect_true(identical(bb, cc))
+
+  #
+  bb <- showCache(tmpdir, userTags = "notHowdie")
+  cc <- showCache(tmpdir)
+  expect_false(identical(bb, cc))
+  expect_true(length(unique(bb$artifact))==1)
+  expect_true(length(unique(cc$artifact))==3)
+
+
+
+})

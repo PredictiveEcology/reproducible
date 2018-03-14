@@ -2,17 +2,20 @@ if (getRversion() >= "3.1.0") {
   utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue", ".SD", "tag"))
 }
 
+.reproEnv <- new.env(parent = asNamespace("reproducible"))
+
 ################################################################################
-#' Cache method that accommodates environments, S4 methods, Rasters
+#' Cache method that accommodates environments, S4 methods, Rasters, & nested caching
 #'
 #' @details
-#' Caching R objects using \code{\link[archivist]{cache}} has four important limitations:
+#' Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
 #' \enumerate{
 #'   \item the \code{archivist} package detects different environments as different;
 #'   \item it also does not detect S4 methods correctly due to method inheritance;
 #'   \item it does not detect objects that have file-base storage of information
 #'         (specifically \code{\link[raster]{RasterLayer-class}} objects);
 #'   \item the default hashing algorithm is relatively slow.
+#'   \item heavily nested function calls may want Cache arguments to propagate through
 #' }
 #' This version of the \code{Cache} function accommodates those four special,
 #' though quite common, cases by:
@@ -28,6 +31,11 @@ if (getRversion() >= "3.1.0") {
 #'         is in RAM, which can be up to ten times faster than
 #'         \code{\link[digest]{digest}}. Note that file-backed objects are still
 #'         hashed using \code{\link[digest]{digest}}.
+#'   \item Cache will save arguments passed by user in a hidden environment. Any
+#'         nested Cache functions will use arguments in this order 1) actual arguments
+#'         passed at each Cache call, 2) any inherited arguments from an outer Cache
+#'         call, 3) the default values of the Cache function. See section on \emph{Nested
+#'         Caching}.
 #' }
 #'
 #' If \code{Cache} is called within a SpaDES module, then the cached entry will automatically
@@ -42,6 +50,24 @@ if (getRversion() >= "3.1.0") {
 #' by their creation dates. See example in \code{\link{clearCache}}.
 #' \code{Cache} (uppercase C) is used here so that it is not confused with, and does
 #' not mask, the \code{archivist::cache} function.
+#'
+#' @section Nested Caching:
+#' Commonly, Caching is nested, i.e., an outer function is wrapped in a \code{Cache}
+#' function call, and one or more inner functions are also wrapped in a \code{Cache}
+#' function call. A user \emph{can} always specify arguments in every Cache function
+#' call, but this can get tedious and can be prone to errors. The normal way that
+#' \emph{R} handles arguments is it takes the user passed arguments if any, and
+#' default arguments for all those that have no user passed arguments. We have inserted
+#' a middle step. The order or precedence for any given \code{Cache} function call is
+#' 1. user arguments, 2. inherited arguments, 3. default arguments. At this time,
+#' the top level \code{Cache} arguments will propagate to all inner functions unless
+#' each individual \code{Cache} call has other arguments specified, i.e., "middle"
+#' nested \code{Cache} function calls don't propagate their arguments to further "inner"
+#' \code{Cache} function calls.  See example.
+#'
+#' \code{userTags} is unique of all arguments: its values will be appended to the
+#' inherited \code{userTags}.
+#'
 #'
 #' @section Filepaths:
 #' If a function has a path argument, there is some ambiguity about what should be
@@ -210,7 +236,72 @@ setMethod(
                         algo, cacheRepo, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick) {
+    if (missing(FUN)) stop("Cache requires the FUN argument")
+
+    # Arguments -- this puts arguments into a special reproducible environment
+    if (R.version[['minor']] < 3.4) { # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
+      objs <- ls()[ls() %in% .namesCacheFormals]
+      env <- environment()
+      args <- mget(objs)
+      forms <- lapply(.formalsCache, function(x) eval(x))
+      objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
+      userCacheArgs <- objs[!objOverride]
+      namesUserCacheArgs <- userCacheArgs
+    } else {
+      mc <- as.list(match.call(expand.dots = TRUE)[-1])
+      namesMatchCall <- names(mc)
+      userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
+      namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
+      objOverride <- is.na(userCacheArgs)
+    }
+
+    if (any(!objOverride)) { # put into .reproEnv
+      lsDotReproEnv <- ls(.reproEnv)
+      namesMatchCallUserCacheArgs <- namesUserCacheArgs
+      prevVals <- namesMatchCallUserCacheArgs %in% lsDotReproEnv
+
+      # userTags is special because it gets appended
+      prevUserTags <- if ("userTags" %in% namesMatchCallUserCacheArgs &&
+                          "userTags" %in% lsDotReproEnv) {
+        TRUE
+      } else {
+        FALSE
+      }
+
+      if (prevUserTags) {
+        oldUserTags <- .reproEnv$userTags
+        userTags <- c(userTags, .reproEnv$userTags)
+        list2env(list(userTags = userTags), .reproEnv)
+        on.exit({
+            .reproEnv$userTags <- oldUserTags
+        }, add = TRUE)
+      }
+
+      if (any(!prevVals)){ # don't override previous values -- except for userTags
+
+        list2env(mget(namesUserCacheArgs[!prevVals]), .reproEnv)
+        on.exit({
+          # THe suppressWarnings is about objects that aren't there -- so far only happens
+          #  when interrupting a process, which means it is spurious
+          suppressWarnings(rm(list = namesUserCacheArgs, envir = .reproEnv))
+          if (prevUserTags) {
+              .reproEnv$userTags <- oldUserTags
+          }
+          }, add = TRUE)
+      }
+    }
+
+    if (any(objOverride)) { # get from .reproEnv
+      lsDotReproEnv <- ls(.reproEnv)
+      prevVals <- .namesCacheFormals[objOverride] %in% lsDotReproEnv
+      if (any(prevVals)) {
+        list2env(mget(.namesCacheFormals[objOverride][prevVals], .reproEnv), environment())
+      }
+    }
+
     tmpl <- list(...)
+
+
     # get cacheRepo if not supplied
     if (is.null(cacheRepo)) {
       cacheRepo <- .checkCacheRepo(tmpl, create = TRUE)
@@ -697,3 +788,7 @@ setMethod(
 
 # .memoisedCacheFuns <- new.env(parent = asNamespace("reproducible"))
 # CacheMem <- memoise::memoise(Cache)
+
+.formalsCache <- formals(Cache)[-(1:2)]
+.namesCacheFormals <- names(.formalsCache)
+
