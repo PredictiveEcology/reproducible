@@ -41,6 +41,7 @@ setGeneric("clearCache", function(x, userTags = character(), after, before, ...)
 
 #' @export
 #' @rdname viewCache
+#' @importFrom archivist createLocalRepo
 setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ...) {
@@ -50,10 +51,12 @@ setMethod(
     }
     if (is(x, "simList")) x <- x@paths$cachePath
 
+    # Check if no args -- faster to delete all then make new empty repo for large repos
     if (all(missing(userTags), missing(after), missing(before))) {
       unlink(file.path(x, "gallery"), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
       unlink(file.path(x, "backpack.db"))
+      createLocalRepo(x)
       return(invisible())
     }
 

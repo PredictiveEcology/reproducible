@@ -207,7 +207,7 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-#' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
+#' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo createLocalRepo
 #' @importFrom digest digest
 #' @importFrom data.table setDT
 #' @importFrom fastdigest fastdigest
@@ -463,7 +463,7 @@ setMethod(
     if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
     if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
-      suppressWarnings(archivist::createLocalRepo(cacheRepo))
+      suppressWarnings(createLocalRepo(cacheRepo))
     }
 
     # List file prior to cache
