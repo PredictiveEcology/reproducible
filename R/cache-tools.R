@@ -53,7 +53,7 @@ setMethod(
     if (all(missing(userTags), missing(after), missing(before))) {
       unlink(file.path(x, "gallery"), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
-      file.remove(file.path(x, "backpack.db"))
+      unlink(file.path(x, "backpack.db"))
       return(invisible())
     }
 
