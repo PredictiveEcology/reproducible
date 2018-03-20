@@ -2,9 +2,18 @@
 % Please edit documentation in R/cache.R
 \name{.recursiveObjectSize}
 \alias{.recursiveObjectSize}
+\alias{.recursiveObjectSize.list}
+\alias{.recursiveObjectSize.environment}
+\alias{.recursiveObjectSize.default}
 \title{Recursive object.size}
 \usage{
 .recursiveObjectSize(x)
+
+\method{.recursiveObjectSize}{list}(x)
+
+\method{.recursiveObjectSize}{environment}(x)
+
+\method{.recursiveObjectSize}{default}(x)
 }
 \arguments{
 \item{x}{An object}

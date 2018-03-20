@@ -930,14 +930,17 @@ setMethod(
   UseMethod(".recursiveObjectSize")
 }
 
+#' @rdname recursiveObjectSize
 .recursiveObjectSize.list <- function(x) {
   lapply(x, function(y) .recursiveObjectSize(y))
 }
 
+#' @rdname recursiveObjectSize
 .recursiveObjectSize.environment <- function(x) {
   .recursiveObjectSize(as.list(x))
 }
 
+#' @rdname recursiveObjectSize
 .recursiveObjectSize.default <- function(x) {
   object.size(x)
 }
