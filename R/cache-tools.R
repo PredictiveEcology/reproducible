@@ -48,9 +48,17 @@ setMethod(
       message("x not specified; using ", getOption("spades.cachePath"))
       x <- getOption("spades.cachePath")
     }
+    if (is(x, "simList")) x <- x@paths$cachePath
+
+    if (all(missing(userTags), missing(after), missing(before))) {
+      unlink(file.path(x, "gallery"), recursive = TRUE)
+      unlink(file.path(x, "rasters"), recursive = TRUE)
+      file.remove(file.path(x, "backpack.db"))
+      return(invisible())
+    }
+
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
-    if (is(x, "simList")) x <- x@paths$cachePath
 
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    list(...))
