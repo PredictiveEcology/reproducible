@@ -142,7 +142,7 @@ tmpdir1 <- file.path(tempdir(), "first")
 tmpdir2 <- file.path(tempdir(), "second")
 
 # Run the Cache ... notOlderThan propagates to all 3 Cache calls,
-#   but cacheRepo is tmpdir in top level Cache and all nested
+#   but cacheRepo is tmpdir1 in top level Cache and all nested
 #   Cache calls, unless individually overridden ... here inner
 #   uses tmpdir2 repository
 Cache(outer, n = 2, cacheRepo = tmpdir1, notOlderThan = Sys.time())
