@@ -908,6 +908,17 @@ setMethod(
 .formalsCache <- formals(Cache)[-(1:2)]
 .namesCacheFormals <- names(.formalsCache)
 
+
+#' Recursive object.size
+#'
+#' This has methods for various types of things that may not correctly report
+#' their object.size using \code{object.size.
+#'
+#' @param x An object
+#'
+#' @export
+#' @rdname recursiveObjectSize
+#' @keywords internal
 .recursiveObjectSize <- function(x) {
   UseMethod(".recursiveObjectSize")
 }
