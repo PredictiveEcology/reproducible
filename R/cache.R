@@ -213,7 +213,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom fastdigest fastdigest
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
-#' @importFrom utils object.size
+#' @importFrom utils object.size tail
 #' @rdname cache
 #'
 #' @example inst/examples/example_Cache.R

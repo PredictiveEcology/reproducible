@@ -195,7 +195,7 @@ setMethod(
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
       cacheRepo <- if (nzchar(getOption("reproducible.cachePath"))) {
         message("No cacheRepo supplied. Using value in getOption('reproducible.cachePath')")
-        getOption("reproducible.cachePath")
+        getOption("reproducible.cachePath", tempdir())
       } else {
         message("No cacheRepo supplied. Using tempdir()")
         tempdir()
