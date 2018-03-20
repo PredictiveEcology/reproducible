@@ -54,4 +54,5 @@ branches:
   only:
     - master
     - development
+    - reproducibleVerbose
 

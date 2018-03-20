@@ -4,8 +4,10 @@
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
   opts <- options()
+  checkPath(.reproducibleTempDir, create = TRUE)
   opts.reproducible <- list( # nolint
-    reproducible.cachePath = file.path(.reproducibleTempDir, "cache"),
+    reproducible.cachePath = file.path(.reproducibleTempDir),
+    reproducible.verbose = FALSE,
     #reproducible.digestPathContent = !reproducible.quick,
     #reproducible.useMemoise = FALSE, #memoise
     reproducible.quick = FALSE
@@ -29,4 +31,4 @@
     options(reproducible.cachePath = NULL)
   }
 }
-.reproducibleTempDir <- file.path(tempdir(), "SpaDES")
+.reproducibleTempDir <- file.path(tempdir(), "reproducibleCache")

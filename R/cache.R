@@ -213,7 +213,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom fastdigest fastdigest
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
-#' @importFrom utils object.size
+#' @importFrom utils object.size tail
 #' @rdname cache
 #'
 #' @example inst/examples/example_Cache.R
@@ -241,6 +241,7 @@ setMethod(
     # Arguments -- this puts arguments into a special reproducible environment
     if (R.version[['minor']] < 3.4) { # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
       objs <- ls()[ls() %in% .namesCacheFormals]
+      objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
       env <- environment()
       args <- mget(objs)
       forms <- lapply(.formalsCache, function(x) eval(x))
@@ -300,7 +301,6 @@ setMethod(
     }
 
     tmpl <- list(...)
-
 
     # get cacheRepo if not supplied
     if (is.null(cacheRepo)) {
@@ -484,6 +484,14 @@ setMethod(
     preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) {
       .preDigestByClass(tmpl[!dotPipe][[x]])
     })
+
+    if (!is.null(omitArgs)) {
+      tmpl[omitArgs] <- NULL
+    }
+
+    if (getOption("reproducible.verbose", FALSE)) {
+      startHashTime <- Sys.time()
+    }
     preDigest <- lapply(tmpl[!dotPipe], function(x) {
       # remove the "newCache" attribute, which is irrelevant for digest
       if (!is.null(attr(x, "newCache"))) attr(x, "newCache") <- NULL
@@ -493,9 +501,57 @@ setMethod(
                         digestPathContent = digestPathContent,
                         classOptions = classOptions)
     })
+    if (getOption("reproducible.verbose", FALSE)) {
+      endHashTime <- Sys.time()
+      verboseDF <- data.frame(functionName = functionDetails$functionName,
+                              component = "Hashing",
+                              elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
+                              units = "secs",
+                              stringsAsFactors = FALSE)
 
-    if (!is.null(omitArgs)) {
-      preDigest <- preDigest[!(names(preDigest) %in% omitArgs)]
+      hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
+        objSize <- objectSize(x)
+
+      }))
+
+      preDigestUnlist <- unlist(preDigest, recursive = TRUE)
+      lengths <- unlist(lapply(preDigest, function(x) length(unlist(x))))
+      hashDetails <- data.frame(objectNames = rep(names(preDigest), lengths),
+                                #objectSize = rep(hashObjectSize, lengths),
+                                hashElements = names(preDigestUnlist),
+                                hash = unname(preDigestUnlist))
+      preDigestUnlistNames <- unlist(lapply(strsplit(names(preDigestUnlist), split = "\\."), tail, 1))
+      hashObjectSizeNames <- unlist(lapply(strsplit(names(hashObjectSize), split = "\\."), tail, 1))
+      hashDetails$objectSize <- NA
+      hashDetails$objectSize[preDigestUnlistNames %in% hashObjectSizeNames] <- hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
+
+      if (exists("hashDetails", envir = .reproEnv)) {
+        .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
+      } else {
+        .reproEnv$hashDetails <- hashDetails
+      on.exit(
+        {
+          assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
+          print(.reproEnv$hashDetails)
+          message("The hashing details are available from .reproEnv$hashDetails")
+          rm("hashDetails", envir = .reproEnv)
+        },
+        add = TRUE)
+      }
+
+      if (exists("verboseTiming", envir = .reproEnv)) {
+        verboseDF$functionName <- paste0("  ", verboseDF$functionName)
+        .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+      } else {
+        .reproEnv$verboseTiming <- verboseDF
+        on.exit({
+          assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
+          print(.reproEnv$verboseTiming)
+          message("This object is also available from .reproEnv$cacheTimings")
+          rm("verboseTiming", envir = .reproEnv)
+        },
+        add = TRUE)
+      }
     }
 
     if (length(debugCache)) {
@@ -516,8 +572,28 @@ setMethod(
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
+        if (getOption("reproducible.verbose", FALSE)) {
+          startLoadTime <- Sys.time()
+        }
+
         output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+
+        if (getOption("reproducible.verbose", FALSE)) {
+          endLoadTime <- Sys.time()
+          verboseDF <- data.frame(functionName = functionDetails$functionName,
+                                  component = "Loading from repo",
+                                  elapsedTime = as.numeric(difftime(endLoadTime, startLoadTime, units = "secs")),
+                                  units = "secs",
+                                  stringsAsFactors = FALSE)
+
+          if (exists("verboseTiming", envir = .reproEnv)) {
+            .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+          }
+          # on.exit({message("Loading from repo took ", format(endLoadTime - startLoadTime))},
+          #   add = TRUE)
+
+        }
 
         # Class-specific message
         .cacheMessage(output, functionDetails$functionName)
@@ -607,7 +683,7 @@ setMethod(
       }
     } else {
       # find similar -- in progress
-      if (FALSE) {
+      if (FALSE) { # INCOMPLETE
         if (!identical(debugCache, FALSE)) {
           setDT(localTags)
           if (!is.null(userTags)) {
@@ -629,10 +705,31 @@ setMethod(
     }
 
     # RUN the function call
+    if (getOption("reproducible.verbose", FALSE)) {
+      startRunTime <- Sys.time()
+    }
+
     if (isPipe) {
       output <- eval(tmpl$._pipe, envir = tmpl$._envir)
     } else {
       output <- do.call(FUN, originalDots)
+    }
+
+    if (getOption("reproducible.verbose", FALSE)) {
+      endRunTime <- Sys.time()
+      verboseDF <- data.frame(functionName = functionDetails$functionName,
+                              component = paste("Running", functionDetails$functionName),
+                              elapsedTime = as.numeric(difftime(endRunTime, startRunTime, units = "secs")),
+                              units = "secs",
+                              stringsAsFactors = FALSE)
+
+      if (exists("verboseTiming", envir = .reproEnv)) {
+        .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+      }
+
+      # on.exit({message("Running ", functionDetails$functionName, " took ", format(endRunTime - startRunTime))},
+      #         add = TRUE)
+
     }
 
     # Delete previous version if notOlderThan violated --
@@ -729,6 +826,10 @@ setMethod(
       }
     }
 
+    if (getOption("reproducible.verbose", FALSE)) {
+      startSaveTime <- Sys.time()
+    }
+
     while (!written) {
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
@@ -752,6 +853,22 @@ setMethod(
       } else {
         TRUE
       }
+    }
+    if (getOption("reproducible.verbose", FALSE)) {
+      endSaveTime <- Sys.time()
+      verboseDF <- data.frame(functionName = functionDetails$functionName,
+                              component = "Saving to repo",
+                              elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
+                              units = "secs",
+                              stringsAsFactors = FALSE)
+
+      if (exists("verboseTiming", envir = .reproEnv)) {
+        .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+      }
+      # on.exit({message("Saving ", functionDetails$functionName, " to repo took ",
+      #                  format(endSaveTime - startSaveTime))},
+      #         add = TRUE)
+
     }
 
     if (isNullOutput) return(NULL) else return(output)
@@ -792,3 +909,48 @@ setMethod(
 .formalsCache <- formals(Cache)[-(1:2)]
 .namesCacheFormals <- names(.formalsCache)
 
+
+#' Recursive object.size
+#'
+#' This has methods for various types of things that may not correctly report
+#' their object.size using \code{object\.size}.
+#'
+#' @param x An object
+#'
+#' @export
+#' @rdname objectSize
+#' @keywords internal
+#' @examples
+#' a <- new.env()
+#' a$b <- 1:10
+#' a$d <- 1:10
+#'
+#' objectSize(a) # all the elements in the environment
+#' object.size(a) # different - only measuring the environment as an object
+objectSize <- function(x) {
+  UseMethod("objectSize", x)
+}
+
+#' @export
+#' @rdname objectSize
+objectSize.list <- function(x) {
+  lapply(x, function(y) objectSize(y))
+}
+
+#' @export
+#' @rdname objectSize
+#' @importFrom utils object.size
+objectSize.environment <- function(x) {
+  xName <- deparse(substitute(x))
+  os <- objectSize(as.list(x))
+  names(os) <- paste0(xName, "$", names(os))
+  osCur <- list(object.size(x))
+  names(osCur) <- xName
+  os <- append(os, osCur)
+}
+
+#' @export
+#' @rdname objectSize
+objectSize.default <- function(x) {
+  object.size(x)
+}

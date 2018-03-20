@@ -608,13 +608,13 @@ test_that("test Cache argument inheritance to inner functions", {
   clearCache(tmpdir)
 
   out <- capture_messages(Cache(outer, n = 2))
-  expect_true(all(unlist(lapply(c("No cacheRepo supplied. Using tempdir",
-                                  "No cacheRepo supplied. Using tempdir"),
+  expect_true(all(unlist(lapply(c("No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)",
+                                  "No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)"),
          function(mess) any(grepl(mess, out))))))
 
   # does Sys.time() propagate to outer ones
   out <- capture_messages(Cache(outer, n = 2, notOlderThan = Sys.time()))
-  expect_true(all(grepl("No cacheRepo supplied. Using tempdir", out)))
+  expect_true(all(grepl("No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)", out)))
 
   # does Sys.time() propagate to outer ones -- no message about cacheRepo being tempdir()
   out <- expect_silent(Cache(outer, n = 2, notOlderThan = Sys.time(),
@@ -713,5 +713,24 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_true(length(unique(cc$artifact))==3)
 
 
+
+})
+
+
+##########################
+test_that("test reproducible.verbose", {
+  cacheDir <- paste(sample(letters, 5), collapse = "")
+  tmpdir <- file.path(tempdir(), cacheDir)
+  checkPath(tmpdir, create = TRUE)
+  options(reproducible.verbose = TRUE)
+  on.exit({
+    options(reproducible.verbose = FALSE)
+    unlink(tmpdir, recursive = TRUE)
+    }, add = TRUE)
+  Cache(rnorm, 1, cacheRepo = tmpdir)
+  expect_is(.reproEnv$cacheTimings, "data.frame")
+  #write.table(.reproEnv$cacheTimings, file = paste0("c:/Eliot/tmp/temp",cacheDir,".txt"), col.names = FALSE)
+  expect_true(NROW(.reproEnv$cacheTimings)==3)
+  expect_true(NCOL(.reproEnv$cacheTimings)==4)
 
 })
