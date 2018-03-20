@@ -614,7 +614,7 @@ test_that("test Cache argument inheritance to inner functions", {
 
   # does Sys.time() propagate to outer ones
   out <- capture_messages(Cache(outer, n = 2, notOlderThan = Sys.time()))
-  expect_true(all(grepl("No cacheRepo supplied. Using tempdir", out)))
+  expect_true(all(grepl("No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)", out)))
 
   # does Sys.time() propagate to outer ones -- no message about cacheRepo being tempdir()
   out <- expect_silent(Cache(outer, n = 2, notOlderThan = Sys.time(),

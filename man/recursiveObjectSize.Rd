@@ -9,4 +9,8 @@
 \arguments{
 \item{x}{An object}
 }
+\description{
+This has methods for various types of things that may not correctly report
+their object.size using \code{object.size}.
+}
 \keyword{internal}
