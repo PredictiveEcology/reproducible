@@ -608,8 +608,8 @@ test_that("test Cache argument inheritance to inner functions", {
   clearCache(tmpdir)
 
   out <- capture_messages(Cache(outer, n = 2))
-  expect_true(all(unlist(lapply(c("No cacheRepo supplied. Using tempdir",
-                                  "No cacheRepo supplied. Using tempdir"),
+  expect_true(all(unlist(lapply(c("No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)",
+                                  "No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)"),
          function(mess) any(grepl(mess, out))))))
 
   # does Sys.time() propagate to outer ones
@@ -726,7 +726,8 @@ test_that("test reproducible.verbose", {
   options(reproducible.verbose = TRUE)
   Cache(rnorm, 1)
   expect_is(.reproEnv$cacheTimings, "data.frame")
-  expect_true(NROW(.reproEnv$cacheTimings)==2)
+  expect_true(NROW(.reproEnv$cacheTimings)==3)
   expect_true(NCOL(.reproEnv$cacheTimings)==4)
+  options(reproducible.verbose = FALSE)
 
 })
