@@ -20,7 +20,7 @@
 }
 \description{
 This has methods for various types of things that may not correctly report
-their object.size using \code{object.size}.
+their object.size using \code{object\.size}.
 }
 \examples{
 a <- new.env()
