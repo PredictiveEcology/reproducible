@@ -6,6 +6,7 @@
   opts <- options()
   opts.reproducible <- list( # nolint
     reproducible.cachePath = file.path(.reproducibleTempDir, "cache"),
+    reproducible.verbose = FALSE,
     #reproducible.digestPathContent = !reproducible.quick,
     #reproducible.useMemoise = FALSE, #memoise
     reproducible.quick = FALSE

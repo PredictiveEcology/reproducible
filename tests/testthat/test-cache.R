@@ -715,3 +715,18 @@ test_that("test Cache argument inheritance to inner functions", {
 
 
 })
+
+
+##########################
+test_that("test reproducible.verbose", {
+  cacheDir <- paste(sample(letters, 5), collapse = "")
+  tmpdir <- file.path(tempdir(), cacheDir)
+  checkPath(tmpdir, create = TRUE)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  options(reproducible.verbose = TRUE)
+  Cache(rnorm, 1)
+  expect_is(.reproEnv$cacheTimings, "data.frame")
+  expect_true(NROW(.reproEnv$cacheTimings)==2)
+  expect_true(NCOL(.reproEnv$cacheTimings)==4)
+
+})

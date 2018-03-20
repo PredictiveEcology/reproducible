@@ -3,6 +3,7 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.1.4
 =============
 
+* new option: reproducible.verbose, set to FALSE by default, but if set to true may help understand caching behaviour, especially for complex highly nested code
 * All Cache arguments other than FUN and ... will now propagate to internal, nested Cache calls, if they are not specified explicitly in each of the inner Cache calls. 
 * Cached pipe operator %C% -- use to begin a pipe sequence, e.g., `Cache() %C% ...`
 * Cache arg `sideEffect` can now be a path
