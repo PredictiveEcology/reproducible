@@ -23,6 +23,9 @@
 #'   them and also the time it took to run the call and save the call to the
 #'   cache repository or load the cached copy from the repository.
 #'
+#'   \item \code{reproducible.cachePath}: The default path for repositories if not
+#'   passed as an argument. The default is the tempdir() of the session.
+#'
 #' }
 #'
 #' @importFrom Rcpp evalCpp

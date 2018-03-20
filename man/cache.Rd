@@ -4,7 +4,7 @@
 \name{Cache}
 \alias{Cache}
 \alias{Cache,ANY-method}
-\title{Cache method that accommodates environments, S4 methods, Rasters}
+\title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
@@ -100,16 +100,17 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
-Cache method that accommodates environments, S4 methods, Rasters
+Cache method that accommodates environments, S4 methods, Rasters, & nested caching
 }
 \details{
-Caching R objects using \code{\link[archivist]{cache}} has four important limitations:
+Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
 \enumerate{
   \item the \code{archivist} package detects different environments as different;
   \item it also does not detect S4 methods correctly due to method inheritance;
   \item it does not detect objects that have file-base storage of information
         (specifically \code{\link[raster]{RasterLayer-class}} objects);
   \item the default hashing algorithm is relatively slow.
+  \item heavily nested function calls may want Cache arguments to propagate through
 }
 This version of the \code{Cache} function accommodates those four special,
 though quite common, cases by:
@@ -125,6 +126,11 @@ though quite common, cases by:
         is in RAM, which can be up to ten times faster than
         \code{\link[digest]{digest}}. Note that file-backed objects are still
         hashed using \code{\link[digest]{digest}}.
+  \item Cache will save arguments passed by user in a hidden environment. Any
+        nested Cache functions will use arguments in this order 1) actual arguments
+        passed at each Cache call, 2) any inherited arguments from an outer Cache
+        call, 3) the default values of the Cache function. See section on \emph{Nested
+        Caching}.
 }
 
 If \code{Cache} is called within a SpaDES module, then the cached entry will automatically
@@ -149,6 +155,25 @@ of classes. See \code{\link{.robustDigest}}.
 
 See \code{\link{.robustDigest}} for other specifics for other classes.
 }
+\section{Nested Caching}{
+
+Commonly, Caching is nested, i.e., an outer function is wrapped in a \code{Cache}
+function call, and one or more inner functions are also wrapped in a \code{Cache}
+function call. A user \emph{can} always specify arguments in every Cache function
+call, but this can get tedious and can be prone to errors. The normal way that
+\emph{R} handles arguments is it takes the user passed arguments if any, and
+default arguments for all those that have no user passed arguments. We have inserted
+a middle step. The order or precedence for any given \code{Cache} function call is
+1. user arguments, 2. inherited arguments, 3. default arguments. At this time,
+the top level \code{Cache} arguments will propagate to all inner functions unless
+each individual \code{Cache} call has other arguments specified, i.e., "middle"
+nested \code{Cache} function calls don't propagate their arguments to further "inner"
+\code{Cache} function calls.  See example.
+
+\code{userTags} is unique of all arguments: its values will be appended to the
+inherited \code{userTags}.
+}
+
 \section{Filepaths}{
 
 If a function has a path argument, there is some ambiguity about what should be
@@ -324,9 +349,50 @@ Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir) # cached copy is 
 
 clearCache(tmpDir)
 
+
+##########################
+## Nested Caching
+# Make 2 functions
+inner <- function(mean) {
+  d <- 1
+  Cache(rnorm, n = 3, mean = mean)
+}
+outer <- function(n) {
+  Cache(inner, 0.1, cacheRepo = tmpdir2)
+}
+
+# make 2 different cache paths
+tmpdir1 <- file.path(tempdir(), "first")
+tmpdir2 <- file.path(tempdir(), "second")
+
+# Run the Cache ... notOlderThan propagates to all 3 Cache calls,
+#   but cacheRepo is tmpdir in top level Cache and all nested
+#   Cache calls, unless individually overridden ... here inner
+#   uses tmpdir2 repository
+Cache(outer, n = 2, cacheRepo = tmpdir1, notOlderThan = Sys.time())
+
+showCache(tmpdir1) # 2 function calls
+showCache(tmpdir2) # 1 function call
+
+# userTags get appended
+# all items have the outer tag propagate, plus inner ones only have inner ones
+clearCache(tmpdir1)
+outerTag <- "outerTag"
+innerTag <- "innerTag"
+inner <- function(mean) {
+  d <- 1
+  Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5, userTags = innerTag)
+}
+outer <- function(n) {
+  Cache(inner, 0.1)
+}
+aa <- Cache(outer, n = 2, cacheRepo = tmpdir1, userTags = outerTag)
+showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer only have outerTag
+
 ## cleanup
 unlink(c("filename.rda", "filename1.rda"))
 unlink(dirname(tmpDir), recursive = TRUE)
+
 }
 \seealso{
 \code{\link[archivist]{cache}}, \code{\link{.robustDigest}}

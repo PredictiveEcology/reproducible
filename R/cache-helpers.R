@@ -193,10 +193,15 @@ setMethod(
   signature = "ANY",
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
+      cacheRepo <- if (nzchar(getOption("reproducible.cachePath"))) {
+        message("No cacheRepo supplied. Using value in getOption('reproducible.cachePath')")
+        getOption("reproducible.cachePath")
+      } else {
         message("No cacheRepo supplied. Using tempdir()")
         tempdir()
-      })
-
+      }
+      checkPath(path = cacheRepo, create = create)
+    })
 })
 
 ################################################################################
