@@ -919,12 +919,23 @@ setMethod(
 #' @export
 #' @rdname recursiveObjectSize
 #' @keywords internal
+#' @examples
+#' a <- new.env()
+#' a$b <- 1:10
+#' a$d <- 1:10
+#'
+#' .recursiveObjectSize(a) # all the elements in the environment
+#' object.size(a) # different - only measuring the environment as an object
 .recursiveObjectSize <- function(x) {
   UseMethod(".recursiveObjectSize")
 }
 
 .recursiveObjectSize.list <- function(x) {
   lapply(x, function(y) .recursiveObjectSize(y))
+}
+
+.recursiveObjectSize.environment <- function(x) {
+  .recursiveObjectSize(as.list(x))
 }
 
 .recursiveObjectSize.default <- function(x) {

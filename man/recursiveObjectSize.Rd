@@ -13,4 +13,12 @@
 This has methods for various types of things that may not correctly report
 their object.size using \code{object.size}.
 }
+\examples{
+a <- new.env()
+a$b <- 1:10
+a$d <- 1:10
+
+.recursiveObjectSize(a) # all the elements in the environment
+object.size(a) # different - only measuring the environment as an object
+}
 \keyword{internal}
