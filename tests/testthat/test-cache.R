@@ -727,8 +727,9 @@ test_that("test reproducible.verbose", {
     options(reproducible.verbose = FALSE)
     unlink(tmpdir, recursive = TRUE)
     }, add = TRUE)
-  Cache(rnorm, 1)
+  Cache(rnorm, 1, cacheRepo = tmpdir)
   expect_is(.reproEnv$cacheTimings, "data.frame")
+  #write.table(.reproEnv$cacheTimings, file = paste0("c:/Eliot/tmp/temp",cacheDir,".txt"), col.names = FALSE)
   expect_true(NROW(.reproEnv$cacheTimings)==3)
   expect_true(NCOL(.reproEnv$cacheTimings)==4)
 
