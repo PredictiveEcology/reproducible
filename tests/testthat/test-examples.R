@@ -1,7 +1,7 @@
 test_that("all exported functions have examples", {
   fns <- ls("package:reproducible")
   omit <- which(fns == "cache") ## cache is deprecated, so omit it
-  if (grepl("VIC-", Sys.info()["nodename"])) { # for debugging only
+  if (grepl("VIC-", Sys.info()["nodename"]))  # for debugging only
     cat("###############\n", file = "C:/Eliot/tmp/examples.txt", append = FALSE)
   sapply(fns[-omit], function(x) {
     warn <- capture_warning(example(x, package = "reproducible", character.only = TRUE,

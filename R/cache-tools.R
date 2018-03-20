@@ -56,6 +56,7 @@ setMethod(
       unlink(file.path(x, "gallery"), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
       unlink(file.path(x, "backpack.db"))
+      checkPath(x, create = TRUE)
       createLocalRepo(x)
       return(invisible())
     }
