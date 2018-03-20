@@ -509,7 +509,7 @@ setMethod(
                               stringsAsFactors = FALSE)
 
       hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
-        objSize <- .recursiveObjectSize(x)
+        objSize <- objectSize(x)
 
       }))
 
@@ -917,30 +917,39 @@ setMethod(
 #' @param x An object
 #'
 #' @export
-#' @rdname recursiveObjectSize
+#' @rdname objectSize
 #' @keywords internal
 #' @examples
 #' a <- new.env()
 #' a$b <- 1:10
 #' a$d <- 1:10
 #'
-#' .recursiveObjectSize(a) # all the elements in the environment
+#' objectSize(a) # all the elements in the environment
 #' object.size(a) # different - only measuring the environment as an object
-.recursiveObjectSize <- function(x) {
-  UseMethod(".recursiveObjectSize")
+objectSize <- function(x) {
+  UseMethod("objectSize", x)
 }
 
-#' @rdname recursiveObjectSize
-.recursiveObjectSize.list <- function(x) {
-  lapply(x, function(y) .recursiveObjectSize(y))
+#' @export
+#' @rdname objectSize
+objectSize.list <- function(x) {
+  lapply(x, function(y) objectSize(y))
 }
 
-#' @rdname recursiveObjectSize
-.recursiveObjectSize.environment <- function(x) {
-  .recursiveObjectSize(as.list(x))
+#' @export
+#' @rdname objectSize
+#' @importFrom utils object.size
+objectSize.environment <- function(x) {
+  xName <- deparse(substitute(x))
+  os <- objectSize(as.list(x))
+  names(os) <- paste0(xName, "$", names(os))
+  osCur <- list(object.size(x))
+  names(osCur) <- xName
+  os <- append(os, osCur)
 }
 
-#' @rdname recursiveObjectSize
-.recursiveObjectSize.default <- function(x) {
+#' @export
+#' @rdname objectSize
+objectSize.default <- function(x) {
   object.size(x)
 }
