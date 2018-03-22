@@ -5,18 +5,28 @@
 \alias{objectSize.list}
 \alias{objectSize.environment}
 \alias{objectSize.default}
+\alias{objectSize.Path}
 \title{Recursive object.size}
 \usage{
-objectSize(x)
+objectSize(x, quick)
 
-\method{objectSize}{list}(x)
+\method{objectSize}{list}(x, quick = getOption("reproducible.quick", FALSE))
 
-\method{objectSize}{environment}(x)
+\method{objectSize}{environment}(x, quick = getOption("reproducible.quick",
+  FALSE))
 
-\method{objectSize}{default}(x)
+\method{objectSize}{default}(x, quick = getOption("reproducible.quick",
+  FALSE))
+
+\method{objectSize}{Path}(x, quick = getOption("reproducible.quick", FALSE))
 }
 \arguments{
 \item{x}{An object}
+
+\item{quick}{Logical. If \code{TRUE}, then object.size will be used. \code{TRUE}
+will generally not do anything unless there is an alternative, .e.g,
+\code{Path} class objects. In which case, \code{file.size} will be
+used.}
 }
 \description{
 This has methods for various types of things that may not correctly report

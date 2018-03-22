@@ -68,6 +68,12 @@ if (getRversion() >= "3.1.0") {
 #' \code{userTags} is unique of all arguments: its values will be appended to the
 #' inherited \code{userTags}.
 #'
+#' @section Caching Speed:
+#' Caching speed may become a critical aspect of a final product. For example,
+#' if the final product is a shiny app, rerunning the entire project may need
+#' to take less then a few seconds at most. There are 4 arguments that affect
+#' Cache speed: \code{quick}, \code{length}, \code{digestPathContent} and
+#' \code{algo}.
 #'
 #' @section Filepaths:
 #' If a function has a path argument, there is some ambiguity about what should be
@@ -138,11 +144,12 @@ if (getRversion() >= "3.1.0") {
 #' @param cacheRepo A repository used for storing cached objects.
 #'                  This is optional if \code{Cache} is used inside a SpaDES module.
 #'
-#' @param compareRasterFileLength Numeric. Optional. When there are Rasters, that
-#'        have file-backed storage, this is passed to the length arg in \code{digest}
-#'        when determining if the Raster file is already in the database.
-#'        Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-#'        Default 1e6. Passed to \code{.prepareFileBackedRaster}.
+#' @param length Numeric. If the element passed to Cache is a \code{Path} class
+#'        object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing, then this will be
+#'        passed to \code{digest::digest}, essentially limiting the number of bytes
+#'        to digest (for speed). This will only be used if \code{quick = FALSE}.
+#'
+#' @param compareRasterFileLength Being deprecated; use \code{length}.
 #'
 #' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
 #'
@@ -179,12 +186,15 @@ if (getRversion() >= "3.1.0") {
 #'        hashing the contents of the file(s). If set to \code{FALSE} (default),
 #'        the contents of the file(s) are hashed.
 #'        \emph{NOTE: this argument is experimental and may change in future releases.}
+#' @param verbose Logical. This will output much more information about the internals of
+#'        Caching, which may help diagnose Caching challenges.
 #'
 #' @inheritParams digest::digest
 #'
 #' @param digestPathContent Logical. Should arguments that are of class \code{Path}
 #'                          (see examples below) have their name digested
-#'                          (\code{FALSE}), or their file contents (\code{TRUE}; default).
+#'                          (\code{FALSE}), or their file contents. Default is
+#'                          \code{!quick}, i.e., \code{TRUE} when package is loaded.
 #'
 #' @return As with \code{\link[archivist]{cache}}, returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
@@ -221,10 +231,12 @@ if (getRversion() >= "3.1.0") {
 setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
-           algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e6,
-           userTags = c(), digestPathContent = !getOption("reproducible.quick", FALSE),
-           omitArgs = NULL, classOptions = list(), debugCache = character(),
-           sideEffect = FALSE, makeCopy = FALSE, quick = getOption("reproducible.quick", FALSE)) {
+           algo = "xxhash64", cacheRepo = NULL, length = 1e6,
+           compareRasterFileLength, userTags = c(),
+           digestPathContent = !quick, omitArgs = NULL,
+           classOptions = list(), debugCache = character(),
+           sideEffect = FALSE, makeCopy = FALSE, quick = getOption("reproducible.quick", FALSE),
+           verbose = getOption("reproducible.verbose", FALSE)) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
 
@@ -233,10 +245,15 @@ setGeneric(
 setMethod(
   "Cache",
   definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
-                        algo, cacheRepo, compareRasterFileLength, userTags,
+                        algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick) {
     if (missing(FUN)) stop("Cache requires the FUN argument")
+
+    if (!missing(compareRasterFileLength)) {
+      message("compareRasterFileLength argument being deprecated. Use 'length'")
+      length <- compareRasterFileLength
+    }
 
     # Arguments -- this puts arguments into a special reproducible environment
     if (R.version[['minor']] < 3.4) { # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
@@ -489,19 +506,19 @@ setMethod(
       tmpl[omitArgs] <- NULL
     }
 
-    if (getOption("reproducible.verbose", FALSE)) {
+    if (verbose) {
       startHashTime <- Sys.time()
     }
     preDigest <- lapply(tmpl[!dotPipe], function(x) {
       # remove the "newCache" attribute, which is irrelevant for digest
       if (!is.null(attr(x, "newCache"))) attr(x, "newCache") <- NULL
       .robustDigest(x, objects = objects,
-                        compareRasterFileLength = compareRasterFileLength,
+                        length = length,
                         algo = algo,
                         digestPathContent = digestPathContent,
                         classOptions = classOptions)
     })
-    if (getOption("reproducible.verbose", FALSE)) {
+    if (verbose) {
       endHashTime <- Sys.time()
       verboseDF <- data.frame(functionName = functionDetails$functionName,
                               component = "Hashing",
@@ -510,7 +527,7 @@ setMethod(
                               stringsAsFactors = FALSE)
 
       hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
-        objSize <- objectSize(x)
+        objSize <- objectSize(x, quick = quick)
 
       }))
 
@@ -572,14 +589,14 @@ setMethod(
 
       # make sure the notOlderThan is valid, if not, exit this loop
       if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-        if (getOption("reproducible.verbose", FALSE)) {
+        if (verbose) {
           startLoadTime <- Sys.time()
         }
 
         output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
 
-        if (getOption("reproducible.verbose", FALSE)) {
+        if (verbose) {
           endLoadTime <- Sys.time()
           verboseDF <- data.frame(functionName = functionDetails$functionName,
                                   component = "Loading from repo",
@@ -705,7 +722,7 @@ setMethod(
     }
 
     # RUN the function call
-    if (getOption("reproducible.verbose", FALSE)) {
+    if (verbose) {
       startRunTime <- Sys.time()
     }
 
@@ -715,7 +732,7 @@ setMethod(
       output <- do.call(FUN, originalDots)
     }
 
-    if (getOption("reproducible.verbose", FALSE)) {
+    if (verbose) {
       endRunTime <- Sys.time()
       verboseDF <- data.frame(functionName = functionDetails$functionName,
                               component = paste("Running", functionDetails$functionName),
@@ -826,7 +843,7 @@ setMethod(
       }
     }
 
-    if (getOption("reproducible.verbose", FALSE)) {
+    if (verbose) {
       startSaveTime <- Sys.time()
     }
 
@@ -854,7 +871,7 @@ setMethod(
         TRUE
       }
     }
-    if (getOption("reproducible.verbose", FALSE)) {
+    if (verbose) {
       endSaveTime <- Sys.time()
       verboseDF <- data.frame(functionName = functionDetails$functionName,
                               component = "Saving to repo",
@@ -916,6 +933,10 @@ setMethod(
 #' their object.size using \code{object\.size}.
 #'
 #' @param x An object
+#' @param quick Logical. If \code{TRUE}, then object.size will be used. \code{TRUE}
+#'              will generally not do anything unless there is an alternative, .e.g,
+#'              \code{Path} class objects. In which case, \code{file.size} will be
+#'              used.
 #'
 #' @export
 #' @rdname objectSize
@@ -927,20 +948,20 @@ setMethod(
 #'
 #' objectSize(a) # all the elements in the environment
 #' object.size(a) # different - only measuring the environment as an object
-objectSize <- function(x) {
+objectSize <- function(x, quick) {
   UseMethod("objectSize", x)
 }
 
 #' @export
 #' @rdname objectSize
-objectSize.list <- function(x) {
+objectSize.list <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   lapply(x, function(y) objectSize(y))
 }
 
 #' @export
 #' @rdname objectSize
 #' @importFrom utils object.size
-objectSize.environment <- function(x) {
+objectSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   xName <- deparse(substitute(x))
   os <- objectSize(as.list(x))
   names(os) <- paste0(xName, "$", names(os))
@@ -951,6 +972,16 @@ objectSize.environment <- function(x) {
 
 #' @export
 #' @rdname objectSize
-objectSize.default <- function(x) {
+objectSize.default <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   object.size(x)
+}
+
+#' @export
+#' @rdname objectSize
+objectSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE)) {
+  if (quick) {
+    object.size(x)
+  } else {
+    file.size(x)
+  }
 }

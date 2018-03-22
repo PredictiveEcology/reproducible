@@ -729,8 +729,19 @@ test_that("test reproducible.verbose", {
     }, add = TRUE)
   Cache(rnorm, 1, cacheRepo = tmpdir)
   expect_is(.reproEnv$cacheTimings, "data.frame")
-  #write.table(.reproEnv$cacheTimings, file = paste0("c:/Eliot/tmp/temp",cacheDir,".txt"), col.names = FALSE)
   expect_true(NROW(.reproEnv$cacheTimings)==3)
   expect_true(NCOL(.reproEnv$cacheTimings)==4)
+
+  # Test Path class objects
+  a <- 1:10000
+  tmpFile <- tempfile(fileext = ".rds")
+  saveRDS(a, file = tmpFile)
+  out1 <- Cache(readRDS, tmpFile, cacheRepo = tmpdir)
+  out1Details <- .reproEnv$hashDetailsAll
+  out2 <- Cache(readRDS, asPath(tmpFile), cacheRepo = tmpdir)
+  out2Details <- .reproEnv$hashDetailsAll
+
+  # should be vastly larger when actual file, rather than just filename
+  expect_true( (20*out1Details$objectSize[1]) < out2Details$objectSize[1])
 
 })

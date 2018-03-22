@@ -7,7 +7,7 @@
 \usage{
 getFunctionName(FUN, ..., overrideCall, isPipe)
 
-.digestRaster(object, compareRasterFileLength, algo)
+.digestRaster(object, length, algo)
 }
 \arguments{
 \item{FUN}{A function}

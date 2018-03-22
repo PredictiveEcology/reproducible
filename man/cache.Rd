@@ -7,19 +7,20 @@
 \title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
-  algo = "xxhash64", cacheRepo = NULL, compareRasterFileLength = 1e+06,
-  userTags = c(), digestPathContent = !getOption("reproducible.quick",
-  FALSE), omitArgs = NULL, classOptions = list(),
-  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
-  quick = getOption("reproducible.quick", FALSE))
+  algo = "xxhash64", cacheRepo = NULL, length = 1e+06,
+  compareRasterFileLength, userTags = c(), digestPathContent = !quick,
+  omitArgs = NULL, classOptions = list(), debugCache = character(),
+  sideEffect = FALSE, makeCopy = FALSE,
+  quick = getOption("reproducible.quick", FALSE),
+  verbose = getOption("reproducible.verbose", FALSE))
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
-  compareRasterFileLength = 1e+06, userTags = c(),
-  digestPathContent = !getOption("reproducible.quick", FALSE),
-  omitArgs = NULL, classOptions = list(), debugCache = character(),
-  sideEffect = FALSE, makeCopy = FALSE,
-  quick = getOption("reproducible.quick", FALSE))
+  length = 1e+06, compareRasterFileLength, userTags = c(),
+  digestPathContent = !quick, omitArgs = NULL, classOptions = list(),
+  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
+  quick = getOption("reproducible.quick", FALSE),
+  verbose = getOption("reproducible.verbose", FALSE))
 }
 \arguments{
 \item{FUN}{Either a function or an unevaluated function call (e.g., using
@@ -46,17 +47,19 @@ return. This is only relevant for \code{simList} objects}
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
-\item{compareRasterFileLength}{Numeric. Optional. When there are Rasters, that
-have file-backed storage, this is passed to the length arg in \code{digest}
-when determining if the Raster file is already in the database.
-Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
+\item{length}{Numeric. If the element passed to Cache is a \code{Path} class
+object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing, then this will be
+passed to \code{digest::digest}, essentially limiting the number of bytes
+to digest (for speed). This will only be used if \code{quick = FALSE}.}
+
+\item{compareRasterFileLength}{Being deprecated; use \code{length}.}
 
 \item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
 
 \item{digestPathContent}{Logical. Should arguments that are of class \code{Path}
 (see examples below) have their name digested
-(\code{FALSE}), or their file contents (\code{TRUE}; default).}
+(\code{FALSE}), or their file contents. Default is
+\code{!quick}, i.e., \code{TRUE} when package is loaded.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
@@ -93,6 +96,9 @@ will hash the file's metadata (i.e., filename and file size) instead of
 hashing the contents of the file(s). If set to \code{FALSE} (default),
 the contents of the file(s) are hashed.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
+
+\item{verbose}{Logical. This will output much more information about the internals of
+Caching, which may help diagnose Caching challenges.}
 }
 \value{
 As with \code{\link[archivist]{cache}}, returns the value of the
@@ -172,6 +178,15 @@ nested \code{Cache} function calls don't propagate their arguments to further "i
 
 \code{userTags} is unique of all arguments: its values will be appended to the
 inherited \code{userTags}.
+}
+
+\section{Caching Speed}{
+
+Caching speed may become a critical aspect of a final product. For example,
+if the final product is a shiny app, rerunning the entire project may need
+to take less then a few seconds at most. There are 4 arguments that affect
+Cache speed: \code{quick}, \code{length}, \code{digestPathContent} and
+\code{algo}.
 }
 
 \section{Filepaths}{
