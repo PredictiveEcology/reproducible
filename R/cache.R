@@ -269,7 +269,6 @@ setMethod(
     if (R.version[['minor']] < 3.4) { # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
       objs <- ls()[ls() %in% .namesCacheFormals]
       objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
-      env <- environment()
       args <- mget(objs)
       forms <- lapply(.formalsCache, function(x) eval(x))
       objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
@@ -934,5 +933,6 @@ setMethod(
 # CacheMem <- memoise::memoise(Cache)
 
 .formalsCache <- formals(Cache)[-(1:2)]
-.namesCacheFormals <- names(.formalsCache)
+.formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
+.namesCacheFormals <- names(.formalsCache)[]
 
