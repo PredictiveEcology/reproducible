@@ -60,6 +60,7 @@ Collate:
     'consistentPaths.R'
     'git.R'
     'helpers.R'
+    'objectSize.R'
     'packages.R'
     'pipe.R'
     'reproducible-package.R'

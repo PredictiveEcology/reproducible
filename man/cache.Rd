@@ -8,7 +8,7 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   algo = "xxhash64", cacheRepo = NULL, length = 1e+06,
-  compareRasterFileLength, userTags = c(), digestPathContent = !quick,
+  compareRasterFileLength, userTags = c(), digestPathContent,
   omitArgs = NULL, classOptions = list(), debugCache = character(),
   sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
@@ -17,7 +17,7 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   length = 1e+06, compareRasterFileLength, userTags = c(),
-  digestPathContent = !quick, omitArgs = NULL, classOptions = list(),
+  digestPathContent, omitArgs = NULL, classOptions = list(),
   debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", FALSE))
@@ -56,10 +56,7 @@ to digest (for speed). This will only be used if \code{quick = FALSE}.}
 
 \item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
 
-\item{digestPathContent}{Logical. Should arguments that are of class \code{Path}
-(see examples below) have their name digested
-(\code{FALSE}), or their file contents. Default is
-\code{!quick}, i.e., \code{TRUE} when package is loaded.}
+\item{digestPathContent}{Being deprecated. Use \code{quick}.}
 
 \item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
 
@@ -91,10 +88,14 @@ of the downloaded files are corrupted or missing. Currently only works when
 set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
-\item{quick}{Logical. If \code{sideEffect = TRUE}, setting this to \code{TRUE},
-will hash the file's metadata (i.e., filename and file size) instead of
-hashing the contents of the file(s). If set to \code{FALSE} (default),
+\item{quick}{Logical. If \code{TRUE},
+little or no disk-based information will be assessed, i.e., mostly its
+memory content. This is relevant for objects of class
+\code{Path} and \code{Raster} currently.
+For class \code{Path} objects, the file's metadata (i.e., filename and file size)
+will be hashed instead of the file contents. If set to \code{FALSE} (default),
 the contents of the file(s) are hashed.
+If \code{quick = TRUE}, \code{length} is ignored.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 
 \item{verbose}{Logical. This will output much more information about the internals of
@@ -184,9 +185,11 @@ inherited \code{userTags}.
 
 Caching speed may become a critical aspect of a final product. For example,
 if the final product is a shiny app, rerunning the entire project may need
-to take less then a few seconds at most. There are 4 arguments that affect
-Cache speed: \code{quick}, \code{length}, \code{digestPathContent} and
-\code{algo}.
+to take less then a few seconds at most. There are 3 arguments that affect
+Cache speed: \code{quick}, \code{length}, and
+\code{algo}. \code{quick} is passed to \code{.robustDigest}, which currently
+only affects \code{Path} and \code{Raster*} class objects. In both cases, \code{quick}
+means that little or no disk-based information will be assessed.
 }
 
 \section{Filepaths}{
@@ -202,8 +205,8 @@ done. Possibilities include:
 If paths are passed in as is (i.e,. character string), the result will not be predictable.
 Instead, one should use the wrapper function \code{asPath(path)}, which sets the
 class of the string to a \code{Path}, and one should decide whether one wants
-to digest the content of the file (using \code{digestPathContent = TRUE}),
-or just the filename (\code{(digestPathContent = FALSE)}). See examples.
+to digest the content of the file (using \code{quick = FALSE}),
+or just the filename (\code{(quick = TRUE)}). See examples.
 }
 
 \section{Stochasticity}{

@@ -71,9 +71,12 @@ if (getRversion() >= "3.1.0") {
 #' @section Caching Speed:
 #' Caching speed may become a critical aspect of a final product. For example,
 #' if the final product is a shiny app, rerunning the entire project may need
-#' to take less then a few seconds at most. There are 4 arguments that affect
-#' Cache speed: \code{quick}, \code{length}, \code{digestPathContent} and
-#' \code{algo}.
+#' to take less then a few seconds at most. There are 3 arguments that affect
+#' Cache speed: \code{quick}, \code{length}, and
+#' \code{algo}. \code{quick} is passed to \code{.robustDigest}, which currently
+#' only affects \code{Path} and \code{Raster*} class objects. In both cases, \code{quick}
+#' means that little or no disk-based information will be assessed.
+#'
 #'
 #' @section Filepaths:
 #' If a function has a path argument, there is some ambiguity about what should be
@@ -87,8 +90,8 @@ if (getRversion() >= "3.1.0") {
 #' If paths are passed in as is (i.e,. character string), the result will not be predictable.
 #' Instead, one should use the wrapper function \code{asPath(path)}, which sets the
 #' class of the string to a \code{Path}, and one should decide whether one wants
-#' to digest the content of the file (using \code{digestPathContent = TRUE}),
-#' or just the filename (\code{(digestPathContent = FALSE)}). See examples.
+#' to digest the content of the file (using \code{quick = FALSE}),
+#' or just the filename (\code{(quick = TRUE)}). See examples.
 #'
 #' @section Stochasticity:
 #' In general, it is expected that caching will only be used when stochasticity
