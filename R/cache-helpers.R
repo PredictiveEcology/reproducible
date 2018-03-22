@@ -751,22 +751,22 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #' @importFrom fastdigest fastdigest
 #' @importFrom digest digest
 #' @importFrom raster res crs extent
-.digestRaster <- function(object, compareRasterFileLength, algo) {
+.digestRasterLayer <- function(object, length, algo, quick) {
+  # metadata -- only a few items of the long list because one thing (I don't recall)
+  #  doesn't cache consistently
+  dig <- fastdigest(list(dim(object), res(object), crs(object),
+                         extent(object), object@data))
   if (nzchar(object@file@name)) {
-    dig <- fastdigest(list(dim(object), res(object), crs(object),
-                           extent(object), object@data))
-    # if the Raster is on disk, has the first compareRasterFileLength characters;
-    if (endsWith(basename(object@file@name), suffix = ".grd"))
-      filename <- sub(object@file@name, pattern = ".grd$", replacement = ".gri")
-    else
-      filename <- object@file@name
-    dig <- fastdigest(
-      append(dig, digest::digest(file = filename,
-                                 length = compareRasterFileLength,
-                                 algo = algo)))
-  } else {
-    dig <- fastdigest(object)
+    # if the Raster is on disk, has the first length characters;
+    filename <- if (endsWith(basename(object@file@name), suffix = ".grd")) {
+      sub(object@file@name, pattern = ".grd$", replacement = ".gri")
+    } else {
+      object@file@name
+    }
+    dig2 <- .robustDigest(asPath(filename), length = length, quick = quick, algo = algo)
+    dig <- c(dig, dig2)
   }
+  dig <- fastdigest(dig)
 }
 
 #' Recursive copying of nested environments, and other "hard to copy" objects
