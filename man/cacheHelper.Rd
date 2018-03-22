@@ -2,12 +2,12 @@
 % Please edit documentation in R/cache-helpers.R
 \name{getFunctionName}
 \alias{getFunctionName}
-\alias{.digestRaster}
+\alias{.digestRasterLayer}
 \title{A set of helpers for Cache}
 \usage{
 getFunctionName(FUN, ..., overrideCall, isPipe)
 
-.digestRaster(object, length, algo)
+.digestRasterLayer(object, length, algo, quick)
 }
 \arguments{
 \item{FUN}{A function}
