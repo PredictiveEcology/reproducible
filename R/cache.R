@@ -181,20 +181,22 @@ if (getRversion() >= "3.1.0") {
 #'        set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
 #'        \emph{NOTE: this argument is experimental and may change in future releases.}
 #'
-#' @param quick Logical. If \code{sideEffect = TRUE}, setting this to \code{TRUE},
-#'        will hash the file's metadata (i.e., filename and file size) instead of
-#'        hashing the contents of the file(s). If set to \code{FALSE} (default),
+#' @param quick Logical. If \code{TRUE},
+#'        little or no disk-based information will be assessed, i.e., mostly its
+#'        memory content. This is relevant for objects of class
+#'        \code{Path} and \code{Raster} currently.
+#'        For class \code{Path} objects, the file's metadata (i.e., filename and file size)
+#'        will be hashed instead of the file contents. If set to \code{FALSE} (default),
 #'        the contents of the file(s) are hashed.
+#'        If \code{quick = TRUE}, \code{length} is ignored.
 #'        \emph{NOTE: this argument is experimental and may change in future releases.}
+#'
 #' @param verbose Logical. This will output much more information about the internals of
 #'        Caching, which may help diagnose Caching challenges.
 #'
 #' @inheritParams digest::digest
 #'
-#' @param digestPathContent Logical. Should arguments that are of class \code{Path}
-#'                          (see examples below) have their name digested
-#'                          (\code{FALSE}), or their file contents. Default is
-#'                          \code{!quick}, i.e., \code{TRUE} when package is loaded.
+#' @param digestPathContent Being deprecated. Use \code{quick}.
 #'
 #' @return As with \code{\link[archivist]{cache}}, returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
@@ -233,9 +235,10 @@ setGeneric(
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL, length = 1e6,
            compareRasterFileLength, userTags = c(),
-           digestPathContent = !quick, omitArgs = NULL,
+           digestPathContent, omitArgs = NULL,
            classOptions = list(), debugCache = character(),
-           sideEffect = FALSE, makeCopy = FALSE, quick = getOption("reproducible.quick", FALSE),
+           sideEffect = FALSE, makeCopy = FALSE,
+           quick = getOption("reproducible.quick", FALSE),
            verbose = getOption("reproducible.verbose", FALSE)) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
@@ -253,6 +256,10 @@ setMethod(
     if (!missing(compareRasterFileLength)) {
       message("compareRasterFileLength argument being deprecated. Use 'length'")
       length <- compareRasterFileLength
+    }
+    if (!missing(digestPathContent)) {
+      message("digestPathContent argument being deprecated. Use 'quick'.")
+      quick <- !digestPathContent
     }
 
     # Arguments -- this puts arguments into a special reproducible environment
@@ -515,7 +522,7 @@ setMethod(
       .robustDigest(x, objects = objects,
                         length = length,
                         algo = algo,
-                        digestPathContent = digestPathContent,
+                        quick = quick,
                         classOptions = classOptions)
     })
     if (verbose) {

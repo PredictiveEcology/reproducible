@@ -203,7 +203,7 @@ test_that("test memory backed raster robustDigest", {
 
 
 
-test_that("test digestPathContent", {
+test_that("test 'quick' argument", {
 
   library(raster)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
@@ -223,14 +223,14 @@ test_that("test digestPathContent", {
   }
   fn <- filename(r1)
   out1a <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir)
-  out1b <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, digestPathContent = FALSE)
+  out1b <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
   r1 <- writeRaster(r1, filename = tmpFile1, overwrite = TRUE)
   mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
-                                          cacheRepo = tmpdir, digestPathContent = FALSE))
+                                          cacheRepo = tmpdir, quick = TRUE))
   expect_true(grepl("loading cached result from previous quickFun call\\.", mess1 ))
   mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
-                                          cacheRepo = tmpdir, digestPathContent = TRUE))
+                                          cacheRepo = tmpdir, quick = FALSE))
   expect_null(mess1)
 
   # Using Raster directly -- not file
@@ -238,12 +238,12 @@ test_that("test digestPathContent", {
     ras[sample(ncell(ras), size = 1)]
   }
   out1a <- Cache(quickFun, r1, cacheRepo = tmpdir)
-  out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, digestPathContent = FALSE)
+  out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
   r1 <- writeRaster(r1, filename = tmpFile1, overwrite = TRUE)
-  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, digestPathContent = FALSE))
+  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE))
   expect_true(grepl("loading cached result from previous quickFun call\\.", mess1 ))
-  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, digestPathContent = TRUE))
+  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE))
   expect_null(mess1)
 
 
@@ -404,11 +404,11 @@ test_that("test asPath", {
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
   a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
-                               digestPathContent = FALSE, cacheRepo = tmpdir))
+                               quick = TRUE, cacheRepo = tmpdir))
   a2 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
-                               digestPathContent = FALSE, cacheRepo = tmpdir))
+                               quick = TRUE, cacheRepo = tmpdir))
   a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
-                               digestPathContent = FALSE, cacheRepo = tmpdir))
+                               quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))
@@ -416,11 +416,11 @@ test_that("test asPath", {
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
   a1 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
-                               digestPathContent = FALSE, cacheRepo = tmpdir))
+                               quick = TRUE, cacheRepo = tmpdir))
   a2 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
-                               digestPathContent = FALSE, cacheRepo = tmpdir))
+                               quick = TRUE, cacheRepo = tmpdir))
   a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
-                               digestPathContent = FALSE, cacheRepo = tmpdir))
+                               quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading cached", a3))

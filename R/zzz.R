@@ -8,7 +8,6 @@
   opts.reproducible <- list( # nolint
     reproducible.cachePath = file.path(.reproducibleTempDir),
     reproducible.verbose = FALSE,
-    #reproducible.digestPathContent = !reproducible.quick,
     #reproducible.useMemoise = FALSE, #memoise
     reproducible.quick = FALSE
   )

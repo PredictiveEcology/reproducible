@@ -78,11 +78,11 @@
 #'
 #' # if you tell it that it is a path, then you can decide if you want it to be
 #' #  treated as a character string or as a file path
-#' .robustDigest(asPath(tmpfile1))
-#' .robustDigest(asPath(tmpfile2)) # different because you have a choice
+#' .robustDigest(asPath(tmpfile1), quick = TRUE)
+#' .robustDigest(asPath(tmpfile2), quick = TRUE) # different because using file info
 #'
-#' .robustDigest(asPath(tmpfile1), digestPathContent = TRUE)
-#' .robustDigest(asPath(tmpfile2), digestPathContent = TRUE) # same
+#' .robustDigest(asPath(tmpfile1), quick = FALSE)
+#' .robustDigest(asPath(tmpfile2), quick = FALSE) # same because using file content
 #'
 #' # Rasters are interesting because it is not know a priori if it
 #' #   it has a file name associated with it.
@@ -107,7 +107,7 @@
 setGeneric(".robustDigest", function(object, objects,
                                     length = 1e6,
                                     algo = "xxhash64",
-                                    digestPathContent = !getOption("reproducible.quick", FALSE),
+                                    quick = getOption("reproducible.quick", FALSE),
                                     classOptions = list()) {
   standardGeneric(".robustDigest")
 })
@@ -117,7 +117,7 @@ setGeneric(".robustDigest", function(object, objects,
 setMethod(
   ".robustDigest",
   signature = "ANY",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
     fastdigest(object)
 })
@@ -130,7 +130,7 @@ setOldClass("cluster")
 setMethod(
   ".robustDigest",
   signature = "cluster",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
     fastdigest(NULL)
 })
@@ -140,7 +140,7 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "function",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
     fastdigest(format(object))
 })
@@ -150,7 +150,7 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "expression",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
     fastdigest(format(object))
 })
@@ -160,9 +160,9 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "character",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
-  if (digestPathContent) {
+  if (!quick) {
       if (any(unlist(lapply(object, dir.exists)))) {
         unlist(lapply(object, function(x) {
           if (dir.exists(x)) {
@@ -192,9 +192,9 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Path",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
-  if (digestPathContent) {
+  if (!quick) {
       lapply(object, function(x) {
         isExistentFile <- FALSE
         if (file.exists(x)) {
@@ -219,11 +219,11 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "environment",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
   .robustDigest(as.list(object, all.names = TRUE), objects = objects,
                  length = length,
-                 algo = algo, digestPathContent = digestPathContent)
+                 algo = algo, quick = quick)
 })
 
 #' @rdname robustDigest
@@ -231,12 +231,12 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "list",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
   lapply(.sortDotsUnderscoreFirst(object), function(x) {
       .robustDigest(object = x, objects = objects,
                    length = length,
-                   algo = algo, digestPathContent = digestPathContent)
+                   algo = algo, quick = quick)
     })
 })
 
@@ -245,9 +245,9 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Raster",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
-  if (digestPathContent) {
+  if (!quick) {
       if (is(object, "RasterStack")) {
         # have to do one file at a time with Stack
         dig <- suppressWarnings(
@@ -270,7 +270,7 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Spatial",
-  definition = function(object, objects, length, algo, digestPathContent,
+  definition = function(object, objects, length, algo, quick,
                         classOptions) {
   if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
