@@ -173,7 +173,6 @@
 #'
 #' unlink(tmpdir, recursive = TRUE)
 `%C%` <- function(lhs, rhs) {
-  browser()
   # adapted from magrittr code below
   parent <- parent.frame()
   env <- new.env(parent = parent)
