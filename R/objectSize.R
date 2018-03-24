@@ -27,7 +27,7 @@ objectSize <- function(x, quick) {
 #' @export
 #' @rdname objectSize
 objectSize.list <- function(x, quick = getOption("reproducible.quick", FALSE)) {
-  lapply(x, function(y) objectSize(y))
+  lapply(x, function(y) objectSize(y, quick = quick))
 }
 
 #' @export
@@ -35,7 +35,7 @@ objectSize.list <- function(x, quick = getOption("reproducible.quick", FALSE)) {
 #' @importFrom utils object.size
 objectSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   xName <- deparse(substitute(x))
-  os <- objectSize(as.list(x))
+  os <- objectSize(as.list(x), quick = quick)
   names(os) <- paste0(xName, "$", names(os))
   osCur <- list(object.size(x))
   names(osCur) <- xName
