@@ -22,6 +22,8 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", FALSE))
+
+lhs \%<\% rhs
 }
 \arguments{
 \item{FUN}{Either a function or an unevaluated function call (e.g., using
