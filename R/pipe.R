@@ -236,3 +236,22 @@
     }
   }
 }
+
+#' The special assign operator \code{\%<\%} is equivalent to Cache. See examples at the end.
+#'
+#' @export
+#' @rdname cache
+#' @param lhs A name to assign to.
+#' @param rhs A function call
+#' @examples
+#' # Equivalent
+#' a <- Cache(rnorm, 1)
+#' b %<% rnorm(1)
+#'
+`%<%` <- function(lhs, rhs) {
+  lhsChar <- deparse(substitute(lhs))
+  mc <- match.call()["rhs"]
+  RHS <- as.list(mc)[[1]]
+  assign(lhsChar, do.call(Cache, as.list(RHS)), envir = parent.frame())
+  return(invisible(get(lhsChar, envir = parent.frame(), inherits = FALSE)))
+}
