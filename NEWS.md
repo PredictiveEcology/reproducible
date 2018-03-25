@@ -3,6 +3,7 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.1.4
 =============
 
+* Cache assign -- %<% can be used instead of normal assign, equivalent to lhss <- Cache(rhs)
 * new option: reproducible.verbose, set to FALSE by default, but if set to true may help understand caching behaviour, especially for complex highly nested code
 * all options now described in ?reproducible
 * All Cache arguments other than FUN and ... will now propagate to internal, nested Cache calls, if they are not specified explicitly in each of the inner Cache calls. 
