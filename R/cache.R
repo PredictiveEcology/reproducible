@@ -602,8 +602,13 @@ setMethod(
           startLoadTime <- Sys.time()
         }
 
-        output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+        if (quick & getOption("reproducible.useMemoise", TRUE)) {
+          output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+        } else {
+          output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+                                         repoDir = cacheRepo, value = TRUE)
+        }
 
         if (verbose) {
           endLoadTime <- Sys.time()
@@ -936,3 +941,4 @@ setMethod(
 .formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
 .namesCacheFormals <- names(.formalsCache)[]
 
+loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
