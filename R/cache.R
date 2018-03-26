@@ -254,6 +254,10 @@ setMethod(
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick) {
+    if (verbose) {
+      startCacheTime <- Sys.time()
+    }
+
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
     if (!missing(compareRasterFileLength)) {
@@ -710,6 +714,23 @@ setMethod(
         }
         attr(output, "newCache") <- FALSE
 
+        if (verbose) {
+          endCacheTime <- Sys.time()
+          verboseDF <- data.frame(functionName = functionDetails$functionName,
+                                  component = "Whole Cache call",
+                                  elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
+                                                                    units = "secs")),
+                                  units = "secs",
+                                  stringsAsFactors = FALSE)
+
+          if (exists("verboseTiming", envir = .reproEnv)) {
+            .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+          }
+          # on.exit({message("Loading from repo took ", format(endLoadTime - startLoadTime))},
+          #   add = TRUE)
+
+        }
+
         return(output)
       }
     } else {
@@ -899,6 +920,23 @@ setMethod(
       # on.exit({message("Saving ", functionDetails$functionName, " to repo took ",
       #                  format(endSaveTime - startSaveTime))},
       #         add = TRUE)
+
+    }
+
+    if (verbose) {
+      endCacheTime <- Sys.time()
+      verboseDF <- data.frame(functionName = functionDetails$functionName,
+                              component = "Whole Cache call",
+                              elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
+                                                                units = "secs")),
+                              units = "secs",
+                              stringsAsFactors = FALSE)
+
+      if (exists("verboseTiming", envir = .reproEnv)) {
+        .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+      }
+      # on.exit({message("Loading from repo took ", format(endLoadTime - startLoadTime))},
+      #   add = TRUE)
 
     }
 
