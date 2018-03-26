@@ -540,20 +540,20 @@ setMethod(
                               stringsAsFactors = FALSE)
 
       hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
-        objSize <- objectSize(x, quick = quick)
+        objSize <- objSize(x, quick = quick)
 
       }))
 
       preDigestUnlist <- unlist(preDigest, recursive = TRUE)
       lengths <- unlist(lapply(preDigest, function(x) length(unlist(x))))
       hashDetails <- data.frame(objectNames = rep(names(preDigest), lengths),
-                                #objectSize = rep(hashObjectSize, lengths),
+                                #objSize = rep(hashObjectSize, lengths),
                                 hashElements = names(preDigestUnlist),
                                 hash = unname(preDigestUnlist))
       preDigestUnlistNames <- unlist(lapply(strsplit(names(preDigestUnlist), split = "\\."), tail, 1))
       hashObjectSizeNames <- unlist(lapply(strsplit(names(hashObjectSize), split = "\\."), tail, 1))
-      hashDetails$objectSize <- NA
-      hashDetails$objectSize[preDigestUnlistNames %in% hashObjectSizeNames] <- hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
+      hashDetails$objSize <- NA
+      hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <- hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
 
       if (exists("hashDetails", envir = .reproEnv)) {
         .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)

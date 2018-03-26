@@ -12,8 +12,8 @@ Description: Built on top of 'git2r' and 'archivist', this package aims at
 URL: 
     https://predictiveecology.github.io/reproducible/,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-03-24
-Version: 0.1.4.9010
+Date: 2018-03-26
+Version: 0.1.4.9011
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre")),
