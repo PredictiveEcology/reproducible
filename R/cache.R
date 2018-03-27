@@ -609,15 +609,17 @@ setMethod(
         if (quick & getOption("reproducible.useMemoise", TRUE)) {
           output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+          loadFromMgs <- "Loading from memoise version of repo"
         } else {
           output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                          repoDir = cacheRepo, value = TRUE)
+          loadFromMgs <- "Loading from repo"
         }
 
         if (verbose) {
           endLoadTime <- Sys.time()
           verboseDF <- data.frame(functionName = functionDetails$functionName,
-                                  component = "Loading from repo",
+                                  component = loadFromMgs,
                                   elapsedTime = as.numeric(difftime(endLoadTime, startLoadTime, units = "secs")),
                                   units = "secs",
                                   stringsAsFactors = FALSE)
