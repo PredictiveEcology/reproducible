@@ -1,5 +1,5 @@
 test_that("test cached downloads", {
-  outdir <- file.path(tempdir(), "test-cached-downloads")
+  outdir <- file.path(tempdir(), paste0(sample(LETTERS), collapse = ""))
   expect_true(dir.create(outdir))
 
   on.exit({

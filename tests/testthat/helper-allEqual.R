@@ -3,3 +3,5 @@ all.equalWONewCache <- function(a, b) {
   attr(b, "newCache") <- NULL
   all.equal(a,b)
 }
+
+options(reproducible.verbose = FALSE)
