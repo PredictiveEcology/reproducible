@@ -16,6 +16,10 @@
 #' if \code{sim} is provided, or located in \code{cacheRepo}. Also returns a data.table invisibly
 #' of the removed items.
 #'
+#' @note If the cache is larger than 10MB, and clearCache is used, there will be a message
+#' and a pause, if interactive, to prevent accidentally deleting of a large cache repository.
+#'
+#'
 #' @export
 #' @importFrom archivist rmFromLocalRepo searchInLocalRepo
 #' @importFrom methods setGeneric setMethod
@@ -55,7 +59,8 @@ setMethod(
     if (all(missing(userTags), missing(after), missing(before))) {
       if (interactive()) {
         cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
-        formattedCacheSize <- utils:::format.object_size(cacheSize, "auto")
+        class(cacheSize) <- "object_size"
+        formattedCacheSize <- format(cacheSize, "auto")
 
         if (cacheSize > 1e7) {
           message("Your current cache size is ", formattedCacheSize,
@@ -106,7 +111,8 @@ setMethod(
       }
 
       if (interactive()) {
-        formattedCacheSize <- utils:::format.object_size(cacheSize, "auto")
+        class(cacheSize) <- "object_size"
+        formattedCacheSize <- format(cacheSize, "auto")
         if (cacheSize > 1e7) {
           message("Your current cache size is ", formattedCacheSize,
                   " Are you sure you would like to delete it all? Y or N")
@@ -191,9 +197,10 @@ setMethod(
         }
       }
     }
+    fs <- file.size(dir(x, full.names = TRUE, recursive = TRUE))
+    class(fs) <- "object_size"
     message("Total Cache size: ",
-            utils:::format.object_size(sum(
-              file.size(dir(x, full.names = TRUE, recursive = TRUE))), "auto"))
+            format(sum(fs), "auto"))
     objsDT
 })
 
