@@ -729,7 +729,7 @@ test_that("test reproducible.verbose", {
     }, add = TRUE)
   Cache(rnorm, 1, cacheRepo = tmpdir)
   expect_is(.reproEnv$cacheTimings, "data.frame")
-  expect_true(NROW(.reproEnv$cacheTimings)==3)
+  expect_true(NROW(.reproEnv$cacheTimings)==4)
   expect_true(NCOL(.reproEnv$cacheTimings)==4)
 
   # Test Path class objects
