@@ -197,10 +197,10 @@ setMethod(
         }
       }
     }
-    fs <- file.size(dir(x, full.names = TRUE, recursive = TRUE))
+    fs <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
     class(fs) <- "object_size"
     message("Total Cache size: ",
-            format(sum(fs), "auto"))
+            format(fs, "auto"))
     objsDT
 })
 
