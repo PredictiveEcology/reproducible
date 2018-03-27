@@ -53,6 +53,20 @@ setMethod(
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
     if (all(missing(userTags), missing(after), missing(before))) {
+      if (interactive()) {
+        cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
+        formattedCacheSize <- utils:::format.object_size(cacheSize, "auto")
+
+        if (cacheSize > 1e7) {
+          message("Your current cache size is ", formattedCacheSize,
+                  " Are you sure you would like to delete it all? Y or N")
+          rl <- readline()
+          if (!identical(rl, "Y")) {
+            message("Aborting clearCache")
+            return(invisible())
+          }
+        }
+      }
       unlink(file.path(x, "gallery"), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
       unlink(file.path(x, "backpack.db"))
@@ -70,14 +84,41 @@ setMethod(
 
     objsDT <- do.call(showCache, args = args)
 
+    if (interactive()) {
+      rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
+      cacheSize <- sum(file.size(rdaFiles))
+    }
+
     if (NROW(objsDT)) {
       rastersInRepo <- objsDT[grep(tagValue, pattern = "Raster")]
-      if (all(!is.na(rastersInRepo$artifact))) {
+      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo)>0) {
         suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
           loadFromLocalRepo(ras, repoDir = x, value = TRUE)
         }))
         filesToRemove <- unlist(lapply(rasters, function(x) filename(x)))
         filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
+
+        if (interactive()) {
+          dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
+          dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
+          cacheSize <- sum(cacheSize, file.size(dirLs))
+        }
+      }
+
+      if (interactive()) {
+        formattedCacheSize <- utils:::format.object_size(cacheSize, "auto")
+        if (cacheSize > 1e7) {
+          message("Your current cache size is ", formattedCacheSize,
+                  " Are you sure you would like to delete it all? Y or N")
+          rl <- readline()
+          if (!identical(rl, "Y")) {
+            message("Aborting clearCache")
+            return(invisible())
+          }
+        }
+      }
+
+      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo)>0) {
         unlink(filesToRemove)
       }
 
@@ -150,6 +191,9 @@ setMethod(
         }
       }
     }
+    message("Total Cache size: ",
+            utils:::format.object_size(sum(
+              file.size(dir(x, full.names = TRUE, recursive = TRUE))), "auto"))
     objsDT
 })
 

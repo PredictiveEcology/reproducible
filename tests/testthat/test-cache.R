@@ -205,6 +205,8 @@ test_that("test memory backed raster robustDigest", {
 
 test_that("test 'quick' argument", {
 
+  options(reproducible.verbose = FALSE)
+  on.exit(options(reproducible.verbose = TRUE), add = TRUE)
   library(raster)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
