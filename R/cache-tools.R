@@ -58,6 +58,7 @@ setMethod(
       unlink(file.path(x, "backpack.db"))
       checkPath(x, create = TRUE)
       createLocalRepo(x)
+      memoise::forget(loadFromLocalRepoMem)
       return(invisible())
     }
 
@@ -88,6 +89,7 @@ setMethod(
 
       suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
     }
+    memoise::forget(loadFromLocalRepoMem)
     return(invisible(objsDT))
 })
 

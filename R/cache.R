@@ -254,6 +254,10 @@ setMethod(
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick) {
+    if (verbose) {
+      startCacheTime <- Sys.time()
+    }
+
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
     if (!missing(compareRasterFileLength)) {
@@ -536,20 +540,20 @@ setMethod(
                               stringsAsFactors = FALSE)
 
       hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
-        objSize <- objectSize(x, quick = quick)
+        objSize <- objSize(x, quick = quick)
 
       }))
 
       preDigestUnlist <- unlist(preDigest, recursive = TRUE)
       lengths <- unlist(lapply(preDigest, function(x) length(unlist(x))))
       hashDetails <- data.frame(objectNames = rep(names(preDigest), lengths),
-                                #objectSize = rep(hashObjectSize, lengths),
+                                #objSize = rep(hashObjectSize, lengths),
                                 hashElements = names(preDigestUnlist),
                                 hash = unname(preDigestUnlist))
       preDigestUnlistNames <- unlist(lapply(strsplit(names(preDigestUnlist), split = "\\."), tail, 1))
       hashObjectSizeNames <- unlist(lapply(strsplit(names(hashObjectSize), split = "\\."), tail, 1))
-      hashDetails$objectSize <- NA
-      hashDetails$objectSize[preDigestUnlistNames %in% hashObjectSizeNames] <- hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
+      hashDetails$objSize <- NA
+      hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <- hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
 
       if (exists("hashDetails", envir = .reproEnv)) {
         .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
@@ -602,8 +606,13 @@ setMethod(
           startLoadTime <- Sys.time()
         }
 
-        output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+        if (quick & getOption("reproducible.useMemoise", TRUE)) {
+          output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+        } else {
+          output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+                                         repoDir = cacheRepo, value = TRUE)
+        }
 
         if (verbose) {
           endLoadTime <- Sys.time()
@@ -704,6 +713,23 @@ setMethod(
             output <- .debugCache(output, preDigest, ...)
         }
         attr(output, "newCache") <- FALSE
+
+        if (verbose) {
+          endCacheTime <- Sys.time()
+          verboseDF <- data.frame(functionName = functionDetails$functionName,
+                                  component = "Whole Cache call",
+                                  elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
+                                                                    units = "secs")),
+                                  units = "secs",
+                                  stringsAsFactors = FALSE)
+
+          if (exists("verboseTiming", envir = .reproEnv)) {
+            .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+          }
+          # on.exit({message("Loading from repo took ", format(endLoadTime - startLoadTime))},
+          #   add = TRUE)
+
+        }
 
         return(output)
       }
@@ -897,6 +923,23 @@ setMethod(
 
     }
 
+    if (verbose) {
+      endCacheTime <- Sys.time()
+      verboseDF <- data.frame(functionName = functionDetails$functionName,
+                              component = "Whole Cache call",
+                              elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
+                                                                units = "secs")),
+                              units = "secs",
+                              stringsAsFactors = FALSE)
+
+      if (exists("verboseTiming", envir = .reproEnv)) {
+        .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+      }
+      # on.exit({message("Loading from repo took ", format(endLoadTime - startLoadTime))},
+      #   add = TRUE)
+
+    }
+
     if (isNullOutput) return(NULL) else return(output)
 })
 
@@ -936,3 +979,4 @@ setMethod(
 .formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
 .namesCacheFormals <- names(.formalsCache)[]
 
+loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)

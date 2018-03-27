@@ -8,7 +8,7 @@
   opts.reproducible <- list( # nolint
     reproducible.cachePath = file.path(.reproducibleTempDir),
     reproducible.verbose = FALSE,
-    #reproducible.useMemoise = FALSE, #memoise
+    reproducible.useMemoise = TRUE, #memoise
     reproducible.quick = FALSE
   )
   toset <- !(names(opts.reproducible) %in% names(opts))

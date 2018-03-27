@@ -11,31 +11,31 @@
 #'              used instead of \code{object.size}.
 #'
 #' @export
-#' @rdname objectSize
+#' @rdname objSize
 #' @keywords internal
 #' @examples
 #' a <- new.env()
 #' a$b <- 1:10
 #' a$d <- 1:10
 #'
-#' objectSize(a) # all the elements in the environment
+#' objSize(a) # all the elements in the environment
 #' object.size(a) # different - only measuring the environment as an object
-objectSize <- function(x, quick) {
-  UseMethod("objectSize", x)
+objSize <- function(x, quick) {
+  UseMethod("objSize", x)
 }
 
 #' @export
-#' @rdname objectSize
-objectSize.list <- function(x, quick = getOption("reproducible.quick", FALSE)) {
-  lapply(x, function(y) objectSize(y, quick = quick))
+#' @rdname objSize
+objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE)) {
+  lapply(x, function(y) objSize(y))
 }
 
 #' @export
-#' @rdname objectSize
+#' @rdname objSize
 #' @importFrom utils object.size
-objectSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE)) {
+objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   xName <- deparse(substitute(x))
-  os <- objectSize(as.list(x), quick = quick)
+  os <- objSize(as.list(x))
   names(os) <- paste0(xName, "$", names(os))
   osCur <- list(object.size(x))
   names(osCur) <- xName
@@ -43,14 +43,14 @@ objectSize.environment <- function(x, quick = getOption("reproducible.quick", FA
 }
 
 #' @export
-#' @rdname objectSize
-objectSize.default <- function(x, quick = getOption("reproducible.quick", FALSE)) {
+#' @rdname objSize
+objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   object.size(x)
 }
 
 #' @export
-#' @rdname objectSize
-objectSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE)) {
+#' @rdname objSize
+objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   if (quick) {
     object.size(x)
   } else {
