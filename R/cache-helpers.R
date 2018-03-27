@@ -35,6 +35,8 @@ setMethod(
 #'
 #' @param object Any R object.
 #' @param functionName A character string indicating the function name
+#' @param fromMemoise Logical. If \code{TRUE}, the message will be about
+#'        recovery from memoised copy
 #'
 #' @author Eliot McIntire
 #' @export
@@ -43,7 +45,7 @@ setMethod(
 #' a <- 1
 #' .cacheMessage(a, "mean")
 #'
-setGeneric(".cacheMessage", function(object, functionName) {
+setGeneric(".cacheMessage", function(object, functionName, fromMemoise) {
   standardGeneric(".cacheMessage")
 })
 
@@ -52,9 +54,14 @@ setGeneric(".cacheMessage", function(object, functionName) {
 setMethod(
   ".cacheMessage",
   signature = "ANY",
-  definition = function(object, functionName) {
-    message(crayon::blue("  loading cached result from previous ", functionName, " call.",
-                         sep = ""))
+  definition = function(object, functionName, fromMemoise) {
+    if (fromMemoise) {
+      message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
+                           sep = ""))
+    } else {
+      message(crayon::blue("  loading cached result from previous ", functionName, " call.",
+                           sep = ""))
+    }
 })
 
 ################################################################################

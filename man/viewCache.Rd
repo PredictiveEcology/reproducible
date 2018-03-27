@@ -70,6 +70,10 @@ They allow the user a bit of control over what is being cached.
   \item{\code{showCache}}{display the contents of the cache.}
 }
 }
+\note{
+If the cache is larger than 10MB, and clearCache is used, there will be a message
+and a pause, if interactive, to prevent accidentally deleting of a large cache repository.
+}
 \examples{
 library(raster)
 

@@ -606,7 +606,7 @@ setMethod(
           startLoadTime <- Sys.time()
         }
 
-        if (quick & getOption("reproducible.useMemoise", TRUE)) {
+        if (getOption("reproducible.useMemoise")) {
           output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
           loadFromMgs <- "Loading from memoise version of repo"
@@ -633,7 +633,8 @@ setMethod(
         }
 
         # Class-specific message
-        .cacheMessage(output, functionDetails$functionName)
+        .cacheMessage(output, functionDetails$functionName,
+                      fromMemoise = getOption("reproducible.useMemoise"))
 
         suppressWarnings(
           archivist::addTagsRepo(isInRepo$artifact[lastOne],
