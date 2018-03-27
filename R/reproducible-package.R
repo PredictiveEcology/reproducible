@@ -11,6 +11,19 @@
 #' \code{reproducible} has the following \code{\link{options}} to configure behaviour:
 #'
 #' \itemize{
+#'   \item \code{reproducible.cachePath}: The default path for repositories if not
+#'   passed as an argument. The default is the tempdir() of the session.
+#'
+#'   \item \code{reproducible.useMemoise}: Default is \code{TRUE}. When
+#'   the Cache mechanism determines that it has already run a particular function
+#'   based on the digest (hash) of its input parameters, it will load the object
+#'   from disk (an .rda file indexed in an SQLite database), but it will
+#'   memoise that step. Thus, the third time the function is run with identical
+#'   arguments, it will use the memoised copy (i.e., RAM copy) which can be
+#'   substantially faster. Since memoising is session specific, the memoised
+#'   version won't be retrieved until the second time in a session. \code{clearCache}
+#'   of any sort will cause all memoising to be 'forgotten' (\code{memoise::forget}).
+#'
 #'   \item \code{reproducible.quick}: Default is \code{FALSE}. This means that
 #'   all hashing will be run on full objects but only file.size for any file paths.
 #'   If \code{TRUE}, then full objects and file content will be hashed. Because
@@ -22,9 +35,6 @@
 #'   of the objects being cached, their object.size and the time it took to digest
 #'   them and also the time it took to run the call and save the call to the
 #'   cache repository or load the cached copy from the repository.
-#'
-#'   \item \code{reproducible.cachePath}: The default path for repositories if not
-#'   passed as an argument. The default is the tempdir() of the session.
 #'
 #' }
 #'
