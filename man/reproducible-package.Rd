@@ -60,7 +60,7 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Alex M Chubaty \email{alexander.chubaty@canada.ca}
+  \item Alex M Chubaty \email{alex.chubaty@gmail.com}
 }
 
 Other contributors:

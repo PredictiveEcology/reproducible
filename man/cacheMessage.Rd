@@ -8,7 +8,8 @@
 \usage{
 .cacheMessage(object, functionName, fromMemoise)
 
-\S4method{.cacheMessage}{ANY}(object, functionName, fromMemoise)
+\S4method{.cacheMessage}{ANY}(object, functionName,
+  fromMemoise = getOption("reproducible.useMemoise"))
 }
 \arguments{
 \item{object}{Any R object.}
