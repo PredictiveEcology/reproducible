@@ -606,15 +606,16 @@ setMethod(
           startLoadTime <- Sys.time()
         }
 
+        fromMemoise <- FALSE
         if (getOption("reproducible.useMemoise")) {
+          if (memoise::has_cache(loadFromLocalRepoMem)(isInRepo$artifact[lastOne],
+                                                       repoDir = cacheRepo, value = TRUE))
+            fromMemoise <- TRUE
           output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
-          browser()
-          loadFromMgs <- "Loading from memoise version of repo"
         } else {
           output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                          repoDir = cacheRepo, value = TRUE)
-          loadFromMgs <- "Loading from repo"
         }
 
         if (verbose) {
@@ -634,9 +635,8 @@ setMethod(
         }
 
         # Class-specific message
-        browser()
         .cacheMessage(output, functionDetails$functionName,
-                      fromMemoise = getOption("reproducible.useMemoise", TRUE))
+                      fromMemoise = fromMemoise)
 
         suppressWarnings(
           archivist::addTagsRepo(isInRepo$artifact[lastOne],
