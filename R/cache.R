@@ -609,6 +609,7 @@ setMethod(
         if (getOption("reproducible.useMemoise")) {
           output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+          browser()
           loadFromMgs <- "Loading from memoise version of repo"
         } else {
           output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
@@ -633,8 +634,9 @@ setMethod(
         }
 
         # Class-specific message
+        browser()
         .cacheMessage(output, functionDetails$functionName,
-                      fromMemoise = getOption("reproducible.useMemoise"))
+                      fromMemoise = getOption("reproducible.useMemoise", TRUE))
 
         suppressWarnings(
           archivist::addTagsRepo(isInRepo$artifact[lastOne],
