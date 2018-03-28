@@ -606,11 +606,15 @@ setMethod(
           startLoadTime <- Sys.time()
         }
 
-        fromMemoise <- FALSE
+        fromMemoise <- NA
         if (getOption("reproducible.useMemoise")) {
-          if (memoise::has_cache(loadFromLocalRepoMem)(isInRepo$artifact[lastOne],
-                                                       repoDir = cacheRepo, value = TRUE))
-            fromMemoise <- TRUE
+          fromMemoise <-
+            if (memoise::has_cache(loadFromLocalRepoMem)(isInRepo$artifact[lastOne],
+                                                         repoDir = cacheRepo, value = TRUE)) {
+              TRUE
+            } else {
+              FALSE
+            }
           output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
         } else {

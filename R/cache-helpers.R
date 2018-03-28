@@ -56,9 +56,12 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName,
                         fromMemoise = getOption("reproducible.useMemoise", TRUE)) {
-    if (fromMemoise) {
+    if (isTRUE(fromMemoise)) {
       message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
                            sep = ""))
+    } else if (!is.na(fromMemoise)){
+      message(crayon::blue("  loading cached result from previous ", functionName, " call, ",
+                           "adding to memoised copy", sep = ""))
     } else {
       message(crayon::blue("  loading cached result from previous ", functionName, " call.",
                            sep = ""))
