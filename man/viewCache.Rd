@@ -248,5 +248,5 @@ unlink(dirname(tmpDir), recursive = TRUE)
 
 }
 \seealso{
-\code{\link[archivist]{splitTagsLocal}}.
+\code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}.
 }

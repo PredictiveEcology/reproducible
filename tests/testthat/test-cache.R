@@ -745,3 +745,43 @@ test_that("test reproducible.verbose", {
   expect_true( (20*out1Details$objSize[1]) < out2Details$objSize[1])
 
 })
+
+
+
+
+##########################
+test_that("test reproducible.verbose", {
+  cacheDir1 <- paste(sample(letters, 5), collapse = "")
+  cacheDir2 <- paste(sample(letters, 5), collapse = "")
+
+  cacheDir1 <- file.path(tempdir(), cacheDir1)
+  cacheDir2 <- file.path(tempdir(), cacheDir2)
+
+  checkPath(cacheDir1, create = TRUE)
+  checkPath(cacheDir2, create = TRUE)
+
+  options(reproducible.verbose = FALSE)
+
+  on.exit({
+    options(reproducible.verbose = FALSE)
+    unlink(cacheDir1, recursive = TRUE)
+    unlink(cacheDir2, recursive = TRUE)
+  }, add = TRUE)
+  Cache(rnorm, 1, cacheRepo = cacheDir1)
+  Cache(rnorm, 2, cacheRepo = cacheDir2)
+  Cache(rnorm, 3, cacheRepo = cacheDir1)
+  Cache(rnorm, 4, cacheRepo = cacheDir2)
+  preCacheDir1Items <- data.table::copy(showCache(cacheDir1))
+  preCacheDir2Items <- data.table::copy(showCache(cacheDir2))
+  cacheDir1 <- mergeCache(cacheDir1, cacheDir2)
+  postCache <- showCache(cacheDir1)[tagKey != "date"]
+  expect_true(identical(sort(unique(postCache$artifact)),
+                      sort(c(unique(preCacheDir1Items$artifact),
+                        unique(preCacheDir2Items$artifact)))))
+  preCacheRbindlist <- data.table::setkey(data.table::rbindlist(
+    list(preCacheDir1Items[tagKey != "date"], preCacheDir2Items[tagKey != "date"])), artifact)
+
+  expect_true(all.equal(postCache[,createdDate:=NULL], preCacheRbindlist[,createdDate:=NULL]))
+
+
+})
