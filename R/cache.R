@@ -615,9 +615,11 @@ setMethod(
             } else {
               FALSE
             }
+          loadFromMgs <- "Loading from memoise version of repo"
           output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
         } else {
+          loadFromMgs <- "Loading from repo"
           output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                          repoDir = cacheRepo, value = TRUE)
         }
