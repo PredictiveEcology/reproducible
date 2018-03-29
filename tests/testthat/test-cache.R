@@ -228,7 +228,7 @@ test_that("test 'quick' argument", {
   r1 <- writeRaster(r1, filename = tmpFile1, overwrite = TRUE)
   mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
                                           cacheRepo = tmpdir, quick = TRUE))
-  expect_true(grepl("loading cached result from previous quickFun call\\.", mess1 ))
+  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
   mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
                                           cacheRepo = tmpdir, quick = FALSE))
   expect_null(mess1)
@@ -242,7 +242,7 @@ test_that("test 'quick' argument", {
   r1[4] <- r1[4] + 1
   r1 <- writeRaster(r1, filename = tmpFile1, overwrite = TRUE)
   mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE))
-  expect_true(grepl("loading cached result from previous quickFun call\\.", mess1 ))
+  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
   mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE))
   expect_null(mess1)
 
@@ -411,7 +411,7 @@ test_that("test asPath", {
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
-  expect_true(grepl("loading cached", a3))
+  expect_true(grepl("loading memoised result from previous saveRDS call", a3))
 
   unlink("filename.RData")
   try(clearCache(tmpdir), silent = TRUE)
@@ -423,7 +423,7 @@ test_that("test asPath", {
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(grepl("loading cached", a2))
-  expect_true(grepl("loading cached", a3))
+  expect_true(grepl("loading memoised result from previous saveRDS call", a3))
 
   setwd(origDir)
   unlink(tmpdir, recursive = TRUE)
