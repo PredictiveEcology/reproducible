@@ -771,17 +771,23 @@ test_that("test reproducible.verbose", {
   Cache(rnorm, 2, cacheRepo = cacheDir2)
   Cache(rnorm, 3, cacheRepo = cacheDir1)
   Cache(rnorm, 4, cacheRepo = cacheDir2)
+  library(raster)
+  r <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
+  r <- Cache(writeRaster, r, filename = tempfile(fileext = ".tif"), cacheRepo = cacheDir2)
   preCacheDir1Items <- data.table::copy(showCache(cacheDir1))
   preCacheDir2Items <- data.table::copy(showCache(cacheDir2))
   cacheDir1 <- mergeCache(cacheDir1, cacheDir2)
   postCache <- showCache(cacheDir1)[tagKey != "date"]
-  expect_true(identical(sort(unique(postCache$artifact)),
-                      sort(c(unique(preCacheDir1Items$artifact),
-                        unique(preCacheDir2Items$artifact)))))
+  expect_true(identical(sort(unique(postCache[tagKey=="cacheId"]$tagValue)),
+                      sort(c(unique(preCacheDir1Items[tagKey=="cacheId"]$tagValue),
+                        unique(preCacheDir2Items[tagKey=="cacheId"]$tagValue)))))
   preCacheRbindlist <- data.table::setkey(data.table::rbindlist(
     list(preCacheDir1Items[tagKey != "date"], preCacheDir2Items[tagKey != "date"])), artifact)
 
-  expect_true(all.equal(postCache[,createdDate:=NULL], preCacheRbindlist[,createdDate:=NULL]))
-
+  postCache[,`:=`(artifact=NULL, createdDate=NULL)]
+  data.table::setkey(postCache, tagKey, tagValue)
+  preCacheRbindlist[,`:=`(artifact=NULL, createdDate=NULL)]
+  data.table::setkey(preCacheRbindlist, tagKey, tagValue)
+  expect_true(all.equal(postCache,preCacheRbindlist))
 
 })

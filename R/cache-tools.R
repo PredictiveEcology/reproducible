@@ -276,6 +276,9 @@ setMethod(
     mapply(outputToSave = objectList, artifact = artifacts,
            function(outputToSave, artifact) {
              written <- FALSE
+             if (is(outputToSave, "Raster")) {
+               outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
+             }
              userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "class", "date", "cacheId"),
                                                  list(tagKey, tagValue)]
              userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
