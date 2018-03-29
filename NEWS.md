@@ -3,6 +3,7 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.1.4
 =============
 
+* `mergeCache`: a new function to merge two different Cache repositories
 * memoise::memoise is now used on loadFromLocalRepo, meaning that the 3rd time a Cache function is run on the same arguments (and the 2nd time in a session), the returned Cache will be from a RAM object via memoise. To stop this behaviour and use only disk-based Caching, set `options(reproducible.useMemoise = FALSE)` 
 * Cache assign -- %<% can be used instead of normal assign, equivalent to lhss <- Cache(rhs)
 * new option: reproducible.verbose, set to FALSE by default, but if set to true may help understand caching behaviour, especially for complex highly nested code
