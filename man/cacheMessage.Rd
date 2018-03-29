@@ -6,7 +6,8 @@
 \alias{.cacheMessage,ANY-method}
 \title{Create a custom cache message by class}
 \usage{
-.cacheMessage(object, functionName, fromMemoise)
+.cacheMessage(object, functionName,
+  fromMemoise = getOption("reproducible.useMemoise", TRUE))
 
 \S4method{.cacheMessage}{ANY}(object, functionName,
   fromMemoise = getOption("reproducible.useMemoise", TRUE))

@@ -45,7 +45,8 @@ setMethod(
 #' a <- 1
 #' .cacheMessage(a, "mean")
 #'
-setGeneric(".cacheMessage", function(object, functionName, fromMemoise) {
+setGeneric(".cacheMessage", function(object, functionName,
+                                     fromMemoise = getOption("reproducible.useMemoise", TRUE)) {
   standardGeneric(".cacheMessage")
 })
 
@@ -55,7 +56,7 @@ setMethod(
   ".cacheMessage",
   signature = "ANY",
   definition = function(object, functionName,
-                        fromMemoise = getOption("reproducible.useMemoise", TRUE)) {
+                        fromMemoise) {
     if (isTRUE(fromMemoise)) {
       message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
                            sep = ""))
