@@ -159,7 +159,7 @@ setMethod(
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
-#' @seealso \code{\link[archivist]{splitTagsLocal}}.
+#' @seealso \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}.
 #'
 setGeneric("showCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("showCache")
@@ -197,10 +197,7 @@ setMethod(
         }
       }
     }
-    fs <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
-    class(fs) <- "object_size"
-    message("Total Cache size: ",
-            format(fs, "auto"))
+    .messageCacheSize(x)
     objsDT
 })
 
@@ -236,3 +233,81 @@ setMethod(
     }
     return(objsDT)
 })
+
+
+##############################################################
+##############################################################
+#' Merge two cache repositories together
+#'
+#' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
+#' repository. All \code{userTags} will be copied verbatim, including
+#' \code{accessed}, with 1 exception: \code{date} will be the
+#' current \code{Sys.time()} at the time of merging. The
+#' \code{createdDate} column will be similarly the current time
+#' of merging.
+#'
+#' @param cacheTo The cache repository (character string of the file path)
+#'                that will become larger, i.e., merge into this
+#' @param cacheFrom The cache repository (character string of the file path)
+#'                  from which all objects will be taken and copied from
+#'
+#' @details
+#' This is still experimental
+#'
+#' @return The character string of the path of \code{cacheTo}, i.e., not the
+#' objects themselves.
+#'
+#' @rdname mergeCache
+setGeneric("mergeCache", function(cacheTo, cacheFrom) {
+  standardGeneric("mergeCache")
+})
+
+#' @export
+#' @rdname mergeCache
+setMethod(
+  "mergeCache",
+  definition = function(cacheTo, cacheFrom) {
+    suppressMessages(cacheFromList <- showCache(cacheFrom))
+    suppressMessages(cacheToList <- showCache(cacheTo))
+
+    artifacts <- unique(cacheFromList$artifact)
+    objectList <- lapply(artifacts, loadFromLocalRepo,
+                         repoDir = cacheFrom, value = TRUE)
+    mapply(outputToSave = objectList, artifact = artifacts,
+           function(outputToSave, artifact) {
+             written <- FALSE
+             userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "class", "date", "cacheId"),
+                                                 list(tagKey, tagValue)]
+             userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
+             while (!written) {
+               saved <- suppressWarnings(try(
+                 saveToLocalRepo(outputToSave, repoDir = cacheTo,
+                                 artifactName = "Cache",
+                                 archiveData = FALSE, archiveSessionInfo = FALSE,
+                                 archiveMiniature = FALSE, rememberName = FALSE,
+                                 silent = TRUE, userTags = userTags),
+                 silent = TRUE
+               ))
+               # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+               written <- if (is(saved, "try-error")) {
+                 Sys.sleep(0.05)
+                 FALSE
+               } else {
+                 TRUE
+               }
+             }
+           }
+    )
+    .messageCacheSize(cacheTo)
+
+    return(invisible(cacheTo))
+  })
+
+
+#' @keywords internal
+.messageCacheSize <- function(x) {
+  fs <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
+  class(fs) <- "object_size"
+  message("Total Cache size: ",
+          format(fs, "auto"))
+}
