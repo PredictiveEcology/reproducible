@@ -167,11 +167,11 @@ showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer o
 
 ### cacheId
 set.seed(1)
-Cache(rnorm, 1, cacheRepo = tmpdir)
+Cache(rnorm, 1, cacheRepo = tmpdir1)
 # manually look at output attribute which shows cacheId: ad184ce64541972b50afd8e7b75f821b
-Cache(rnorm, 1, cacheRepo = tmpdir, cacheId = "ad184ce64541972b50afd8e7b75f821b") # same value
+Cache(rnorm, 1, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b") # same value
 # override even with different inputs:
-Cache(rnorm, 2, cacheRepo = tmpdir, cacheId = "ad184ce64541972b50afd8e7b75f821b")
+Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b")
 
 ## cleanup
 unlink(c("filename.rda", "filename1.rda"))
