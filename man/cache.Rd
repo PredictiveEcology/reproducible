@@ -13,7 +13,7 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   omitArgs = NULL, classOptions = list(), debugCache = character(),
   sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", FALSE))
+  verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
@@ -21,7 +21,7 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   digestPathContent, omitArgs = NULL, classOptions = list(),
   debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", FALSE))
+  verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL)
 
 lhs \%<\% rhs
 }
@@ -103,6 +103,12 @@ If \code{quick = TRUE}, \code{length} is ignored.
 
 \item{verbose}{Logical. This will output much more information about the internals of
 Caching, which may help diagnose Caching challenges.}
+
+\item{cacheId}{Character string. If passed, this will override the calculated hash
+of the inputs, and return the result from this cacheId in the cacheRepo.
+In general, this is not used; however, in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs, this can stabilize
+the return value.}
 
 \item{lhs}{A name to assign to.}
 
@@ -415,6 +421,14 @@ outer <- function(n) {
 }
 aa <- Cache(outer, n = 2, cacheRepo = tmpdir1, userTags = outerTag)
 showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer only have outerTag
+
+### cacheId
+set.seed(1)
+Cache(rnorm, 1, cacheRepo = tmpdir1)
+# manually look at output attribute which shows cacheId: ad184ce64541972b50afd8e7b75f821b
+Cache(rnorm, 1, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b") # same value
+# override even with different inputs:
+Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b")
 
 ## cleanup
 unlink(c("filename.rda", "filename1.rda"))

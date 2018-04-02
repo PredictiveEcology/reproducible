@@ -197,6 +197,13 @@ if (getRversion() >= "3.1.0") {
 #' @param verbose Logical. This will output much more information about the internals of
 #'        Caching, which may help diagnose Caching challenges.
 #'
+#'
+#' @param cacheId Character string. If passed, this will override the calculated hash
+#'        of the inputs, and return the result from this cacheId in the cacheRepo.
+#'        In general, this is not used; however, in some particularly finicky situations
+#'        where Cache is not correctly detecting unchanged inputs, this can stabilize
+#'        the return value.
+#'
 #' @inheritParams digest::digest
 #'
 #' @param digestPathContent Being deprecated. Use \code{quick}.
@@ -242,7 +249,7 @@ setGeneric(
            classOptions = list(), debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE,
            quick = getOption("reproducible.quick", FALSE),
-           verbose = getOption("reproducible.verbose", FALSE)) {
+           verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
 
@@ -253,7 +260,7 @@ setMethod(
   definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
-                        debugCache, sideEffect, makeCopy, quick) {
+                        debugCache, sideEffect, makeCopy, quick, cacheId) {
     if (verbose) {
       startCacheTime <- Sys.time()
     }
@@ -590,6 +597,15 @@ setMethod(
     }
 
     outputHash <- fastdigest(preDigest)
+    if (!is.null(cacheId)) {
+      outputHashManual <- cacheId
+      if (identical(outputHashManual, outputHash)) {
+        message("cacheId is same as calculated hash")
+      } else {
+        message("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId)
+      }
+      outputHash <- outputHashManual
+    }
 
     # compare outputHash to existing Cache record
     localTags <- showLocalRepo(cacheRepo, "tags")
