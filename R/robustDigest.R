@@ -194,7 +194,9 @@ setMethod(
   signature = "Path",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
-  if (!quick) {
+    nParentDirs <- attr(object, "nParentDirs")
+
+    if (!quick) {
       lapply(object, function(x) {
         isExistentFile <- FALSE
         if (file.exists(x)) {
@@ -206,11 +208,11 @@ setMethod(
           digest::digest(file = x, length = length, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          fastdigest(basename(x))
+          fastdigest(.basenames(x, nParentDirs))
         }
       })
     } else {
-      fastdigest(basename(object))
+      fastdigest(.basenames(object, nParentDirs))
     }
 })
 
@@ -287,3 +289,22 @@ setMethod(
 
     return(fastdigest(aaa))
   })
+
+.basenames <- function(object, nParentDirs) {
+  if (missing(nParentDirs)) {
+    nParentDirs <- 0
+  }
+  object <- if (nParentDirs > 0) {
+    obj <- object
+    objOut <- basename(obj)
+    for (i in seq_len(nParentDirs)) {
+      obj <- dirname(obj)
+      objOut <- file.path(basename(obj), objOut)
+    }
+    objOut
+  } else {
+    basename(object)
+  }
+  object
+
+}

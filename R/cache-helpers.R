@@ -413,6 +413,8 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #' the location, NOT the character string representation.
 #'
 #' @param obj A character string to convert to a \code{Path}.
+#' @param nParentDirs A numeric indicating the number of parent directories starting
+#'                    from basename(obj) = 0 to keep for the digest
 #'
 #' @export
 #' @rdname Path-class
@@ -424,24 +426,27 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #' is(tmpf, "Path")     ## FALSE
 #' is(tmpfPath, "Path") ## TRUE
 #'
-asPath <- function(obj) {
+asPath <- function(obj, nParentDirs = 0) {
   UseMethod("asPath", obj)
 }
 
 #' @export
 #' @importFrom methods is
 #' @rdname Path-class
-asPath.character <- function(obj) {  # nolint
+asPath.character <- function(obj, nParentDirs = 0) {  # nolint
   class(obj) <- c("Path", is(obj))
+  attr(obj, "nParentDirs") <- nParentDirs
   return(obj)
 }
 
+#' If using \code{as("string", "Path")}, there is no option to pass \code{nParentDirs}.
+#' So, using \code{asPath} directly (e.g., \code{asPath("string", 0))}) is preferred.
 #' @export
 #' @importFrom methods new
 #' @rdname Path-class
 #' @name asPath
 setAs(from = "character", to = "Path", function(from) {
-  new("Path", from)
+  asPath(from, 0)
 })
 
 ################################################################################
