@@ -500,9 +500,7 @@ setMethod(
 
     if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
-    if (is(try(showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
-      suppressWarnings(createLocalRepo(cacheRepo))
-    }
+    suppressMessages(archivist::createLocalRepo(cacheRepo))
 
     # List file prior to cache
     if (sideEffect != FALSE) {
