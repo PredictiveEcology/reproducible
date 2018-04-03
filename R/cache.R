@@ -229,7 +229,8 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-#' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo createLocalRepo
+#' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
+#' @importFrom archivist createLocalRepo addTagsRepo
 #' @importFrom digest digest
 #' @importFrom data.table setDT
 #' @importFrom fastdigest fastdigest
@@ -499,7 +500,7 @@ setMethod(
 
     if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
-    if (is(try(archivist::showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
+    if (is(try(showLocalRepo(cacheRepo), silent = TRUE), "try-error")) {
       suppressWarnings(createLocalRepo(cacheRepo))
     }
 
@@ -661,7 +662,7 @@ setMethod(
                       fromMemoise = fromMemoise)
 
         suppressWarnings(
-          archivist::addTagsRepo(isInRepo$artifact[lastOne],
+          addTagsRepo(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo,
                                  tags = paste0("accessed:", Sys.time()))
         )
@@ -972,7 +973,7 @@ setMethod(
 
 #' Deprecated functions
 #' @export
-#' @importFrom archivist showLocalRepo rmFromLocalRepo
+#' @importFrom archivist showLocalRepo rmFromLocalRepo addTagsRepo
 #' @inheritParams Cache
 #' @rdname reproducible-deprecated
 setGeneric("cache", signature = "...",
