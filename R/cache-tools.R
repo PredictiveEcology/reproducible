@@ -66,7 +66,7 @@ setMethod(
           message("Your current cache size is ", formattedCacheSize,
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
-          if (!identical(rl, "Y")) {
+          if (!identical(toupper(rl), "Y")) {
             message("Aborting clearCache")
             return(invisible())
           }
