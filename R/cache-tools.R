@@ -95,7 +95,7 @@ setMethod(
     }
 
     if (NROW(objsDT)) {
-      rastersInRepo <- objsDT[grep(tagValue, pattern = "Raster")]
+      rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) & grepl(pattern = "Raster", tagValue)] # only Rasters* class
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo)>0) {
         suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
           loadFromLocalRepo(ras, repoDir = x, value = TRUE)
