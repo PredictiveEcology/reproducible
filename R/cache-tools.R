@@ -100,14 +100,17 @@ setMethod(
         suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
           loadFromLocalRepo(ras, repoDir = x, value = TRUE)
         }))
-        filesToRemove <- unlist(lapply(rasters, function(x) filename(x)))
-        filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
-
-        if (interactive()) {
-          dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
-          dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
-          cacheSize <- sum(cacheSize, file.size(dirLs))
+        filesToRemove <- tryCatch(unlist(lapply(rasters, function(x) filename(x))), 
+                                  error = function(x) NULL)
+        if (!is.null(filesToRemove)) {
+          filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
+          if (interactive()) {
+            dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
+            dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
+            cacheSize <- sum(cacheSize, file.size(dirLs))
+          }
         }
+
       }
 
       if (interactive()) {
