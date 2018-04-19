@@ -526,15 +526,15 @@ setMethod(
     if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
 
     # Do the digesting
+    if (!is.null(omitArgs)) {
+      tmpl[omitArgs] <- NULL
+    }
+    
     dotPipe <- startsWith(names(tmpl), "._") # don't digest the dotPipe elements as they are already
                                              # extracted individually into tmpl list elements
     preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) {
       .preDigestByClass(tmpl[!dotPipe][[x]])
     })
-
-    if (!is.null(omitArgs)) {
-      tmpl[omitArgs] <- NULL
-    }
 
     if (verbose) {
       startHashTime <- Sys.time()
