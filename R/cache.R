@@ -203,6 +203,15 @@ if (getRversion() >= "3.1.0") {
 #'        In general, this is not used; however, in some particularly finicky situations
 #'        where Cache is not correctly detecting unchanged inputs, this can stabilize
 #'        the return value.
+#'        
+#' @param showSimilar A logical or numeric. Useful for debugging. 
+#'        If \code{TRUE} or \code{1}, then if the Cache
+#'        does not find an identical archive in the cacheRepo, it will report (via message)
+#'        the next most similar archive, and indicate which argument(s) is/are different.
+#'        If a number larger than \code{1}, then it will report the N most similar archived
+#'        objects.
+#'        
+#'         
 #'
 #' @inheritParams digest::digest
 #'
@@ -250,7 +259,8 @@ setGeneric(
            classOptions = list(), debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE,
            quick = getOption("reproducible.quick", FALSE),
-           verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL) {
+           verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
+           showSimilar = NULL) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
 })
 
@@ -261,7 +271,8 @@ setMethod(
   definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
-                        debugCache, sideEffect, makeCopy, quick, cacheId) {
+                        debugCache, sideEffect, makeCopy, quick, cacheId,
+                        showSimilar) {
     if (verbose) {
       startCacheTime <- Sys.time()
     }
@@ -537,6 +548,8 @@ setMethod(
                         quick = quick,
                         classOptions = classOptions)
     })
+    preDigestUnlist <- unlist(preDigest, recursive = TRUE)
+    
     if (verbose) {
       endHashTime <- Sys.time()
       verboseDF <- data.frame(functionName = functionDetails$functionName,
@@ -550,7 +563,6 @@ setMethod(
 
       }))
 
-      preDigestUnlist <- unlist(preDigest, recursive = TRUE)
       lengths <- unlist(lapply(preDigest, function(x) length(unlist(x))))
       hashDetails <- data.frame(objectNames = rep(names(preDigest), lengths),
                                 #objSize = rep(hashObjectSize, lengths),
@@ -761,23 +773,25 @@ setMethod(
       }
     } else {
       # find similar -- in progress
-      if (FALSE) { # INCOMPLETE
-        if (!identical(debugCache, FALSE)) {
-          setDT(localTags)
-          if (!is.null(userTags)) {
-            similar <- localTags[all(userTags %in% tag), .SD, by = artifact]
-            if (NROW(similar)) {
-              similarObjs <- loadFromLocalRepo(similar[1,artifact],
-                                             repoDir = cacheRepo, value = TRUE)
-              older <- attr(similarObjs, "debugCache2")
-              if (!is.null(older)) {
-                return(setdiff(preDigest, older))
+      if (!is.null(showSimilar)) { # TODO: Needs testing
+        setDT(localTags)
+        userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
+        userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlist), preDigestUnlist, sep = ":"))
+        userTags3 <- c(userTags, userTags2)
+        aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
+        setkey(aa, N)
+        similar <- localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N==max(N)]
+        if (NROW(similar)) {
+          similar2 <- similar[grepl("preDigest", tag)]
+          similar2[, `:=`(fun=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
+                          hash=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
+          similar2[, differs:=!(hash %in% preDigestUnlist), by = artifact]
+          message("This call to cache differs from the next closest because of a ",
+                  "different ", paste(similar2[differs==TRUE]$fun, collapse = ", ")) 
+          print(similar2[,c("fun", "differs")])
 
-              }
-
-            }
-          }
-
+        } else {
+          message("There is no similar item in the cacheRepo")
         }
       }
     }
@@ -915,7 +929,8 @@ setMethod(
                       paste0("function:", functionDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
-                    paste0("otherFunctions:", otherFns))
+                    paste0(otherFns),
+                    paste("preDigest", names(preDigestUnlist), preDigestUnlist, sep = ":"))
       saved <- suppressWarnings(try(
         saveToLocalRepo(outputToSave, repoDir = cacheRepo, artifactName = "Cache",
                         archiveData = FALSE, archiveSessionInfo = FALSE,
