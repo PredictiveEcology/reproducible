@@ -772,7 +772,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
   dig <- fastdigest(list(dim(object), res(object), crs(object),
-                         extent(object), object@data))
+                         extent(object)))#, object@data)) # don't include object@data -- these are volatile
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
     filename <- if (endsWith(basename(object@file@name), suffix = ".grd")) {
