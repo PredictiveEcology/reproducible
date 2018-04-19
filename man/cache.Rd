@@ -13,7 +13,8 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   omitArgs = NULL, classOptions = list(), debugCache = character(),
   sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL)
+  verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
+  useCache = getOption("reproducible.useCache", TRUE), showSimilar = NULL)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
@@ -21,7 +22,8 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   digestPathContent, omitArgs = NULL, classOptions = list(),
   debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL)
+  verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
+  useCache = getOption("reproducible.useCache", TRUE), showSimilar = NULL)
 
 lhs \%<\% rhs
 }
@@ -109,6 +111,13 @@ of the inputs, and return the result from this cacheId in the cacheRepo.
 In general, this is not used; however, in some particularly finicky situations
 where Cache is not correctly detecting unchanged inputs, this can stabilize
 the return value.}
+
+\item{showSimilar}{A logical or numeric. Useful for debugging.
+If \code{TRUE} or \code{1}, then if the Cache
+does not find an identical archive in the cacheRepo, it will report (via message)
+the next most similar archive, and indicate which argument(s) is/are different.
+If a number larger than \code{1}, then it will report the N most similar archived
+objects.}
 
 \item{lhs}{A name to assign to.}
 

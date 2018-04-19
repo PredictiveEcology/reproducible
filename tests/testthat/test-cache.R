@@ -24,18 +24,18 @@ test_that("test file-backed raster caching", {
   aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
 
   # Test clearCache by tags
-  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
   clearCache(tmpdir, userTags = "something$")
-  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
   clearCache(tmpdir, userTags = "something2")
   expect_equal(NROW(showCache(tmpdir)), 0)
 
   aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
-  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
   clearCache(tmpdir, userTags = c("something$", "testing$"))
-  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
   clearCache(tmpdir, userTags = c("something2$", "testing$"))
-  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 9)
+  expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
   clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"))
   expect_equal(NROW(showCache(tmpdir)), 0)
 
@@ -82,7 +82,7 @@ test_that("test file-backed raster caching", {
   expect_true(inMemory(bb))
 
   bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 9)
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 10)
 
   # Test that factors are saved correctly
   randomPolyToFactorInMemory <- function() {
@@ -279,12 +279,12 @@ test_that("test keepCache", {
   Cache(rnorm, 10, cacheRepo = tmpdir)
   Cache(runif, 10, cacheRepo = tmpdir)
   Cache(round, runif(4), cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 24)
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 30)
   expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))) == 0) # and search
-  expect_true(NROW(keepCache(tmpdir, "rnorm")[tagKey != "otherFunctions"]) == 8)
+  expect_true(NROW(keepCache(tmpdir, "rnorm")[tagKey != "otherFunctions"]) == 10)
 
   # do it twice to make sure it can deal with repeats
-  expect_true(NROW(keepCache(tmpdir, "rnorm")[tagKey != "otherFunctions"]) == 8)
+  expect_true(NROW(keepCache(tmpdir, "rnorm")[tagKey != "otherFunctions"]) == 10)
   Sys.sleep(1)
   st <- Sys.time()
   Sys.sleep(1)
@@ -292,9 +292,9 @@ test_that("test keepCache", {
   Cache(length, 10, cacheRepo = tmpdir)
   Cache(sum, runif(4), cacheRepo = tmpdir)
   showCache(tmpdir, after = st)
-  expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 8)
-  expect_true(NROW(keepCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 8)
-  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 8)
+  expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 10)
+  expect_true(NROW(keepCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 10)
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 10)
 
   ranNums <- Cache(runif, 4, cacheRepo = tmpdir, userTags = "objectName:a")
   ranNums <- Cache(rnorm, 4, cacheRepo = tmpdir, userTags = "objectName:a")
@@ -485,6 +485,12 @@ test_that("test pipe for Cache", {
   expect_false(isTRUE(all.equalWONewCache(d1, d2)))
 
 
+  clearCache(tmpdir)
+  a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
+  b <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() # nolint
+  d <- Cache(cacheRepo = tmpdir) %C% rnorm(10, 16) %>% mean() # nolint
+  expect_true(all.equalWONewCache(b, d))
+
 })
 
 test_that("test quoted FUN in Cache", {
@@ -585,12 +591,15 @@ test_that("test masking of %>% error message", {
   }
   expect_true(masker)
   if (interactive()) {
+
     # somehow, in a non-interactive session, R is finding reproducible::`%>%`
     # even though it is after magrittr on the search path -- somehow reproducible is
     # being kept on top... i.e,. overriding search()
-    expect_error(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
-    detach("package:magrittr")
     expect_silent(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
+    detach("package:magrittr")
+    mess <- capture_messages(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
+    expect_true(all(grepl("loading cached result from previous", mess)))
+
   }
 })
 

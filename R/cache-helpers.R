@@ -771,8 +771,12 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
-  dig <- fastdigest(list(dim(object), res(object), crs(object),
-                         extent(object)))#, object@data)) # don't include object@data -- these are volatile
+  sn <- slotNames(object@data)
+  sn <- sn[!(sn %in% c("min", "max", "haveminmax", "names", "isfactor",
+                       "dropped", "nlayers", "fromdisk", "inmemory", "offset", "gain"))]
+  dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
+  dig <- fastdigest(append(list(dim(object), res(object), crs(object),
+                         extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
     filename <- if (endsWith(basename(object@file@name), suffix = ".grd")) {
