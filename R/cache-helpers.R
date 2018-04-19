@@ -780,7 +780,8 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     } else {
       object@file@name
     }
-    dig2 <- .robustDigest(asPath(filename), length = length, quick = quick, algo = algo)
+    # there is no good reason to use depth = 0, 1, or 2 or more -- but I think 2 is *more* reliable
+    dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
     dig <- c(dig, dig2)
   }
   dig <- fastdigest(dig)
