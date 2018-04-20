@@ -561,9 +561,10 @@ setMethod(
                         quick = quick,
                         classOptions = classOptions)
     })
-    preDigestUnlist <- unlist(preDigest, recursive = TRUE)
+    preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
 
     if (verbose) {
+      preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
       endHashTime <- Sys.time()
       verboseDF <- data.frame(functionName = functionDetails$functionName,
                               component = "Hashing",
@@ -571,18 +572,22 @@ setMethod(
                               units = "secs",
                               stringsAsFactors = FALSE)
 
-        hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
-          objSize <- objSize(x, quick = quick)
+      hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
+        objSize <- objSize(x, quick = quick)
 
-        }))
+      }))
 
-      lengths <- unlist(lapply(preDigest, function(x) length(unlist(x))))
-      hashDetails <- data.frame(objectNames = rep(names(preDigest), lengths),
+      lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
+      hashDetails <- data.frame(objectNames = rep(names(preDigestUnlist), lengths),
                                 #objSize = rep(hashObjectSize, lengths),
-                                hashElements = names(preDigestUnlist),
-                                hash = unname(preDigestUnlist))
-      preDigestUnlistNames <- unlist(lapply(strsplit(names(preDigestUnlist), split = "\\."), tail, 1))
-      hashObjectSizeNames <- unlist(lapply(strsplit(names(hashObjectSize), split = "\\."), tail, 1))
+                                hashElements = names(unlist(preDigestUnlist)),
+                                hash = unname(unlist(preDigestUnlist)),
+                                stringsAsFactors = FALSE)
+      preDigestUnlistNames <- unlist(lapply(strsplit(names(unlist(preDigestUnlist)), split = "\\."), function(x) paste0(tail(x, 2), collapse = ".")))
+      hashObjectSizeNames <- unlist(lapply(strsplit(names(hashObjectSize), split = "\\$"), function(x) paste0(tail(x, 2), collapse = ".")))
+      #hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\.y"), function(x) paste0(tail(x, 2), collapse = ".")))
+      hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
+      hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\."), function(x) paste0(tail(x, 2), collapse = ".")))
       hashDetails$objSize <- NA
       hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <- hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
 
@@ -790,7 +795,7 @@ setMethod(
       if (!is.null(showSimilar)) { # TODO: Needs testing
         setDT(localTags)
         userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
-        userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlist), preDigestUnlist, sep = ":"))
+        userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":"))
         userTags3 <- c(userTags, userTags2)
         aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
         setkeyv(aa, "N")
@@ -799,7 +804,7 @@ setMethod(
           similar2 <- similar[grepl("preDigest", tag)]
           similar2[, `:=`(fun=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
                           hash=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
-          similar2[, differs := !(hash %in% preDigestUnlist), by = artifact]
+          similar2[, differs := !(hash %in% preDigestUnlistTrunc), by = artifact]
           message("This call to cache differs from the next closest because of a ",
                   "different ", paste(similar2[differs==TRUE]$fun, collapse = ", "))
           print(similar2[,c("fun", "differs")])
@@ -944,7 +949,7 @@ setMethod(
                   paste0("object.size:", objSize),
                   paste0("accessed:", Sys.time()),
                   paste0(otherFns),
-                  paste("preDigest", names(preDigestUnlist), preDigestUnlist, sep = ":"))
+                  paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":"))
     saved <- suppressWarnings(try(
       saveToLocalRepo(outputToSave, repoDir = cacheRepo, artifactName = "Cache",
                       archiveData = FALSE, archiveSessionInfo = FALSE,
@@ -1036,3 +1041,22 @@ setMethod(
 .namesCacheFormals <- names(.formalsCache)[]
 
 loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
+
+
+.unlistToCharacter <- function(l, max.level = 1) {
+  if (max.level > 0) {
+    lapply(l, function(l1) {
+      if (is.character(l1)) {
+        l1
+      } else {
+        if (is.list(l1)) {
+          .unlistToCharacter(l1, max.level = max.level - 1)
+        } else {
+          "not list"
+        }
+      }
+    })
+  } else {
+    "other"
+  }
+}
