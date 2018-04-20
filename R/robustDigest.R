@@ -246,6 +246,16 @@ setMethod(
 #' @exportMethod .robustDigest
 setMethod(
   ".robustDigest",
+  signature = "data.frame",
+  definition = function(object, objects, length, algo, quick,
+                        classOptions) {
+    fastdigest(object)
+  })
+
+#' @rdname robustDigest
+#' @exportMethod .robustDigest
+setMethod(
+  ".robustDigest",
   signature = "Raster",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
