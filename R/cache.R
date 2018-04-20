@@ -1,5 +1,6 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue", ".SD", "tag"))
+  utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue", "tag",
+                           "N", "differs", "hash"))
 }
 
 .reproEnv <- new.env(parent = asNamespace("reproducible"))
@@ -203,6 +204,12 @@ if (getRversion() >= "3.1.0") {
 #'        In general, this is not used; however, in some particularly finicky situations
 #'        where Cache is not correctly detecting unchanged inputs, this can stabilize
 #'        the return value.
+#' @param useCache Logical. If \code{FALSE}, then the entire Caching mechanism is bypassed
+#'                 and the function is evaluated as if it was not being Cached.
+#'                 Default is \code{getOption("reproducible.useCache")}),
+#'                 which is \code{FALSE} by default, meaning use the Cache mechanism. This
+#'                 may be useful to turn all Caching on or off in very complex scripts and
+#'                 nested functions.
 #'
 #' @param showSimilar A logical or numeric. Useful for debugging.
 #'        If \code{TRUE} or \code{1}, then if the Cache
@@ -241,7 +248,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom archivist createLocalRepo addTagsRepo
 #' @importFrom digest digest
-#' @importFrom data.table setDT
+#' @importFrom data.table setDT := setkeyv .N .SD
 #' @importFrom fastdigest fastdigest
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
@@ -786,13 +793,13 @@ setMethod(
         userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlist), preDigestUnlist, sep = ":"))
         userTags3 <- c(userTags, userTags2)
         aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
-        setkey(aa, N)
+        setkeyv(aa, "N")
         similar <- localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N==max(N)]
         if (NROW(similar)) {
           similar2 <- similar[grepl("preDigest", tag)]
           similar2[, `:=`(fun=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
                           hash=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
-          similar2[, differs:=!(hash %in% preDigestUnlist), by = artifact]
+          similar2[, differs := !(hash %in% preDigestUnlist), by = artifact]
           message("This call to cache differs from the next closest because of a ",
                   "different ", paste(similar2[differs==TRUE]$fun, collapse = ", "))
           print(similar2[,c("fun", "differs")])

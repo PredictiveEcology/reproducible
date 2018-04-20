@@ -766,6 +766,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
 #' @rdname cacheHelper
 #' @importFrom fastdigest fastdigest
+#' @importFrom methods slotNames
 #' @importFrom digest digest
 #' @importFrom raster res crs extent
 .digestRasterLayer <- function(object, length, algo, quick) {

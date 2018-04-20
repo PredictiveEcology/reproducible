@@ -112,6 +112,13 @@ In general, this is not used; however, in some particularly finicky situations
 where Cache is not correctly detecting unchanged inputs, this can stabilize
 the return value.}
 
+\item{useCache}{Logical. If \code{FALSE}, then the entire Caching mechanism is bypassed
+and the function is evaluated as if it was not being Cached.
+Default is \code{getOption("reproducible.useCache")}),
+which is \code{FALSE} by default, meaning use the Cache mechanism. This
+may be useful to turn all Caching on or off in very complex scripts and
+nested functions.}
+
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache
 does not find an identical archive in the cacheRepo, it will report (via message)
