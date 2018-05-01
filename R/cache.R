@@ -807,13 +807,39 @@ setMethod(
         similar <- localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N==max(N)]
         if (NROW(similar)) {
           similar2 <- similar[grepl("preDigest", tag)]
+          cacheIdOfSimilar <- similar[grepl("cacheId", tag)]$tag
+          cacheIdOfSimilar <- unlist(strsplit(cacheIdOfSimilar, split = ":"))[2]
+          
           similar2[, `:=`(fun=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
                           hash=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
           similar2[, differs := !(hash %in% preDigestUnlistTrunc), by = artifact]
-          message("This call to cache differs from the next closest because of a ",
-                  "different ", paste(similar2[differs==TRUE]$fun, collapse = ", "))
+          
+          similar2[!(fun %in% names(preDigestUnlistTrunc)), differs := NA]
+          similar2[(hash %in% "other"), deeperThan3 := TRUE]
+          similar2[(hash %in% "other"), differs := NA]
+          differed <- FALSE
+          message("This call to cache differs from the next closest due to:")
+          if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
+            differed <- TRUE
+            message("... different ", paste(similar2[differs %in% TRUE]$fun, collapse = ", "))
+          }
+          
+          if (length(similar2[is.na(differs)]$differs)) {
+            differed <- TRUE
+            message("... possible, unknown, differences in a nested list that is deeper than 3 in ",
+                    paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)))
+          }
+          missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
+          if (length(missingArgs)) {
+            differed <- TRUE
+            message("... because of an ",
+                    "argument currently not specified: ", 
+                    paste(as.character(missingArgs), collapse = ", "))
+            
+          }
+          print(paste0("artifact with cacheId ", cacheIdOfSimilar))
           print(similar2[,c("fun", "differs")])
-
+          
         } else {
           message("There is no similar item in the cacheRepo")
         }
