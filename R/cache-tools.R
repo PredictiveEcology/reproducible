@@ -131,12 +131,6 @@ setMethod(
         unlink(filesToRemove)
       }
 
-      # memoise
-      # fn <- unique(objsDT[tagKey == "memoisedFunction", tagValue])
-      # forgetResults <- lapply(fn, function(f)
-      #   forget(.memoisedCacheFuns[[f]])
-      # )
-
       suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
     }
     memoise::forget(loadFromLocalRepoMem)
@@ -200,7 +194,7 @@ setMethod(
         }
       }
     }
-    .messageCacheSize(x)
+    .messageCacheSize(x, artifacts = unique(objsDT$artifact))
     objsDT
 })
 
@@ -274,36 +268,45 @@ setMethod(
     suppressMessages(cacheToList <- showCache(cacheTo))
 
     artifacts <- unique(cacheFromList$artifact)
-    objectList <- lapply(artifacts, loadFromLocalRepo,
-                         repoDir = cacheFrom, value = TRUE)
-    mapply(outputToSave = objectList, artifact = artifacts,
-           function(outputToSave, artifact) {
-             written <- FALSE
-             if (is(outputToSave, "Raster")) {
-               outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
-             }
-             userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "class", "date", "cacheId"),
-                                                 list(tagKey, tagValue)]
-             userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
-             while (!written) {
-               saved <- suppressWarnings(try(
-                 saveToLocalRepo(outputToSave, repoDir = cacheTo,
-                                 artifactName = "Cache",
-                                 archiveData = FALSE, archiveSessionInfo = FALSE,
-                                 archiveMiniature = FALSE, rememberName = FALSE,
-                                 silent = TRUE, userTags = userTags),
-                 silent = TRUE
-               ))
-               # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-               written <- if (is(saved, "try-error")) {
-                 Sys.sleep(0.05)
-                 FALSE
-               } else {
-                 TRUE
-               }
-             }
-           }
-    )
+    objectList <- lapply(artifacts, function(artifact) {
+      if (!(artifact %in% cacheToList$artifact)) {
+        outputToSave <- try(loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
+        if (is(outputToSave, "try-error")) {
+          message("Continuing to load others")
+          outputToSave <- NULL
+        }
+        
+        ## Save it
+        written <- FALSE
+        if (is(outputToSave, "Raster")) {
+          outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
+        }
+        userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "class", "date", "cacheId"),
+                                            list(tagKey, tagValue)]
+        userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
+        while (!written) {
+          saved <- suppressWarnings(try(
+            saveToLocalRepo(outputToSave, repoDir = cacheTo,
+                            artifactName = "Cache",
+                            archiveData = FALSE, archiveSessionInfo = FALSE,
+                            archiveMiniature = FALSE, rememberName = FALSE,
+                            silent = TRUE, userTags = userTags),
+            silent = TRUE
+          ))
+          # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+          written <- if (is(saved, "try-error")) {
+            Sys.sleep(0.05)
+            FALSE
+          } else {
+            TRUE
+          }
+        }
+        message(artifact, " copied")
+        outputToSave
+      } else {
+        message("Skipping ", artifact, "; already in ", cacheTo)
+      }
+    })
     .messageCacheSize(cacheTo)
 
     return(invisible(cacheTo))
@@ -311,9 +314,20 @@ setMethod(
 
 
 #' @keywords internal
-.messageCacheSize <- function(x) {
-  fs <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
+.messageCacheSize <- function(x, artifacts = NULL) {
+  
+  fsTotal <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
+  class(fsTotal) <- "object_size"
+  preMessage1 <- "  Total (including Rasters): "
+  
+  fs <- sum(file.size(dir(file.path(x, "gallery"), 
+                          pattern = paste(collapse = "|", 
+                                          unique(artifacts)), full.names = TRUE)))
   class(fs) <- "object_size"
-  message("Total Cache size: ",
-          format(fs, "auto"))
+  preMessage <- "  Selected objects (not including Rasters): "
+  
+  message("Cache size: ")
+  message(preMessage1, format(fsTotal, "auto"))
+  message(preMessage, format(fs, "auto"))
+  
 }
