@@ -788,6 +788,11 @@ setMethod(
 
         }
 
+        # If it was a NULL, the cacheRepo stored it as "NULL" ... return it as NULL
+        if (is.character(output))
+          if (identical(as.character(output), "NULL"))
+            output <- NULL
+
         return(output)
       }
     } else {
