@@ -70,6 +70,7 @@
     freduce(value, `_function_list`)
   }), env, env), c("fseq", "function"))
   env[["freduce"]] <- freduce
+
   if (getFromNamespace("is_placeholder", ns = "magrittr")(lhs)) {
     env[["_fseq"]]
   } else {
@@ -186,7 +187,7 @@
   whPipeCall <- unlist(lapply(mcs, function(elem) as.character(elem[[1]]) %in% c("%C%", "%>%")))
   # Take the first one, which will be one with the whole pipe sequence
   mc <- mcs[whPipeCall][[1]]
-  mc[[2]][[2]] <- parse(text = gsub(deparse(mc[[2]][[2]]), pattern = "%C%",
+  mc <- parse(text = gsub(deparse(mc), pattern = "%C%",
                                     replacement = "%>%"))[[1]]
   chain_parts <- getFromNamespace("split_chain", ns = "magrittr")(mc, env = env) # nolint
   pipes <- chain_parts[["pipes"]][-1]
@@ -200,7 +201,7 @@
   #   lhs[[1]] <- lhs[[1]][[1]]
   # }
 
-  env[["_function_list"]] <- lapply(1:length(rhss), function(i) {
+  env[["_function_list"]] <- lapply(seq(rhss), function(i) {
     getFromNamespace("wrap_function", ns = "magrittr")(rhss[[i]], pipes[[i]], parent)
   })
   env[["_fseq"]] <- `class<-`(eval(quote(function(value) {
@@ -235,4 +236,23 @@
       else invisible(result[["value"]])
     }
   }
+}
+
+#' The special assign operator \code{\%<\%} is equivalent to Cache. See examples at the end.
+#'
+#' @export
+#' @rdname cache
+#' @param lhs A name to assign to.
+#' @param rhs A function call
+#' @examples
+#' # Equivalent
+#' a <- Cache(rnorm, 1)
+#' b %<% rnorm(1)
+#'
+`%<%` <- function(lhs, rhs) {
+  lhsChar <- deparse(substitute(lhs))
+  mc <- match.call()["rhs"]
+  RHS <- as.list(mc)[[1]]
+  assign(lhsChar, do.call(Cache, as.list(RHS)), envir = parent.frame())
+  return(invisible(get(lhsChar, envir = parent.frame(), inherits = FALSE)))
 }

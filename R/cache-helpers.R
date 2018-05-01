@@ -35,6 +35,8 @@ setMethod(
 #'
 #' @param object Any R object.
 #' @param functionName A character string indicating the function name
+#' @param fromMemoise Logical. If \code{TRUE}, the message will be about
+#'        recovery from memoised copy
 #'
 #' @author Eliot McIntire
 #' @export
@@ -43,7 +45,8 @@ setMethod(
 #' a <- 1
 #' .cacheMessage(a, "mean")
 #'
-setGeneric(".cacheMessage", function(object, functionName) {
+setGeneric(".cacheMessage", function(object, functionName,
+                                     fromMemoise = getOption("reproducible.useMemoise", TRUE)) {
   standardGeneric(".cacheMessage")
 })
 
@@ -52,9 +55,18 @@ setGeneric(".cacheMessage", function(object, functionName) {
 setMethod(
   ".cacheMessage",
   signature = "ANY",
-  definition = function(object, functionName) {
-    message(crayon::blue("  loading cached result from previous ", functionName, " call.",
-                         sep = ""))
+  definition = function(object, functionName,
+                        fromMemoise) {
+    if (isTRUE(fromMemoise)) {
+      message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
+                           sep = ""))
+    } else if (!is.na(fromMemoise)){
+      message(crayon::blue("  loading cached result from previous ", functionName, " call, ",
+                           "adding to memoised copy", sep = ""))
+    } else {
+      message(crayon::blue("  loading cached result from previous ", functionName, " call.",
+                           sep = ""))
+    }
 })
 
 ################################################################################
@@ -193,10 +205,15 @@ setMethod(
   signature = "ANY",
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
+      cacheRepo <- if (nzchar(getOption("reproducible.cachePath"))) {
+        message("No cacheRepo supplied. Using value in getOption('reproducible.cachePath')")
+        getOption("reproducible.cachePath", tempdir())
+      } else {
         message("No cacheRepo supplied. Using tempdir()")
         tempdir()
-      })
-
+      }
+      checkPath(path = cacheRepo, create = create)
+    })
 })
 
 ################################################################################
@@ -396,6 +413,8 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #' the location, NOT the character string representation.
 #'
 #' @param obj A character string to convert to a \code{Path}.
+#' @param nParentDirs A numeric indicating the number of parent directories starting
+#'                    from basename(obj) = 0 to keep for the digest
 #'
 #' @export
 #' @rdname Path-class
@@ -407,24 +426,27 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #' is(tmpf, "Path")     ## FALSE
 #' is(tmpfPath, "Path") ## TRUE
 #'
-asPath <- function(obj) {
+asPath <- function(obj, nParentDirs = 0) {
   UseMethod("asPath", obj)
 }
 
 #' @export
 #' @importFrom methods is
 #' @rdname Path-class
-asPath.character <- function(obj) {  # nolint
+asPath.character <- function(obj, nParentDirs = 0) {  # nolint
   class(obj) <- c("Path", is(obj))
+  attr(obj, "nParentDirs") <- nParentDirs
   return(obj)
 }
 
+#' If using \code{as("string", "Path")}, there is no option to pass \code{nParentDirs}.
+#' So, using \code{asPath} directly (e.g., \code{asPath("string", 0))}) is preferred.
 #' @export
 #' @importFrom methods new
 #' @rdname Path-class
 #' @name asPath
 setAs(from = "character", to = "Path", function(from) {
-  new("Path", from)
+  asPath(from, 0)
 })
 
 ################################################################################
@@ -534,13 +556,17 @@ setMethod(
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- if (!all(c("backpack.db", "gallery") %in% list.files(repoDir))) {
-    FALSE
-  } else {
-    TRUE
-  }
+  isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
 
-  if (!inMemory(obj)) {
+  if (inMemory(obj)) {
+    isFilebacked <- FALSE
+    if (is.factor(obj)) {
+      fileExt <- ".grd"
+    } else {
+      fileExt <- ".tif"
+    }
+    curFilename <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
+  } else {
     isFilebacked <- TRUE
     if (is(obj, "RasterLayer")) {
       curFilename <- normalizePath(filename(obj), winslash = "/", mustWork = FALSE)
@@ -549,14 +575,6 @@ setMethod(
         normalizePath(filename(x), winslash = "/", mustWork = FALSE)))
       curFilename <- unique(curFilenames)
     }
-  } else {
-    isFilebacked <- FALSE
-    if (is.factor(obj)) {
-      fileExt <- ".grd"
-    } else {
-      fileExt <- ".tif"
-    }
-    curFilename <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
   }
 
   if (any(!file.exists(curFilename)) & isFilebacked & isRasterLayer) {
@@ -566,15 +584,19 @@ setMethod(
         file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
         winslash = "/", mustWork = FALSE)
     } else {
-      normalizePath(
-        file.path(repoDir, splittedFilenames),
-        winslash = "/", mustWork = FALSE)
+      splittedFilenames2 <- lapply(splittedFilenames, function(x) {
+        ifelse(length(x), x[length(x)], "")
+      })
+
+      normalizePath(file.path(repoDir, splittedFilenames2), winslash = "/", mustWork = FALSE)
     }
     if (any(!file.exists(trySaveFilename))) {
-      stop("The raster that is supposed to be on disk with this or these filename(s) ",
-           curFilename, " has been deleted. It must be recreated e.g.,",
-           "try showCache(userTags = \"writeRaster\"), examine that and possibly -- with",
-           "caution -- clearCache(userTags = \"writeRaster\")")
+      stop("The following rasters are supposed to be on disk but appear to have been deleted:\n",
+           paste("    ", curFilename, collapse = "\n"),
+           "\n\nThese files must be recreated, e.g., try:\n",
+           "  showCache(userTags = \"writeRaster\").\n",
+           "\nExamine that and possibly [with caution!]:\n",
+           "  reproducible::clearCache(userTags = \"writeRaster\")")
     } else {
       slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
     }
@@ -744,24 +766,30 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
 #' @rdname cacheHelper
 #' @importFrom fastdigest fastdigest
+#' @importFrom methods slotNames
 #' @importFrom digest digest
 #' @importFrom raster res crs extent
-.digestRaster <- function(object, compareRasterFileLength, algo) {
+.digestRasterLayer <- function(object, length, algo, quick) {
+  # metadata -- only a few items of the long list because one thing (I don't recall)
+  #  doesn't cache consistently
+  sn <- slotNames(object@data)
+  sn <- sn[!(sn %in% c("min", "max", "haveminmax", "names", "isfactor",
+                       "dropped", "nlayers", "fromdisk", "inmemory", "offset", "gain"))]
+  dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
+  dig <- fastdigest(append(list(dim(object), res(object), crs(object),
+                         extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
   if (nzchar(object@file@name)) {
-    dig <- fastdigest(list(dim(object), res(object), crs(object),
-                           extent(object), object@data))
-    # if the Raster is on disk, has the first compareRasterFileLength characters;
-    if (endsWith(basename(object@file@name), suffix = ".grd"))
-      filename <- sub(object@file@name, pattern = ".grd$", replacement = ".gri")
-    else
-      filename <- object@file@name
-    dig <- fastdigest(
-      append(dig, digest::digest(file = filename,
-                                 length = compareRasterFileLength,
-                                 algo = algo)))
-  } else {
-    dig <- fastdigest(object)
+    # if the Raster is on disk, has the first length characters;
+    filename <- if (endsWith(basename(object@file@name), suffix = ".grd")) {
+      sub(object@file@name, pattern = ".grd$", replacement = ".gri")
+    } else {
+      object@file@name
+    }
+    # there is no good reason to use depth = 0, 1, or 2 or more -- but I think 2 is *more* reliable
+    dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
+    dig <- c(dig, dig2)
   }
+  dig <- fastdigest(dig)
 }
 
 #' Recursive copying of nested environments, and other "hard to copy" objects
@@ -932,7 +960,7 @@ setMethod("Copy",
   obj
 }
 
-loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
+# loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
 
 
 .getOtherFnNamesAndTags <- function(scalls) {

@@ -6,14 +6,19 @@
 \alias{.cacheMessage,ANY-method}
 \title{Create a custom cache message by class}
 \usage{
-.cacheMessage(object, functionName)
+.cacheMessage(object, functionName,
+  fromMemoise = getOption("reproducible.useMemoise", TRUE))
 
-\S4method{.cacheMessage}{ANY}(object, functionName)
+\S4method{.cacheMessage}{ANY}(object, functionName,
+  fromMemoise = getOption("reproducible.useMemoise", TRUE))
 }
 \arguments{
 \item{object}{Any R object.}
 
 \item{functionName}{A character string indicating the function name}
+
+\item{fromMemoise}{Logical. If \code{TRUE}, the message will be about
+recovery from memoised copy}
 }
 \value{
 Nothing; called for its messaging side effect.

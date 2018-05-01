@@ -26,6 +26,8 @@ matrix:
     after_success:
     - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
     - Rscript -e 'lintr::lint_package()'
+    r_packages:
+    - devtools
   - os: linux
     dist: trusty
     r: devel
@@ -54,4 +56,4 @@ branches:
   only:
     - master
     - development
-    - testing
+

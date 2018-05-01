@@ -125,6 +125,55 @@ Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir) # cached copy is 
 
 clearCache(tmpDir)
 
+
+##########################
+## Nested Caching
+# Make 2 functions
+inner <- function(mean) {
+  d <- 1
+  Cache(rnorm, n = 3, mean = mean)
+}
+outer <- function(n) {
+  Cache(inner, 0.1, cacheRepo = tmpdir2)
+}
+
+# make 2 different cache paths
+tmpdir1 <- file.path(tempdir(), "first")
+tmpdir2 <- file.path(tempdir(), "second")
+
+# Run the Cache ... notOlderThan propagates to all 3 Cache calls,
+#   but cacheRepo is tmpdir1 in top level Cache and all nested
+#   Cache calls, unless individually overridden ... here inner
+#   uses tmpdir2 repository
+Cache(outer, n = 2, cacheRepo = tmpdir1, notOlderThan = Sys.time())
+
+showCache(tmpdir1) # 2 function calls
+showCache(tmpdir2) # 1 function call
+
+# userTags get appended
+# all items have the outer tag propagate, plus inner ones only have inner ones
+clearCache(tmpdir1)
+outerTag <- "outerTag"
+innerTag <- "innerTag"
+inner <- function(mean) {
+  d <- 1
+  Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5, userTags = innerTag)
+}
+outer <- function(n) {
+  Cache(inner, 0.1)
+}
+aa <- Cache(outer, n = 2, cacheRepo = tmpdir1, userTags = outerTag)
+showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer only have outerTag
+
+### cacheId
+set.seed(1)
+Cache(rnorm, 1, cacheRepo = tmpdir1)
+# manually look at output attribute which shows cacheId: ad184ce64541972b50afd8e7b75f821b
+Cache(rnorm, 1, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b") # same value
+# override even with different inputs:
+Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b")
+
 ## cleanup
 unlink(c("filename.rda", "filename1.rda"))
 unlink(dirname(tmpDir), recursive = TRUE)
+

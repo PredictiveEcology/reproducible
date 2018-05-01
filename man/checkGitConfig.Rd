@@ -8,7 +8,7 @@
 }
 \description{
 In general, interacting with remote repositories using \pkg{git2r} won't work
-if a users's \file{.gitconfig} file rewrites HTTPS urls to SSH.
+if a user's \file{.gitconfig} file rewrites HTTPS urls to SSH.
 }
 \author{
 Alex Chubaty
