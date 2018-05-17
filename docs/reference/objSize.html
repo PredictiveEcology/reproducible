@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Take a snapshot of all the packages and version numbers — pkgSnapshot • reproducible</title>
+<title>Recursive object.size — objSize • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -28,9 +28,11 @@
 
 
 
-<meta property="og:title" content="Take a snapshot of all the packages and version numbers — pkgSnapshot" />
+<meta property="og:title" content="Recursive object.size — objSize" />
 
-<meta property="og:description" content="This can be used later by installVersions to install or re-install the correct versions." />
+<meta property="og:description" content="This has methods for various types of things that may not correctly report
+their object.size using object\.size. Also, for lists and environments,
+it will return the object.size separately for each element." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -107,85 +109,63 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Take a snapshot of all the packages and version numbers</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/packages.R'><code>R/packages.R</code></a></small>
-    <div class="hidden name"><code>pkgSnapshot.Rd</code></div>
+    <h1>Recursive object.size</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/objectSize.R'><code>R/objectSize.R</code></a></small>
+    <div class="hidden name"><code>objSize.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>This can be used later by <code>installVersions</code> to install or re-install the correct versions.</p>
+    <p>This has methods for various types of things that may not correctly report
+their object.size using <code>object\.size</code>. Also, for lists and environments,
+it will return the object.size separately for each element.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>pkgSnapshot</span>(<span class='no'>packageVersionFile</span>, <span class='no'>libPath</span>, <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='no'>quick</span>)
+
+<span class='co'># S3 method for list</span>
+<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>))
+
+<span class='co'># S3 method for environment</span>
+<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>,
+  <span class='fl'>FALSE</span>))
+
+<span class='co'># S3 method for default</span>
+<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>))
+
+<span class='co'># S3 method for Path</span>
+<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>packageVersionFile</th>
-      <td><p>A filename to save the packages and their currently
-installed version numbers. Defaults to <code>".packageVersions.txt"</code>.</p></td>
+      <th>x</th>
+      <td><p>An object</p></td>
     </tr>
     <tr>
-      <th>libPath</th>
-      <td><p>The path to the local library where packages are installed.
-Defaults to the .libPaths()[1]</p></td>
-    </tr>
-    <tr>
-      <th>standAlone</th>
-      <td><p>Logical. If <code>TRUE</code>, all packages will be installed and loaded strictly
-from the <code>libPaths</code> only. If <code>FALSE</code>, all <code>.libPaths</code> will
-be used to find the correct versions. This can be create dramatically faster
-installs if the user has a substantial number of the packages already in their
-personal library. In the case of <code>TRUE</code>, there will be a hidden file
-place in the <code>libPath</code> directory that lists all the packages
-that were needed during the <code>Require</code> call. Default <code>FALSE</code> to
-minimize package installing.</p></td>
+      <th>quick</th>
+      <td><p>Logical. Only some methods use this. e.g.,
+<code>Path</code> class objects. In which case, <code>file.size</code> will be
+used instead of <code>object.size</code>.</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>A file is written with the package names and versions of all packages within <code>libPath</code>.
-This can later be passed to <code>Require</code>.</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>pkgSnapFile</span> <span class='kw'>&lt;-</span> <span class='fu'>tempfile</span>()
-<span class='fu'>pkgSnapshot</span>(<span class='no'>pkgSnapFile</span>, <span class='fu'>.libPaths</span>()[<span class='fl'>1</span>])</div><div class='output co'>#&gt;         instPkgs   instVers
-#&gt;   1: ansistrings 1.0.0.9000
-#&gt;   2:   archivist      2.3.1
-#&gt;   3:  assertthat      0.2.0
-#&gt;   4:   backports      1.1.2
-#&gt;   5:          BH   1.66.0-1
-#&gt;  ---                       
-#&gt; 130:    parallel      3.4.4
-#&gt; 131:       stats      3.4.4
-#&gt; 132:       tcltk      3.4.4
-#&gt; 133:       tools      3.4.4
-#&gt; 134:       utils      3.4.4</div><div class='input'><span class='kw pkg'>data.table</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/data.table/topics/fread'>fread</a></span>(<span class='no'>pkgSnapFile</span>)</div><div class='output co'>#&gt;         instPkgs   instVers
-#&gt;   1: ansistrings 1.0.0.9000
-#&gt;   2:   archivist      2.3.1
-#&gt;   3:  assertthat      0.2.0
-#&gt;   4:   backports      1.1.2
-#&gt;   5:          BH   1.66.0-1
-#&gt;  ---                       
-#&gt; 130:    parallel      3.4.4
-#&gt; 131:       stats      3.4.4
-#&gt; 132:       tcltk      3.4.4
-#&gt; 133:       tools      3.4.4
-#&gt; 134:       utils      3.4.4</div><div class='input'>
-</div></pre>
+    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'>new.env</span>()
+<span class='no'>a</span>$<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
+<span class='no'>a</span>$<span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
+
+<span class='fu'>objSize</span>(<span class='no'>a</span>) <span class='co'># all the elements in the environment</span>
+<span class='fu'>object.size</span>(<span class='no'>a</span>) <span class='co'># different - only measuring the environment as an object</span></div><div class='output co'>#&gt; 56 bytes</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#details">Details</a></li>
-      
+            
       <li><a href="#examples">Examples</a></li>
     </ul>
 

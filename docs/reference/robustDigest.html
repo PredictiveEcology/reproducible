@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create reproducible digests of objects in R � .robustDigest • reproducible</title>
+<title>Create reproducible digests of objects in R — .robustDigest • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -18,13 +18,33 @@
 <!-- Font Awesome icons -->
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 
+<!-- clipboard.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-  
-  
+
+
+
+<meta property="og:title" content="Create reproducible digests of objects in R — .robustDigest" />
+
+<meta property="og:description" content="Not all aspects of R objects are captured by current hashing tools in R (e.g.
+digest::digest, fastdigest::fastdigest, knitr caching,
+archivist::cache). This is mostly because many objects have "transient"
+(e.g., functions have environments), or "disk-backed" features. This function
+allows for these accommodations to be made and uses fastdigest
+internally.  Since
+the goal of using reproducibility is to have tools that are not session specific,
+this function
+attempts to strip all session specific information so that the fastdigest
+works between sessions and operating systems. It is tested under many
+conditions and object types, there are bound to be others that don't
+work correctly." />
+<meta name="twitter:card" content="summary" />
+
+
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -34,16 +54,14 @@
 <![endif]-->
 
 
-<!-- Google analytics -->
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-58633549-5"></script>
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-  ga('create', 'UA-58633549-5', 'auto');
-  ga('send', 'pageview');
-
+  gtag('config', 'UA-58633549-5');
 </script>
 
   </head>
@@ -59,8 +77,12 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">reproducible</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="../index.html">reproducible</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.1.4.9016</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
@@ -73,7 +95,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li>
-  <a href="../news/index.html">News</a>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       
@@ -85,6 +107,7 @@
   </a>
 </li>
       </ul>
+      
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -92,12 +115,15 @@
       
       </header>
 
-      <div class="row">
+<div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create reproducible digests of objects in R</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/robustDigest.R'><code>R/robustDigest.R</code></a></small>
+    <div class="hidden name"><code>robustDigest.Rd</code></div>
     </div>
 
+    <div class="ref-description">
     
     <p>Not all aspects of R objects are captured by current hashing tools in R (e.g.
 <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest::digest</a></code>, <code><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest::fastdigest</a></code>, <code>knitr</code> caching,
@@ -112,51 +138,67 @@ works between sessions and operating systems. It is tested under many
 conditions and object types, there are bound to be others that don't
 work correctly.</p>
     
+    </div>
 
-    <pre class="usage"><span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>compareRasterFileLength</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
-  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>digestPathContent</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
+    <pre class="usage"><span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>, <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>), <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for cluster</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for `function`</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for expression</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for character</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for Path</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for environment</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for list</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
+
+<span class='co'># S4 method for data.frame</span>
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for Raster</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())
 
 <span class='co'># S4 method for Spatial</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>compareRasterFileLength</span>, <span class='no'>algo</span>,
-  <span class='no'>digestPathContent</span>, <span class='no'>classOptions</span>)</pre>
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>())</pre>
     
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
@@ -166,16 +208,17 @@ work correctly.</p>
     <tr>
       <th>objects</th>
       <td><p>Optional character vector indicating which objects are to
-be considered while making digestible. This is only relevant
-if the object being passed is an environment or list or the like.</p></td>
+be considered while making digestible. This argument is not used
+in the default cases; the only known method that uses this
+in the default cases; the only known method that uses this
+argument is the <code>simList</code> class from <code>SpaDES.core</code>.</p></td>
     </tr>
     <tr>
-      <th>compareRasterFileLength</th>
-      <td><p>Numeric. Optional. When there are Rasters, that
-have file-backed storage, this is passed to the length arg in <code>digest</code>
-when determining if the Raster file is already in the database.
-Note: uses <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></code> for file-backed Raster.
-Default 1e6. Passed to <code>.prepareFileBackedRaster</code>.</p></td>
+      <th>length</th>
+      <td><p>Numeric. If the element passed to Cache is a <code>Path</code> class
+object (from e.g., <code>asPath(filename)</code>) or it is a <code>Raster</code> with file-backing, then this will be
+passed to <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest::digest</a></code>, essentially limiting the number of bytes
+to digest (for speed). This will only be used if <code>quick = FALSE</code>.</p></td>
     </tr>
     <tr>
       <th>algo</th>
@@ -185,10 +228,16 @@ Default 1e6. Passed to <code>.prepareFileBackedRaster</code>.</p></td>
     <code>murmur32</code>.</p></td>
     </tr>
     <tr>
-      <th>digestPathContent</th>
-      <td><p>Logical. Should arguments that are of class <code>Path</code>
-(see examples below) have their name digested
-(<code>FALSE</code>), or their file contents (<code>TRUE</code>; default).</p></td>
+      <th>quick</th>
+      <td><p>Logical. If <code>TRUE</code>,
+little or no disk-based information will be assessed, i.e., mostly its
+memory content. This is relevant for objects of class
+<code>Path</code> and <code>Raster</code> currently.
+For class <code>Path</code> objects, the file's metadata (i.e., filename and file size)
+will be hashed instead of the file contents. If set to <code>FALSE</code> (default),
+the contents of the file(s) are hashed.
+If <code>quick = TRUE</code>, <code>length</code> is ignored.
+<em>NOTE: this argument is experimental and may change in future releases.</em></p></td>
     </tr>
     <tr>
       <th>classOptions</th>
@@ -227,8 +276,8 @@ using <code>asPath(thePath)</code></p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <p><code><a href='http://www.rdocumentation.org/packages/archivist/topics/cache'>cache</a></code>.
-    <code><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></code>.</p>
+    <div class='dont-index'><p><code><a href='http://www.rdocumentation.org/packages/archivist/topics/cache'>cache</a></code>.</p>
+<p><code><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></code>.</p></div>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -240,16 +289,16 @@ using <code>asPath(thePath)</code></p>
 <span class='fu'>save</span>(<span class='no'>a</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
 <span class='co'># treats as character string, so 2 filenames are different</span>
-<span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "7616b3f08f75b8e46b6e6e5099259606"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "558ca583c69b03f52a3e3a8d875fbbd2"</div><div class='input'>
+<span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "05d2bc51ce4c8600b7df248b8921b504"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "6084c7a74417d344daef2ea25876deb9"</div><div class='input'>
 <span class='co'># tests to see whether character string is representing a file</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "46016fc41d2dbcf4"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>tmpfile2</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [1] "46016fc41d2dbcf4"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "d608ee53f4355b64"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>tmpfile2</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [1] "d608ee53f4355b64"</div><div class='input'>
 <span class='co'># if you tell it that it is a path, then you can decide if you want it to be</span>
 <span class='co'>#  treated as a character string or as a file path</span>
-<span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile1</span>))</div><div class='output co'>#&gt; [1] "8345cbf07267dee5f8f511ec20c8a062"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile2</span>)) <span class='co'># different because you have a choice</span></div><div class='output co'>#&gt; [1] "2ffbd2f505cc7de0b64ce2c9895d2c21"</div><div class='input'>
-<span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile1</span>), <span class='kw'>digestPathContent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [[1]]
-#&gt; [1] "46016fc41d2dbcf4"
-#&gt; </div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile2</span>), <span class='kw'>digestPathContent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [[1]]
-#&gt; [1] "46016fc41d2dbcf4"
+<span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "c525e185c44de79b343a5a4ac1a4aa51"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "b7703b703d434921b0593064f05cf89f"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; [[1]]
+#&gt; [1] "d608ee53f4355b64"
+#&gt; </div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>) <span class='co'># same because using file content</span></div><div class='output co'>#&gt; [[1]]
+#&gt; [1] "d608ee53f4355b64"
 #&gt; </div><div class='input'>
 <span class='co'># Rasters are interesting because it is not know a priori if it</span>
 <span class='co'>#   it has a file name associated with it.</span>
@@ -260,9 +309,9 @@ using <code>asPath(thePath)</code></p>
 <span class='no'>r1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile1</span>)
 <span class='no'>r2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
-<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "ad819d19cbb8edf7d40b659108a7a00a"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "79e6cb8ed6625234805ba9d7de899215"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "f9b841727bfd42ae83d53fdfd1273e71"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "4971a320b754b8efb35077eddf602ef4"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "79317ebbbb2d0e6b05fa1e968b9f5880"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "79317ebbbb2d0e6b05fa1e968b9f5880"</div><div class='input'>
+<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "77adfcaedf3e55e33da1651e986a4959"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "40464cd23c9c94f2525b0543a72671f4"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "7bbdb0bdbc142781a74a8b0c37edeee0"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "77ef8f39128167f6ce7acbe0c813ac87"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "ad6655dc935a001207ba8fd3fa9d5b15"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "ad6655dc935a001207ba8fd3fa9d5b15"</div><div class='input'>
 <span class='co'># note, this is not true for comparing memory and file-backed rasters</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>r</span>)</div><div class='output co'>#&gt; [1] "36cb66a1b7fedc105c3b25649645ae91"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "79317ebbbb2d0e6b05fa1e968b9f5880"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='no'>r</span>)</div><div class='output co'>#&gt; [1] "f6dddb6b1d2896b041a37cef3a9b3d1e"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "ad6655dc935a001207ba8fd3fa9d5b15"</div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -298,5 +347,8 @@ Eliot McIntire
       </footer>
    </div>
 
+  
+
   </body>
 </html>
+

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Search up the full scope for functions � searchFull • reproducible</title>
+<title>Search up the full scope for functions — searchFull • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -18,13 +18,28 @@
 <!-- Font Awesome icons -->
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 
+<!-- clipboard.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-  
-  
+
+
+
+<meta property="og:title" content="Search up the full scope for functions — searchFull" />
+
+<meta property="og:description" content="This is like base::search but when used inside a function, it will
+show the full scope (see figure in the section Binding environments
+on http://adv-r.had.co.nz/Environments.html).
+This full search path will be potentially much longer than
+just search() (which always starts at .GlobalEnv).
+searchFullEx shows an example function that is inside this package
+whose only function is to show the Scope of a package function." />
+<meta name="twitter:card" content="summary" />
+
+
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -34,16 +49,14 @@
 <![endif]-->
 
 
-<!-- Google analytics -->
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-58633549-5"></script>
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-  ga('create', 'UA-58633549-5', 'auto');
-  ga('send', 'pageview');
-
+  gtag('config', 'UA-58633549-5');
 </script>
 
   </head>
@@ -59,8 +72,12 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">reproducible</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="../index.html">reproducible</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.1.4.9016</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
@@ -73,7 +90,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li>
-  <a href="../news/index.html">News</a>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       
@@ -85,6 +102,7 @@
   </a>
 </li>
       </ul>
+      
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -92,28 +110,31 @@
       
       </header>
 
-      <div class="row">
+<div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Search up the full scope for functions</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/search.R'><code>R/search.R</code></a></small>
+    <div class="hidden name"><code>search.Rd</code></div>
     </div>
 
+    <div class="ref-description">
     
     <p>This is like <code><a href='http://www.rdocumentation.org/packages/base/topics/search'>base::search</a></code> but when used inside a function, it will
 show the full scope (see figure in the section <em>Binding environments</em>
 on <a href='http://adv-r.had.co.nz/Environments.html'>http://adv-r.had.co.nz/Environments.html</a>).
 This full search path will be potentially much longer than
-just <code>search()</code> (which always starts at <code>.GlobalEnv</code>).
-
-    <code>searchFullEx</code> shows an example function that is inside this package
+just <code>search()</code> (which always starts at <code>.GlobalEnv</code>).</p>
+<p><code>searchFullEx</code> shows an example function that is inside this package
 whose only function is to show the Scope of a package function.</p>
     
+    </div>
 
     <pre class="usage"><span class='fu'>searchFull</span>(<span class='kw'>env</span> <span class='kw'>=</span> <span class='fu'>parent.frame</span>(), <span class='kw'>simplify</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
 <span class='fu'>searchFullEx</span>()</pre>
     
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
@@ -138,10 +159,10 @@ where possible</p></td>
   <span class='fu'>searchFull</span>()
 }
 <span class='fu'>seeScope</span>()</div><div class='output co'>#&gt; [[1]]
-#&gt; &lt;environment: 0x000000002a042418&gt;
+#&gt; &lt;environment: 0xc13afe0&gt;
 #&gt; 
 #&gt; [[2]]
-#&gt; &lt;environment: 0x000000002a042ab8&gt;
+#&gt; &lt;environment: 0xc13b768&gt;
 #&gt; 
 #&gt; [[3]]
 #&gt; &lt;environment: R_GlobalEnv&gt;
@@ -159,25 +180,25 @@ where possible</p></td>
 #&gt; [1] "package:reproducible"
 #&gt; 
 #&gt; [[8]]
-#&gt; [1] "package:testthat"
-#&gt; 
-#&gt; [[9]]
 #&gt; [1] "tools:rstudio"
 #&gt; 
-#&gt; [[10]]
+#&gt; [[9]]
 #&gt; [1] "package:stats"
 #&gt; 
-#&gt; [[11]]
+#&gt; [[10]]
 #&gt; [1] "package:graphics"
 #&gt; 
-#&gt; [[12]]
+#&gt; [[11]]
 #&gt; [1] "package:grDevices"
 #&gt; 
-#&gt; [[13]]
+#&gt; [[12]]
 #&gt; [1] "package:utils"
 #&gt; 
-#&gt; [[14]]
+#&gt; [[13]]
 #&gt; [1] "package:datasets"
+#&gt; 
+#&gt; [[14]]
+#&gt; [1] "package:devtools"
 #&gt; 
 #&gt; [[15]]
 #&gt; [1] "package:methods"
@@ -188,7 +209,7 @@ where possible</p></td>
 #&gt; [[17]]
 #&gt; &lt;environment: base&gt;
 #&gt; </div><div class='input'><span class='fu'>searchFull</span>()</div><div class='output co'>#&gt; [[1]]
-#&gt; &lt;environment: 0x000000002a042ab8&gt;
+#&gt; &lt;environment: 0xc13b768&gt;
 #&gt; 
 #&gt; [[2]]
 #&gt; &lt;environment: R_GlobalEnv&gt;
@@ -206,25 +227,25 @@ where possible</p></td>
 #&gt; [1] "package:reproducible"
 #&gt; 
 #&gt; [[7]]
-#&gt; [1] "package:testthat"
-#&gt; 
-#&gt; [[8]]
 #&gt; [1] "tools:rstudio"
 #&gt; 
-#&gt; [[9]]
+#&gt; [[8]]
 #&gt; [1] "package:stats"
 #&gt; 
-#&gt; [[10]]
+#&gt; [[9]]
 #&gt; [1] "package:graphics"
 #&gt; 
-#&gt; [[11]]
+#&gt; [[10]]
 #&gt; [1] "package:grDevices"
 #&gt; 
-#&gt; [[12]]
+#&gt; [[11]]
 #&gt; [1] "package:utils"
 #&gt; 
-#&gt; [[13]]
+#&gt; [[12]]
 #&gt; [1] "package:datasets"
+#&gt; 
+#&gt; [[13]]
+#&gt; [1] "package:devtools"
 #&gt; 
 #&gt; [[14]]
 #&gt; [1] "package:methods"
@@ -260,25 +281,25 @@ where possible</p></td>
 #&gt; [1] "package:reproducible"
 #&gt; 
 #&gt; [[9]]
-#&gt; [1] "package:testthat"
-#&gt; 
-#&gt; [[10]]
 #&gt; [1] "tools:rstudio"
 #&gt; 
-#&gt; [[11]]
+#&gt; [[10]]
 #&gt; [1] "package:stats"
 #&gt; 
-#&gt; [[12]]
+#&gt; [[11]]
 #&gt; [1] "package:graphics"
 #&gt; 
-#&gt; [[13]]
+#&gt; [[12]]
 #&gt; [1] "package:grDevices"
 #&gt; 
-#&gt; [[14]]
+#&gt; [[13]]
 #&gt; [1] "package:utils"
 #&gt; 
-#&gt; [[15]]
+#&gt; [[14]]
 #&gt; [1] "package:datasets"
+#&gt; 
+#&gt; [[15]]
+#&gt; [1] "package:devtools"
 #&gt; 
 #&gt; [[16]]
 #&gt; [1] "package:methods"
@@ -315,5 +336,8 @@ where possible</p></td>
       </footer>
    </div>
 
+  
+
   </body>
 </html>
+

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>All news • reproducible</title>
+<title>Changelog • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -18,13 +18,19 @@
 <!-- Font Awesome icons -->
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 
+<!-- clipboard.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-  
-  
+
+
+
+<meta property="og:title" content="Changelog" />
+
+
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -34,16 +40,14 @@
 <![endif]-->
 
 
-<!-- Google analytics -->
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-58633549-5"></script>
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-  ga('create', 'UA-58633549-5', 'auto');
-  ga('send', 'pageview');
-
+  gtag('config', 'UA-58633549-5');
 </script>
 
   </head>
@@ -59,8 +63,12 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">reproducible</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="../index.html">reproducible</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.1.4.9016</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
@@ -73,7 +81,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li>
-  <a href="../news/index.html">News</a>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       
@@ -85,6 +93,7 @@
   </a>
 </li>
       </ul>
+      
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -92,19 +101,28 @@
       
       </header>
 
-      <div class="row">
-
-  <div class="col-md-9">
+<div class="row">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Change log <small>All releases</small></h1>
+      <h1>Changelog <small></small></h1>
+      <small>Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div class="contents">
     <div id="version-0-1-4" class="section level1">
-<h1 class="hasAnchor">
-<a href="#version-0-1-4" class="anchor"></a>version 0.1.4</h1>
+<h1 class="page-header">
+<a href="#version-0-1-4" class="anchor"></a>version 0.1.4<small> 2018-01-25 </small>
+</h1>
 <ul>
-<li>Cached pipe operator %C% – use to begin a pipe sequence, e.g., Cache() %C% …</li>
+<li>
+<code>mergeCache</code>: a new function to merge two different Cache repositories</li>
+<li>memoise::memoise is now used on loadFromLocalRepo, meaning that the 3rd time a Cache function is run on the same arguments (and the 2nd time in a session), the returned Cache will be from a RAM object via memoise. To stop this behaviour and use only disk-based Caching, set <code>options(reproducible.useMemoise = FALSE)</code>
+</li>
+<li>Cache assign – %&lt;% can be used instead of normal assign, equivalent to lhss &lt;- Cache(rhs)</li>
+<li>new option: reproducible.verbose, set to FALSE by default, but if set to true may help understand caching behaviour, especially for complex highly nested code</li>
+<li>all options now described in ?reproducible</li>
+<li>All Cache arguments other than FUN and … will now propagate to internal, nested Cache calls, if they are not specified explicitly in each of the inner Cache calls.</li>
+<li>Cached pipe operator %C% – use to begin a pipe sequence, e.g., <code>Cache() %C% ...</code>
+</li>
 <li>Cache arg <code>sideEffect</code> can now be a path</li>
 <li>Cache arg <code>digestPathContent</code> default changed from FALSE (was for speed) to TRUE (for content accuracy)</li>
 <li>New function, <code>searchFull</code>, which shows the full search path, known alternatively as “scope”, or “binding environments”. It is where R will search for a function when requested by a user.</li>
@@ -116,21 +134,23 @@
 <li>can accept uncommented name, if length 1.</li>
 </ul>
 </li>
-<li>remove dplyr from Imports</li>
-<li>Add RCurl to Imports</li>
-<li><p>change name of digestRaster to .digestRaster</p></li>
+<li>remove <code>dplyr</code> from Imports</li>
+<li>Add <code>RCurl</code> to Imports</li>
+<li><p>change name of <code>digestRaster</code> to <code>.digestRaster</code></p></li>
 </ul>
 </div>
     <div id="version-0-1-3" class="section level1">
-<h1 class="hasAnchor">
-<a href="#version-0-1-3" class="anchor"></a>version 0.1.3</h1>
+<h1 class="page-header">
+<a href="#version-0-1-3" class="anchor"></a>version 0.1.3<small> 2017-08-10 </small>
+</h1>
 <ul>
 <li>fix R CMD check errors on Solaris that were not previously resolved</li>
 </ul>
 </div>
     <div id="version-0-1-2" class="section level1">
-<h1 class="hasAnchor">
-<a href="#version-0-1-2" class="anchor"></a>version 0.1.2</h1>
+<h1 class="page-header">
+<a href="#version-0-1-2" class="anchor"></a>version 0.1.2<small> 2017-08-09 </small>
+</h1>
 <ul>
 <li>fix R CMD check errors on Solaris</li>
 <li>fix bug in <code>digestRaster</code> affecting in-memory rasters</li>
@@ -138,21 +158,22 @@
 </ul>
 </div>
     <div id="version-0-1-1" class="section level1">
-<h1 class="hasAnchor">
-<a href="#version-0-1-1" class="anchor"></a>version 0.1.1</h1>
+<h1 class="page-header">
+<a href="#version-0-1-1" class="anchor"></a>version 0.1.1<small> 2017-08-05 </small>
+</h1>
 <ul>
 <li>cleanup examples and <em>do</em> run them (per CRAN)</li>
 <li>add tests to ensure all exported (non-dot) functions have examples</li>
 </ul>
 </div>
     <div id="version-0-1-0" class="section level1">
-<h1 class="hasAnchor">
-<a href="#version-0-1-0" class="anchor"></a>version 0.1.0</h1>
+<h1 class="page-header">
+<a href="#version-0-1-0" class="anchor"></a>version 0.1.0<small> Unreleased </small>
+</h1>
 <ul>
 <li>A new package, which takes all caching utilities out of the <code>SpaDES</code> package.</li>
 </ul>
 </div>
-    </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -182,5 +203,8 @@
       </footer>
    </div>
 
+  
+
   </body>
 </html>
+

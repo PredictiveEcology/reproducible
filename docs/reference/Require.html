@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Repeatability-safe install and load packages, optionally with specific versions � Require • reproducible</title>
+<title>Repeatability-safe install and load packages, optionally with specific versions — Require • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -18,13 +18,32 @@
 <!-- Font Awesome icons -->
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 
+<!-- clipboard.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-  
-  
+
+
+
+<meta property="og:title" content="Repeatability-safe install and load packages, optionally with specific versions — Require" />
+
+<meta property="og:description" content="This is an "all in one" function that will run install.packages for
+CRAN packages, devtools::install_github for GitHub.com packages and
+will install specific versions of each package if
+there is a packageVersionFile supplied.
+Plus, when packages is provided as a character vector, or a
+packageVersionFile is supplied, all package dependencies
+will be first assessed for unique(dependencies) so the same package is
+not installed multiple times. Finally library is called on the
+packages. If packages are already installed (packages supplied),
+and their version numbers are exact (when packageVersionFile is supplied),
+then the "install" component will be skipped very quickly with a message." />
+<meta name="twitter:card" content="summary" />
+
+
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -34,16 +53,14 @@
 <![endif]-->
 
 
-<!-- Google analytics -->
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-58633549-5"></script>
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-  ga('create', 'UA-58633549-5', 'auto');
-  ga('send', 'pageview');
-
+  gtag('config', 'UA-58633549-5');
 </script>
 
   </head>
@@ -59,8 +76,12 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">reproducible</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="../index.html">reproducible</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.1.4.9016</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
@@ -73,7 +94,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li>
-  <a href="../news/index.html">News</a>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       
@@ -85,6 +106,7 @@
   </a>
 </li>
       </ul>
+      
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -92,12 +114,15 @@
       
       </header>
 
-      <div class="row">
+<div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Repeatability-safe install and load packages, optionally with specific versions</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/packages.R'><code>R/packages.R</code></a></small>
+    <div class="hidden name"><code>Require.Rd</code></div>
     </div>
 
+    <div class="ref-description">
     
     <p>This is an "all in one" function that will run <code>install.packages</code> for
 CRAN packages, <code><a href='http://www.rdocumentation.org/packages/devtools/topics/install_github'>devtools::install_github</a></code> for GitHub.com packages and
@@ -111,12 +136,13 @@ not installed multiple times. Finally <code>library</code> is called on the
 and their version numbers are exact (when <code>packageVersionFile</code> is supplied),
 then the "install" component will be skipped very quickly with a message.</p>
     
+    </div>
 
     <pre class="usage"><span class='fu'>Require</span>(<span class='no'>packages</span>, <span class='no'>packageVersionFile</span>, <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='fu'>.libPaths</span>()[<span class='fl'>1</span>],
   <span class='kw'>install_githubArgs</span> <span class='kw'>=</span> <span class='fu'>list</span>(), <span class='kw'>install.packagesArgs</span> <span class='kw'>=</span> <span class='fu'>list</span>(),
   <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"repos"</span>), <span class='kw'>forget</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
@@ -265,5 +291,8 @@ element should be wiped, using <code>forget = TRUE</code>.</p>
       </footer>
    </div>
 
+  
+
   </body>
 </html>
+

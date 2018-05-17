@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Alternative to readLines that is faster � readLinesRcppInternal • reproducible</title>
+<title>Alternative to readLines that is faster — readLinesRcppInternal • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -18,13 +18,22 @@
 <!-- Font Awesome icons -->
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 
+<!-- clipboard.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-  
-  
+
+
+
+<meta property="og:title" content="Alternative to readLines that is faster — readLinesRcppInternal" />
+
+<meta property="og:description" content="This alternative is from https://gist.github.com/hadley/6353939" />
+<meta name="twitter:card" content="summary" />
+
+
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -34,16 +43,14 @@
 <![endif]-->
 
 
-<!-- Google analytics -->
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-58633549-5"></script>
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-  ga('create', 'UA-58633549-5', 'auto');
-  ga('send', 'pageview');
-
+  gtag('config', 'UA-58633549-5');
 </script>
 
   </head>
@@ -59,8 +66,12 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">reproducible</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="../index.html">reproducible</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.1.4.9016</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
@@ -73,7 +84,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li>
-  <a href="../news/index.html">News</a>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       
@@ -85,6 +96,7 @@
   </a>
 </li>
       </ul>
+      
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -92,19 +104,23 @@
       
       </header>
 
-      <div class="row">
+<div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Alternative to readLines that is faster</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/RcppExports.R'><code>R/RcppExports.R</code></a></small>
+    <div class="hidden name"><code>readLinesRcppInternal.Rd</code></div>
     </div>
 
+    <div class="ref-description">
     
     <p>This alternative is from <a href='https://gist.github.com/hadley/6353939'>https://gist.github.com/hadley/6353939</a></p>
     
+    </div>
 
     <pre class="usage"><span class='fu'>readLinesRcppInternal</span>(<span class='no'>path</span>)</pre>
     
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
@@ -127,66 +143,67 @@
 #&gt;  [6] "    deeply reproducible and reusable content in R. This includes light weight"                                       
 #&gt;  [7] "    package management (similar to 'packrat' and 'checkpoint', but more flexible,"                                   
 #&gt;  [8] "    lightweight and simpler than both), plus it includes"                                                            
-#&gt;  [9] "    tools for caching, and accessing GitHub repositories."                                                           
-#&gt; [10] "URL: "                                                                                                               
-#&gt; [11] "    https://predictiveecology.github.io/reproducible/,"                                                              
-#&gt; [12] "    https://github.com/PredictiveEcology/reproducible"                                                               
-#&gt; [13] "Date: 2018-01-24"                                                                                                    
-#&gt; [14] "Version: 0.1.4"                                                                                                      
-#&gt; [15] "Authors@R: c("                                                                                                       
-#&gt; [16] "    person(\"Eliot J B\", \"McIntire\", email = \"eliot.mcintire@canada.ca\","                                       
-#&gt; [17] "    role = c(\"aut\", \"cre\")),"                                                                                    
-#&gt; [18] "    person(\"Alex M\", \"Chubaty\", email = \"alexander.chubaty@canada.ca\","                                        
-#&gt; [19] "    role = c(\"aut\")),"                                                                                             
-#&gt; [20] "    person(\"Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada\","
-#&gt; [21] "    role = \"cph\")"                                                                                                 
-#&gt; [22] "    )"                                                                                                               
-#&gt; [23] "Depends:"                                                                                                            
-#&gt; [24] "    R (&gt;= 3.3.0)"                                                                                                    
-#&gt; [25] "Imports:"                                                                                                            
-#&gt; [26] "    archivist (&gt;= 2.1.2),"                                                                                           
-#&gt; [27] "    crayon,"                                                                                                         
-#&gt; [28] "    data.table (&gt;= 1.10.4),"                                                                                         
-#&gt; [29] "    devtools,"                                                                                                       
-#&gt; [30] "    digest,"                                                                                                         
-#&gt; [31] "    fastdigest,"                                                                                                     
-#&gt; [32] "    git2r (&gt;= 0.18),"                                                                                                
-#&gt; [33] "    magrittr,"                                                                                                       
-#&gt; [34] "    memoise,"                                                                                                        
-#&gt; [35] "    methods,"                                                                                                        
-#&gt; [36] "    raster,"                                                                                                         
-#&gt; [37] "    Rcpp (&gt;= 0.12.13),"                                                                                              
-#&gt; [38] "    RCurl,"                                                                                                          
-#&gt; [39] "    sp,"                                                                                                             
-#&gt; [40] "    versions"                                                                                                        
-#&gt; [41] "Suggests:"                                                                                                           
-#&gt; [42] "    hunspell,"                                                                                                       
-#&gt; [43] "    knitr,"                                                                                                          
-#&gt; [44] "    rgdal,"                                                                                                          
-#&gt; [45] "    rmarkdown,"                                                                                                      
-#&gt; [46] "    testthat"                                                                                                        
-#&gt; [47] "LinkingTo: Rcpp"                                                                                                     
-#&gt; [48] "License: GPL-3"                                                                                                      
-#&gt; [49] "BugReports: https://github.com/PredictiveEcology/reproducible/issues"                                                
-#&gt; [50] "ByteCompile: yes"                                                                                                    
-#&gt; [51] "RoxygenNote: 6.0.1"                                                                                                  
-#&gt; [52] "Collate: "                                                                                                           
-#&gt; [53] "    'RcppExports.R'"                                                                                                 
-#&gt; [54] "    'cache-helpers.R'"                                                                                               
-#&gt; [55] "    'cache-tools.R'"                                                                                                 
-#&gt; [56] "    'robustDigest.R'"                                                                                                
-#&gt; [57] "    'cache.R'"                                                                                                       
-#&gt; [58] "    'consistentPaths.R'"                                                                                             
-#&gt; [59] "    'git.R'"                                                                                                         
-#&gt; [60] "    'helpers.R'"                                                                                                     
-#&gt; [61] "    'packages.R'"                                                                                                    
-#&gt; [62] "    'pipe.R'"                                                                                                        
-#&gt; [63] "    'reproducible-package.R'"                                                                                        
-#&gt; [64] "    'search.R'"                                                                                                      
-#&gt; [65] "R'"                                                                                                                  
+#&gt;  [9] "    tools for caching, and accessing GitHub repositories. There are many features"                                   
+#&gt; [10] "    that are still under active development, so behaviour may change in future"                                      
+#&gt; [11] "    versions."                                                                                                       
+#&gt; [12] "URL: "                                                                                                               
+#&gt; [13] "    https://predictiveecology.github.io/reproducible/,"                                                              
+#&gt; [14] "    https://github.com/PredictiveEcology/reproducible"                                                               
+#&gt; [15] "Date: 2018-05-17"                                                                                                    
+#&gt; [16] "Version: 0.1.4.9016"                                                                                                 
+#&gt; [17] "Authors@R: c("                                                                                                       
+#&gt; [18] "    person(\"Eliot J B\", \"McIntire\", email = \"eliot.mcintire@canada.ca\","                                       
+#&gt; [19] "    role = c(\"aut\", \"cre\")),"                                                                                    
+#&gt; [20] "    person(\"Alex M\", \"Chubaty\", email = \"alex.chubaty@gmail.com\","                                             
+#&gt; [21] "    role = c(\"aut\")),"                                                                                             
+#&gt; [22] "    person(\"Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada\","
+#&gt; [23] "    role = \"cph\")"                                                                                                 
+#&gt; [24] "    )"                                                                                                               
+#&gt; [25] "Depends:"                                                                                                            
+#&gt; [26] "    R (&gt;= 3.3.0)"                                                                                                    
+#&gt; [27] "Imports:"                                                                                                            
+#&gt; [28] "    archivist (&gt;= 2.1.2),"                                                                                           
+#&gt; [29] "    crayon,"                                                                                                         
+#&gt; [30] "    data.table (&gt;= 1.10.4),"                                                                                         
+#&gt; [31] "    devtools,"                                                                                                       
+#&gt; [32] "    digest,"                                                                                                         
+#&gt; [33] "    fastdigest,"                                                                                                     
+#&gt; [34] "    git2r (&gt;= 0.18),"                                                                                                
+#&gt; [35] "    magrittr,"                                                                                                       
+#&gt; [36] "    memoise,"                                                                                                        
+#&gt; [37] "    methods,"                                                                                                        
+#&gt; [38] "    raster,"                                                                                                         
+#&gt; [39] "    Rcpp (&gt;= 0.12.13),"                                                                                              
+#&gt; [40] "    RCurl,"                                                                                                          
+#&gt; [41] "    sp,"                                                                                                             
+#&gt; [42] "    versions"                                                                                                        
+#&gt; [43] "Suggests:"                                                                                                           
+#&gt; [44] "    covr,"                                                                                                           
+#&gt; [45] "    hunspell,"                                                                                                       
+#&gt; [46] "    knitr,"                                                                                                          
+#&gt; [47] "    rgdal,"                                                                                                          
+#&gt; [48] "    rmarkdown,"                                                                                                      
+#&gt; [49] "    testthat"                                                                                                        
+#&gt; [50] "LinkingTo: Rcpp"                                                                                                     
+#&gt; [51] "License: GPL-3"                                                                                                      
+#&gt; [52] "BugReports: https://github.com/PredictiveEcology/reproducible/issues"                                                
+#&gt; [53] "ByteCompile: yes"                                                                                                    
+#&gt; [54] "RoxygenNote: 6.0.1"                                                                                                  
+#&gt; [55] "Collate: "                                                                                                           
+#&gt; [56] "    'RcppExports.R'"                                                                                                 
+#&gt; [57] "    'cache-helpers.R'"                                                                                               
+#&gt; [58] "    'cache-tools.R'"                                                                                                 
+#&gt; [59] "    'robustDigest.R'"                                                                                                
+#&gt; [60] "    'cache.R'"                                                                                                       
+#&gt; [61] "    'consistentPaths.R'"                                                                                             
+#&gt; [62] "    'git.R'"                                                                                                         
+#&gt; [63] "    'helpers.R'"                                                                                                     
+#&gt; [64] "    'objectSize.R'"                                                                                                  
+#&gt; [65] "    'packages.R'"                                                                                                    
 #&gt; [66] "    'pipe.R'"                                                                                                        
 #&gt; [67] "    'reproducible-package.R'"                                                                                        
-#&gt; [68] "    'search.R'"                                                                                                      </div></pre>
+#&gt; [68] "    'search.R'"                                                                                                      
+#&gt; [69] "    'zzz.R'"                                                                                                         </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -213,5 +230,8 @@
       </footer>
    </div>
 
+  
+
   </body>
 </html>
+
