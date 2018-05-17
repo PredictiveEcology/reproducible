@@ -5,6 +5,22 @@ matrix:
   include:
   - os: linux
     dist: trusty
+    r: 3.3.0
+    addons:
+      apt:
+        packages:
+          - libgdal1-dev
+          - libproj-dev
+  - os: linux
+    dist: trusty
+    r: 3.4.0
+    addons:
+      apt:
+        packages:
+          - libgdal1-dev
+          - libproj-dev
+  - os: linux
+    dist: trusty
     r: oldrel
     addons:
       apt:

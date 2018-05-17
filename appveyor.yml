@@ -30,9 +30,12 @@ environment:
   - R_VERSION: release
 
   - R_VERSION: oldrel
-    RTOOLS_VERSION: 33
+    RTOOLS_VERSION: 34
 
-  - R_VERSION: 3.3.2
+  - R_VERSION: 3.4.0
+    RTOOLS_VERSION: 34
+
+  - R_VERSION: 3.3.0
     RTOOLS_VERSION: 33
 
 branches:
@@ -40,9 +43,6 @@ branches:
   - master
   - development
   - testing
-
-  except:
-  - gh-pages
 
 clone_depth: 5
 
