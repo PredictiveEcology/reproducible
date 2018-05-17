@@ -1,6 +1,6 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c(".", "artifact", "createdDate", "tagKey", "tagValue", "tag",
-                           "N", "differs", "hash"))
+  utils::globalVariables(c(".", "artifact", "createdDate", "deeperThan3", "differs",
+                           "fun", "hash", "N", "tag", "tagKey", "tagValue"))
 }
 
 .reproEnv <- new.env(parent = asNamespace("reproducible"))
@@ -804,16 +804,15 @@ setMethod(
         userTags3 <- c(userTags, userTags2)
         aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
         setkeyv(aa, "N")
-        similar <- localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N==max(N)]
+        similar <- localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N == max(N)]
         if (NROW(similar)) {
           similar2 <- similar[grepl("preDigest", tag)]
           cacheIdOfSimilar <- similar[grepl("cacheId", tag)]$tag
           cacheIdOfSimilar <- unlist(strsplit(cacheIdOfSimilar, split = ":"))[2]
-          
-          similar2[, `:=`(fun=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
-                          hash=unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
+
+          similar2[, `:=`(fun = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
+                          hash = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
           similar2[, differs := !(hash %in% preDigestUnlistTrunc), by = artifact]
-          
           similar2[!(fun %in% names(preDigestUnlistTrunc)), differs := NA]
           similar2[(hash %in% "other"), deeperThan3 := TRUE]
           similar2[(hash %in% "other"), differs := NA]
@@ -823,7 +822,7 @@ setMethod(
             differed <- TRUE
             message("... different ", paste(similar2[differs %in% TRUE]$fun, collapse = ", "))
           }
-          
+
           if (length(similar2[is.na(differs)]$differs)) {
             differed <- TRUE
             message("... possible, unknown, differences in a nested list that is deeper than 3 in ",
@@ -833,13 +832,13 @@ setMethod(
           if (length(missingArgs)) {
             differed <- TRUE
             message("... because of an ",
-                    "argument currently not specified: ", 
+                    "argument currently not specified: ",
                     paste(as.character(missingArgs), collapse = ", "))
-            
+
           }
           print(paste0("artifact with cacheId ", cacheIdOfSimilar))
           print(similar2[,c("fun", "differs")])
-          
+
         } else {
           message("There is no similar item in the cacheRepo")
         }
