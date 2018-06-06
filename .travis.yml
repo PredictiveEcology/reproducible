@@ -8,33 +8,45 @@ matrix:
     r: 3.3.0
     addons:
       apt:
+        sources:
+        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal1-dev
-          - libproj-dev
+        - libgdal-dev
+        - libproj-dev
+        - gdal-bin
   - os: linux
     dist: trusty
     r: 3.4.0
     addons:
       apt:
+        sources:
+        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal1-dev
-          - libproj-dev
+        - libgdal-dev
+        - libproj-dev
+        - gdal-bin
   - os: linux
     dist: trusty
     r: oldrel
     addons:
       apt:
+        sources:
+        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal1-dev
-          - libproj-dev
+        - libgdal-dev
+        - libproj-dev
+        - gdal-bin
   - os: linux
     dist: trusty
     r: release
     addons:
       apt:
+        sources:
+        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal1-dev
-          - libproj-dev
+        - libgdal-dev
+        - libproj-dev
+        - gdal-bin
     r_packages:
       - covr
       - devtools
