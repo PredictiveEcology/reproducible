@@ -637,11 +637,22 @@ setMethod(
     }
 
     # compare outputHash to existing Cache record
-    localTags <- showLocalRepo(cacheRepo, "tags")
+
+    written <- 0
+    while (written >= 0) {
+      localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
+      written <- if (is(localTags, "try-error")) {
+        Sys.sleep(sum(runif(written + 1,0.05, 0.2)))
+        written + 1
+      } else {
+        -1
+      }
+    }
+
     isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE] # nolint
 
-
     # If it is in the existing record:
+
     if (NROW(isInRepo) > 0) {
       lastEntry <- max(isInRepo$createdDate)
       lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
@@ -690,11 +701,19 @@ setMethod(
         .cacheMessage(output, functionDetails$functionName,
                       fromMemoise = fromMemoise)
 
-        suppressWarnings(
-          addTagsRepo(isInRepo$artifact[lastOne],
-                                 repoDir = cacheRepo,
-                                 tags = paste0("accessed:", Sys.time()))
-        )
+        written <- 0
+        while (written >= 0) {
+          saved <- suppressWarnings(try(silent = TRUE,
+                                        addTagsRepo(isInRepo$artifact[lastOne],
+                                                    repoDir = cacheRepo,
+                                                    tags = paste0("accessed:", Sys.time()))))
+          written <- if (is(saved, "try-error")) {
+            Sys.sleep(sum(runif(written + 1,0.05, 0.1)))
+            written + 1
+          } else {
+            -1
+          }
+        }
 
         if (sideEffect != FALSE) {
           #if(isTRUE(sideEffect)) {
@@ -937,9 +956,6 @@ setMethod(
     # extract other function names that are not the ones the focus of the Cache call
     otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
 
-    # This is for write conflicts to the SQLite database
-    #   (i.e., keep trying until it is written)
-    written <- FALSE
     outputToSaveIsList <- is.list(outputToSave)
     if (outputToSaveIsList) {
       rasters <- unlist(lapply(outputToSave, is, "Raster"))
@@ -971,7 +987,9 @@ setMethod(
       startSaveTime <- Sys.time()
     }
 
-  while (!written) {
+    # This is for write conflicts to the SQLite database
+    #   (i.e., keep trying until it is written)
+
     objSize <- .objSizeInclEnviros(outputToSave)
     userTags <- c(userTags,
                   if (!is.na(functionDetails$functionName))
@@ -979,30 +997,43 @@ setMethod(
                   paste0("object.size:", objSize),
                   paste0("accessed:", Sys.time()),
                   paste0(otherFns),
-                  paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":"))
-    saved <- suppressWarnings(try(
-      saveToLocalRepo(outputToSave, repoDir = cacheRepo, artifactName = "Cache",
-                      archiveData = FALSE, archiveSessionInfo = FALSE,
-                      archiveMiniature = FALSE, rememberName = FALSE,
-                      silent = TRUE, userTags = userTags),
-      silent = TRUE
-    ))
+                  paste("preDigest", names(preDigestUnlistTrunc),
+                        preDigestUnlistTrunc, sep = ":"))
+
+    written <- 0
+    while (written >= 0) {
+      saved <- suppressWarnings(try(silent = TRUE,
+                                    saveToLocalRepo(
+                                      outputToSave,
+                                      repoDir = cacheRepo,
+                                      artifactName = "Cache",
+                                      archiveData = FALSE,
+                                      archiveSessionInfo = FALSE,
+                                      archiveMiniature = FALSE,
+                                      rememberName = FALSE,
+                                      silent = TRUE,
+                                      userTags = userTags
+                                    )))
 
       # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
       written <- if (is(saved, "try-error")) {
-        Sys.sleep(0.05)
-        FALSE
+        Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+        written + 1
       } else {
-        TRUE
+        - 1
       }
     }
+
     if (verbose) {
       endSaveTime <- Sys.time()
-      verboseDF <- data.frame(functionName = functionDetails$functionName,
-                              component = "Saving to repo",
-                              elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
-                              units = "secs",
-                              stringsAsFactors = FALSE)
+      verboseDF <-
+        data.frame(
+          functionName = functionDetails$functionName,
+          component = "Saving to repo",
+          elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
+          units = "secs",
+          stringsAsFactors = FALSE
+        )
 
       if (exists("verboseTiming", envir = .reproEnv)) {
         .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
