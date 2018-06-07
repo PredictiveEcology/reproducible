@@ -1068,6 +1068,7 @@ setMethod(
 #' Deprecated functions
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo addTagsRepo
+#' @importFrom stats runif
 #' @inheritParams Cache
 #' @rdname reproducible-deprecated
 setGeneric("cache", signature = "...",
