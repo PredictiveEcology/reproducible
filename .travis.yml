@@ -60,12 +60,14 @@ matrix:
     r: devel
     addons:
       apt:
+        sources:
+          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal1-dev
+          - libgdal-dev
           - libproj-dev
+          - gdal-bin
     r_packages:
-    - devtools
-    - rgdal
+      - devtools
   - os: osx
     osx_image: xcode9.2
     latex: false
