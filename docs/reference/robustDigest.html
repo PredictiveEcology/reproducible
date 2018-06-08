@@ -21,9 +21,11 @@
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
+<!-- sticky kit -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
-<script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
 
 
@@ -32,8 +34,8 @@
 
 <meta property="og:description" content="Not all aspects of R objects are captured by current hashing tools in R (e.g.
 digest::digest, fastdigest::fastdigest, knitr caching,
-archivist::cache). This is mostly because many objects have "transient"
-(e.g., functions have environments), or "disk-backed" features. This function
+archivist::cache). This is mostly because many objects have &quot;transient&quot;
+(e.g., functions have environments), or &quot;disk-backed&quot; features. This function
 allows for these accommodations to be made and uses fastdigest
 internally.  Since
 the goal of using reproducibility is to have tools that are not session specific,
@@ -43,6 +45,7 @@ works between sessions and operating systems. It is tested under many
 conditions and object types, there are bound to be others that don't
 work correctly." />
 <meta name="twitter:card" content="summary" />
+
 
 
 <!-- mathjax -->
@@ -79,7 +82,7 @@ work correctly." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.1.4.9016</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0</span>
       </span>
     </div>
 
@@ -289,12 +292,12 @@ using <code>asPath(thePath)</code></p>
 <span class='fu'>save</span>(<span class='no'>a</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
 <span class='co'># treats as character string, so 2 filenames are different</span>
-<span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "05d2bc51ce4c8600b7df248b8921b504"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "6084c7a74417d344daef2ea25876deb9"</div><div class='input'>
+<span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "e79fbee2b626d41553e64c3e7d14a280"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "8aa9a40083f043d0fda05d5aa873b725"</div><div class='input'>
 <span class='co'># tests to see whether character string is representing a file</span>
 <span class='fu'>.robustDigest</span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "d608ee53f4355b64"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>tmpfile2</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [1] "d608ee53f4355b64"</div><div class='input'>
 <span class='co'># if you tell it that it is a path, then you can decide if you want it to be</span>
 <span class='co'>#  treated as a character string or as a file path</span>
-<span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "c525e185c44de79b343a5a4ac1a4aa51"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "b7703b703d434921b0593064f05cf89f"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "79548e94fed198287f1f6374c5c69b66"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "b890a503428ac3d439aff1fe07038e20"</div><div class='input'>
 <span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; [[1]]
 #&gt; [1] "d608ee53f4355b64"
 #&gt; </div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'>asPath</span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>) <span class='co'># same because using file content</span></div><div class='output co'>#&gt; [[1]]
@@ -309,7 +312,7 @@ using <code>asPath(thePath)</code></p>
 <span class='no'>r1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile1</span>)
 <span class='no'>r2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
-<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "77adfcaedf3e55e33da1651e986a4959"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "40464cd23c9c94f2525b0543a72671f4"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "7bbdb0bdbc142781a74a8b0c37edeee0"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "77ef8f39128167f6ce7acbe0c813ac87"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "ad6655dc935a001207ba8fd3fa9d5b15"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "ad6655dc935a001207ba8fd3fa9d5b15"</div><div class='input'>
+<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "e72314921ab1aba1d7f00b1d7b58a983"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "c742e78ab378872a746141df0328f8f6"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "75b20f5b319132b5c81fcde6c02dcc79"</div><div class='input'><span class='kw pkg'>fastdigest</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/fastdigest/topics/fastdigest'>fastdigest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "6db575ffdc9c7c1fe5188eb6c7613572"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "ad6655dc935a001207ba8fd3fa9d5b15"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "ad6655dc935a001207ba8fd3fa9d5b15"</div><div class='input'>
 <span class='co'># note, this is not true for comparing memory and file-backed rasters</span>
 <span class='fu'>.robustDigest</span>(<span class='no'>r</span>)</div><div class='output co'>#&gt; [1] "f6dddb6b1d2896b041a37cef3a9b3d1e"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "ad6655dc935a001207ba8fd3fa9d5b15"</div><div class='input'>
 </div></pre>

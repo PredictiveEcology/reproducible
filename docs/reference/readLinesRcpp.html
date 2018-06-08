@@ -21,9 +21,11 @@
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
 
+<!-- sticky kit -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
-<script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
 
 
@@ -32,6 +34,7 @@
 
 <meta property="og:description" content="This alternative is from https://gist.github.com/hadley/6353939" />
 <meta name="twitter:card" content="summary" />
+
 
 
 <!-- mathjax -->
@@ -68,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.1.4.9016</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0</span>
       </span>
     </div>
 
@@ -147,10 +150,10 @@
 #&gt; [10] "    that are still under active development, so behaviour may change in future"                                      
 #&gt; [11] "    versions."                                                                                                       
 #&gt; [12] "URL: "                                                                                                               
-#&gt; [13] "    https://predictiveecology.github.io/reproducible/,"                                                              
+#&gt; [13] "    http://reproducible.predictiveecology.org,"                                                                      
 #&gt; [14] "    https://github.com/PredictiveEcology/reproducible"                                                               
-#&gt; [15] "Date: 2018-05-17"                                                                                                    
-#&gt; [16] "Version: 0.1.4.9016"                                                                                                 
+#&gt; [15] "Date: 2018-06-08"                                                                                                    
+#&gt; [16] "Version: 0.2.0"                                                                                                      
 #&gt; [17] "Authors@R: c("                                                                                                       
 #&gt; [18] "    person(\"Eliot J B\", \"McIntire\", email = \"eliot.mcintire@canada.ca\","                                       
 #&gt; [19] "    role = c(\"aut\", \"cre\")),"                                                                                    
@@ -183,27 +186,28 @@
 #&gt; [46] "    knitr,"                                                                                                          
 #&gt; [47] "    rgdal,"                                                                                                          
 #&gt; [48] "    rmarkdown,"                                                                                                      
-#&gt; [49] "    testthat"                                                                                                        
-#&gt; [50] "LinkingTo: Rcpp"                                                                                                     
-#&gt; [51] "License: GPL-3"                                                                                                      
-#&gt; [52] "BugReports: https://github.com/PredictiveEcology/reproducible/issues"                                                
-#&gt; [53] "ByteCompile: yes"                                                                                                    
-#&gt; [54] "RoxygenNote: 6.0.1"                                                                                                  
-#&gt; [55] "Collate: "                                                                                                           
-#&gt; [56] "    'RcppExports.R'"                                                                                                 
-#&gt; [57] "    'cache-helpers.R'"                                                                                               
-#&gt; [58] "    'cache-tools.R'"                                                                                                 
-#&gt; [59] "    'robustDigest.R'"                                                                                                
-#&gt; [60] "    'cache.R'"                                                                                                       
-#&gt; [61] "    'consistentPaths.R'"                                                                                             
-#&gt; [62] "    'git.R'"                                                                                                         
-#&gt; [63] "    'helpers.R'"                                                                                                     
-#&gt; [64] "    'objectSize.R'"                                                                                                  
-#&gt; [65] "    'packages.R'"                                                                                                    
-#&gt; [66] "    'pipe.R'"                                                                                                        
-#&gt; [67] "    'reproducible-package.R'"                                                                                        
-#&gt; [68] "    'search.R'"                                                                                                      
-#&gt; [69] "    'zzz.R'"                                                                                                         </div></pre>
+#&gt; [49] "    testthat,"                                                                                                       
+#&gt; [50] "    TimeWarp"                                                                                                        
+#&gt; [51] "LinkingTo: Rcpp"                                                                                                     
+#&gt; [52] "License: GPL-3"                                                                                                      
+#&gt; [53] "BugReports: https://github.com/PredictiveEcology/reproducible/issues"                                                
+#&gt; [54] "ByteCompile: yes"                                                                                                    
+#&gt; [55] "RoxygenNote: 6.0.1"                                                                                                  
+#&gt; [56] "Collate: "                                                                                                           
+#&gt; [57] "    'RcppExports.R'"                                                                                                 
+#&gt; [58] "    'cache-helpers.R'"                                                                                               
+#&gt; [59] "    'cache-tools.R'"                                                                                                 
+#&gt; [60] "    'robustDigest.R'"                                                                                                
+#&gt; [61] "    'cache.R'"                                                                                                       
+#&gt; [62] "    'consistentPaths.R'"                                                                                             
+#&gt; [63] "    'git.R'"                                                                                                         
+#&gt; [64] "    'helpers.R'"                                                                                                     
+#&gt; [65] "    'objectSize.R'"                                                                                                  
+#&gt; [66] "    'packages.R'"                                                                                                    
+#&gt; [67] "    'pipe.R'"                                                                                                        
+#&gt; [68] "    'reproducible-package.R'"                                                                                        
+#&gt; [69] "    'search.R'"                                                                                                      
+#&gt; [70] "    'zzz.R'"                                                                                                         </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

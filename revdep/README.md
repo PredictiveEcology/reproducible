@@ -6,18 +6,19 @@
 |:--------|:----------------------------|
 |version  |R version 3.4.4 (2018-03-15) |
 |system   |x86_64, linux-gnu            |
-|ui       |RStudio (1.1.442)            |
+|ui       |RStudio (1.1.453)            |
 |language |en_CA:en                     |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-05-17                   |
+|date     |2018-06-08                   |
 
 ## Packages
 
 |package      |*  |version    |date       |source                                          |
 |:------------|:--|:----------|:----------|:-----------------------------------------------|
-|memoise      |   |1.1.0      |2018-05-17 |Github (hadley/memoise@06d16ec)                 |
-|reproducible |*  |0.1.4.9016 |2018-05-17 |Github (PredictiveEcology/reproducible@d6de0ba) |
+|memoise      |   |1.1.0      |2018-06-08 |Github (hadley/memoise@06d16ec)                 |
+|reproducible |   |0.1.4.9016 |2018-06-08 |Github (PredictiveEcology/reproducible@4cb066b) |
+|TimeWarp     |   |1.0.15     |2016-07-22 |cran (@1.0.15)                                  |
 
 # Check results
 
@@ -62,10 +63,10 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.tools/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [79s/79s]
+  Running ‘test-all.R’ [78s/78s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-  ══ testthat results  ══════════════════════════════════════════════
+  ══ testthat results  ═══════════════════════════════════════════════════════════
   OK: 1595 SKIPPED: 23 FAILED: 40
   1. Failure: spread2 tests -- asymmetry (@test-spread2.R#630) 
   2. Failure: spread2 tests -- asymmetry (@test-spread2.R#630) 
