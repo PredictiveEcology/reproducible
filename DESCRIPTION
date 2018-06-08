@@ -39,6 +39,7 @@ Imports:
     Rcpp (>= 0.12.13),
     RCurl,
     sp,
+    tools,
     versions
 Suggests:
     covr,
@@ -59,8 +60,10 @@ Collate:
     'cache-tools.R'
     'robustDigest.R'
     'cache.R'
+    'checksums.R'
     'consistentPaths.R'
     'download.R'
+    'gis.R'
     'git.R'
     'helpers.R'
     'objectSize.R'

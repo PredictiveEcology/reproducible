@@ -5,8 +5,7 @@
 \title{A wrapper around a set of downloading functions}
 \usage{
 downloadFile(archive, targetFile, neededFiles, destinationPath, quick,
-  checkSums, url, needChecksums, overwrite = TRUE, moduleName, modulePath,
-  ...)
+  checksumFile, checkSums, url, needChecksums, overwrite = TRUE)
 }
 \arguments{
 \item{archive}{Optional character string giving the path of an archive
@@ -33,7 +32,7 @@ and \code{\link{downloadData}} (the quickCheck argument for both), and to
 \code{\link{Cache}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
 
-\item{checkSums}{A checksums file, e.g., created by checksums(..., write = TRUE)}
+\item{checkSums}{A checksums file, e.g., created by Checksums(..., write = TRUE)}
 
 \item{url}{Optional character string indicating the URL to download from.
 Normally, if used within a module, this url should be explicitly given as
@@ -42,7 +41,7 @@ module's checksums file to confirm that the download occurred correctly. If
 URL is used here, an ad hoc checksums will be created in the
 \code{destinationPath}. This will be used in subsequent calls to
 \code{prepInputs}, comparing the file on hand with the ad hoc
-\code{checksums.txt}.}
+\code{CHECKSUMS.txt}.}
 
 \item{needChecksums}{A numeric, with \code{0} indicating do not write a new checksums,
 \code{1} write a new one,
@@ -56,12 +55,6 @@ being called
 being called}
 
 \item{modulePath}{Character string of the path where the \code{moduleName} is located.}
-
-\item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
- \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
-Since \code{...} is passed to \code{\link{postProcess}}, these will
-\code{...} will also be passed into the inner
-functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 }
 \description{
 Currently, this only deals with \code{\link[googledrive]{drive_download}},

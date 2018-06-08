@@ -19,7 +19,7 @@ extracted. Defaults to the archive directory.}
 
 \item{extractedArchives}{Used internally to track archives that have been extracted from.}
 
-\item{checkSums}{A checksums file, e.g., created by checksums(..., write = TRUE)}
+\item{checkSums}{A checksums file, e.g., created by Checksums(..., write = TRUE)}
 
 \item{needChecksums}{A numeric, with \code{0} indicating do not write a new checksums,
 \code{1} write a new one,

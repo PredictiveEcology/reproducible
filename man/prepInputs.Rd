@@ -24,7 +24,7 @@ module's checksums file to confirm that the download occurred correctly. If
 URL is used here, an ad hoc checksums will be created in the
 \code{destinationPath}. This will be used in subsequent calls to
 \code{prepInputs}, comparing the file on hand with the ad hoc
-\code{checksums.txt}.}
+\code{CHECKSUMS.txt}.}
 
 \item{archive}{Optional character string giving the path of an archive
 containing \code{targetFile}, or a vector giving a set of nested archives
@@ -162,7 +162,15 @@ unlink(dPath, recursive = TRUE)
 
 #' # Add a study area to Crop and Mask to
 # Create a "study area"
-StudyArea <- randomPolygon(x = sp::SpatialPoints(matrix(c(-110, 60), ncol=2)), 1e8)
+library(sp)
+library(raster)
+coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9), .Dim = c(5L, 2L))
+Sr1 <- Polygon(coords)
+Srs1 <- Polygons(list(Sr1), "s1")
+StudyArea <- SpatialPolygons(list(Srs1), 1L)
+crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+StudyArea <- SpaDES.tools::randomPolygon(x = sp::SpatialPoints(matrix(c(-110, 60), ncol=2)), 1e8)
 
 #  specify targetFile, alsoExtract, and fun, wrap with Cache
 ecozoneFilename <- file.path(dPath, "ecozones.shp")
@@ -170,7 +178,6 @@ ecozoneFilename <- file.path(dPath, "ecozones.shp")
 #   targetFile is there, it will not redownload the archive.
 ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
                   "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
-library(reproducible)
 shpEcozoneSm <- Cache(prepInputs,
                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
                          targetFile = reproducible::asPath(ecozoneFilename),
@@ -179,10 +186,8 @@ shpEcozoneSm <- Cache(prepInputs,
                          fun = "shapefile", destinationPath = dPath,
                          postProcessedFilename = "EcozoneFile.shp") # passed to determineFilename
 
-library(quickPlot)
-dev();
-Plot(shpEcozone)
-Plot(shpEcozoneSm, addTo = "shpEcozone", gp = gpar(col = "red"))
+plot(shpEcozone)
+plot(shpEcozoneSm, add = TRUE, col = "red")
 unlink(dPath)
 
 # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
@@ -197,9 +202,9 @@ LCC2005 <- prepInputs(url = url,
                      destinationPath = asPath(dPath),
                      studyArea = StudyArea)
 
-Plot(LCC2005)
+plot(LCC2005)
 
-# if wrapped with Cache, will be very fast second time
+# if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
 LCC2005 <- Cache(prepInputs, url = url,
                      targetFile = lcc2005Filename,
                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),

@@ -5,6 +5,7 @@
 #'
 #' @export
 #' @inheritParams prepInputs
+#' @include checksums.R
 #' @inheritParams extractFromArchive
 #' @param moduleName Character string indicating SpaDES module name from which prepInputs is
 #'                    being called
@@ -12,7 +13,8 @@
 #' @param modulePath Character string of the path where the \code{moduleName} is located.
 #' @author Eliot McIntire
 downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quick,
-                         checkSums, url, needChecksums, overwrite = TRUE, moduleName, modulePath, ...) {
+                         checksumFile,
+                         checkSums, url, needChecksums, overwrite = TRUE) { #}, moduleName, modulePath, ...) {
 
   if (!is.null(neededFiles)) {
     if ("shp" %in% file_ext(neededFiles)) { # if user wants .shp file, needs other anciliary files
@@ -56,34 +58,19 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     skipDownloadMsg <- "Skipping download of url; local copy already exists and passes checksums"
 
     # The download step
-    if (!is.null(moduleName)) { # means it is inside a SpaDES module
-      if (!is.null(fileToDownload)) {
-        # downloadData(moduleName, modulePath, files = fileToDownload,
-        #              checked = checkSums, quickCheck = quick, overwrite = overwrite,
-        #              urls = urls)
-        download.file ## TODO: use httr for download
-      }
-    } else {
-      # The ad hoc case
-      if (!is.null(fileToDownload) ) {#|| is.null(targetFile)) {
-        if (!is.null(url)) {
-          if (grepl("drive.google.com", url)) {
-            dlGoogle(url)
-          } else {
-            destFile <- file.path(tempdir(), basename(url))
-            download.file(url, destfile = destFile)
-          }
-          # if destinationPath is tempdir, then don't copy and remove
-          if (!(identical(dirname(destFile),
-                          normalizePath(destinationPath, winslash = "/", mustWork = FALSE)))) {
-            suppressWarnings(file.copy(destFile, destinationPath))
-            suppressWarnings(file.remove(destFile))
-          }
-
-        }
-      } else {
-        message(skipDownloadMsg)
-        needChecksums <- 0
+    needChecksums <- downloadRemote(url = url, archive = archive,
+                   targetFile = targetFile, fileToDownload = fileToDownload,
+                   skipDownloadMsg = skipDownloadMsg,
+                   checkSums = checkSums,
+                   destinationPath = destinationPath,
+                   overwrite = overwrite,
+                   needChecksums = needChecksums)
+    if (file.exists(checksumFile)) {
+      if (!is.null(fileToDownload))  {
+        res <- Checksums(files = fileToDownload, checksumFile = checksumFile,
+                       path = destinationPath, quickCheck = quick,
+                       write = FALSE)
+        browser()
       }
     }
   } else {
@@ -126,7 +113,9 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 #' @keywords internal
 #' @importFrom googledrive as_id drive_auth drive_get
 #'
-dlGoogle <- function(url) { ## TODO: add additional arguments per below
+dlGoogle <- function(url, archive = NULL, targetFile = NULL,
+                     checkSums, skipDownloadMsg, destinationPath,
+                     overwrite, needChecksums) { ## TODO: add additional arguments per below
   googledrive::drive_auth() ## neededFiles for use on e.g., rstudio-server
   if (is.null(archive)) {
     fileAttr <- googledrive::drive_get(googledrive::as_id(url))
@@ -152,4 +141,70 @@ dlGoogle <- function(url) { ## TODO: add additional arguments per below
     message(skipDownloadMsg)
     needChecksums <- 0
   }
+  return(list(needChecksums = needChecksums, destFile = destFile))
+}
+
+#' Download file from generic source url
+#'
+#' @param url  The url (link) to the file.
+#'
+#' @author Eilot McIntire and Alex Chubaty
+#' @keywords internal
+#' @importFrom googledrive as_id drive_auth drive_get
+#'
+dlGeneric <- function(url, needChecksums) {
+  destFile <- file.path(tempdir(), basename(url))
+  # TODO
+   # if (httr::http_error(url))
+   #    stop("Can not access url ", url)
+   #
+   #  message("  Downloading ", filename, " ...")
+   #
+   #  httr::GET(
+   #    url = paste0(url, filename),
+   #    authenticate,
+   #    httr::progress(),
+   #    httr::write_disk(filepath, overwrite = overwrite)
+   #  )
+  download.file(url, destfile = destFile)
+  list(needChecksums = needChecksums, destFile = destFile)
+}
+
+downloadRemote <- function(url, archive, targetFile, checkSums,
+                           moduleName, fileToDownload, skipDownloadMsg,
+                           destinationPath, overwrite, needChecksums) {
+    if (!is.null(fileToDownload) ) {#|| is.null(targetFile)) {
+      if (!is.null(url)) {
+        if (grepl("drive.google.com", url)) {
+          downloadResults <-
+            dlGoogle(
+              url = url,
+              archive = archive,
+              targetFile = targetFile,
+              checkSums = checkSums,
+              skipDownloadMsg = skipDownloadMsg,
+              destinationPath = destinationPath,
+              overwrite = overwrite,
+              needChecksums = needChecksums
+            )
+        } else if (grepl("dl.dropbox.com", url)) {
+          stop("Dropbox downloading is currently not supported")
+        } else if (grepl("onedrive.live.com", url)) {
+          stop("Onedrive downloading is currently not supported")
+        } else {
+          downloadResults <- dlGeneric(url = url, needChecksums = needChecksums)
+        }
+        # if destinationPath is tempdir, then don't copy and remove
+        if (!(identical(dirname(downloadResults$destFile),
+                        normalizePath(destinationPath, winslash = "/", mustWork = FALSE)))) {
+          suppressWarnings(file.copy(downloadResults$destFile, destinationPath))
+          suppressWarnings(file.remove(downloadResults$destFile))
+        }
+
+      }
+    } else {
+      message(skipDownloadMsg)
+      downloadResults <- list(needChecksums = 0)
+    }
+  downloadResults$needChecksums
 }

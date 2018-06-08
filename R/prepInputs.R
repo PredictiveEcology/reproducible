@@ -82,7 +82,7 @@ if (getRversion() >= "3.1.0") {
 #'   URL is used here, an ad hoc checksums will be created in the
 #'   \code{destinationPath}. This will be used in subsequent calls to
 #'   \code{prepInputs}, comparing the file on hand with the ad hoc
-#'   \code{checksums.txt}.
+#'   \code{CHECKSUMS.txt}.
 #'
 #' @param alsoExtract Optional character string naming files other than
 #'   \code{targetFile} that must be extracted from the \code{archive}.
@@ -120,10 +120,9 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom data.table data.table
 #' @importFrom digest digest
 #' @importFrom methods is
-#' @importFrom reproducible Cache compareNA asPath
 #' @importFrom R.utils isAbsolutePath isFile
 #' @importFrom utils methods
-#' @include download.R postProcess.R
+#' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
 #' @seealso \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
 #'          \code{\link{downloadFile}}, \code{\link{postProcess}}.
@@ -163,7 +162,15 @@ if (getRversion() >= "3.1.0") {
 #'
 #' #' # Add a study area to Crop and Mask to
 #' # Create a "study area"
-#' StudyArea <- randomPolygon(x = sp::SpatialPoints(matrix(c(-110, 60), ncol=2)), 1e8)
+#' library(sp)
+#' library(raster)
+#' coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9), .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
+#' crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#'
+#' StudyArea <- SpaDES.tools::randomPolygon(x = sp::SpatialPoints(matrix(c(-110, 60), ncol=2)), 1e8)
 #'
 #' #  specify targetFile, alsoExtract, and fun, wrap with Cache
 #' ecozoneFilename <- file.path(dPath, "ecozones.shp")
@@ -171,7 +178,6 @@ if (getRversion() >= "3.1.0") {
 #' #   targetFile is there, it will not redownload the archive.
 #' ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
 #'                   "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
-#' library(reproducible)
 #' shpEcozoneSm <- Cache(prepInputs,
 #'                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
 #'                          targetFile = reproducible::asPath(ecozoneFilename),
@@ -180,10 +186,8 @@ if (getRversion() >= "3.1.0") {
 #'                          fun = "shapefile", destinationPath = dPath,
 #'                          postProcessedFilename = "EcozoneFile.shp") # passed to determineFilename
 #'
-#' library(quickPlot)
-#' dev();
-#' Plot(shpEcozone)
-#' Plot(shpEcozoneSm, addTo = "shpEcozone", gp = gpar(col = "red"))
+#' plot(shpEcozone)
+#' plot(shpEcozoneSm, add = TRUE, col = "red")
 #' unlink(dPath)
 #'
 #' # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
@@ -198,9 +202,9 @@ if (getRversion() >= "3.1.0") {
 #'                      destinationPath = asPath(dPath),
 #'                      studyArea = StudyArea)
 #'
-#' Plot(LCC2005)
+#' plot(LCC2005)
 #'
-#' # if wrapped with Cache, will be very fast second time
+#' # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
 #' LCC2005 <- Cache(prepInputs, url = url,
 #'                      targetFile = lcc2005Filename,
 #'                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
@@ -250,13 +254,14 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
 
-  if (!missing(targetFile)) {
-    targetFile <- basename(targetFile)
-    targetFilePath <- file.path(destinationPath, targetFile)
-  } else {
+  if (missing(targetFile)) {
     targetFile <- NULL
     targetFilePath <- NULL
+  } else {
+    targetFile <- basename(targetFile)
+    targetFilePath <- file.path(destinationPath, targetFile)
   }
+
 
   if (!is.null(alsoExtract)) {
     alsoExtract <- basename(alsoExtract)
@@ -289,8 +294,8 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
 
   # If quick, then use file.info as part of cache/memoise ... otherwise,
   #   pass a random real number to make a new memoise
-  moduleName <- NULL
-  modulePath <- NULL
+  # moduleName <- NULL
+  # modulePath <- NULL
   if (is.null(url)) { # the only way for this to be useful is if there is a SpaDES module
     # and url can be gotten during downloadData from module metadata
     fileinfo <- if (quick) {
@@ -317,7 +322,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
     }
 
   } else {
-    checkSums <- try(checksums(path = destinationPath, write = FALSE)#, checksumFile = checkSumFilePath)
+    checkSums <- try(Checksums(path = destinationPath, write = FALSE)#, checksumFile = checkSumFilePath)
                      , silent = TRUE)
     if (is(checkSums, "try-error")) {
       needChecksums <- 1
@@ -328,9 +333,19 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
 
   # Stage 1 -- Download
-  downloadFileResult <- downloadFile(archive, targetFile, neededFiles = neededFiles,
-                                     destinationPath, quick, checkSums, url, needChecksums = needChecksums,
-                                     overwrite = overwrite, moduleName = moduleName, modulePath = modulePath)
+  downloadFileResult <-
+    downloadFile(
+      archive = archive,
+      targetFile = targetFile,
+      neededFiles = neededFiles,
+      destinationPath = destinationPath,
+      quick = quick,
+      checkSums = checkSums,
+      url = url,
+      checksumFile = asPath(checkSumFilePath),
+      needChecksums = needChecksums,
+      overwrite = overwrite
+    )#, moduleName = moduleName, modulePath = modulePath)
   needChecksums <- downloadFileResult$needChecksums
   neededFiles <- downloadFileResult$neededFiles
   if (is.null(archive)) archive <- downloadFileResult$archive
@@ -499,7 +514,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 #'
 #' @param extractedArchives Used internally to track archives that have been extracted from.
 #' @param filesExtracted Used internally to track files that have been extracted.
-#' @param checkSums A checksums file, e.g., created by checksums(..., write = TRUE)
+#' @param checkSums A checksums file, e.g., created by Checksums(..., write = TRUE)
 #' @param needChecksums A numeric, with \code{0} indicating do not write a new checksums,
 #'                      \code{1} write a new one,
 #'                      \code{2} append new information to existing one.
@@ -509,7 +524,6 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 #'
 #' @author Jean Marchal
 #' @author Eliot McIntire
-#' @importFrom reproducible Cache compareNA
 #' @importFrom tools file_ext
 #'
 extractFromArchive <- function(archive, destinationPath = dirname(archive),
@@ -690,7 +704,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   }
   moduleName <- basename(dirname(dirname(chksumsFilePath)))
   modulePath <- dirname(dirname(dirname(chksumsFilePath)))
-  checkSums <- checksums(files = filesToCheck,
+  checkSums <- Checksums(files = filesToCheck,
                          module = moduleName,
                          path = modulePath,
                          checksumFile = asPath(chksumsFilePath),
@@ -715,4 +729,25 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   mess <- grep(mess, pattern = omitPattern,
                invert = TRUE, value = TRUE)
   if (length(mess)) message(paste(mess, collapse = "\n    "))
+}
+
+appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationPath, append = TRUE) {
+  if (append) {# needChecksums == 2) { # a checksums file already existed, need to keep some of it
+    cs <- try(read.table(checkSumFilePath, header = TRUE), silent = TRUE)
+    if (is(cs, "try-error")) { # meant that it was an empty CHECKSUMS.txt file -- rebuild it
+      append <- FALSE
+    } else {
+      nonCurrentFiles <- cs %>%
+        filter(!file %in% filesToChecksum)
+    }
+  }
+  message("Appending checksums to CHECKSUMS.txt. If you see this message repeatedly,\n",
+          "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
+          "  what to look for.")
+  capture.output(type = "message", currentFiles <- Checksums(path = destinationPath, write = TRUE, #checksumFile = checkSumFilePath,
+                            files = file.path(destinationPath, filesToChecksum)))
+  if (append) { # a checksums file already existed, need to keep some of it
+    currentFiles <- rbind(nonCurrentFiles, currentFiles)
+    writeChecksumsTable(currentFiles, checkSumFilePath, dots = list())
+  }
 }

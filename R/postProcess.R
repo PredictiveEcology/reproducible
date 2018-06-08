@@ -229,7 +229,6 @@ postProcess.spatialObjects <- function(x, inputFilePath = NULL,
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
 #' @importFrom rgeos gIsValid
-#' @importFrom reproducible Cache
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS
 #' @rdname cropInputs
 cropInputs <- function(x, studyArea, rasterToMatch, ...) {
@@ -391,7 +390,6 @@ getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch) {
 #' @author Jean Marchal
 #' @export
 #' @inheritParams cropInputs
-#' @importFrom reproducible Cache
 #' @rdname maskInputs
 #'
 maskInputs <- function(x, studyArea, ...) {
@@ -524,7 +522,6 @@ determineFilename <- function(postProcessedFilename = TRUE, inputFilePath = NULL
 #' @export
 #' @importFrom methods is
 #' @importFrom raster shapefile writeRaster
-#' @importFrom reproducible Cache
 #' @rdname writeOutputs
 #'
 writeOutputs <- function(x, filename, overwrite, ...) {
