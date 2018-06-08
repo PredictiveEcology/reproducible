@@ -66,6 +66,7 @@ Collate:
     'objectSize.R'
     'packages.R'
     'pipe.R'
+    'postProcess.R'
     'prepInputs.R'
     'reproducible-package.R'
     'search.R'

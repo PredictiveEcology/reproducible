@@ -127,7 +127,7 @@ This function is still experimental: use with caution.
 }
 
 \examples{
-# This function works within a module, however, currently,
+# This function works within a module; however, currently,
 #   \\cde{sourceURL} is not yet working as desired. Use \\code{url}.
 \dontrun{
 # Put chunks like this in your .inputObjects

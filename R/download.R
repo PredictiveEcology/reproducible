@@ -58,42 +58,17 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     # The download step
     if (!is.null(moduleName)) { # means it is inside a SpaDES module
       if (!is.null(fileToDownload)) {
-        parsedModule <- parse(file = file.path(modulePath, moduleName, paste0(moduleName, '.R')))
-        urls <- .getSourceURL(pattern = fileToDownload, x = parsedModule)
-        downloadData(moduleName, modulePath, files = fileToDownload,
-                     checked = checkSums, quickCheck = quick, overwrite = overwrite,
-                     urls = urls)
+        # downloadData(moduleName, modulePath, files = fileToDownload,
+        #              checked = checkSums, quickCheck = quick, overwrite = overwrite,
+        #              urls = urls)
+        download.file ## TODO: use httr for download
       }
     } else {
       # The ad hoc case
       if (!is.null(fileToDownload) ) {#|| is.null(targetFile)) {
         if (!is.null(url)) {
           if (grepl("drive.google.com", url)) {
-            googledrive::drive_auth() ## neededFiles for use on e.g., rstudio-server
-            if (is.null(archive)) {
-              fileAttr <- googledrive::drive_get(googledrive::as_id(url))
-              archive <- .isArchive(fileAttr$name)
-              archive <- file.path(destinationPath, basename(archive))
-              downloadFilename <- archive
-              if (is.null(archive)) {
-                if (is.null(targetFile)) {
-                  # make the guess
-                  targetFile <- fileAttr$name
-                  downloadFilename <- targetFile # override if the targetFile is not an archive
-                }
-              }
-            } else {
-              downloadFilename <- archive
-            }
-            destFile <- file.path(tempdir(), basename(downloadFilename))
-            if (!isTRUE(checkSums[ checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
-              message("  Downloading from Google Drive.")
-              googledrive::drive_download(googledrive::as_id(url), path = destFile,
-                                          overwrite = overwrite, verbose = TRUE)
-            } else {
-              message(skipDownloadMsg)
-              needChecksums <- 0
-            }
+            dlGoogle(url)
           } else {
             destFile <- file.path(tempdir(), basename(url))
             download.file(url, destfile = destFile)
@@ -140,5 +115,41 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     }
   } else {
     stop("There is no sourceURL in module metadata")
+  }
+}
+
+#' Download file from Google Drive
+#'
+#' @param url  The url (link) to the file.
+#'
+#' @author Eilot McIntire and Alex Chubaty
+#' @keywords internal
+#' @importFrom googledrive as_id drive_auth drive_get
+#'
+dlGoogle <- function(url) { ## TODO: add additional arguments per below
+  googledrive::drive_auth() ## neededFiles for use on e.g., rstudio-server
+  if (is.null(archive)) {
+    fileAttr <- googledrive::drive_get(googledrive::as_id(url))
+    archive <- .isArchive(fileAttr$name)
+    archive <- file.path(destinationPath, basename(archive))
+    downloadFilename <- archive
+    if (is.null(archive)) {
+      if (is.null(targetFile)) {
+        # make the guess
+        targetFile <- fileAttr$name
+        downloadFilename <- targetFile # override if the targetFile is not an archive
+      }
+    }
+  } else {
+    downloadFilename <- archive
+  }
+  destFile <- file.path(tempdir(), basename(downloadFilename))
+  if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
+    message("  Downloading from Google Drive.")
+    googledrive::drive_download(googledrive::as_id(url), path = destFile,
+                                overwrite = overwrite, verbose = TRUE)
+  } else {
+    message(skipDownloadMsg)
+    needChecksums <- 0
   }
 }
