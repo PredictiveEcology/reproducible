@@ -742,7 +742,8 @@ test_that("test reproducible.verbose", {
   expect_true(NCOL(.reproEnv$cacheTimings)==4)
 
   # Test Path class objects
-  a <- 1:10000
+  a <- sample(1e4)
+
   tmpFile <- tempfile(fileext = ".rds")
   saveRDS(a, file = tmpFile)
   out1 <- Cache(readRDS, tmpFile, cacheRepo = tmpdir)
