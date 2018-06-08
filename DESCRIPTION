@@ -46,7 +46,8 @@ Suggests:
     knitr,
     rgdal,
     rmarkdown,
-    testthat
+    testthat,
+    TimeWarp
 LinkingTo: Rcpp
 License: GPL-3
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
