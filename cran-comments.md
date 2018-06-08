@@ -38,4 +38,8 @@ There are no errors, warnings, or notes in any of the above.
 We have run R CMD check on downstream dependencies, and all have passed except those noted below.
 Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
 
+* `SpaDES` produces a warning about `DISPLAY` and Tk not being available.
+
+* `SpaDES.core` produces an error due to a non-CRAN package in Suggests, but passes once that dependency is installed.
+
 * `SpaDES.tools` produces an error due to an unrelated error in that package. I am a developer of `SpaDES.tools` and have prepared a fixed version for CRAN which will be submitted shortly.
