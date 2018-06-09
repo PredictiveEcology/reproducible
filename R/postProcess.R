@@ -6,6 +6,7 @@
 #' @keywords internal
 #' @param x  An object of postProcessing. See individual methods.
 #' @importClassesFrom quickPlot spatialObjects
+#' @importFrom utils capture.output
 #' @seealso \code{prepInputs}, \code{\link{postProcess.spatialObjects}}
 #' @param targetFilePath Full path of the target file
 #' @param ... Passed to internal functions. None implemented for the generic.
@@ -390,6 +391,7 @@ getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch) {
 #' @author Jean Marchal
 #' @export
 #' @inheritParams cropInputs
+#' @importFrom utils capture.output
 #' @rdname maskInputs
 #'
 maskInputs <- function(x, studyArea, ...) {

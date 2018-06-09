@@ -42,8 +42,8 @@ will look for \code{archive} or \code{targetFile}.}
 \item{fun}{Character string indicating the function to use to load
 \code{targetFile} into an \code{R} object.}
 
-\item{quick}{Logical. This is passed internally to \code{\link{checksums}}
-and \code{\link{downloadData}} (the quickCheck argument for both), and to
+\item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
+(the quickCheck argument), and to
 \code{\link{Cache}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
 
@@ -81,7 +81,7 @@ This function is still experimental: use with caution.
 
   \enumerate{
     \item Download from the web via either \code{\link[googledrive]{drive_download}},
-    \code{\link[utils]{download.file}}, or \code{\link{downloadFromWebDB}};
+    \code{\link[utils]{download.file}};
     \item Extract from archive using \code{\link{unzip}} or \code{\link{untar}};
     \item Load into R using \code{\link[raster]{raster}},
     \code{\link[raster]{shapefile}}, or any other function passed in with \code{fun};
@@ -164,7 +164,8 @@ unlink(dPath, recursive = TRUE)
 # Create a "study area"
 library(sp)
 library(raster)
-coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9), .Dim = c(5L, 2L))
+coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                    .Dim = c(5L, 2L))
 Sr1 <- Polygon(coords)
 Srs1 <- Polygons(list(Sr1), "s1")
 StudyArea <- SpatialPolygons(list(Srs1), 1L)

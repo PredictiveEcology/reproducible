@@ -27,10 +27,13 @@ Using \code{Cache} around \code{prepInputs} will do a sufficient job in these ca
 and save the file that comes from \code{url} and is also where the function
 will look for \code{archive} or \code{targetFile}.}
 
-\item{quick}{Logical. This is passed internally to \code{\link{checksums}}
-and \code{\link{downloadData}} (the quickCheck argument for both), and to
+\item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
+(the quickCheck argument), and to
 \code{\link{Cache}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
+
+\item{checksumFile}{A character string indicating the absolute path to the \code{CHECKSUMS.txt}
+file.}
 
 \item{checkSums}{A checksums file, e.g., created by Checksums(..., write = TRUE)}
 
@@ -49,16 +52,10 @@ URL is used here, an ad hoc checksums will be created in the
 
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}
-
-\item{moduleName}{Character string indicating SpaDES module name from which prepInputs is
-being called
-being called}
-
-\item{modulePath}{Character string of the path where the \code{moduleName} is located.}
 }
 \description{
 Currently, this only deals with \code{\link[googledrive]{drive_download}},
-\code{\link{downloadData}}, and \code{\link[utils]{download.file}}.
+and \code{\link[utils]{download.file}}.
 }
 \author{
 Eliot McIntire

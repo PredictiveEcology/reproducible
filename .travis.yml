@@ -115,5 +115,4 @@ branches:
   only:
     - master
     - development
-    - prepInputs
 

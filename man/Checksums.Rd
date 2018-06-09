@@ -33,12 +33,20 @@ Default is \code{FALSE}, as users should not change this file.
 Module developers should write this file prior to distributing
 their module code, and update accordingly when the data change.}
 
+\item{quickCheck}{Logical. If \code{TRUE}, then this will only use file sizes,
+rather than a digest::digest hash. This is generally faster,
+but will be \emph{much} less robust.}
+
 \item{checksumFile}{The filename of the checksums file to read or write to.
 The default is \file{CHECKSUMS.txt} located at
 \code{file.path(path, module, "data", checksumFile)}.
 It is likely not a good idea to change this, and should
 only be used in cases such as \code{Cache}, which can
 evaluate if the \code{checksumFile} has changed.}
+
+\item{files}{An optional character string or vector of specific files to checksum.
+This may be very important if there are many files listed in a
+\code{CHECKSUMS.txt} file, but only a few are to be checksummed.}
 
 \item{...}{Passed to \code{\link[digest]{digest}} and \code{\link[utils]{write.table}}.
 For \code{digest}, the notable argument is \code{algo}. For \code{write.table},
@@ -60,7 +68,7 @@ Modules may require data that for various reasons cannot be distributed with
 the module source code. In these cases, the module developer should ensure
 that the module downloads and extracts the data required. It is useful to not
 only check that the data files exist locally but that their checksums match
-those expected. See also \code{\link{downloadData}}.
+those expected.
 }
 \note{
 In version 1.2.0 and earlier, two checksums per file were required

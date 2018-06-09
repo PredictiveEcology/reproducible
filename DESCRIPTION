@@ -32,6 +32,7 @@ Imports:
     digest,
     dplyr,
     fastdigest,
+    fasterize,
     gdalUtils,
     git2r (>= 0.18),
     googledrive,
@@ -45,15 +46,15 @@ Imports:
     rgdal,
     rgeos,
     quickPlot,
+    sf,
     sp,
     tools,
-    velox,
+    utils,
     versions
 Suggests:
     covr,
     hunspell,
     knitr,
-    rgdal,
     rmarkdown,
     testthat,
     TimeWarp

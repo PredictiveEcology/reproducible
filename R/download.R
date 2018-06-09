@@ -7,10 +7,8 @@
 #' @inheritParams prepInputs
 #' @include checksums.R
 #' @inheritParams extractFromArchive
-#' @param moduleName Character string indicating SpaDES module name from which prepInputs is
-#'                    being called
-#'                    being called
-#' @param modulePath Character string of the path where the \code{moduleName} is located.
+#' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
+#'                     file.
 #' @author Eliot McIntire
 downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quick,
                          checksumFile,
@@ -70,7 +68,12 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         res <- Checksums(files = fileToDownload, checksumFile = checksumFile,
                        path = destinationPath, quickCheck = quick,
                        write = FALSE)
-        browser()
+        isOK <- res[compareNA(res$expectedFile, fileToDownload) | compareNA(res$actualFile, fileToDownload),]$result
+        if (length(isOK) > 0) {
+          if (!isTRUEall(isOK)) {
+            stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try again.")
+          }
+        }
       }
     }
   } else {
@@ -150,7 +153,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #'
 #' @author Eilot McIntire and Alex Chubaty
 #' @keywords internal
-#' @importFrom googledrive as_id drive_auth drive_get
+#' @importFrom utils download.file
 #'
 dlGeneric <- function(url, needChecksums) {
   destFile <- file.path(tempdir(), basename(url))

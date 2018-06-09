@@ -1,3 +1,8 @@
+if (getRversion() >= "3.1.0") {
+  utils::globalVariables(c("checksum.x", "checksum.y", "filesize.x", "filesize.y", "result" ))
+}
+
+
 ################################################################################
 #' Calculate checksums for a module's data files
 #'
@@ -11,7 +16,7 @@
 #' the module source code. In these cases, the module developer should ensure
 #' that the module downloads and extracts the data required. It is useful to not
 #' only check that the data files exist locally but that their checksums match
-#' those expected. See also \code{\link{downloadData}}.
+#' those expected.
 #'
 #' @note In version 1.2.0 and earlier, two checksums per file were required
 #' because of differences in the checksum hash values on Windows and Unix-like
@@ -29,12 +34,20 @@
 #'                Module developers should write this file prior to distributing
 #'                their module code, and update accordingly when the data change.
 #'
+#' @param quickCheck Logical. If \code{TRUE}, then this will only use file sizes,
+#'                   rather than a digest::digest hash. This is generally faster,
+#'                   but will be \emph{much} less robust.
+#'
 #' @param checksumFile The filename of the checksums file to read or write to.
 #'                     The default is \file{CHECKSUMS.txt} located at
 #'                     \code{file.path(path, module, "data", checksumFile)}.
 #'                     It is likely not a good idea to change this, and should
 #'                     only be used in cases such as \code{Cache}, which can
 #'                     evaluate if the \code{checksumFile} has changed.
+#'
+#' @param files An optional character string or vector of specific files to checksum.
+#'              This may be very important if there are many files listed in a
+#'              \code{CHECKSUMS.txt} file, but only a few are to be checksummed.
 #'
 #' @param ...     Passed to \code{\link[digest]{digest}} and \code{\link[utils]{write.table}}.
 #'                For \code{digest}, the notable argument is \code{algo}. For \code{write.table},
@@ -74,6 +87,7 @@ setGeneric("Checksums", function(module, path, write, quickCheck = FALSE,
 
 #' @rdname Checksums
 #' @importFrom utils read.table write.table
+#' @importFrom methods formalArgs
 #' @importFrom crayon magenta
 setMethod(
   "Checksums",
@@ -149,7 +163,7 @@ setMethod(
 
     if (is.null(txt$filesize)) {
       quickCheck <- FALSE
-      message(crayon::magenta("  Not possible to use quickCheck in downloadData;\n ",
+      message(crayon::magenta("  Not possible to use quickCheck;\n ",
                               "    CHECKSUMS.txt file does not have filesizes", sep = ""))
     }
     checksums <- rep(list(rep("", length(filesToCheck))), 2)
