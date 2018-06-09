@@ -70,7 +70,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                        write = FALSE)
         isOK <- res[compareNA(res$expectedFile, fileToDownload) | compareNA(res$actualFile, fileToDownload),]$result
         if (length(isOK) > 0) {
-          if (!isTRUEall(isOK)) {
+          if (!isTRUE(all(isOK))) {
             stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try again.")
           }
         }

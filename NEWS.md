@@ -3,6 +3,9 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.2.0
 =============
 
+## New features
+
+* new function `prepInputs` and its internal modular pieces to aid in data downloading and preparation problems, solved in a reproducible way.
 * bug fixes
 
 version 0.1.4

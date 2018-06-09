@@ -4,19 +4,11 @@ if (getRversion() >= "3.1.0") {
 
 
 ################################################################################
-#' Calculate checksums for a module's data files
+#' Calculate checksum
 #'
-#' Verify (and optionally write) checksums for data files in a module's
-#' \code{data/} subdirectory. The file \code{data/CHECKSUMS.txt} contains the
-#' expected checksums for each data file.
-#' Checksums are computed using \code{SpaDES.tools:::.digest}, which is simply a
+#' Verify (and optionally write) checksums.
+#' Checksums are computed using \code{\link{.digest}}, which is simply a
 #' wrapper around \code{digest::digest}.
-#'
-#' Modules may require data that for various reasons cannot be distributed with
-#' the module source code. In these cases, the module developer should ensure
-#' that the module downloads and extracts the data required. It is useful to not
-#' only check that the data files exist locally but that their checksums match
-#' those expected.
 #'
 #' @note In version 1.2.0 and earlier, two checksums per file were required
 #' because of differences in the checksum hash values on Windows and Unix-like
@@ -79,7 +71,7 @@ if (getRversion() >= "3.1.0") {
 #' Checksums(moduleName, modulePath, write = TRUE)
 #' }
 #'
-setGeneric("Checksums", function(module, path, write, quickCheck = FALSE,
+setGeneric("Checksums", function(path, write, quickCheck = FALSE,
                                  checksumFile = file.path(path, "CHECKSUMS.txt"),
                                  files = NULL, ...) {
   standardGeneric("Checksums")
@@ -91,20 +83,15 @@ setGeneric("Checksums", function(module, path, write, quickCheck = FALSE,
 #' @importFrom crayon magenta
 setMethod(
   "Checksums",
-  signature = c(module = "character", path = "character", quickCheck = "ANY",
+  signature = c(path = "character", quickCheck = "ANY",
                 write = "logical", files = "ANY"),
-  definition = function(module, path, write, quickCheck, checksumFile, files, ...) {
+  definition = function(path, write, quickCheck, checksumFile, files, ...) {
     defaultHashAlgo <- "xxhash64"
     defaultWriteHashAlgo <- "xxhash64"
     dots <- list(...)
     dotsWriteTable <- dots[names(dots) %in% formalArgs(write.table)]
     dots <- dots[names(dots) %in% formalArgs(digest::digest)]
     checkPath(path, create = write)
-    path <- if (length(module)) {
-      file.path(path, module, "data")
-    } else {
-      file.path(path)
-    }
 
     # If it is a SpaDES module, then CHECKSUM.txt must be in the data folder
     checksumFile <- file.path(path, basename(checksumFile))
@@ -224,20 +211,20 @@ setMethod(
 #' @rdname Checksums
 setMethod(
   "Checksums",
-  signature = c(module = "character", path = "character", quickCheck = "ANY",
+  signature = c(path = "character", quickCheck = "ANY",
                 write = "missing", files = "ANY"),
-  definition = function(module, path, quickCheck, checksumFile, files, ...) {
-    Checksums(module, path, write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
+  definition = function(path, quickCheck, checksumFile, files, ...) {
+    Checksums(path, write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
               files = files, ...)
   })
 
 #' @rdname Checksums
 setMethod(
   "Checksums",
-  signature = c(module = "missing", path = "character", write = "logical",
+  signature = c(path = "character", write = "logical",
                 quickCheck = "ANY", files = "ANY"),
-  definition = function(module, path, write, quickCheck, checksumFile, files, ...) {
-    Checksums(module = character(), path = path, write = write,
+  definition = function(path, write, quickCheck, checksumFile, files, ...) {
+    Checksums(path = path, write = write,
               quickCheck = quickCheck, checksumFile = checksumFile, files = files, ...)
   })
 

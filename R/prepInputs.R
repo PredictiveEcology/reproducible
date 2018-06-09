@@ -217,6 +217,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
                        overwrite = FALSE, purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
 
+  browser()
   dots <- list(...)
 
   if (!is.null(dots$cacheTags))  {
@@ -354,22 +355,6 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
     if (needChecksums > 0) {
       appendChecksumsTable(checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
                            destinationPath = destinationPath, append = needChecksums == 2)
-
-      # if (needChecksums == 2) { # a checksums file already existed, need to keep some of it
-      #   cs <- try(read.table(checkSumFilePath, header = TRUE), silent = TRUE)
-      #   if (is(cs, "try-error")) { # meant that it was an empty CHECKSUMS.txt file -- rebuild it
-      #     needChecksums <- 1
-      #   } else {
-      #     nonCurrentFiles <- cs %>%
-      #       filter(!file %in% filesToChecksum)
-      #   }
-      # }
-      # currentFiles <- checksums(path = destinationPath, write = TRUE, #checksumFile = checkSumFilePath,
-      #                           files = file.path(destinationPath, filesToChecksum))
-      # if (needChecksums == 2) { # a checksums file already existed, need to keep some of it
-      #   currentFiles <- rbind(nonCurrentFiles, currentFiles)
-      #   writeChecksumsTable(currentFiles, checkSumFilePath, dots = list())
-      # }
     }
   })
 
@@ -420,6 +405,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   # Stage 1 - load into R
   if (tryRasterFn) {
     # Don't cache the reading of a raster -- normal reading of raster on disk is fast b/c only reads metadata
+    browser()
     x <- do.call(fun, append(list(asPath(targetFilePath)), args))
   } else {
     x <- Cache(do.call, fun, append(list(asPath(targetFilePath)), args))
@@ -619,6 +605,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 #' @param filesExtracted A character vector of all files that have been extracted (e.g.,
 #'                       from an archive)
 #' @param destinationPath Full path of the directory where the target file should be
+#' @keywords internal
 .guessAtTargetAndFun <- function(targetFilePath, destinationPath, filesExtracted, fun) {
   #if (is.null(targetFilePath)) {
   #filesExtracted <- dir(destinationPath)
@@ -682,6 +669,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   return(list(fun = fun, args = args))
 }
 
+#' @keywords internal
 .unzipOrUnTar <- function(fun, args, files, overwrite = TRUE) {
   argList <- list(files = files)
   isUnzip <- ("overwrite" %in% names(formals(fun)))
@@ -697,6 +685,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   extractedFiles
 }
 
+#' @keywords internal
 .checkSums <- function(filesToCheck, fileinfo, chksumsFilePath, quick) {
   if (missing(chksumsFilePath)) {
     chksumsFilePath <- file.path(dirname(filesToCheck), "CHECKSUMS.txt")
@@ -713,6 +702,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   list(moduleName = moduleName, modulePath = modulePath, checkSums = checkSums)
 }
 
+#' @keywords internal
 .checkSumsMem <- memoise::memoise(.checkSums)
 
 .isArchive <- function(filename) {
@@ -724,6 +714,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
 }
 
+#' @keywords internal
 .groupedMessage <- function(mess, omitPattern) {
   mess <- grep(mess, pattern = omitPattern,
                invert = TRUE, value = TRUE)

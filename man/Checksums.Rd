@@ -3,29 +3,24 @@
 \docType{methods}
 \name{Checksums}
 \alias{Checksums}
-\alias{Checksums,character,character,logical-method}
-\alias{Checksums,character,character,missing-method}
-\alias{Checksums,missing,character,logical-method}
-\title{Calculate checksums for a module's data files}
+\alias{Checksums,character,logical-method}
+\alias{Checksums,character,missing-method}
+\alias{Checksums,character,logical-method}
+\title{Calculate checksum}
 \usage{
-Checksums(module, path, write, quickCheck = FALSE,
+Checksums(path, write, quickCheck = FALSE, checksumFile = file.path(path,
+  "CHECKSUMS.txt"), files = NULL, ...)
+
+\S4method{Checksums}{character,logical}(path, write, quickCheck = FALSE,
   checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
 
-\S4method{Checksums}{character,character,logical}(module, path, write,
-  quickCheck = FALSE, checksumFile = file.path(path, "CHECKSUMS.txt"),
-  files = NULL, ...)
+\S4method{Checksums}{character,missing}(path, write, quickCheck = FALSE,
+  checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
 
-\S4method{Checksums}{character,character,missing}(module, path, write,
-  quickCheck = FALSE, checksumFile = file.path(path, "CHECKSUMS.txt"),
-  files = NULL, ...)
-
-\S4method{Checksums}{missing,character,logical}(module, path, write,
-  quickCheck = FALSE, checksumFile = file.path(path, "CHECKSUMS.txt"),
-  files = NULL, ...)
+\S4method{Checksums}{character,logical}(path, write, quickCheck = FALSE,
+  checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
 }
 \arguments{
-\item{module}{Character string giving the name of the module.}
-
 \item{path}{Character string giving the path to the module directory.}
 
 \item{write}{Logical indicating whether to overwrite \code{CHECKSUMS.txt}.
@@ -51,24 +46,17 @@ This may be very important if there are many files listed in a
 \item{...}{Passed to \code{\link[digest]{digest}} and \code{\link[utils]{write.table}}.
 For \code{digest}, the notable argument is \code{algo}. For \code{write.table},
 the notable argument is \code{append}.}
+
+\item{module}{Character string giving the name of the module.}
 }
 \value{
 A \code{data.frame} with columns: \code{result}, \code{expectedFile},
         \code{actualFile}, and \code{checksum}.
 }
 \description{
-Verify (and optionally write) checksums for data files in a module's
-\code{data/} subdirectory. The file \code{data/CHECKSUMS.txt} contains the
-expected checksums for each data file.
-Checksums are computed using \code{SpaDES.tools:::.digest}, which is simply a
+Verify (and optionally write) checksums.
+Checksums are computed using \code{\link{.digest}}, which is simply a
 wrapper around \code{digest::digest}.
-}
-\details{
-Modules may require data that for various reasons cannot be distributed with
-the module source code. In these cases, the module developer should ensure
-that the module downloads and extracts the data required. It is useful to not
-only check that the data files exist locally but that their checksums match
-those expected.
 }
 \note{
 In version 1.2.0 and earlier, two checksums per file were required
