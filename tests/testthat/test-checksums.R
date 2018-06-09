@@ -3,7 +3,7 @@ test_that("Checksums read and written correctly", {
 
   sampleDir <- system.file("maps", package = "quickPlot")
   sampleFiles <- list.files(sampleDir, pattern = "[.]tif", full.names = TRUE)
-  tmpdir <- file.path(tempdir(), "test_checksums", "data") %>%
+  tmpdir <- file.path(tempdir(), "test_checksums") %>%
     checkPath(create = TRUE)
   on.exit(unlink(dirname(tmpdir), recursive = TRUE), add = TRUE)
 
@@ -17,17 +17,17 @@ test_that("Checksums read and written correctly", {
              "f21251dcdf23dde0", "86e342cfc6876b7d")
 
   # 1. read Checksums without CHECKSUMS.txt file
-  expect_error(Checksums(file.path(dirname(dirname(tmpdir))), "test_checksums"))
+  expect_error(Checksums(tmpdir))
 
   # 2. read Checksums with empty CHECKSUMS.txt file
   expect_true(file.create(csf))
-  txt <- Checksums("test_checksums", dirname(dirname(tmpdir)))
+  txt <- Checksums(tmpdir)
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), 0)
 
   # 3. write Checksums without CHECKSUMS.txt
   expect_true(file.remove(csf))
-  txt <- Checksums("test_checksums", dirname(dirname(tmpdir)), write = TRUE)
+  txt <- Checksums(dirname(csf), write = TRUE)
   expect_true(all(colnames(txt) == cnamesW))
   expect_equal(nrow(txt), 5)
   expect_true(all(txt$file == basename(sampleFiles)))
@@ -40,7 +40,7 @@ test_that("Checksums read and written correctly", {
                     stringsAsFactors = FALSE)
   utils::write.table(out, csf, eol = "\n", col.names = TRUE, row.names = FALSE)
 
-  txt <- Checksums("test_checksums", dirname(dirname(tmpdir)), write = TRUE)
+  txt <- Checksums(tmpdir, write = TRUE)
   expect_true(all(colnames(txt) == cnamesW))
   expect_equal(nrow(txt), 5)
   expect_true(all(txt$file == basename(sampleFiles)))
