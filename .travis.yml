@@ -12,7 +12,11 @@ matrix:
         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
         - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
         - libproj-dev
+        - libudunits2-dev
         - gdal-bin
   - os: linux
     dist: trusty
@@ -23,7 +27,11 @@ matrix:
         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
         - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
         - libproj-dev
+        - libudunits2-dev
         - gdal-bin
   - os: linux
     dist: trusty
@@ -34,7 +42,11 @@ matrix:
         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
         - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
         - libproj-dev
+        - libudunits2-dev
         - gdal-bin
   - os: linux
     dist: trusty
@@ -45,7 +57,11 @@ matrix:
         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
         - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
         - libproj-dev
+        - libudunits2-dev
         - gdal-bin
     r_packages:
       - covr
@@ -63,9 +79,13 @@ matrix:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal-dev
-          - libproj-dev
-          - gdal-bin
+        - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
+        - libproj-dev
+        - libudunits2-dev
+        - gdal-bin
     r_packages:
       - devtools
   - os: osx
