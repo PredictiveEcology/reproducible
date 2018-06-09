@@ -170,8 +170,6 @@ Srs1 <- Polygons(list(Sr1), "s1")
 StudyArea <- SpatialPolygons(list(Srs1), 1L)
 crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-StudyArea <- SpaDES.tools::randomPolygon(x = sp::SpatialPoints(matrix(c(-110, 60), ncol=2)), 1e8)
-
 #  specify targetFile, alsoExtract, and fun, wrap with Cache
 ecozoneFilename <- file.path(dPath, "ecozones.shp")
 # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
