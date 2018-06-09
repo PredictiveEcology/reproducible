@@ -30,15 +30,24 @@ Imports:
     data.table (>= 1.10.4),
     devtools,
     digest,
+    dplyr,
     fastdigest,
+    gdalUtils,
     git2r (>= 0.18),
+    googledrive,
     magrittr,
     memoise,
     methods,
     raster,
     Rcpp (>= 0.12.13),
-    RCurl,
+    RCurl (>= 1.95-4.8),
+    R.utils,
+    rgdal,
+    rgeos,
+    quickPlot,
     sp,
+    tools,
+    velox,
     versions
 Suggests:
     covr,
@@ -59,12 +68,17 @@ Collate:
     'cache-tools.R'
     'robustDigest.R'
     'cache.R'
+    'checksums.R'
     'consistentPaths.R'
+    'download.R'
+    'gis.R'
     'git.R'
     'helpers.R'
     'objectSize.R'
     'packages.R'
     'pipe.R'
+    'postProcess.R'
+    'prepInputs.R'
     'reproducible-package.R'
     'search.R'
     'zzz.R'
