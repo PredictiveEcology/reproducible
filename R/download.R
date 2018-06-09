@@ -1,7 +1,7 @@
 #' A wrapper around a set of downloading functions
 #'
 #' Currently, this only deals with \code{\link[googledrive]{drive_download}},
-#' \code{\link{downloadData}}, and \code{\link[utils]{download.file}}.
+#' and \code{\link[utils]{download.file}}.
 #'
 #' @export
 #' @inheritParams prepInputs
