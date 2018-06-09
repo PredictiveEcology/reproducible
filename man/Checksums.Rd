@@ -42,8 +42,6 @@ This may be very important if there are many files listed in a
 \item{...}{Passed to \code{\link[digest]{digest}} and \code{\link[utils]{write.table}}.
 For \code{digest}, the notable argument is \code{algo}. For \code{write.table},
 the notable argument is \code{append}.}
-
-\item{module}{Character string giving the name of the module.}
 }
 \value{
 A \code{data.frame} with columns: \code{result}, \code{expectedFile},

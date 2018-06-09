@@ -17,8 +17,6 @@ if (getRversion() >= "3.1.0") {
 #' To update your \file{CHECKSUMS.txt} files using the new algorithm, see
 #' \url{https://github.com/PredictiveEcology/SpaDES/issues/295#issuecomment-246513405}.
 #'
-#' @param module  Character string giving the name of the module.
-#'
 #' @param path    Character string giving the path to the module directory.
 #'
 #' @param write   Logical indicating whether to overwrite \code{CHECKSUMS.txt}.
