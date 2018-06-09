@@ -218,15 +218,6 @@ setMethod(
               files = files, ...)
   })
 
-#' @rdname Checksums
-setMethod(
-  "Checksums",
-  signature = c(path = "character", write = "logical",
-                quickCheck = "ANY", files = "ANY"),
-  definition = function(path, write, quickCheck, checksumFile, files, ...) {
-    Checksums(path = path, write = write,
-              quickCheck = quickCheck, checksumFile = checksumFile, files = files, ...)
-  })
 
 writeChecksumsTable <- function(out, checksumFile, dots) {
   do.call(write.table,

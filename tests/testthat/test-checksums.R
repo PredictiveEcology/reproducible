@@ -17,7 +17,6 @@ test_that("Checksums read and written correctly", {
              "f21251dcdf23dde0", "86e342cfc6876b7d")
 
   # 1. read Checksums without CHECKSUMS.txt file
-  browser()
   expect_error(Checksums(file.path(dirname(dirname(tmpdir))), "test_checksums"))
 
   # 2. read Checksums with empty CHECKSUMS.txt file

@@ -30,10 +30,11 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     }
   }
 
-  if (!is.null(neededFiles)) {
-    result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
-  } else {
+  if (is.null(neededFiles)) {
     result <- unique(checkSums$result)
+    neededFiles <- checkSums$expectedFile
+  } else {
+    result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
   }
   missingNeededFiles <- (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
                            is.null(targetFile) || is.null(neededFiles))
@@ -56,7 +57,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     skipDownloadMsg <- "Skipping download of url; local copy already exists and passes checksums"
 
     # The download step
-    needChecksums <- downloadRemote(url = url, archive = archive,
+    downloadResults <- downloadRemote(url = url, archive = archive,
                    targetFile = targetFile, fileToDownload = fileToDownload,
                    skipDownloadMsg = skipDownloadMsg,
                    checkSums = checkSums,
@@ -65,13 +66,15 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                    needChecksums = needChecksums)
     if (file.exists(checksumFile)) {
       if (!is.null(fileToDownload))  {
-        res <- Checksums(files = fileToDownload, checksumFile = checksumFile,
+        res <- Checksums(files = file.path(destinationPath, fileToDownload), checksumFile = checksumFile,
                        path = destinationPath, quickCheck = quick,
                        write = FALSE)
         isOK <- res[compareNA(res$expectedFile, fileToDownload) | compareNA(res$actualFile, fileToDownload),]$result
+        isOK <- isOK[!is.na(isOK)] == "OK"
         if (length(isOK) > 0) {
           if (!isTRUE(all(isOK))) {
-            stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try again.")
+            stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try download again, ",
+                 "or if the local file(s) is/are correct, rerun checksums(write = TRUE, ...) on the local files")
           }
         }
       }
@@ -85,7 +88,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     }
   }
   archiveReturn <- if (is.null(archive)) archive else file.path(destinationPath, basename(archive))
-  list(needChecksums = needChecksums, archive = archiveReturn, neededFiles = neededFiles)
+  list(needChecksums = downloadResults$needChecksums, archive = archiveReturn, neededFiles = neededFiles,
+       downloaded = downloadResults$destFile)
 }
 
 .getSourceURL <- function(pattern, x) {
@@ -169,7 +173,7 @@ dlGeneric <- function(url, needChecksums) {
    #    httr::progress(),
    #    httr::write_disk(filepath, overwrite = overwrite)
    #  )
-  download.file(url, destfile = destFile)
+  download.file(url, destfile = destFile, method = "auto", mode = "wb")
   list(needChecksums = needChecksums, destFile = destFile)
 }
 
@@ -202,12 +206,13 @@ downloadRemote <- function(url, archive, targetFile, checkSums,
                         normalizePath(destinationPath, winslash = "/", mustWork = FALSE)))) {
           suppressWarnings(file.copy(downloadResults$destFile, destinationPath))
           suppressWarnings(file.remove(downloadResults$destFile))
+          downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }
 
       }
     } else {
       message(skipDownloadMsg)
-      downloadResults <- list(needChecksums = 0)
+      downloadResults <- list(needChecksums = 0, destFile = NULL)
     }
-  downloadResults$needChecksums
+  downloadResults
 }

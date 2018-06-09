@@ -217,7 +217,6 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
                        overwrite = FALSE, purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
 
-  browser()
   dots <- list(...)
 
   if (!is.null(dots$cacheTags))  {
@@ -350,7 +349,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   neededFiles <- downloadFileResult$neededFiles
   if (is.null(archive)) archive <- downloadFileResult$archive
 
-  filesToChecksum <- if (is.null(archive)) character() else basename(archive)
+  filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else basename(archive)
   on.exit({
     if (needChecksums > 0) {
       appendChecksumsTable(checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
@@ -371,7 +370,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
 
   #targetFilePath might still be NULL, need destinationPath too
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
-                                       filesExtracted$filesExtracted,
+                                       c(unique(filesToChecksum, filesExtracted$filesExtracted)),
                                        fun) # passes through if all known
   targetFile <- basename(targetParams$targetFilePath)
   targetFilePath <- targetParams$targetFilePath
@@ -405,7 +404,6 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   # Stage 1 - load into R
   if (tryRasterFn) {
     # Don't cache the reading of a raster -- normal reading of raster on disk is fast b/c only reads metadata
-    browser()
     x <- do.call(fun, append(list(asPath(targetFilePath)), args))
   } else {
     x <- Cache(do.call, fun, append(list(asPath(targetFilePath)), args))

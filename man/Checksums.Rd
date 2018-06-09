@@ -5,7 +5,6 @@
 \alias{Checksums}
 \alias{Checksums,character,logical-method}
 \alias{Checksums,character,missing-method}
-\alias{Checksums,character,logical-method}
 \title{Calculate checksum}
 \usage{
 Checksums(path, write, quickCheck = FALSE, checksumFile = file.path(path,
@@ -15,9 +14,6 @@ Checksums(path, write, quickCheck = FALSE, checksumFile = file.path(path,
   checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
 
 \S4method{Checksums}{character,missing}(path, write, quickCheck = FALSE,
-  checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
-
-\S4method{Checksums}{character,logical}(path, write, quickCheck = FALSE,
   checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
 }
 \arguments{
