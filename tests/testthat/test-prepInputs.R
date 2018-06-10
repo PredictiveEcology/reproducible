@@ -148,10 +148,11 @@ test_that("prepInputs doesn't work", {
 
 
   setwd(tempdir())
-  test <- prepInputs(targetFile = "FMA_Boundary_Updated.shp",
-                     url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
-                     destinationPath = "data/FMA")
-  expect_is(test, "SpatialPolygons")
-
+  if (interactive()) { # need authentication for this
+    test <- prepInputs(targetFile = "FMA_Boundary_Updated.shp",
+                       url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
+                       destinationPath = "data/FMA")
+    expect_is(test, "SpatialPolygons")
+  }
 
 })
