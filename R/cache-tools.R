@@ -39,7 +39,8 @@
 #'
 #' @examples
 #' library(raster)
-#' try(detach("package:magrittr", unload = TRUE), silent = TRUE) # magrittr, if loaded, gives an error below
+#' try(detach("package:magrittr", unload = TRUE), silent = TRUE) # magrittr,
+#'                                     #if loaded, gives an error below
 #'
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 #' try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
@@ -62,10 +63,9 @@
 #'
 #' showCache(tmpDir, userTags = c("objectName"))
 #' showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
-#' showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif call
 #'
 #' # Fine control of cache elements -- pick out only the large runif object, and remove it
-#' cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif calls
+#' cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
 #' toRemove <- cache1[tagKey=="object.size"][as.numeric(tagValue) > 700]$artifact
 #' clearCache(tmpDir, userTags = toRemove)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left

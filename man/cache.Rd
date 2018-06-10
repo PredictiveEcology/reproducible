@@ -272,7 +272,8 @@ Subsequent calls to this function
 
 \examples{
 library(raster)
-try(detach("package:magrittr", unload = TRUE), silent = TRUE) # magrittr, if loaded, gives an error below
+# magrittr, if loaded, gives an error below
+  try(detach("package:magrittr", unload = TRUE), silent = TRUE)
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
@@ -358,8 +359,8 @@ keepCache(tmpDir, userTags = "runif|rnorm")
 clearCache(tmpDir)
 
 ## Example 5: using caching to speed up rerunning expensive computations
-ras <- raster(extent(0, 10, 0, 10), res = 1,
-              vals = sample(1:5, replace = TRUE, size = 1e2),
+ras <- raster(extent(0, 5, 0, 5), res = 1,
+              vals = sample(1:5, replace = TRUE, size = 25),
               crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
 
 # A slow operation, like GIS operation
@@ -370,7 +371,8 @@ notCached <- suppressWarnings(
 
 cached <- suppressWarnings(
   # project raster generates warnings when run non-interactively
-  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+  # using quote works also
+  Cache(projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir))
 )
 
 # second time is much faster
