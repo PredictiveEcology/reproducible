@@ -99,7 +99,7 @@ notCached <- suppressWarnings(
 cached <- suppressWarnings(
   # project raster generates warnings when run non-interactively
   # using quote works also
-  Cache(projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir))
+  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
 )
 
 # second time is much faster

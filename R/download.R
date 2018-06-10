@@ -32,7 +32,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 
   if (is.null(neededFiles)) {
     result <- unique(checkSums$result)
-    neededFiles <- checkSums$expectedFile
+    if (NROW(checkSums))
+      neededFiles <- checkSums$expectedFile
   } else {
     result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
   }
@@ -80,6 +81,19 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
       }
     }
   } else {
+    fileAlreadyDownloaded <- if (is.null(archive[1])) {
+      archivePossibly <- setdiff(checkSums$expectedFile, neededFiles)
+      if (!is.null(.isArchive(archivePossibly))) {
+        archivePossibly
+      } else {
+        neededFiles
+      }
+
+    } else {
+      archive[1]
+    }
+
+    downloadResults <- list(needChecksums = needChecksums, destFile = fileAlreadyDownloaded)
     if (is.null(targetFile)) {
       message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
               " If this is not correct, rerun prepInputs with purge = TRUE")
@@ -87,7 +101,11 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
       message("  Skipping download: targetFile (and any alsoExtract) already present")
     }
   }
-  archiveReturn <- if (is.null(archive)) archive else file.path(destinationPath, basename(archive))
+  archiveReturn <- if (is.null(archive)) {
+    .isArchive(downloadResults$destFile)
+  } else {
+    archive
+  }
   list(needChecksums = downloadResults$needChecksums, archive = archiveReturn, neededFiles = neededFiles,
        downloaded = downloadResults$destFile)
 }

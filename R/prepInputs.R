@@ -358,7 +358,6 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   })
 
   # Stage 1 - Extract from archive
-
   filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                          neededFiles = neededFiles,
                                          checkSums = checkSums, needChecksums = needChecksums)
@@ -587,6 +586,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     }
   } else {
     message("  Skipping extractFromArchive: targetFile (and any alsoExtract) already extracted.")
+    filesExtracted <- setdiff(neededFiles, basename(archive))
   }
   list(extractedArchives = c(extractedArchives, archive),
        filesExtracted = unique(c(filesExtracted, extractedObjs$filesExtracted)),
