@@ -209,7 +209,14 @@ if (getRversion() >= "3.1.0") {
 #'                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
 #'                      destinationPath = asPath(dPath),
 #'                      studyArea = StudyArea)
+#'
+#' ##########
+#'
+#' # Try manually, individual pieces
+#' cropInputs(LCC2005, )
 #' }
+#'
+#'
 #'
 prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL,

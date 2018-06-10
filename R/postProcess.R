@@ -3,7 +3,6 @@
 #' There may be many methods developed. See e.g.,
 #' \code{\link{postProcess.spatialObjects}}
 #' @export
-#' @keywords internal
 #' @param x  An object of postProcessing. See individual methods.
 #' @importClassesFrom quickPlot spatialObjects
 #' @importFrom utils capture.output
@@ -17,7 +16,6 @@ postProcess <- function(x, ...) {
 }
 
 #' @export
-#' @keywords internal
 postProcess.default <- function(x, ...) {
   x
 }
@@ -116,6 +114,35 @@ postProcess.default <- function(x, ...) {
 #'   }
 #'   * Can be overridden with \code{useSAcrs}
 #' }
+#'
+#' @examples
+#'
+#' # download a zip file from internet, unzip all files, load as shapefile, Cache the call
+#' dPath <- file.path(tempdir(), "ecozones")
+#' shpEcozone <- prepInputs(destinationPath = dPath,
+#'                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+#'
+#'
+#' #' # Add a study area to Crop and Mask to
+#' # Create a "study area"
+#' library(sp)
+#' library(raster)
+#' coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+#'                     .Dim = c(5L, 2L))
+#' Sr1 <- Polygon(coords)
+#' Srs1 <- Polygons(list(Sr1), "s1")
+#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
+#' crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#'
+#'
+#' ##########
+#' shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
+#'
+#' # Try manually, individual pieces
+#' shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
+#' shpEcozoneClean <- fixErrors(shpEcozone)
+#' shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+#'
 postProcess.spatialObjects <- function(x, inputFilePath = NULL,
                                        studyArea = NULL, rasterToMatch = NULL,
                                        overwrite = TRUE, useSAcrs = FALSE,
@@ -175,7 +202,7 @@ postProcess.spatialObjects <- function(x, inputFilePath = NULL,
       .groupedMessage(mess, omitPattern = skipCacheMess)
 
       # projectInputs
-      targetCRS <- getTargetCRS(useSAcrs, studyArea, rasterToMatch)
+      targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch)
 
       mess <- capture.output(type = "message",
                              x <- Cache(projectInputs, x, targetCRS = targetCRS,
@@ -231,19 +258,19 @@ postProcess.spatialObjects <- function(x, inputFilePath = NULL,
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
 #' @importFrom rgeos gIsValid
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS
-#' @rdname cropInputs
+#' @rdname postProcess.spatialObjects
 cropInputs <- function(x, studyArea, rasterToMatch, ...) {
   UseMethod("cropInputs")
 }
 
 #' @export
-#' @rdname cropInputs
+#' @rdname postProcess.spatialObjects
 cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
   x
 }
 
 #' @export
-#' @rdname cropInputs
+#' @rdname postProcess.spatialObjects
 #' @importFrom raster projectExtent
 #' @param extentToMatch Optional. Can pass an extent here and a \code{crs} to
 #'                      \code{extentCRS} instead of \code{rasterToMatch}. These
@@ -308,6 +335,7 @@ cropInputs.spatialObjects <- function(x, studyArea, rasterToMatch = NULL, extent
 #' @param ... Passed into \code{\link[raster]{projectRaster}},
 #'            \code{\link[sp]{spTransform}} or \code{\link[sf]{st_transform}}
 #'
+#' @rdname postProcess.spatialObjects
 #' @return
 #' A file of the same type as starting, but with projection (and possibly other
 #' characteristics, including resolution, origin, extent if changed.
@@ -316,6 +344,7 @@ projectInputs <- function(x, targetCRS, ...) {
 }
 
 #' @export
+#' @rdname postProcess.spatialObjects
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
 
   if (!is.null(rasterToMatch)) {
@@ -338,6 +367,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 }
 
 #' @export
+#' @rdname postProcess.spatialObjects
 projectInputs.sf <- function(x, targetCRS, ...) {
   warning("sf class objects not fully implemented. Use with projectInputs.sf caution.")
   if (requireNamespace("sf")) {
@@ -353,6 +383,7 @@ projectInputs.sf <- function(x, targetCRS, ...) {
 }
 
 #' @export
+#' @rdname postProcess.spatialObjects
 projectInputs.Spatial <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
     x <- spTransform(x = x, CRSobj = targetCRS)
@@ -365,8 +396,9 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
 #' This is the function that follows the table of order of
 #' preference for determining CRS. See \code{\link{postProcess.spatialObjects}}
 #' @inheritParams postProcess.spatialObjects
-#' @export
-getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch) {
+#' @rdname postProcessHelpers
+#' @keywords internal
+.getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch) {
   targetCRS <- if (useSAcrs) {
     crs(studyArea)
   } else if (!is.null(rasterToMatch)) {
@@ -392,7 +424,7 @@ getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch) {
 #' @export
 #' @inheritParams cropInputs
 #' @importFrom utils capture.output
-#' @rdname maskInputs
+#' @rdname postProcess.spatialObjects
 #'
 maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
@@ -400,7 +432,7 @@ maskInputs <- function(x, studyArea, ...) {
 
 #' @export
 #' @param maskWithRTM Logical. If \code{TRUE}, then the default,
-#' @rdname maskInputs
+#' @rdname postProcess.spatialObjects
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
 
   message("    masking...")
@@ -419,7 +451,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 }
 
 #' @export
-#' @rdname maskInputs
+#' @rdname postProcess.spatialObjects
 maskInputs.Spatial <- function(x, studyArea, ...) {
 
   if (!is.null(studyArea)) {
@@ -470,6 +502,7 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 #'  absolute or relative path and used as is if absolute or prepended with
 #'  \code{destinationPath} if provided, and if \code{postProcessedFilename} is relative.
 #'
+#' @rdname postProcess.spatialObjects
 determineFilename <- function(postProcessedFilename = TRUE, inputFilePath = NULL,
                               destinationPath = NULL, ...) {
 
@@ -489,6 +522,11 @@ determineFilename <- function(postProcessedFilename = TRUE, inputFilePath = NULL
 
   newFilename <- if (!identical(postProcessedFilename, FALSE)) { # allow TRUE or path
     if (isTRUE(postProcessedFilename) ) {
+      if (is.null(inputFilePath)) {
+        tmpfile <- basename(tempfile())
+        message("Please provide postProcessedFilename; will use: ", tmpfile)
+        inputFilePath <- tmpfile
+      }
       .prefix(inputFilePath, "Small")
     } else {
       if (isAbsolutePath(postProcessedFilename)) {
@@ -524,12 +562,13 @@ determineFilename <- function(postProcessedFilename = TRUE, inputFilePath = NULL
 #' @export
 #' @importFrom methods is
 #' @importFrom raster shapefile writeRaster
-#' @rdname writeOutputs
+#' @rdname postProcess.spatialObjects
 #'
 writeOutputs <- function(x, filename, overwrite, ...) {
   UseMethod("writeOutputs")
 }
 
+#' @rdname postProcess.spatialObjects
 writeOutputs.Raster <- function(x, filename, overwrite = FALSE, ...) {
   if (!is.null(filename)) {
     xTmp <- writeRaster(x = x, filename = filename, overwrite = overwrite, ...)
@@ -546,6 +585,7 @@ writeOutputs.Raster <- function(x, filename, overwrite = FALSE, ...) {
   x
 }
 
+#' @rdname postProcess.spatialObjects
 writeOutputs.Spatial <- function(x, filename, overwrite = FALSE, ...) {
   if (!is.null(filename)) {
     shapefile(x = x, filename = filename, overwrite = overwrite)
@@ -553,6 +593,7 @@ writeOutputs.Spatial <- function(x, filename, overwrite = FALSE, ...) {
   x
 }
 
+#' @rdname postProcess.spatialObjects
 writeOutputs.sf <- function(x, filename, overwrite = FALSE, ...) {
   if (!is.null(filename)) {
     if (requireNamespace("sf")) {
@@ -564,6 +605,7 @@ writeOutputs.sf <- function(x, filename, overwrite = FALSE, ...) {
   x
 }
 
+#' @rdname postProcess.spatialObjects
 writeOutputs.default <- function(x, filename, ...) {
   stop("Don't know how to write object of class ", class(x), " on disk.")
 }

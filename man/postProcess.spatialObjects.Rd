@@ -2,12 +2,64 @@
 % Please edit documentation in R/postProcess.R
 \name{postProcess.spatialObjects}
 \alias{postProcess.spatialObjects}
+\alias{cropInputs}
+\alias{cropInputs.default}
+\alias{cropInputs.spatialObjects}
+\alias{projectInputs}
+\alias{projectInputs.Raster}
+\alias{projectInputs.sf}
+\alias{projectInputs.Spatial}
+\alias{maskInputs}
+\alias{maskInputs.Raster}
+\alias{maskInputs.Spatial}
+\alias{determineFilename}
+\alias{writeOutputs}
+\alias{writeOutputs.Raster}
+\alias{writeOutputs.Spatial}
+\alias{writeOutputs.sf}
+\alias{writeOutputs.default}
 \title{Post processing for \code{spatialObjects}}
 \usage{
 \method{postProcess}{spatialObjects}(x, inputFilePath = NULL,
   studyArea = NULL, rasterToMatch = NULL, overwrite = TRUE,
   useSAcrs = FALSE, useCache = getOption("reproducible.useCache", FALSE),
   postProcessedFilename = NULL, ...)
+
+cropInputs(x, studyArea, rasterToMatch, ...)
+
+\method{cropInputs}{default}(x, studyArea, rasterToMatch, ...)
+
+\method{cropInputs}{spatialObjects}(x, studyArea, rasterToMatch = NULL,
+  extentToMatch = NULL, extentCRS = NULL, ...)
+
+projectInputs(x, targetCRS, ...)
+
+\method{projectInputs}{Raster}(x, targetCRS = NULL, rasterToMatch = NULL,
+  ...)
+
+\method{projectInputs}{sf}(x, targetCRS, ...)
+
+\method{projectInputs}{Spatial}(x, targetCRS, ...)
+
+maskInputs(x, studyArea, ...)
+
+\method{maskInputs}{Raster}(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
+  ...)
+
+\method{maskInputs}{Spatial}(x, studyArea, ...)
+
+determineFilename(postProcessedFilename = TRUE, inputFilePath = NULL,
+  destinationPath = NULL, ...)
+
+writeOutputs(x, filename, overwrite, ...)
+
+\method{writeOutputs}{Raster}(x, filename, overwrite = FALSE, ...)
+
+\method{writeOutputs}{Spatial}(x, filename, overwrite = FALSE, ...)
+
+\method{writeOutputs}{sf}(x, filename, overwrite = FALSE, ...)
+
+\method{writeOutputs}{default}(x, filename, ...)
 }
 \arguments{
 \item{x}{A \code{Spatial*}, \code{sf} or \code{Raster*} object.}
@@ -30,8 +82,8 @@ the extent of desired outcome), reprojecting (including changing the
 resolution and projection).
 See details in \code{\link{postProcess.spatialObjects}}.}
 
-\item{overwrite}{Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.}
+\item{overwrite}{Logical. Should file being written overwrite an existing file if it
+exists.}
 
 \item{useSAcrs}{Logical. If \code{FALSE}, the default, then the desired projection
 will be taken from \code{rasterToMatch} or none at all.
@@ -50,6 +102,53 @@ These then pass \code{...} into other functions, like
 This might include potentially important arguments like \code{datatype},
 \code{format}. Also passed to \code{projectRaster},
 with likely important arguments such as \code{method = "bilinear"}.}
+
+\item{extentToMatch}{Optional. Can pass an extent here and a \code{crs} to
+\code{extentCRS} instead of \code{rasterToMatch}. These
+will override \code{rasterToMatch}, with a warning if both
+passed.}
+
+\item{extentCRS}{Optional. Can pass a \code{crs} here with an extent to
+\code{extentTomatch} instead of \code{rasterToMatch}}
+
+\item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
+
+\item{maskWithRTM}{Logical. If \code{TRUE}, then the default,}
+
+\item{destinationPath}{Optional. If \code{postProcessedFilename} is a relative file path, then this
+will be the directory of the resulting absolute file path.}
+
+\item{filename}{The filename to save the output object to disk (a \code{Raster*} or
+\code{Spatial*} object)}
+
+\item{x}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
+
+\item{...}{Passed to \code{projectRaster} and \code{Cache}
+cropping.}
+
+\item{x}{A \code{Raster*}, \code{Spatial*} or \code{sf} object}
+
+\item{...}{Passed into \code{\link[raster]{projectRaster}},
+\code{\link[sp]{spTransform}} or \code{\link[sf]{st_transform}}}
+
+\item{x}{A \code{Raster*} object}
+
+\item{studyArea}{A \code{SpatialPolygons*} object}
+
+\item{...}{Arguments passed to methods}
+
+\item{postProcessedFilename}{Logical or character string (a file path). See details.}
+
+\item{inputFilePath}{Optional. Filename (with or without full path). Only used if
+\code{postProcessedFilename} is \code{TRUE}, in which case,
+this is used to help name the output.}
+
+\item{...}{Passed to \code{\link[raster]{writeRaster}}, such as \code{datatype},
+and \code{\link[raster]{shapefile}}}
+}
+\value{
+A file of the same type as starting, but with projection (and possibly other
+characteristics, including resolution, origin, extent if changed.
 }
 \description{
 The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
@@ -57,6 +156,29 @@ crop, reproject, and mask, in that order.  This function is a wrapper for
 \code{\link{cropInputs}}, \code{\link{maskInputs}} and
 \code{\link{writeOutputs}}, with a decent amount of data manipulating
 between these calls so that the crs match.
+
+This function can be used to crop or reproject module inputs from raw data.
+
+A simple wrapper around the various different tools for these GIS types.
+
+This function can be used to mask module inputs from raw data.
+
+If \code{postProcessedFilename} is \code{logical}, then the cropped/masked
+raster will be written to disk with the original \code{targetFile} name, with
+\code{"Small"} prefixed to the basename(\code{targetFilename}).
+If a character string, it will be the path of the saved raster.
+It will be tested whether it is an absolute or relative path and used as is
+if absolute or prepended with \code{destinationPath} if relative.
+
+Can be used to write prepared inputs on disk.
+}
+\details{
+If \code{postProcessedFilename} is \code{logical}, then the output
+ filename will be \code{"Small"} prefixed to the basename(\code{inputFilePath}).
+ If a character string, it
+ will be the path returned. It will be tested whether it is an
+ absolute or relative path and used as is if absolute or prepended with
+ \code{destinationPath} if provided, and if \code{postProcessedFilename} is relative.
 }
 \section{Post processing sequence}{
 
@@ -116,3 +238,45 @@ located at \code{inputFilePath}.
 }
 }
 
+\examples{
+
+# download a zip file from internet, unzip all files, load as shapefile, Cache the call
+dPath <- file.path(tempdir(), "ecozones")
+shpEcozone <- prepInputs(destinationPath = dPath,
+                         url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+
+
+#' # Add a study area to Crop and Mask to
+# Create a "study area"
+library(sp)
+library(raster)
+coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                    .Dim = c(5L, 2L))
+Sr1 <- Polygon(coords)
+Srs1 <- Polygons(list(Sr1), "s1")
+StudyArea <- SpatialPolygons(list(Srs1), 1L)
+crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+
+##########
+shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
+
+# Try manually, individual pieces
+shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
+shpEcozoneClean <- fixErrors(shpEcozone)
+shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+
+}
+\author{
+Eliot McIntire
+
+Jean Marchal
+
+Eliot McIntire
+
+Jean Marchal
+
+Eliot McIntire
+
+Jean Marchal
+}

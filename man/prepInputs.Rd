@@ -209,7 +209,14 @@ LCC2005 <- Cache(prepInputs, url = url,
                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
                      destinationPath = asPath(dPath),
                      studyArea = StudyArea)
+
+##########
+
+# Try manually, individual pieces
+cropInputs(LCC2005, )
 }
+
+
 
 }
 \seealso{

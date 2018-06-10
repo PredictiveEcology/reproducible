@@ -20,4 +20,3 @@ There may be many methods developed. See e.g.,
 \seealso{
 \code{prepInputs}, \code{\link{postProcess.spatialObjects}}
 }
-\keyword{internal}

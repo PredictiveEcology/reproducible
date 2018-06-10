@@ -62,22 +62,9 @@ test_that("prepInputs doesn't work", {
   # Create a "study area"
   library(sp)
   library(raster)
-  coords <-
-    structure(
-      c(
-        -122.98,
-        -116.1,
-        -99.2,
-        -106,
-        -122.98,
-        59.9,
-        65.73,
-        63.58,
-        54.79,
-        59.9
-      ),
-      .Dim = c(5L, 2L)
-    )
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98,
+                        59.9, 65.73, 63.58, 54.79, 59.9),
+                      .Dim = c(5L, 2L))
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
