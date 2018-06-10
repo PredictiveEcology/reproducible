@@ -27,7 +27,11 @@ getGDALVersion <-  function() {
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
+#' @examples
 #'
+#' \dontrun{
+#'   checkGDALVersion(2.0)
+#' }
 checkGDALVersion <- function(version) {
   if (missing(version)) stop("Minimum version not specified.")
 

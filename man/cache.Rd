@@ -272,6 +272,7 @@ Subsequent calls to this function
 
 \examples{
 library(raster)
+try(detach("package:magrittr", unload = TRUE), silent = TRUE) # magrittr, if loaded, gives an error below
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear

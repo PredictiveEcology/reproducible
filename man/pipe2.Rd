@@ -42,8 +42,10 @@ normal, caching the return value at the point of the \code{Cache} call
 into the cache repository for later use.
 }
 \examples{
+\dontrun{
 tmpdir <- file.path(tempdir(), "testCache")
 checkPath(tmpdir, create = TRUE)
+try(detach("package:magrittr", unload = TRUE)) # magrittr, if loaded, gives an error below
 a <- rnorm(10, 16) \%>\% mean() \%>\% prod(., 6)
 b <- rnorm(10, 16) \%>\% mean() \%>\% prod(., 6) \%>\% Cache(cacheRepo = tmpdir)
 d <- rnorm(10, 16) \%>\% mean() \%>\% prod(., 6) \%>\% Cache(cacheRepo = tmpdir)
@@ -59,7 +61,7 @@ all.equal(f1, f2) # TRUE because the runif is before the Cache
 all.equal(f3, f4) # different because the runif is after the Cache
 
 unlink(tmpdir, recursive = TRUE)
-
+}
 }
 \seealso{
 pipe

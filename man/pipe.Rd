@@ -27,14 +27,17 @@ arguments, then all chain elements will be evaluated. The final result will
 be cached for future use. The entire chain must be identical, therefore.
 The required usage should be straight forward to insert into existing code
 that uses pipes (\code{Cache() \%C\% ... remaining pipes}.
+\code{This is still experimental; use with care}.
 }
 \examples{
+
+# dontrun{ # these can't be automatically run due to package conflicts with magrittr
 tmpdir <- file.path(tempdir(), "testCache")
 checkPath(tmpdir, create = TRUE)
 a <- rnorm(10, 16) \%>\%
      mean() \%>\%
      prod(., 6)
-b <- Cache(cacheRepo = tmpdir) \%C\%
+b <- Cache(cacheRepo = tmpdir) \%C\% # use of the \%C\% pipe!
      rnorm(10, 16) \%>\%
      mean() \%>\%
      prod(., 6)
@@ -53,6 +56,7 @@ all.equal(a,d) # different because 'a' uses a unique rnorm, 'd' uses the Cached 
 all.equal(a,e) # different because the final function, prod, has a changed argument.
 
 unlink(tmpdir, recursive = TRUE)
+#}
 }
 \seealso{
 pipe2
