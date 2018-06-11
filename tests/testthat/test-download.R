@@ -1,4 +1,5 @@
 test_that("dlGeneric works", {
+  skip_on_cran()
 
   url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
                    "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")

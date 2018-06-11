@@ -60,12 +60,11 @@ postProcess.default <- function(pp, ...) {
 #'   object to disk after all post processing. This subtlety means that there are
 #'   2 file names that may be at play: the "input" file name (\code{filename1}),
 #'   and the "output" filename (\code{filename2}).
-#'   When this is used \emph{only} with post process, it is straight forward. However,
-#'   when \code{postProcess} is used within a \code{prepInputs} call, the \code{filename1}
-#'   file is actually the file name of the downloaded file (i.e., what name to give to the
-#'   downloaded  object) and the \code{filename2} is the
-#'   file name of the of post-processed file.
-#'
+#'   When this is used \emph{only} with post process, it is straight forward.
+#'   However, when \code{postProcess} is used within a \code{prepInputs} call,
+#'   the \code{filename1} file is actually the file name of the downloaded file
+#'   (i.e., what name to give to the downloaded  object) and the \code{filename2}
+#'   is the file name of the of post-processed file.
 #'
 #' @inheritParams prepInputs
 #'
@@ -87,7 +86,7 @@ postProcess.default <- function(pp, ...) {
 #'                 will be taken from \code{rasterToMatch} or none at all.
 #'                 If \code{TRUE}, it will be taken from \code{studyArea}.
 #'
-#' @param ... Additonal arguments passed to \code{\link{cropInputs}},
+#' @param ... Additional arguments passed to \code{\link{cropInputs}},
 #'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
 #'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
 #'            These then pass \code{...} into other functions, like

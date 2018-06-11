@@ -193,11 +193,11 @@ If \code{filename2} is \code{logical}, then the output
   object to disk after all post processing. This subtlety means that there are
   2 file names that may be at play: the "input" file name (\code{filename1}),
   and the "output" filename (\code{filename2}).
-  When this is used \emph{only} with post process, it is straight forward. However,
-  when \code{postProcess} is used within a \code{prepInputs} call, the \code{filename1}
-  file is actually the file name of the downloaded file (i.e., what name to give to the
-  downloaded  object) and the \code{filename2} is the
-  file name of the of post-processed file.
+  When this is used \emph{only} with post process, it is straight forward.
+  However, when \code{postProcess} is used within a \code{prepInputs} call,
+  the \code{filename1} file is actually the file name of the downloaded file
+  (i.e., what name to give to the downloaded  object) and the \code{filename2}
+  is the file name of the of post-processed file.
 }
 
 \section{Passing \code{rasterToMatch} and/or \code{studyArea}}{
