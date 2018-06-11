@@ -40,7 +40,7 @@ if (getRversion() >= "3.1.0") {
 #'     \item Crop using \code{\link{cropInputs}};
 #'     \item Project using \code{\link{projectInputs}};
 #'     \item Mask using \code{\link{maskInputs}};
-#'     \item Determine file name \code{\link{determineFilename}} via \code{postProcessedFilename};
+#'     \item Determine file name \code{\link{determineFilename}} via \code{filename2};
 #'     \item Optionally, write that file name to disk via \code{\link{writeOutputs}}.
 #'    }
 #'
@@ -183,7 +183,7 @@ if (getRversion() >= "3.1.0") {
 #'                          alsoExtract = reproducible::asPath(ecozoneFiles),
 #'                          studyArea = StudyArea,
 #'                          fun = "shapefile", destinationPath = dPath,
-#'                          postProcessedFilename = "EcozoneFile.shp") # passed to determineFilename
+#'                          filename2 = "EcozoneFile.shp") # passed to determineFilename
 #'
 #' plot(shpEcozone)
 #' plot(shpEcozoneSm, add = TRUE, col = "red")
@@ -210,10 +210,6 @@ if (getRversion() >= "3.1.0") {
 #'                      destinationPath = asPath(dPath),
 #'                      studyArea = StudyArea)
 #'
-#' ##########
-#'
-#' # Try manually, individual pieces
-#' cropInputs(LCC2005, )
 #' }
 #'
 #'
@@ -232,10 +228,16 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
     dots$userTags <- dots$cacheTags
     dots$cacheTags <- NULL
   }
+  if (!is.null(dots$postProcessedFilename))  {
+    message("postProcessedFilename is being deprecated;",
+            " use filename2, used in determineFilename.")
+    dots$filename2 <- dots$postProcessedFilename
+    dots$postProcessedFilename <- NULL
+  }
   if (!is.null(dots$writeCropped))  {
     message("writeCropped is being deprecated;",
-            " use postProcessedFilename, used in determineFilename.")
-    dots$postProcessedFilename <- dots$writeCropped
+            " use filename2, used in determineFilename.")
+    dots$filename2 <- dots$writeCropped
     dots$writeCropped <- NULL
   }
   if (!is.null(dots$rasterInterpMethod))  {
@@ -417,76 +419,12 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
 
   # postProcess
   out <-  Cache(postProcess, useCache = useCache, x,
-                inputFilePath = targetFilePath, destinationPath = destinationPath,
+                filename = targetFilePath, destinationPath = destinationPath,
                 ...)
   return(out)
 }
 
 
-#' Do some minor error fixing
-#'
-#' These must be very common for this function to be useful. Currently, the only
-#' meaningful method is on SpatialPolygons, and it runs \code{rgeos::gIsValid}. If
-#' \code{FALSE}, then it runs a buffer of width 0.
-#' @inheritParams prepInputs
-#' @param x Any object that could be fixed for errors.
-#'          See \code{\link{fixErrors.SpatialPolygons}}
-#' @export
-#' @keywords internal
-#' @param ... None used currently
-#' @param objectName Optional. This is only for messaging; if provided, then messages relayed
-#'                   to user will mention this.
-#' @param attemptErrorFixes Will attempt to fix known errors. Currently only some failures
-#'        for SpatialPolygons* are attempted. Notably with \code{raster::buffer(..., width = 0)}.
-#'        Default \code{TRUE}, though this may not be the right action for all cases.
-#' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-#'                 Cache is used on the internal \code{raster::buffer} command.
-#'  @examples
-fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
-                      useCache = getOption("reproducible.useCache", FALSE), ...) {
-  UseMethod("fixErrors")
-}
-
-#' @export
-#' @keywords internal
-fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
-                              useCache = getOption("reproducible.useCache", FALSE), ...) {
-  x
-}
-
-#' Fix \code{rgeos::gIsValid} failures in \code{SpatialPolygons}
-#'
-#' This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
-#' failures to \code{rgeos::gIsValid}
-#'
-#' @export
-#' @param x A \code{SpatialPolygons} object
-#' @inheritParams fixErrors
-fixErrors.SpatialPolygons <- function(x, objectName = NULL,
-                                      attemptErrorFixes = TRUE,
-                                      useCache = getOption("reproducible.useCache", FALSE), ...) {
-  if (attemptErrorFixes) {
-    if (is.null(objectName)) objectName = "SpatialPolygon"
-    if (is(x, "SpatialPolygons")) {
-      message("Checking for errors in ", objectName)
-      if (suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))) {
-        message("Found errors in ", objectName, ". Attempting to correct.")
-        x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
-        if (is(x1, "try-error")) {
-          message("There are errors with ", objectName,
-                  ". Couldn't fix them with raster::buffer(..., width = 0)")
-        } else {
-          x <- x1
-          message("  Some or all of the errors fixed.")
-        }
-
-      } else {
-        message("  Found no errors.")
-      }
-    }
-  }
-  return(x)
-}
 
 #' Extract files from archive.
 #'

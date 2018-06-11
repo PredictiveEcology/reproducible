@@ -13,8 +13,8 @@ If \code{TRUE}, it will be taken from \code{studyArea}.}
 
 \item{studyArea}{Template \code{SpatialPolygons*} object used for masking, after cropping.
 If not in same CRS, then it will be \code{spTransform}ed to
-CRS of \code{x} before masking. Currently, this function will not reproject the
-\code{x}. \code{\link{postProcess.spatialObjects}}}
+CRS of \code{ci} before masking. Currently, this function will not reproject the
+\code{ci}. \code{\link{postProcess.spatialObjects}}}
 
 \item{rasterToMatch}{Template \code{Raster*} object used for cropping (so extent should be
 the extent of desired outcome), reprojecting (including changing the

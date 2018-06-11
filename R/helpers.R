@@ -70,3 +70,7 @@ getCRANrepos <- function(repos = NULL) {
                                ".", tools::file_ext(f)))
 }
 
+#' @keywords internal
+.formalsNotInCurrentDots <- function(fun, ...) {
+  names(list(...))[!(names(list(...)) %in% names(formals(fun)))]
+}

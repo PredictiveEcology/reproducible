@@ -20,62 +20,63 @@
 \alias{writeOutputs.default}
 \title{Post processing for \code{spatialObjects}}
 \usage{
-\method{postProcess}{spatialObjects}(x, inputFilePath = NULL,
-  studyArea = NULL, rasterToMatch = NULL, overwrite = TRUE,
-  useSAcrs = FALSE, useCache = getOption("reproducible.useCache", FALSE),
-  postProcessedFilename = NULL, ...)
+\method{postProcess}{spatialObjects}(pp, filename1 = NULL, studyArea = NULL,
+  rasterToMatch = NULL, overwrite = TRUE, useSAcrs = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE), ...)
 
-cropInputs(x, studyArea, rasterToMatch, ...)
+cropInputs(ci, studyArea, rasterToMatch, ...)
 
-\method{cropInputs}{default}(x, studyArea, rasterToMatch, ...)
+\method{cropInputs}{default}(ci, studyArea, rasterToMatch, ...)
 
-\method{cropInputs}{spatialObjects}(x, studyArea, rasterToMatch = NULL,
+\method{cropInputs}{spatialObjects}(ci, studyArea, rasterToMatch = NULL,
   extentToMatch = NULL, extentCRS = NULL, ...)
 
-projectInputs(x, targetCRS, ...)
+projectInputs(pi, targetCRS, ...)
 
-\method{projectInputs}{Raster}(x, targetCRS = NULL, rasterToMatch = NULL,
+\method{projectInputs}{Raster}(pi, targetCRS = NULL, rasterToMatch = NULL,
   ...)
 
-\method{projectInputs}{sf}(x, targetCRS, ...)
+\method{projectInputs}{sf}(pi, targetCRS, ...)
 
-\method{projectInputs}{Spatial}(x, targetCRS, ...)
+\method{projectInputs}{Spatial}(pi, targetCRS, ...)
 
-maskInputs(x, studyArea, ...)
+maskInputs(mi, studyArea, ...)
 
-\method{maskInputs}{Raster}(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
+\method{maskInputs}{Raster}(mi, studyArea, rasterToMatch, maskWithRTM = FALSE,
   ...)
 
-\method{maskInputs}{Spatial}(x, studyArea, ...)
+\method{maskInputs}{Spatial}(mi, studyArea, ...)
 
-determineFilename(postProcessedFilename = TRUE, inputFilePath = NULL,
+determineFilename(filename2 = TRUE, filename1 = NULL,
   destinationPath = NULL, ...)
 
-writeOutputs(x, filename, overwrite, ...)
+writeOutputs(wo, filename2, overwrite, ...)
 
-\method{writeOutputs}{Raster}(x, filename, overwrite = FALSE, ...)
+\method{writeOutputs}{Raster}(wo, filename2, overwrite = FALSE, ...)
 
-\method{writeOutputs}{Spatial}(x, filename, overwrite = FALSE, ...)
+\method{writeOutputs}{Spatial}(wo, filename2, overwrite = FALSE, ...)
 
-\method{writeOutputs}{sf}(x, filename, overwrite = FALSE, ...)
+\method{writeOutputs}{sf}(wo, filename2, overwrite = FALSE, ...)
 
-\method{writeOutputs}{default}(x, filename, ...)
+\method{writeOutputs}{default}(wo, filename2, ...)
 }
 \arguments{
-\item{x}{A \code{Spatial*}, \code{sf} or \code{Raster*} object.}
+\item{pp}{A \code{Spatial*}, \code{sf} or \code{Raster*} object.}
 
-\item{inputFilePath}{Character string giving the file path of the \emph{input} object,
-if it has one. This is then used if \code{postProcessedFilename}
-is \code{TRUE} to name the output file, where the resulting
+\item{filename1}{Character string giving the file path of the \emph{input} object,
+if it has one. This is then used if \code{filename2}
+is specified here as \code{TRUE} (the default,
+and passed to \code{\link{determineFilename}})
+to name the output file, where the resulting
 post-processed filename will be
-\code{.prefix(basename(inputFilePath), "Small")}.
+\code{.prefix(basename(filename1), "Small")}.
 Mostly used by \code{\link{prepInputs}},
-where \code{postProcessedFilename} is missing.}
+where \code{filename2} is missing.}
 
 \item{studyArea}{Template \code{SpatialPolygons*} object used for masking, after cropping.
 If not in same CRS, then it will be \code{spTransform}ed to
-CRS of \code{x} before masking. Currently, this function will not reproject the
-\code{x}. \code{\link{postProcess.spatialObjects}}}
+CRS of \code{ci} before masking. Currently, this function will not reproject the
+\code{ci}. \code{\link{postProcess.spatialObjects}}}
 
 \item{rasterToMatch}{Template \code{Raster*} object used for cropping (so extent should be
 the extent of desired outcome), reprojecting (including changing the
@@ -91,17 +92,32 @@ If \code{TRUE}, it will be taken from \code{studyArea}.}
 
 \item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
 
-\item{postProcessedFilename}{Character string. If provided, then it is passed to
-\code{determineFilename} and then \code{writeOutputs}.}
-
 \item{...}{Additonal arguments passed to \code{\link{cropInputs}},
-\code{\link{projectInputs}}, \code{\link{maskInputs}},
-\code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
-These then pass \code{...} into other functions, like
-\code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
-This might include potentially important arguments like \code{datatype},
-\code{format}. Also passed to \code{projectRaster},
-with likely important arguments such as \code{method = "bilinear"}.}
+           \code{\link{projectInputs}}, \code{\link{maskInputs}},
+           \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
+           These then pass \code{...} into other functions, like
+           \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
+           This might include potentially important arguments like \code{datatype},
+           \code{format}. Also passed to \code{projectRaster},
+           with likely important arguments such as \code{method = "bilinear"}.
+           See details.
+
+
+\subsection{... possibly useful arguments:}{
+  \tabular{lccc}{
+     Function                \tab Arguments \cr
+    \code{cropInputs}        \tab \cr
+    \code{projectInputs}     \tab \cr
+    \code{maskInputs}        \tab \cr
+    \code{fixErrors}         \tab \cr
+    \code{writeOutputs}      \tab \cr
+    \code{determineFilename} \tab \cr
+  }
+  * Can be overridden with \code{useSAcrs}
+  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+}}
+
+\item{ci}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
 
 \item{extentToMatch}{Optional. Can pass an extent here and a \code{crs} to
 \code{extentCRS} instead of \code{rasterToMatch}. These
@@ -111,37 +127,23 @@ passed.}
 \item{extentCRS}{Optional. Can pass a \code{crs} here with an extent to
 \code{extentTomatch} instead of \code{rasterToMatch}}
 
-\item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
+\item{pi}{A \code{Raster*}, \code{Spatial*} or \code{sf} object}
+
+\item{targetCRS}{The CRS of pi at the end  of this function (i.e., the goal)}
+
+\item{mi}{A \code{Raster*} object}
 
 \item{maskWithRTM}{Logical. If \code{TRUE}, then the default,}
 
-\item{destinationPath}{Optional. If \code{postProcessedFilename} is a relative file path, then this
+\item{filename2}{Logical or character string (a file path) for the
+output file, after post processing, if saving is desired. See details.}
+
+\item{destinationPath}{Optional. If \code{filename2} is a relative file path, then this
 will be the directory of the resulting absolute file path.}
 
-\item{filename}{The filename to save the output object to disk (a \code{Raster*} or
-\code{Spatial*} object)}
-
-\item{x}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
-
-\item{...}{Passed to \code{projectRaster} and \code{Cache}
-cropping.}
-
-\item{x}{A \code{Raster*}, \code{Spatial*} or \code{sf} object}
-
-\item{...}{Passed into \code{\link[raster]{projectRaster}},
-\code{\link[sp]{spTransform}} or \code{\link[sf]{st_transform}}}
-
-\item{x}{A \code{Raster*} object}
+\item{wo}{The object save to disk i.e., write outputs}
 
 \item{studyArea}{A \code{SpatialPolygons*} object}
-
-\item{...}{Arguments passed to methods}
-
-\item{postProcessedFilename}{Logical or character string (a file path). See details.}
-
-\item{inputFilePath}{Optional. Filename (with or without full path). Only used if
-\code{postProcessedFilename} is \code{TRUE}, in which case,
-this is used to help name the output.}
 
 \item{...}{Passed to \code{\link[raster]{writeRaster}}, such as \code{datatype},
 and \code{\link[raster]{shapefile}}}
@@ -153,7 +155,8 @@ characteristics, including resolution, origin, extent if changed.
 \description{
 The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
 crop, reproject, and mask, in that order.  This function is a wrapper for
-\code{\link{cropInputs}}, \code{\link{maskInputs}} and
+\code{\link{cropInputs}}, \code{\link{fixErrors}}, \code{\link{projectInputs}},
+\code{\link{maskInputs}} and
 \code{\link{writeOutputs}}, with a decent amount of data manipulating
 between these calls so that the crs match.
 
@@ -163,7 +166,7 @@ A simple wrapper around the various different tools for these GIS types.
 
 This function can be used to mask module inputs from raw data.
 
-If \code{postProcessedFilename} is \code{logical}, then the cropped/masked
+If \code{filename2} is \code{logical}, then the cropped/masked
 raster will be written to disk with the original \code{targetFile} name, with
 \code{"Small"} prefixed to the basename(\code{targetFilename}).
 If a character string, it will be the path of the saved raster.
@@ -173,12 +176,12 @@ if absolute or prepended with \code{destinationPath} if relative.
 Can be used to write prepared inputs on disk.
 }
 \details{
-If \code{postProcessedFilename} is \code{logical}, then the output
- filename will be \code{"Small"} prefixed to the basename(\code{inputFilePath}).
+If \code{filename2} is \code{logical}, then the output
+ filename will be \code{"Small"} prefixed to the basename(\code{filename1}).
  If a character string, it
  will be the path returned. It will be tested whether it is an
  absolute or relative path and used as is if absolute or prepended with
- \code{destinationPath} if provided, and if \code{postProcessedFilename} is relative.
+ \code{destinationPath} if provided, and if \code{filename2} is relative.
 }
 \section{Post processing sequence}{
 
@@ -187,11 +190,12 @@ If \code{postProcessedFilename} is \code{logical}, then the output
   the following sequence will occur:
 
   \enumerate{
-    \item Fix errors. Currently only errors fixed are for \code{SpatialPolygons} using
-           \code{buffer(..., width = 0)}.
+    \item Fix errors \code{\link{fixErrors}}. Currently only errors fixed are for
+           \code{SpatialPolygons} using \code{buffer(..., width = 0)}.
     \item Crop using \code{\link{cropInputs}}
-    \item Project using \code{\link{projectInputs}} \item Mask using \code{\link{maskInputs}}
-    \item Determine file name \code{\link{determineFilename}} via \code{postProcessedFilename}
+    \item Project using \code{\link{projectInputs}}
+    \item Mask using \code{\link{maskInputs}}
+    \item Determine file name \code{\link{determineFilename}}
     \item Write that file name to disk, optionally \code{\link{writeOutputs}}
   }
 
@@ -200,17 +204,30 @@ If \code{postProcessedFilename} is \code{logical}, then the output
   \code{prepInputs} with \code{Cache}
 
   NOTE: \code{sf} objects are still very experimental.
+}
 
- \subsection{Understanding various combinations of \code{rasterToMatch}
-  and/or \code{studyArea}}{ Please see \code{\link{postProcess.spatialObjects}}
- }
+\section{File naming}{
+
+
+  Post processing addresses several scenarios, and depending on which scenario,
+  file names are subtly different. For example, \code{Raster} objects may have
+  file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
+  objects do not. Similarly, there may or may not be a desire to write an
+  object to disk after all post processing. This subtlety means that there are
+  2 file names that may be at play: the "input" file name (\code{filename1}),
+  and the "output" filename (\code{filename2}).
+  When this is used \emph{only} with post process, it is straight forward. However,
+  when \code{postProcess} is used within a \code{prepInputs} call, the \code{filename1}
+  file is actually the file name of the downloaded file (i.e., what name to give to the
+  downloaded  object) and the \code{filename2} is the
+  file name of the of post-processed file.
 }
 
 \section{Passing \code{rasterToMatch} and/or \code{studyArea}}{
 
 
 Depending on which of these were passed, different things will happen to the \code{targetFile}
-located at \code{inputFilePath}.
+located at \code{filename1}.
 
 \subsection{If \code{targetFile} is a \code{Raster*} object:}{
   \tabular{lccc}{

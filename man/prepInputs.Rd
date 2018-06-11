@@ -103,7 +103,7 @@ This function is still experimental: use with caution.
     \item Crop using \code{\link{cropInputs}};
     \item Project using \code{\link{projectInputs}};
     \item Mask using \code{\link{maskInputs}};
-    \item Determine file name \code{\link{determineFilename}} via \code{postProcessedFilename};
+    \item Determine file name \code{\link{determineFilename}} via \code{filename2};
     \item Optionally, write that file name to disk via \code{\link{writeOutputs}}.
    }
 
@@ -183,7 +183,7 @@ shpEcozoneSm <- Cache(prepInputs,
                          alsoExtract = reproducible::asPath(ecozoneFiles),
                          studyArea = StudyArea,
                          fun = "shapefile", destinationPath = dPath,
-                         postProcessedFilename = "EcozoneFile.shp") # passed to determineFilename
+                         filename2 = "EcozoneFile.shp") # passed to determineFilename
 
 plot(shpEcozone)
 plot(shpEcozoneSm, add = TRUE, col = "red")
@@ -210,10 +210,6 @@ LCC2005 <- Cache(prepInputs, url = url,
                      destinationPath = asPath(dPath),
                      studyArea = StudyArea)
 
-##########
-
-# Try manually, individual pieces
-cropInputs(LCC2005, )
 }
 
 

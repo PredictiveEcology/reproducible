@@ -4,14 +4,12 @@
 \alias{postProcess}
 \title{Generic function to post process objects}
 \usage{
-postProcess(x, ...)
+postProcess(pp, ...)
 }
 \arguments{
-\item{x}{An object of postProcessing. See individual methods.}
+\item{pp}{An object of postProcessing. See individual methods.}
 
 \item{...}{Passed to internal functions. None implemented for the generic.}
-
-\item{targetFilePath}{Full path of the target file}
 }
 \description{
 There may be many methods developed. See e.g.,

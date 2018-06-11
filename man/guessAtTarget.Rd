@@ -8,8 +8,6 @@
 .guessAtTargetAndFun(targetFilePath, destinationPath, filesExtracted, fun)
 }
 \arguments{
-\item{targetFilePath}{Full path of the target file}
-
 \item{destinationPath}{Full path of the directory where the target file should be}
 
 \item{filesExtracted}{A character vector of all files that have been extracted (e.g.,

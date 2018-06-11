@@ -91,7 +91,7 @@ test_that("prepInputs doesn't work", {
     studyArea = StudyArea,
     fun = "shapefile",
     destinationPath = dPath,
-    postProcessedFilename = "EcozoneFile.shp"
+    filename2 = "EcozoneFile.shp"
   ) # passed to determineFilename
   expect_true(is(shpEcozoneSm, "SpatialPolygons"))
   expect_identical(extent(shpEcozoneSm), extent(StudyArea))
