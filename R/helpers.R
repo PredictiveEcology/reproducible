@@ -30,7 +30,6 @@ getCRANrepos <- function(repos = NULL) {
   return(repos)
 }
 
-
 #' Add a prefix or suffix to the basename part of a file path
 #'
 #' Prepend (or postpend) a filename with a prefix (or suffix).
@@ -74,27 +73,3 @@ getCRANrepos <- function(repos = NULL) {
 .formalsNotInCurrentDots <- function(fun, ...) {
   names(list(...))[!(names(list(...)) %in% names(formals(fun)))]
 }
-
-#' Find a url
-#'
-#' The default method is simply a pass through. There may be other methods
-#' for other classes of url.
-#'
-#' @return The url.
-#' @param url A url.
-#' @param ... Other arguments. None used for default method. See indid
-#' @export
-setGeneric("getURL", function(url, ...) {
-  standardGeneric("getURL")
-})
-
-#' @export
-#' @exportMethod getURL
-#' @rdname getURL
-setMethod(
-  "getURL",
-  signature = "ANY",
-  definition = function(url, ...) {
-    url
-})
-

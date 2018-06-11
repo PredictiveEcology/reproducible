@@ -1,3 +1,28 @@
+#' Find a url
+#'
+#' The default method is simply a pass through. There may be other methods
+#' for other classes of url.
+#'
+#' @param url A url.
+#' @param ... Other arguments which may be passed to individual methods.
+#'
+#' @return The url.
+#'
+#' @export
+setGeneric("getURL", function(url, ...) {
+  standardGeneric("getURL")
+})
+
+#' @export
+#' @exportMethod getURL
+#' @rdname getURL
+setMethod(
+  "getURL",
+  signature = "ANY",
+  definition = function(url, ...) {
+    url
+})
+
 #' A wrapper around a set of downloading functions
 #'
 #' Currently, this only deals with \code{\link[googledrive]{drive_download}},

@@ -92,7 +92,7 @@ If \code{TRUE}, it will be taken from \code{studyArea}.}
 
 \item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
 
-\item{...}{Additonal arguments passed to \code{\link{cropInputs}},
+\item{...}{Additional arguments passed to \code{\link{cropInputs}},
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
            These then pass \code{...} into other functions, like
