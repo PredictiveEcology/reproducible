@@ -58,14 +58,13 @@ postProcess.default <- function(pp, ...) {
 #'   file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
 #'   objects do not. Similarly, there may or may not be a desire to write an
 #'   object to disk after all post processing. This subtlety means that there are
-#'   2 file names that may be at play: the "input" file name (\code{filename1}),
+#'   two file names that may be at play: the "input" file name (\code{filename1}),
 #'   and the "output" filename (\code{filename2}).
-#'   When this is used \emph{only} with post process, it is straight forward. However,
-#'   when \code{postProcess} is used within a \code{prepInputs} call, the \code{filename1}
-#'   file is actually the file name of the downloaded file (i.e., what name to give to the
-#'   downloaded  object) and the \code{filename2} is the
-#'   file name of the of post-processed file.
-#'
+#'   When this is used \emph{only} with post process, it is straight forward.
+#'   However, when \code{postProcess} is used within a \code{prepInputs} call,
+#'   the \code{filename1} file is actually the file name of the downloaded file
+#'   (i.e., what name to give to the downloaded  object) and the \code{filename2}
+#'   is the file name of the of post-processed file.
 #'
 #' @inheritParams prepInputs
 #'
@@ -73,21 +72,20 @@ postProcess.default <- function(pp, ...) {
 #'
 #' @param pp   A \code{Spatial*}, \code{sf}, or \code{Raster*} object.
 #'
-#' @param filename1 Character string giving the file path of the \emph{input} object,
-#'                      if it has one. This is then used if \code{filename2}
-#'                      is specified here as \code{TRUE} (the default,
-#'                      and passed to \code{\link{determineFilename}})
-#'                      to name the output file, where the resulting
-#'                      post-processed filename will be
-#'                      \code{.prefix(basename(filename1), "Small")}.
-#'                      Mostly used by \code{\link{prepInputs}},
-#'                      where \code{filename2} is missing.
+#' @param filename1  Character string giving the file path of the \emph{input} object,
+#'                   if it has one. This is then used if \code{filename2} is
+#'                   specified here as \code{TRUE} (the default, and passed to
+#'                   \code{\link{determineFilename}}) to name the output file,
+#'                   where the resulting post-processed filename will be
+#'                   \code{.prefix(basename(filename1), "Small")}.
+#'                   Mostly used by \code{\link{prepInputs}}, where \code{filename2}
+#'                   is missing.
 #'
 #' @param useSAcrs Logical. If \code{FALSE}, the default, then the desired projection
 #'                 will be taken from \code{rasterToMatch} or none at all.
 #'                 If \code{TRUE}, it will be taken from \code{studyArea}.
 #'
-#' @param ... Additonal arguments passed to \code{\link{cropInputs}},
+#' @param ... Additional arguments passed to \code{\link{cropInputs}},
 #'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
 #'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
 #'            These then pass \code{...} into other functions, like
@@ -113,8 +111,8 @@ postProcess.default <- function(pp, ...) {
 #'
 #' @section Passing \code{rasterToMatch} and/or \code{studyArea}:
 #'
-#' Depending on which of these were passed, different things will happen to the \code{targetFile}
-#' located at \code{filename1}.
+#' Depending on which of these were passed, different things will happen to the
+#' \code{targetFile} located at \code{filename1}.
 #'
 #' \subsection{If \code{targetFile} is a \code{Raster*} object:}{
 #'   \tabular{lccc}{

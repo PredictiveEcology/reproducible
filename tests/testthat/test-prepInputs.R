@@ -3,8 +3,7 @@ test_that("prepInputs doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
-  tmpdir <-
-    file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
+  tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
   checkPath(tmpdir, create = TRUE)
   cwd <- getwd()
   setwd(tmpdir)
@@ -14,13 +13,11 @@ test_that("prepInputs doesn't work", {
     unlink(tmpdir, recursive = TRUE)
   }, add = TRUE)
 
-
   dPath <- file.path(tempdir(), "ecozones")
-  mess <-
-    capture_messages(
-      shpEcozone <- prepInputs(destinationPath = dPath,
-                               url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
-    )
+  mess <- capture_messages(
+    shpEcozone <- prepInputs(destinationPath = dPath,
+                             url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+  )
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
   expect_true(any(grepl(mess, pattern = "Appending")))
   expect_true(any(grepl(mess, pattern = "Finished")))
@@ -68,8 +65,7 @@ test_that("prepInputs doesn't work", {
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <-
-    "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
   #  specify targetFile, alsoExtract, and fun, wrap with Cache
   ecozoneFilename <- file.path(dPath, "ecozones.shp")
@@ -104,10 +100,8 @@ test_that("prepInputs doesn't work", {
   #   but the StudyArea does get reprojected, need to use rasterToMatch
   dPath <- file.path(tempdir(), "LCC")
   lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
-  url <- file.path(
-    "ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
-    "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip"
-  )
+  url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
+                   "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
 
   # messages received below may help for filling in more arguments in the subsequent call
   LCC2005 <- prepInputs(
@@ -119,7 +113,6 @@ test_that("prepInputs doesn't work", {
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_identical(extent(LCC2005)[1:4], round(extent(StudyAreaCRSLCC2005)[1:4] /
                                                  250, 0) * 250)
-
 
   # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
   LCC2005_2 <- Cache(
@@ -133,13 +126,12 @@ test_that("prepInputs doesn't work", {
   expect_is(LCC2005_2, "Raster")
   expect_equivalent(LCC2005, LCC2005_2)
 
-
   setwd(tempdir())
-  if (interactive()) { # need authentication for this
+  if (interactive()) {
+    # need authentication for this
     test <- prepInputs(targetFile = "FMA_Boundary_Updated.shp",
                        url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
                        destinationPath = "data/FMA")
     expect_is(test, "SpatialPolygons")
   }
-
 })

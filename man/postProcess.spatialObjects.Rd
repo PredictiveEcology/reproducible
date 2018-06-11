@@ -64,14 +64,13 @@ writeOutputs(wo, filename2, overwrite, ...)
 \item{pp}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
 
 \item{filename1}{Character string giving the file path of the \emph{input} object,
-if it has one. This is then used if \code{filename2}
-is specified here as \code{TRUE} (the default,
-and passed to \code{\link{determineFilename}})
-to name the output file, where the resulting
-post-processed filename will be
+if it has one. This is then used if \code{filename2} is
+specified here as \code{TRUE} (the default, and passed to
+\code{\link{determineFilename}}) to name the output file,
+where the resulting post-processed filename will be
 \code{.prefix(basename(filename1), "Small")}.
-Mostly used by \code{\link{prepInputs}},
-where \code{filename2} is missing.}
+Mostly used by \code{\link{prepInputs}}, where \code{filename2}
+is missing.}
 
 \item{studyArea}{\code{SpatialPolygons*} object used for masking and possibly cropping
 if no \code{rasterToMatch} is provided.
@@ -209,20 +208,20 @@ If \code{filename2} is \code{logical}, then the output
   file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
   objects do not. Similarly, there may or may not be a desire to write an
   object to disk after all post processing. This subtlety means that there are
-  2 file names that may be at play: the "input" file name (\code{filename1}),
+  two file names that may be at play: the "input" file name (\code{filename1}),
   and the "output" filename (\code{filename2}).
-  When this is used \emph{only} with post process, it is straight forward. However,
-  when \code{postProcess} is used within a \code{prepInputs} call, the \code{filename1}
-  file is actually the file name of the downloaded file (i.e., what name to give to the
-  downloaded  object) and the \code{filename2} is the
-  file name of the of post-processed file.
+  When this is used \emph{only} with post process, it is straight forward.
+  However, when \code{postProcess} is used within a \code{prepInputs} call,
+  the \code{filename1} file is actually the file name of the downloaded file
+  (i.e., what name to give to the downloaded  object) and the \code{filename2}
+  is the file name of the of post-processed file.
 }
 
 \section{Passing \code{rasterToMatch} and/or \code{studyArea}}{
 
 
-Depending on which of these were passed, different things will happen to the \code{targetFile}
-located at \code{filename1}.
+Depending on which of these were passed, different things will happen to the
+\code{targetFile} located at \code{filename1}.
 
 \subsection{If \code{targetFile} is a \code{Raster*} object:}{
   \tabular{lccc}{

@@ -25,10 +25,13 @@
 #'   of any sort will cause all memoising to be 'forgotten' (\code{memoise::forget}).
 #'
 #'   \item \code{reproducible.quick}: Default is \code{FALSE}. This means that
-#'   all hashing will be run on full objects but only file.size for any file paths.
-#'   If \code{TRUE}, then full objects and file content will be hashed. Because
-#'   the hash will be different between quick = TRUE and quick = FALSE, hashing
-#'   will effectively be independent between the two states.
+#'   all hashing will be run on full objects but only \code{file.size} for any file paths.
+#'   If \code{TRUE}, then full objects and file content will be hashed.
+#'   Because the hash will be different between \code{quick = TRUE} and
+#'   \code{quick = FALSE}, hashing will effectively be independent between the two states.
+#'
+#'   \item {reproducible.useragent}: User agent for downloads using thi package.
+#'   Default is \code{"http://github.com/PredictiveEcology/reproducible"}.
 #'
 #'   \item \code{reproducible:verbose}: Default is \code{FALSE}. This is the
 #'   normal setting. If set to \code{TRUE} then every Cache call will show a summary
