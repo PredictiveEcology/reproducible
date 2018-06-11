@@ -73,13 +73,14 @@ post-processed filename will be
 Mostly used by \code{\link{prepInputs}},
 where \code{filename2} is missing.}
 
-\item{studyArea}{Template \code{SpatialPolygons*} object used for masking, after cropping.
+\item{studyArea}{\code{SpatialPolygons*} object used for masking and possibly cropping
+if no \code{rasterToMatch} is provided.
 If not in same CRS, then it will be \code{spTransform}ed to
 CRS of \code{ci} before masking. Currently, this function will not reproject the
-\code{ci}. \code{\link{postProcess.spatialObjects}}}
+\code{ci}. Optional in \code{postProcess}. \code{\link{postProcess.spatialObjects}}}
 
 \item{rasterToMatch}{Template \code{Raster*} object used for cropping (so extent should be
-the extent of desired outcome), reprojecting (including changing the
+the extent of desired outcome) and reprojecting (including changing the
 resolution and projection).
 See details in \code{\link{postProcess.spatialObjects}}.}
 
@@ -92,30 +93,11 @@ If \code{TRUE}, it will be taken from \code{studyArea}.}
 
 \item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
 
-\item{...}{Additonal arguments passed to \code{\link{cropInputs}},
-           \code{\link{projectInputs}}, \code{\link{maskInputs}},
-           \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
-           These then pass \code{...} into other functions, like
-           \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
-           This might include potentially important arguments like \code{datatype},
-           \code{format}. Also passed to \code{projectRaster},
-           with likely important arguments such as \code{method = "bilinear"}.
-           See details.
-
-
-\subsection{... possibly useful arguments:}{
-  \tabular{lccc}{
-     Function                \tab Arguments \cr
-    \code{cropInputs}        \tab \cr
-    \code{projectInputs}     \tab \cr
-    \code{maskInputs}        \tab \cr
-    \code{fixErrors}         \tab \cr
-    \code{writeOutputs}      \tab \cr
-    \code{determineFilename} \tab \cr
-  }
-  * Can be overridden with \code{useSAcrs}
-  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
-}}
+\item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
+ \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
+Since \code{...} is passed to \code{\link{postProcess}}, these will
+\code{...} will also be passed into the inner
+functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 
 \item{ci}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
 
@@ -142,11 +124,6 @@ output file, after post processing, if saving is desired. See details.}
 will be the directory of the resulting absolute file path.}
 
 \item{wo}{The object save to disk i.e., write outputs}
-
-\item{studyArea}{A \code{SpatialPolygons*} object}
-
-\item{...}{Passed to \code{\link[raster]{writeRaster}}, such as \code{datatype},
-and \code{\link[raster]{shapefile}}}
 }
 \value{
 A file of the same type as starting, but with projection (and possibly other

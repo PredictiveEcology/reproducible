@@ -98,14 +98,14 @@ postProcess.default <- function(pp, ...) {
 #'            See details.
 #'
 #'
-#' \subsection{... possibly useful arguments:}{
+#' \subsection{... passed to:}{
 #'   \tabular{lccc}{
 #'      Function                \tab Arguments \cr
-#'     \code{cropInputs}        \tab \cr
-#'     \code{projectInputs}     \tab \cr
-#'     \code{maskInputs}        \tab \cr
-#'     \code{fixErrors}         \tab \cr
-#'     \code{writeOutputs}      \tab \cr
+#'     \code{cropInputs}        \tab \code{\link{raster]{crop}} \cr
+#'     \code{projectInputs}     \tab \code{\link{raster]{projectRaster}}\cr
+#'     \code{maskInputs}        \tab \code{\link{fastMask}} or \code{\link{raster]{intersect}}\cr
+#'     \code{fixErrors}         \tab \code{\link{raster]{buffer}}\cr
+#'     \code{writeOutputs}      \tab \code{\link{raster]{writeRaster}} or \code{\link{raster]{shapefile}}\cr
 #'     \code{determineFilename} \tab \cr
 #'   }
 #'   * Can be overridden with \code{useSAcrs}
@@ -270,13 +270,14 @@ postProcess.spatialObjects <- function(pp, filename1 = NULL,
 #'
 #' @param ci A \code{Spatial*}, \code{sf}, or \code{Raster*} object.
 #'
-#' @param studyArea Template \code{SpatialPolygons*} object used for masking, after cropping.
+#' @param studyArea \code{SpatialPolygons*} object used for masking and possibly cropping
+#'                  if no \code{rasterToMatch} is provided.
 #'                  If not in same CRS, then it will be \code{spTransform}ed to
 #'                  CRS of \code{ci} before masking. Currently, this function will not reproject the
-#'                  \code{ci}. \code{\link{postProcess.spatialObjects}}
+#'                  \code{ci}. Optional in \code{postProcess}. \code{\link{postProcess.spatialObjects}}
 #'
 #' @param rasterToMatch Template \code{Raster*} object used for cropping (so extent should be
-#'                      the extent of desired outcome), reprojecting (including changing the
+#'                      the extent of desired outcome) and reprojecting (including changing the
 #'                      resolution and projection).
 #'                      See details in \code{\link{postProcess.spatialObjects}}.
 #'
@@ -509,9 +510,6 @@ projectInputs.Spatial <- function(pi, targetCRS, ...) {
 #'
 #' @param mi          A \code{Raster*} object
 #'
-#' @param studyArea  A \code{SpatialPolygons*} object
-#'
-#'
 #' @author Eliot McIntire
 #' @author Jean Marchal
 #' @export
@@ -656,9 +654,6 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 #' @param wo  The object save to disk i.e., write outputs
 #' @param overwrite Logical. Should file being written overwrite an existing file if it
 #'                  exists.
-#' @param ... Passed to \code{\link[raster]{writeRaster}}, such as \code{datatype},
-#'            and \code{\link[raster]{shapefile}}
-#'
 #' @author Eliot McIntire
 #' @author Jean Marchal
 #' @export
