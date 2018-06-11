@@ -93,11 +93,29 @@ If \code{TRUE}, it will be taken from \code{studyArea}.}
 
 \item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
 
-\item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
- \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
-Since \code{...} is passed to \code{\link{postProcess}}, these will
-\code{...} will also be passed into the inner
-functions, e.g., \code{\link{cropInputs}}. See details and examples.}
+\item{...}{Additonal arguments passed to \code{\link{cropInputs}},
+           \code{\link{projectInputs}}, \code{\link{maskInputs}},
+           \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
+           These then pass \code{...} into other functions, like
+           \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
+           This might include potentially important arguments like \code{datatype},
+           \code{format}. Also passed to \code{projectRaster},
+           with likely important arguments such as \code{method = "bilinear"}.
+           See details.
+
+\subsection{... passed to:}{
+  \tabular{lccc}{
+     Function                \tab Arguments \cr
+    \code{cropInputs}        \tab \code{\link[raster]{crop}} \cr
+    \code{projectInputs}     \tab \code{\link[raster]{projectRaster}}\cr
+    \code{maskInputs}        \tab \code{\link{fastMask}} or \code{\link[raster]{intersect}}\cr
+    \code{fixErrors}         \tab \code{\link[raster]{buffer}}\cr
+    \code{writeOutputs}      \tab \code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}\cr
+    \code{determineFilename} \tab \cr
+  }
+  * Can be overridden with \code{useSAcrs}
+  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+}}
 
 \item{ci}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
 

@@ -100,11 +100,11 @@ postProcess.default <- function(pp, ...) {
 #' \subsection{... passed to:}{
 #'   \tabular{lccc}{
 #'      Function                \tab Arguments \cr
-#'     \code{cropInputs}        \tab \code{\link{raster]{crop}} \cr
-#'     \code{projectInputs}     \tab \code{\link{raster]{projectRaster}}\cr
-#'     \code{maskInputs}        \tab \code{\link{fastMask}} or \code{\link{raster]{intersect}}\cr
-#'     \code{fixErrors}         \tab \code{\link{raster]{buffer}}\cr
-#'     \code{writeOutputs}      \tab \code{\link{raster]{writeRaster}} or \code{\link{raster]{shapefile}}\cr
+#'     \code{cropInputs}        \tab \code{\link[raster]{crop}} \cr
+#'     \code{projectInputs}     \tab \code{\link[raster]{projectRaster}}\cr
+#'     \code{maskInputs}        \tab \code{\link{fastMask}} or \code{\link[raster]{intersect}}\cr
+#'     \code{fixErrors}         \tab \code{\link[raster]{buffer}}\cr
+#'     \code{writeOutputs}      \tab \code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}\cr
 #'     \code{determineFilename} \tab \cr
 #'   }
 #'   * Can be overridden with \code{useSAcrs}
