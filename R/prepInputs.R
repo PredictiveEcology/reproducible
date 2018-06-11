@@ -301,7 +301,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   # If quick, then use file.info as part of cache/memoise ... otherwise,
   #   pass a random real number to make a new memoise
   # moduleName <- NULL
-  url <- getURL(url, ...)
+  url <- extractURL(url, ...)
   # modulePath <- NULL
   if (is.null(url)) { # the only way for this to be useful is if there is a SpaDES module
     # TODO -- a way to get url from SpaDES module metadata

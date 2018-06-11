@@ -1,26 +1,26 @@
-#' Find a url
+#' Extract a url
 #'
 #' The default method is simply a pass through. There may be other methods
 #' for other classes of url.
 #'
-#' @param url A url.
-#' @param ... Other arguments which may be passed to individual methods.
+#' @param x    A character string or other object containing a url.
+#' @param ...  Other arguments which may be passed to individual methods.
 #'
 #' @return The url.
 #'
 #' @export
-setGeneric("getURL", function(url, ...) {
-  standardGeneric("getURL")
+setGeneric("extractURL", function(x, ...) {
+  standardGeneric("extractURL")
 })
 
 #' @export
-#' @exportMethod getURL
-#' @rdname getURL
+#' @exportMethod extractURL
+#' @rdname extractURL
 setMethod(
-  "getURL",
+  "extractURL",
   signature = "ANY",
-  definition = function(url, ...) {
-    url
+  definition = function(x, ...) {
+    x
 })
 
 #' A wrapper around a set of downloading functions
