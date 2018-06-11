@@ -71,7 +71,7 @@ postProcess.default <- function(pp, ...) {
 #'
 #' @inheritParams cropInputs
 #'
-#' @param pp A \code{Spatial*}, \code{sf} or \code{Raster*} object.
+#' @param pp   A \code{Spatial*}, \code{sf}, or \code{Raster*} object.
 #'
 #' @param filename1 Character string giving the file path of the \emph{input} object,
 #'                      if it has one. This is then used if \code{filename2}
@@ -97,7 +97,6 @@ postProcess.default <- function(pp, ...) {
 #'            with likely important arguments such as \code{method = "bilinear"}.
 #'            See details.
 #'
-#'
 #' \subsection{... passed to:}{
 #'   \tabular{lccc}{
 #'      Function                \tab Arguments \cr
@@ -111,7 +110,6 @@ postProcess.default <- function(pp, ...) {
 #'   * Can be overridden with \code{useSAcrs}
 #'   ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
 #' }
-#'
 #'
 #' @section Passing \code{rasterToMatch} and/or \code{studyArea}:
 #'

@@ -8,6 +8,10 @@ dlGeneric(url, needChecksums)
 }
 \arguments{
 \item{url}{The url (link) to the file.}
+
+\item{needChecksums}{TODO
+
+## TODO: add overwrite arg to the function?}
 }
 \description{
 Download file from generic source url

@@ -61,7 +61,7 @@ writeOutputs(wo, filename2, overwrite, ...)
 \method{writeOutputs}{default}(wo, filename2, ...)
 }
 \arguments{
-\item{pp}{A \code{Spatial*}, \code{sf} or \code{Raster*} object.}
+\item{pp}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
 
 \item{filename1}{Character string giving the file path of the \emph{input} object,
 if it has one. This is then used if \code{filename2}

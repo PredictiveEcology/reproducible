@@ -212,8 +212,6 @@ LCC2005 <- Cache(prepInputs, url = url,
 
 }
 
-
-
 }
 \seealso{
 \code{\link{downloadFile}}, \code{\link{extractFromArchive}},

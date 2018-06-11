@@ -212,8 +212,6 @@ if (getRversion() >= "3.1.0") {
 #'
 #' }
 #'
-#'
-#'
 prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL,
                        quick = getOption("reproducible.quick"),

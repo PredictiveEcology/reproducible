@@ -140,7 +140,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 #'
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
-                     overwrite, needChecksums) { ## TODO: add additional arguments per below
+                     overwrite, needChecksums) {
   googledrive::drive_auth() ## neededFiles for use on e.g., rstudio-server
   if (is.null(archive)) {
     fileAttr <- googledrive::drive_get(googledrive::as_id(url))
@@ -166,52 +166,56 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     message(skipDownloadMsg)
     needChecksums <- 0
   }
-  return(list(needChecksums = needChecksums, destFile = destFile))
+  return(list(destFile = destFile, needChecksums = needChecksums))
 }
 
 #' Download file from generic source url
 #'
 #' @param url  The url (link) to the file.
+#' @param needChecksums TODO
+#'
+#' ## TODO: add overwrite arg to the function?
 #'
 #' @author Eilot McIntire and Alex Chubaty
 #' @keywords internal
-#' @importFrom utils download.file
+#' @importFrom crayon magenta
+#' @importFrom httr GET http_error progress stop_for_status user_agent write_disk
 #'
 dlGeneric <- function(url, needChecksums) {
   destFile <- file.path(tempdir(), basename(url))
-  # TODO
-   # if (httr::http_error(url))
-   #    stop("Can not access url ", url)
-   #
-   #  message("  Downloading ", filename, " ...")
-   #
-   #  httr::GET(
-   #    url = paste0(url, filename),
-   #    authenticate,
-   #    httr::progress(),
-   #    httr::write_disk(filepath, overwrite = overwrite)
-   #  )
-  download.file(url, destfile = destFile, method = "auto", mode = "wb")
-  list(needChecksums = needChecksums, destFile = destFile)
+
+  if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
+    stop("Can not access url ", url)
+
+  message("  Downloading ", url, " ...")
+
+  ua <- httr::user_agent(getOption("reproducible.useragent"))
+  request <- suppressWarnings(
+    ## TODO: GET is throving warnings
+    httr::GET(url, ua, httr::progress(),
+              httr::write_disk(destFile, overwrite = TRUE)) ## TODO overwrite?
+  )
+  httr::stop_for_status(request)
+
+  list(destFile = destFile, needChecksums = needChecksums)
 }
 
 downloadRemote <- function(url, archive, targetFile, checkSums,
                            moduleName, fileToDownload, skipDownloadMsg,
                            destinationPath, overwrite, needChecksums) {
-    if (!is.null(fileToDownload) ) {#|| is.null(targetFile)) {
+    if (!is.null(fileToDownload) ) {
       if (!is.null(url)) {
         if (grepl("drive.google.com", url)) {
-          downloadResults <-
-            dlGoogle(
-              url = url,
-              archive = archive,
-              targetFile = targetFile,
-              checkSums = checkSums,
-              skipDownloadMsg = skipDownloadMsg,
-              destinationPath = destinationPath,
-              overwrite = overwrite,
-              needChecksums = needChecksums
-            )
+          downloadResults <- dlGoogle(
+            url = url,
+            archive = archive,
+            targetFile = targetFile,
+            checkSums = checkSums,
+            skipDownloadMsg = skipDownloadMsg,
+            destinationPath = destinationPath,
+            overwrite = overwrite,
+            needChecksums = needChecksums
+          )
         } else if (grepl("dl.dropbox.com", url)) {
           stop("Dropbox downloading is currently not supported")
         } else if (grepl("onedrive.live.com", url)) {
@@ -226,7 +230,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums,
           suppressWarnings(file.remove(downloadResults$destFile))
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }
-
       }
     } else {
       message(skipDownloadMsg)
