@@ -3,8 +3,7 @@ test_that("prepInputs doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
-  tmpdir <-
-    file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
+  tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
   checkPath(tmpdir, create = TRUE)
   cwd <- getwd()
   setwd(tmpdir)
@@ -16,11 +15,10 @@ test_that("prepInputs doesn't work", {
 
 
   dPath <- file.path(tempdir(), "ecozones")
-  mess <-
-    capture_messages(
-      shpEcozone <- prepInputs(destinationPath = dPath,
-                               url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
-    )
+  mess <- capture_messages(
+    shpEcozone <- prepInputs(destinationPath = dPath,
+                             url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+  )
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
   expect_true(any(grepl(mess, pattern = "Appending")))
   expect_true(any(grepl(mess, pattern = "Finished")))
@@ -120,7 +118,6 @@ test_that("prepInputs doesn't work", {
   expect_identical(extent(LCC2005)[1:4], round(extent(StudyAreaCRSLCC2005)[1:4] /
                                                  250, 0) * 250)
 
-
   # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
   LCC2005_2 <- Cache(
     prepInputs,
@@ -133,7 +130,6 @@ test_that("prepInputs doesn't work", {
   expect_is(LCC2005_2, "Raster")
   expect_equivalent(LCC2005, LCC2005_2)
 
-
   setwd(tempdir())
   if (interactive()) { # need authentication for this
     test <- prepInputs(targetFile = "FMA_Boundary_Updated.shp",
@@ -141,5 +137,4 @@ test_that("prepInputs doesn't work", {
                        destinationPath = "data/FMA")
     expect_is(test, "SpatialPolygons")
   }
-
 })
