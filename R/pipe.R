@@ -1,5 +1,7 @@
 #' Pipe that is Cache-aware, being deprecated
 #'
+#' STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
+#'
 #' This pipe will likely be deprecated, as it masks
 #' other pipes in the R ecosystem. This is fine, except to work,
 #' the reproducible package must be guaranteed to be first
@@ -127,6 +129,8 @@
 
 #################
 #' A cache-aware pipe that does not mask with \%>\%
+#'
+#' STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
 #'
 #' This pipe can only be used at the start of a pipe chain, and must
 #' be preceeded by \code{Cache(...)} to allow other Cache arguments to be passed.

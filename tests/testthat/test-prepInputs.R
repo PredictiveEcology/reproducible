@@ -3,6 +3,7 @@ test_that("prepInputs doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
+  browser()
   tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
   checkPath(tmpdir, create = TRUE)
   cwd <- getwd()

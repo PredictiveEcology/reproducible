@@ -2,19 +2,181 @@
 % Please edit documentation in R/postProcess.R
 \name{postProcess}
 \alias{postProcess}
+\alias{postProcess.spatialObjects}
 \title{Generic function to post process objects}
 \usage{
-postProcess(pp, ...)
+postProcess(x, ...)
+
+\method{postProcess}{spatialObjects}(x, filename1 = NULL, filename2 = TRUE,
+  studyArea = NULL, rasterToMatch = NULL, overwrite = TRUE,
+  useSAcrs = FALSE, useCache = getOption("reproducible.useCache", FALSE),
+  ...)
 }
 \arguments{
-\item{pp}{An object of postProcessing. See individual methods.}
+\item{x}{An object of postProcessing, e.g., \code{spatialObjects}.
+See individual methods.}
 
-\item{...}{Passed to internal functions. None implemented for the generic.}
+\item{...}{Additional arguments passed to methods. For \code{spatialObjects},
+           these are: \code{\link{cropInputs}},
+           \code{\link{fixErrors}},
+           \code{\link{projectInputs}}, \code{\link{maskInputs}},
+           \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
+           Each of these may also pass \code{...} into other functions, like
+           \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
+           This might include potentially important arguments like \code{datatype},
+           \code{format}. Also passed to \code{projectRaster},
+           with likely important arguments such as \code{method = "bilinear"}.
+           See details.
+
+\subsection{... passed to:}{
+  \tabular{lccc}{
+     Function                \tab Arguments \cr
+    \code{cropInputs}        \tab \code{\link[raster]{crop}} \cr
+    \code{projectInputs}     \tab \code{\link[raster]{projectRaster}}\cr
+    \code{maskInputs}        \tab \code{\link{fastMask}} or \code{\link[raster]{intersect}}\cr
+    \code{fixErrors}         \tab \code{\link[raster]{buffer}}\cr
+    \code{writeOutputs}      \tab \code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}\cr
+    \code{determineFilename} \tab \cr
+  }
+  * Can be overridden with \code{useSAcrs}
+  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+}}
+
+\item{filename1}{Character strings giving the file paths of
+the \emph{input} object (\code{filename1}) \code{filename1}
+is only used for messaging (i.e., the object itself is passed
+in as \code{x}) and possibly naming of output (see details
+and \code{filename2}).}
+
+\item{filename2}{\code{filename2} is optional, and is either
+NULL (no writing of outputs to disk), or several options
+for writing the object to disk. If
+\code{TRUE} (the default), it will give it a file name determined by
+\code{.prefix(basename(filename1), prefix)}. If
+a character string, it will use this as its file name. See
+\code{\link{determineFilename}}.}
+
+\item{studyArea}{\code{SpatialPolygons*} object used for masking and possibly cropping
+if no \code{rasterToMatch} is provided.
+If not in same CRS, then it will be \code{spTransform}ed to
+CRS of \code{x} before masking. Currently, this function will not reproject the
+\code{x}. Optional in \code{postProcess}.}
+
+\item{rasterToMatch}{Template \code{Raster*} object used for cropping (so extent should be
+the extent of desired outcome) and reprojecting (including changing the
+resolution and projection).
+See details in \code{\link{postProcess}}.}
+
+\item{overwrite}{Logical. Should downloading and all the other actions occur
+even if they pass the checksums or the files are all there.}
+
+\item{useSAcrs}{Logical. If \code{FALSE}, the default, then the desired projection
+will be taken from \code{rasterToMatch} or none at all.
+If \code{TRUE}, it will be taken from \code{studyArea}. See table
+in details below.}
+
+\item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
 }
 \description{
-There may be many methods developed. See e.g.,
-\code{\link{postProcess.spatialObjects}}
+Generic function to post process objects
+
+The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
+crop, reproject, and mask, in that order.  This function is a wrapper for
+\code{\link{cropInputs}}, \code{\link{fixErrors}}, \code{\link{projectInputs}},
+\code{\link{maskInputs}} and
+\code{\link{writeOutputs}}, with a decent amount of data manipulating
+between these calls so that the crs match.
+}
+\section{Post processing sequence}{
+
+
+  If the \code{rasterToMatch} or \code{studyArea} are passed, then
+  the following sequence will occur:
+
+  \enumerate{
+    \item Fix errors \code{\link{fixErrors}}. Currently only errors fixed are for
+           \code{SpatialPolygons} using \code{buffer(..., width = 0)}.
+    \item Crop using \code{\link{cropInputs}}
+    \item Project using \code{\link{projectInputs}}
+    \item Mask using \code{\link{maskInputs}}
+    \item Determine file name \code{\link{determineFilename}}
+    \item Write that file name to disk, optionally \code{\link{writeOutputs}}
+  }
+
+  NOTE: checksumming does not occur during the post-processing stage, as
+  there are no file downloads. To achieve fast results, wrap
+  \code{prepInputs} with \code{Cache}
+
+  NOTE: \code{sf} objects are still very experimental.
+}
+
+\section{Passing \code{rasterToMatch} and/or \code{studyArea}}{
+
+
+Depending on which of these were passed, different things will happen to the
+\code{targetFile} located at \code{filename1}.
+
+\subsection{If \code{targetFile} is a \code{Raster*} object:}{
+  \tabular{lccc}{
+                      \tab \code{rasterToMatch} \tab \code{studyArea} \tab             Both \cr
+    \code{extent}     \tab Yes                  \tab   Yes        \tab \code{rasterToMatch} \cr
+    \code{resolution} \tab Yes                  \tab   No         \tab \code{rasterToMatch} \cr
+    \code{projection} \tab Yes                  \tab   No*        \tab \code{rasterToMatch}*\cr
+    \code{alignment}  \tab Yes                  \tab   No         \tab \code{rasterToMatch} \cr
+    \code{mask}       \tab No**                 \tab   Yes        \tab \code{studyArea}**   \cr
+  }
+  * Can be overridden with \code{useSAcrs}
+  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+}
+
+\subsection{If \code{targetFile} is a \code{Spatial*} object:}{
+  \tabular{lccc}{
+                      \tab \code{rasterToMatch} \tab \code{studyArea} \tab             Both \cr
+    \code{extent}     \tab Yes                  \tab   Yes        \tab \code{rasterToMatch} \cr
+    \code{resolution} \tab NA                   \tab   NA         \tab NA                   \cr
+    \code{projection} \tab Yes                  \tab   No*        \tab \code{rasterToMatch}*\cr
+    \code{alignment}  \tab NA                   \tab   NA         \tab NA                   \cr
+    \code{mask}       \tab No                   \tab   Yes        \tab \code{studyArea}     \cr
+  }
+  * Can be overridden with \code{useSAcrs}
+}
+}
+
+\examples{
+# Add a study area to Crop and Mask to
+# Create a "study area"
+library(sp)
+library(raster)
+ow <- setwd(tempdir())
+
+# make a SpatialPolygon
+coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58, 51.79, 60.9),
+                    .Dim = c(5L, 2L))
+Sr1 <- Polygon(coords1)
+Srs1 <- Polygons(list(Sr1), "s1")
+shpEcozone <- SpatialPolygons(list(Srs1), 1L)
+crs(shpEcozone) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+# make a "study area" that is subset of larger dataset
+coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                    .Dim = c(5L, 2L))
+Sr1 <- Polygon(coords)
+Srs1 <- Polygons(list(Sr1), "s1")
+StudyArea <- SpatialPolygons(list(Srs1), 1L)
+crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#'
+#'
+##########
+shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
+#'
+# Try manually, individual pieces
+shpEcozoneReprojected <- projectInputs(shpEcozone, StudyArea)
+shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
+shpEcozoneClean <- fixErrors(shpEcozone)
+shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
+
+setwd(ow)
 }
 \seealso{
-\code{prepInputs}, \code{\link{postProcess.spatialObjects}}
+\code{prepInputs}
 }
