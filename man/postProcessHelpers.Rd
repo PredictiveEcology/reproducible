@@ -9,21 +9,22 @@
 \arguments{
 \item{useSAcrs}{Logical. If \code{FALSE}, the default, then the desired projection
 will be taken from \code{rasterToMatch} or none at all.
-If \code{TRUE}, it will be taken from \code{studyArea}.}
+If \code{TRUE}, it will be taken from \code{studyArea}. See table
+in details below.}
 
 \item{studyArea}{\code{SpatialPolygons*} object used for masking and possibly cropping
 if no \code{rasterToMatch} is provided.
 If not in same CRS, then it will be \code{spTransform}ed to
-CRS of \code{ci} before masking. Currently, this function will not reproject the
-\code{ci}. Optional in \code{postProcess}. \code{\link{postProcess.spatialObjects}}}
+CRS of \code{x} before masking. Currently, this function will not reproject the
+\code{x}. Optional in \code{postProcess}.}
 
 \item{rasterToMatch}{Template \code{Raster*} object used for cropping (so extent should be
 the extent of desired outcome) and reprojecting (including changing the
 resolution and projection).
-See details in \code{\link{postProcess.spatialObjects}}.}
+See details in \code{\link{postProcess}}.}
 }
 \description{
 This is the function that follows the table of order of
-preference for determining CRS. See \code{\link{postProcess.spatialObjects}}
+preference for determining CRS. See \code{\link{postProcess}}
 }
 \keyword{internal}

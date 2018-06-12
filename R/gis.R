@@ -50,7 +50,7 @@ checkGDALVersion <- function(version) {
 #'
 #' This alternative to \code{raster::mask} is included here.
 #'
-#' @param x        A \code{Raster*} object.
+#' @param x  A \code{Raster*} object.
 #'
 #' @param y  A \code{SpatialPolygons} object. If it is not in the same projection
 #'           as \code{x}, it will be reprojected on the fly to that of \code{x}

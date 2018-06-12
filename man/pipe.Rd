@@ -13,10 +13,12 @@ lhs \%C\% rhs
 \item{rhs}{A function call using the magrittr semantics.}
 }
 \description{
-This pipe can only be used at the start of a pipe chain, and must
-be preceeded by \code{Cache(...)} to allow other Cache arguments to be passed.
+STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
 }
 \details{
+This pipe can only be used at the start of a pipe chain, and must
+be preceeded by \code{Cache(...)} to allow other Cache arguments to be passed.
+
 This will take the input arguments of the
 first function immediately following the \code{Cache() \%C\%} and the
 entire pipe chain code, evaluate them both

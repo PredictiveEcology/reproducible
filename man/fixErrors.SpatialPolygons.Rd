@@ -4,12 +4,12 @@
 \alias{fixErrors.SpatialPolygons}
 \title{Fix \code{rgeos::gIsValid} failures in \code{SpatialPolygons}}
 \usage{
-\method{fixErrors}{SpatialPolygons}(fe, objectName = NULL,
+\method{fixErrors}{SpatialPolygons}(x, objectName = NULL,
   attemptErrorFixes = TRUE, useCache = getOption("reproducible.useCache",
   FALSE), ...)
 }
 \arguments{
-\item{fe}{A \code{SpatialPolygons} object}
+\item{x}{A \code{SpatialPolygons} object}
 
 \item{objectName}{Optional. This is only for messaging; if provided, then messages relayed
 to user will mention this.}
@@ -21,11 +21,7 @@ Default \code{TRUE}, though this may not be the right action for all cases.}
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 Cache is used on the internal \code{raster::buffer} command.}
 
-\item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
- \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
-Since \code{...} is passed to \code{\link{postProcess}}, these will
-\code{...} will also be passed into the inner
-functions, e.g., \code{\link{cropInputs}}. See details and examples.}
+\item{...}{Passed to methods. None currently implemented.}
 }
 \description{
 This uses \code{raster::buffer(..., width = 0)} internally, which fixes some

@@ -1,23 +1,21 @@
 #' Generic function to post process objects
 #'
-#' There may be many methods developed. See e.g.,
-#' \code{\link{postProcess.spatialObjects}}
 #' @export
-#' @param pp  An object of postProcessing. See individual methods.
+#' @param x  An object of postProcessing, e.g., \code{spatialObjects}.
+#'           See individual methods.
 #' @importClassesFrom quickPlot spatialObjects
 #' @importFrom utils capture.output
-#' @seealso \code{prepInputs}, \code{\link{postProcess.spatialObjects}}
-#' @param ... Passed to internal functions. None implemented for the generic.
+#' @seealso \code{prepInputs}
 #' @inheritParams prepInputs
 #' @rdname postProcess
 #'
-postProcess <- function(pp, ...) {
+postProcess <- function(x, ...) {
   UseMethod("postProcess")
 }
 
 #' @export
-postProcess.default <- function(pp, ...) {
-  pp
+postProcess.default <- function(x, ...) {
+  x
 }
 
 #' Post processing for \code{spatialObjects}
@@ -51,44 +49,35 @@ postProcess.default <- function(pp, ...) {
 #'
 #'   NOTE: \code{sf} objects are still very experimental.
 #'
-#' @section File naming:
-#'
-#'   Post processing addresses several scenarios, and depending on which scenario,
-#'   file names are subtly different. For example, \code{Raster} objects may have
-#'   file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
-#'   objects do not. Similarly, there may or may not be a desire to write an
-#'   object to disk after all post processing. This subtlety means that there are
-#'   two file names that may be at play: the "input" file name (\code{filename1}),
-#'   and the "output" filename (\code{filename2}).
-#'   When this is used \emph{only} with post process, it is straight forward.
-#'   However, when \code{postProcess} is used within a \code{prepInputs} call,
-#'   the \code{filename1} file is actually the file name of the downloaded file
-#'   (i.e., what name to give to the downloaded  object) and the \code{filename2}
-#'   is the file name of the of post-processed file.
-#'
 #' @inheritParams prepInputs
 #'
 #' @inheritParams cropInputs
 #'
-#' @param pp   A \code{Spatial*}, \code{sf}, or \code{Raster*} object.
+#' @param filename1  Character strings giving the file paths of
+#'                   the \emph{input} object (\code{filename1}) \code{filename1}
+#'                   is only used for messaging (i.e., the object itself is passed
+#'                   in as \code{x}) and possibly naming of output (see details
+#'                   and \code{filename2}).
 #'
-#' @param filename1  Character string giving the file path of the \emph{input} object,
-#'                   if it has one. This is then used if \code{filename2} is
-#'                   specified here as \code{TRUE} (the default, and passed to
-#'                   \code{\link{determineFilename}}) to name the output file,
-#'                   where the resulting post-processed filename will be
-#'                   \code{.prefix(basename(filename1), "Small")}.
-#'                   Mostly used by \code{\link{prepInputs}}, where \code{filename2}
-#'                   is missing.
+#' @param filename2   \code{filename2} is optional, and is either
+#'                   NULL (no writing of outputs to disk), or several options
+#'                   for writing the object to disk. If
+#'                   \code{TRUE} (the default), it will give it a file name determined by
+#'                   \code{.prefix(basename(filename1), prefix)}. If
+#'                   a character string, it will use this as its file name. See
+#'                   \code{\link{determineFilename}}.
 #'
 #' @param useSAcrs Logical. If \code{FALSE}, the default, then the desired projection
 #'                 will be taken from \code{rasterToMatch} or none at all.
-#'                 If \code{TRUE}, it will be taken from \code{studyArea}.
+#'                 If \code{TRUE}, it will be taken from \code{studyArea}. See table
+#'                 in details below.
 #'
-#' @param ... Additional arguments passed to \code{\link{cropInputs}},
+#' @param ... Additional arguments passed to methods. For \code{spatialObjects},
+#'            these are: \code{\link{cropInputs}},
+#'            \code{\link{fixErrors}},
 #'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
 #'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
-#'            These then pass \code{...} into other functions, like
+#'            Each of these may also pass \code{...} into other functions, like
 #'            \code{\link[raster]{writeRaster}}, or \code{sf::st_write}.
 #'            This might include potentially important arguments like \code{datatype},
 #'            \code{format}. Also passed to \code{projectRaster},
@@ -140,35 +129,9 @@ postProcess.default <- function(pp, ...) {
 #' }
 #'
 #' @export
-#' @examples
-#'
-#' # download a zip file from internet, unzip all files, load as shapefile, Cache the call
-#' dPath <- file.path(tempdir(), "ecozones")
-#' shpEcozone <- prepInputs(destinationPath = dPath,
-#'                          url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
-#'
-#'
-#' #' # Add a study area to Crop and Mask to
-#' # Create a "study area"
-#' library(sp)
-#' library(raster)
-#' coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-#'                     .Dim = c(5L, 2L))
-#' Sr1 <- Polygon(coords)
-#' Srs1 <- Polygons(list(Sr1), "s1")
-#' StudyArea <- SpatialPolygons(list(Srs1), 1L)
-#' crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-#'
-#'
-#' ##########
-#' shpEcozonePostProcessed <- postProcess(shpEcozone, studyArea = StudyArea)
-#'
-#' # Try manually, individual pieces
-#' shpEcozoneCropped <- cropInputs(shpEcozone, StudyArea)
-#' shpEcozoneClean <- fixErrors(shpEcozone)
-#' shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
-#'
-postProcess.spatialObjects <- function(pp, filename1 = NULL,
+#' @example inst/examples/example_postProcess.R
+#' @rdname postProcess
+postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        studyArea = NULL, rasterToMatch = NULL,
                                        overwrite = TRUE, useSAcrs = FALSE,
                                        useCache = getOption("reproducible.useCache", FALSE),
@@ -216,7 +179,7 @@ postProcess.spatialObjects <- function(pp, filename1 = NULL,
     }
 
     mess <- capture.output(type = "message",
-                           pp <- Cache(cropInputs, ci = pp, studyArea = studyArea,
+                           x <- Cache(cropInputs, x = x, studyArea = studyArea,
                                       extentToMatch = extRTM,
                                       extentCRS = crsRTM,
                                       useCache = useCache, ...))
@@ -224,10 +187,10 @@ postProcess.spatialObjects <- function(pp, filename1 = NULL,
     .groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
 
     # cropInputs may have returned NULL if they don't overlap
-    if (!is.null(pp)) {
+    if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
       mess <- capture.output(type = "message", # no Cache at the method level because may be just passed through if raster
-                             pp <- fixErrors(fe = pp, objectName = objectName,
+                             x <- fixErrors(x = x, objectName = objectName,
                                             useCache = useCache, ...))
       .groupedMessage(mess, omitPattern = skipCacheMess)
 
@@ -235,48 +198,49 @@ postProcess.spatialObjects <- function(pp, filename1 = NULL,
       targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch)
 
       mess <- capture.output(type = "message",
-                             pp <- Cache(projectInputs, pi = pp, targetCRS = targetCRS,
+                             x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
                                         rasterToMatch = rasterToMatch, useCache = useCache, ...))
 
       .groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
 
       # maskInputs
       mess <- capture.output(type = "message",
-                             pp <- Cache(maskInputs, mi = pp, studyArea = studyArea,
+                             x <- Cache(maskInputs, x = x, studyArea = studyArea,
                                         rasterToMatch = rasterToMatch, useCache = useCache, ...))
 
       .groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
 
       # filename
-      newFilename <- determineFilename(filename1 = filename1, ...)
+      newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, ...)
       if (!is.null(dots$filename1)) stop("Can't pass filename1; use filename2")
       if (!is.null(dots$filename2)) dots$filename2 <- NULL
 
       # writeOutputs
-      pp <- do.call(writeOutputs, append(list(wo = pp, filename2 = newFilename,
+      x <- do.call(writeOutputs, append(list(x = x, filename2 = newFilename,
                                               overwrite = overwrite), dots))
     }
   }
-  return(pp)
+  return(x)
 }
 
 #' Crop a \code{Spatial*} or \code{Raster*} object
 #'
 #' This function can be used to crop or reproject module inputs from raw data.
 #'
-#' @param ci A \code{Spatial*}, \code{sf}, or \code{Raster*} object.
+#' @param x A \code{Spatial*}, \code{sf}, or \code{Raster*} object.
 #'
 #' @param studyArea \code{SpatialPolygons*} object used for masking and possibly cropping
 #'                  if no \code{rasterToMatch} is provided.
 #'                  If not in same CRS, then it will be \code{spTransform}ed to
-#'                  CRS of \code{ci} before masking. Currently, this function will not reproject the
-#'                  \code{ci}. Optional in \code{postProcess}. \code{\link{postProcess.spatialObjects}}
+#'                  CRS of \code{x} before masking. Currently, this function will not reproject the
+#'                  \code{x}. Optional in \code{postProcess}.
 #'
 #' @param rasterToMatch Template \code{Raster*} object used for cropping (so extent should be
 #'                      the extent of desired outcome) and reprojecting (including changing the
 #'                      resolution and projection).
-#'                      See details in \code{\link{postProcess.spatialObjects}}.
+#'                      See details in \code{\link{postProcess}}.
 #'
+#' @param ... Passed to raster::crop
 #' @author Eliot McIntire
 #' @author Jean Marchal
 #' @export
@@ -284,19 +248,20 @@ postProcess.spatialObjects <- function(pp, filename1 = NULL,
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
 #' @importFrom rgeos gIsValid
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS
-#' @rdname postProcess.spatialObjects
-cropInputs <- function(ci, studyArea, rasterToMatch, ...) {
+#' @rdname cropInputs
+#' @example inst/examples/example_postProcess.R
+cropInputs <- function(x, studyArea, rasterToMatch, ...) {
   UseMethod("cropInputs")
 }
 
 #' @export
-#' @rdname postProcess.spatialObjects
-cropInputs.default <- function(ci, studyArea, rasterToMatch, ...) {
-  ci
+#' @rdname cropInputs
+cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
+  x
 }
 
 #' @export
-#' @rdname postProcess.spatialObjects
+#' @rdname cropInputs
 #' @importFrom raster projectExtent
 #' @param extentToMatch Optional. Can pass an extent here and a \code{crs} to
 #'                      \code{extentCRS} instead of \code{rasterToMatch}. These
@@ -304,7 +269,7 @@ cropInputs.default <- function(ci, studyArea, rasterToMatch, ...) {
 #'                      passed.
 #' @param extentCRS     Optional. Can pass a \code{crs} here with an extent to
 #'                      \code{extentTomatch} instead of \code{rasterToMatch}
-cropInputs.spatialObjects <- function(ci, studyArea, rasterToMatch = NULL, extentToMatch = NULL,
+cropInputs.spatialObjects <- function(x, studyArea, rasterToMatch = NULL, extentToMatch = NULL,
                                       extentCRS = NULL, ...) {
 
 
@@ -320,17 +285,17 @@ cropInputs.spatialObjects <- function(ci, studyArea, rasterToMatch = NULL, exten
         studyArea
       }
 
-    # have to project the extent to the ci projection so crop will work -- this is temporary
+    # have to project the extent to the x projection so crop will work -- this is temporary
     #   once cropped, then cropExtent should be rm
 
-    cropExtent <- if (identical(crs(ci), crs(cropTo))) {
+    cropExtent <- if (identical(crs(x), crs(cropTo))) {
       extent(cropTo)
     } else {
       if (!is.null(rasterToMatch)) {
-        projectExtent(cropTo, crs(ci))
+        projectExtent(cropTo, crs(x))
       } else {
         if (is(studyArea, "Spatial")) {
-          spTransform(x = cropTo, CRSobj = crs(ci))
+          spTransform(x = cropTo, CRSobj = crs(x))
         } else {
           NULL
         }
@@ -339,18 +304,18 @@ cropInputs.spatialObjects <- function(ci, studyArea, rasterToMatch = NULL, exten
 
     if (!is.null(cropExtent)) {
       # crop it
-      if (!identical(cropExtent, extent(ci))) {
+      if (!identical(cropExtent, extent(x))) {
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
-        ci <- do.call(raster::crop, args = append(list(x = ci, y = cropExtent), dots))
-        if (is.null(ci)) {
+        x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
+        if (is.null(x)) {
           message("    polygons do not intersect.")
         }
       }
     }
   }
-  return(ci)
+  return(x)
 }
 
 
@@ -360,7 +325,7 @@ cropInputs.spatialObjects <- function(ci, studyArea, rasterToMatch = NULL, exten
 #' meaningful method is on SpatialPolygons, and it runs \code{rgeos::gIsValid}. If
 #' \code{FALSE}, then it runs a buffer of width 0.
 #' @inheritParams prepInputs
-#' @param fe Any object that could be fixed for errors.
+#' @param x Any object that could be fixed for errors.
 #'          See \code{\link{fixErrors.SpatialPolygons}}
 #' @export
 #' @keywords internal
@@ -371,16 +336,18 @@ cropInputs.spatialObjects <- function(ci, studyArea, rasterToMatch = NULL, exten
 #'        Default \code{TRUE}, though this may not be the right action for all cases.
 #' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 #'                 Cache is used on the internal \code{raster::buffer} command.
-fixErrors <- function(fe, objectName, attemptErrorFixes = TRUE,
+#' @param ... Passed to methods. None currently implemented.
+#' @example inst/examples/example_postProcess.R
+fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
                       useCache = getOption("reproducible.useCache", FALSE), ...) {
   UseMethod("fixErrors")
 }
 
 #' @export
 #' @keywords internal
-fixErrors.default <- function(fe, objectName, attemptErrorFixes = TRUE,
+fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
                               useCache = getOption("reproducible.useCache", FALSE), ...) {
-  fe
+  x
 }
 
 #' Fix \code{rgeos::gIsValid} failures in \code{SpatialPolygons}
@@ -389,23 +356,23 @@ fixErrors.default <- function(fe, objectName, attemptErrorFixes = TRUE,
 #' failures to \code{rgeos::gIsValid}
 #'
 #' @export
-#' @param fe A \code{SpatialPolygons} object
+#' @param x A \code{SpatialPolygons} object
 #' @inheritParams fixErrors
-fixErrors.SpatialPolygons <- function(fe, objectName = NULL,
+fixErrors.SpatialPolygons <- function(x, objectName = NULL,
                                       attemptErrorFixes = TRUE,
                                       useCache = getOption("reproducible.useCache", FALSE), ...) {
   if (attemptErrorFixes) {
     if (is.null(objectName)) objectName = "SpatialPolygon"
-    if (is(fe, "SpatialPolygons")) {
+    if (is(x, "SpatialPolygons")) {
       message("Checking for errors in ", objectName)
-      if (suppressWarnings(any(!rgeos::gIsValid(fe, byid = TRUE)))) {
+      if (suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
-        x1 <- try(Cache(raster::buffer, fe, width = 0, dissolve = FALSE, useCache = useCache))
+        x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
         if (is(x1, "try-error")) {
           message("There are errors with ", objectName,
                   ". Couldn't fix them with raster::buffer(..., width = 0)")
         } else {
-          fe <- x1
+          x <- x1
           message("  Some or all of the errors fixed.")
         }
 
@@ -414,7 +381,7 @@ fixErrors.SpatialPolygons <- function(fe, objectName = NULL,
       }
     }
   }
-  return(fe)
+  return(x)
 }
 
 
@@ -423,28 +390,34 @@ fixErrors.SpatialPolygons <- function(fe, objectName = NULL,
 #' A simple wrapper around the various different tools for these GIS types.
 #'
 #' @export
-#' @param pi A \code{Raster*}, \code{Spatial*} or \code{sf} object
-#' @param targetCRS The CRS of pi at the end  of this function (i.e., the goal)
+#' @param x A \code{Raster*}, \code{Spatial*} or \code{sf} object
+#' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
+#' @param ... Passed to \code{\link[raster]{projectRaster}}.
+#' @param rasterToMatch Template \code{Raster*} object passed to the \code{to} argument of
+#'                      \code{\link[raster]{projectRaster}}, thus will changing the
+#'                      resolution and projection of \code{x}.
+#'                      See details in \code{\link{postProcess}}.
 #'
-#' @rdname postProcess.spatialObjects
+#' @rdname projectInputs
 #' @return
 #' A file of the same type as starting, but with projection (and possibly other
 #' characteristics, including resolution, origin, extent if changed.
-projectInputs <- function(pi, targetCRS, ...) {
+#' @example inst/examples/example_postProcess.R
+projectInputs <- function(x, targetCRS, ...) {
   UseMethod("projectInputs")
 }
 
 #' @export
-#' @rdname postProcess.spatialObjects
-projectInputs.Raster <- function(pi, targetCRS = NULL, rasterToMatch = NULL, ...) {
+#' @rdname projectInputs
+projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
 
   if (!is.null(rasterToMatch)) {
     if (!is.null(targetCRS)) {
-      if (!identical(crs(pi), targetCRS) |
-          !identical(res(pi), res(rasterToMatch)) |
-          !identical(extent(pi), extent(rasterToMatch))) {
+      if (!identical(crs(x), targetCRS) |
+          !identical(res(x), res(rasterToMatch)) |
+          !identical(extent(x), extent(rasterToMatch))) {
         message("    reprojecting ...")
-        pi <- projectRaster(from = pi, to = rasterToMatch, ...)
+        x <- projectRaster(from = x, to = rasterToMatch, ...)
       } else {
         message("    no reprojecting because target characteristics same as input Raster.")
       }
@@ -454,19 +427,19 @@ projectInputs.Raster <- function(pi, targetCRS = NULL, rasterToMatch = NULL, ...
   } else {
     message("    no reprojecting because no rasterToMatch.")
   }
-  pi
+  x
 }
 
 #' @export
-#' @rdname postProcess.spatialObjects
-projectInputs.sf <- function(pi, targetCRS, ...) {
+#' @rdname projectInputs
+projectInputs.sf <- function(x, targetCRS, ...) {
   warning("sf class objects not fully implemented. Use with projectInputs.sf caution.")
   if (requireNamespace("sf")) {
-    if (any(sf::st_is(pi, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid <- sf::st_is_valid(pi))) {
-      pi[!isValid] <- sf::st_buffer(pi[!isValid], dist = 0, ...)
+    if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid <- sf::st_is_valid(x))) {
+      x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
     }
 
-    pi <- sf::st_transform(x = pi, crs = sf::st_crs(targetCRS@projargs), ...)
+    x <- sf::st_transform(x = x, crs = sf::st_crs(targetCRS@projargs), ...)
 
   } else {
     stop("Please install sf package: https://github.com/r-spatial/sf")
@@ -474,18 +447,27 @@ projectInputs.sf <- function(pi, targetCRS, ...) {
 }
 
 #' @export
-#' @rdname postProcess.spatialObjects
-projectInputs.Spatial <- function(pi, targetCRS, ...) {
+#' @rdname projectInputs
+#' @importFrom raster crs
+projectInputs.Spatial <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
-    pi <- spTransform(x = pi, CRSobj = targetCRS)
+    if (!is.character(targetCRS)) {
+      if (is(targetCRS, "spatialObjects")) {
+        targetCRS <- crs(targetCRS)
+      } else {
+        stop("targetCRS in projectInputs must be a CRS object or a class from",
+             " which a crs can be extracted with raster::crs")
+      }
+    }
+    x <- spTransform(x = x, CRSobj = targetCRS)
   }
-  pi
+  x
 }
 
 #' Hierachically get crs from \code{Raster*}, \code{Spatial*}
 #'
 #' This is the function that follows the table of order of
-#' preference for determining CRS. See \code{\link{postProcess.spatialObjects}}
+#' preference for determining CRS. See \code{\link{postProcess}}
 #' @inheritParams postProcess.spatialObjects
 #' @rdname postProcessHelpers
 #' @keywords internal
@@ -502,93 +484,123 @@ projectInputs.Spatial <- function(pi, targetCRS, ...) {
 
 #' Mask module inputs
 #'
-#' This function can be used to mask module inputs from raw data.
+#' This function can be used to mask inputs from data. Masking here is
+#' equivalent to \code{raster::mask} (though \code{\link{fastMask}} is used here)
+#' or \code{raster::intersect}.
 #'
-#' @param mi          A \code{Raster*} object
+#' @param x An object to do a geographic raster::mask/raster::intersect.
+#'          See methods.
+#' @param ... Passed to methods. None currently implemented.
 #'
 #' @author Eliot McIntire
 #' @author Jean Marchal
 #' @export
 #' @inheritParams cropInputs
 #' @importFrom utils capture.output
-#' @rdname postProcess.spatialObjects
+#' @rdname maskInputs
+#' @example inst/examples/example_postProcess.R
 #'
-maskInputs <- function(mi, studyArea, ...) {
+maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
 }
 
 #' @export
 #' @param maskWithRTM Logical. If \code{TRUE}, then the default,
-#' @rdname postProcess.spatialObjects
-maskInputs.Raster <- function(mi, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
+#' @rdname maskInputs
+maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
 
   message("    masking...")
   if (isTRUE(maskWithRTM)) {
-    mi[is.na(rasterToMatch)] <- NA
+    x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
       msg <- capture.output(type = "message",
-                            mi <- fastMask(x = mi, y = studyArea))
+                            x <- fastMask(x = x, y = studyArea))
       message(paste0("      ", paste(msg, collapse = "\n      ")))
     } else {
       message("studyArea not provided, skipping masking.")
     }
   }
-  return(mi)
+  return(x)
 }
 
 #' @export
-#' @rdname postProcess.spatialObjects
-maskInputs.Spatial <- function(mi, studyArea, ...) {
+#' @rdname maskInputs
+maskInputs.Spatial <- function(x, studyArea, ...) {
 
   if (!is.null(studyArea)) {
     message("    intersecting ...")
     studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
-    studyArea <- spTransform(studyArea, CRSobj = crs(mi))
+    studyArea <- spTransform(studyArea, CRSobj = crs(x))
     suppressWarnings(studyArea <- fixErrors(studyArea, "studyArea"))
-    mi <- tryCatch(raster::intersect(mi, studyArea), error = function(e) {
+    x <- tryCatch(raster::intersect(x, studyArea), error = function(e) {
       warning("  Could not mask with studyArea, for unknown reasons.",
               " Returning object without masking.")
-      return(mi)
+      return(x)
     }
     )
-    return(mi)
+    return(x)
   } else {
-    message("studyArea not provided, skipping masking.")
-    return(mi)
+    return(x)
   }
 }
 
 #' Determine filename, either automatically or manually
 #'
-#' If \code{filename2} is \code{logical}, then the cropped/masked
-#' raster will be written to disk with the original \code{targetFile} name, with
-#' \code{"Small"} prefixed to the basename(\code{targetFilename}).
-#' If a character string, it will be the path of the saved raster.
-#' It will be tested whether it is an absolute or relative path and used as is
-#' if absolute or prepended with \code{destinationPath} if relative.
+#' Determine the filename, given various combinations of inputs.
+#'
+#' @details
+#' The post processing workflow, which includes this function,
+#' addresses several scenarios, and depending on which scenario, there are
+#' several file names at play. For example, \code{Raster} objects may have
+#'   file-backed data, and so \emph{possess a file name}, whereas \code{Spatial}
+#'   objects do not. Also, if post processing is part of a \code{\link{prepInputs}}
+#'   workflow, there will always be a file downloaded. From the perspective of
+#'   \code{postProcess}, these are the "inputs" or \code{filename1}.
+#'   Similarly, there may or may not be a desire to write an
+#'   object to disk after all post processing, \code{filename2}.
+#'
+#'   This subtlety means that there are two file names that may be at play:
+#'   the "input" file name (\code{filename1}), and the "output" filename (\code{filename2}).
+#'   When this is used within \code{postProcess}, it is straight forward.
+#'
+#'
+#'   However, when \code{postProcess} is used within a \code{prepInputs} call,
+#'   the \code{filename1} file is the file name of the downloaded file (usually
+#'   automatically known following the downloading, and refered to as \code{targetFile})
+#'   and the \code{filename2} is the file name of the of post-processed file.
+#'
+#'   If \code{filename2} is \code{TRUE}, i.e., not an actual file name, then the cropped/masked
+#'   raster will be written to disk with the original \code{filenam1/targetFile}
+#'   name, with \code{prefix} prefixed to the basename(\code{targetFile}).
+#'
+#'   If \code{filename2} is a character string, it will be the path of the saved/written
+#'   object e.g., passed to \code{writeOutput}. It will be tested whether it is an
+#'   absolute or relative path and used as is if absolute or
+#'   prepended with \code{destinationPath} if relative.
 #'
 #' @inheritParams postProcess.spatialObjects
 #'
-#' @param filename2 Logical or character string (a file path) for the
-#'                  output file, after post processing, if saving is desired. See details.
-#'
 #' @param destinationPath Optional. If \code{filename2} is a relative file path, then this
 #'                        will be the directory of the resulting absolute file path.
+#'
+#' @param prefix The character string to prepend to \code{filename1}, if \code{filename2}
+#'               not provided.
 #'
 #' @include helpers.R
 #'
 #' @details
 #'  If \code{filename2} is \code{logical}, then the output
-#'  filename will be \code{"Small"} prefixed to the basename(\code{filename1}).
+#'  filename will be \code{prefix} prefixed to the basename(\code{filename1}).
 #'  If a character string, it
 #'  will be the path returned. It will be tested whether it is an
 #'  absolute or relative path and used as is if absolute or prepended with
 #'  \code{destinationPath} if provided, and if \code{filename2} is relative.
 #'
-#' @rdname postProcess.spatialObjects
+#' @rdname determineFilename
+#' @example inst/examples/example_postProcess.R
 determineFilename <- function(filename2 = TRUE, filename1 = NULL,
-                              destinationPath = NULL, ...) {
+                              destinationPath = NULL, prefix = "Small", ...) {
 
   dots <- list(...)
 
@@ -613,18 +625,17 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
     }
   }
 
-  if (!(is.logical(filename2) || is.character(filename2))) {
-    stop("filename2 must be logical or character string")
+  if (!(is.logical(filename2) || is.character(filename2) || is.null(filename2))) {
+    stop("filename2 must be logical or character string or NULL")
   }
 
   newFilename <- if (!identical(filename2, FALSE)) { # allow TRUE or path
     if (isTRUE(filename2) ) {
       if (is.null(filename1)) {
         tmpfile <- basename(tempfile())
-        message("Please provide filename2; will use: ", tmpfile)
         filename1 <- tmpfile
       }
-      .prefix(filename1, "Small")
+      .prefix(filename1, prefix)
     } else {
       if (isAbsolutePath(filename2)) {
         filename2
@@ -639,6 +650,10 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
   } else {
     NULL
   }
+  if (exists("tmpfile", inherits = FALSE)) {
+    message("Saving output to ", newFilename, ". Specify filename1 or filename2 for more control")
+  }
+
   newFilename
 }
 
@@ -647,59 +662,72 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 #' Can be used to write prepared inputs on disk.
 #'
 #' @inheritParams postProcess
-#' @param wo  The object save to disk i.e., write outputs
+#' @param x  The object save to disk i.e., write outputs
 #' @param overwrite Logical. Should file being written overwrite an existing file if it
 #'                  exists.
+#' @param filename2 File name passed to \code{\link[raster]{writeRaster}}, or
+#'                  \code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
+#'                  (\code{dsn} argument).
+#' @param ... Passed into \code{\link[raster]{shapefile}} or
+#'             \code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}
 #' @author Eliot McIntire
 #' @author Jean Marchal
 #' @export
 #' @importFrom methods is
 #' @importFrom raster shapefile writeRaster
-#' @rdname postProcess.spatialObjects
+#' @rdname writeOutputs
+#' @example inst/examples/example_postProcess.R
 #'
-writeOutputs <- function(wo, filename2, overwrite, ...) {
+writeOutputs <- function(x, filename2, overwrite, ...) {
   UseMethod("writeOutputs")
 }
 
-#' @rdname postProcess.spatialObjects
-writeOutputs.Raster <- function(wo, filename2, overwrite = FALSE, ...) {
+#' @rdname writeOutputs
+writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
   if (!is.null(filename2)) {
-    xTmp <- writeRaster(x = wo, filename = filename2, overwrite = overwrite, ...)
+    xTmp <- writeRaster(x = x, filename = filename2, overwrite = overwrite, ...)
 
     # This is a bug in writeRaster was spotted with crs of xTmp became
     # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
     # should have stayed at
     # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
-    if (!identical(crs(xTmp), crs(wo)))
-      crs(xTmp) <- crs(wo)
+    if (!identical(crs(xTmp), crs(x)))
+      crs(xTmp) <- crs(x)
 
-    wo <- xTmp
+    x <- xTmp
   }
-  wo
+  x
 }
 
-#' @rdname postProcess.spatialObjects
-writeOutputs.Spatial <- function(wo, filename2, overwrite = FALSE, ...) {
+#' @rdname writeOutputs
+writeOutputs.Spatial <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
   if (!is.null(filename2)) {
-    shapefile(x = wo, filename = filename2, overwrite = overwrite)
+    dots <- list(...)
+    notWanted1 <- .formalsNotInCurrentDots(shapefile, ...)
+    notWanted2 <- .formalsNotInCurrentDots(rgdal::writeOGR, ...)
+    keepForDots <- c(setdiff(notWanted1, notWanted2), setdiff(names(dots), notWanted1))
+    dots <- dots[keepForDots]
+    do.call(shapefile, append(dots, list(x = x, filename = filename2, overwrite = overwrite)))
+
   }
-  wo
+  x
 }
 
-#' @rdname postProcess.spatialObjects
-writeOutputs.sf <- function(wo, filename2, overwrite = FALSE, ...) {
+#' @rdname writeOutputs
+writeOutputs.sf <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
   if (!is.null(filename2)) {
     if (requireNamespace("sf")) {
-      wo <- sf::st_write(obj = wo, delete_dsn = TRUE, dsn = filename2, delete_dsn = overwrite)
+      x <- sf::st_write(obj = x, delete_dsn = TRUE, dsn = filename2, delete_dsn = overwrite,
+                        ...)
     } else {
       stop("Please install sf package: https://github.com/r-spatial/sf")
     }
   }
-  wo
+  x
 }
 
-#' @rdname postProcess.spatialObjects
-writeOutputs.default <- function(wo, filename2, ...) {
-  stop("Don't know how to write object of class ", class(wo), " on disk.")
+#' @rdname writeOutputs
+writeOutputs.default <- function(x, filename2, ...) {
+  stop("Don't know how to write object of class ", class(x), " on disk.")
 }
 
