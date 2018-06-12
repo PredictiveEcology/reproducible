@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepInputs.R
 \name{extractFromArchive}
 \alias{extractFromArchive}
-\title{Extract files from archive.}
+\title{Extract files from archive}
 \usage{
 extractFromArchive(archive, destinationPath = dirname(archive), neededFiles,
   extractedArchives = NULL, checkSums, needChecksums,
@@ -33,11 +33,8 @@ extracted. Defaults to the archive directory.}
 A character vector listing the paths of the extracted archives.
 }
 \description{
-Extract zip or tar archive files, possibly nested in other zip or tar
-archives.
+Extract zip or tar archive files, possibly nested in other zip or tar archives.
 }
 \author{
-Jean Marchal
-
-Eliot McIntire
+Jean Marchal & Eliot McIntire
 }

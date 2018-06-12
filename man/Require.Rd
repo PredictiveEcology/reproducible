@@ -88,14 +88,13 @@ element should be wiped, using \code{forget = TRUE}.
 }
 \examples{
 \dontrun{
-
 # simple usage, like conditional install.packages then library
 Require("stats") # analogous to require(stats), but slower because it checks for
                  #   pkg dependencies, and installs them, if missing
 tempPkgFolder <- file.path(tempdir(), "Packages")
 
-# use standAlone, means it will put it in libPath, even if it already exists in another local
-#   library (e.g., personal library)
+# use standAlone, means it will put it in libPath, even if it already exists
+#   in another local library (e.g., personal library)
 Require("crayon", libPath = tempPkgFolder, standAlone = TRUE)
 
 # make a package version snapshot
@@ -122,4 +121,5 @@ Require("crayon", packageVersionFile = packageVersionFile)
 Require(c("cranlogs", "covr"), libPath = tempPkgFolder)
 
 }
+
 }

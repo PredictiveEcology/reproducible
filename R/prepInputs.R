@@ -309,7 +309,8 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
         stop("You appear to be using prepInputs inside a module,",
              " but are not using the 'data/' subdirectory.\n",
              "Currently, this does not work.",
-             " Please specify a url if you would like to do this, or use the 'data/' subdirectory.")
+             " Please specify a url if you would like to do this,",
+             " or use the 'data/' subdirectory.")
       }
 
       out <- .checkSumsMem(asPath(filesToCheck), fileinfo,
@@ -321,10 +322,8 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
     } else {
       checkSums <- out <- emptyChecksums
     }
-
   } else {
-    checkSums <- try(Checksums(path = destinationPath, write = FALSE)#, checksumFile = checkSumFilePath)
-                     , silent = TRUE)
+    checkSums <- try(Checksums(path = destinationPath, write = FALSE), silent = TRUE)
     if (is(checkSums, "try-error")) {
       needChecksums <- 1
       checkSums <- emptyChecksums
@@ -334,19 +333,18 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
 
   # Stage 1 -- Download
-  downloadFileResult <-
-    downloadFile(
-      archive = archive,
-      targetFile = targetFile,
-      neededFiles = neededFiles,
-      destinationPath = destinationPath,
-      quick = quick,
-      checkSums = checkSums,
-      url = url,
-      checksumFile = asPath(checkSumFilePath),
-      needChecksums = needChecksums,
-      overwrite = overwrite
-    )#, moduleName = moduleName, modulePath = modulePath)
+  downloadFileResult <- downloadFile(
+    archive = archive,
+    targetFile = targetFile,
+    neededFiles = neededFiles,
+    destinationPath = destinationPath,
+    quick = quick,
+    checkSums = checkSums,
+    url = url,
+    checksumFile = asPath(checkSumFilePath),
+    needChecksums = needChecksums,
+    overwrite = overwrite
+  )#, moduleName = moduleName, modulePath = modulePath)
   needChecksums <- downloadFileResult$needChecksums
   neededFiles <- downloadFileResult$neededFiles
   if (is.null(archive)) archive <- downloadFileResult$archive
@@ -390,8 +388,8 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
     fun <- get(fun)
   }
 
-  # dots will contain too many things for some functions -- need to remove those that are known going
-  #   into prepInputs
+  ## dots will contain too many things for some functions
+  ## -- need to remove those that are known going into prepInputs
   argsToRemove <- unique(c(names(formals(prepInputs)),
                            names(formals(fixErrors)),
                            names(formals(writeRaster)),
@@ -404,25 +402,22 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
 
   # Stage 1 - load into R
   if (tryRasterFn) {
-    # Don't cache the reading of a raster -- normal reading of raster on disk is fast b/c only reads metadata
+    ## Don't cache the reading of a raster
+    ## -- normal reading of raster on disk is fast b/c only reads metadata
     x <- do.call(fun, append(list(asPath(targetFilePath)), args))
   } else {
     x <- Cache(do.call, fun, append(list(asPath(targetFilePath)), args))
   }
 
-  # postProcess
-  out <-  Cache(postProcess, useCache = useCache, x,
-                filename = targetFilePath, destinationPath = destinationPath,
-                ...)
+  ## postProcess
+  out <-  Cache(postProcess, useCache = useCache, x, filename = targetFilePath,
+                destinationPath = destinationPath, ...)
   return(out)
 }
 
-
-
-#' Extract files from archive.
+#' Extract files from archive
 #'
-#' Extract zip or tar archive files, possibly nested in other zip or tar
-#' archives.
+#' Extract zip or tar archive files, possibly nested in other zip or tar archives.
 #'
 #' @param archive Character string giving the path of the archive
 #' containing the \code{file} to be extracted.
@@ -442,13 +437,12 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
 #'
 #' @return A character vector listing the paths of the extracted archives.
 #'
-#' @author Jean Marchal
-#' @author Eliot McIntire
+#' @author Jean Marchal & Eliot McIntire
 #' @importFrom tools file_ext
 #'
 extractFromArchive <- function(archive, destinationPath = dirname(archive),
-                               neededFiles, extractedArchives = NULL, checkSums, needChecksums,
-                               filesExtracted = character()) {
+                               neededFiles, extractedArchives = NULL, checkSums,
+                               needChecksums, filesExtracted = character()) {
 
   result <- if (!is.null(neededFiles)) {
     checkSums[checkSums$expectedFile %in% basename(neededFiles), ]$result
@@ -466,7 +460,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
 
       if ("Name" %in% names(filesInArchive)) {
-        filesInArchive <- filesInArchive[filesInArchive$Length != 0,]$Name # for zips, rm directories (length = 0)
+        # for zips, rm directories (length = 0)
+        filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
       }
 
       # recheck, now that we have the whole file liast
@@ -474,25 +469,36 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
         result <- checkSums[checkSums$expectedFile %in% basename(filesInArchive), ]$result
       }
       if (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
-          NROW(result) == 0) { # don't extract if we already have all files and they are fine
-        if (needChecksums == 0) needChecksums <- 2 # use binary addition -- 1 is new file, 2 is append
+          NROW(result) == 0) {
+        # don't extract if we already have all files and they are fine
+
+        # use binary addition -- 1 is new file, 2 is append
+        if (needChecksums == 0) needChecksums <- 2
 
         if (length(archive) > 1) {
           filesExtracted <- c(filesExtracted,
-                              .unzipOrUnTar(funWArgs$fun, funWArgs$args, files = basename(archive[2])))
+                              .unzipOrUnTar(funWArgs$fun, funWArgs$args,
+                                            files = basename(archive[2])))
           # recursion, removing one archive
-          extractedObjs <- extractFromArchive(archive[-1], destinationPath = destinationPath,
-                                              neededFiles = neededFiles, extractedArchives = extractedArchives,
-                                              checkSums, needChecksums, filesExtracted = filesExtracted)
+          extractedObjs <- extractFromArchive(archive[-1],
+                                              destinationPath = destinationPath,
+                                              neededFiles = neededFiles,
+                                              extractedArchives = extractedArchives,
+                                              checkSums,
+                                              needChecksums,
+                                              filesExtracted = filesExtracted)
         } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
-          extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in% neededFiles]),
+          extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in%
+                                                                  neededFiles]),
                                         collapse = ", ")
           if (!nzchar(extractingTheseFiles))
-            extractingTheseFiles <- paste0("all files: ", paste(basename(filesInArchive), collapse = ", "))
+            extractingTheseFiles <- paste0("all files: ", paste(basename(filesInArchive),
+                                                                collapse = ", "))
           message("From:", basename(archive[1]), "  Extracting ", extractingTheseFiles)
           filesExtracted <- c(filesExtracted,
                               .unzipOrUnTar(funWArgs$fun, funWArgs$args,
-                                            files = filesInArchive[basename(filesInArchive) %in% neededFiles]))
+                                            files = filesInArchive[basename(filesInArchive) %in%
+                                                                     neededFiles]))
         } else {
           # don't have a 2nd archive, and don't have our neededFiles file
           isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar)", ignore.case = TRUE)
@@ -510,7 +516,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
               unlist(
                 lapply(file.path(destinationPath, arch), function(ap)
                   extractFromArchive(archive = ap, destinationPath = destinationPath,
-                                     neededFiles = neededFiles, extractedArchives = extractedArchives,
+                                     neededFiles = neededFiles,
+                                     extractedArchives = extractedArchives,
                                      filesExtracted = filesExtracted,
                                      checkSums, needChecksums))
               )
@@ -519,7 +526,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
         }
       } else {
         message("  Skipping extractFromArchive: all files already extracted.")
-        filesExtracted <- checkSums[checkSums$expectedFile %in% basename(filesInArchive), ]$expectedFile
+        filesExtracted <- checkSums[checkSums$expectedFile %in%
+                                      basename(filesInArchive), ]$expectedFile
       }
     }
   } else {
@@ -647,7 +655,6 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   } else {
     NULL
   }
-
 }
 
 #' @keywords internal
@@ -659,10 +666,13 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
 #' @keywords internal
 #' @importFrom utils capture.output
-appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationPath, append = TRUE) {
-  if (append) {# needChecksums == 2) { # a checksums file already existed, need to keep some of it
+appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationPath,
+                                 append = TRUE) {
+  if (append) {
+    # a checksums file already existed, need to keep some of it
     cs <- try(read.table(checkSumFilePath, header = TRUE), silent = TRUE)
-    if (is(cs, "try-error")) { # meant that it was an empty CHECKSUMS.txt file -- rebuild it
+    if (is(cs, "try-error")) {
+      # meant that it was an empty CHECKSUMS.txt file -- rebuild it
       append <- FALSE
     } else {
       nonCurrentFiles <- cs %>%
@@ -672,8 +682,11 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
   message("Appending checksums to CHECKSUMS.txt. If you see this message repeatedly,\n",
           "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
           "  what to look for.")
-  capture.output(type = "message", currentFiles <- Checksums(path = destinationPath, write = TRUE, #checksumFile = checkSumFilePath,
-                            files = file.path(destinationPath, filesToChecksum)))
+  capture.output(
+    type = "message",
+    currentFiles <- Checksums(path = destinationPath, write = TRUE,
+                              files = file.path(destinationPath, filesToChecksum))
+  )
   if (append) { # a checksums file already existed, need to keep some of it
     currentFiles <- rbind(nonCurrentFiles, currentFiles)
     writeChecksumsTable(currentFiles, checkSumFilePath, dots = list())

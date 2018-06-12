@@ -4,6 +4,9 @@
     <loc>http://reproducible.predictiveecology.org/index.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/Checksums.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/Copy.html</loc>
   </url>
   <url>
@@ -31,6 +34,9 @@
     <loc>http://reproducible.predictiveecology.org/reference/checkCacheRepo.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/checkGDALVersion.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/checkGitConfig.html</loc>
   </url>
   <url>
@@ -50,6 +56,39 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/debugCache.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/digest.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/dlGeneric.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/dlGoogle.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/downloadFile.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/extractFromArchive.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/extractURL.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/fastMask.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/fixErrors.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/fixErrors.SpatialPolygons.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/getGDALVersion.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/guessAtTarget.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/installPackages.html</loc>
@@ -91,7 +130,22 @@
     <loc>http://reproducible.predictiveecology.org/reference/pkgSnapshot.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/postProcess.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/postProcess.spatialObjects.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/postProcessHelpers.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/preDigestByClass.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/prefix.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/prepInputs.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/prepareFileBackedRaster.html</loc>

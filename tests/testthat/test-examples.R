@@ -26,6 +26,7 @@ test_that("all exported functions have examples", {
     if (grepl("VIC-", Sys.info()["nodename"])) { # for debugging only
       cat(paste(file, " -- ", "\n"), file = tmpExFile, append = TRUE)
     }
+    # for debugging only
     print(file)
     test_example(file)
   }
