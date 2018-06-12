@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Normalize filepath — normPath • reproducible</title>
+<title>Download file from generic source url — dlGeneric • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,12 +30,9 @@
 
 
 
-<meta property="og:title" content="Normalize filepath — normPath" />
+<meta property="og:title" content="Download file from generic source url — dlGeneric" />
 
-<meta property="og:description" content="Checks the specified filepath for formatting consistencies:
- 1) use slash instead of backslash;
- 2) do tilde etc. expansion;
- 3) remove trailing slash." />
+<meta property="og:description" content="Download file from generic source url" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -113,76 +110,44 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Normalize filepath</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/consistentPaths.R'><code>R/consistentPaths.R</code></a></small>
-    <div class="hidden name"><code>normPath.Rd</code></div>
+    <h1>Download file from generic source url</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/download.R'><code>R/download.R</code></a></small>
+    <div class="hidden name"><code>dlGeneric.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Checks the specified filepath for formatting consistencies:
- 1) use slash instead of backslash;
- 2) do tilde etc. expansion;
- 3) remove trailing slash.</p>
+    <p>Download file from generic source url</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>normPath</span>(<span class='no'>path</span>)
-
-<span class='co'># S4 method for character</span>
-<span class='fu'>normPath</span>(<span class='no'>path</span>)
-
-<span class='co'># S4 method for list</span>
-<span class='fu'>normPath</span>(<span class='no'>path</span>)
-
-<span class='co'># S4 method for `NULL`</span>
-<span class='fu'>normPath</span>(<span class='no'>path</span>)
-
-<span class='co'># S4 method for missing</span>
-<span class='fu'>normPath</span>()</pre>
+    <pre class="usage"><span class='fu'>dlGeneric</span>(<span class='no'>url</span>, <span class='no'>needChecksums</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>path</th>
-      <td><p>A character vector of filepaths.</p></td>
+      <th>url</th>
+      <td><p>The url (link) to the file.</p></td>
+    </tr>
+    <tr>
+      <th>needChecksums</th>
+      <td><p>TODO</p>
+<p>## TODO: add overwrite arg to the function?</p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Character vector of cleaned up filepaths.</p>
-    
-
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>## normalize file paths</span>
-<span class='no'>paths</span> <span class='kw'>&lt;-</span> <span class='fu'>list</span>(<span class='st'>"./aaa/zzz"</span>,
-              <span class='st'>"./aaa/zzz/"</span>,
-              <span class='st'>".//aaa//zzz"</span>,
-              <span class='st'>".//aaa//zzz/"</span>,
-              <span class='st'>".\\aaa\\zzz"</span>,
-              <span class='st'>".\\aaa\\zzz\\"</span>,
-              <span class='fu'>file.path</span>(<span class='st'>"."</span>, <span class='st'>"aaa"</span>, <span class='st'>"zzz"</span>))
-
-<span class='no'>checked</span> <span class='kw'>&lt;-</span> <span class='fu'>normPath</span>(<span class='no'>paths</span>)
-<span class='fu'>length</span>(<span class='fu'>unique</span>(<span class='no'>checked</span>)) <span class='co'>## 1; all of the above are equivalent</span></div><div class='output co'>#&gt; [1] 1</div><div class='input'>
-<span class='co'>## check to see if a path exists</span>
-<span class='no'>tmpdir</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>(), <span class='st'>"example_checkPath"</span>)
-
-<span class='fu'>dir.exists</span>(<span class='no'>tmpdir</span>) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'><span class='fu'>tryCatch</span>(<span class='fu'><a href='checkPath.html'>checkPath</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>), <span class='kw'>error</span> <span class='kw'>=</span> <span class='kw'>function</span>(<span class='no'>e</span>) <span class='fl'>FALSE</span>) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'>
-<span class='fu'><a href='checkPath.html'>checkPath</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "/tmp/RtmpEe3s40/example_checkPath"</div><div class='input'><span class='fu'>dir.exists</span>(<span class='no'>tmpdir</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
-<span class='fu'>unlink</span>(<span class='no'>tmpdir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-      
-      <li><a href="#examples">Examples</a></li>
-    </ul>
+                </ul>
+
+    <h2>Author</h2>
+    
+Eilot McIntire and Alex Chubaty
 
   </div>
 </div>

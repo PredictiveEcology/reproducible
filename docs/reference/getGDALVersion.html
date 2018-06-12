@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Make any modifications to object recovered from cacheRepo — .prepareOutput • reproducible</title>
+<title>Check the GDAL version in use — getGDALVersion • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Make any modifications to object recovered from cacheRepo — .prepareOutput" />
+<meta property="og:title" content="Check the GDAL version in use — getGDALVersion" />
 
-<meta property="og:description" content="This is a generic definition that can be extended according to class." />
+<meta property="og:description" content="Check the GDAL version in use" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -110,77 +110,35 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Make any modifications to object recovered from cacheRepo</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R'><code>R/cache-helpers.R</code></a></small>
-    <div class="hidden name"><code>prepareOutput.Rd</code></div>
+    <h1>Check the GDAL version in use</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/gis.R'><code>R/gis.R</code></a></small>
+    <div class="hidden name"><code>getGDALVersion.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>This is a generic definition that can be extended according to class.</p>
+    <p>Check the GDAL version in use</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>.prepareOutput</span>(<span class='no'>object</span>, <span class='no'>cacheRepo</span>, <span class='no'>...</span>)
-
-<span class='co'># S4 method for RasterLayer</span>
-<span class='fu'>.prepareOutput</span>(<span class='no'>object</span>, <span class='no'>cacheRepo</span>, <span class='no'>...</span>)
-
-<span class='co'># S4 method for ANY</span>
-<span class='fu'>.prepareOutput</span>(<span class='no'>object</span>, <span class='no'>cacheRepo</span>, <span class='no'>...</span>)</pre>
-    
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>object</th>
-      <td><p>Any R object</p></td>
-    </tr>
-    <tr>
-      <th>cacheRepo</th>
-      <td><p>A repository used for storing cached objects.
-This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Arguments of <code>FUN</code> function .</p></td>
-    </tr>
-    </table>
-    
+    <pre class="usage"><span class='fu'>getGDALVersion</span>()</pre>
+        
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>The object, modified</p>
+    <p><code>numeric_version</code></p>
     
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='fu'>.prepareOutput</span>(<span class='no'>a</span>) <span class='co'># does nothing</span></div><div class='output co'>#&gt; [1] 1</div><div class='input'>
-<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='st'>"Null"</span>
-<span class='fu'>.prepareOutput</span>(<span class='no'>b</span>) <span class='co'># converts to NULL</span></div><div class='output co'>#&gt; NULL</div><div class='input'>
-<span class='co'># For rasters, it is same as .prepareFileBackedRaster</span>
-<span class='fu'>try</span>(<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/archivist/topics/createEmptyRepo'>createLocalRepo</a></span>(<span class='fu'>tempdir</span>()))</div><div class='output co'>#&gt; <span class='message'>Directory /tmp/RtmpEe3s40 does exist and contain the backpack.db file. Use force=TRUE to reinitialize.</span></div><div class='input'>
-<span class='fu'>library</span>(<span class='no'>raster</span>)
-<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/extent'>extent</a></span>(<span class='fl'>0</span>,<span class='fl'>10</span>,<span class='fl'>0</span>,<span class='fl'>10</span>), <span class='kw'>vals</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>100</span>)
-
-<span class='co'># write to disk manually -- will be in tempdir()</span>
-<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='fu'>tempfile</span>())
-
-<span class='co'># copy it to the cache repository</span>
-<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'>.prepareOutput</span>(<span class='no'>r</span>, <span class='fu'>tempdir</span>())</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
-      
-      <li><a href="#examples">Examples</a></li>
-    </ul>
+          </ul>
 
     <h2>Author</h2>
     
-Eliot McIntire
+Alex Chubaty and Eliot McIntire
 
   </div>
 </div>
