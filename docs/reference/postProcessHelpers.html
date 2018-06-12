@@ -33,7 +33,7 @@
 <meta property="og:title" content="Hierachically get crs from <code>Raster*</code>, <code>Spatial*</code> — .getTargetCRS" />
 
 <meta property="og:description" content="This is the function that follows the table of order of
-preference for determining CRS. See postProcess.spatialObjects" />
+preference for determining CRS. See postProcess" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -119,7 +119,7 @@ preference for determining CRS. See postProcess.spatialObjects" />
     <div class="ref-description">
     
     <p>This is the function that follows the table of order of
-preference for determining CRS. See <code><a href='postProcess.spatialObjects.html'>postProcess.spatialObjects</a></code></p>
+preference for determining CRS. See <code><a href='postProcess.html'>postProcess</a></code></p>
     
     </div>
 
@@ -132,22 +132,23 @@ preference for determining CRS. See <code><a href='postProcess.spatialObjects.ht
       <th>useSAcrs</th>
       <td><p>Logical. If <code>FALSE</code>, the default, then the desired projection
 will be taken from <code>rasterToMatch</code> or none at all.
-If <code>TRUE</code>, it will be taken from <code>studyArea</code>.</p></td>
+If <code>TRUE</code>, it will be taken from <code>studyArea</code>. See table
+in details below.</p></td>
     </tr>
     <tr>
       <th>studyArea</th>
       <td><p><code>SpatialPolygons*</code> object used for masking and possibly cropping
 if no <code>rasterToMatch</code> is provided.
 If not in same CRS, then it will be <code>spTransform</code>ed to
-CRS of <code>ci</code> before masking. Currently, this function will not reproject the
-<code>ci</code>. Optional in <code>postProcess</code>. <code><a href='postProcess.spatialObjects.html'>postProcess.spatialObjects</a></code></p></td>
+CRS of <code>x</code> before masking. Currently, this function will not reproject the
+<code>x</code>. Optional in <code>postProcess</code>.</p></td>
     </tr>
     <tr>
       <th>rasterToMatch</th>
       <td><p>Template <code>Raster*</code> object used for cropping (so extent should be
 the extent of desired outcome) and reprojecting (including changing the
 resolution and projection).
-See details in <code><a href='postProcess.spatialObjects.html'>postProcess.spatialObjects</a></code>.</p></td>
+See details in <code><a href='postProcess.html'>postProcess</a></code>.</p></td>
     </tr>
     </table>
     

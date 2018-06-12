@@ -238,8 +238,8 @@ element should be wiped, using <code>forget = TRUE</code>.</p>
                  <span class='co'>#   pkg dependencies, and installs them, if missing</span>
 <span class='no'>tempPkgFolder</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>(), <span class='st'>"Packages"</span>)
 
-<span class='co'># use standAlone, means it will put it in libPath, even if it already exists in another local</span>
-<span class='co'>#   library (e.g., personal library)</span>
+<span class='co'># use standAlone, means it will put it in libPath, even if it already exists</span>
+<span class='co'>#   in another local library (e.g., personal library)</span>
 <span class='fu'>Require</span>(<span class='st'>"crayon"</span>, <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='no'>tempPkgFolder</span>, <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
 <span class='co'># make a package version snapshot</span>
@@ -265,7 +265,8 @@ element should be wiped, using <code>forget = TRUE</code>.</p>
 <span class='co'># Mutual dependencies, only installs once -- e.g., httr</span>
 <span class='fu'>Require</span>(<span class='fu'>c</span>(<span class='st'>"cranlogs"</span>, <span class='st'>"covr"</span>), <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='no'>tempPkgFolder</span>)
 
-<span class='co'># }</span></pre>
+<span class='co'># }</span><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

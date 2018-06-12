@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Do some minor error fixing — fixErrors • reproducible</title>
+<title>Project <code>Raster*</code> or Spatial* or <code>sf</code> objects — projectInputs • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,11 +30,9 @@
 
 
 
-<meta property="og:title" content="Do some minor error fixing — fixErrors" />
+<meta property="og:title" content="Project <code>Raster*</code> or Spatial* or <code>sf</code> objects — projectInputs" />
 
-<meta property="og:description" content="These must be very common for this function to be useful. Currently, the only
-meaningful method is on SpatialPolygons, and it runs rgeos::gIsValid. If
-FALSE, then it runs a buffer of width 0." />
+<meta property="og:description" content="A simple wrapper around the various different tools for these GIS types." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -112,51 +110,57 @@ FALSE, then it runs a buffer of width 0." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Do some minor error fixing</h1>
+    <h1>Project <code>Raster*</code> or Spatial* or <code>sf</code> objects</h1>
     <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/postProcess.R'><code>R/postProcess.R</code></a></small>
-    <div class="hidden name"><code>fixErrors.Rd</code></div>
+    <div class="hidden name"><code>projectInputs.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>These must be very common for this function to be useful. Currently, the only
-meaningful method is on SpatialPolygons, and it runs <code><a href='http://www.rdocumentation.org/packages/rgeos/topics/pred-unary-gIsValid'>rgeos::gIsValid</a></code>. If
-<code>FALSE</code>, then it runs a buffer of width 0.</p>
+    <p>A simple wrapper around the various different tools for these GIS types.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='no'>objectName</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>projectInputs</span>(<span class='no'>x</span>, <span class='no'>targetCRS</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for Raster</span>
+<span class='fu'>projectInputs</span>(<span class='no'>x</span>, <span class='kw'>targetCRS</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='no'>...</span>)
+
+<span class='co'># S3 method for sf</span>
+<span class='fu'>projectInputs</span>(<span class='no'>x</span>, <span class='no'>targetCRS</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for Spatial</span>
+<span class='fu'>projectInputs</span>(<span class='no'>x</span>, <span class='no'>targetCRS</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>Any object that could be fixed for errors.
-See <code><a href='fixErrors.SpatialPolygons.html'>fixErrors.SpatialPolygons</a></code></p></td>
+      <td><p>A <code>Raster*</code>, <code>Spatial*</code> or <code>sf</code> object</p></td>
     </tr>
     <tr>
-      <th>objectName</th>
-      <td><p>Optional. This is only for messaging; if provided, then messages relayed
-to user will mention this.</p></td>
-    </tr>
-    <tr>
-      <th>attemptErrorFixes</th>
-      <td><p>Will attempt to fix known errors. Currently only some failures
-for SpatialPolygons* are attempted. Notably with <code><a href='http://www.rdocumentation.org/packages/raster/topics/buffer'>raster::buffer(..., width = 0)</a></code>.
-Default <code>TRUE</code>, though this may not be the right action for all cases.</p></td>
-    </tr>
-    <tr>
-      <th>useCache</th>
-      <td><p>Logical, default <code>getOption("reproducible.useCache", FALSE)</code>, whether
-Cache is used on the internal <code><a href='http://www.rdocumentation.org/packages/raster/topics/buffer'>raster::buffer</a></code> command.</p></td>
+      <th>targetCRS</th>
+      <td><p>The CRS of x at the end  of this function (i.e., the goal)</p></td>
     </tr>
     <tr>
       <th>...</th>
-      <td><p>Passed to methods. None currently implemented.</p></td>
+      <td><p>Passed to <code><a href='http://www.rdocumentation.org/packages/raster/topics/projectRaster'>projectRaster</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>rasterToMatch</th>
+      <td><p>Template <code>Raster*</code> object passed to the <code>to</code> argument of
+<code><a href='http://www.rdocumentation.org/packages/raster/topics/projectRaster'>projectRaster</a></code>, thus will changing the
+resolution and projection of <code>x</code>.
+See details in <code><a href='postProcess.html'>postProcess</a></code>.</p></td>
     </tr>
     </table>
+    
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A file of the same type as starting, but with projection (and possibly other
+characteristics, including resolution, origin, extent if changed.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -184,17 +188,19 @@ Cache is used on the internal <code><a href='http://www.rdocumentation.org/packa
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous cropInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous projectInputs call.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous maskInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile1ed17ea514fb. Specify filename1 or filename2 for more control</span></div><div class='input'><span class='co'>#'</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous cropInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous projectInputs call.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous maskInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile1ed12a98f6a8. Specify filename1 or filename2 for more control</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
-<span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
-<span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'>fixErrors</span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'>
+<span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'>projectInputs</span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
+<span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='fixErrors.html'>fixErrors</a></span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'>
 <span class='fu'>setwd</span>(<span class='no'>ow</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-            
+      
+      <li><a href="#value">Value</a></li>
+      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

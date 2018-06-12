@@ -27,7 +27,7 @@
 |package      |version | errors| warnings| notes|
 |:------------|:-------|------:|--------:|-----:|
 |SpaDES.core  |0.1.1   |      1|        0|     0|
-|SpaDES       |2.0.1   |      1|        0|     0|
+|SpaDES       |2.0.1   |      0|        4|     4|
 |SpaDES.tools |0.1.1   |      1|        0|     0|
 
 ## SpaDES.core (0.1.1)
@@ -46,12 +46,60 @@ See ‘/home/achubaty/Documents/GitHub/SpaDES/reproducible/revdep/checks/SpaDES.
 Maintainer: Alex M Chubaty <alexander.chubaty@canada.ca>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES/issues
 
-1 error  | 0 warnings | 0 notes
+0 errors | 4 warnings | 4 notes
 
 ```
-checking whether package ‘SpaDES’ can be installed ... ERROR
-Installation failed.
+checking whether package ‘SpaDES’ can be installed ... WARNING
+Found the following significant warnings:
+  Warning: replacing previous import ‘SpaDES.tools::writeOutputs’ by ‘reproducible::writeOutputs’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::prepInputs’ by ‘reproducible::prepInputs’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::checkGDALVersion’ by ‘reproducible::checkGDALVersion’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::cropInputs’ by ‘reproducible::cropInputs’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::postProcess’ by ‘reproducible::postProcess’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::maskInputs’ by ‘reproducible::maskInputs’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::downloadFile’ by ‘reproducible::downloadFile’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::.suffix’ by ‘reproducible::.suffix’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::getGDALVersion’ by ‘reproducible::getGDALVersion’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::fastMask’ by ‘reproducible::fastMask’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::projectInputs’ by ‘reproducible::projectInputs’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::.prefix’ by ‘reproducible::.prefix’ when loading ‘SpaDES’
+  Warning: replacing previous import ‘SpaDES.tools::fixErrors’ by ‘reproducible::fixErrors’ when loading ‘SpaDES’
 See ‘/home/achubaty/Documents/GitHub/SpaDES/reproducible/revdep/checks/SpaDES.Rcheck/00install.out’ for details.
+
+checking S3 generic/method consistency ... WARNING
+Invalid MIT-MAGIC-COOKIE-1 keyInvalid MIT-MAGIC-COOKIE-1 key
+See section ‘Generic functions and methods’ in the ‘Writing R
+Extensions’ manual.
+
+checking replacement functions ... WARNING
+Invalid MIT-MAGIC-COOKIE-1 keyInvalid MIT-MAGIC-COOKIE-1 key
+The argument of a replacement function which corresponds to the right
+hand side must be named ‘value’.
+
+checking for missing documentation entries ... WARNING
+Invalid MIT-MAGIC-COOKIE-1 keyInvalid MIT-MAGIC-COOKIE-1 key
+All user-level objects in a package should have documentation entries.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+
+checking dependencies in R code ... NOTE
+Invalid MIT-MAGIC-COOKIE-1 keyInvalid MIT-MAGIC-COOKIE-1 key
+
+checking foreign function calls ... NOTE
+Invalid MIT-MAGIC-COOKIE-1 keyInvalid MIT-MAGIC-COOKIE-1 key
+See chapter ‘System and foreign language interfaces’ in the ‘Writing R
+Extensions’ manual.
+
+checking R code for possible problems ... NOTE
+Invalid MIT-MAGIC-COOKIE-1 keyInvalid MIT-MAGIC-COOKIE-1 key
+Invalid MIT-MAGIC-COOKIE-1 keyInvalid MIT-MAGIC-COOKIE-1 key
+
+checking Rd \usage sections ... NOTE
+Invalid MIT-MAGIC-COOKIE-1 keyInvalid MIT-MAGIC-COOKIE-1 key
+The \usage entries for S3 methods should use the \method markup and not
+their full name.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
 ```
 
 ## SpaDES.tools (0.1.1)
@@ -62,10 +110,10 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.tools/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [73s/72s]
+  Running ‘test-all.R’ [77s/77s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-  ══ testthat results  ══════════════════════════════════════════════════════
+  ══ testthat results  ═══════════════════════════════════════════════════════════
   OK: 1595 SKIPPED: 23 FAILED: 40
   1. Failure: spread2 tests -- asymmetry (@test-spread2.R#630) 
   2. Failure: spread2 tests -- asymmetry (@test-spread2.R#630) 
