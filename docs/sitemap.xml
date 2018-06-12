@@ -55,7 +55,13 @@
     <loc>http://reproducible.predictiveecology.org/reference/copyFile.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/cropInputs.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/debugCache.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/determineFilename.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/digest.html</loc>
@@ -100,6 +106,9 @@
     <loc>http://reproducible.predictiveecology.org/reference/installedVersions.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/maskInputs.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/mergeCache.html</loc>
   </url>
   <url>
@@ -133,9 +142,6 @@
     <loc>http://reproducible.predictiveecology.org/reference/postProcess.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/postProcess.spatialObjects.html</loc>
-  </url>
-  <url>
     <loc>http://reproducible.predictiveecology.org/reference/postProcessHelpers.html</loc>
   </url>
   <url>
@@ -152,6 +158,9 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/prepareOutput.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/projectInputs.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/readLinesRcpp.html</loc>
@@ -179,5 +188,8 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/viewCache.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/writeOutputs.html</loc>
   </url>
 </urlset>

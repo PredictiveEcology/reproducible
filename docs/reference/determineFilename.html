@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Generic function to post process objects — postProcess • reproducible</title>
+<title>Determine filename, either automatically or manually — determineFilename • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,15 +30,9 @@
 
 
 
-<meta property="og:title" content="Generic function to post process objects — postProcess" />
+<meta property="og:title" content="Determine filename, either automatically or manually — determineFilename" />
 
-<meta property="og:description" content="Generic function to post process objects
-The method for spatialObjects (Raster* and Spatial*) will
-crop, reproject, and mask, in that order.  This function is a wrapper for
-cropInputs, fixErrors, projectInputs,
-maskInputs and
-writeOutputs, with a decent amount of data manipulating
-between these calls so that the crs match." />
+<meta property="og:description" content="Determine the filename, given various combinations of inputs." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -116,38 +110,50 @@ between these calls so that the crs match." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Generic function to post process objects</h1>
+    <h1>Determine filename, either automatically or manually</h1>
     <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/postProcess.R'><code>R/postProcess.R</code></a></small>
-    <div class="hidden name"><code>postProcess.Rd</code></div>
+    <div class="hidden name"><code>determineFilename.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Generic function to post process objects</p>
-<p>The method for spatialObjects (<code>Raster*</code> and <code>Spatial*</code>) will
-crop, reproject, and mask, in that order.  This function is a wrapper for
-<code><a href='cropInputs.html'>cropInputs</a></code>, <code><a href='fixErrors.html'>fixErrors</a></code>, <code><a href='projectInputs.html'>projectInputs</a></code>,
-<code><a href='maskInputs.html'>maskInputs</a></code> and
-<code><a href='writeOutputs.html'>writeOutputs</a></code>, with a decent amount of data manipulating
-between these calls so that the crs match.</p>
+    <p>Determine the filename, given various combinations of inputs.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='no'>...</span>)
-
-<span class='co'># S3 method for spatialObjects</span>
-<span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='kw'>filename1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>useSAcrs</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
-  <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>determineFilename</span>(<span class='kw'>filename2</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>filename1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>prefix</span> <span class='kw'>=</span> <span class='st'>"Small"</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>An object of postProcessing, e.g., <code>spatialObjects</code>.
-See individual methods.</p></td>
+      <th>filename2</th>
+      <td><p><code>filename2</code> is optional, and is either
+NULL (no writing of outputs to disk), or several options
+for writing the object to disk. If
+<code>TRUE</code> (the default), it will give it a file name determined by
+<code><a href='prefix.html'>.prefix(basename(filename1), prefix)</a></code>. If
+a character string, it will use this as its file name. See
+<code>determineFilename</code>.</p></td>
+    </tr>
+    <tr>
+      <th>filename1</th>
+      <td><p>Character strings giving the file paths of
+the <em>input</em> object (<code>filename1</code>) <code>filename1</code>
+is only used for messaging (i.e., the object itself is passed
+in as <code>x</code>) and possibly naming of output (see details
+and <code>filename2</code>).</p></td>
+    </tr>
+    <tr>
+      <th>destinationPath</th>
+      <td><p>Optional. If <code>filename2</code> is a relative file path, then this
+will be the directory of the resulting absolute file path.</p></td>
+    </tr>
+    <tr>
+      <th>prefix</th>
+      <td><p>The character string to prepend to <code>filename1</code>, if <code>filename2</code>
+not provided.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -155,7 +161,7 @@ See individual methods.</p></td>
            these are: <code><a href='cropInputs.html'>cropInputs</a></code>,
            <code><a href='fixErrors.html'>fixErrors</a></code>,
            <code><a href='projectInputs.html'>projectInputs</a></code>, <code><a href='maskInputs.html'>maskInputs</a></code>,
-           <code><a href='determineFilename.html'>determineFilename</a></code>, and <code><a href='writeOutputs.html'>writeOutputs</a></code>.
+           <code>determineFilename</code>, and <code><a href='writeOutputs.html'>writeOutputs</a></code>.
            Each of these may also pass <code>...</code> into other functions, like
            <code><a href='http://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></code>, or <code><a href='http://www.rdocumentation.org/packages/sf/topics/st_write'>sf::st_write</a></code>.
            This might include potentially important arguments like <code>datatype</code>,
@@ -175,108 +181,39 @@ See individual methods.</p></td>
   ** Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code>
 </td>
     </tr>
-    <tr>
-      <th>filename1</th>
-      <td><p>Character strings giving the file paths of
-the <em>input</em> object (<code>filename1</code>) <code>filename1</code>
-is only used for messaging (i.e., the object itself is passed
-in as <code>x</code>) and possibly naming of output (see details
-and <code>filename2</code>).</p></td>
-    </tr>
-    <tr>
-      <th>filename2</th>
-      <td><p><code>filename2</code> is optional, and is either
-NULL (no writing of outputs to disk), or several options
-for writing the object to disk. If
-<code>TRUE</code> (the default), it will give it a file name determined by
-<code><a href='prefix.html'>.prefix(basename(filename1), prefix)</a></code>. If
-a character string, it will use this as its file name. See
-<code><a href='determineFilename.html'>determineFilename</a></code>.</p></td>
-    </tr>
-    <tr>
-      <th>studyArea</th>
-      <td><p><code>SpatialPolygons*</code> object used for masking and possibly cropping
-if no <code>rasterToMatch</code> is provided.
-If not in same CRS, then it will be <code>spTransform</code>ed to
-CRS of <code>x</code> before masking. Currently, this function will not reproject the
-<code>x</code>. Optional in <code>postProcess</code>.</p></td>
-    </tr>
-    <tr>
-      <th>rasterToMatch</th>
-      <td><p>Template <code>Raster*</code> object used for cropping (so extent should be
-the extent of desired outcome) and reprojecting (including changing the
-resolution and projection).
-See details in <code>postProcess</code>.</p></td>
-    </tr>
-    <tr>
-      <th>overwrite</th>
-      <td><p>Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.</p></td>
-    </tr>
-    <tr>
-      <th>useSAcrs</th>
-      <td><p>Logical. If <code>FALSE</code>, the default, then the desired projection
-will be taken from <code>rasterToMatch</code> or none at all.
-If <code>TRUE</code>, it will be taken from <code>studyArea</code>. See table
-in details below.</p></td>
-    </tr>
-    <tr>
-      <th>useCache</th>
-      <td><p>Passed to Cache in various places. Default <code>FALSE</code></p></td>
-    </tr>
     </table>
     
-    <h2 class="hasAnchor" id="post-processing-sequence"><a class="anchor" href="#post-processing-sequence"></a>Post processing sequence</h2>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    
-    <p>If the <code>rasterToMatch</code> or <code>studyArea</code> are passed, then
-  the following sequence will occur:</p>
-<p></p><ol>
-<li><p>Fix errors <code><a href='fixErrors.html'>fixErrors</a></code>. Currently only errors fixed are for
-           <code>SpatialPolygons</code> using <code><a href='http://www.rdocumentation.org/packages/raster/topics/buffer'>buffer(..., width = 0)</a></code>.</p></li>
-<li><p>Crop using <code><a href='cropInputs.html'>cropInputs</a></code></p></li>
-<li><p>Project using <code><a href='projectInputs.html'>projectInputs</a></code></p></li>
-<li><p>Mask using <code><a href='maskInputs.html'>maskInputs</a></code></p></li>
-<li><p>Determine file name <code><a href='determineFilename.html'>determineFilename</a></code></p></li>
-<li><p>Write that file name to disk, optionally <code><a href='writeOutputs.html'>writeOutputs</a></code></p></li>
-</ol>
-    <p>NOTE: checksumming does not occur during the post-processing stage, as
-  there are no file downloads. To achieve fast results, wrap
-  <code>prepInputs</code> with <code>Cache</code></p>
-<p>NOTE: <code>sf</code> objects are still very experimental.</p>
-    
-    <h2 class="hasAnchor" id="passing-rastertomatch-and-or-studyarea"><a class="anchor" href="#passing-rastertomatch-and-or-studyarea"></a>Passing <code>rasterToMatch</code> and/or <code>studyArea</code></h2>
-
-    
-    <p>Depending on which of these were passed, different things will happen to the
-<code>targetFile</code> located at <code>filename1</code>.</p>
-<h3>If <code>targetFile</code> is a <code>Raster*</code> object:</h3>
-    <table class='table'>
-<tr><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td><td>Both</td></tr>
-<tr><td><code>extent</code></td><td>Yes</td><td>Yes</td><td><code>rasterToMatch</code></td></tr>
-<tr><td><code>resolution</code></td><td>Yes</td><td>No</td><td><code>rasterToMatch</code></td></tr>
-<tr><td><code>projection</code></td><td>Yes</td><td>No*</td><td><code>rasterToMatch</code>*</td></tr>
-<tr><td><code>alignment</code></td><td>Yes</td><td>No</td><td><code>rasterToMatch</code></td></tr>
-<tr><td><code>mask</code></td><td>No**</td><td>Yes</td><td><code>studyArea</code>**</td></tr>
-<tr><td></td><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td></tr>
-</table>
-    * Can be overridden with <code>useSAcrs</code>
-  ** Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code>
-    <h3>If <code>targetFile</code> is a <code>Spatial*</code> object:</h3>
-    <table class='table'>
-<tr><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td><td>Both</td></tr>
-<tr><td><code>extent</code></td><td>Yes</td><td>Yes</td><td><code>rasterToMatch</code></td></tr>
-<tr><td><code>resolution</code></td><td>NA</td><td>NA</td><td>NA</td></tr>
-<tr><td><code>projection</code></td><td>Yes</td><td>No*</td><td><code>rasterToMatch</code>*</td></tr>
-<tr><td><code>alignment</code></td><td>NA</td><td>NA</td><td>NA</td></tr>
-<tr><td><code>mask</code></td><td>No</td><td>Yes</td><td><code>studyArea</code></td></tr>
-<tr><td></td><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td></tr>
-</table>
-    * Can be overridden with <code>useSAcrs</code>
-    
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p><code>prepInputs</code></p></div>
+    <p>The post processing workflow, which includes this function,
+addresses several scenarios, and depending on which scenario, there are
+several file names at play. For example, <code>Raster</code> objects may have
+  file-backed data, and so <em>possess a file name</em>, whereas <code>Spatial</code>
+  objects do not. Also, if post processing is part of a <code><a href='prepInputs.html'>prepInputs</a></code>
+  workflow, there will always be a file downloaded. From the perspective of
+  <code>postProcess</code>, these are the "inputs" or <code>filename1</code>.
+  Similarly, there may or may not be a desire to write an
+  object to disk after all post processing, <code>filename2</code>.</p>
+<p>This subtlety means that there are two file names that may be at play:
+  the "input" file name (<code>filename1</code>), and the "output" filename (<code>filename2</code>).
+  When this is used within <code>postProcess</code>, it is straight forward.</p>
+    <p>However, when <code>postProcess</code> is used within a <code>prepInputs</code> call,
+  the <code>filename1</code> file is the file name of the downloaded file (usually
+  automatically known following the downloading, and refered to as <code>targetFile</code>)
+  and the <code>filename2</code> is the file name of the of post-processed file.</p>
+<p>If <code>filename2</code> is <code>TRUE</code>, i.e., not an actual file name, then the cropped/masked
+  raster will be written to disk with the original <code>filenam1/targetFile</code>
+  name, with <code>prefix</code> prefixed to the basename(<code>targetFile</code>).</p>
+<p>If <code>filename2</code> is a character string, it will be the path of the saved/written
+  object e.g., passed to <code>writeOutput</code>. It will be tested whether it is an
+  absolute or relative path and used as is if absolute or
+  prepended with <code>destinationPath</code> if relative.</p>
+<p>If <code>filename2</code> is <code>logical</code>, then the output
+ filename will be <code>prefix</code> prefixed to the basename(<code>filename1</code>).
+ If a character string, it
+ will be the path returned. It will be tested whether it is an
+ absolute or relative path and used as is if absolute or prepended with
+ <code>destinationPath</code> if provided, and if <code>filename2</code> is relative.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -304,7 +241,7 @@ in details below.</p></td>
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous cropInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous projectInputs call.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous maskInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile1ed12b10a0b1. Specify filename1 or filename2 for more control</span></div><div class='input'><span class='co'>#'</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous cropInputs call, adding to memoised copy</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous projectInputs call, adding to memoised copy</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous maskInputs call, adding to memoised copy</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile1ed12aadd062. Specify filename1 or filename2 for more control</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
 <span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='fixErrors.html'>fixErrors</a></span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'>
@@ -315,11 +252,7 @@ in details below.</p></td>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#post-processing-sequence">Post processing sequence</a></li>
-
-      <li><a href="#passing-rastertomatch-and-or-studyarea">Passing <code>rasterToMatch</code> and/or <code>studyArea</code></a></li>
-
-      <li><a href="#see-also">See also</a></li>
+      <li><a href="#details">Details</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

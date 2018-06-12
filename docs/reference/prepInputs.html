@@ -217,7 +217,7 @@ this will purge it.</p></td>
  <code><a href='postProcess.html'>postProcess</a></code> and <code><a href='cache.html'>Cache</a></code>.
 Since <code>...</code> is passed to <code><a href='postProcess.html'>postProcess</a></code>, these will
 <code>...</code> will also be passed into the inner
-functions, e.g., <code><a href='postProcess.spatialObjects.html'>cropInputs</a></code>. See details and examples.</p></td>
+functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See details and examples.</p></td>
     </tr>
     </table>
     
@@ -247,11 +247,11 @@ functions, e.g., <code><a href='postProcess.spatialObjects.html'>cropInputs</a><
 <p></p><ol>
 <li><p>Fix errors. Currently only errors fixed are for <code>SpatialPolygons</code>
     using <code><a href='http://www.rdocumentation.org/packages/raster/topics/buffer'>buffer(..., width = 0)</a></code>;</p></li>
-<li><p>Crop using <code><a href='postProcess.spatialObjects.html'>cropInputs</a></code>;</p></li>
-<li><p>Project using <code><a href='postProcess.spatialObjects.html'>projectInputs</a></code>;</p></li>
-<li><p>Mask using <code><a href='postProcess.spatialObjects.html'>maskInputs</a></code>;</p></li>
-<li><p>Determine file name <code><a href='postProcess.spatialObjects.html'>determineFilename</a></code> via <code>filename2</code>;</p></li>
-<li><p>Optionally, write that file name to disk via <code><a href='postProcess.spatialObjects.html'>writeOutputs</a></code>.</p></li>
+<li><p>Crop using <code><a href='cropInputs.html'>cropInputs</a></code>;</p></li>
+<li><p>Project using <code><a href='projectInputs.html'>projectInputs</a></code>;</p></li>
+<li><p>Mask using <code><a href='maskInputs.html'>maskInputs</a></code>;</p></li>
+<li><p>Determine file name <code><a href='determineFilename.html'>determineFilename</a></code> via <code>filename2</code>;</p></li>
+<li><p>Optionally, write that file name to disk via <code><a href='writeOutputs.html'>writeOutputs</a></code>.</p></li>
 </ol>
     <p>NOTE: checksumming does not occur during the post-processing stage, as
   there are no file downloads. To achieve fast results, wrap
@@ -261,10 +261,10 @@ functions, e.g., <code><a href='postProcess.spatialObjects.html'>cropInputs</a><
     If <code>rasterToMatch</code> or <code>studyArea</code> are used, then this will
   trigger several subsequent functions, specifically the sequence,
   <em>Crop, reproject, mask</em>, which appears to be a common sequence in
-  spatial simulation. See <code><a href='postProcess.spatialObjects.html'>postProcess.spatialObjects</a></code>.
+  spatial simulation. See <code><a href='postProcess.html'>postProcess.spatialObjects</a></code>.
     <em>Understanding various combinations of <code>rasterToMatch</code>
   and/or <code>studyArea</code>:</em>
-  Please see <code><a href='postProcess.spatialObjects.html'>postProcess.spatialObjects</a></code>.
+  Please see <code><a href='postProcess.html'>postProcess.spatialObjects</a></code>.
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
