@@ -23,7 +23,6 @@ test_that("prepInputs doesn't work", {
   expect_true(any(grepl(mess, pattern = "Finished")))
   expect_true(is(shpEcozone, "SpatialPolygons"))
 
-
   # Robust to partial file deletions:
   unlink(dir(dPath, full.names = TRUE)[1:3])
   expect_error(raster::shapefile(file.path(dPath, "ecozone_shp.zip")))
@@ -111,8 +110,8 @@ test_that("prepInputs doesn't work", {
   )
   expect_is(LCC2005, "Raster")
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-  expect_identical(extent(LCC2005)[1:4], round(extent(StudyAreaCRSLCC2005)[1:4] /
-                                                 250, 0) * 250)
+  expect_identical(extent(LCC2005)[1:4],
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 
   # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
   LCC2005_2 <- Cache(
@@ -129,9 +128,11 @@ test_that("prepInputs doesn't work", {
   setwd(tempdir())
   if (interactive()) {
     # need authentication for this
-    test <- prepInputs(targetFile = "FMA_Boundary_Updated.shp",
-                       url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
-                       destinationPath = "data/FMA")
+    test <- prepInputs(
+      targetFile = "FMA_Boundary_Updated.shp",
+      url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
+      destinationPath = "data/FMA"
+    )
     expect_is(test, "SpatialPolygons")
   }
 })

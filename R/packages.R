@@ -77,14 +77,13 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @examples
 #' \dontrun{
-#'
 #' # simple usage, like conditional install.packages then library
 #' Require("stats") # analogous to require(stats), but slower because it checks for
 #'                  #   pkg dependencies, and installs them, if missing
 #' tempPkgFolder <- file.path(tempdir(), "Packages")
 #'
-#' # use standAlone, means it will put it in libPath, even if it already exists in another local
-#' #   library (e.g., personal library)
+#' # use standAlone, means it will put it in libPath, even if it already exists
+#' #   in another local library (e.g., personal library)
 #' Require("crayon", libPath = tempPkgFolder, standAlone = TRUE)
 #'
 #' # make a package version snapshot
@@ -111,6 +110,7 @@ if (getRversion() >= "3.1.0") {
 #' Require(c("cranlogs", "covr"), libPath = tempPkgFolder)
 #'
 #' }
+#'
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # nolint
                     install_githubArgs = list(),       # nolint
                     install.packagesArgs = list(), standAlone = FALSE,      # nolint
@@ -123,7 +123,6 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     if (!exists(subpackages, envir = parent.frame())) # if it does exist, then it is not a name, but an object
       packages <- subpackages
   }
-
 
   if (!is.character(packages)) {
     stop("packages should be a character vector or a name")
@@ -248,7 +247,6 @@ newLibPaths <- function(libPath) {
   .libPaths(libPath)
   invisible(.libPaths())
 }
-
 
 #' Determine versions all installed pacakges
 #'
