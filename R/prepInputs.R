@@ -296,37 +296,11 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   #   pass a random real number to make a new memoise
   # moduleName <- NULL
   # modulePath <- NULL
-  if (is.null(url)) { # the only way for this to be useful is if there is a SpaDES module
-    # TODO -- a way to get url from SpaDES module metadata
-    fileinfo <- if (quick) {
-      file.info(filesToCheck)
-    } else {
-      runif(1)
-    }
-    if (file.exists(checkSumFilePath)) {
-      if (!grepl("data", basename(dirname(checkSumFilePath)))) {
-        stop("You appear to be using prepInputs inside a module,",
-             " but are not using the 'data/' subdirectory.\n",
-             "Currently, this does not work.",
-             " Please specify a url if you would like to do this,",
-             " or use the 'data/' subdirectory.")
-      }
-
-      out <- .checkSumsMem(asPath(filesToCheck), fileinfo,
-                           asPath(checkSumFilePath), quick = quick)
-      moduleName <- out$moduleName # TODO -- remove
-      modulePath <- out$modulePath # TODO -- remove
-
-      checkSums <- out$checkSums
-    } else {
-      checkSums <- out <- emptyChecksums
-    }
-  } else {
-    checkSums <- try(Checksums(path = destinationPath, write = FALSE), silent = TRUE)
-    if (is(checkSums, "try-error")) {
-      needChecksums <- 1
-      checkSums <- emptyChecksums
-    }
+  needEmptyChecksums <- FALSE
+  checkSums <- try(Checksums(path = destinationPath, write = FALSE), silent = TRUE)
+  if (is(checkSums, "try-error")) {
+    needChecksums <- 1
+    checkSums <- emptyChecksums
   }
 
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))

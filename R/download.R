@@ -39,97 +39,102 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                          checksumFile,
                          checkSums, url, needChecksums, overwrite = TRUE) { #}, moduleName, modulePath, ...) {
 
-  if (!is.null(neededFiles)) {
-    if ("shp" %in% file_ext(neededFiles)) { # if user wants .shp file, needs other anciliary files
-      # but not all
-      shpfileBase <- gsub(".shp$", "", neededFiles[file_ext(neededFiles) %in% "shp"])
-      reqdShpFiles <- paste0(shpfileBase, ".", c("shx", "dbf", "prj", "sbx", "sbn"))
-      if (length(neededFiles) > 0) {
-        if (identical(FALSE, (all(reqdShpFiles %in% neededFiles)))) {
-          optionalShpFiles <- paste0(shpfileBase, ".", c("cpg", "shp.xml"))
-          otherShpfiles <- c(reqdShpFiles, optionalShpFiles)
-          neededFiles <- unique(c(neededFiles, otherShpfiles))
+  if (!is.null(url)) {
+    if (!is.null(neededFiles)) {
+      if ("shp" %in% file_ext(neededFiles)) { # if user wants .shp file, needs other anciliary files
+        # but not all
+        shpfileBase <- gsub(".shp$", "", neededFiles[file_ext(neededFiles) %in% "shp"])
+        reqdShpFiles <- paste0(shpfileBase, ".", c("shx", "dbf", "prj", "sbx", "sbn"))
+        if (length(neededFiles) > 0) {
+          if (identical(FALSE, (all(reqdShpFiles %in% neededFiles)))) {
+            optionalShpFiles <- paste0(shpfileBase, ".", c("cpg", "shp.xml"))
+            otherShpfiles <- c(reqdShpFiles, optionalShpFiles)
+            neededFiles <- unique(c(neededFiles, otherShpfiles))
+          }
+        }
+
+      }
+    }
+
+    if (is.null(neededFiles)) {
+      result <- unique(checkSums$result)
+      if (NROW(checkSums))
+        neededFiles <- checkSums$expectedFile
+    } else {
+      result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
+    }
+    missingNeededFiles <- (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
+                             is.null(targetFile) || is.null(neededFiles))
+    if (missingNeededFiles) {
+      if (needChecksums == 0) needChecksums <- 2 # use binary addition -- 1 is new file, 2 is append
+    }
+
+    if (missingNeededFiles) {
+      fileToDownload <- if (is.null(archive[1])) {
+        neededFiles
+      } else {
+        result <- checkSums[checkSums$expectedFile %in% basename(archive[1]), ]$result
+        missingArchive <- !isTRUE(result == "OK")
+        if (missingArchive) {
+          archive[1]
+        } else {
+          NULL # means nothing to download because the archive is already in hand
         }
       }
+      skipDownloadMsg <- "Skipping download of url; local copy already exists and passes checksums"
 
-    }
-  }
-
-  if (is.null(neededFiles)) {
-    result <- unique(checkSums$result)
-    if (NROW(checkSums))
-      neededFiles <- checkSums$expectedFile
-  } else {
-    result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
-  }
-  missingNeededFiles <- (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
-                           is.null(targetFile) || is.null(neededFiles))
-  if (missingNeededFiles) {
-    if (needChecksums == 0) needChecksums <- 2 # use binary addition -- 1 is new file, 2 is append
-  }
-
-  if (missingNeededFiles) {
-    fileToDownload <- if (is.null(archive[1])) {
-      neededFiles
-    } else {
-      result <- checkSums[checkSums$expectedFile %in% basename(archive[1]), ]$result
-      missingArchive <- !isTRUE(result == "OK")
-      if (missingArchive) {
-        archive[1]
-      } else {
-        NULL # means nothing to download because the archive is already in hand
-      }
-    }
-    skipDownloadMsg <- "Skipping download of url; local copy already exists and passes checksums"
-
-    # The download step
-    downloadResults <- downloadRemote(url = url, archive = archive,
-                   targetFile = targetFile, fileToDownload = fileToDownload,
-                   skipDownloadMsg = skipDownloadMsg,
-                   checkSums = checkSums,
-                   destinationPath = destinationPath,
-                   overwrite = overwrite,
-                   needChecksums = needChecksums)
-    if (file.exists(checksumFile)) {
-      if (!is.null(fileToDownload))  {
-        res <- Checksums(files = file.path(destinationPath, fileToDownload), checksumFile = checksumFile,
-                       path = destinationPath, quickCheck = quick,
-                       write = FALSE)
-        isOK <- res[compareNA(res$expectedFile, fileToDownload) | compareNA(res$actualFile, fileToDownload),]$result
-        isOK <- isOK[!is.na(isOK)] == "OK"
-        if (length(isOK) > 0) {
-          if (!isTRUE(all(isOK))) {
-            stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try download again, ",
-                 "or if the local file(s) is/are correct, rerun checksums(write = TRUE, ...) on the local files")
+      # The download step
+      downloadResults <- downloadRemote(url = url, archive = archive,
+                     targetFile = targetFile, fileToDownload = fileToDownload,
+                     skipDownloadMsg = skipDownloadMsg,
+                     checkSums = checkSums,
+                     destinationPath = destinationPath,
+                     overwrite = overwrite,
+                     needChecksums = needChecksums)
+      if (file.exists(checksumFile)) {
+        if (!is.null(fileToDownload))  {
+          res <- Checksums(files = file.path(destinationPath, fileToDownload), checksumFile = checksumFile,
+                         path = destinationPath, quickCheck = quick,
+                         write = FALSE)
+          isOK <- res[compareNA(res$expectedFile, fileToDownload) | compareNA(res$actualFile, fileToDownload),]$result
+          isOK <- isOK[!is.na(isOK)] == "OK"
+          if (length(isOK) > 0) {
+            if (!isTRUE(all(isOK))) {
+              stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try download again, ",
+                   "or if the local file(s) is/are correct, rerun checksums(write = TRUE, ...) on the local files")
+            }
           }
         }
       }
-    }
-  } else {
-    fileAlreadyDownloaded <- if (is.null(archive[1])) {
-      archivePossibly <- setdiff(checkSums$expectedFile, neededFiles)
-      if (!is.null(.isArchive(archivePossibly))) {
-        archivePossibly
+    } else {
+      fileAlreadyDownloaded <- if (is.null(archive[1])) {
+        archivePossibly <- setdiff(checkSums$expectedFile, neededFiles)
+        if (!is.null(.isArchive(archivePossibly))) {
+          archivePossibly
+        } else {
+          neededFiles
+        }
+
       } else {
-        neededFiles
+        archive[1]
       }
 
-    } else {
-      archive[1]
+      downloadResults <- list(needChecksums = needChecksums, destFile = fileAlreadyDownloaded)
+      if (is.null(targetFile)) {
+        message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
+                " If this is not correct, rerun prepInputs with purge = TRUE")
+      } else {
+        message("  Skipping download: targetFile (and any alsoExtract) already present")
+      }
     }
-
-    downloadResults <- list(needChecksums = needChecksums, destFile = fileAlreadyDownloaded)
-    if (is.null(targetFile)) {
-      message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
-              " If this is not correct, rerun prepInputs with purge = TRUE")
+    archiveReturn <- if (is.null(archive)) {
+      .isArchive(downloadResults$destFile)
     } else {
-      message("  Skipping download: targetFile (and any alsoExtract) already present")
+      archive
     }
-  }
-  archiveReturn <- if (is.null(archive)) {
-    .isArchive(downloadResults$destFile)
   } else {
-    archive
+    downloadResults <- list(needChecksums = 0, destFile = NULL)
+    archiveReturn <- archive
   }
   list(needChecksums = downloadResults$needChecksums, archive = archiveReturn, neededFiles = neededFiles,
        downloaded = downloadResults$destFile)

@@ -135,4 +135,28 @@ test_that("prepInputs doesn't work", {
     )
     expect_is(test, "SpatialPolygons")
   }
+
+
+  # don't pass url -- use local copy of archive only
+  shpEcozone <- prepInputs(destinationPath = dPath,
+                           archive = file.path(dPath, "ecozone_shp.zip"))
+  expect_true(is(shpEcozone, "SpatialPolygons"))
+
+  shpEcozone <- prepInputs(destinationPath = dPath,
+                           archive = file.path(dPath, "ecozone_shp.zip"),
+                           alsoExtract = c("ecozones.dbf", "ecozones.prj",
+                                           "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
+  expect_true(is(shpEcozone, "SpatialPolygons"))
+
+  rm(shpEcozone)
+  expect_false(exists("shpEcozone", inherits = FALSE))
+  # try again with url
+
+  shpEcozone <- prepInputs(destinationPath = dPath,
+                           url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+                           archive = file.path(dPath, "ecozone_shp.zip"),
+                           alsoExtract = c("ecozones.dbf", "ecozones.prj",
+                                           "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
+  expect_true(is(shpEcozone, "SpatialPolygons"))
+
 })
