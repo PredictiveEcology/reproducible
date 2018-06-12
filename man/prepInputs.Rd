@@ -130,12 +130,6 @@ This function is still experimental: use with caution.
 # This function works within a module; however, currently,
 #   \\cde{sourceURL} is not yet working as desired. Use \\code{url}.
 \dontrun{
-# Put chunks like this in your .inputObjects
-if (!suppliedElsewhere("test", sim))
-  sim$test <- Cache(prepInputs, "raster.tif", "downloadedArchive.zip",
-                    destinationPath = dataPath(sim), studyArea = sim$studyArea,
-                    rasterToMatch = sim$otherRasterTemplate, overwrite = TRUE)
-
 # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 # First time: don't know all files - prepInputs will guess, if download file is an archive,
 #   then extract all files, then if there is a .shp, it will load with raster::shapefile
