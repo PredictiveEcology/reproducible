@@ -276,12 +276,6 @@ functions, e.g., <code><a href='postProcess.spatialObjects.html'>cropInputs</a><
     <pre class="examples"><div class='input'># This function works within a module; however, currently,
 #   \cde{sourceURL} is not yet working as desired. Use \code{url}.
 </div><span class='co'># NOT RUN {</span>
-<span class='co'># Put chunks like this in your .inputObjects</span>
-<span class='kw'>if</span> (!<span class='fu'>suppliedElsewhere</span>(<span class='st'>"test"</span>, <span class='no'>sim</span>))
-  <span class='no'>sim</span>$<span class='no'>test</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>, <span class='st'>"raster.tif"</span>, <span class='st'>"downloadedArchive.zip"</span>,
-                    <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>dataPath</span>(<span class='no'>sim</span>), <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>sim</span>$<span class='no'>studyArea</span>,
-                    <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='no'>sim</span>$<span class='no'>otherRasterTemplate</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-
 <span class='co'># download a zip file from internet, unzip all files, load as shapefile, Cache the call</span>
 <span class='co'># First time: don't know all files - prepInputs will guess, if download file is an archive,</span>
 <span class='co'>#   then extract all files, then if there is a .shp, it will load with raster::shapefile</span>

@@ -62,10 +62,10 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.tools/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [73s/72s]
+  Running ‘test-all.R’ [70s/69s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-  ══ testthat results  ══════════════════════════════════════════════════════
+  ══ testthat results  ═══════════════════════════════════════════════════════════
   OK: 1595 SKIPPED: 23 FAILED: 40
   1. Failure: spread2 tests -- asymmetry (@test-spread2.R#630) 
   2. Failure: spread2 tests -- asymmetry (@test-spread2.R#630) 
