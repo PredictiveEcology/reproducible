@@ -1,13 +1,12 @@
 Package: reproducible
 Type: Package
 Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
-Description: This package aims at
-    making high-level, robust, machine and OS independent tools for making
-    deeply reproducible and reusable content in R. This includes light weight
-    package management (similar to 'packrat' and 'checkpoint', but more flexible,
-    lightweight and simpler than both), tools for caching, downloading and 
-    checksumming, post-processing of common spatial datasets, and
-    accessing GitHub repositories. Some features are still under
+Description: This package aims at making high-level, robust, machine- and
+    OS-independent tools for making deeply reproducible and reusable content in R.
+    This includes light weight package management (similar to 'packrat' and
+    'checkpoint', but more flexible, lightweight and simpler than both), tools
+    for caching, downloading and checksumming, post-processing of common spatial
+    datasets, and accessing GitHub repositories. Some features are still under
     active development.
 URL: 
     http://reproducible.predictiveecology.org,

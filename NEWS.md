@@ -9,7 +9,7 @@ version 0.2.0
 
     - `prepInputs` to aid in data downloading and preparation problems, solved in a reproducible, Cache-aware way.
     - `postProcess` which is a wrapper for sequences of several other new functions (`cropInputs`, `fixErrors`, `projectInputs`, `maskInputs`, `writeOutputs`, and `determineFilename`) 
-    - `downloadFile` can handle googledrive and ftp/http files
+    - `downloadFile` can handle Google Drive and ftp/http(s) files
     - `zipCache` and `mergeCache`
     - `compareNA` does comparisons with NA as a possible value e.g., `compareNA(c(1,NA), c(2, NA))` returns `FALSE, TRUE`
 
@@ -25,7 +25,7 @@ version 0.2.0
 
 * `clearCache` and `showCache` now give messages and require user intervention if request to `clearCache` would be large quantities of data deleted
 * `memoise::memoise` now used on 3rd run through an identical `Cache` call, dramatically speeding up in most cases
-* new options: `reproducible.cachePath`, `reproducible.useMemoise`, `reproducible.useCache`, `reproducible.verbose`, `reproducible.quick`
+* new options: `reproducible.cachePath`, `reproducible.quick`, `reproducible.useMemoise`, `reproducible.useCache`, `reproducible.useragent`, `reproducible.verbose`
 * `asPath` has a new argument indicating how deep should the path be considered when included in caching (only relevant when `quick = TRUE`)
 * New vignette on using Cache
 * Cache is `parallel`-safe, meaning there are `tryCatch` around every attempt at writing to SQLite database so it can be used safely on multi-threaded machines
@@ -33,7 +33,6 @@ version 0.2.0
 * updates for R 3.6.0 compact storage of sequence vectors
 * experimental pipes (`%>%`, `%C%`) and assign `%<%`
 * several performance enhancements
-
 
 version 0.1.4
 =============

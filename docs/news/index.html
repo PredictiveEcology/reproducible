@@ -131,8 +131,50 @@
 <h2 class="hasAnchor">
 <a href="#new-features" class="anchor"></a>New features</h2>
 <ul>
-<li>new function <code>prepInputs</code> and its internal modular pieces to aid in data downloading and preparation problems, solved in a reproducible way.</li>
-<li>bug fixes</li>
+<li>
+<p>new functions:</p>
+<ul>
+<li>
+<code>prepInputs</code> to aid in data downloading and preparation problems, solved in a reproducible, Cache-aware way.</li>
+<li>
+<code>postProcess</code> which is a wrapper for sequences of several other new functions (<code>cropInputs</code>, <code>fixErrors</code>, <code>projectInputs</code>, <code>maskInputs</code>, <code>writeOutputs</code>, and <code>determineFilename</code>)</li>
+<li>
+<code>downloadFile</code> can handle Google Drive and ftp/http(s) files</li>
+<li>
+<code>zipCache</code> and <code>mergeCache</code>
+</li>
+</ul>
+</li>
+<li>
+<p>Cache – new features:</p>
+<ul>
+<li>new arguments <code>showSimilar</code>, <code>verbose</code> which can help with debugging</li>
+<li>new argument <code>useCache</code> which allows turning caching on and off at a high level (e.g., options(“useCache”))</li>
+<li>new argument <code>cacheId</code> which allows user to hard code a result from a Cache</li>
+<li>deprecated arguments: <code>digestPathContent</code> –&gt; <code>quick</code>, <code>compareRasterFileLength</code> –&gt; <code>length</code>
+</li>
+<li>Cache arguments now propagate inward to nested <code>Cache</code> function calls, unless explicitly set on the inner functions</li>
+<li>more precise messages provided upon each use</li>
+<li>many more <code>userTags</code> added automatically to cache entries so much more powerful searching via <code><a href="../reference/viewCache.html">showCache(userTags="something")</a></code>
+</li>
+</ul>
+</li>
+<li>
+<code>clearCache</code> and <code>showCache</code> now give messages and require user intervention if request to <code>clearCache</code> would be large quantities of data deleted</li>
+<li>
+<code><a href="http://www.rdocumentation.org/packages/memoise/topics/memoise">memoise::memoise</a></code> now used on 3rd run through an identical <code>Cache</code> call, dramatically speeding up in most cases</li>
+<li>new options: <code>reproducible.cachePath</code>, <code>reproducible.quick</code>, <code>reproducible.useMemoise</code>, <code>reproducible.useCache</code>, <code>reproducible.useragent</code>, <code>reproducible.verbose</code>
+</li>
+<li>
+<code>asPath</code> has a new argument indicating how deep should the path be considered when included in caching (only relevant when <code>quick = TRUE</code>)</li>
+<li>New vignette on using Cache</li>
+<li>Cache is <code>parallel</code>-safe, meaning there are <code>tryCatch</code> around every attempt at writing to SQLite database so it can be used safely on multi-threaded machines</li>
+<li>bug fixes, unit tests, more <code>imports</code> for packages e.g., <code>stats</code>
+</li>
+<li>updates for R 3.6.0 compact storage of sequence vectors</li>
+<li>experimental pipes (<code>%&gt;%</code>, <code>%C%</code>) and assign <code>%&lt;%</code>
+</li>
+<li><p>several performance enhancements</p></li>
 </ul>
 </div>
 </div>
