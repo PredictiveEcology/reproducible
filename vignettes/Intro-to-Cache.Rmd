@@ -268,7 +268,6 @@ Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b
 
 ## cleanup
 unlink(c("filename.rda", "filename1.rda"))
-unlink(dirname(tmpDir), recursive = TRUE)
 
 ```
 

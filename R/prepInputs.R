@@ -338,6 +338,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   }
 
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
+  if (is.null(neededFiles)) neededFiles <- if (!is.null(archive)) basename(archive)
 
   # Stage 1 -- Download
   downloadFileResult <- downloadFile(
@@ -354,6 +355,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   )#, moduleName = moduleName, modulePath = modulePath)
   needChecksums <- downloadFileResult$needChecksums
   neededFiles <- downloadFileResult$neededFiles
+  if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
   if (is.null(archive)) archive <- downloadFileResult$archive
 
   filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else basename(archive)
@@ -367,6 +369,7 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   })
 
   # Stage 1 - Extract from archive
+  neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
   filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                          neededFiles = neededFiles,
                                          checkSums = checkSums, needChecksums = needChecksums)

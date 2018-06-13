@@ -50,9 +50,10 @@ less robust checking of inputs. See the respective functions.}
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}
 
-\item{purge}{When prepInputs is called from outside a module, it will write a
-\code{CHECKSUMS.txt} file. If there is an incorrect \code{CHECKSUMS.txt},
-this will purge it.}
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
+\code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
+\code{CHECKSUMS.txt} file. Other options, see details.}
 
 \item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
 
@@ -124,6 +125,27 @@ This function is still experimental: use with caution.
   and/or \code{studyArea}:}
   Please see \code{\link{postProcess.spatialObjects}}.
  }
+}
+
+\section{\code{purge}}{
+
+
+In options for control of purging the \code{CHECKSUMS.txt} file are:
+
+  \tabular{cl}{
+    \code{0} \tab keep file \cr
+    \code{1} \tab delete file \cr
+    \code{2} \tab delete entry for \code{targetFile} \cr
+    \code{4} \tab delete entry for \code{alsoExtract} \cr
+    \code{3} \tab delete entry for \code{archive} \cr
+    \code{5} \tab delete entry for \code{targetFile} & \code{alsoExtract} \cr
+    \code{6} \tab delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive} \cr
+  }
+will only remove entries in the \code{CHECKSUMS.txt} that are associated with
+   \code{targetFile}, \code{alsoExtract} or \code{archive} When prepInputs is called, it will write or append to a (if
+   already exists)
+  \code{CHECKSUMS.txt} file. If the \code{CHECKSUMS.txt} is not correct, use
+  this argument to remove it.
 }
 
 \examples{

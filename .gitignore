@@ -5,7 +5,6 @@
 *.RData
 .Rhistory
 .Rproj.user
-
 #################
 ## LaTeX
 *.acn
@@ -45,3 +44,8 @@ src/reproducible\.dll
 src-i386/
 src-x64/
 src/
+.httr-oauth
+
+vignettes/Intro-to-Cache\.html
+
+vignettes/Intro-to-Cache\.R
