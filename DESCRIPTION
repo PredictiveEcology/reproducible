@@ -5,10 +5,9 @@ Description: Built on top of 'git2r' and 'archivist', this package aims at
     making high-level, robust, machine and OS independent tools for making
     deeply reproducible and reusable content in R. This includes light weight
     package management (similar to 'packrat' and 'checkpoint', but more flexible,
-    lightweight and simpler than both), plus it includes
-    tools for caching, and accessing GitHub repositories. There are many features
-    that are still under active development, so behaviour may change in future
-    versions.
+    lightweight and simpler than both), plus it includes tools for caching, and
+    accessing GitHub repositories. There are many features that are still under
+    active development, so behaviour may change in future versions.
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
@@ -16,9 +15,9 @@ Date: 2018-06-13
 Version: 0.2.0
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
-    role = c("aut", "cre")),
-    person("Alex M", "Chubaty", email = "alex.chubaty@gmail.com",
     role = c("aut")),
+    person("Alex M", "Chubaty", email = "alex.chubaty@gmail.com",
+    role = c("aut", "cre")),
     person("Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada",
     role = "cph")
     )
