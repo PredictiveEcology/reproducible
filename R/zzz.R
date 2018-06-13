@@ -10,6 +10,7 @@
     reproducible.verbose = FALSE,
     reproducible.useCache = TRUE, #memoise
     reproducible.useMemoise = TRUE, #memoise
+    reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
     reproducible.quick = FALSE
   )
   toset <- !(names(opts.reproducible) %in% names(opts))

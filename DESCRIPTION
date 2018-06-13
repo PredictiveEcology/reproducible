@@ -12,7 +12,7 @@ Description: Built on top of 'git2r' and 'archivist', this package aims at
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-06-08
+Date: 2018-06-13
 Version: 0.2.0
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
@@ -30,26 +30,38 @@ Imports:
     data.table (>= 1.10.4),
     devtools,
     digest,
+    dplyr,
     fastdigest,
+    fasterize,
+    gdalUtils,
     git2r (>= 0.18),
+    googledrive,
+    httr,
     magrittr,
     memoise,
     methods,
     raster,
     Rcpp (>= 0.12.13),
-    RCurl,
+    RCurl (>= 1.95-4.8),
+    R.utils,
+    rgdal,
+    rgeos,
+    quickPlot,
+    sf,
     sp,
+    tools,
+    utils,
     versions
 Suggests:
     covr,
     hunspell,
     knitr,
-    rgdal,
     rmarkdown,
     testthat,
     TimeWarp
 LinkingTo: Rcpp
 License: GPL-3
+VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 6.0.1
@@ -59,12 +71,17 @@ Collate:
     'cache-tools.R'
     'robustDigest.R'
     'cache.R'
+    'checksums.R'
     'consistentPaths.R'
+    'download.R'
+    'gis.R'
     'git.R'
     'helpers.R'
     'objectSize.R'
     'packages.R'
     'pipe.R'
+    'postProcess.R'
+    'prepInputs.R'
     'reproducible-package.R'
     'search.R'
     'zzz.R'

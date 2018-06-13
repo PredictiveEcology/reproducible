@@ -1,5 +1,4 @@
 test_that("package-related functions work", {
-
   repos <- getOption("repos", "https://cran.rstudio.com")
   if (is.null(repos) | any(repos == "" | "@CRAN@" %in% repos)) {
     repos <- "https://cran.rstudio.com"
@@ -97,11 +96,8 @@ test_that("package-related functions work", {
   try(detach("package:meow", unload = TRUE))
   try(detach("package:Holidays", unload = TRUE))
 
-
   ## Test passing package as unquoted name
   expect_silent(Require(TimeWarp, libPath = packageDir1, standAlone = TRUE))
 
   unlink(packageDir, recursive = TRUE, force = TRUE)
 })
-
-

@@ -1,5 +1,7 @@
 #' Pipe that is Cache-aware, being deprecated
 #'
+#' STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
+#'
 #' This pipe will likely be deprecated, as it masks
 #' other pipes in the R ecosystem. This is fine, except to work,
 #' the reproducible package must be guaranteed to be first
@@ -36,8 +38,10 @@
 #' @seealso pipe
 #' @rdname pipe2
 #' @examples
+#' \dontrun{
 #' tmpdir <- file.path(tempdir(), "testCache")
 #' checkPath(tmpdir, create = TRUE)
+#' try(detach("package:magrittr", unload = TRUE)) # magrittr, if loaded, gives an error below
 #' a <- rnorm(10, 16) %>% mean() %>% prod(., 6)
 #' b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
 #' d <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir)
@@ -53,7 +57,7 @@
 #' all.equal(f3, f4) # different because the runif is after the Cache
 #'
 #' unlink(tmpdir, recursive = TRUE)
-#'
+#' }
 `%>%` <- function(lhs, rhs) {
   # magrittr code below
   parent <- parent.frame()
@@ -126,6 +130,8 @@
 #################
 #' A cache-aware pipe that does not mask with \%>\%
 #'
+#' STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
+#'
 #' This pipe can only be used at the start of a pipe chain, and must
 #' be preceeded by \code{Cache(...)} to allow other Cache arguments to be passed.
 #'
@@ -139,6 +145,7 @@
 #' be cached for future use. The entire chain must be identical, therefore.
 #' The required usage should be straight forward to insert into existing code
 #' that uses pipes (\code{Cache() \%C\% ... remaining pipes}.
+#' \code{This is still experimental; use with care}.
 #'
 #' @rdname pipe
 #' @name pipe
@@ -149,12 +156,14 @@
 #' @aliases %C%
 #' @export
 #' @examples
+#'
+#' # dontrun{ # these can't be automatically run due to package conflicts with magrittr
 #' tmpdir <- file.path(tempdir(), "testCache")
 #' checkPath(tmpdir, create = TRUE)
 #' a <- rnorm(10, 16) %>%
 #'      mean() %>%
 #'      prod(., 6)
-#' b <- Cache(cacheRepo = tmpdir) %C%
+#' b <- Cache(cacheRepo = tmpdir) %C% # use of the %C% pipe!
 #'      rnorm(10, 16) %>%
 #'      mean() %>%
 #'      prod(., 6)
@@ -173,6 +182,7 @@
 #' all.equal(a,e) # different because the final function, prod, has a changed argument.
 #'
 #' unlink(tmpdir, recursive = TRUE)
+#' #}
 `%C%` <- function(lhs, rhs) {
   # adapted from magrittr code below
   parent <- parent.frame()

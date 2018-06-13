@@ -83,6 +83,18 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
@@ -128,6 +140,12 @@
       <tr>
         
         <td>
+          <p><code><a href="Checksums.html">Checksums()</a></code> </p>
+        </td>
+        <td><p>Calculate checksum</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="Copy.html">Copy()</a></code> </p>
         </td>
         <td><p>Recursive copying of nested environments, and other "hard to copy" objects</p></td>
@@ -170,6 +188,12 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="checkGDALVersion.html">checkGDALVersion()</a></code> </p>
+        </td>
+        <td><p>Check whether the system has a minimum version of GDAL available</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="checkPath.html">checkPath()</a></code> </p>
         </td>
         <td><p>Check filepath</p></td>
@@ -200,9 +224,57 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="cropInputs.html">cropInputs()</a></code> </p>
+        </td>
+        <td><p>Crop a <code>Spatial*</code> or <code>Raster*</code> object</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="debugCache.html">.debugCache()</a></code> </p>
         </td>
         <td><p>Attach debug info to return for Cache</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="determineFilename.html">determineFilename()</a></code> </p>
+        </td>
+        <td><p>Determine filename, either automatically or manually</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="downloadFile.html">downloadFile()</a></code> </p>
+        </td>
+        <td><p>A wrapper around a set of downloading functions</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="extractFromArchive.html">extractFromArchive()</a></code> </p>
+        </td>
+        <td><p>Extract files from archive</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="extractURL.html">extractURL()</a></code> </p>
+        </td>
+        <td><p>Extract a url</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="fastMask.html">fastMask()</a></code> </p>
+        </td>
+        <td><p>Faster operations on rasters</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="fixErrors.SpatialPolygons.html">fixErrors(<i>&lt;SpatialPolygons&gt;</i>)</a></code> </p>
+        </td>
+        <td><p>Fix <code>rgeos::gIsValid</code> failures in <code>SpatialPolygons</code></p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getGDALVersion.html">getGDALVersion()</a></code> </p>
+        </td>
+        <td><p>Check the GDAL version in use</p></td>
       </tr><tr>
         
         <td>
@@ -221,6 +293,12 @@
           <p><code><a href="installedVersions.html">installedVersions()</a></code> </p>
         </td>
         <td><p>Determine versions all installed pacakges</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="maskInputs.html">maskInputs()</a></code> </p>
+        </td>
+        <td><p>Mask module inputs</p></td>
       </tr><tr>
         
         <td>
@@ -278,9 +356,27 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="postProcess.html">postProcess()</a></code> </p>
+        </td>
+        <td><p>Generic function to post process objects</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="preDigestByClass.html">.preDigestByClass()</a></code> </p>
         </td>
         <td><p>Any miscellaneous things to do before <code>.robustDigest</code> and after <code>FUN</code> call</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prefix.html">.prefix()</a></code> <code><a href="prefix.html">.suffix()</a></code> </p>
+        </td>
+        <td><p>Add a prefix or suffix to the basename part of a file path</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prepInputs.html">prepInputs()</a></code> </p>
+        </td>
+        <td><p>Download and optionally post process files</p></td>
       </tr><tr>
         
         <td>
@@ -293,6 +389,12 @@
           <p><code><a href="prepareOutput.html">.prepareOutput()</a></code> </p>
         </td>
         <td><p>Make any modifications to object recovered from cacheRepo</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="projectInputs.html">projectInputs()</a></code> </p>
+        </td>
+        <td><p>Project <code>Raster*</code> or Spatial* or <code>sf</code> objects</p></td>
       </tr><tr>
         
         <td>
@@ -341,6 +443,12 @@
           <p><code><a href="viewCache.html">clearCache()</a></code> <code><a href="viewCache.html">showCache()</a></code> <code><a href="viewCache.html">keepCache()</a></code> </p>
         </td>
         <td><p>Examining and modifying the cache</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="writeOutputs.html">writeOutputs()</a></code> </p>
+        </td>
+        <td><p>Write module inputs on disk</p></td>
       </tr>
     </tbody>
     </table>

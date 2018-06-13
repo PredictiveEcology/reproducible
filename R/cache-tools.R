@@ -37,7 +37,39 @@
 #'
 #' @rdname viewCache
 #'
-#' @example inst/examples/example_Cache.R
+#' @examples
+#' library(raster)
+#' try(detach("package:magrittr", unload = TRUE), silent = TRUE) # magrittr,
+#'                                     #if loaded, gives an error below
+#'
+#' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+#' try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
+#'
+#' # Basic use
+#' ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+#'
+#' # All same
+#' ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
+#' ranNumsC <- rnorm(10, 16) %>% Cache(cacheRepo = tmpDir) # recovers cached copy
+#' ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+#'
+#' # Any minor change makes it different
+#' ranNumsE <- rnorm(10, 6) %>% Cache(cacheRepo = tmpDir) # different
+#'
+#' ## Example 1: basic cache use with tags
+#' ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+#' ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+#' ranNumsC <- Cache(runif, 40, cacheRepo = tmpDir, userTags = "objectName:b")
+#'
+#' showCache(tmpDir, userTags = c("objectName"))
+#' showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
+#'
+#' # Fine control of cache elements -- pick out only the large runif object, and remove it
+#' cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
+#' toRemove <- cache1[tagKey=="object.size"][as.numeric(tagValue) > 700]$artifact
+#' clearCache(tmpDir, userTags = toRemove)
+#' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
+#'
 #'
 setGeneric("clearCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("clearCache")
@@ -100,7 +132,7 @@ setMethod(
         suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
           loadFromLocalRepo(ras, repoDir = x, value = TRUE)
         }))
-        filesToRemove <- tryCatch(unlist(lapply(rasters, function(x) filename(x))), 
+        filesToRemove <- tryCatch(unlist(lapply(rasters, function(x) filename(x))),
                                   error = function(x) NULL)
         if (!is.null(filesToRemove)) {
           filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
@@ -156,7 +188,8 @@ setMethod(
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
-#' @seealso \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}.
+#' @seealso \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
+#' in \code{\link{Cache}}
 #'
 setGeneric("showCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("showCache")
@@ -275,7 +308,7 @@ setMethod(
           message("Continuing to load others")
           outputToSave <- NULL
         }
-        
+
         ## Save it
         written <- FALSE
         if (is(outputToSave, "Raster")) {
@@ -315,19 +348,19 @@ setMethod(
 
 #' @keywords internal
 .messageCacheSize <- function(x, artifacts = NULL) {
-  
+
   fsTotal <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
   class(fsTotal) <- "object_size"
   preMessage1 <- "  Total (including Rasters): "
-  
-  fs <- sum(file.size(dir(file.path(x, "gallery"), 
-                          pattern = paste(collapse = "|", 
+
+  fs <- sum(file.size(dir(file.path(x, "gallery"),
+                          pattern = paste(collapse = "|",
                                           unique(artifacts)), full.names = TRUE)))
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
-  
+
   message("Cache size: ")
   message(preMessage1, format(fsTotal, "auto"))
   message(preMessage, format(fs, "auto"))
-  
+
 }
