@@ -41,25 +41,13 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 
   if (!is.null(url)) {
     if (!is.null(neededFiles)) {
-      if ("shp" %in% file_ext(neededFiles)) { # if user wants .shp file, needs other anciliary files
-        # but not all
-        shpfileBase <- gsub(".shp$", "", neededFiles[file_ext(neededFiles) %in% "shp"])
-        reqdShpFiles <- paste0(shpfileBase, ".", c("shx", "dbf", "prj", "sbx", "sbn"))
-        if (length(neededFiles) > 0) {
-          if (identical(FALSE, (all(reqdShpFiles %in% neededFiles)))) {
-            optionalShpFiles <- paste0(shpfileBase, ".", c("cpg", "shp.xml"))
-            otherShpfiles <- c(reqdShpFiles, optionalShpFiles)
-            neededFiles <- unique(c(neededFiles, otherShpfiles))
-          }
-        }
-
-      }
+      neededFiles <- .checkForAuxiliaryFiles(neededFiles)
     }
 
     if (is.null(neededFiles)) {
       result <- unique(checkSums$result)
-      if (NROW(checkSums))
-        neededFiles <- checkSums$expectedFile
+      #if (NROW(checkSums))
+      #  neededFiles <- checkSums$expectedFile
     } else {
       result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
     }
@@ -133,7 +121,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
       archive
     }
   } else {
-    downloadResults <- list(needChecksums = 0, destFile = NULL)
+    downloadResults <- list(needChecksums = needChecksums, destFile = NULL)
     archiveReturn <- archive
   }
   list(needChecksums = downloadResults$needChecksums, archive = archiveReturn, neededFiles = neededFiles,

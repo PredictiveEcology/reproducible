@@ -665,3 +665,30 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
     writeChecksumsTable(currentFiles, checkSumFilePath, dots = list())
   }
 }
+
+#' Check a neededFile for commonly needed auxiliary files
+#'
+#' Currently, this is only used for shapefiles.
+#'
+#' @param neededFiles A character string of file name(s) that will be checked. Specifically
+#'        if the file extension is \code{.shp} it will output the names of files with
+#'        these extensions also:
+#'        c("shx", "dbf", "prj", "sbx", "sbn") files also.
+#' @keywords internal
+#' @rdname checkForAuxiliaryFiles
+.checkForAuxiliaryFiles <- function(neededFiles) {
+  if ("shp" %in% file_ext(neededFiles)) { # if user wants .shp file, needs other anciliary files
+    # but not all
+    shpfileBase <- gsub(".shp$", "", neededFiles[file_ext(neededFiles) %in% "shp"])
+    reqdShpFiles <- paste0(shpfileBase, ".", c("shx", "dbf", "prj", "sbx", "sbn"))
+    if (length(neededFiles) > 0) {
+      if (identical(FALSE, (all(reqdShpFiles %in% neededFiles)))) {
+        optionalShpFiles <- paste0(shpfileBase, ".", c("cpg", "shp.xml"))
+        otherShpfiles <- c(reqdShpFiles, optionalShpFiles)
+        neededFiles <- unique(c(neededFiles, otherShpfiles))
+      }
+    }
+
+  }
+  neededFiles
+}
