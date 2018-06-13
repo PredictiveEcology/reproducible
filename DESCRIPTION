@@ -61,6 +61,7 @@ Suggests:
     TimeWarp
 LinkingTo: Rcpp
 License: GPL-3
+VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 6.0.1
