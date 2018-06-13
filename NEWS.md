@@ -11,6 +11,7 @@ version 0.2.0
     - `postProcess` which is a wrapper for sequences of several other new functions (`cropInputs`, `fixErrors`, `projectInputs`, `maskInputs`, `writeOutputs`, and `determineFilename`) 
     - `downloadFile` can handle googledrive and ftp/http files
     - `zipCache` and `mergeCache`
+    - `compareNA` does comparisons with NA as a possible value e.g., `compareNA(c(1,NA), c(2, NA))` returns `FALSE, TRUE`
 
 * Cache -- new features:
 
