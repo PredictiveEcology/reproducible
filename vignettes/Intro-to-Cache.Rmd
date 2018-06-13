@@ -1,0 +1,305 @@
+---
+title: "Introduction to Cache"
+author:
+  - "Eliot J. B. McIntire"
+date: '`r strftime(Sys.Date(), "%B %d %Y")`'
+output:
+  rmarkdown::html_vignette:
+    fig_width: 7
+    number_sections: yes
+    self_contained: yes
+    toc: yes
+vignette: >
+  %\VignetteIndexEntry{Introduction to Cache}
+  %\VignetteDepends{raster}
+  %\VignetteKeyword{Cache}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+# Reproducible workflow
+
+As part of a reproducible workflow, caching of function calls, code chunks, and other elements of a project is a critical component.
+The objective of a reproducible workflow is is likely that an entire work flow from raw data to publication, decision support, report writing, presentation building etc., could be built and be reproducible anywhere, on any computer, operating system, with any starting conditions, on demand.
+The `reproducible::Cache` function is built to work with any R function. 
+
+## Differences with other approaches
+
+`Cache` uses 2 key the `archivist` functions `saveToLocalRepo` and `loadFromLocalRepo`, but does not use `archivist::cache`. Similar to `archivist::cache`, there is some reliance on `digest::digest` to determine whether the arguments are identical in subsequent iterations; however, it also uses `fastdigest::fastdigest` to make it substantially faster in many cases. It also but does *many* things that make standard caching with `digest::digest` don't work reliably between systems. For these, the function `.robustDigest` is introduced to make caching transferable between systems. This is relevant for file paths, environments, parallell clusters, functions (which are contained within an environment), and many others (e.g., see ?.robustDigest for methods). `Cache` also adds important elements like automated tagging and the option to retrieve disk-cached values via stashed objects in memory using `memoise::memoise`. This means that running `Cache` 1, 2, and 3 times on the same function will get progressively faster. This can be extremely useful for web apps built with, say `shiny`.
+
+## Function-level caching
+
+Any function can be cached using: `Cache(FUN = functionName, ...)`. 
+
+This will be a slight change to a function call, such as:
+`projectRaster(raster, crs = crs(newRaster))`
+to
+`Cache(projectRaster, raster, crs = crs(newRaster))`.
+
+This is particularly useful for expensive operations.
+
+```{r function-level, echo=TRUE}
+tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+library(raster)
+library(reproducible)
+ras <- raster(extent(0,1000,0,1000), vals = 1:1e6, res = 1)
+crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
+
+newCRS <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+# No Cache
+system.time(map1 <- projectRaster(ras, crs = newCRS))
+
+# With Cache -- a little slower the first time because saving to disk
+system.time(map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir,
+                         notOlderThan = Sys.time()))
+
+# vastly faster the second time
+system.time(map2 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
+
+# even faster the third time
+system.time(map3 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
+
+all.equal(map1, map2) # TRUE
+all.equal(map1, map3) # TRUE
+```
+
+
+## Caching examples
+
+### Basic use
+```{r}
+library(raster)
+# magrittr, if loaded, gives an error below
+  try(detach("package:magrittr", unload = TRUE), silent = TRUE)
+
+try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
+
+ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
+
+# All same
+ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- rnorm(10, 16) %>% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+
+# Any minor change makes it different
+ranNumsE <- rnorm(10, 6) %>% Cache(cacheRepo = tmpDir) # different
+
+```
+
+## Example 1: Basic cache use with tags
+
+```{r tags}
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+
+showCache(tmpDir, userTags = c("objectName"))
+showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
+showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif call
+
+clearCache(tmpDir, userTags = c("runif")) # remove only cached objects made during runif call
+showCache(tmpDir) # only those made during rnorm call
+
+clearCache(tmpDir)
+
+```
+
+## Example 2: using the "accessed" tag
+
+```{r accessed-tag}
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+
+# access it again, from Cache
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+wholeCache <- showCache(tmpDir)
+
+# keep only items accessed "recently" (i.e., only objectName:a)
+onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "accessed"]$tagValue))
+
+# inverse join with 2 data.tables ... using: a[!b]
+# i.e., return all of wholeCache that was not recently accessed
+toRemove <- unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$artifact
+clearCache(tmpDir, toRemove) # remove ones not recently accessed
+showCache(tmpDir) # still has more recently accessed
+
+clearCache(tmpDir)
+
+```
+
+## Example 3: using keepCache
+
+```{r keepCache}
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+
+# keep only those cached items from the last 24 hours
+oneDay <- 60 * 60 * 24
+keepCache(tmpDir, after = Sys.time() - oneDay)
+
+# Keep all Cache items created with an rnorm() call
+keepCache(tmpDir, userTags = "rnorm")
+
+# Remove all Cache items that happened within a rnorm() call
+clearCache(tmpDir, userTags = "rnorm")
+
+showCache(tmpDir) ## empty
+```
+
+## Example 4: searching for multiple objects in the cache
+
+
+```{r searching-within-cache}
+# default userTags is "and" matching; for "or" matching use |
+ranNumsA <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+ranNumsB <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+
+# show all objects (runif and rnorm in this case)
+showCache(tmpDir)
+
+# show objects that are both runif and rnorm
+# (i.e., none in this case, because objecs are either or, not both)
+showCache(tmpDir, userTags = c("runif", "rnorm")) ## empty
+
+# show objects that are either runif or rnorm ("or" search)
+showCache(tmpDir, userTags = "runif|rnorm")
+
+# keep only objects that are either runif or rnorm ("or" search)
+keepCache(tmpDir, userTags = "runif|rnorm")
+
+clearCache(tmpDir)
+
+```
+
+## Example 5: using caching to speed up rerunning expensive computations
+
+```{r expensive-computations}
+ras <- raster(extent(0, 5, 0, 5), res = 1,
+              vals = sample(1:5, replace = TRUE, size = 25),
+              crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
+
+# A slow operation, like GIS operation
+notCached <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
+
+cached <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  # using quote works also
+  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
+
+# second time is much faster
+reRun <- suppressWarnings(
+  # project raster generates warnings when run non-interactively
+  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
+)
+
+# recovered cached version is same as non-cached version
+all.equal(notCached, reRun) ## TRUE
+
+```
+
+
+## Nested Caching
+
+Nested caching, which is when Caching of a function occurs inside an outer function, which is itself cached. This is a critical element to working within a reproducible work flow. It is not enough during development to cache flat code chunks, as there will be many levels of "slow" functions. Ideally, at all points in a development cycle, it should be possible to get to any line of code starting from the very initial steps, running through everything up to that point, in less that 1 second. If the workflow can be kept very fast like this, then there is a guarantee that it will work at any point.
+
+```{r nested}
+##########################
+## Nested Caching
+# Make 2 functions
+inner <- function(mean) {
+  d <- 1
+  Cache(rnorm, n = 3, mean = mean)
+}
+outer <- function(n) {
+  Cache(inner, 0.1, cacheRepo = tmpdir2)
+}
+
+# make 2 different cache paths
+tmpdir1 <- file.path(tempdir(), "first")
+tmpdir2 <- file.path(tempdir(), "second")
+
+# Run the Cache ... notOlderThan propagates to all 3 Cache calls,
+#   but cacheRepo is tmpdir1 in top level Cache and all nested
+#   Cache calls, unless individually overridden ... here inner
+#   uses tmpdir2 repository
+Cache(outer, n = 2, cacheRepo = tmpdir1, notOlderThan = Sys.time())
+
+showCache(tmpdir1) # 2 function calls
+showCache(tmpdir2) # 1 function call
+
+# userTags get appended
+# all items have the outer tag propagate, plus inner ones only have inner ones
+clearCache(tmpdir1)
+outerTag <- "outerTag"
+innerTag <- "innerTag"
+inner <- function(mean) {
+  d <- 1
+  Cache(rnorm, n = 3, mean = mean, notOlderThan = Sys.time() - 1e5, userTags = innerTag)
+}
+outer <- function(n) {
+  Cache(inner, 0.1)
+}
+aa <- Cache(outer, n = 2, cacheRepo = tmpdir1, userTags = outerTag)
+showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer only have outerTag
+
+```
+
+## cacheId
+
+Sometimes, it is not absolutely desirable to maintain the work flow intact because changes that are irrelevant to the analysis, such as changing messages sent to a user, may be changed, without a desire to rerun functions. The `cacheId` argument is for this. Once a piece of code is run, then the `cacheId` can be manually extracted (it is reported at the end of a Cache call) and manually placed in the code, passed in as, say, `cacheId = "ad184ce64541972b50afd8e7b75f821b"`.
+
+```{r selective-cacheId}
+
+### cacheId
+set.seed(1)
+Cache(rnorm, 1, cacheRepo = tmpdir1)
+# manually look at output attribute which shows cacheId: ad184ce64541972b50afd8e7b75f821b
+Cache(rnorm, 1, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b") # same value
+# override even with different inputs:
+Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b")
+
+## cleanup
+unlink(c("filename.rda", "filename1.rda"))
+unlink(dirname(tmpDir), recursive = TRUE)
+
+```
+
+
+## Working with the Cache manually
+
+Since the cache is simply an `archivist` repository, all `archivist` functions will work as is.
+In addition, there are several helpers in the `reproducible` package, including `showCache`, `keepCache` and `clearCache` that may be useful.
+Also, one can access cached items manually (rather than simply rerunning the same `Cache` function again).
+
+```{r manual-cache}
+
+if (requireNamespace("archivist")) {
+  # get the RasterLayer that was produced with the gaussMap function:
+  mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$artifact)
+  map <- archivist::loadFromLocalRepo(md5hash = mapHash[1], repoDir = tmpDir, value = TRUE)
+  
+  plot(map)
+}
+```
+
+# Reproducible Workflow
+
+In general, we feel that a liberal use of `Cache` will make a re-useable and reproducible work flow.
+`shiny` apps can be made, taking advantage of `Cache`. 
+Indeed, much of the difficulty in managing data sets and saving them for future use, can be accommodated by caching.
+
+## Nested Caching
+
+
+
+#### Cache individual functions
+
+`Cache(<functionName>, <other arguments>)`
+
+This will allow fine scale control of individual function calls.
+
