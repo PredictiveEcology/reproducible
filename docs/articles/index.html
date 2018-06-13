@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A set of helpers for Cache — getFunctionName • reproducible</title>
+<title>Articles • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,10 +30,7 @@
 
 
 
-<meta property="og:title" content="A set of helpers for Cache — getFunctionName" />
-
-<meta property="og:description" content="These are internal only." />
-<meta name="twitter:card" content="summary" />
+<meta property="og:title" content="Articles" />
 
 
 
@@ -59,7 +56,7 @@
   </head>
 
   <body>
-    <div class="container template-reference-topic">
+    <div class="container template-article-index">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -122,63 +119,17 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>A set of helpers for Cache</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R'><code>R/cache-helpers.R</code></a></small>
-    <div class="hidden name"><code>cacheHelper.Rd</code></div>
+      <h1>Articles</h1>
     </div>
 
-    <div class="ref-description">
-    
-    <p>These are internal only.</p>
-    
+    <div class="section ">
+      <h3>All vignettes</h3>
+      <p class="section-desc"></p>
+
+      <ul>
+        <li><a href="Intro-to-Cache.html">Introduction to Cache</a></li>
+      </ul>
     </div>
-
-    <pre class="usage"><span class='fu'>getFunctionName</span>(<span class='no'>FUN</span>, <span class='no'>...</span>, <span class='no'>overrideCall</span>, <span class='no'>isPipe</span>)
-
-<span class='fu'>.digestRasterLayer</span>(<span class='no'>object</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>)</pre>
-    
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>FUN</th>
-      <td><p>A function</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>passing the ... from outer function, which will include potential
-arguments to the FUN</p></td>
-    </tr>
-    <tr>
-      <th>overrideCall</th>
-      <td><p>A character string indicating a different (not "Cache") function
-name to search for. Mostly so that this works with deprecated "cache".</p></td>
-    </tr>
-    <tr>
-      <th>isPipe</th>
-      <td><p>Logical. If the call to getFunctionName is coming from a pipe, there is more
-information available. Specifically, ._lhs which is already a call.</p></td>
-    </tr>
-    </table>
-    
-    <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
-
-    <p>If the function cannot figure out a clean function name, it returns "internal"</p>
-    
-
-  </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#note">Note</a></li>
-          </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire
-
   </div>
 </div>
 
