@@ -62,6 +62,26 @@ if (getRversion() >= "3.1.0") {
 #'   Please see \code{\link{postProcess.spatialObjects}}.
 #'  }
 #'
+#' @section \code{purge}:
+#'
+#' In options for control of purging the \code{CHECKSUMS.txt} file are:
+#'
+#'   \tabular{cl}{
+#'     \code{0} \tab keep file \cr
+#'     \code{1} \tab delete file \cr
+#'     \code{2} \tab delete entry for \code{targetFile} \cr
+#'     \code{4} \tab delete entry for \code{alsoExtract} \cr
+#'     \code{3} \tab delete entry for \code{archive} \cr
+#'     \code{5} \tab delete entry for \code{targetFile} & \code{alsoExtract} \cr
+#'     \code{6} \tab delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive} \cr
+#'   }
+#' will only remove entries in the \code{CHECKSUMS.txt} that are associated with
+#'    \code{targetFile}, \code{alsoExtract} or \code{archive} When prepInputs is called, it will write or append to a (if
+#'    already exists)
+#'   \code{CHECKSUMS.txt} file. If the \code{CHECKSUMS.txt} is not correct, use
+#'   this argument to remove it.
+
+#'
 #' @param targetFile Character string giving the path to the eventual file
 #'   (raster, shapefile, csv, etc.) after downloading and extracting from a zip
 #'   or tar archive. This is the file \emph{before} it is passed to
@@ -99,9 +119,10 @@ if (getRversion() >= "3.1.0") {
 #'   \code{\link{Cache}} (the quick argument). This results in faster, though
 #'   less robust checking of inputs. See the respective functions.
 #'
-#' @param purge When prepInputs is called from outside a module, it will write a
-#'   \code{CHECKSUMS.txt} file. If there is an incorrect \code{CHECKSUMS.txt},
-#'   this will purge it.
+#' @param purge Logical or Integer. \code{0/FALSE} (default) keeps existing
+#'    \code{CHECKSUMS.txt} file and
+#'    \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
+#'    \code{CHECKSUMS.txt} file. Other options, see details.
 #'
 #' @param overwrite Logical. Should downloading and all the other actions occur
 #'   even if they pass the checksums or the files are all there.
@@ -269,8 +290,6 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   }
 
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
-  if (purge) unlink(checkSumFilePath)
-
   if (!dir.exists(destinationPath)) {
     if (isFile(destinationPath)) {
       stop("destinationPath must be a directory")
@@ -292,13 +311,28 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
     filesToCheck <- c(targetFilePath, alsoExtract)
   }
 
-  # If quick, then use file.info as part of cache/memoise ... otherwise,
-  #   pass a random real number to make a new memoise
-  # moduleName <- NULL
-  # modulePath <- NULL
   needEmptyChecksums <- FALSE
+  if (is.logical(purge)) purge <- as.numeric(purge)
+  if (purge == 1) {
+    unlink(checkSumFilePath)
+    needChecksums <- 1
+  }
+
   checkSums <- try(Checksums(path = destinationPath, write = FALSE), silent = TRUE)
-  if (is(checkSums, "try-error")) {
+
+  if (purge > 1)  {
+    purgeChar <- as.character(purge)
+    checkSums <- switch(purgeChar,
+                      "2" = checkSums[!(checkSums$expectedFile %in% basename(targetFile)),],
+                      "3" = checkSums[!(checkSums$expectedFile %in% basename(archive)),],
+                      "4" = checkSums[!(checkSums$expectedFile %in% basename(alsoExtract)),],
+                      "5" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract)))),],
+                      "6" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract, archive)))),]
+    )
+    needChecksums <- 2
+  }
+
+  if (is(checkSums, "try-error") | purge) {
     needChecksums <- 1
     checkSums <- emptyChecksums
   }
