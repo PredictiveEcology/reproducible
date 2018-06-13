@@ -34,6 +34,9 @@
     <loc>http://reproducible.predictiveecology.org/reference/checkCacheRepo.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/checkForAuxiliaryFiles.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/checkGDALVersion.html</loc>
   </url>
   <url>

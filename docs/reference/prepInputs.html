@@ -215,9 +215,10 @@ even if they pass the checksums or the files are all there.</p></td>
     </tr>
     <tr>
       <th>purge</th>
-      <td><p>When prepInputs is called from outside a module, it will write a
-<code>CHECKSUMS.txt</code> file. If there is an incorrect <code>CHECKSUMS.txt</code>,
-this will purge it.</p></td>
+      <td><p>Logical or Integer. <code>0/FALSE</code> (default) keeps existing
+<code>CHECKSUMS.txt</code> file and
+<code>prepInputs</code> will write or append to it. <code>1/TRUE</code> will deleted the entire
+<code>CHECKSUMS.txt</code> file. Other options, see details.</p></td>
     </tr>
     <tr>
       <th>useCache</th>
@@ -277,6 +278,26 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
     <em>Understanding various combinations of <code>rasterToMatch</code>
   and/or <code>studyArea</code>:</em>
   Please see <code><a href='postProcess.html'>postProcess.spatialObjects</a></code>.
+    
+    <h2 class="hasAnchor" id="purge"><a class="anchor" href="#purge"></a><code>purge</code></h2>
+
+    
+    <p>In options for control of purging the <code>CHECKSUMS.txt</code> file are:</p>
+<p></p><table class='table'>
+<tr><td><code>0</code></td><td>keep file</td></tr>
+<tr><td><code>1</code></td><td>delete file</td></tr>
+<tr><td><code>2</code></td><td>delete entry for <code>targetFile</code></td></tr>
+<tr><td><code>4</code></td><td>delete entry for <code>alsoExtract</code></td></tr>
+<tr><td><code>3</code></td><td>delete entry for <code>archive</code></td></tr>
+<tr><td><code>5</code></td><td>delete entry for <code>targetFile</code> &amp; <code>alsoExtract</code></td></tr>
+<tr><td><code>6</code></td><td>delete entry for <code>targetFile</code>, <code>alsoExtract</code> &amp; <code>archive</code></td></tr>
+<tr><td></td><td><code>0</code></td></tr>
+</table>
+<p>will only remove entries in the <code>CHECKSUMS.txt</code> that are associated with
+   <code>targetFile</code>, <code>alsoExtract</code> or <code>archive</code> When prepInputs is called, it will write or append to a (if
+   already exists)
+  <code>CHECKSUMS.txt</code> file. If the <code>CHECKSUMS.txt</code> is not correct, use
+  this argument to remove it.</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -375,6 +396,8 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
       <li><a href="#stage-getting-data">Stage 1 - Getting data</a></li>
 
       <li><a href="#stage-post-processing">Stage 2 - Post processing</a></li>
+
+      <li><a href="#purge"><code>purge</code></a></li>
 
       <li><a href="#see-also">See also</a></li>
       
