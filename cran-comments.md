@@ -31,7 +31,14 @@ This is a major update to our package.
 
 ## R CMD check results
 
-There are no errors, warnings, or notes in any of the above.
+There were no ERRORs nor WARNINGs.
+
+There was 1 NOTE:
+
+1. spell-check reports false positives:
+
+    Possibly mis-spelled words in DESCRIPTION:
+      Reproducibility (3:36)
 
 ## Downstream dependencies
 

@@ -1,4 +1,5 @@
 .csv
+.httr-oauth
 .log
 *.o
 .Rapp.history
@@ -11,6 +12,8 @@ src/
 src/reproducible\.dll
 src-i386/
 src-x64/
+vignettes/Intro-to-Cache\.html
+vignettes/Intro-to-Cache\.R
 
 #################
 ## LaTeX
@@ -46,8 +49,3 @@ src-x64/
 *.vrb
 *.xdy
 *.tdo
-.httr-oauth
-
-vignettes/Intro-to-Cache\.html
-
-vignettes/Intro-to-Cache\.R
