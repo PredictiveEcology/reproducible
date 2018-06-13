@@ -359,6 +359,8 @@ prepInputs <- function(targetFile, url = NULL, archive = NULL, alsoExtract = NUL
   filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else basename(archive)
   on.exit({
     if (needChecksums > 0) {
+      # needChecksums 1 --> write a new checksums.txt file
+      # needChecksums 2 --> append  a new checksums.txt file
       appendChecksumsTable(checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
                            destinationPath = destinationPath, append = needChecksums == 2)
     }
@@ -692,8 +694,11 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
       nonCurrentFiles <- cs %>%
         filter(!file %in% filesToChecksum)
     }
+    messStart <- "Appending "
+  } else {
+    messStart <- "Writing "
   }
-  message("Appending checksums to CHECKSUMS.txt. If you see this message repeatedly,\n",
+  message(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly,\n",
           "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
           "  what to look for.")
   capture.output(
