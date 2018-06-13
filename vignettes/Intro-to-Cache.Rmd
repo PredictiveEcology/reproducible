@@ -11,7 +11,7 @@ output:
     toc: yes
 vignette: >
   %\VignetteIndexEntry{Introduction to Cache}
-  %\VignetteDepends{raster}
+  %\VignetteDepends{archivist, raster}
   %\VignetteKeyword{Cache}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
@@ -27,7 +27,14 @@ The `reproducible::Cache` function is built to work with any R function.
 
 ## Differences with other approaches
 
-`Cache` uses 2 key the `archivist` functions `saveToLocalRepo` and `loadFromLocalRepo`, but does not use `archivist::cache`. Similar to `archivist::cache`, there is some reliance on `digest::digest` to determine whether the arguments are identical in subsequent iterations; however, it also uses `fastdigest::fastdigest` to make it substantially faster in many cases. It also but does *many* things that make standard caching with `digest::digest` don't work reliably between systems. For these, the function `.robustDigest` is introduced to make caching transferable between systems. This is relevant for file paths, environments, parallell clusters, functions (which are contained within an environment), and many others (e.g., see ?.robustDigest for methods). `Cache` also adds important elements like automated tagging and the option to retrieve disk-cached values via stashed objects in memory using `memoise::memoise`. This means that running `Cache` 1, 2, and 3 times on the same function will get progressively faster. This can be extremely useful for web apps built with, say `shiny`.
+`Cache` uses 2 key the `archivist` functions `saveToLocalRepo` and `loadFromLocalRepo`, but does not use `archivist::cache`.
+Similar to `archivist::cache`, there is some reliance on `digest::digest` to determine whether the arguments are identical in subsequent iterations; however, it also uses `fastdigest::fastdigest` to make it substantially faster in many cases.
+It also but does *many* things that make standard caching with `digest::digest` don't work reliably between systems.
+For these, the function `.robustDigest` is introduced to make caching transferable between systems.
+This is relevant for file paths, environments, parallell clusters, functions (which are contained within an environment), and many others (e.g., see ?.robustDigest for methods).
+`Cache` also adds important elements like automated tagging and the option to retrieve disk-cached values via stashed objects in memory using `memoise::memoise`.
+This means that running `Cache` 1, 2, and 3 times on the same function will get progressively faster.
+This can be extremely useful for web apps built with, say `shiny`.
 
 ## Function-level caching
 
@@ -68,7 +75,6 @@ all.equal(map1, map2) # TRUE
 all.equal(map1, map3) # TRUE
 ```
 
-
 ## Caching examples
 
 ### Basic use
@@ -88,7 +94,6 @@ ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cache
 
 # Any minor change makes it different
 ranNumsE <- rnorm(10, 6) %>% Cache(cacheRepo = tmpDir) # different
-
 ```
 
 ## Example 1: Basic cache use with tags
@@ -105,7 +110,6 @@ clearCache(tmpDir, userTags = c("runif")) # remove only cached objects made duri
 showCache(tmpDir) # only those made during rnorm call
 
 clearCache(tmpDir)
-
 ```
 
 ## Example 2: using the "accessed" tag
@@ -152,7 +156,6 @@ showCache(tmpDir) ## empty
 
 ## Example 4: searching for multiple objects in the cache
 
-
 ```{r searching-within-cache}
 # default userTags is "and" matching; for "or" matching use |
 ranNumsA <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:a")
@@ -172,7 +175,6 @@ showCache(tmpDir, userTags = "runif|rnorm")
 keepCache(tmpDir, userTags = "runif|rnorm")
 
 clearCache(tmpDir)
-
 ```
 
 ## Example 5: using caching to speed up rerunning expensive computations
@@ -202,13 +204,15 @@ reRun <- suppressWarnings(
 
 # recovered cached version is same as non-cached version
 all.equal(notCached, reRun) ## TRUE
-
 ```
-
 
 ## Nested Caching
 
-Nested caching, which is when Caching of a function occurs inside an outer function, which is itself cached. This is a critical element to working within a reproducible work flow. It is not enough during development to cache flat code chunks, as there will be many levels of "slow" functions. Ideally, at all points in a development cycle, it should be possible to get to any line of code starting from the very initial steps, running through everything up to that point, in less that 1 second. If the workflow can be kept very fast like this, then there is a guarantee that it will work at any point.
+Nested caching, which is when Caching of a function occurs inside an outer function, which is itself cached.
+This is a critical element to working within a reproducible work flow.
+It is not enough during development to cache flat code chunks, as there will be many levels of "slow" functions.
+Ideally, at all points in a development cycle, it should be possible to get to any line of code starting from the very initial steps, running through everything up to that point, in less that 1 second.
+If the workflow can be kept very fast like this, then there is a guarantee that it will work at any point.
 
 ```{r nested}
 ##########################
@@ -254,10 +258,11 @@ showCache(tmpdir1) # rnorm function has outerTag and innerTag, inner and outer o
 
 ## cacheId
 
-Sometimes, it is not absolutely desirable to maintain the work flow intact because changes that are irrelevant to the analysis, such as changing messages sent to a user, may be changed, without a desire to rerun functions. The `cacheId` argument is for this. Once a piece of code is run, then the `cacheId` can be manually extracted (it is reported at the end of a Cache call) and manually placed in the code, passed in as, say, `cacheId = "ad184ce64541972b50afd8e7b75f821b"`.
+Sometimes, it is not absolutely desirable to maintain the work flow intact because changes that are irrelevant to the analysis, such as changing messages sent to a user, may be changed, without a desire to rerun functions.
+The `cacheId` argument is for this.
+Once a piece of code is run, then the `cacheId` can be manually extracted (it is reported at the end of a Cache call) and manually placed in the code, passed in as, say, `cacheId = "ad184ce64541972b50afd8e7b75f821b"`.
 
 ```{r selective-cacheId}
-
 ### cacheId
 set.seed(1)
 Cache(rnorm, 1, cacheRepo = tmpdir1)
@@ -268,10 +273,7 @@ Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b
 
 ## cleanup
 unlink(c("filename.rda", "filename1.rda"))
-unlink(dirname(tmpDir), recursive = TRUE)
-
 ```
-
 
 ## Working with the Cache manually
 
@@ -280,7 +282,6 @@ In addition, there are several helpers in the `reproducible` package, including 
 Also, one can access cached items manually (rather than simply rerunning the same `Cache` function again).
 
 ```{r manual-cache}
-
 if (requireNamespace("archivist")) {
   # get the RasterLayer that was produced with the gaussMap function:
   mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$artifact)
@@ -288,6 +289,11 @@ if (requireNamespace("archivist")) {
   
   plot(map)
 }
+```
+
+```{r cleanup}
+## cleanup
+unlink(dirname(tmpDir), recursive = TRUE)
 ```
 
 # Reproducible Workflow
@@ -298,11 +304,8 @@ Indeed, much of the difficulty in managing data sets and saving them for future 
 
 ## Nested Caching
 
-
-
 #### Cache individual functions
 
 `Cache(<functionName>, <other arguments>)`
 
 This will allow fine scale control of individual function calls.
-

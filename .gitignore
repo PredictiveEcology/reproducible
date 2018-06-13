@@ -1,10 +1,16 @@
-/revdep/.cache.rds
 .csv
 .log
+*.o
 .Rapp.history
 *.RData
 .Rhistory
 .Rproj.user
+inst/doc
+/revdep/.cache.rds
+src/
+src/reproducible\.dll
+src-i386/
+src-x64/
 
 #################
 ## LaTeX
@@ -40,8 +46,3 @@
 *.vrb
 *.xdy
 *.tdo
-src/reproducible\.dll
-*.o
-src-i386/
-src-x64/
-src/
