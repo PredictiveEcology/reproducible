@@ -451,6 +451,13 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                neededFiles, extractedArchives = NULL, checkSums,
                                needChecksums, filesExtracted = character()) {
 
+
+  if (!is.null(archive)) {
+    if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
+      stop("Archives of type ", file_ext(archive), " are not currently supported. ",
+           "Try extracting manually then placing extracted files in ", destinationPath)
+    }
+  }
   result <- if (!is.null(neededFiles)) {
     checkSums[checkSums$expectedFile %in% basename(neededFiles), ]$result
   } else {
