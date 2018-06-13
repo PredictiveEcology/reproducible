@@ -25,7 +25,7 @@ version 0.2.0
 * `clearCache` and `showCache` now give messages and require user intervention if request to `clearCache` would be large quantities of data deleted
 * `memoise::memoise` now used on 3rd run through an identical `Cache` call, dramatically speeding up in most cases
 * new options: `reproducible.cachePath`, `reproducible.useMemoise`, `reproducible.useCache`, `reproducible.verbose`, `reproducible.quick`
-* `asPath` has a new argument indicating how deep should the path be considered when included in caching 
+* `asPath` has a new argument indicating how deep should the path be considered when included in caching (only relevant when `quick = TRUE`)
 * New vignette on using Cache
 * Cache is `parallel`-safe, meaning there are `tryCatch` around every attempt at writing to SQLite database so it can be used safely on multi-threaded machines
 * bug fixes, unit tests, more `imports` for packages e.g., `stats`
