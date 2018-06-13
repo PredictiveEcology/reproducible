@@ -90,6 +90,18 @@ have no actual file with data." />
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
+    </li>
+  </ul>
+</li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
@@ -156,8 +168,8 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 <span class='fu'>lapply</span>(<span class='fu'>c</span>(<span class='no'>runif</span>, <span class='no'>rnorm</span>), <span class='kw'>function</span>(<span class='no'>f</span>) {
   <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/cache.html'>Cache</a></span>(<span class='no'>f</span>, <span class='fl'>10</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 })</div><div class='output co'>#&gt; [[1]]
-#&gt;  [1] 0.94467527 0.66079779 0.62911404 0.06178627 0.20597457 0.17655675
-#&gt;  [7] 0.68702285 0.38410372 0.76984142 0.49769924
+#&gt;  [1] 0.17467589 0.53157354 0.49363702 0.77930863 0.20417834 0.71339728
+#&gt;  [7] 0.06521611 0.35420680 0.82519942 0.27381825
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:f024b63398f829eb00833e3e0d1cc753"
 #&gt; attr(,"newCache")
@@ -166,8 +178,8 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; [1] ""
 #&gt; 
 #&gt; [[2]]
-#&gt;  [1]  0.57578135 -0.30538839  1.51178117  0.38984324 -0.62124058 -2.21469989
-#&gt;  [7]  1.12493092 -0.04493361 -0.01619026  0.94383621
+#&gt;  [1]  0.17648861  0.24368546  1.62354888  0.11203808 -0.13399701 -1.91008747
+#&gt;  [7] -0.27923724 -0.31344598  1.06730788  0.07003485
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:b7eae7c361dfb6d161192321de6bc893"
 #&gt; attr(,"newCache")
@@ -176,189 +188,189 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; [1] ""
 #&gt; </div><div class='input'>
 <span class='co'># clear out any stub artifacts</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 12.4 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 426 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 2f832b611ee22ec8a43069b5c431fe70         format
-#&gt;  2: 2f832b611ee22ec8a43069b5c431fe70           name
-#&gt;  3: 2f832b611ee22ec8a43069b5c431fe70          class
-#&gt;  4: 2f832b611ee22ec8a43069b5c431fe70           date
-#&gt;  5: 2f832b611ee22ec8a43069b5c431fe70        cacheId
-#&gt;  6: 2f832b611ee22ec8a43069b5c431fe70       function
-#&gt;  7: 2f832b611ee22ec8a43069b5c431fe70    object.size
-#&gt;  8: 2f832b611ee22ec8a43069b5c431fe70       accessed
-#&gt;  9: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 10: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 11: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 12: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 13: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 14: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 15: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 16: 2f832b611ee22ec8a43069b5c431fe70      preDigest
-#&gt; 17: 2f832b611ee22ec8a43069b5c431fe70      preDigest
-#&gt; 18: d2780cccdef206458bba01d19d3ff208         format
-#&gt; 19: d2780cccdef206458bba01d19d3ff208           name
-#&gt; 20: d2780cccdef206458bba01d19d3ff208          class
-#&gt; 21: d2780cccdef206458bba01d19d3ff208           date
-#&gt; 22: d2780cccdef206458bba01d19d3ff208        cacheId
-#&gt; 23: d2780cccdef206458bba01d19d3ff208       function
-#&gt; 24: d2780cccdef206458bba01d19d3ff208    object.size
-#&gt; 25: d2780cccdef206458bba01d19d3ff208       accessed
-#&gt; 26: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 27: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 28: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 29: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 30: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 31: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 32: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 33: d2780cccdef206458bba01d19d3ff208      preDigest
-#&gt; 34: d2780cccdef206458bba01d19d3ff208      preDigest
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 12.4 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 430 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
+#&gt;  1: 62d8bd92cc8e10d443f1b624916573d6         format
+#&gt;  2: 62d8bd92cc8e10d443f1b624916573d6           name
+#&gt;  3: 62d8bd92cc8e10d443f1b624916573d6          class
+#&gt;  4: 62d8bd92cc8e10d443f1b624916573d6           date
+#&gt;  5: 62d8bd92cc8e10d443f1b624916573d6        cacheId
+#&gt;  6: 62d8bd92cc8e10d443f1b624916573d6       function
+#&gt;  7: 62d8bd92cc8e10d443f1b624916573d6    object.size
+#&gt;  8: 62d8bd92cc8e10d443f1b624916573d6       accessed
+#&gt;  9: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 10: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 11: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 12: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 13: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 14: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 15: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 16: 62d8bd92cc8e10d443f1b624916573d6      preDigest
+#&gt; 17: 62d8bd92cc8e10d443f1b624916573d6      preDigest
+#&gt; 18: 645af519be4e5e3a0ab2631ff4ca64ab         format
+#&gt; 19: 645af519be4e5e3a0ab2631ff4ca64ab           name
+#&gt; 20: 645af519be4e5e3a0ab2631ff4ca64ab          class
+#&gt; 21: 645af519be4e5e3a0ab2631ff4ca64ab           date
+#&gt; 22: 645af519be4e5e3a0ab2631ff4ca64ab        cacheId
+#&gt; 23: 645af519be4e5e3a0ab2631ff4ca64ab       function
+#&gt; 24: 645af519be4e5e3a0ab2631ff4ca64ab    object.size
+#&gt; 25: 645af519be4e5e3a0ab2631ff4ca64ab       accessed
+#&gt; 26: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 27: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 28: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 29: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 30: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 31: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 32: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 33: 645af519be4e5e3a0ab2631ff4ca64ab      preDigest
+#&gt; 34: 645af519be4e5e3a0ab2631ff4ca64ab      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-06-12 16:09:46
-#&gt;  2:                                 Cache 2018-06-12 16:09:46
-#&gt;  3:                               numeric 2018-06-12 16:09:46
-#&gt;  4:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt;  5:      f024b63398f829eb00833e3e0d1cc753 2018-06-12 16:09:46
-#&gt;  6:                                     f 2018-06-12 16:09:46
-#&gt;  7:                                   784 2018-06-12 16:09:46
-#&gt;  8:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt;  9:                   withCallingHandlers 2018-06-12 16:09:46
-#&gt; 10:                               saveRDS 2018-06-12 16:09:46
-#&gt; 11:                               do.call 2018-06-12 16:09:46
-#&gt; 12:                      build_site_local 2018-06-12 16:09:46
-#&gt; 13:                       build_reference 2018-06-12 16:09:46
-#&gt; 14:                  data_reference_topic 2018-06-12 16:09:46
-#&gt; 15:                                   try 2018-06-12 16:09:46
-#&gt; 16:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-12 16:09:46
-#&gt; 17: .FUN:d2631d24c3b38b89c7bdd4ab7faaaac3 2018-06-12 16:09:46
-#&gt; 18:                                   rda 2018-06-12 16:09:46
-#&gt; 19:                                 Cache 2018-06-12 16:09:46
-#&gt; 20:                               numeric 2018-06-12 16:09:46
-#&gt; 21:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt; 22:      b7eae7c361dfb6d161192321de6bc893 2018-06-12 16:09:46
-#&gt; 23:                                     f 2018-06-12 16:09:46
-#&gt; 24:                                   784 2018-06-12 16:09:46
-#&gt; 25:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt; 26:                   withCallingHandlers 2018-06-12 16:09:46
-#&gt; 27:                               saveRDS 2018-06-12 16:09:46
-#&gt; 28:                               do.call 2018-06-12 16:09:46
-#&gt; 29:                      build_site_local 2018-06-12 16:09:46
-#&gt; 30:                       build_reference 2018-06-12 16:09:46
-#&gt; 31:                  data_reference_topic 2018-06-12 16:09:46
-#&gt; 32:                                   try 2018-06-12 16:09:46
-#&gt; 33:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-12 16:09:46
-#&gt; 34: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-12 16:09:46
+#&gt;  1:                                   rda 2018-06-13 10:07:12
+#&gt;  2:                                 Cache 2018-06-13 10:07:12
+#&gt;  3:                               numeric 2018-06-13 10:07:12
+#&gt;  4:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt;  5:      f024b63398f829eb00833e3e0d1cc753 2018-06-13 10:07:12
+#&gt;  6:                                     f 2018-06-13 10:07:12
+#&gt;  7:                                   784 2018-06-13 10:07:12
+#&gt;  8:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt;  9:                   withCallingHandlers 2018-06-13 10:07:12
+#&gt; 10:                               saveRDS 2018-06-13 10:07:12
+#&gt; 11:                               do.call 2018-06-13 10:07:12
+#&gt; 12:                      build_site_local 2018-06-13 10:07:12
+#&gt; 13:                       build_reference 2018-06-13 10:07:12
+#&gt; 14:                  data_reference_topic 2018-06-13 10:07:12
+#&gt; 15:                                   try 2018-06-13 10:07:12
+#&gt; 16:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-13 10:07:12
+#&gt; 17: .FUN:d2631d24c3b38b89c7bdd4ab7faaaac3 2018-06-13 10:07:12
+#&gt; 18:                                   rda 2018-06-13 10:07:12
+#&gt; 19:                                 Cache 2018-06-13 10:07:12
+#&gt; 20:                               numeric 2018-06-13 10:07:12
+#&gt; 21:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt; 22:      b7eae7c361dfb6d161192321de6bc893 2018-06-13 10:07:12
+#&gt; 23:                                     f 2018-06-13 10:07:12
+#&gt; 24:                                   784 2018-06-13 10:07:12
+#&gt; 25:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt; 26:                   withCallingHandlers 2018-06-13 10:07:12
+#&gt; 27:                               saveRDS 2018-06-13 10:07:12
+#&gt; 28:                               do.call 2018-06-13 10:07:12
+#&gt; 29:                      build_site_local 2018-06-13 10:07:12
+#&gt; 30:                       build_reference 2018-06-13 10:07:12
+#&gt; 31:                  data_reference_topic 2018-06-13 10:07:12
+#&gt; 32:                                   try 2018-06-13 10:07:12
+#&gt; 33:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-13 10:07:12
+#&gt; 34: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-13 10:07:12
 #&gt;                                  tagValue         createdDate</div><div class='input'>
 <span class='no'>file2Remove</span> <span class='kw'>&lt;-</span> <span class='fu'>dir</span>(<span class='fu'>file.path</span>(<span class='no'>tmpDir</span>, <span class='st'>"gallery"</span>), <span class='kw'>full.name</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>]
 <span class='fu'>file.remove</span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 12.2 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 224 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 2f832b611ee22ec8a43069b5c431fe70         format
-#&gt;  2: 2f832b611ee22ec8a43069b5c431fe70           name
-#&gt;  3: 2f832b611ee22ec8a43069b5c431fe70          class
-#&gt;  4: 2f832b611ee22ec8a43069b5c431fe70           date
-#&gt;  5: 2f832b611ee22ec8a43069b5c431fe70        cacheId
-#&gt;  6: 2f832b611ee22ec8a43069b5c431fe70       function
-#&gt;  7: 2f832b611ee22ec8a43069b5c431fe70    object.size
-#&gt;  8: 2f832b611ee22ec8a43069b5c431fe70       accessed
-#&gt;  9: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 10: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 11: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 12: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 13: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 14: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 15: 2f832b611ee22ec8a43069b5c431fe70 otherFunctions
-#&gt; 16: 2f832b611ee22ec8a43069b5c431fe70      preDigest
-#&gt; 17: 2f832b611ee22ec8a43069b5c431fe70      preDigest
-#&gt; 18: d2780cccdef206458bba01d19d3ff208         format
-#&gt; 19: d2780cccdef206458bba01d19d3ff208           name
-#&gt; 20: d2780cccdef206458bba01d19d3ff208          class
-#&gt; 21: d2780cccdef206458bba01d19d3ff208           date
-#&gt; 22: d2780cccdef206458bba01d19d3ff208        cacheId
-#&gt; 23: d2780cccdef206458bba01d19d3ff208       function
-#&gt; 24: d2780cccdef206458bba01d19d3ff208    object.size
-#&gt; 25: d2780cccdef206458bba01d19d3ff208       accessed
-#&gt; 26: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 27: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 28: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 29: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 30: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 31: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 32: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 33: d2780cccdef206458bba01d19d3ff208      preDigest
-#&gt; 34: d2780cccdef206458bba01d19d3ff208      preDigest
+#&gt;  1: 62d8bd92cc8e10d443f1b624916573d6         format
+#&gt;  2: 62d8bd92cc8e10d443f1b624916573d6           name
+#&gt;  3: 62d8bd92cc8e10d443f1b624916573d6          class
+#&gt;  4: 62d8bd92cc8e10d443f1b624916573d6           date
+#&gt;  5: 62d8bd92cc8e10d443f1b624916573d6        cacheId
+#&gt;  6: 62d8bd92cc8e10d443f1b624916573d6       function
+#&gt;  7: 62d8bd92cc8e10d443f1b624916573d6    object.size
+#&gt;  8: 62d8bd92cc8e10d443f1b624916573d6       accessed
+#&gt;  9: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 10: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 11: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 12: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 13: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 14: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 15: 62d8bd92cc8e10d443f1b624916573d6 otherFunctions
+#&gt; 16: 62d8bd92cc8e10d443f1b624916573d6      preDigest
+#&gt; 17: 62d8bd92cc8e10d443f1b624916573d6      preDigest
+#&gt; 18: 645af519be4e5e3a0ab2631ff4ca64ab         format
+#&gt; 19: 645af519be4e5e3a0ab2631ff4ca64ab           name
+#&gt; 20: 645af519be4e5e3a0ab2631ff4ca64ab          class
+#&gt; 21: 645af519be4e5e3a0ab2631ff4ca64ab           date
+#&gt; 22: 645af519be4e5e3a0ab2631ff4ca64ab        cacheId
+#&gt; 23: 645af519be4e5e3a0ab2631ff4ca64ab       function
+#&gt; 24: 645af519be4e5e3a0ab2631ff4ca64ab    object.size
+#&gt; 25: 645af519be4e5e3a0ab2631ff4ca64ab       accessed
+#&gt; 26: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 27: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 28: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 29: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 30: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 31: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 32: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 33: 645af519be4e5e3a0ab2631ff4ca64ab      preDigest
+#&gt; 34: 645af519be4e5e3a0ab2631ff4ca64ab      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-06-12 16:09:46
-#&gt;  2:                                 Cache 2018-06-12 16:09:46
-#&gt;  3:                               numeric 2018-06-12 16:09:46
-#&gt;  4:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt;  5:      f024b63398f829eb00833e3e0d1cc753 2018-06-12 16:09:46
-#&gt;  6:                                     f 2018-06-12 16:09:46
-#&gt;  7:                                   784 2018-06-12 16:09:46
-#&gt;  8:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt;  9:                   withCallingHandlers 2018-06-12 16:09:46
-#&gt; 10:                               saveRDS 2018-06-12 16:09:46
-#&gt; 11:                               do.call 2018-06-12 16:09:46
-#&gt; 12:                      build_site_local 2018-06-12 16:09:46
-#&gt; 13:                       build_reference 2018-06-12 16:09:46
-#&gt; 14:                  data_reference_topic 2018-06-12 16:09:46
-#&gt; 15:                                   try 2018-06-12 16:09:46
-#&gt; 16:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-12 16:09:46
-#&gt; 17: .FUN:d2631d24c3b38b89c7bdd4ab7faaaac3 2018-06-12 16:09:46
-#&gt; 18:                                   rda 2018-06-12 16:09:46
-#&gt; 19:                                 Cache 2018-06-12 16:09:46
-#&gt; 20:                               numeric 2018-06-12 16:09:46
-#&gt; 21:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt; 22:      b7eae7c361dfb6d161192321de6bc893 2018-06-12 16:09:46
-#&gt; 23:                                     f 2018-06-12 16:09:46
-#&gt; 24:                                   784 2018-06-12 16:09:46
-#&gt; 25:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt; 26:                   withCallingHandlers 2018-06-12 16:09:46
-#&gt; 27:                               saveRDS 2018-06-12 16:09:46
-#&gt; 28:                               do.call 2018-06-12 16:09:46
-#&gt; 29:                      build_site_local 2018-06-12 16:09:46
-#&gt; 30:                       build_reference 2018-06-12 16:09:46
-#&gt; 31:                  data_reference_topic 2018-06-12 16:09:46
-#&gt; 32:                                   try 2018-06-12 16:09:46
-#&gt; 33:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-12 16:09:46
-#&gt; 34: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-12 16:09:46
+#&gt;  1:                                   rda 2018-06-13 10:07:12
+#&gt;  2:                                 Cache 2018-06-13 10:07:12
+#&gt;  3:                               numeric 2018-06-13 10:07:12
+#&gt;  4:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt;  5:      f024b63398f829eb00833e3e0d1cc753 2018-06-13 10:07:12
+#&gt;  6:                                     f 2018-06-13 10:07:12
+#&gt;  7:                                   784 2018-06-13 10:07:12
+#&gt;  8:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt;  9:                   withCallingHandlers 2018-06-13 10:07:12
+#&gt; 10:                               saveRDS 2018-06-13 10:07:12
+#&gt; 11:                               do.call 2018-06-13 10:07:12
+#&gt; 12:                      build_site_local 2018-06-13 10:07:12
+#&gt; 13:                       build_reference 2018-06-13 10:07:12
+#&gt; 14:                  data_reference_topic 2018-06-13 10:07:12
+#&gt; 15:                                   try 2018-06-13 10:07:12
+#&gt; 16:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-13 10:07:12
+#&gt; 17: .FUN:d2631d24c3b38b89c7bdd4ab7faaaac3 2018-06-13 10:07:12
+#&gt; 18:                                   rda 2018-06-13 10:07:12
+#&gt; 19:                                 Cache 2018-06-13 10:07:12
+#&gt; 20:                               numeric 2018-06-13 10:07:12
+#&gt; 21:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt; 22:      b7eae7c361dfb6d161192321de6bc893 2018-06-13 10:07:12
+#&gt; 23:                                     f 2018-06-13 10:07:12
+#&gt; 24:                                   784 2018-06-13 10:07:12
+#&gt; 25:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt; 26:                   withCallingHandlers 2018-06-13 10:07:12
+#&gt; 27:                               saveRDS 2018-06-13 10:07:12
+#&gt; 28:                               do.call 2018-06-13 10:07:12
+#&gt; 29:                      build_site_local 2018-06-13 10:07:12
+#&gt; 30:                       build_reference 2018-06-13 10:07:12
+#&gt; 31:                  data_reference_topic 2018-06-13 10:07:12
+#&gt; 32:                                   try 2018-06-13 10:07:12
+#&gt; 33:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-13 10:07:12
+#&gt; 34: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-13 10:07:12
 #&gt;                                  tagValue         createdDate</div><div class='input'>
 <span class='co'># run clearStubArtifacts</span>
 <span class='fu'>suppressWarnings</span>(<span class='fu'>clearStubArtifacts</span>(<span class='no'>tmpDir</span>))
 <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># stubs are removed</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 12.2 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 224 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: d2780cccdef206458bba01d19d3ff208         format
-#&gt;  2: d2780cccdef206458bba01d19d3ff208           name
-#&gt;  3: d2780cccdef206458bba01d19d3ff208          class
-#&gt;  4: d2780cccdef206458bba01d19d3ff208           date
-#&gt;  5: d2780cccdef206458bba01d19d3ff208        cacheId
-#&gt;  6: d2780cccdef206458bba01d19d3ff208       function
-#&gt;  7: d2780cccdef206458bba01d19d3ff208    object.size
-#&gt;  8: d2780cccdef206458bba01d19d3ff208       accessed
-#&gt;  9: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 10: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 11: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 12: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 13: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 14: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 15: d2780cccdef206458bba01d19d3ff208 otherFunctions
-#&gt; 16: d2780cccdef206458bba01d19d3ff208      preDigest
-#&gt; 17: d2780cccdef206458bba01d19d3ff208      preDigest
+#&gt;  1: 645af519be4e5e3a0ab2631ff4ca64ab         format
+#&gt;  2: 645af519be4e5e3a0ab2631ff4ca64ab           name
+#&gt;  3: 645af519be4e5e3a0ab2631ff4ca64ab          class
+#&gt;  4: 645af519be4e5e3a0ab2631ff4ca64ab           date
+#&gt;  5: 645af519be4e5e3a0ab2631ff4ca64ab        cacheId
+#&gt;  6: 645af519be4e5e3a0ab2631ff4ca64ab       function
+#&gt;  7: 645af519be4e5e3a0ab2631ff4ca64ab    object.size
+#&gt;  8: 645af519be4e5e3a0ab2631ff4ca64ab       accessed
+#&gt;  9: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 10: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 11: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 12: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 13: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 14: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 15: 645af519be4e5e3a0ab2631ff4ca64ab otherFunctions
+#&gt; 16: 645af519be4e5e3a0ab2631ff4ca64ab      preDigest
+#&gt; 17: 645af519be4e5e3a0ab2631ff4ca64ab      preDigest
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-06-12 16:09:46
-#&gt;  2:                                 Cache 2018-06-12 16:09:46
-#&gt;  3:                               numeric 2018-06-12 16:09:46
-#&gt;  4:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt;  5:      b7eae7c361dfb6d161192321de6bc893 2018-06-12 16:09:46
-#&gt;  6:                                     f 2018-06-12 16:09:46
-#&gt;  7:                                   784 2018-06-12 16:09:46
-#&gt;  8:                   2018-06-12 16:09:46 2018-06-12 16:09:46
-#&gt;  9:                   withCallingHandlers 2018-06-12 16:09:46
-#&gt; 10:                               saveRDS 2018-06-12 16:09:46
-#&gt; 11:                               do.call 2018-06-12 16:09:46
-#&gt; 12:                      build_site_local 2018-06-12 16:09:46
-#&gt; 13:                       build_reference 2018-06-12 16:09:46
-#&gt; 14:                  data_reference_topic 2018-06-12 16:09:46
-#&gt; 15:                                   try 2018-06-12 16:09:46
-#&gt; 16:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-12 16:09:46
-#&gt; 17: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-12 16:09:46</div><div class='input'>
+#&gt;  1:                                   rda 2018-06-13 10:07:12
+#&gt;  2:                                 Cache 2018-06-13 10:07:12
+#&gt;  3:                               numeric 2018-06-13 10:07:12
+#&gt;  4:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt;  5:      b7eae7c361dfb6d161192321de6bc893 2018-06-13 10:07:12
+#&gt;  6:                                     f 2018-06-13 10:07:12
+#&gt;  7:                                   784 2018-06-13 10:07:12
+#&gt;  8:                   2018-06-13 10:07:12 2018-06-13 10:07:12
+#&gt;  9:                   withCallingHandlers 2018-06-13 10:07:12
+#&gt; 10:                               saveRDS 2018-06-13 10:07:12
+#&gt; 11:                               do.call 2018-06-13 10:07:12
+#&gt; 12:                      build_site_local 2018-06-13 10:07:12
+#&gt; 13:                       build_reference 2018-06-13 10:07:12
+#&gt; 14:                  data_reference_topic 2018-06-13 10:07:12
+#&gt; 15:                                   try 2018-06-13 10:07:12
+#&gt; 16:    n:52ad08b1270ae9be9c0a12805d408433 2018-06-13 10:07:12
+#&gt; 17: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-13 10:07:12</div><div class='input'>
 <span class='co'># cleanup</span>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
 <span class='fu'>unlink</span>(<span class='no'>tmpDir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>

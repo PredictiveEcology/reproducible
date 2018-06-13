@@ -10,15 +10,15 @@
 |language |en_CA:en                     |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-06-12                   |
+|date     |2018-06-13                   |
 
 ## Packages
 
 |package      |*  |version    |date       |source                                          |
 |:------------|:--|:----------|:----------|:-----------------------------------------------|
-|memoise      |   |1.1.0      |2018-06-12 |Github (hadley/memoise@06d16ec)                 |
-|quickPlot    |   |0.1.3.9002 |2018-06-12 |Github (PredictiveEcology/quickPlot@d26bb6e)    |
-|reproducible |   |0.2.0      |2018-06-12 |Github (PredictiveEcology/reproducible@fc661a6) |
+|memoise      |   |1.1.0      |2018-06-13 |Github (hadley/memoise@06d16ec)                 |
+|quickPlot    |   |0.1.3.9002 |2018-06-13 |Github (PredictiveEcology/quickPlot@d26bb6e)    |
+|reproducible |   |0.2.0      |2018-06-13 |Github (PredictiveEcology/reproducible@fc661a6) |
 
 # Check results
 
@@ -110,7 +110,7 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.tools/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [77s/77s]
+  Running ‘test-all.R’ [75s/75s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
   ══ testthat results  ═══════════════════════════════════════════════════════════
