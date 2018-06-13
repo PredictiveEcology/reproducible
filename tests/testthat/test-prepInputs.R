@@ -19,7 +19,7 @@ test_that("prepInputs doesn't work", {
                              url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
   )
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
-  expect_true(any(grepl(mess, pattern = "Appending")))
+  expect_true(any(grepl(mess, pattern = "Writing")))
   expect_true(any(grepl(mess, pattern = "Finished")))
   expect_true(is(shpEcozone, "SpatialPolygons"))
 
@@ -52,7 +52,6 @@ test_that("prepInputs doesn't work", {
   )
   expect_true(is(shpEcozone2, "SpatialPolygons"))
   expect(identical(shpEcozone1, shpEcozone2))
-  unlink(dPath, recursive = TRUE)
 
   # Add a study area to Crop and Mask to
   # Create a "study area"
@@ -93,11 +92,9 @@ test_that("prepInputs doesn't work", {
 
   #plot(shpEcozone)
   #plot(shpEcozoneSm, add = TRUE, col = "red")
-  unlink(dPath)
 
   # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
   #   but the StudyArea does get reprojected, need to use rasterToMatch
-  dPath <- file.path(tempdir(), "LCC")
   lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
   url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
                    "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
@@ -128,18 +125,21 @@ test_that("prepInputs doesn't work", {
   setwd(tempdir())
   if (interactive()) {
     # need authentication for this
-    test <- prepInputs(
+    warns <- capture_warnings(test <- prepInputs(
       targetFile = "FMA_Boundary_Updated.shp",
       url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
       destinationPath = "data/FMA"
-    )
+    ))
+    # There is a meaningless warning for this unit test -- ignore it :
+    # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
+      #                  Z-dimension discarded
     expect_is(test, "SpatialPolygons")
   }
 
 
-  # don't pass url -- use local copy of archive only
+  # don't pass url -- use local copy of archive only - use purge = TRUE to rm checksums file, rewrite it here
   shpEcozone <- prepInputs(destinationPath = dPath,
-                           archive = file.path(dPath, "ecozone_shp.zip"))
+                           archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
   expect_true(is(shpEcozone, "SpatialPolygons"))
 
   shpEcozone <- prepInputs(destinationPath = dPath,
@@ -150,13 +150,56 @@ test_that("prepInputs doesn't work", {
 
   rm(shpEcozone)
   expect_false(exists("shpEcozone", inherits = FALSE))
-  # try again with url
 
+  # try again with url - should *not* download, even though checksums came from the
+  #   prepInputs that had locally generated -- confirming that checksums with a manually copied file will work
+  #   instead of forcing prepInputs to get the file.
   shpEcozone <- prepInputs(destinationPath = dPath,
                            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
                            archive = file.path(dPath, "ecozone_shp.zip"),
                            alsoExtract = c("ecozones.dbf", "ecozones.prj",
                                            "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
   expect_true(is(shpEcozone, "SpatialPolygons"))
+
+  lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
+  url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
+                   "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
+
+  # only archive -- i.e., skip download, but do extract and postProcess
+  rm(LCC2005)
+  LCC2005 <- prepInputs(
+    archive = "LandCoverOfCanada2005_V1_4.zip",
+    destinationPath = asPath(dPath),
+    studyArea = StudyArea,
+    purge = TRUE
+  )
+  expect_false(any(grepl("Skipping extractFromArchive", mess)))
+  expect_true(is(LCC2005, "Raster"))
+
+  rm(LCC2005)
+  mess <- capture_messages(LCC2005 <- prepInputs(
+    archive = "LandCoverOfCanada2005_V1_4.zip",
+    destinationPath = asPath(dPath),
+    studyArea = StudyArea
+  ))
+  expect_true(any(grepl("Skipping extractFromArchive", mess)))
+  expect_true(is(LCC2005, "Raster"))
+
+  # only targetFile -- i.e., skip download, extract ... but do postProcess
+  rm(LCC2005)
+  mess <- capture_messages(LCC2005 <- prepInputs(
+    targetFile = lcc2005Filename,
+    destinationPath = asPath(dPath),
+    studyArea = StudyArea,
+    purge = TRUE
+  ))
+  expect_false(any(grepl("extract", mess))) # nothing that talks about extracting ...
+                         #which means no extractFromArchive or even skipping extract
+
+  expect_true(is(LCC2005, "Raster"))
+  StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
+  # crop and mask worked:
+  expect_identical(extent(LCC2005)[1:4],
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 
 })
