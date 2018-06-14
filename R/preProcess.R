@@ -2,15 +2,15 @@
 #'
 #' This does downloading (via \code{downloadFile}), checksumming (\code{Checksums}),
 #' and extracting from archives (\code{extractFromArchive}), plus cleaning up of input
-#' arguments (e.g., paths, function names). This is the first stage of three used in
-#' \code{prepInputs}.
+#' arguments (e.g., paths, function names).
+#' This is the first stage of three used in \code{prepInputs}.
 #'
 #' @return
-#' A list with 5 elements, \code{checkSums} (the result of a \code{Checksums} after downloading),
-#' \code{dots} (cleaned up ..., including deprecated argument checks), \code{fun} (the function to
-#' be used to load the preProcessed object from disk), \code{targetFilePath} (the fully qualified
-#' path to the \code{targetFile}), and \code{tryRasterFn} (a logical whether the the
-#' \code{targetFilePath}
+#' A list with 5 elements, \code{checkSums} (the result of a \code{Checksums}
+#' after downloading), \code{dots} (cleaned up ..., including deprecated argument checks),
+#' \code{fun} (the function to be used to load the preProcessed object from disk),
+#' \code{targetFilePath} (the fully qualified path to the \code{targetFile}),
+#' and \code{tryRasterFn} (a logical whether the the \code{targetFilePath}
 #' should be loaded with \code{\link[raster]{raster}}).
 #'
 #' @author Eliot McIntire
@@ -115,12 +115,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   if (purge > 1)  {
     purgeChar <- as.character(purge)
-    checkSums <- switch(purgeChar,
-                        "2" = checkSums[!(checkSums$expectedFile %in% basename(targetFile)),],
-                        "3" = checkSums[!(checkSums$expectedFile %in% basename(archive)),],
-                        "4" = checkSums[!(checkSums$expectedFile %in% basename(alsoExtract)),],
-                        "5" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract)))),],
-                        "6" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract, archive)))),]
+    checkSums <- switch(
+      purgeChar,
+      "2" = checkSums[!(checkSums$expectedFile %in% basename(targetFile)), ],
+      "3" = checkSums[!(checkSums$expectedFile %in% basename(archive)), ],
+      "4" = checkSums[!(checkSums$expectedFile %in% basename(alsoExtract)), ],
+      "5" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract)))), ], #nolint
+      "6" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract, archive)))), ] #nolint
     )
     needChecksums <- 2
   }
@@ -192,7 +193,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               dots = dots,
               fun = fun,
               targetFilePath = targetFilePath,
-              tryRasterFn = tryRasterFn
-              )
+              tryRasterFn = tryRasterFn)
   return(out)
 }
