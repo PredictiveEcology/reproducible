@@ -202,4 +202,26 @@ test_that("prepInputs doesn't work", {
   expect_identical(extent(LCC2005)[1:4],
                    round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 
+  skip(message = "Untested deeper tests")
+  file.remove(dir(dPath, full.names = TRUE, recursive = TRUE))
+  polyMatrix <- matrix(c(-121.85, 53.04), ncol = 2)
+  template <- prepInputs(url = "ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover/LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip",
+                         destinationPath = dPath)
+
+
+  # fix StudyArea
+  x <- postProcess(x = StudyArea, destinationPath = dPath) # Not using rasterToMatch: works
+
+
+  studyArea2 <- SpaDES.tools::randomPolygon(x = polyMatrix, hectares = 1000)
+  studyArea2 <- spTransform(studyArea2, crs(LCC2005))
+  rgeos::gArea(studyArea2)
+  rgeos::gArea(StudyArea)
+
+
+  postProcess(x = studyArea, targetFilePath = dataPath(sim), destinationPath = dataPath(sim), rasterToMatch = template) # rasterToMatch: doesn't work; doesn't finish nor returns error.
+
+
+
+
 })
