@@ -74,6 +74,7 @@ if (getRversion() >= "3.1.0") {
 #'     \code{3} \tab delete entry for \code{archive} \cr
 #'     \code{5} \tab delete entry for \code{targetFile} & \code{alsoExtract} \cr
 #'     \code{6} \tab delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive} \cr
+#'     \code{7} \tab delete entry that is failing (i.e., for the file downloaded by the \code{url})\cr
 #'   }
 #' will only remove entries in the \code{CHECKSUMS.txt} that are associated with
 #'    \code{targetFile}, \code{alsoExtract} or \code{archive} When prepInputs is called, it will write or append to a (if
@@ -247,7 +248,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     useCache = useCache,
     ...
   )
-
 
   # Load object to R
   ## dots will contain too many things for some functions
@@ -535,6 +535,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
 #' @keywords internal
 #' @importFrom utils capture.output
+#' @importFrom data.table rbindlist as.data.table
 appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationPath,
                                  append = TRUE) {
   if (append) {
@@ -560,9 +561,14 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
                               files = file.path(destinationPath, filesToChecksum))
   )
   if (append) { # a checksums file already existed, need to keep some of it
-    currentFiles <- rbind(nonCurrentFiles, currentFiles)
-    writeChecksumsTable(currentFiles, checkSumFilePath, dots = list())
+    currentFilesToRbind <- data.table::as.data.table(currentFiles)
+    keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
+    currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
+    data.table::setnames(currentFilesToRbind, old = keepCols, new = c("file", "checksum", "algorithm", "filesize"))
+    currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
+    writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
   }
+  return(currentFiles)
 }
 
 #' Check a neededFile for commonly needed auxiliary files

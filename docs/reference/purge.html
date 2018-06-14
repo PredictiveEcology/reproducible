@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A wrapper around a set of downloading functions — downloadFile • reproducible</title>
+<title>Purge individual line items from checksums file — .purge • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,10 +30,9 @@
 
 
 
-<meta property="og:title" content="A wrapper around a set of downloading functions — downloadFile" />
+<meta property="og:title" content="Purge individual line items from checksums file — .purge" />
 
-<meta property="og:description" content="Currently, this only deals with drive_download,
-and download.file." />
+<meta property="og:description" content="Purge individual line items from checksums file" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -123,25 +122,33 @@ and download.file." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>A wrapper around a set of downloading functions</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/download.R'><code>R/download.R</code></a></small>
-    <div class="hidden name"><code>downloadFile.Rd</code></div>
+    <h1>Purge individual line items from checksums file</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/preProcess.R'><code>R/preProcess.R</code></a></small>
+    <div class="hidden name"><code>purge.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Currently, this only deals with <code><a href='http://www.rdocumentation.org/packages/googledrive/topics/drive_download'>drive_download</a></code>,
-and <code><a href='http://www.rdocumentation.org/packages/utils/topics/download.file'>download.file</a></code>.</p>
+    <p>Purge individual line items from checksums file</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>downloadFile</span>(<span class='no'>archive</span>, <span class='no'>targetFile</span>, <span class='no'>neededFiles</span>, <span class='no'>destinationPath</span>, <span class='no'>quick</span>,
-  <span class='no'>checksumFile</span>, <span class='no'>checkSums</span>, <span class='no'>url</span>, <span class='no'>needChecksums</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>.purge</span>(<span class='no'>checkSums</span>, <span class='no'>purge</span>, <span class='no'>targeFile</span>, <span class='no'>archive</span>, <span class='no'>alsoExtract</span>, <span class='no'>url</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>checkSums</th>
+      <td><p>A checksums file, e.g., created by Checksums(..., write = TRUE)</p></td>
+    </tr>
+    <tr>
+      <th>purge</th>
+      <td><p>Logical or Integer. <code>0/FALSE</code> (default) keeps existing
+<code>CHECKSUMS.txt</code> file and
+<code>prepInputs</code> will write or append to it. <code>1/TRUE</code> will deleted the entire
+<code>CHECKSUMS.txt</code> file. Other options, see details.</p></td>
+    </tr>
     <tr>
       <th>archive</th>
       <td><p>Optional character string giving the path of an archive
@@ -149,41 +156,6 @@ containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code>c("xxx.tar", "inner.zip")</code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
 the <code>targetFile</code></p></td>
-    </tr>
-    <tr>
-      <th>targetFile</th>
-      <td><p>Character string giving the path to the eventual file
-(raster, shapefile, csv, etc.) after downloading and extracting from a zip
-or tar archive. This is the file <em>before</em> it is passed to
-<code>postProcess</code>. Currently, the internal checksumming does not checksum
-the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
-Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.</p></td>
-    </tr>
-    <tr>
-      <th>neededFiles</th>
-      <td><p>Character string giving the name of the file(s) to be extracted.</p></td>
-    </tr>
-    <tr>
-      <th>destinationPath</th>
-      <td><p>Character string of a directory in which to download
-and save the file that comes from <code>url</code> and is also where the function
-will look for <code>archive</code> or <code>targetFile</code>.</p></td>
-    </tr>
-    <tr>
-      <th>quick</th>
-      <td><p>Logical. This is passed internally to <code><a href='Checksums.html'>Checksums</a></code>
-(the quickCheck argument), and to
-<code><a href='cache.html'>Cache</a></code> (the quick argument). This results in faster, though
-less robust checking of inputs. See the respective functions.</p></td>
-    </tr>
-    <tr>
-      <th>checksumFile</th>
-      <td><p>A character string indicating the absolute path to the <code>CHECKSUMS.txt</code>
-file.</p></td>
-    </tr>
-    <tr>
-      <th>checkSums</th>
-      <td><p>A checksums file, e.g., created by Checksums(..., write = TRUE)</p></td>
     </tr>
     <tr>
       <th>url</th>
@@ -196,24 +168,6 @@ URL is used here, an ad hoc checksums will be created in the
 <code>prepInputs</code>, comparing the file on hand with the ad hoc
 <code>CHECKSUMS.txt</code>.</p></td>
     </tr>
-    <tr>
-      <th>needChecksums</th>
-      <td><p>A numeric, with <code>0</code> indicating do not write a new checksums,
-<code>1</code> write a new one,
-<code>2</code> append new information to existing one.</p></td>
-    </tr>
-    <tr>
-      <th>overwrite</th>
-      <td><p>Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.</p></td>
-    </tr>
-    <tr>
-      <th>purge</th>
-      <td><p>Logical or Integer. <code>0/FALSE</code> (default) keeps existing
-<code>CHECKSUMS.txt</code> file and
-<code>prepInputs</code> will write or append to it. <code>1/TRUE</code> will deleted the entire
-<code>CHECKSUMS.txt</code> file. Other options, see details.</p></td>
-    </tr>
     </table>
     
 
@@ -223,10 +177,6 @@ even if they pass the checksums or the files are all there.</p></td>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
                 </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire
 
   </div>
 </div>

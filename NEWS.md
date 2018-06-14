@@ -23,6 +23,7 @@ version 0.2.0
     - more precise messages provided upon each use
     - many more `userTags` added automatically to cache entries so much more powerful searching via `showCache(userTags="something")`
 
+* `checksums` now returns a data.table with the same columns whether `write = TRUE` or `write = FALSE`. 
 * `clearCache` and `showCache` now give messages and require user intervention if request to `clearCache` would be large quantities of data deleted
 * `memoise::memoise` now used on 3rd run through an identical `Cache` call, dramatically speeding up in most cases
 * new options: `reproducible.cachePath`, `reproducible.quick`, `reproducible.useMemoise`, `reproducible.useCache`, `reproducible.useragent`, `reproducible.verbose`

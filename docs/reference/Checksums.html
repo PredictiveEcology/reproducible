@@ -193,8 +193,11 @@ the notable argument is <code>append</code>.</p></td>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>data.frame</code> with columns: <code>result</code>, <code>expectedFile</code>,
-        <code>actualFile</code>, and <code>checksum</code>.</p>
+    <p>A <code>data.table</code> with columns: <code>result</code>, <code>expectedFile</code>,
+        <code>actualFile</code>, <code>checksum.x</code>, <code>checksum.y</code>,
+        <code>algorithm.x</code>, <code>algorithm.y</code>, <code>filesize.x</code>, <code>filesize.y</code>
+        indicating the result of comparison between local file (<code>x</code>) and
+        expectation based on the <code>CHECKSUMS.txt</code> file.</p>
     
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 

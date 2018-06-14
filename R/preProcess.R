@@ -86,7 +86,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   message("Preparing: ", targetFile)
 
-  emptyChecksums <- data.table(expectedFile = character(), result = character())
   needChecksums <- 0
 
   if (!is.null(archive)) {
@@ -106,23 +105,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     needChecksums <- 1
   }
 
+  # Need to run checksums on all files in destinationPath because we may not know what files we
+  #   want if targetFile, archive, alsoExtract not specified
   checkSums <- try(Checksums(path = destinationPath, write = FALSE), silent = TRUE)
 
   if (is(checkSums, "try-error")) {
     needChecksums <- 1
-    checkSums <- emptyChecksums
+    checkSums <- .emptyChecksumsResult
   }
 
   if (purge > 1)  {
-    purgeChar <- as.character(purge)
-    checkSums <- switch(
-      purgeChar,
-      "2" = checkSums[!(checkSums$expectedFile %in% basename(targetFile)), ],
-      "3" = checkSums[!(checkSums$expectedFile %in% basename(archive)), ],
-      "4" = checkSums[!(checkSums$expectedFile %in% basename(alsoExtract)), ],
-      "5" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract)))), ], #nolint
-      "6" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract, archive)))), ] #nolint
-    )
+    checkSums <- .purge(checkSums = checkSums, purge = purge)
     needChecksums <- 2
   }
 
@@ -140,7 +133,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     url = url,
     checksumFile = asPath(checkSumFilePath),
     needChecksums = needChecksums,
-    overwrite = overwrite
+    overwrite = overwrite,
+    purge = purge # may need to try purging again if no target, archive or alsoExtract were known yet
   )#, moduleName = moduleName, modulePath = modulePath)
   checkSums <- downloadFileResult$checkSums
   needChecksums <- downloadFileResult$needChecksums
@@ -153,7 +147,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (needChecksums > 0) {
       # needChecksums 1 --> write a new checksums.txt file
       # needChecksums 2 --> append  a new checksums.txt file
-      appendChecksumsTable(checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+      appendChecksumsTable(checkSumFilePath = checkSumFilePath, filesToChecksum = basename(filesToChecksum),
                            destinationPath = destinationPath, append = needChecksums == 2)
     }
   })
@@ -189,6 +183,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     fun <- get(fun)
   }
 
+
+  if (needChecksums > 0) {
+    # needChecksums 1 --> write a new checksums.txt file
+    # needChecksums 2 --> append  a new checksums.txt file
+    checkSums <-
+      appendChecksumsTable(
+        checkSumFilePath = checkSumFilePath,
+        filesToChecksum = basename(filesToChecksum),
+        destinationPath = destinationPath,
+        append = needChecksums == 2
+      )
+    on.exit() # remove on.exit because it is done here
+  }
   out <- list(checkSums = checkSums,
               dots = dots,
               fun = fun,
@@ -196,3 +203,27 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               tryRasterFn = tryRasterFn)
   return(out)
 }
+
+#' Purge individual line items from checksums file
+#'
+#' @inheritParams downloadFile
+#' @keywords internal
+#' @rdname purge
+.purge <- function(checkSums, purge, targeFile, archive, alsoExtract, url) {
+  purgeChar <- as.character(purge)
+  checkSums <- tryCatch(
+    switch(
+      purgeChar,
+      "2" = checkSums[!(checkSums$expectedFile %in% basename(targetFile)), ],
+      "3" = checkSums[!(checkSums$expectedFile %in% basename(archive)), ],
+      "4" = checkSums[!(checkSums$expectedFile %in% basename(alsoExtract)), ],
+      "5" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract)))), ], #nolint
+      "6" = checkSums[!(checkSums$expectedFile %in% basename(unique(c(targetFile, alsoExtract, archive)))), ], #nolint
+      "7" = checkSums[!(checkSums$expectedFile %in% basename(url)), ] #nolint
+    ), error = function(x) checkSums)
+  checkSums
+}
+
+.emptyChecksumsResult <- data.table(expectedFile = character(), result = character())
+.emptyChecksumsFileContent <- data.frame(file = character(), checksum = character(), filesize = character(),
+                              algorithm = character())
