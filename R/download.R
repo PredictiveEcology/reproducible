@@ -1,28 +1,3 @@
-#' Extract a url
-#'
-#' The default method is simply a pass through. There may be other methods
-#' for other classes of url.
-#'
-#' @param x    A character string or other object containing a url.
-#' @param ...  Other arguments which may be passed to individual methods.
-#'
-#' @return The url.
-#'
-#' @export
-setGeneric("extractURL", function(x, ...) {
-  standardGeneric("extractURL")
-})
-
-#' @export
-#' @exportMethod extractURL
-#' @rdname extractURL
-setMethod(
-  "extractURL",
-  signature = "ANY",
-  definition = function(x, ...) {
-    x
-})
-
 #' A wrapper around a set of downloading functions
 #'
 #' Currently, this only deals with \code{\link[googledrive]{drive_download}},
