@@ -82,9 +82,6 @@
     <loc>http://reproducible.predictiveecology.org/reference/extractFromArchive.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/extractURL.html</loc>
-  </url>
-  <url>
     <loc>http://reproducible.predictiveecology.org/reference/fastMask.html</loc>
   </url>
   <url>
@@ -167,6 +164,9 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/projectInputs.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/purge.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/readLinesRcpp.html</loc>
