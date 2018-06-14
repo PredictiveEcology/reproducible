@@ -83,9 +83,10 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         if (is.null(fileToDownload))  {
           fileToDownload <- basename(downloadResults$destFile)
         }
-        checkSums <- Checksums(files = file.path(destinationPath, fileToDownload), checksumFile = checksumFile,
-                       path = destinationPath, quickCheck = quick,
-                       write = FALSE)
+        checkSums <- Checksums(files = file.path(destinationPath, fileToDownload),
+                               checksumFile = checksumFile,
+                               path = destinationPath, quickCheck = quick,
+                               write = FALSE)
         isOK <- checkSums[compareNA(checkSums$expectedFile, fileToDownload) |
                                   compareNA(checkSums$actualFile, fileToDownload),]$result
         isOK <- isOK[!is.na(isOK)] == "OK"
@@ -97,8 +98,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 
             sc <- sys.calls()
             piCall <- grep("^prepInputs", sc, value = TRUE)
-            purgeTry <- if(length(piCall)) {
-              gsub(piCall, pattern = ")$", replacement = paste0(", purge = ",purgeNum,")"))
+            purgeTry <- if (length(piCall)) {
+              gsub(piCall, pattern = ")$", replacement = paste0(", purge = ", purgeNum, ")"))
             } else {
               ""
             }
@@ -107,13 +108,11 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                  " 1) This may be an intermittent internet problem -- try to rerun this ",
                  "current function call.\n",
                  " 2) The local copy of the file may have been changed or corrupted -- run:\n",
-                 "      file.remove('",normalizePath(fileToDownload),"')\n",
+                 "      file.remove('", normalizePath(fileToDownload), "')\n",
                  "      then rerun this current function call.\n",
                  " 3) The download is correct, and the Checksums should be rewritten for this file:\n",
-                 "      --> rerun this current function call, specifying 'purge = ",purgeNum,"' possibly\n",
+                 "      --> rerun this current function call, specifying 'purge = ", purgeNum, "' possibly\n",
                  "      ", purgeTry, call. = FALSE)
-
-
           } else if (isTRUE(all(isOK))) {
             downloadResults$needChecksums <- 0
           }
