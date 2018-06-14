@@ -80,17 +80,21 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                      overwrite = overwrite,
                      needChecksums = needChecksums)
       if (file.exists(checksumFile)) {
-        if (!is.null(fileToDownload))  {
-          res <- Checksums(files = file.path(destinationPath, fileToDownload), checksumFile = checksumFile,
-                         path = destinationPath, quickCheck = quick,
-                         write = FALSE)
-          isOK <- res[compareNA(res$expectedFile, fileToDownload) | compareNA(res$actualFile, fileToDownload),]$result
-          isOK <- isOK[!is.na(isOK)] == "OK"
-          if (length(isOK) > 0) {
-            if (!isTRUE(all(isOK))) {
-              stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try download again, ",
-                   "or if the local file(s) is/are correct, rerun checksums(write = TRUE, ...) on the local files")
-            }
+        if (is.null(fileToDownload))  {
+          fileToDownload <- basename(downloadResults$destFile)
+        }
+        checkSums <- Checksums(files = file.path(destinationPath, fileToDownload), checksumFile = checksumFile,
+                       path = destinationPath, quickCheck = quick,
+                       write = FALSE)
+        isOK <- checkSums[compareNA(checkSums$expectedFile, fileToDownload) |
+                                  compareNA(checkSums$actualFile, fileToDownload),]$result
+        isOK <- isOK[!is.na(isOK)] == "OK"
+        if (length(isOK) > 0) {
+          if (!isTRUE(all(isOK))) {
+            stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try download again, ",
+                 "or if the local file(s) is/are correct, rerun checksums(write = TRUE, ...) on the local files")
+          } else if (isTRUE(all(isOK))) {
+            downloadResults$needChecksums <- 0
           }
         }
       }
@@ -125,7 +129,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     archiveReturn <- archive
   }
   list(needChecksums = downloadResults$needChecksums, archive = archiveReturn, neededFiles = neededFiles,
-       downloaded = downloadResults$destFile)
+       downloaded = downloadResults$destFile, checkSums = checkSums)
 }
 
 .getSourceURL <- function(pattern, x) {
@@ -221,7 +225,8 @@ dlGeneric <- function(url, needChecksums) {
 downloadRemote <- function(url, archive, targetFile, checkSums,
                            moduleName, fileToDownload, skipDownloadMsg,
                            destinationPath, overwrite, needChecksums) {
-    if (!is.null(fileToDownload) ) {
+
+    if (!is.null(fileToDownload) || !is.null(url) ) { # don't need to download because no url --- but need a case
       if (!is.null(url)) {
         if (grepl("drive.google.com", url)) {
           downloadResults <- dlGoogle(

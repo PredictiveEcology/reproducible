@@ -1,6 +1,6 @@
-## resubmission
+## Updated release
 
-This is a major update to our package.
+This is a major update to our package that includes numerous enhancements and bug fixes (see NEWS.md).
 
 ## Test environments
 
@@ -24,21 +24,14 @@ This is a major update to our package.
 * Windows 7            (local), R 3.5.0
 
 ### Development R version
-* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-11 r74885)
+* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-13 r74895)
 * Ubuntu 18.04         (local), R 3.6.0 (2018-06-11 r74889)
-* Windows           (appveyor), R 3.6.0 (2018-06-11 r74889)
+* Windows           (appveyor), R 3.6.0 (2018-06-13 r74895)
 * Windows        (win-builder), R 3.6.0 (2018-06-11 r74889)
 
 ## R CMD check results
 
-There were no ERRORs nor WARNINGs.
-
-There was 1 NOTE:
-
-1. spell-check reports false positives:
-
-    Possibly mis-spelled words in DESCRIPTION:
-      Reproducibility (3:36)
+There were no ERRORs, WARNINGs, nor NOTEs.
 
 ## Downstream dependencies
 
