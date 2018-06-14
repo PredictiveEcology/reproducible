@@ -31,14 +31,7 @@ This is a major update to our package that includes numerous enhancements and bu
 
 ## R CMD check results
 
-There were no ERRORs nor WARNINGs.
-
-There was 1 NOTE:
-
-1. spell-check reports false positives:
-
-    Possibly mis-spelled words in DESCRIPTION:
-      Reproducibility (3:36)
+There were no ERRORs, WARNINGs, nor NOTEs.
 
 ## Downstream dependencies
 
