@@ -213,15 +213,13 @@ test_that("prepInputs doesn't work", {
   x <- postProcess(x = StudyArea, destinationPath = dPath) # Not using rasterToMatch: works
 
 
-  studyArea2 <- SpaDES.tools::randomPolygon(x = polyMatrix, hectares = 1000)
-  studyArea2 <- spTransform(studyArea2, crs(LCC2005))
-  rgeos::gArea(studyArea2)
-  rgeos::gArea(StudyArea)
+  ## TODO: remove SpaDES.shiny dependency
+  #studyArea2 <- SpaDES.tools::randomPolygon(x = polyMatrix, hectares = 1000)
+  #studyArea2 <- spTransform(studyArea2, crs(LCC2005))
+  #rgeos::gArea(studyArea2)
+  #rgeos::gArea(StudyArea)
 
-
-  postProcess(x = studyArea, targetFilePath = dataPath(sim), destinationPath = dataPath(sim), rasterToMatch = template) # rasterToMatch: doesn't work; doesn't finish nor returns error.
-
-
-
-
+  ## rasterToMatch: doesn't work; doesn't finish nor returns error.
+  #postProcess(x = studyArea, targetFilePath = dataPath(sim),
+  #            destinationPath = dataPath(sim), rasterToMatch = template)
 })
