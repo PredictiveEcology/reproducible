@@ -1,6 +1,6 @@
-## resubmission
+## Updated release
 
-This is a major update to our package.
+This is a major update to our package that includes numerous enhancements and bug fixes (see NEWS.md).
 
 ## Test environments
 
