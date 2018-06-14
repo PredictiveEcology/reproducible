@@ -51,7 +51,7 @@ test_that("prepInputs doesn't work", {
     destinationPath = dPath
   )
   expect_true(is(shpEcozone2, "SpatialPolygons"))
-  expect_identical(shpEcozone1, shpEcozone2)
+  expect_equivalent(shpEcozone1, shpEcozone2) # different attribute newCache
 
   # Add a study area to Crop and Mask to
   # Create a "study area"

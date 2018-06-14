@@ -91,8 +91,29 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         isOK <- isOK[!is.na(isOK)] == "OK"
         if (length(isOK) > 0) {
           if (!isTRUE(all(isOK))) {
-            stop("Checksums for ", fileToDownload, " from url: ", url, " failed checksum test. Please try download again, ",
-                 "or if the local file(s) is/are correct, rerun checksums(write = TRUE, ...) on the local files")
+            tf <- tryCatch(basename(targetFile) %in% fileToDownload, error = function(x) FALSE)
+            af <- tryCatch(basename(archive) %in% fileToDownload, error = function(x) FALSE)
+            purgeNum <- if (isTRUE(tf)) 2 else if (isTRUE(af)) 3 else 6
+
+            sc <- sys.calls()
+            piCall <- grep("^prepInputs", sc, value = TRUE)
+            purgeTry <- if(length(piCall)) {
+              gsub(piCall, pattern = ")$", replacement = paste0(", purge = ",purgeNum,")"))
+            } else {
+              ""
+            }
+            stop("\nDownloaded version of ", fileToDownload, " from url: ", url,
+                 " did not match expected file (checksums failed). There are several options:\n",
+                 " 1) This may be an intermittent internet problem -- try to rerun this ",
+                 "current function call.\n",
+                 " 2) The local copy of the file may have been changed or corrupted -- run:\n",
+                 "      file.remove('",normalizePath(fileToDownload),"')\n",
+                 "      then rerun this current function call.\n",
+                 " 3) The download is correct, and the Checksums should be rewritten for this file:\n",
+                 "      --> rerun this current function call, specifying 'purge = ",purgeNum,"' possibly\n",
+                 "      ", purgeTry, call. = FALSE)
+
+
           } else if (isTRUE(all(isOK))) {
             downloadResults$needChecksums <- 0
           }
