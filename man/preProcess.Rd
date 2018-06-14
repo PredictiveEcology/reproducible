@@ -64,18 +64,18 @@ Since \code{...} is passed to \code{\link{postProcess}}, these will
 functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 }
 \value{
-A list with 5 elements, \code{checkSums} (the result of a \code{Checksums} after downloading),
-\code{dots} (cleaned up ..., including deprecated argument checks), \code{fun} (the function to
-be used to load the preProcessed object from disk), \code{targetFilePath} (the fully qualified
-path to the \code{targetFile}), and \code{tryRasterFn} (a logical whether the the
-\code{targetFilePath}
+A list with 5 elements, \code{checkSums} (the result of a \code{Checksums}
+after downloading), \code{dots} (cleaned up ..., including deprecated argument checks),
+\code{fun} (the function to be used to load the preProcessed object from disk),
+\code{targetFilePath} (the fully qualified path to the \code{targetFile}),
+and \code{tryRasterFn} (a logical whether the the \code{targetFilePath}
 should be loaded with \code{\link[raster]{raster}}).
 }
 \description{
 This does downloading (via \code{downloadFile}), checksumming (\code{Checksums}),
 and extracting from archives (\code{extractFromArchive}), plus cleaning up of input
-arguments (e.g., paths, function names). This is the first stage of three used in
-\code{prepInputs}.
+arguments (e.g., paths, function names).
+This is the first stage of three used in \code{prepInputs}.
 }
 \author{
 Eliot McIntire
