@@ -80,6 +80,7 @@ Collate:
     'packages.R'
     'pipe.R'
     'postProcess.R'
+    'preProcess.R'
     'prepInputs.R'
     'reproducible-package.R'
     'search.R'
