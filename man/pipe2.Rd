@@ -13,13 +13,15 @@ lhs \%>\% rhs
 \item{rhs}{A function call using the magrittr semantics.}
 }
 \description{
+STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
+}
+\details{
 This pipe will likely be deprecated, as it masks
 other pipes in the R ecosystem. This is fine, except to work,
 the reproducible package must be guaranteed to be first
 on the search path, which is almost impossible in any realistic project. Please
 see the \code{\%C\%} function ?pipe
-}
-\details{
+
 A pipe that works with Cache. The code for this is based on a verbatim copy from
 \url{https://github.com/tidyverse/magrittr/blob/master/R/pipe.R} on Sep 8, 2017,
 based on commit 81c2e2410ebb7c560a2b4a8384ef5c20946373c3, with enhancements
@@ -42,8 +44,10 @@ normal, caching the return value at the point of the \code{Cache} call
 into the cache repository for later use.
 }
 \examples{
+\dontrun{
 tmpdir <- file.path(tempdir(), "testCache")
 checkPath(tmpdir, create = TRUE)
+try(detach("package:magrittr", unload = TRUE)) # magrittr, if loaded, gives an error below
 a <- rnorm(10, 16) \%>\% mean() \%>\% prod(., 6)
 b <- rnorm(10, 16) \%>\% mean() \%>\% prod(., 6) \%>\% Cache(cacheRepo = tmpdir)
 d <- rnorm(10, 16) \%>\% mean() \%>\% prod(., 6) \%>\% Cache(cacheRepo = tmpdir)
@@ -59,7 +63,7 @@ all.equal(f1, f2) # TRUE because the runif is before the Cache
 all.equal(f3, f4) # different because the runif is after the Cache
 
 unlink(tmpdir, recursive = TRUE)
-
+}
 }
 \seealso{
 pipe

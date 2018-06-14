@@ -1,37 +1,50 @@
-## resubmission
+## Updated release
 
-This is a major update to our package.
+This is a major update to our package that includes numerous enhancements and bug fixes (see NEWS.md).
 
 ## Test environments
 
 ### Previous R versions
-* Ubuntu 14.04.5      (travis-ci), R 3.3.3
-* Windows              (appveyor), R 3.3.2
-* Windows              (appveyor), R 3.3.3
-* Windows 7               (local), R 3.3.3
+* Ubuntu 14.04        (travis-ci), R 3.1.0
+* Ubuntu 14.04        (travis-ci), R 3.2.0
+* Ubuntu 14.04        (travis-ci), R 3.3.0
+* Ubuntu 14.04        (travis-ci), R 3.4.0
+* Windows              (appveyor), R 3.1.0
+* Windows              (appveyor), R 3.2.0
+* Windows              (appveyor), R 3.3.0
+* Windows              (appveyor), R 3.4.0
 
 ### Current R versions
-* macOS High Sierra    (local), R 3.4.3
-* Ubuntu 16.0          (local), R 3.4.3
-* Ubuntu 14.04.5   (travis-ci), R 3.4.2
-* Debian 4.9.51        (local), R 3.4.3
-* Windows           (appveyor), R 3.4.3
-* Windows        (win-builder), R 3.4.3
-* Windows 7            (local), R 3.4.3
+* macOS High Sierra    (local), R 3.5.0
+* OS X El Capitan  (travis-ci), R 3.5.0
+* Ubuntu 14.04     (travis-ci), R 3.5.0
+* Ubuntu 18.04         (local), R 3.5.0
+* Windows           (appveyor), R 3.5.0
+* Windows        (win-builder), R 3.5.0
+* Windows 7            (local), R 3.5.0
 
 ### Development R version
-* Ubuntu 14.04        (travis-ci), R 3.5.0 (2018-01-24 r74157)
-* Windows                 (local), R 3.5.0 (2018-01-24 r74157)
-* Windows           (win-builder), R 3.5.0 (2018-01-24 r74157)
+* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-11 r74885)
+* Ubuntu 18.04         (local), R 3.6.0 (2018-06-11 r74889)
+* Windows           (appveyor), R 3.6.0 (2018-06-11 r74889)
+* Windows        (win-builder), R 3.6.0 (2018-06-11 r74889)
 
 ## R CMD check results
 
-There are no errors, warnings, or notes in any of the above.
+There were no ERRORs nor WARNINGs.
+
+There was 1 NOTE:
+
+1. spell-check reports false positives:
+
+    Possibly mis-spelled words in DESCRIPTION:
+      Reproducibility (3:36)
 
 ## Downstream dependencies
 
-There are several 3 downstream dependencies of this package. I am a co-developer of these 3 packages. These packages are about to be updated with CRAN. We checked against current CRAN versions of all 3 and current development versions of all 3. There were 2 failed tests on SpaDES.core on CRAN and 2 failed tests currently on the development version. These have been noted, are easy to change. Changes to those packages will be will be submitted soon (within 2 weeks) to CRAN.
+We have run R CMD check on downstream dependencies, and all have passed except those noted below.
+Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
 
-- `SpaDES` (Imports)
-- `SpaDES.addins` (Imports)
-- `SpaDES.core` (Depends)
+* `SpaDES` and `SpaDES.core` produce an error due to a non-CRAN package in Suggests, but passes once that dependency is installed.
+
+* `SpaDES.tools` produces an error due to an unrelated error in that package. I am a developer of `SpaDES.tools` and have prepared a fixed version for CRAN which will be submitted shortly.

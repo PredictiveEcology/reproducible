@@ -13,10 +13,12 @@ lhs \%C\% rhs
 \item{rhs}{A function call using the magrittr semantics.}
 }
 \description{
-This pipe can only be used at the start of a pipe chain, and must
-be preceeded by \code{Cache(...)} to allow other Cache arguments to be passed.
+STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
 }
 \details{
+This pipe can only be used at the start of a pipe chain, and must
+be preceeded by \code{Cache(...)} to allow other Cache arguments to be passed.
+
 This will take the input arguments of the
 first function immediately following the \code{Cache() \%C\%} and the
 entire pipe chain code, evaluate them both
@@ -27,14 +29,17 @@ arguments, then all chain elements will be evaluated. The final result will
 be cached for future use. The entire chain must be identical, therefore.
 The required usage should be straight forward to insert into existing code
 that uses pipes (\code{Cache() \%C\% ... remaining pipes}.
+\code{This is still experimental; use with care}.
 }
 \examples{
+
+# dontrun{ # these can't be automatically run due to package conflicts with magrittr
 tmpdir <- file.path(tempdir(), "testCache")
 checkPath(tmpdir, create = TRUE)
 a <- rnorm(10, 16) \%>\%
      mean() \%>\%
      prod(., 6)
-b <- Cache(cacheRepo = tmpdir) \%C\%
+b <- Cache(cacheRepo = tmpdir) \%C\% # use of the \%C\% pipe!
      rnorm(10, 16) \%>\%
      mean() \%>\%
      prod(., 6)
@@ -53,6 +58,7 @@ all.equal(a,d) # different because 'a' uses a unique rnorm, 'd' uses the Cached 
 all.equal(a,e) # different because the final function, prod, has a changed argument.
 
 unlink(tmpdir, recursive = TRUE)
+#}
 }
 \seealso{
 pipe2

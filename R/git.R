@@ -1,7 +1,7 @@
 #' Check global git config file
 #'
 #' In general, interacting with remote repositories using \pkg{git2r} won't work
-#' if a users's \file{.gitconfig} file rewrites HTTPS urls to SSH.
+#' if a user's \file{.gitconfig} file rewrites HTTPS urls to SSH.
 #'
 #' @author Alex Chubaty
 #' @importFrom git2r config
@@ -38,8 +38,7 @@
 #'
 #' @param ...  Additional arguments passed to \code{git2r} functions.
 #'
-#' @return Invisibly returns a repository class object, defined in
-#'         \code{\link[git2r]{git_repository-class}}
+#' @return Invisibly returns a git_repository class object, defined in \pkg{git2r}.
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export

@@ -5,37 +5,98 @@ matrix:
   include:
   - os: linux
     dist: trusty
+    r: 3.3.0
+    addons:
+      apt:
+        sources:
+        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
+        packages:
+        - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
+        - libproj-dev
+        - libudunits2-dev
+        - gdal-bin
+    r_packages:
+    - rgdal
+  - os: linux
+    dist: trusty
+    r: 3.4.0
+    addons:
+      apt:
+        sources:
+        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
+        packages:
+        - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
+        - libproj-dev
+        - libudunits2-dev
+        - gdal-bin
+    r_packages:
+    - rgdal
+  - os: linux
+    dist: trusty
     r: oldrel
     addons:
       apt:
+        sources:
+        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal1-dev
-          - libproj-dev
+        - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
+        - libproj-dev
+        - libudunits2-dev
+        - gdal-bin
+    r_packages:
+    - rgdal
   - os: linux
     dist: trusty
     r: release
     addons:
       apt:
+        sources:
+        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal1-dev
-          - libproj-dev
-    r_binary_packages:
+        - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
+        - libproj-dev
+        - libudunits2-dev
+        - gdal-bin
+    r_packages:
       - covr
+      - devtools
     r_github_packages:
       - jimhester/lintr
     after_success:
     - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
     - Rscript -e 'lintr::lint_package()'
+    r_packages:
+    - rgdal
   - os: linux
     dist: trusty
     r: devel
     addons:
       apt:
+        sources:
+          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - libgdal1-dev
-          - libproj-dev
+        - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
+        - libproj-dev
+        - libudunits2-dev
+        - gdal-bin
     r_packages:
-    - devtools
+      - devtools
+      - rgdal
   - os: osx
     osx_image: xcode9.2
     latex: false
@@ -50,8 +111,3 @@ notifications:
   email:
     on_success: change
     on_failure: change
-branches:
-  only:
-    - master
-    - development
-    - testing

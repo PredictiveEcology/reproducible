@@ -18,13 +18,22 @@
 <!-- Font Awesome icons -->
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 
+<!-- clipboard.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
+
+<!-- sticky kit -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
-<script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-  
-  
+
+
+
+<meta property="og:title" content="Function reference" />
+
+
+
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -33,6 +42,16 @@
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-58633549-5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-58633549-5');
+</script>
 
   </head>
 
@@ -47,12 +66,16 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">reproducible</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="../index.html">reproducible</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="..//index.html">
+  <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
      
   </a>
@@ -60,8 +83,20 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
+    </li>
+  </ul>
+</li>
 <li>
-  <a href="../news/index.html">News</a>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       
@@ -73,6 +108,7 @@
   </a>
 </li>
       </ul>
+      
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -80,160 +116,342 @@
       
       </header>
 
-      <div class="row">
-  <div class="col-md-9">
+<div class="row">
+  <div class="contents col-md-9">
     <div class="page-header">
-      <h1>
-        Reference
-        <small>version&nbsp;0.1.3</small>
-      </h1>
+      <h1>Reference</h1>
     </div>
 
-    <div class="contents">
-      <table class="ref-index">
+    <table class="ref-index">
 
-      <colgroup>
-        <col class="alias" />
-        <col class="title" />
-      </colgroup>
+    <colgroup>
+      
+      <col class="alias" />
+      <col class="title" />
+    </colgroup>
 
-      <tbody>
-        <tr>
-          <th colspan="2">
-            <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-            <p class="section-desc"></p>
-          </th>
-        </tr>
-        <tr>
-          <!--  -->
-          <td>
-            <p><code><a href="addTagsToOutput.html">.addTagsToOutput</a></code> </p>
-          </td>
-          <td><p>Add tags to object</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="cacheMessage.html">.cacheMessage</a></code> </p>
-          </td>
-          <td><p>Create a custom cache message by class</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="cache.html">Cache</a></code> </p>
-          </td>
-          <td><p>Cache method that accommodates environments, S4 methods, Rasters</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="checkCacheRepo.html">.checkCacheRepo</a></code> </p>
-          </td>
-          <td><p>Check for cache repository info in ...</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="checkoutVersion.html">checkoutVersion</a></code> </p>
-          </td>
-          <td><p>Clone, fetch, and checkout from GitHub.com repositories</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="checkPath.html">checkPath</a></code> </p>
-          </td>
-          <td><p>Check filepath</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="clearStubArtifacts.html">clearStubArtifacts</a></code> </p>
-          </td>
-          <td><p>Clear erroneous archivist artifacts</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="copyFile.html">copyFile</a></code> </p>
-          </td>
-          <td><p>Copy a file using <code>Robocopy</code> on Windows and <code>rsync</code> on Linux/macOS</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="Copy.html">Copy</a></code> </p>
-          </td>
-          <td><p>Recursive copying of nested environments, and other "hard to copy" objects</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="debugCache.html">.debugCache</a></code> </p>
-          </td>
-          <td><p>Attach debug info to return for Cache</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="normPath.html">normPath</a></code> </p>
-          </td>
-          <td><p>Normalize filepath</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="objSizeInclEnviros.html">.objSizeInclEnviros</a></code> </p>
-          </td>
-          <td><p>Determine object size of all objects inside environments</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="Path-class.html">asPath</a></code> </p>
-          </td>
-          <td><p>Coerce a character string to a class "Path"</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="preDigestByClass.html">.preDigestByClass</a></code> </p>
-          </td>
-          <td><p>Any miscellaneous things to do before <code>.robustDigest</code> and after <code>FUN</code> call</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="prepareFileBackedRaster.html">.prepareFileBackedRaster</a></code> </p>
-          </td>
-          <td><p>Copy the file-backing of a file-backed Raster* object</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="prepareOutput.html">.prepareOutput</a></code> </p>
-          </td>
-          <td><p>Make any modifications to object recovered from cacheRepo</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="reproducible-deprecated.html">cache</a></code> </p>
-          </td>
-          <td><p>Deprecated functions</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="reproducible-package.html">reproducible-package</a></code> </p>
-          </td>
-          <td><p>The <code>reproducible</code> package</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="sortDotsUnderscoreFirst.html">.sortDotsUnderscoreFirst</a></code> </p>
-          </td>
-          <td><p>Sort a any named object with dotted names first</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="tagsByClass.html">.tagsByClass</a></code> </p>
-          </td>
-          <td><p>Add extra tags to an archive based on class</p></td>
-        </tr><tr>
-          <!--  -->
-          <td>
-            <p><code><a href="viewCache.html">clearCache</a></code> <code><a href="viewCache.html">showCache</a></code> <code><a href="viewCache.html">keepCache</a></code> </p>
-          </td>
-          <td><p>Examining and modifying the cache</p></td>
-        </tr>
-      </tbody>
-      </table>
-    </div>
+    <tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      <tr>
+        
+        <td>
+          <p><code><a href="Checksums.html">Checksums()</a></code> </p>
+        </td>
+        <td><p>Calculate checksum</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="Copy.html">Copy()</a></code> </p>
+        </td>
+        <td><p>Recursive copying of nested environments, and other "hard to copy" objects</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="Path-class.html">asPath()</a></code> </p>
+        </td>
+        <td><p>Coerce a character string to a class "Path"</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="Require.html">Require()</a></code> </p>
+        </td>
+        <td><p>Repeatability-safe install and load packages, optionally with specific versions</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="addTagsToOutput.html">.addTagsToOutput()</a></code> </p>
+        </td>
+        <td><p>Add tags to object</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cache.html">Cache()</a></code> <code><a href="cache.html">`%<%`</a></code> </p>
+        </td>
+        <td><p>Cache method that accommodates environments, S4 methods, Rasters, &amp; nested caching</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cacheMessage.html">.cacheMessage()</a></code> </p>
+        </td>
+        <td><p>Create a custom cache message by class</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="checkCacheRepo.html">.checkCacheRepo()</a></code> </p>
+        </td>
+        <td><p>Check for cache repository info in ...</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="checkGDALVersion.html">checkGDALVersion()</a></code> </p>
+        </td>
+        <td><p>Check whether the system has a minimum version of GDAL available</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="checkPath.html">checkPath()</a></code> </p>
+        </td>
+        <td><p>Check filepath</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="checkoutVersion.html">checkoutVersion()</a></code> </p>
+        </td>
+        <td><p>Clone, fetch, and checkout from GitHub.com repositories</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="clearStubArtifacts.html">clearStubArtifacts()</a></code> </p>
+        </td>
+        <td><p>Clear erroneous archivist artifacts</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="compareNA.html">compareNA()</a></code> </p>
+        </td>
+        <td><p><code>NA</code>-aware comparison of two vectors</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="copyFile.html">copyFile()</a></code> </p>
+        </td>
+        <td><p>Copy a file using <code>Robocopy</code> on Windows and <code>rsync</code> on Linux/macOS</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cropInputs.html">cropInputs()</a></code> </p>
+        </td>
+        <td><p>Crop a <code>Spatial*</code> or <code>Raster*</code> object</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="debugCache.html">.debugCache()</a></code> </p>
+        </td>
+        <td><p>Attach debug info to return for Cache</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="determineFilename.html">determineFilename()</a></code> </p>
+        </td>
+        <td><p>Determine filename, either automatically or manually</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="downloadFile.html">downloadFile()</a></code> </p>
+        </td>
+        <td><p>A wrapper around a set of downloading functions</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="extractFromArchive.html">extractFromArchive()</a></code> </p>
+        </td>
+        <td><p>Extract files from archive</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="extractURL.html">extractURL()</a></code> </p>
+        </td>
+        <td><p>Extract a url</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="fastMask.html">fastMask()</a></code> </p>
+        </td>
+        <td><p>Faster operations on rasters</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="fixErrors.SpatialPolygons.html">fixErrors(<i>&lt;SpatialPolygons&gt;</i>)</a></code> </p>
+        </td>
+        <td><p>Fix <code>rgeos::gIsValid</code> failures in <code>SpatialPolygons</code></p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="getGDALVersion.html">getGDALVersion()</a></code> </p>
+        </td>
+        <td><p>Check the GDAL version in use</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="installPackages.html">.installPackages()</a></code> </p>
+        </td>
+        <td><p>Internal function to install packages</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="installVersions.html">installVersions()</a></code> </p>
+        </td>
+        <td><p>Install exact package versions from a package version text file &amp; GitHub</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="installedVersions.html">installedVersions()</a></code> </p>
+        </td>
+        <td><p>Determine versions all installed pacakges</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="maskInputs.html">maskInputs()</a></code> </p>
+        </td>
+        <td><p>Mask module inputs</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="mergeCache.html">mergeCache()</a></code> </p>
+        </td>
+        <td><p>Merge two cache repositories together</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="newLibPaths.html">newLibPaths()</a></code> </p>
+        </td>
+        <td><p>A shortcut to create a .libPaths() with only 2 folders</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="normPath.html">normPath()</a></code> </p>
+        </td>
+        <td><p>Normalize filepath</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="objSizeInclEnviros.html">.objSizeInclEnviros()</a></code> </p>
+        </td>
+        <td><p>Determine object size of all objects inside environments</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="package_dependenciesMem.html">package_dependenciesMem()</a></code> </p>
+        </td>
+        <td><p>Memoised version of package_dependencies</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="pipe.html">`%C%`</a></code> </p>
+        </td>
+        <td><p>A cache-aware pipe that does not mask with %&gt;%</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="pipe2.html">`%>%`</a></code> </p>
+        </td>
+        <td><p>Pipe that is Cache-aware, being deprecated</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="pkgDep.html">pkgDep()</a></code> </p>
+        </td>
+        <td><p>Determine package dependencies, first looking at local filesystem</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="pkgSnapshot.html">pkgSnapshot()</a></code> </p>
+        </td>
+        <td><p>Take a snapshot of all the packages and version numbers</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="postProcess.html">postProcess()</a></code> </p>
+        </td>
+        <td><p>Generic function to post process objects</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="preDigestByClass.html">.preDigestByClass()</a></code> </p>
+        </td>
+        <td><p>Any miscellaneous things to do before <code>.robustDigest</code> and after <code>FUN</code> call</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prefix.html">.prefix()</a></code> <code><a href="prefix.html">.suffix()</a></code> </p>
+        </td>
+        <td><p>Add a prefix or suffix to the basename part of a file path</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prepInputs.html">prepInputs()</a></code> </p>
+        </td>
+        <td><p>Download and optionally post process files</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prepareFileBackedRaster.html">.prepareFileBackedRaster()</a></code> </p>
+        </td>
+        <td><p>Copy the file-backing of a file-backed Raster* object</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prepareOutput.html">.prepareOutput()</a></code> </p>
+        </td>
+        <td><p>Make any modifications to object recovered from cacheRepo</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="projectInputs.html">projectInputs()</a></code> </p>
+        </td>
+        <td><p>Project <code>Raster*</code> or Spatial* or <code>sf</code> objects</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="readLinesRcpp.html">readLinesRcpp()</a></code> </p>
+        </td>
+        <td><p>Alternative to readLines that is faster</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="readLinesRcppInternal.html">readLinesRcppInternal()</a></code> </p>
+        </td>
+        <td><p>Alternative to readLines that is faster</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="reproducible-deprecated.html">cache()</a></code> </p>
+        </td>
+        <td><p>Deprecated functions</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="reproducible-package.html">reproducible-package</a></code> </p>
+        </td>
+        <td><p>The <code>reproducible</code> package</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="search.html">searchFull()</a></code> <code><a href="search.html">searchFullEx()</a></code> </p>
+        </td>
+        <td><p>Search up the full scope for functions</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="sortDotsUnderscoreFirst.html">.sortDotsUnderscoreFirst()</a></code> <code><a href="sortDotsUnderscoreFirst.html">.orderDotsUnderscoreFirst()</a></code> </p>
+        </td>
+        <td><p>Sort or order any named object with dotted names and underscores first</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="tagsByClass.html">.tagsByClass()</a></code> </p>
+        </td>
+        <td><p>Add extra tags to an archive based on class</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="viewCache.html">clearCache()</a></code> <code><a href="viewCache.html">showCache()</a></code> <code><a href="viewCache.html">keepCache()</a></code> </p>
+        </td>
+        <td><p>Examining and modifying the cache</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="writeOutputs.html">writeOutputs()</a></code> </p>
+        </td>
+        <td><p>Write module inputs on disk</p></td>
+      </tr>
+    </tbody>
+    </table>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -250,11 +468,14 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="http://hadley.github.io/pkgdown/">pkgdown</a>.</p>
+  <p>Site built with <a href="http://pkgdown.r-lib.org/">pkgdown</a>.</p>
 </div>
 
       </footer>
    </div>
 
+  
+
   </body>
 </html>
+

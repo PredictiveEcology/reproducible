@@ -70,8 +70,14 @@ They allow the user a bit of control over what is being cached.
   \item{\code{showCache}}{display the contents of the cache.}
 }
 }
+\note{
+If the cache is larger than 10MB, and clearCache is used, there will be a message
+and a pause, if interactive, to prevent accidentally deleting of a large cache repository.
+}
 \examples{
 library(raster)
+try(detach("package:magrittr", unload = TRUE), silent = TRUE) # magrittr,
+                                    #if loaded, gives an error below
 
 tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
@@ -90,118 +96,20 @@ ranNumsE <- rnorm(10, 6) \%>\% Cache(cacheRepo = tmpDir) # different
 ## Example 1: basic cache use with tags
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
+ranNumsC <- Cache(runif, 40, cacheRepo = tmpDir, userTags = "objectName:b")
 
 showCache(tmpDir, userTags = c("objectName"))
 showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
-showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif call
 
-clearCache(tmpDir, userTags = c("runif")) # remove only cached objects made during runif call
-showCache(tmpDir) # only those made during rnorm call
+# Fine control of cache elements -- pick out only the large runif object, and remove it
+cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
+toRemove <- cache1[tagKey=="object.size"][as.numeric(tagValue) > 700]$artifact
+clearCache(tmpDir, userTags = toRemove)
+cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 
-clearCache(tmpDir)
 
-## Example 2: using the "accessed" tag
-ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
-
-# access it again, from Cache
-ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-wholeCache <- showCache(tmpDir)
-
-# keep only items accessed "recently" (i.e., only objectName:a)
-onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "accessed"]$tagValue))
-
-# inverse join with 2 data.tables ... using: a[!b]
-# i.e., return all of wholeCache that was not recently accessed
-toRemove <- unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$artifact
-clearCache(tmpDir, toRemove) # remove ones not recently accessed
-showCache(tmpDir) # still has more recently accessed
-
-clearCache(tmpDir)
-
-## Example 3: using keepCache
-ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
-
-# keep only those cached items from the last 24 hours
-oneDay <- 60 * 60 * 24
-keepCache(tmpDir, after = Sys.time() - oneDay)
-
-# Keep all Cache items created with an rnorm() call
-keepCache(tmpDir, userTags = "rnorm")
-
-# Remove all Cache items that happened within a rnorm() call
-clearCache(tmpDir, userTags = "rnorm")
-
-showCache(tmpDir) ## empty
-
-## Example 4: searching for multiple objects in the cache
-
-# default userTags is "and" matching; for "or" matching use |
-ranNumsA <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-ranNumsB <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:b")
-
-# show all objects (runif and rnorm in this case)
-showCache(tmpDir)
-
-# show objects that are both runif and rnorm
-# (i.e., none in this case, because objecs are either or, not both)
-showCache(tmpDir, userTags = c("runif", "rnorm")) ## empty
-
-# show objects that are either runif or rnorm ("or" search)
-showCache(tmpDir, userTags = "runif|rnorm")
-
-# keep only objects that are either runif or rnorm ("or" search)
-keepCache(tmpDir, userTags = "runif|rnorm")
-
-clearCache(tmpDir)
-
-## Example 5: using caching to speed up rerunning expensive computations
-ras <- raster(extent(0, 10, 0, 10), res = 1,
-              vals = sample(1:5, replace = TRUE, size = 1e2),
-              crs = "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84")
-
-# A slow operation, like GIS operation
-notCached <- suppressWarnings(
-  # project raster generates warnings when run non-interactively
-  projectRaster(ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
-)
-
-cached <- suppressWarnings(
-  # project raster generates warnings when run non-interactively
-  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
-)
-
-# second time is much faster
-reRun <- suppressWarnings(
-  # project raster generates warnings when run non-interactively
-  Cache(projectRaster, ras, crs = crs(ras), res = 5, cacheRepo = tmpDir)
-)
-
-# recovered cached version is same as non-cached version
-all.equal(notCached, reRun) ## TRUE
-
-## Example 6: working with file paths
-
-# if passing a character string, it will take 2 complete passes to before
-#  a cached copy is used when it is a save event (read or load is different)
-obj <- 1:10
-fname <- tempfile(fileext = ".RData")
-Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = fname, cacheRepo = tmpDir) # cached copy is loaded
-
-# however, using asPath(), cached version retrieved after being run once
-fname1 <- tempfile(fileext = ".RData")
-Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir)
-Cache(saveRDS, obj, file = asPath(fname1), cacheRepo = tmpDir) # cached copy is loaded
-
-clearCache(tmpDir)
-
-## cleanup
-unlink(c("filename.rda", "filename1.rda"))
-unlink(dirname(tmpDir), recursive = TRUE)
 }
 \seealso{
-\code{\link[archivist]{splitTagsLocal}}.
+\code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
+in \code{\link{Cache}}
 }

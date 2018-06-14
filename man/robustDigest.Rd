@@ -11,64 +11,86 @@
 \alias{.robustDigest,Path-method}
 \alias{.robustDigest,environment-method}
 \alias{.robustDigest,list-method}
+\alias{.robustDigest,data.frame-method}
 \alias{.robustDigest,Raster-method}
 \alias{.robustDigest,Spatial-method}
 \title{Create reproducible digests of objects in R}
 \usage{
-.robustDigest(object, objects, compareRasterFileLength = 1e+06,
-  algo = "xxhash64", digestPathContent = FALSE, classOptions = list())
+.robustDigest(object, objects, length = 1e+06, algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE), classOptions = list())
 
-\S4method{.robustDigest}{ANY}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{ANY}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{cluster}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{cluster}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{`function`}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{`function`}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{expression}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{expression}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{character}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{character}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{Path}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{Path}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{environment}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{environment}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{list}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{list}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{Raster}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{data.frame}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
-\S4method{.robustDigest}{Spatial}(object, compareRasterFileLength, algo,
-  digestPathContent, classOptions)
+\S4method{.robustDigest}{Raster}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
+
+\S4method{.robustDigest}{Spatial}(object, objects, length = 1e+06,
+  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 }
 \arguments{
 \item{object}{an object to digest.}
 
 \item{objects}{Optional character vector indicating which objects are to
-be considered while making digestible. This is only relevant
-if the object being passed is an environment or list or the like.}
+be considered while making digestible. This argument is not used
+in the default cases; the only known method that uses this
+in the default cases; the only known method that uses this
+argument is the \code{simList} class from \code{SpaDES.core}.}
 
-\item{compareRasterFileLength}{Numeric. Optional. When there are Rasters, that
-have file-backed storage, this is passed to the length arg in \code{digest}
-when determining if the Raster file is already in the database.
-Note: uses \code{\link[digest]{digest}} for file-backed Raster.
-Default 1e6. Passed to \code{.prepareFileBackedRaster}.}
+\item{length}{Numeric. If the element passed to Cache is a \code{Path} class
+object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing, then this will be
+passed to \code{digest::digest}, essentially limiting the number of bytes
+to digest (for speed). This will only be used if \code{quick = FALSE}.}
 
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64} and
     \code{murmur32}.}
 
-\item{digestPathContent}{Logical. Should arguments that are of class \code{Path}
-(see examples below) have their name digested
-(\code{FALSE}), or their file contents (\code{TRUE}; default).}
+\item{quick}{Logical. If \code{TRUE},
+little or no disk-based information will be assessed, i.e., mostly its
+memory content. This is relevant for objects of class
+\code{Path} and \code{Raster} currently.
+For class \code{Path} objects, the file's metadata (i.e., filename and file size)
+will be hashed instead of the file contents. If set to \code{FALSE} (default),
+the contents of the file(s) are hashed.
+If \code{quick = TRUE}, \code{length} is ignored.
+\emph{NOTE: this argument is experimental and may change in future releases.}}
 
 \item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
 specific classes. Should be options that the \code{.robustDigest} knows what
@@ -136,11 +158,11 @@ fastdigest::fastdigest(tmpfile2)
 
 # if you tell it that it is a path, then you can decide if you want it to be
 #  treated as a character string or as a file path
-.robustDigest(asPath(tmpfile1))
-.robustDigest(asPath(tmpfile2)) # different because you have a choice
+.robustDigest(asPath(tmpfile1), quick = TRUE)
+.robustDigest(asPath(tmpfile2), quick = TRUE) # different because using file info
 
-.robustDigest(asPath(tmpfile1), digestPathContent = TRUE)
-.robustDigest(asPath(tmpfile2), digestPathContent = TRUE) # same
+.robustDigest(asPath(tmpfile1), quick = FALSE)
+.robustDigest(asPath(tmpfile2), quick = FALSE) # same because using file content
 
 # Rasters are interesting because it is not know a priori if it
 #   it has a file name associated with it.

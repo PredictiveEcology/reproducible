@@ -22,8 +22,7 @@ that contains the GitHub PAT or filename of the GitHub private key file.}
 \item{...}{Additional arguments passed to \code{git2r} functions.}
 }
 \value{
-Invisibly returns a repository class object, defined in
-        \code{\link[git2r]{git_repository-class}}
+Invisibly returns a git_repository class object, defined in \pkg{git2r}.
 }
 \description{
 In reproducible research, not only do packages and R version have to be

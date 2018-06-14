@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Cache method that accommodates environments, S4 methods, Rasters — Cache • reproducible</title>
+<title>Cache method that accommodates environments, S4 methods, Rasters, &amp; nested caching — Cache • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -18,13 +18,26 @@
 <!-- Font Awesome icons -->
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 
+<!-- clipboard.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script>
+
+<!-- sticky kit -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
-<script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-  
-  
+
+
+
+<meta property="og:title" content="Cache method that accommodates environments, S4 methods, Rasters, &amp; nested caching — Cache" />
+
+<meta property="og:description" content="Cache method that accommodates environments, S4 methods, Rasters, &amp;amp; nested caching
+The special assign operator %&amp;lt;% is equivalent to Cache. See examples at the end." />
+<meta name="twitter:card" content="summary" />
+
+
+
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -33,6 +46,16 @@
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-58633549-5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-58633549-5');
+</script>
 
   </head>
 
@@ -47,12 +70,16 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">reproducible</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="../index.html">reproducible</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="..//index.html">
+  <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
      
   </a>
@@ -60,8 +87,20 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
+    </li>
+  </ul>
+</li>
 <li>
-  <a href="../news/index.html">News</a>
+  <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
       
@@ -73,6 +112,7 @@
   </a>
 </li>
       </ul>
+      
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -80,36 +120,49 @@
       
       </header>
 
-      <div class="row">
+<div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Cache method that accommodates environments, S4 methods, Rasters</h1>
+    <h1>Cache method that accommodates environments, S4 methods, Rasters, &amp; nested caching</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache.R'><code>R/cache.R</code></a>, <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/pipe.R'><code>R/pipe.R</code></a></small>
+    <div class="hidden name"><code>cache.Rd</code></div>
     </div>
 
+    <div class="ref-description">
     
-    <p>Cache method that accommodates environments, S4 methods, Rasters</p>
+    <p>Cache method that accommodates environments, S4 methods, Rasters, &amp; nested caching</p>
+<p>The special assign operator <code>%&lt;%</code> is equivalent to Cache. See examples at the end.</p>
     
+    </div>
 
     <pre class="usage"><span class='fu'>Cache</span>(<span class='no'>FUN</span>, <span class='no'>...</span>, <span class='kw'>notOlderThan</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>objects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>outputObjects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>compareRasterFileLength</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
-  <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(), <span class='kw'>digestPathContent</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>omitArgs</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>(), <span class='kw'>debugCache</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='kw'>sideEffect</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>makeCopy</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
+  <span class='no'>compareRasterFileLength</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(), <span class='no'>digestPathContent</span>,
+  <span class='kw'>omitArgs</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>(), <span class='kw'>debugCache</span> <span class='kw'>=</span> <span class='fu'>character</span>(),
+  <span class='kw'>sideEffect</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>makeCopy</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>FALSE</span>), <span class='kw'>cacheId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>TRUE</span>), <span class='kw'>showSimilar</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
 
 <span class='co'># S4 method for ANY</span>
 <span class='fu'>Cache</span>(<span class='no'>FUN</span>, <span class='no'>...</span>, <span class='kw'>notOlderThan</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>objects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>outputObjects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>compareRasterFileLength</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(),
-  <span class='kw'>digestPathContent</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>omitArgs</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>(),
+  <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>, <span class='no'>compareRasterFileLength</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(),
+  <span class='no'>digestPathContent</span>, <span class='kw'>omitArgs</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>(),
   <span class='kw'>debugCache</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='kw'>sideEffect</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>makeCopy</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>FALSE</span>), <span class='kw'>cacheId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>TRUE</span>), <span class='kw'>showSimilar</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+
+<span class='no'>lhs</span> <span class='kw'>%&lt;%</span> <span class='no'>rhs</span></pre>
     
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>FUN</th>
-      <td><p>A function to be called.</p></td>
+      <td><p>Either a function or an unevaluated function call (e.g., using
+<code>quote</code>.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -145,12 +198,15 @@ return. This is only relevant for <code>simList</code> objects</p></td>
 This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
     </tr>
     <tr>
+      <th>length</th>
+      <td><p>Numeric. If the element passed to Cache is a <code>Path</code> class
+object (from e.g., <code>asPath(filename)</code>) or it is a <code>Raster</code> with file-backing, then this will be
+passed to <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest::digest</a></code>, essentially limiting the number of bytes
+to digest (for speed). This will only be used if <code>quick = FALSE</code>.</p></td>
+    </tr>
+    <tr>
       <th>compareRasterFileLength</th>
-      <td><p>Numeric. Optional. When there are Rasters, that
-have file-backed storage, this is passed to the length arg in <code>digest</code>
-when determining if the Raster file is already in the database.
-Note: uses <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></code> for file-backed Raster.
-Default 1e6. Passed to <code>.prepareFileBackedRaster</code>.</p></td>
+      <td><p>Being deprecated; use <code>length</code>.</p></td>
     </tr>
     <tr>
       <th>userTags</th>
@@ -158,9 +214,7 @@ Default 1e6. Passed to <code>.prepareFileBackedRaster</code>.</p></td>
     </tr>
     <tr>
       <th>digestPathContent</th>
-      <td><p>Logical. Should arguments that are of class <code>Path</code>
-(see examples below) have their name digested
-(<code>FALSE</code>; default), or their file contents (<code>TRUE</code>).</p></td>
+      <td><p>Being deprecated. Use <code>quick</code>.</p></td>
     </tr>
     <tr>
       <th>omitArgs</th>
@@ -189,10 +243,8 @@ without evalutating the <code>FUN(...)</code>.</p></td>
     </tr>
     <tr>
       <th>sideEffect</th>
-      <td><p>Logical. Check if files to be downloaded are found locally
-in the <code>cacheRepo</code> prior to download and try to recover from a copy
-(<code>makeCopy</code> must have been set to <code>TRUE</code> the first time <code>Cache</code>
-was run). Default is <code>FALSE</code>.
+      <td><p>Logical or path. Deteremines where the function will look for
+new files following function completion. See Details.
 <em>NOTE: this argument is experimental and may change in future releases.</em></p></td>
     </tr>
     <tr>
@@ -206,11 +258,54 @@ set to <code>TRUE</code> during the first run of <code>Cache</code>. Default is 
     </tr>
     <tr>
       <th>quick</th>
-      <td><p>Logical. If <code>sideEffect = TRUE</code>, setting this to <code>TRUE</code>,
-will hash the file's metadata (i.e., filename and file size) instead of
-hashing the contents of the file(s). If set to <code>FALSE</code> (default),
+      <td><p>Logical. If <code>TRUE</code>,
+little or no disk-based information will be assessed, i.e., mostly its
+memory content. This is relevant for objects of class
+<code>Path</code> and <code>Raster</code> currently.
+For class <code>Path</code> objects, the file's metadata (i.e., filename and file size)
+will be hashed instead of the file contents. If set to <code>FALSE</code> (default),
 the contents of the file(s) are hashed.
+If <code>quick = TRUE</code>, <code>length</code> is ignored.
 <em>NOTE: this argument is experimental and may change in future releases.</em></p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>Logical. This will output much more information about the internals of
+Caching, which may help diagnose Caching challenges.</p></td>
+    </tr>
+    <tr>
+      <th>cacheId</th>
+      <td><p>Character string. If passed, this will override the calculated hash
+of the inputs, and return the result from this cacheId in the cacheRepo.
+In general, this is not used; however, in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs, this can stabilize
+the return value.</p></td>
+    </tr>
+    <tr>
+      <th>useCache</th>
+      <td><p>Logical. If <code>FALSE</code>, then the entire Caching mechanism is bypassed
+and the function is evaluated as if it was not being Cached.
+Default is <code>getOption("reproducible.useCache")</code>),
+which is <code>FALSE</code> by default, meaning use the Cache mechanism. This
+may be useful to turn all Caching on or off in very complex scripts and
+nested functions.</p></td>
+    </tr>
+    <tr>
+      <th>showSimilar</th>
+      <td><p>A logical or numeric. Useful for debugging.
+If <code>TRUE</code> or <code>1</code>, then if the Cache
+does not find an identical archive in the cacheRepo, it will report (via message)
+the next most similar archive, and indicate which argument(s) is/are different.
+If a number larger than <code>1</code>, then it will report the N most similar archived
+objects.</p></td>
+    </tr>
+    <tr>
+      <th>lhs</th>
+      <td><p>A name to assign to.</p></td>
+    </tr>
+    <tr>
+      <th>rhs</th>
+      <td><p>A function call</p></td>
     </tr>
     </table>
     
@@ -222,12 +317,13 @@ to this same cached function with identical arguments).</p>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Caching R objects using <code><a href='http://www.rdocumentation.org/packages/archivist/topics/cache'>cache</a></code> has four important limitations:</p><ol>
+    <p>Caching R objects using <code><a href='http://www.rdocumentation.org/packages/archivist/topics/cache'>cache</a></code> has five important limitations:</p><ol>
 <li><p>the <code>archivist</code> package detects different environments as different;</p></li>
 <li><p>it also does not detect S4 methods correctly due to method inheritance;</p></li>
 <li><p>it does not detect objects that have file-base storage of information
         (specifically <code><a href='http://www.rdocumentation.org/packages/raster/topics/Raster-classes'>RasterLayer-class</a></code> objects);</p></li>
 <li><p>the default hashing algorithm is relatively slow.</p></li>
+<li><p>heavily nested function calls may want Cache arguments to propagate through</p></li>
 </ol><p>This version of the <code>Cache</code> function accommodates those four special,
 though quite common, cases by:</p><ol>
 <li><p>converting any environments into list equivalents;</p></li>
@@ -241,12 +337,17 @@ though quite common, cases by:</p><ol>
         is in RAM, which can be up to ten times faster than
         <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></code>. Note that file-backed objects are still
         hashed using <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest</a></code>.</p></li>
+<li><p>Cache will save arguments passed by user in a hidden environment. Any
+        nested Cache functions will use arguments in this order 1) actual arguments
+        passed at each Cache call, 2) any inherited arguments from an outer Cache
+        call, 3) the default values of the Cache function. See section on <em>Nested
+        Caching</em>.</p></li>
 </ol>
     <p>If <code>Cache</code> is called within a SpaDES module, then the cached entry will automatically
 get 3 extra <code>userTags</code>: <code>eventTime</code>, <code>eventType</code>, and <code>moduleName</code>.
 These can then be used in <code>clearCache</code> to selectively remove cached objects
-by <code>eventTime</code>, <code>eventType</code> or <code>moduleName</code>.
-    <code>Cache</code> will add a tag to the artifact in the database called <code>accessed</code>,
+by <code>eventTime</code>, <code>eventType</code> or <code>moduleName</code>.</p>
+<p><code>Cache</code> will add a tag to the artifact in the database called <code>accessed</code>,
 which will assign the time that it was accessed, either read or write.
 That way, artifacts can be shown (using <code>showCache</code>) or removed (using
 <code>clearCache</code>) selectively, based on their access dates, rather than only
@@ -263,6 +364,35 @@ different classes of objects. Currently, there are methods for several types
 of classes. See <code><a href='robustDigest.html'>.robustDigest</a></code>.</p>
 <p>See <code><a href='robustDigest.html'>.robustDigest</a></code> for other specifics for other classes.</p>
     
+    <h2 class="hasAnchor" id="nested-caching"><a class="anchor" href="#nested-caching"></a>Nested Caching</h2>
+
+    
+    <p>Commonly, Caching is nested, i.e., an outer function is wrapped in a <code>Cache</code>
+function call, and one or more inner functions are also wrapped in a <code>Cache</code>
+function call. A user <em>can</em> always specify arguments in every Cache function
+call, but this can get tedious and can be prone to errors. The normal way that
+<em>R</em> handles arguments is it takes the user passed arguments if any, and
+default arguments for all those that have no user passed arguments. We have inserted
+a middle step. The order or precedence for any given <code>Cache</code> function call is
+1. user arguments, 2. inherited arguments, 3. default arguments. At this time,
+the top level <code>Cache</code> arguments will propagate to all inner functions unless
+each individual <code>Cache</code> call has other arguments specified, i.e., "middle"
+nested <code>Cache</code> function calls don't propagate their arguments to further "inner"
+<code>Cache</code> function calls.  See example.</p>
+<p><code>userTags</code> is unique of all arguments: its values will be appended to the
+inherited <code>userTags</code>.</p>
+    
+    <h2 class="hasAnchor" id="caching-speed"><a class="anchor" href="#caching-speed"></a>Caching Speed</h2>
+
+    
+    <p>Caching speed may become a critical aspect of a final product. For example,
+if the final product is a shiny app, rerunning the entire project may need
+to take less then a few seconds at most. There are 3 arguments that affect
+Cache speed: <code>quick</code>, <code>length</code>, and
+<code>algo</code>. <code>quick</code> is passed to <code>.robustDigest</code>, which currently
+only affects <code>Path</code> and <code>Raster*</code> class objects. In both cases, <code>quick</code>
+means that little or no disk-based information will be assessed.</p>
+    
     <h2 class="hasAnchor" id="filepaths"><a class="anchor" href="#filepaths"></a>Filepaths</h2>
 
     
@@ -273,10 +403,10 @@ done. Possibilities include:</p><ol>
 <li><p>hash the <code>basename(path)</code>;</p></li>
 <li><p>hash the contents of the file.</p></li>
 </ol><p>If paths are passed in as is (i.e,. character string), the result will not be predictable.
-Instead, one should use the wrapper function <code><a href='Path-class.html'>asPath(path)</a></code>, which sets the
+Instead, one should use the wrapper function <code>asPath(path)</code>, which sets the
 class of the string to a <code>Path</code>, and one should decide whether one wants
-to digest the content of the file (using <code>digestPathContent = TRUE</code>),
-or just the filename (<code>(digestPathContent = FALSE)</code>). See examples.</p>
+to digest the content of the file (using <code>quick = FALSE</code>),
+or just the filename (<code>(quick = TRUE)</code>). See examples.</p>
     
     <h2 class="hasAnchor" id="stochasticity"><a class="anchor" href="#stochasticity"></a>Stochasticity</h2>
 
@@ -287,403 +417,45 @@ sufficient number of calls to <code>experiment</code>) such that no new explorat
 of stochastic outcomes are required. It will also be very useful in a
 reproducible workflow.</p>
     
+    <h2 class="hasAnchor" id="sideeffect"><a class="anchor" href="#sideeffect"></a><code>sideEffect</code></h2>
+
+    
+    <p>If <code>sideEffect</code> is not <code>FALSE</code>, then metadata about any files that
+added to <code>sideEffect</code> will be added as an attribute to the cached copy.
+Subsequent calls to this function
+       will assess for the presence of the new files in the <code>sideEffect</code> location.
+       If the files are identical (<code>quick = FALSE</code>) or their file size is
+       identical (<code>quick = TRUE</code>), then the cached copy of the function will
+       be returned (and no files changed). If there are missing or incorrect files,
+       then the function will re-run. This will accommodate the situation where the
+       function call is identical, but somehow the side effect files were modified.
+       If <code>sideEffect</code> is logical, then the function will check the
+       <code>cacheRepo</code>; if it is a path, then it will check the path. The function will
+       assess whether the files to be downloaded are found locally
+       prior to download. If it fails the local test, then it will try to recover from a
+       local copy if (<code>makeCopy</code> had been set to <code>TRUE</code> the first time
+       the function was run. Currently, local recovery will only work if<code>makeCOpy</code> was
+       set to <code>TRUE</code> the first time <code>Cache</code>
+       was run). Default is <code>FALSE</code>.</p>
+    
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <p><code><a href='http://www.rdocumentation.org/packages/archivist/topics/cache'>cache</a></code>, <code><a href='robustDigest.html'>.robustDigest</a></code></p>
+    <div class='dont-index'><p><code><a href='http://www.rdocumentation.org/packages/archivist/topics/cache'>cache</a></code>, <code><a href='robustDigest.html'>.robustDigest</a></code></p></div>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>library</span>(<span class='no'>raster</span>)</div><div class='output co'>#&gt; <span class='message'>Loading required package: sp</span></div><div class='output co'>#&gt; <span class='message'></span>
-#&gt; <span class='message'>Attaching package: ‘raster’</span></div><div class='output co'>#&gt; <span class='message'>The following object is masked from ‘package:reproducible’:</span>
-#&gt; <span class='message'></span>
-#&gt; <span class='message'>    init</span></div><div class='input'>
-<span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"Cache"</span>)
+    <pre class="examples"><div class='input'><span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>())
 
-<span class='co'>## Example 1: basic cache use</span>
-<span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:a"</span>)
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>runif</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
+<span class='co'># Basic use</span>
+<span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"objectName"</span>))</div><div class='output co'>#&gt;                             artifact      tagKey
-#&gt;  1: 5d791310603a3579e3a1753f89e4da70      format
-#&gt;  2: 5d791310603a3579e3a1753f89e4da70        name
-#&gt;  3: 5d791310603a3579e3a1753f89e4da70       class
-#&gt;  4: 5d791310603a3579e3a1753f89e4da70        date
-#&gt;  5: 5d791310603a3579e3a1753f89e4da70  objectName
-#&gt;  6: 5d791310603a3579e3a1753f89e4da70    function
-#&gt;  7: 5d791310603a3579e3a1753f89e4da70 object.size
-#&gt;  8: 5d791310603a3579e3a1753f89e4da70    accessed
-#&gt;  9: 5d791310603a3579e3a1753f89e4da70     cacheId
-#&gt; 10: decbe2d8d61894d086362ed4536cf4df      format
-#&gt; 11: decbe2d8d61894d086362ed4536cf4df        name
-#&gt; 12: decbe2d8d61894d086362ed4536cf4df       class
-#&gt; 13: decbe2d8d61894d086362ed4536cf4df        date
-#&gt; 14: decbe2d8d61894d086362ed4536cf4df  objectName
-#&gt; 15: decbe2d8d61894d086362ed4536cf4df    function
-#&gt; 16: decbe2d8d61894d086362ed4536cf4df object.size
-#&gt; 17: decbe2d8d61894d086362ed4536cf4df    accessed
-#&gt; 18: decbe2d8d61894d086362ed4536cf4df     cacheId
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-09-05 16:33:22
-#&gt;  2:                            Cache 2017-09-05 16:33:22
-#&gt;  3:                          numeric 2017-09-05 16:33:22
-#&gt;  4:              2017-09-05 16:33:22 2017-09-05 16:33:22
-#&gt;  5:                                a 2017-09-05 16:33:22
-#&gt;  6:                            rnorm 2017-09-05 16:33:22
-#&gt;  7:                              528 2017-09-05 16:33:23
-#&gt;  8:              2017-09-05 16:33:22 2017-09-05 16:33:23
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:23
-#&gt; 10:                              rda 2017-09-05 16:33:23
-#&gt; 11:                            Cache 2017-09-05 16:33:23
-#&gt; 12:                          numeric 2017-09-05 16:33:23
-#&gt; 13:              2017-09-05 16:33:23 2017-09-05 16:33:23
-#&gt; 14:                                b 2017-09-05 16:33:23
-#&gt; 15:                            runif 2017-09-05 16:33:23
-#&gt; 16:                              528 2017-09-05 16:33:23
-#&gt; 17:              2017-09-05 16:33:23 2017-09-05 16:33:23
-#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-09-05 16:33:23</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"^a$"</span>)) <span class='co'># regular expression ... "a" exactly</span></div><div class='output co'>#&gt;                            artifact      tagKey
-#&gt; 1: 5d791310603a3579e3a1753f89e4da70      format
-#&gt; 2: 5d791310603a3579e3a1753f89e4da70        name
-#&gt; 3: 5d791310603a3579e3a1753f89e4da70       class
-#&gt; 4: 5d791310603a3579e3a1753f89e4da70        date
-#&gt; 5: 5d791310603a3579e3a1753f89e4da70  objectName
-#&gt; 6: 5d791310603a3579e3a1753f89e4da70    function
-#&gt; 7: 5d791310603a3579e3a1753f89e4da70 object.size
-#&gt; 8: 5d791310603a3579e3a1753f89e4da70    accessed
-#&gt; 9: 5d791310603a3579e3a1753f89e4da70     cacheId
-#&gt;                            tagValue         createdDate
-#&gt; 1:                              rda 2017-09-05 16:33:22
-#&gt; 2:                            Cache 2017-09-05 16:33:22
-#&gt; 3:                          numeric 2017-09-05 16:33:22
-#&gt; 4:              2017-09-05 16:33:22 2017-09-05 16:33:22
-#&gt; 5:                                a 2017-09-05 16:33:22
-#&gt; 6:                            rnorm 2017-09-05 16:33:22
-#&gt; 7:                              528 2017-09-05 16:33:23
-#&gt; 8:              2017-09-05 16:33:22 2017-09-05 16:33:23
-#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:23</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># show only cached objects made during runif call</span></div><div class='output co'>#&gt;                            artifact      tagKey
-#&gt; 1: decbe2d8d61894d086362ed4536cf4df      format
-#&gt; 2: decbe2d8d61894d086362ed4536cf4df        name
-#&gt; 3: decbe2d8d61894d086362ed4536cf4df       class
-#&gt; 4: decbe2d8d61894d086362ed4536cf4df        date
-#&gt; 5: decbe2d8d61894d086362ed4536cf4df  objectName
-#&gt; 6: decbe2d8d61894d086362ed4536cf4df    function
-#&gt; 7: decbe2d8d61894d086362ed4536cf4df object.size
-#&gt; 8: decbe2d8d61894d086362ed4536cf4df    accessed
-#&gt; 9: decbe2d8d61894d086362ed4536cf4df     cacheId
-#&gt;                            tagValue         createdDate
-#&gt; 1:                              rda 2017-09-05 16:33:23
-#&gt; 2:                            Cache 2017-09-05 16:33:23
-#&gt; 3:                          numeric 2017-09-05 16:33:23
-#&gt; 4:              2017-09-05 16:33:23 2017-09-05 16:33:23
-#&gt; 5:                                b 2017-09-05 16:33:23
-#&gt; 6:                            runif 2017-09-05 16:33:23
-#&gt; 7:                              528 2017-09-05 16:33:23
-#&gt; 8:              2017-09-05 16:33:23 2017-09-05 16:33:23
-#&gt; 9: 9dd2494a488858266cd45d230f45a144 2017-09-05 16:33:23</div><div class='input'>
-<span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># remove only cached objects made during runif call</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># only those made during rnorm call</span></div><div class='output co'>#&gt;                            artifact      tagKey
-#&gt; 1: 5d791310603a3579e3a1753f89e4da70      format
-#&gt; 2: 5d791310603a3579e3a1753f89e4da70        name
-#&gt; 3: 5d791310603a3579e3a1753f89e4da70       class
-#&gt; 4: 5d791310603a3579e3a1753f89e4da70        date
-#&gt; 5: 5d791310603a3579e3a1753f89e4da70  objectName
-#&gt; 6: 5d791310603a3579e3a1753f89e4da70    function
-#&gt; 7: 5d791310603a3579e3a1753f89e4da70 object.size
-#&gt; 8: 5d791310603a3579e3a1753f89e4da70    accessed
-#&gt; 9: 5d791310603a3579e3a1753f89e4da70     cacheId
-#&gt;                            tagValue         createdDate
-#&gt; 1:                              rda 2017-09-05 16:33:22
-#&gt; 2:                            Cache 2017-09-05 16:33:22
-#&gt; 3:                          numeric 2017-09-05 16:33:22
-#&gt; 4:              2017-09-05 16:33:22 2017-09-05 16:33:22
-#&gt; 5:                                a 2017-09-05 16:33:22
-#&gt; 6:                            rnorm 2017-09-05 16:33:22
-#&gt; 7:                              528 2017-09-05 16:33:23
-#&gt; 8:              2017-09-05 16:33:22 2017-09-05 16:33:23
-#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:23</div><div class='input'>
-<span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
-
-<span class='co'>## Example 2: using the "accessed" tag</span>
-<span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:a"</span>)
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>runif</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
-
-<span class='co'># access it again, but "later"</span>
-<span class='fu'>Sys.sleep</span>(<span class='fl'>1</span>)
-<span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:a"</span>)</div><div class='output co'>#&gt; <span class='message'>loading cached result from previous rnorm call.</span></div><div class='input'><span class='no'>wholeCache</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)
-
-<span class='co'># keep only items accessed "recently" (i.e., only objectName:a)</span>
-<span class='no'>onlyRecentlyAccessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>max</span>(<span class='no'>wholeCache</span>[<span class='no'>tagKey</span> <span class='kw'>==</span> <span class='st'>"accessed"</span>]$<span class='no'>tagValue</span>))
-
-<span class='co'># inverse join with 2 data.tables ... using: a[!b]</span>
-<span class='co'># i.e., return all of wholeCache that was not recently accessed</span>
-<span class='no'>toRemove</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/unique'>unique</a></span>(<span class='no'>wholeCache</span>[!<span class='no'>onlyRecentlyAccessed</span>], <span class='kw'>by</span> <span class='kw'>=</span> <span class='st'>"artifact"</span>)$<span class='no'>artifact</span>
-<span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='no'>toRemove</span>) <span class='co'># remove ones not recently accessed</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># still has more recently accessed</span></div><div class='output co'>#&gt;                             artifact      tagKey
-#&gt;  1: 1859dfdf3198d6377afbb546cdc9723c      format
-#&gt;  2: 1859dfdf3198d6377afbb546cdc9723c        name
-#&gt;  3: 1859dfdf3198d6377afbb546cdc9723c       class
-#&gt;  4: 1859dfdf3198d6377afbb546cdc9723c        date
-#&gt;  5: 1859dfdf3198d6377afbb546cdc9723c  objectName
-#&gt;  6: 1859dfdf3198d6377afbb546cdc9723c    function
-#&gt;  7: 1859dfdf3198d6377afbb546cdc9723c object.size
-#&gt;  8: 1859dfdf3198d6377afbb546cdc9723c    accessed
-#&gt;  9: 1859dfdf3198d6377afbb546cdc9723c     cacheId
-#&gt; 10: 1859dfdf3198d6377afbb546cdc9723c    accessed
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-09-05 16:33:23
-#&gt;  2:                            Cache 2017-09-05 16:33:23
-#&gt;  3:                          numeric 2017-09-05 16:33:23
-#&gt;  4:              2017-09-05 16:33:23 2017-09-05 16:33:23
-#&gt;  5:                                a 2017-09-05 16:33:23
-#&gt;  6:                            rnorm 2017-09-05 16:33:23
-#&gt;  7:                              528 2017-09-05 16:33:23
-#&gt;  8:              2017-09-05 16:33:23 2017-09-05 16:33:23
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:23
-#&gt; 10:              2017-09-05 16:33:24 2017-09-05 16:33:24</div><div class='input'>
-<span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
-
-<span class='co'>## Example 3: using keepCache</span>
-<span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:a"</span>)
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>runif</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
-
-<span class='co'># keep only those cached items from the last 24 hours</span>
-<span class='no'>oneDay</span> <span class='kw'>&lt;-</span> <span class='fl'>60</span> * <span class='fl'>60</span> * <span class='fl'>24</span>
-<span class='fu'><a href='viewCache.html'>keepCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>after</span> <span class='kw'>=</span> <span class='fu'>Sys.time</span>() - <span class='no'>oneDay</span>)</div><div class='output co'>#&gt;                             artifact      tagKey
-#&gt;  1: 832ac945443ee5a6db5d0f4f6a7703f1      format
-#&gt;  2: 832ac945443ee5a6db5d0f4f6a7703f1        name
-#&gt;  3: 832ac945443ee5a6db5d0f4f6a7703f1       class
-#&gt;  4: 832ac945443ee5a6db5d0f4f6a7703f1        date
-#&gt;  5: 832ac945443ee5a6db5d0f4f6a7703f1  objectName
-#&gt;  6: 832ac945443ee5a6db5d0f4f6a7703f1    function
-#&gt;  7: 832ac945443ee5a6db5d0f4f6a7703f1 object.size
-#&gt;  8: 832ac945443ee5a6db5d0f4f6a7703f1    accessed
-#&gt;  9: 832ac945443ee5a6db5d0f4f6a7703f1     cacheId
-#&gt; 10: 8f71a97709b2d4630bfc1e9051803cc6      format
-#&gt; 11: 8f71a97709b2d4630bfc1e9051803cc6        name
-#&gt; 12: 8f71a97709b2d4630bfc1e9051803cc6       class
-#&gt; 13: 8f71a97709b2d4630bfc1e9051803cc6        date
-#&gt; 14: 8f71a97709b2d4630bfc1e9051803cc6  objectName
-#&gt; 15: 8f71a97709b2d4630bfc1e9051803cc6    function
-#&gt; 16: 8f71a97709b2d4630bfc1e9051803cc6 object.size
-#&gt; 17: 8f71a97709b2d4630bfc1e9051803cc6    accessed
-#&gt; 18: 8f71a97709b2d4630bfc1e9051803cc6     cacheId
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-09-05 16:33:24
-#&gt;  2:                            Cache 2017-09-05 16:33:24
-#&gt;  3:                          numeric 2017-09-05 16:33:24
-#&gt;  4:              2017-09-05 16:33:24 2017-09-05 16:33:24
-#&gt;  5:                                b 2017-09-05 16:33:24
-#&gt;  6:                            runif 2017-09-05 16:33:24
-#&gt;  7:                              528 2017-09-05 16:33:24
-#&gt;  8:              2017-09-05 16:33:24 2017-09-05 16:33:24
-#&gt;  9: 9dd2494a488858266cd45d230f45a144 2017-09-05 16:33:24
-#&gt; 10:                              rda 2017-09-05 16:33:24
-#&gt; 11:                            Cache 2017-09-05 16:33:24
-#&gt; 12:                          numeric 2017-09-05 16:33:24
-#&gt; 13:              2017-09-05 16:33:24 2017-09-05 16:33:24
-#&gt; 14:                                a 2017-09-05 16:33:24
-#&gt; 15:                            rnorm 2017-09-05 16:33:24
-#&gt; 16:                              528 2017-09-05 16:33:24
-#&gt; 17:              2017-09-05 16:33:24 2017-09-05 16:33:24
-#&gt; 18: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:24</div><div class='input'>
-<span class='co'># Keep all Cache items created with an rnorm() call</span>
-<span class='fu'><a href='viewCache.html'>keepCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"rnorm"</span>)</div><div class='output co'>#&gt;                            artifact      tagKey
-#&gt; 1: 8f71a97709b2d4630bfc1e9051803cc6      format
-#&gt; 2: 8f71a97709b2d4630bfc1e9051803cc6        name
-#&gt; 3: 8f71a97709b2d4630bfc1e9051803cc6       class
-#&gt; 4: 8f71a97709b2d4630bfc1e9051803cc6        date
-#&gt; 5: 8f71a97709b2d4630bfc1e9051803cc6  objectName
-#&gt; 6: 8f71a97709b2d4630bfc1e9051803cc6    function
-#&gt; 7: 8f71a97709b2d4630bfc1e9051803cc6 object.size
-#&gt; 8: 8f71a97709b2d4630bfc1e9051803cc6    accessed
-#&gt; 9: 8f71a97709b2d4630bfc1e9051803cc6     cacheId
-#&gt;                            tagValue         createdDate
-#&gt; 1:                              rda 2017-09-05 16:33:24
-#&gt; 2:                            Cache 2017-09-05 16:33:24
-#&gt; 3:                          numeric 2017-09-05 16:33:24
-#&gt; 4:              2017-09-05 16:33:24 2017-09-05 16:33:24
-#&gt; 5:                                a 2017-09-05 16:33:24
-#&gt; 6:                            rnorm 2017-09-05 16:33:24
-#&gt; 7:                              528 2017-09-05 16:33:24
-#&gt; 8:              2017-09-05 16:33:24 2017-09-05 16:33:24
-#&gt; 9: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:24</div><div class='input'>
-<span class='co'># Remove all Cache items that happened within a rnorm() call</span>
-<span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"rnorm"</span>)
-
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'>## empty</span></div><div class='output co'>#&gt; Empty data.table (0 rows) of 3 cols: md5hash,name,createdDate</div><div class='input'>
-<span class='co'>## Example 4: searching for multiple objects in the cache</span>
-
-<span class='co'># default userTags is "and" matching; for "or" matching use |</span>
-<span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>runif</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:a"</span>)
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
-
-<span class='co'># show all objects (runif and rnorm in this case)</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt;                             artifact      tagKey
-#&gt;  1: 272069fa0f28e15171fc3970210c7526      format
-#&gt;  2: 272069fa0f28e15171fc3970210c7526        name
-#&gt;  3: 272069fa0f28e15171fc3970210c7526       class
-#&gt;  4: 272069fa0f28e15171fc3970210c7526        date
-#&gt;  5: 272069fa0f28e15171fc3970210c7526  objectName
-#&gt;  6: 272069fa0f28e15171fc3970210c7526    function
-#&gt;  7: 272069fa0f28e15171fc3970210c7526 object.size
-#&gt;  8: 272069fa0f28e15171fc3970210c7526    accessed
-#&gt;  9: 272069fa0f28e15171fc3970210c7526     cacheId
-#&gt; 10: f0832b8cd870cc65eea28f97be3c4f15      format
-#&gt; 11: f0832b8cd870cc65eea28f97be3c4f15        name
-#&gt; 12: f0832b8cd870cc65eea28f97be3c4f15       class
-#&gt; 13: f0832b8cd870cc65eea28f97be3c4f15        date
-#&gt; 14: f0832b8cd870cc65eea28f97be3c4f15  objectName
-#&gt; 15: f0832b8cd870cc65eea28f97be3c4f15    function
-#&gt; 16: f0832b8cd870cc65eea28f97be3c4f15 object.size
-#&gt; 17: f0832b8cd870cc65eea28f97be3c4f15    accessed
-#&gt; 18: f0832b8cd870cc65eea28f97be3c4f15     cacheId
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-09-05 16:33:25
-#&gt;  2:                            Cache 2017-09-05 16:33:25
-#&gt;  3:                          numeric 2017-09-05 16:33:25
-#&gt;  4:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt;  5:                                b 2017-09-05 16:33:25
-#&gt;  6:                            rnorm 2017-09-05 16:33:25
-#&gt;  7:                              528 2017-09-05 16:33:25
-#&gt;  8:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:25
-#&gt; 10:                              rda 2017-09-05 16:33:25
-#&gt; 11:                            Cache 2017-09-05 16:33:25
-#&gt; 12:                          numeric 2017-09-05 16:33:25
-#&gt; 13:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt; 14:                                a 2017-09-05 16:33:25
-#&gt; 15:                            runif 2017-09-05 16:33:25
-#&gt; 16:                              528 2017-09-05 16:33:25
-#&gt; 17:              2017-09-05 16:33:24 2017-09-05 16:33:25
-#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-09-05 16:33:25</div><div class='input'>
-<span class='co'># show objects that are both runif and rnorm</span>
-<span class='co'># (i.e., none in this case, because objecs are either or, not both)</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>, <span class='st'>"rnorm"</span>)) <span class='co'>## empty</span></div><div class='output co'>#&gt; Empty data.table (0 rows) of 4 cols: artifact,tagKey,tagValue,createdDate</div><div class='input'>
-<span class='co'># show objects that are either runif or rnorm ("or" search)</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"runif|rnorm"</span>)</div><div class='output co'>#&gt;                             artifact      tagKey
-#&gt;  1: 272069fa0f28e15171fc3970210c7526      format
-#&gt;  2: 272069fa0f28e15171fc3970210c7526        name
-#&gt;  3: 272069fa0f28e15171fc3970210c7526       class
-#&gt;  4: 272069fa0f28e15171fc3970210c7526        date
-#&gt;  5: 272069fa0f28e15171fc3970210c7526  objectName
-#&gt;  6: 272069fa0f28e15171fc3970210c7526    function
-#&gt;  7: 272069fa0f28e15171fc3970210c7526 object.size
-#&gt;  8: 272069fa0f28e15171fc3970210c7526    accessed
-#&gt;  9: 272069fa0f28e15171fc3970210c7526     cacheId
-#&gt; 10: f0832b8cd870cc65eea28f97be3c4f15      format
-#&gt; 11: f0832b8cd870cc65eea28f97be3c4f15        name
-#&gt; 12: f0832b8cd870cc65eea28f97be3c4f15       class
-#&gt; 13: f0832b8cd870cc65eea28f97be3c4f15        date
-#&gt; 14: f0832b8cd870cc65eea28f97be3c4f15  objectName
-#&gt; 15: f0832b8cd870cc65eea28f97be3c4f15    function
-#&gt; 16: f0832b8cd870cc65eea28f97be3c4f15 object.size
-#&gt; 17: f0832b8cd870cc65eea28f97be3c4f15    accessed
-#&gt; 18: f0832b8cd870cc65eea28f97be3c4f15     cacheId
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-09-05 16:33:25
-#&gt;  2:                            Cache 2017-09-05 16:33:25
-#&gt;  3:                          numeric 2017-09-05 16:33:25
-#&gt;  4:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt;  5:                                b 2017-09-05 16:33:25
-#&gt;  6:                            rnorm 2017-09-05 16:33:25
-#&gt;  7:                              528 2017-09-05 16:33:25
-#&gt;  8:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:25
-#&gt; 10:                              rda 2017-09-05 16:33:25
-#&gt; 11:                            Cache 2017-09-05 16:33:25
-#&gt; 12:                          numeric 2017-09-05 16:33:25
-#&gt; 13:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt; 14:                                a 2017-09-05 16:33:25
-#&gt; 15:                            runif 2017-09-05 16:33:25
-#&gt; 16:                              528 2017-09-05 16:33:25
-#&gt; 17:              2017-09-05 16:33:24 2017-09-05 16:33:25
-#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-09-05 16:33:25</div><div class='input'>
-<span class='co'># keep only objects that are either runif or rnorm ("or" search)</span>
-<span class='fu'><a href='viewCache.html'>keepCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"runif|rnorm"</span>)</div><div class='output co'>#&gt;                             artifact      tagKey
-#&gt;  1: 272069fa0f28e15171fc3970210c7526      format
-#&gt;  2: 272069fa0f28e15171fc3970210c7526        name
-#&gt;  3: 272069fa0f28e15171fc3970210c7526       class
-#&gt;  4: 272069fa0f28e15171fc3970210c7526        date
-#&gt;  5: 272069fa0f28e15171fc3970210c7526  objectName
-#&gt;  6: 272069fa0f28e15171fc3970210c7526    function
-#&gt;  7: 272069fa0f28e15171fc3970210c7526 object.size
-#&gt;  8: 272069fa0f28e15171fc3970210c7526    accessed
-#&gt;  9: 272069fa0f28e15171fc3970210c7526     cacheId
-#&gt; 10: f0832b8cd870cc65eea28f97be3c4f15      format
-#&gt; 11: f0832b8cd870cc65eea28f97be3c4f15        name
-#&gt; 12: f0832b8cd870cc65eea28f97be3c4f15       class
-#&gt; 13: f0832b8cd870cc65eea28f97be3c4f15        date
-#&gt; 14: f0832b8cd870cc65eea28f97be3c4f15  objectName
-#&gt; 15: f0832b8cd870cc65eea28f97be3c4f15    function
-#&gt; 16: f0832b8cd870cc65eea28f97be3c4f15 object.size
-#&gt; 17: f0832b8cd870cc65eea28f97be3c4f15    accessed
-#&gt; 18: f0832b8cd870cc65eea28f97be3c4f15     cacheId
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2017-09-05 16:33:25
-#&gt;  2:                            Cache 2017-09-05 16:33:25
-#&gt;  3:                          numeric 2017-09-05 16:33:25
-#&gt;  4:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt;  5:                                b 2017-09-05 16:33:25
-#&gt;  6:                            rnorm 2017-09-05 16:33:25
-#&gt;  7:                              528 2017-09-05 16:33:25
-#&gt;  8:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt;  9: 6c02ed3587ff36e0f232dc296099540b 2017-09-05 16:33:25
-#&gt; 10:                              rda 2017-09-05 16:33:25
-#&gt; 11:                            Cache 2017-09-05 16:33:25
-#&gt; 12:                          numeric 2017-09-05 16:33:25
-#&gt; 13:              2017-09-05 16:33:25 2017-09-05 16:33:25
-#&gt; 14:                                a 2017-09-05 16:33:25
-#&gt; 15:                            runif 2017-09-05 16:33:25
-#&gt; 16:                              528 2017-09-05 16:33:25
-#&gt; 17:              2017-09-05 16:33:24 2017-09-05 16:33:25
-#&gt; 18: 9dd2494a488858266cd45d230f45a144 2017-09-05 16:33:25</div><div class='input'>
-<span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
-
-<span class='co'>## Example 5: using caching to speed up rerunning expensive computations</span>
-<span class='no'>ras</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/extent'>extent</a></span>(<span class='fl'>0</span>, <span class='fl'>100</span>, <span class='fl'>0</span>, <span class='fl'>100</span>), <span class='kw'>res</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-              <span class='kw'>vals</span> <span class='kw'>=</span> <span class='fu'>sample</span>(<span class='fl'>1</span>:<span class='fl'>5</span>, <span class='kw'>replace</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>size</span> <span class='kw'>=</span> <span class='fl'>1e4</span>),
-              <span class='kw'>crs</span> <span class='kw'>=</span> <span class='st'>"+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"</span>)
-
-<span class='co'># A slow operation, like GIS operation</span>
-<span class='no'>notCached</span> <span class='kw'>&lt;-</span> <span class='fu'>suppressWarnings</span>(
-  <span class='co'># project raster generates warnings when run non-interactively</span>
-  <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/projectRaster'>projectRaster</a></span>(<span class='no'>ras</span>, <span class='kw'>crs</span> <span class='kw'>=</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/projection'>crs</a></span>(<span class='no'>ras</span>), <span class='kw'>res</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
-)
-
-<span class='no'>cached</span> <span class='kw'>&lt;-</span> <span class='fu'>suppressWarnings</span>(
-  <span class='co'># project raster generates warnings when run non-interactively</span>
-  <span class='fu'>Cache</span>(<span class='no'>projectRaster</span>, <span class='no'>ras</span>, <span class='kw'>crs</span> <span class='kw'>=</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/projection'>crs</a></span>(<span class='no'>ras</span>), <span class='kw'>res</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
-)
-
-<span class='co'># second time is much faster</span>
-<span class='no'>reRun</span> <span class='kw'>&lt;-</span> <span class='fu'>suppressWarnings</span>(
-  <span class='co'># project raster generates warnings when run non-interactively</span>
-  <span class='fu'>Cache</span>(<span class='no'>projectRaster</span>, <span class='no'>ras</span>, <span class='kw'>crs</span> <span class='kw'>=</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/projection'>crs</a></span>(<span class='no'>ras</span>), <span class='kw'>res</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
-)</div><div class='output co'>#&gt; <span class='message'>loading cached result from previous projectRaster call.</span></div><div class='input'>
-<span class='co'># recovered cached version is same as non-cached version</span>
-<span class='fu'>all.equal</span>(<span class='no'>notCached</span>, <span class='no'>reRun</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
-<span class='co'>## Example 6: working with file paths</span>
-
-<span class='co'># if passing a character string, it will take 2 complete passes to before</span>
-<span class='co'>#  a cached copy is used when it is a save event (read or load is different)</span>
-<span class='no'>obj</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
-<span class='no'>fname</span> <span class='kw'>&lt;-</span> <span class='fu'>tempfile</span>(<span class='kw'>fileext</span> <span class='kw'>=</span> <span class='st'>".RData"</span>)
-<span class='fu'>Cache</span>(<span class='no'>saveRDS</span>, <span class='no'>obj</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>fname</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; NULL</div><div class='input'><span class='fu'>Cache</span>(<span class='no'>saveRDS</span>, <span class='no'>obj</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>fname</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; NULL</div><div class='input'><span class='fu'>Cache</span>(<span class='no'>saveRDS</span>, <span class='no'>obj</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>fname</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># cached copy is loaded</span></div><div class='output co'>#&gt; <span class='message'>loading cached result from previous saveRDS call.</span></div><div class='output co'>#&gt; [1] "NULL"
-#&gt; attr(,"tags")
-#&gt; [1] "cacheId:46db9ac49c0d1d44463ac3c5dfe3119a"
-#&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'>
-<span class='co'># however, using asPath(), cached version retrieved after being run once</span>
-<span class='no'>fname1</span> <span class='kw'>&lt;-</span> <span class='fu'>tempfile</span>(<span class='kw'>fileext</span> <span class='kw'>=</span> <span class='st'>".RData"</span>)
-<span class='fu'>Cache</span>(<span class='no'>saveRDS</span>, <span class='no'>obj</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>fname1</span>), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; NULL</div><div class='input'><span class='fu'>Cache</span>(<span class='no'>saveRDS</span>, <span class='no'>obj</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>fname1</span>), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># cached copy is loaded</span></div><div class='output co'>#&gt; <span class='message'>loading cached result from previous saveRDS call.</span></div><div class='output co'>#&gt; [1] "NULL"
-#&gt; attr(,"tags")
-#&gt; [1] "cacheId:e41f2fe323f8a5fa2ca2002f099a7976"
-#&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'>
-<span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
-
-<span class='co'>## cleanup</span>
-<span class='fu'>unlink</span>(<span class='fu'>c</span>(<span class='st'>"filename.rda"</span>, <span class='st'>"filename1.rda"</span>))
-<span class='fu'>unlink</span>(<span class='fu'>dirname</span>(<span class='no'>tmpDir</span>), <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>
+<span class='co'># All same</span>
+<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous rnorm call, adding to memoised copy</span></div><div class='input'><span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'>rnorm</span>(<span class='fl'>10</span>, <span class='fl'>16</span>) <span class='kw'>%&gt;%</span> <span class='fu'>Cache</span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous 'rnorm' pipe sequence call.</span></div><div class='input'><span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='fu'>quote</span>(<span class='fu'>rnorm</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span>)), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous rnorm call.</span></div><div class='input'># For more in depth uses, see vignette
+</div><span class='co'># NOT RUN {</span>
+  <span class='fu'>browseVignettes</span>(<span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"reproducible"</span>)
+<span class='co'># }</span><div class='input'><span class='co'># Equivalent</span>
+<span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous rnorm call, adding to memoised copy</span></div><div class='input'><span class='no'>b</span> <span class='kw'>%&lt;%</span> <span class='fu'>rnorm</span>(<span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous FUN call.</span></div><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -696,9 +468,15 @@ reproducible workflow.</p>
 
       <li><a href="#note">Note</a></li>
 
+      <li><a href="#nested-caching">Nested Caching</a></li>
+
+      <li><a href="#caching-speed">Caching Speed</a></li>
+
       <li><a href="#filepaths">Filepaths</a></li>
 
       <li><a href="#stochasticity">Stochasticity</a></li>
+
+      <li><a href="#sideeffect"><code>sideEffect</code></a></li>
 
       <li><a href="#see-also">See also</a></li>
       
@@ -718,11 +496,14 @@ Eliot McIntire
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="http://hadley.github.io/pkgdown/">pkgdown</a>.</p>
+  <p>Site built with <a href="http://pkgdown.r-lib.org/">pkgdown</a>.</p>
 </div>
 
       </footer>
    </div>
 
+  
+
   </body>
 </html>
+
