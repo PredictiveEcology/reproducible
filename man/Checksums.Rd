@@ -44,8 +44,11 @@ For \code{digest}, the notable argument is \code{algo}. For \code{write.table},
 the notable argument is \code{append}.}
 }
 \value{
-A \code{data.frame} with columns: \code{result}, \code{expectedFile},
-        \code{actualFile}, and \code{checksum}.
+A \code{data.table} with columns: \code{result}, \code{expectedFile},
+        \code{actualFile}, \code{checksum.x}, \code{checksum.y},
+        \code{algorithm.x}, \code{algorithm.y}, \code{filesize.x}, \code{filesize.y}
+        indicating the result of comparison between local file (\code{x}) and
+        expectation based on the \code{CHECKSUMS.txt} file.
 }
 \description{
 Verify (and optionally write) checksums.

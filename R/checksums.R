@@ -43,8 +43,11 @@ if (getRversion() >= "3.1.0") {
 #'                For \code{digest}, the notable argument is \code{algo}. For \code{write.table},
 #'                the notable argument is \code{append}.
 #'
-#' @return A \code{data.frame} with columns: \code{result}, \code{expectedFile},
-#'         \code{actualFile}, and \code{checksum}.
+#' @return A \code{data.table} with columns: \code{result}, \code{expectedFile},
+#'         \code{actualFile}, \code{checksum.x}, \code{checksum.y},
+#'         \code{algorithm.x}, \code{algorithm.y}, \code{filesize.x}, \code{filesize.y}
+#'         indicating the result of comparison between local file (\code{x}) and
+#'         expectation based on the \code{CHECKSUMS.txt} file.
 #'
 #' @importFrom dplyr arrange desc filter group_by left_join mutate rename row_number select
 #' @export
@@ -105,12 +108,19 @@ setMethod(
         grep(basename(checksumFile), ., value = TRUE, invert = TRUE)
     }
 
-    if (!write && file.info(checksumFile)$size > 0) {
-      txt <- read.table(checksumFile, header = TRUE, stringsAsFactors = FALSE)
-      if (dim(txt)[1] == 0) {
-        txt <- dplyr::mutate_all(txt, as.character)
-      }
+    txt <- if (file.size(checksumFile) == 0 || !file.exists(checksumFile)) {
+      .emptyChecksumsFileContent
     } else {
+      read.table(checksumFile,
+                 header = TRUE,
+                 stringsAsFactors = FALSE)
+    }
+    #if (dim(txt)[1] == 0) { # if there are no rows
+    txt <- dplyr::mutate_all(txt, as.character)
+    #}
+    if (is.null(txt$filesize)) txt$filesize <- rep("", NROW(txt))
+    txtRead <- txt # keep a copy even if writing
+    if (!(!write && file.info(checksumFile)$size > 0)) {
       txt <- data.frame(file = character(0), checksum = character(0),
                         filesize = character(0), stringsAsFactors = FALSE)
     }
@@ -127,16 +137,6 @@ setMethod(
       }
     }
 
-    if (!is.null(txt$algorithm)) {
-      if (!write) dots$algo <- unique(txt$algorithm)[1]
-    } else {
-      if (NROW(txt)) {
-        txt$algorithm <- defaultWriteHashAlgo
-      } else {
-        txt$algorithm <- character()
-      }
-    }
-
     message(crayon::magenta("Checking local files...", sep = ""))
     filesToCheck <-  if (length(txt$file) & length(files)) {
       files[basename(files) %in% txt$file]
@@ -145,6 +145,26 @@ setMethod(
     }
     filesToCheck <- filesToCheck[file.exists(filesToCheck)] # remove non existing files
     filesToCheck <- filesToCheck[!dir.exists(filesToCheck)] # remove directories
+
+    if (!is.null(txt$algorithm)) {
+      if (!write) {
+        dots$algo <- unique(txt[txt$file %in% basename(filesToCheck),"algorithm"])
+        dots$algo <- na.omit(dots$algo)[1]
+        if (is.na(dots$algo)) dots$algo <- defaultWriteHashAlgo
+      }
+    } else {
+      if (NROW(txt)) {
+        txt$algorithm <- defaultWriteHashAlgo
+      } else {
+        txt$algorithm <- character()
+      }
+      if (NROW(txtRead)) {
+        txtRead$algorithm <- defaultWriteHashAlgo
+      } else {
+        txtRead$algorithm <- character()
+      }
+    }
+
 
     if (is.null(txt$filesize)) {
       quickCheck <- FALSE
@@ -175,35 +195,59 @@ setMethod(
 
     if (write) {
       writeChecksumsTable(out, checksumFile, dotsWriteTable)
+      txt <- txtRead
+      txt <- dplyr::right_join(txt, out)
+      # wh <- match(txt$file, basename(filesToCheck))
+      # wh <- na.omit(wh)
+      # if (length(wh) > 0) {
+      #   txt[wh,"checksum"] <- checksums[[1]]
+      #   txt[wh,"filesize"] <- checksums[[2]]
+      # }
+      # txt <- txt[wh,]
 
-      return(out)
-    } else {
-      results.df <- out %>%
-        dplyr::mutate(actualFile = file) %>%
-        dplyr::left_join(txt, ., by = "file") %>%
-        dplyr::rename(expectedFile = file) %>%
-        dplyr::group_by(expectedFile) %>%
-        {
-          if (quickCheck) {
-            mutate(., result = ifelse(filesize.x != filesize.y, "FAIL", "OK"))
-          } else {
-            mutate(., result = ifelse(checksum.x != checksum.y, "FAIL", "OK"))
-          }
-        } %>%
-        dplyr::arrange(desc(result)) %>%
-        {
-          if (quickCheck) {
-            select(., "result", "expectedFile", "actualFile", "checksum.x", "checksum.y",
-                   "algorithm.x", "algorithm.y", "filesize.x", "filesize.y")
-          } else {
-            select(., "result", "expectedFile", "actualFile", "checksum.x", "checksum.y",
-                   "algorithm.x", "algorithm.y")
-          }
-        } %>%
-        dplyr::filter(row_number() == 1L)
-
-      return(results.df)
     }
+    results.df <- out %>%
+      dplyr::mutate(actualFile = file) %>%
+      {
+        if (write) {
+          dplyr::right_join(txt, ., by = "file")
+        } else {
+          dplyr::left_join(txt, ., by = "file")
+        }
+      } %>%
+      dplyr::rename(expectedFile = file) %>%
+      dplyr::group_by(expectedFile) %>%
+      {
+        if (quickCheck) {
+          mutate(., result = ifelse(filesize.x != filesize.y, "FAIL", "OK"))
+        } else {
+          mutate(., result = ifelse(checksum.x != checksum.y, "FAIL", "OK"))
+        }
+      } %>%
+      dplyr::arrange(desc(result)) %>%
+      {
+        #if (quickCheck) {
+        select(
+          .,
+          "result",
+          "expectedFile",
+          "actualFile",
+          "checksum.x",
+          "checksum.y",
+          "algorithm.x",
+          "algorithm.y",
+          "filesize.x",
+          "filesize.y"
+        )
+        #} else {
+        #  select(., "result", "expectedFile", "actualFile", "checksum.x", "checksum.y",
+        #         "algorithm.x", "algorithm.y", "filesize.x", "filesize.y")
+        #}
+      } %>%
+      dplyr::filter(row_number() == 1L)
+
+      return(invisible(results.df))
+    #}
   })
 
 #' @rdname Checksums

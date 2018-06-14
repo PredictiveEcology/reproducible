@@ -140,6 +140,7 @@ In options for control of purging the \code{CHECKSUMS.txt} file are:
     \code{3} \tab delete entry for \code{archive} \cr
     \code{5} \tab delete entry for \code{targetFile} & \code{alsoExtract} \cr
     \code{6} \tab delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive} \cr
+    \code{7} \tab delete entry that is failing (i.e., for the file downloaded by the \code{url})\cr
   }
 will only remove entries in the \code{CHECKSUMS.txt} that are associated with
    \code{targetFile}, \code{alsoExtract} or \code{archive} When prepInputs is called, it will write or append to a (if

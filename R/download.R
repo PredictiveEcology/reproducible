@@ -37,7 +37,8 @@ setMethod(
 #' @author Eliot McIntire
 downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quick,
                          checksumFile,
-                         checkSums, url, needChecksums, overwrite = TRUE) { #}, moduleName, modulePath, ...) {
+                         checkSums, url, needChecksums, overwrite = TRUE,
+                         purge = FALSE) {
 
   if (!is.null(url)) {
     if (!is.null(neededFiles)) {
@@ -46,8 +47,6 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 
     if (is.null(neededFiles)) {
       result <- unique(checkSums$result)
-      #if (NROW(checkSums))
-      #  neededFiles <- checkSums$expectedFile
     } else {
       result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
     }
@@ -80,46 +79,85 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                      overwrite = overwrite,
                      needChecksums = needChecksums)
       if (file.exists(checksumFile)) {
-        if (is.null(fileToDownload))  {
-          fileToDownload <- basename(downloadResults$destFile)
+        if (is.null(fileToDownload))  { # This is case where we didn't know what file to download, and only now
+                                        # do we know
+          fileToDownload <- downloadResults$destFile
         }
-        checkSums <- Checksums(files = file.path(destinationPath, fileToDownload), checksumFile = checksumFile,
-                       path = destinationPath, quickCheck = quick,
-                       write = FALSE)
-        isOK <- checkSums[compareNA(checkSums$expectedFile, fileToDownload) |
-                                  compareNA(checkSums$actualFile, fileToDownload),]$result
-        isOK <- isOK[!is.na(isOK)] == "OK"
-        if (length(isOK) > 0) {
-          if (!isTRUE(all(isOK))) {
-            tf <- tryCatch(basename(targetFile) %in% fileToDownload, error = function(x) FALSE)
-            af <- tryCatch(basename(archive) %in% fileToDownload, error = function(x) FALSE)
-            purgeNum <- if (isTRUE(tf)) 2 else if (isTRUE(af)) 3 else 6
+        if ((length(readLines(checksumFile)) > 0)) {
+          checkSums <-
+            Checksums(
+              files = file.path(destinationPath, basename(fileToDownload)),
+              checksumFile = checksumFile,
+              path = destinationPath,
+              quickCheck = quick,
+              write = FALSE
+            )
+          isOK <-
+            checkSums[compareNA(checkSums$expectedFile, fileToDownload) |
+                        compareNA(checkSums$actualFile, fileToDownload),]$result
+          isOK <- isOK[!is.na(isOK)] == "OK"
+          if (length(isOK) > 0) {
+            if (!isTRUE(all(isOK))) {
+              if (purge > 0)  {
+                # This is case where we didn't know what file to download, and only now
+                # do we know
+                checkSums <-
+                  .purge(checkSums = checkSums,
+                         purge = purge,
+                         url = fileToDownload)
+                downloadResults$needChecksums <- 2
+              } else {
+                tf <-
+                  tryCatch(
+                    basename(targetFile) %in% fileToDownload,
+                    error = function(x)
+                      FALSE
+                  )
+                af <-
+                  tryCatch(
+                    basename(archive) %in% fileToDownload,
+                    error = function(x)
+                      FALSE
+                  )
 
-            sc <- sys.calls()
-            piCall <- grep("^prepInputs", sc, value = TRUE)
-            purgeTry <- if(length(piCall)) {
-              gsub(piCall, pattern = ")$", replacement = paste0(", purge = ",purgeNum,")"))
-            } else {
-              ""
+                sc <- sys.calls()
+                piCall <- grep("^prepInputs", sc, value = TRUE)
+                purgeTry <- if (length(piCall)) {
+                  gsub(piCall,
+                       pattern = ")$",
+                       replacement = paste0(", purge = 7)"))
+                } else {
+                  ""
+                }
+                stop(
+                  "\nDownloaded version of ",
+                  fileToDownload,
+                  " from url: ",
+                  url,
+                  " did not match expected file (checksums failed). There are several options:\n",
+                  " 1) This may be an intermittent internet problem -- try to rerun this ",
+                  "current function call.\n",
+                  " 2) The local copy of the file may have been changed or corrupted -- run:\n",
+                  "      file.remove('",
+                  normPath(fileToDownload),
+                  "')\n",
+                  "      then rerun this current function call.\n",
+                  " 3) The download is correct, and the Checksums should be rewritten for this file:\n",
+                  "      --> rerun this current function call, specifying 'purge = 7' possibly\n",
+                  "      ",
+                  purgeTry,
+                  call. = FALSE
+                )
+
+
+              }
+            } else if (isTRUE(all(isOK))) {
+              downloadResults$needChecksums <- 0
             }
-            stop("\nDownloaded version of ", fileToDownload, " from url: ", url,
-                 " did not match expected file (checksums failed). There are several options:\n",
-                 " 1) This may be an intermittent internet problem -- try to rerun this ",
-                 "current function call.\n",
-                 " 2) The local copy of the file may have been changed or corrupted -- run:\n",
-                 "      file.remove('",normalizePath(fileToDownload),"')\n",
-                 "      then rerun this current function call.\n",
-                 " 3) The download is correct, and the Checksums should be rewritten for this file:\n",
-                 "      --> rerun this current function call, specifying 'purge = ",purgeNum,"' possibly\n",
-                 "      ", purgeTry, call. = FALSE)
-
-
-          } else if (isTRUE(all(isOK))) {
-            downloadResults$needChecksums <- 0
           }
         }
-      }
-    } else {
+      } # checksum file doesn't exist
+    } else { # not missing any files to download
       fileAlreadyDownloaded <- if (is.null(archive[1])) {
         archivePossibly <- setdiff(checkSums$expectedFile, neededFiles)
         if (!is.null(.isArchive(archivePossibly))) {

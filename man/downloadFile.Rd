@@ -5,7 +5,8 @@
 \title{A wrapper around a set of downloading functions}
 \usage{
 downloadFile(archive, targetFile, neededFiles, destinationPath, quick,
-  checksumFile, checkSums, url, needChecksums, overwrite = TRUE)
+  checksumFile, checkSums, url, needChecksums, overwrite = TRUE,
+  purge = FALSE)
 }
 \arguments{
 \item{archive}{Optional character string giving the path of an archive
@@ -52,6 +53,11 @@ URL is used here, an ad hoc checksums will be created in the
 
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}
+
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
+\code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
+\code{CHECKSUMS.txt} file. Other options, see details.}
 }
 \description{
 Currently, this only deals with \code{\link[googledrive]{drive_download}},
