@@ -2,8 +2,6 @@
 library("revdepcheck")
 
 revdep_check(num_workers = getOption("Ncpus", 1))
-revdep_check_report_summary()
-revdep_check_report_problems()
 
 ### email maintainers of revdep packages (need to edit: `revdep/email.yml`)
 revdep_email(type = "broken") ## will send via gmail
