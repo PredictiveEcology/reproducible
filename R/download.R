@@ -68,8 +68,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
               write = FALSE
             )
           isOK <-
-            checkSums[compareNA(checkSums$expectedFile, fileToDownload) |
-                        compareNA(checkSums$actualFile, fileToDownload),]$result
+            checkSums[compareNA(checkSums$expectedFile, basename(fileToDownload)) |
+                        compareNA(checkSums$actualFile, basename(fileToDownload)),]$result
           isOK <- isOK[!is.na(isOK)] == "OK"
           if (length(isOK) > 0) {
             if (!isTRUE(all(isOK))) {
@@ -106,7 +106,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                 }
                 stop(
                   "\nDownloaded version of ",
-                  fileToDownload,
+                  normPath(fileToDownload),
                   " from url: ",
                   url,
                   " did not match expected file (checksums failed). There are several options:\n",
