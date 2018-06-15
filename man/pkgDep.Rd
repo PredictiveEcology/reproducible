@@ -30,9 +30,9 @@ NOTE Dependencies of suggests will not be recursive. Default TRUE.}
 }
 \description{
 This is intended to replace \code{\link[tools]{package_dependencies}} or
-\code{pkgDep} in the miniCRAN package, but with modfications for speed.
+\code{pkgDep} in the \pkg{miniCRAN} package, but with modifications for speed.
 It will first check local package directories in \code{libPath}, and it if
-the function cannont find the packages there, then it will use
+the function cannot find the packages there, then it will use
 \code{\link[tools]{package_dependencies}}.
 }
 \note{

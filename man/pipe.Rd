@@ -17,7 +17,7 @@ STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
 }
 \details{
 This pipe can only be used at the start of a pipe chain, and must
-be preceeded by \code{Cache(...)} to allow other Cache arguments to be passed.
+be preceded by \code{Cache(...)} to allow other Cache arguments to be passed.
 
 This will take the input arguments of the
 first function immediately following the \code{Cache() \%C\%} and the

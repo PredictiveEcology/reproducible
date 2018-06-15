@@ -2,7 +2,7 @@
 % Please edit documentation in R/cache-helpers.R
 \name{copyFile}
 \alias{copyFile}
-\title{Copy a file using \code{Robocopy} on Windows and \code{rsync} on Linux/macOS}
+\title{Copy a file using \code{robocopy} on Windows and \code{rsync} on Linux/macOS}
 \usage{
 copyFile(from = NULL, to = NULL, useRobocopy = TRUE, overwrite = TRUE,
   delDestination = FALSE, create = TRUE, silent = FALSE)
@@ -12,14 +12,14 @@ copyFile(from = NULL, to = NULL, useRobocopy = TRUE, overwrite = TRUE,
 
 \item{to}{The new file.}
 
-\item{useRobocopy}{For Windows, this will use a system call to \code{Robocopy}
+\item{useRobocopy}{For Windows, this will use a system call to \code{robocopy}
 which appears to be much faster than the internal \code{file.copy} function.
 Uses \code{/MIR} flag. Default \code{TRUE}.}
 
 \item{overwrite}{Passed to \code{file.copy}}
 
 \item{delDestination}{Logical, whether the destination should have any files deleted,
-if they don't exist in the source. This is \code{/purge} for RoboCopy and --delete for
+if they don't exist in the source. This is \code{/purge} for robocopy and --delete for
 rsync.}
 
 \item{create}{Passed to \code{checkPath}.}
@@ -28,13 +28,11 @@ rsync.}
 }
 \description{
 This is replacement for \code{file.copy}, but for one file at a time.
-The additional feature is that it will use Robocopy (on Windows) or
-rsync on Linux or Mac, if they exist. It will default back to \code{file.copy}
-if none of these exists.
-This will generally copy a large file faster using \code{Robocopy} on Windows,
-and using \code{rsync} on macOS and Linux. In particular, if there is a possibility
-that the file already exists, then this function should be very fast as it
-will do "update only", i.e., nothing.
+The additional feature is that it will use \code{robocopy} (on Windows) or
+\code{rsync} on Linux or Mac, if they exist.
+It will default back to \code{file.copy} if none of these exists.
+If there is a possibility that the file already exists, then this function
+should be very fast as it will do "update only", i.e., nothing.
 }
 \examples{
 tmpDirFrom <- file.path(tempdir(), "example_fileCopy_from")

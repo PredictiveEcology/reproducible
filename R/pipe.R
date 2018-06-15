@@ -23,7 +23,7 @@
 #' type of caching. Here, if there is a call to \code{Cache} in the pipe sequence,
 #' the entire pipe chain before the call to \code{Cache} will have its arguments
 #' examined and digested. This digest is compared to the cache repository database.
-#' If there is an identical pipe sequence in the Cache respository, then it will return
+#' If there is an identical pipe sequence in the Cache repository, then it will return
 #' the final result of the entire pipe up to the Cache call. If there is no
 #' identical copy in the cache repository, then it will evaluate the pipe sequence as per
 #' normal, caching the return value at the point of the \code{Cache} call
@@ -133,7 +133,7 @@
 #' STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
 #'
 #' This pipe can only be used at the start of a pipe chain, and must
-#' be preceeded by \code{Cache(...)} to allow other Cache arguments to be passed.
+#' be preceded by \code{Cache(...)} to allow other Cache arguments to be passed.
 #'
 #' This will take the input arguments of the
 #' first function immediately following the \code{Cache() \%C\%} and the

@@ -133,10 +133,10 @@ tools for caching, and accessing GitHub repositories." />
 
     <div class="ref-description">
     
-    <p>Built on top of <code>git2r</code> and <code>archivist</code>, this package aims at making
+    <p>Built on top of <span class="pkg">git2r</span> and <span class="pkg">archivist</span>, this package aims at making
 high-level, robust, machine and OS independent tools for making deeply
 reproducible and reusable content in R. This extends beyond the package
-management utilities of <code>packrat</code> and <code>checkpoint</code> by including
+management utilities of <span class="pkg">packrat</span> and <span class="pkg">checkpoint</span> by including
 tools for caching, and accessing GitHub repositories.</p>
     
     </div>
@@ -148,7 +148,7 @@ tools for caching, and accessing GitHub repositories.</p>
     <p><code>reproducible</code> has the following <code>options</code> to configure behaviour:</p>
 <ul>
 <li><p><code>reproducible.cachePath</code>: The default path for repositories if not
-  passed as an argument. The default is the tempdir() of the session.</p></li>
+  passed as an argument. The default is the <code>tempdir()</code> of the session.</p></li>
 <li><p><code>reproducible.useMemoise</code>: Default is <code>TRUE</code>. When
   the Cache mechanism determines that it has already run a particular function
   based on the digest (hash) of its input parameters, it will load the object
@@ -163,7 +163,7 @@ tools for caching, and accessing GitHub repositories.</p>
   If <code>TRUE</code>, then full objects and file content will be hashed.
   Because the hash will be different between <code>quick = TRUE</code> and
   <code>quick = FALSE</code>, hashing will effectively be independent between the two states.</p></li>
-<li><p>reproducible.useragent: User agent for downloads using thi package.
+<li><p>reproducible.useragent: User agent for downloads using this package.
   Default is <code>"http://github.com/PredictiveEcology/reproducible"</code>.</p></li>
 <li><p><code>reproducible:verbose</code>: Default is <code>FALSE</code>. This is the
   normal setting. If set to <code>TRUE</code> then every Cache call will show a summary

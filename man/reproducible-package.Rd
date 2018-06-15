@@ -6,10 +6,10 @@
 \alias{reproducible-package}
 \title{The \code{reproducible} package}
 \description{
-Built on top of \code{git2r} and \code{archivist}, this package aims at making
+Built on top of \pkg{git2r} and \pkg{archivist}, this package aims at making
 high-level, robust, machine and OS independent tools for making deeply
 reproducible and reusable content in R. This extends beyond the package
-management utilities of \code{packrat} and \code{checkpoint} by including
+management utilities of \pkg{packrat} and \pkg{checkpoint} by including
 tools for caching, and accessing GitHub repositories.
 }
 \section{Package options}{
@@ -19,7 +19,7 @@ tools for caching, and accessing GitHub repositories.
 
 \itemize{
   \item \code{reproducible.cachePath}: The default path for repositories if not
-  passed as an argument. The default is the tempdir() of the session.
+  passed as an argument. The default is the \code{tempdir()} of the session.
 
   \item \code{reproducible.useMemoise}: Default is \code{TRUE}. When
   the Cache mechanism determines that it has already run a particular function
@@ -37,7 +37,7 @@ tools for caching, and accessing GitHub repositories.
   Because the hash will be different between \code{quick = TRUE} and
   \code{quick = FALSE}, hashing will effectively be independent between the two states.
 
-  \item {reproducible.useragent}: User agent for downloads using thi package.
+  \item {reproducible.useragent}: User agent for downloads using this package.
   Default is \code{"http://github.com/PredictiveEcology/reproducible"}.
 
   \item \code{reproducible:verbose}: Default is \code{FALSE}. This is the

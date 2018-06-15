@@ -39,7 +39,7 @@ digested verbatim, i.e., it must be an exact copy for the Cache mechanism
 to detect a candidate for recovery from the cache.
 Paths, are different. While they are character strings, there are many ways to
 write the same path. Examples of identical meaning, but different character strings are:
-path exanding of \code{~} vs. not, double back slash vs. single forward slash,
+path expanding of \code{~} vs. not, double back slash vs. single forward slash,
 relative path vs. absolute path.
 All of these should be assessed for their actual file or directory location,
 NOT their character string. By converting all character string that are actual

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Copy a file using <code>Robocopy</code> on Windows and <code>rsync</code> on Linux/macOS — copyFile • reproducible</title>
+<title>Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS — copyFile • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,16 +30,14 @@
 
 
 
-<meta property="og:title" content="Copy a file using <code>Robocopy</code> on Windows and <code>rsync</code> on Linux/macOS — copyFile" />
+<meta property="og:title" content="Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS — copyFile" />
 
 <meta property="og:description" content="This is replacement for file.copy, but for one file at a time.
-The additional feature is that it will use Robocopy (on Windows) or
-rsync on Linux or Mac, if they exist. It will default back to file.copy
-if none of these exists.
-This will generally copy a large file faster using Robocopy on Windows,
-and using rsync on macOS and Linux. In particular, if there is a possibility
-that the file already exists, then this function should be very fast as it
-will do &quot;update only&quot;, i.e., nothing." />
+The additional feature is that it will use robocopy (on Windows) or
+rsync on Linux or Mac, if they exist.
+It will default back to file.copy if none of these exists.
+If there is a possibility that the file already exists, then this function
+should be very fast as it will do &quot;update only&quot;, i.e., nothing." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -129,7 +127,7 @@ will do &quot;update only&quot;, i.e., nothing." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Copy a file using <code>Robocopy</code> on Windows and <code>rsync</code> on Linux/macOS</h1>
+    <h1>Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS</h1>
     <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R'><code>R/cache-helpers.R</code></a></small>
     <div class="hidden name"><code>copyFile.Rd</code></div>
     </div>
@@ -137,13 +135,11 @@ will do &quot;update only&quot;, i.e., nothing." />
     <div class="ref-description">
     
     <p>This is replacement for <code>file.copy</code>, but for one file at a time.
-The additional feature is that it will use Robocopy (on Windows) or
-rsync on Linux or Mac, if they exist. It will default back to <code>file.copy</code>
-if none of these exists.
-This will generally copy a large file faster using <code>Robocopy</code> on Windows,
-and using <code>rsync</code> on macOS and Linux. In particular, if there is a possibility
-that the file already exists, then this function should be very fast as it
-will do "update only", i.e., nothing.</p>
+The additional feature is that it will use <code>robocopy</code> (on Windows) or
+<code>rsync</code> on Linux or Mac, if they exist.
+It will default back to <code>file.copy</code> if none of these exists.
+If there is a possibility that the file already exists, then this function
+should be very fast as it will do "update only", i.e., nothing.</p>
     
     </div>
 
@@ -163,7 +159,7 @@ will do "update only", i.e., nothing.</p>
     </tr>
     <tr>
       <th>useRobocopy</th>
-      <td><p>For Windows, this will use a system call to <code>Robocopy</code>
+      <td><p>For Windows, this will use a system call to <code>robocopy</code>
 which appears to be much faster than the internal <code>file.copy</code> function.
 Uses <code>/MIR</code> flag. Default <code>TRUE</code>.</p></td>
     </tr>
@@ -174,7 +170,7 @@ Uses <code>/MIR</code> flag. Default <code>TRUE</code>.</p></td>
     <tr>
       <th>delDestination</th>
       <td><p>Logical, whether the destination should have any files deleted,
-if they don't exist in the source. This is <code>/purge</code> for RoboCopy and --delete for
+if they don't exist in the source. This is <code>/purge</code> for robocopy and --delete for
 rsync.</p></td>
     </tr>
     <tr>
