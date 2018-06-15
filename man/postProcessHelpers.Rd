@@ -2,7 +2,7 @@
 % Please edit documentation in R/postProcess.R
 \name{.getTargetCRS}
 \alias{.getTargetCRS}
-\title{Hierachically get crs from \code{Raster*}, \code{Spatial*}}
+\title{Hierarchically get crs from \code{Raster*}, \code{Spatial*}}
 \usage{
 .getTargetCRS(useSAcrs, studyArea, rasterToMatch)
 }

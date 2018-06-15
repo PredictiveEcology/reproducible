@@ -190,7 +190,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 #'
 #' @param url  The url (link) to the file.
 #'
-#' @author Eilot McIntire and Alex Chubaty
+#' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
 #' @importFrom googledrive as_id drive_auth drive_get
 #'
@@ -232,7 +232,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #'
 #' ## TODO: add overwrite arg to the function?
 #'
-#' @author Eilot McIntire and Alex Chubaty
+#' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
 #' @importFrom crayon magenta
 #' @importFrom httr GET http_error progress stop_for_status user_agent write_disk

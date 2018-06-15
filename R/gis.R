@@ -58,12 +58,12 @@ checkGDALVersion <- function(version) {
 #' @return A \code{Raster*} object, masked (i.e., smaller extent and/or
 #'         several pixels converted to NA)
 #'
-#' @author Eliot Mcintire
+#' @author Eliot McIntire
 #' @export
-#' @importFrom raster crop extract mask nlayers raster stack crs
-#' @importFrom sp spTransform SpatialPolygonsDataFrame
 #' @importFrom fasterize fasterize
+#' @importFrom raster crop extract mask nlayers raster stack crs
 #' @importFrom sf st_as_sf
+#' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
 #' @examples
 #' library(raster)

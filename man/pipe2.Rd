@@ -23,8 +23,8 @@ on the search path, which is almost impossible in any realistic project. Please
 see the \code{\%C\%} function ?pipe
 
 A pipe that works with Cache. The code for this is based on a verbatim copy from
-\url{https://github.com/tidyverse/magrittr/blob/master/R/pipe.R} on Sep 8, 2017,
-based on commit 81c2e2410ebb7c560a2b4a8384ef5c20946373c3, with enhancements
+\url{https://github.com/tidyverse/magrittr/blob/master/R/pipe.R} on Sept 8, 2017,
+based on commit \code{81c2e2410ebb7c560a2b4a8384ef5c20946373c3}, with enhancements
 to make it Cache-aware.
 This version is a drop-in replacement for \code{\link[magrittr]{\%>\%}} and will
 work identically when there is no Cache. To use this, simply add \code{\%>\% Cache()}

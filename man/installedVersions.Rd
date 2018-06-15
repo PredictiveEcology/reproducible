@@ -2,7 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{installedVersions}
 \alias{installedVersions}
-\title{Determine versions all installed pacakges}
+\title{Determine versions all installed packages}
 \usage{
 installedVersions(packages, libPath)
 }
@@ -15,7 +15,7 @@ installed in the \code{libPath}.}
 }
 \description{
 This code is adapted from \code{\link[versions]{installed.versions}},
-but uses an \code{Rcpp} alternative to readLines for speed.
+but uses an \code{Rcpp} alternative to \code{readLines} for speed.
 It will be anywhere from 2x to 10x faster than the
 \code{\link[versions]{installed.versions}} function.
 This is also many times faster than \code{utils::installed.packages},

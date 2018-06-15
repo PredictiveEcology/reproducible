@@ -54,5 +54,5 @@ if (interactive()) {
 
 }
 \author{
-Eliot Mcintire
+Eliot McIntire
 }

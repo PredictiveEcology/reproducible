@@ -464,7 +464,7 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
   x
 }
 
-#' Hierachically get crs from \code{Raster*}, \code{Spatial*}
+#' Hierarchically get crs from \code{Raster*}, \code{Spatial*}
 #'
 #' This is the function that follows the table of order of
 #' preference for determining CRS. See \code{\link{postProcess}}
