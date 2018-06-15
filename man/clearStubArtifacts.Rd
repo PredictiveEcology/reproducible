@@ -20,9 +20,9 @@ Invoked for its side effect on the \code{repoDir}.
 }
 \description{
 Stub artifacts can result from several causes. The most common being
-erroneous removal of a file in the sqlite database. This can be caused
+erroneous removal of a file in the SQLite database. This can be caused
 sometimes if an archive object is being saved multiple times by multiple
-threads. This function will clear entries in the sqlite database which
+threads. This function will clear entries in the SQLite database which
 have no actual file with data.
 }
 \examples{

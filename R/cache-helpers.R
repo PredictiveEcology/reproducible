@@ -453,9 +453,9 @@ setAs(from = "character", to = "Path", function(from) {
 #' Clear erroneous archivist artifacts
 #'
 #' Stub artifacts can result from several causes. The most common being
-#' erroneous removal of a file in the sqlite database. This can be caused
+#' erroneous removal of a file in the SQLite database. This can be caused
 #' sometimes if an archive object is being saved multiple times by multiple
-#' threads. This function will clear entries in the sqlite database which
+#' threads. This function will clear entries in the SQLite database which
 #' have no actual file with data.
 #'
 #' @return Invoked for its side effect on the \code{repoDir}.
@@ -889,10 +889,10 @@ setMethod("Copy",
 ################################################################################
 #' Sort or order any named object with dotted names and underscores first
 #'
-#' Internal use only. This exists so Windows, *nux, Mac machines can have
+#' Internal use only. This exists so Windows, Linux, and Mac machines can have
 #' the same order after a sort. It will put dots and underscores first
-#' (with the sort key based on their second character, see examples. It also
-#' sorts lower case before upper case
+#' (with the sort key based on their second character, see examples.
+#' It also sorts lower case before upper case.
 #'
 #' @param obj  An arbitrary R object for which a \code{names} function
 #'              returns a character vector.

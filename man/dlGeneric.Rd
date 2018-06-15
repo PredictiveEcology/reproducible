@@ -17,6 +17,6 @@ dlGeneric(url, needChecksums)
 Download file from generic source url
 }
 \author{
-Eilot McIntire and Alex Chubaty
+Eliot McIntire and Alex Chubaty
 }
 \keyword{internal}

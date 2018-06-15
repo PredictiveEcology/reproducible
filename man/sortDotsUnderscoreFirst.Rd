@@ -17,10 +17,10 @@ returns a character vector.}
 The same object as \code{obj}, but sorted with .objects first.
 }
 \description{
-Internal use only. This exists so Windows, *nux, Mac machines can have
+Internal use only. This exists so Windows, Linux, and Mac machines can have
 the same order after a sort. It will put dots and underscores first
-(with the sort key based on their second character, see examples. It also
-sorts lower case before upper case
+(with the sort key based on their second character, see examples.
+It also sorts lower case before upper case.
 }
 \examples{
 items <- c(A = "a", Z = "z", `.D` = ".d", `_C` = "_C")

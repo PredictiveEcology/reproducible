@@ -82,7 +82,7 @@ the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
 without evalutating the \code{FUN(...)}.}
 
-\item{sideEffect}{Logical or path. Deteremines where the function will look for
+\item{sideEffect}{Logical or path. Determines where the function will look for
 new files following function completion. See Details.
 \emph{NOTE: this argument is experimental and may change in future releases.}}
 

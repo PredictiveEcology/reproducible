@@ -248,10 +248,10 @@ newLibPaths <- function(libPath) {
   invisible(.libPaths())
 }
 
-#' Determine versions all installed pacakges
+#' Determine versions all installed packages
 #'
 #' This code is adapted from \code{\link[versions]{installed.versions}},
-#' but uses an \code{Rcpp} alternative to readLines for speed.
+#' but uses an \code{Rcpp} alternative to \code{readLines} for speed.
 #' It will be anywhere from 2x to 10x faster than the
 #' \code{\link[versions]{installed.versions}} function.
 #' This is also many times faster than \code{utils::installed.packages},
@@ -453,9 +453,10 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 #' Determine package dependencies, first looking at local filesystem
 #'
 #' This is intended to replace \code{\link[tools]{package_dependencies}} or
-#' \code{pkgDep} in the miniCRAN package, but with modfications for speed. It will first check
-#' local package directory(ies) in \code{libPath}, and it if the function cannont find
-#' the packages there, then it will use \code{\link[tools]{package_dependencies}}.
+#' \code{pkgDep} in the miniCRAN package, but with modfications for speed.
+#' It will first check local package directories in \code{libPath}, and it if
+#' the function cannont find the packages there, then it will use
+#' \code{\link[tools]{package_dependencies}}.
 #'
 #' @note \code{package_dependencies} and \code{pkgDep} will differ under the following
 #' circumstances:
@@ -473,11 +474,12 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 #' @param linkingTo Logical. Include packages listed in "LinkingTo". Default TRUE.
 #' @param recursive Logical. Should dependencies of dependencies be searched, recursively.
 #'                  NOTE Dependencies of suggests will not be recursive. Default TRUE.
-#' @examples
-#' pkgDep("crayon")
-#' @rdname pkgDep
 #' @export
 #' @importFrom memoise memoise
+#' @rdname pkgDep
+#'
+#' @examples
+#' pkgDep("crayon")
 pkgDep <- memoise(pkgDepRaw)
 
 pkgDep2 <- memoise(pkgDepRaw)
@@ -792,17 +794,17 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'
 #' @inheritParams Require
 #' @param repos The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},
-#' @param githubPkgs Character vector of github repositoriess and packages, in the
+#' @param githubPkgs Character vector of github repositories and packages, in the
 #'                   form \code{repository/package@branch}, with branch being optional.
 #' @param githubPkgNames Character vector of the package names, i.e., just the R package name.
 #' @param nonLibPathPkgs Character vector of all installed packages that are in \code{.libPaths},
 #'                       but not in \code{libPath}. This would normally include a listing of
 #'                       base packages, but may also include other library paths if
 #'                       \code{standAlone} if \code{FALSE}
+#' @importFrom data.table data.table setDT setnames
+#' @importFrom memoise forget is.memoised memoise
+#' @importFrom utils assignInMyNamespace available.packages install.packages installed.packages read.table
 #' @importFrom versions install.versions
-#' @importFrom memoise is.memoised memoise forget
-#' @importFrom data.table setDT data.table setnames
-#' @importFrom utils read.table available.packages installed.packages install.packages assignInMyNamespace
 #' @rdname installPackages
 #' @examples
 #' \dontrun{

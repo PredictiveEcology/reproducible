@@ -14,6 +14,6 @@ dlGoogle(url, archive = NULL, targetFile = NULL, checkSums, skipDownloadMsg,
 Download file from Google Drive
 }
 \author{
-Eilot McIntire and Alex Chubaty
+Eliot McIntire and Alex Chubaty
 }
 \keyword{internal}
