@@ -209,7 +209,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @inheritParams downloadFile
 #' @keywords internal
 #' @rdname purge
-.purge <- function(checkSums, purge, targeFile, archive, alsoExtract, url) {
+.purge <- function(checkSums, purge, targetFile, archive, alsoExtract, url) {
   purgeChar <- as.character(purge)
   checkSums <- tryCatch(
     switch(
