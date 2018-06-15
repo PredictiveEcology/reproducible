@@ -31,7 +31,7 @@ The `reproducible::Cache` function is built to work with any R function.
 Similar to `archivist::cache`, there is some reliance on `digest::digest` to determine whether the arguments are identical in subsequent iterations; however, it also uses `fastdigest::fastdigest` to make it substantially faster in many cases.
 It also but does *many* things that make standard caching with `digest::digest` don't work reliably between systems.
 For these, the function `.robustDigest` is introduced to make caching transferable between systems.
-This is relevant for file paths, environments, parallel clusters, functions (which are contained within an environment), and many others (e.g., see ?.robustDigest for methods).
+This is relevant for file paths, environments, parallel clusters, functions (which are contained within an environment), and many others (e.g., see `?.robustDigest` for methods).
 `Cache` also adds important elements like automated tagging and the option to retrieve disk-cached values via stashed objects in memory using `memoise::memoise`.
 This means that running `Cache` 1, 2, and 3 times on the same function will get progressively faster.
 This can be extremely useful for web apps built with, say `shiny`.
@@ -298,7 +298,7 @@ unlink(dirname(tmpDir), recursive = TRUE)
 
 # Reproducible Workflow
 
-In general, we feel that a liberal use of `Cache` will make a re-useable and reproducible work flow.
+In general, we feel that a liberal use of `Cache` will make a re-usable and reproducible work flow.
 `shiny` apps can be made, taking advantage of `Cache`. 
 Indeed, much of the difficulty in managing data sets and saving them for future use, can be accommodated by caching.
 

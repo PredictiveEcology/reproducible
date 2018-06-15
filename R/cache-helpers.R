@@ -405,7 +405,7 @@ setClass("Path", slots = c(.Data = "character"), contains = "character",
 #' to detect a candidate for recovery from the cache.
 #' Paths, are different. While they are character strings, there are many ways to
 #' write the same path. Examples of identical meaning, but different character strings are:
-#' path exanding of \code{~} vs. not, double back slash vs. single forward slash,
+#' path expanding of \code{~} vs. not, double back slash vs. single forward slash,
 #' relative path vs. absolute path.
 #' All of these should be assessed for their actual file or directory location,
 #' NOT their character string. By converting all character string that are actual
@@ -661,29 +661,27 @@ setMethod(
 }
 
 
-#' Copy a file using \code{Robocopy} on Windows and \code{rsync} on Linux/macOS
+#' Copy a file using \code{robocopy} on Windows and \code{rsync} on Linux/macOS
 #'
 #' This is replacement for \code{file.copy}, but for one file at a time.
-#' The additional feature is that it will use Robocopy (on Windows) or
-#' rsync on Linux or Mac, if they exist. It will default back to \code{file.copy}
-#' if none of these exists.
-#' This will generally copy a large file faster using \code{Robocopy} on Windows,
-#' and using \code{rsync} on macOS and Linux. In particular, if there is a possibility
-#' that the file already exists, then this function should be very fast as it
-#' will do "update only", i.e., nothing.
+#' The additional feature is that it will use \code{robocopy} (on Windows) or
+#' \code{rsync} on Linux or Mac, if they exist.
+#' It will default back to \code{file.copy} if none of these exists.
+#' If there is a possibility that the file already exists, then this function
+#' should be very fast as it will do "update only", i.e., nothing.
 #'
 #' @param from The source file.
 #'
 #' @param to The new file.
 #'
-#' @param useRobocopy For Windows, this will use a system call to \code{Robocopy}
+#' @param useRobocopy For Windows, this will use a system call to \code{robocopy}
 #'        which appears to be much faster than the internal \code{file.copy} function.
 #'        Uses \code{/MIR} flag. Default \code{TRUE}.
 #'
 #' @param overwrite Passed to \code{file.copy}
 #'
 #' @param delDestination Logical, whether the destination should have any files deleted,
-#' if they don't exist in the source. This is \code{/purge} for RoboCopy and --delete for
+#' if they don't exist in the source. This is \code{/purge} for robocopy and --delete for
 #' rsync.
 #'
 #' @param create Passed to \code{checkPath}.

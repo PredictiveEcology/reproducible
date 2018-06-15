@@ -222,7 +222,7 @@ the packages and their dependencies, even if the version used is located in
 <code>.libPaths()</code>, i.e., not the <code>libPath</code> provided.
 This hidden file will be used if a user runs <code>pkgSnapshot</code>,
 enabling a new user to rebuild the entire dependency chain, without having to
-install all packages in an isolated directory (as does packrat).
+install all packages in an isolated directory (as does <span class="pkg">packrat</span>).
 This will save potentially a lot of time and disk space, and yet maintain reproducibility.
 <em>NOTE</em>: since there is only one hidden file in a <code>libPath</code>, any call to
 <code>pkgSnapshot</code> will make a snapshot of the most recent call to <code>Require</code>.</p>

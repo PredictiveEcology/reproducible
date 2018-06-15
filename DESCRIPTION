@@ -53,7 +53,6 @@ Imports:
     versions
 Suggests:
     covr,
-    hunspell,
     knitr,
     rmarkdown,
     testthat,

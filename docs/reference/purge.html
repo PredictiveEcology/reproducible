@@ -133,7 +133,7 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>.purge</span>(<span class='no'>checkSums</span>, <span class='no'>purge</span>, <span class='no'>targeFile</span>, <span class='no'>archive</span>, <span class='no'>alsoExtract</span>, <span class='no'>url</span>)</pre>
+    <pre class="usage"><span class='fu'>.purge</span>(<span class='no'>checkSums</span>, <span class='no'>purge</span>, <span class='no'>targetFile</span>, <span class='no'>archive</span>, <span class='no'>alsoExtract</span>, <span class='no'>url</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -148,6 +148,15 @@
 <code>CHECKSUMS.txt</code> file and
 <code>prepInputs</code> will write or append to it. <code>1/TRUE</code> will deleted the entire
 <code>CHECKSUMS.txt</code> file. Other options, see details.</p></td>
+    </tr>
+    <tr>
+      <th>targetFile</th>
+      <td><p>Character string giving the path to the eventual file
+(raster, shapefile, csv, etc.) after downloading and extracting from a zip
+or tar archive. This is the file <em>before</em> it is passed to
+<code>postProcess</code>. Currently, the internal checksumming does not checksum
+the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
+Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.</p></td>
     </tr>
     <tr>
       <th>archive</th>

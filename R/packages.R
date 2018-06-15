@@ -27,7 +27,7 @@ if (getRversion() >= "3.1.0") {
 #' \code{.libPaths()}, i.e., not the \code{libPath} provided.
 #' This hidden file will be used if a user runs \code{pkgSnapshot},
 #' enabling a new user to rebuild the entire dependency chain, without having to
-#' install all packages in an isolated directory (as does packrat).
+#' install all packages in an isolated directory (as does \pkg{packrat}).
 #' This will save potentially a lot of time and disk space, and yet maintain reproducibility.
 #' \emph{NOTE}: since there is only one hidden file in a \code{libPath}, any call to
 #' \code{pkgSnapshot} will make a snapshot of the most recent call to \code{Require}.
@@ -453,9 +453,9 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 #' Determine package dependencies, first looking at local filesystem
 #'
 #' This is intended to replace \code{\link[tools]{package_dependencies}} or
-#' \code{pkgDep} in the miniCRAN package, but with modfications for speed.
+#' \code{pkgDep} in the \pkg{miniCRAN} package, but with modifications for speed.
 #' It will first check local package directories in \code{libPath}, and it if
-#' the function cannont find the packages there, then it will use
+#' the function cannot find the packages there, then it will use
 #' \code{\link[tools]{package_dependencies}}.
 #'
 #' @note \code{package_dependencies} and \code{pkgDep} will differ under the following

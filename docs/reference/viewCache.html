@@ -159,17 +159,17 @@ They allow the user a bit of control over what is being cached.</p>
     </tr>
     <tr>
       <th>userTags</th>
-      <td><p>Character vector. If used, this will be used in place of the <code>after</code> and
-<code>before</code>. Specifying one or more <code>userTag</code> here will
-clear all objects that
-match those tags. Matching is via regular expresssion, meaning
-partial matches
+      <td><p>Character vector. If used, this will be used in place of the
+<code>after</code> and <code>before</code>.
+Specifying one or more <code>userTag</code> here will clear all
+objects that match those tags.
+Matching is via regular expression, meaning partial matches
 will work unless strict beginning (^) and end ($) of string
-characters are used. Matching
-will be against any of the 3 columns returned by <code>showCache()</code>,
-i.e., artifact, tagValue or tagName. Also, length <code>userTags</code> &gt; 1,
-then matching is by `and`. For `or` matching, use | in a single character
-string. See examples.</p></td>
+characters are used.
+Matching will be against any of the 3 columns returned by <code>showCache()</code>,
+i.e., <code>artifact</code>, <code>tagValue</code> or <code>tagName</code>.
+Also, length <code>userTags</code> &gt; 1, then matching is by `and`.
+For `or` matching, use | in a single character string. See examples.</p></td>
     </tr>
     <tr>
       <th>after</th>
@@ -298,60 +298,60 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 #&gt; 54: fd52ce513075ca5b8c99da74d4089f41      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-06-15 07:59:21
-#&gt;  2:                                 Cache 2018-06-15 07:59:21
-#&gt;  3:                               numeric 2018-06-15 07:59:21
-#&gt;  4:                   2018-06-15 07:59:21 2018-06-15 07:59:21
-#&gt;  5:      e37bb635c97bc2eeecab63816b881bbc 2018-06-15 07:59:21
-#&gt;  6:                                     b 2018-06-15 07:59:21
-#&gt;  7:                                 runif 2018-06-15 07:59:21
-#&gt;  8:                                   688 2018-06-15 07:59:21
-#&gt;  9:                   2018-06-15 07:59:21 2018-06-15 07:59:21
-#&gt; 10:                   withCallingHandlers 2018-06-15 07:59:21
-#&gt; 11:                               saveRDS 2018-06-15 07:59:21
-#&gt; 12:                               do.call 2018-06-15 07:59:21
-#&gt; 13:                      build_site_local 2018-06-15 07:59:21
-#&gt; 14:                       build_reference 2018-06-15 07:59:21
-#&gt; 15:                  data_reference_topic 2018-06-15 07:59:21
-#&gt; 16:                                   try 2018-06-15 07:59:21
-#&gt; 17:    n:969a49ec15bcd4323ff31538af321264 2018-06-15 07:59:21
-#&gt; 18: .FUN:d2631d24c3b38b89c7bdd4ab7faaaac3 2018-06-15 07:59:21
-#&gt; 19:                                   rda 2018-06-15 07:59:21
-#&gt; 20:                                 Cache 2018-06-15 07:59:21
-#&gt; 21:                               numeric 2018-06-15 07:59:21
-#&gt; 22:                   2018-06-15 07:59:21 2018-06-15 07:59:21
-#&gt; 23:      b419232b60eb6eedb59532cf0b592010 2018-06-15 07:59:21
-#&gt; 24:                                     b 2018-06-15 07:59:21
-#&gt; 25:                                 runif 2018-06-15 07:59:21
-#&gt; 26:                                   976 2018-06-15 07:59:21
-#&gt; 27:                   2018-06-15 07:59:21 2018-06-15 07:59:21
-#&gt; 28:                   withCallingHandlers 2018-06-15 07:59:21
-#&gt; 29:                               saveRDS 2018-06-15 07:59:21
-#&gt; 30:                               do.call 2018-06-15 07:59:21
-#&gt; 31:                      build_site_local 2018-06-15 07:59:21
-#&gt; 32:                       build_reference 2018-06-15 07:59:21
-#&gt; 33:                  data_reference_topic 2018-06-15 07:59:21
-#&gt; 34:                                   try 2018-06-15 07:59:21
-#&gt; 35:    n:9d7bd914b9878238bccd5686a5a41903 2018-06-15 07:59:21
-#&gt; 36: .FUN:d2631d24c3b38b89c7bdd4ab7faaaac3 2018-06-15 07:59:21
-#&gt; 37:                                   rda 2018-06-15 07:59:20
-#&gt; 38:                                 Cache 2018-06-15 07:59:20
-#&gt; 39:                               numeric 2018-06-15 07:59:20
-#&gt; 40:                   2018-06-15 07:59:20 2018-06-15 07:59:20
-#&gt; 41:      85874f26b2e0c1ef689a7d379d275ebf 2018-06-15 07:59:20
-#&gt; 42:                                     a 2018-06-15 07:59:20
-#&gt; 43:                                 rnorm 2018-06-15 07:59:20
-#&gt; 44:                                   688 2018-06-15 07:59:20
-#&gt; 45:                   2018-06-15 07:59:20 2018-06-15 07:59:20
-#&gt; 46:                   withCallingHandlers 2018-06-15 07:59:20
-#&gt; 47:                               saveRDS 2018-06-15 07:59:20
-#&gt; 48:                               do.call 2018-06-15 07:59:20
-#&gt; 49:                      build_site_local 2018-06-15 07:59:20
-#&gt; 50:                       build_reference 2018-06-15 07:59:20
-#&gt; 51:                  data_reference_topic 2018-06-15 07:59:21
-#&gt; 52:                                   try 2018-06-15 07:59:21
-#&gt; 53:    n:969a49ec15bcd4323ff31538af321264 2018-06-15 07:59:21
-#&gt; 54: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-15 07:59:21
+#&gt;  1:                                   rda 2018-06-15 10:20:38
+#&gt;  2:                                 Cache 2018-06-15 10:20:38
+#&gt;  3:                               numeric 2018-06-15 10:20:38
+#&gt;  4:                   2018-06-15 10:20:38 2018-06-15 10:20:38
+#&gt;  5:      e37bb635c97bc2eeecab63816b881bbc 2018-06-15 10:20:38
+#&gt;  6:                                     b 2018-06-15 10:20:38
+#&gt;  7:                                 runif 2018-06-15 10:20:38
+#&gt;  8:                                   688 2018-06-15 10:20:38
+#&gt;  9:                   2018-06-15 10:20:38 2018-06-15 10:20:38
+#&gt; 10:                   withCallingHandlers 2018-06-15 10:20:38
+#&gt; 11:                               saveRDS 2018-06-15 10:20:38
+#&gt; 12:                               do.call 2018-06-15 10:20:38
+#&gt; 13:                      build_site_local 2018-06-15 10:20:38
+#&gt; 14:                       build_reference 2018-06-15 10:20:38
+#&gt; 15:                  data_reference_topic 2018-06-15 10:20:38
+#&gt; 16:                                   try 2018-06-15 10:20:38
+#&gt; 17:    n:969a49ec15bcd4323ff31538af321264 2018-06-15 10:20:38
+#&gt; 18: .FUN:d2631d24c3b38b89c7bdd4ab7faaaac3 2018-06-15 10:20:38
+#&gt; 19:                                   rda 2018-06-15 10:20:38
+#&gt; 20:                                 Cache 2018-06-15 10:20:38
+#&gt; 21:                               numeric 2018-06-15 10:20:38
+#&gt; 22:                   2018-06-15 10:20:38 2018-06-15 10:20:38
+#&gt; 23:      b419232b60eb6eedb59532cf0b592010 2018-06-15 10:20:38
+#&gt; 24:                                     b 2018-06-15 10:20:38
+#&gt; 25:                                 runif 2018-06-15 10:20:38
+#&gt; 26:                                   976 2018-06-15 10:20:38
+#&gt; 27:                   2018-06-15 10:20:38 2018-06-15 10:20:38
+#&gt; 28:                   withCallingHandlers 2018-06-15 10:20:38
+#&gt; 29:                               saveRDS 2018-06-15 10:20:38
+#&gt; 30:                               do.call 2018-06-15 10:20:38
+#&gt; 31:                      build_site_local 2018-06-15 10:20:38
+#&gt; 32:                       build_reference 2018-06-15 10:20:38
+#&gt; 33:                  data_reference_topic 2018-06-15 10:20:38
+#&gt; 34:                                   try 2018-06-15 10:20:38
+#&gt; 35:    n:9d7bd914b9878238bccd5686a5a41903 2018-06-15 10:20:38
+#&gt; 36: .FUN:d2631d24c3b38b89c7bdd4ab7faaaac3 2018-06-15 10:20:38
+#&gt; 37:                                   rda 2018-06-15 10:20:38
+#&gt; 38:                                 Cache 2018-06-15 10:20:38
+#&gt; 39:                               numeric 2018-06-15 10:20:38
+#&gt; 40:                   2018-06-15 10:20:38 2018-06-15 10:20:38
+#&gt; 41:      85874f26b2e0c1ef689a7d379d275ebf 2018-06-15 10:20:38
+#&gt; 42:                                     a 2018-06-15 10:20:38
+#&gt; 43:                                 rnorm 2018-06-15 10:20:38
+#&gt; 44:                                   688 2018-06-15 10:20:38
+#&gt; 45:                   2018-06-15 10:20:38 2018-06-15 10:20:38
+#&gt; 46:                   withCallingHandlers 2018-06-15 10:20:38
+#&gt; 47:                               saveRDS 2018-06-15 10:20:38
+#&gt; 48:                               do.call 2018-06-15 10:20:38
+#&gt; 49:                      build_site_local 2018-06-15 10:20:38
+#&gt; 50:                       build_reference 2018-06-15 10:20:38
+#&gt; 51:                  data_reference_topic 2018-06-15 10:20:38
+#&gt; 52:                                   try 2018-06-15 10:20:38
+#&gt; 53:    n:969a49ec15bcd4323ff31538af321264 2018-06-15 10:20:38
+#&gt; 54: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-15 10:20:38
 #&gt;                                  tagValue         createdDate</div><div class='input'><span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"^a$"</span>)) <span class='co'># regular expression ... "a" exactly</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 21.1 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 171 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
 #&gt;  1: fd52ce513075ca5b8c99da74d4089f41         format
 #&gt;  2: fd52ce513075ca5b8c99da74d4089f41           name
@@ -372,24 +372,24 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 #&gt; 17: fd52ce513075ca5b8c99da74d4089f41      preDigest
 #&gt; 18: fd52ce513075ca5b8c99da74d4089f41      preDigest
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-06-15 07:59:20
-#&gt;  2:                                 Cache 2018-06-15 07:59:20
-#&gt;  3:                               numeric 2018-06-15 07:59:20
-#&gt;  4:                   2018-06-15 07:59:20 2018-06-15 07:59:20
-#&gt;  5:      85874f26b2e0c1ef689a7d379d275ebf 2018-06-15 07:59:20
-#&gt;  6:                                     a 2018-06-15 07:59:20
-#&gt;  7:                                 rnorm 2018-06-15 07:59:20
-#&gt;  8:                                   688 2018-06-15 07:59:20
-#&gt;  9:                   2018-06-15 07:59:20 2018-06-15 07:59:20
-#&gt; 10:                   withCallingHandlers 2018-06-15 07:59:20
-#&gt; 11:                               saveRDS 2018-06-15 07:59:20
-#&gt; 12:                               do.call 2018-06-15 07:59:20
-#&gt; 13:                      build_site_local 2018-06-15 07:59:20
-#&gt; 14:                       build_reference 2018-06-15 07:59:20
-#&gt; 15:                  data_reference_topic 2018-06-15 07:59:21
-#&gt; 16:                                   try 2018-06-15 07:59:21
-#&gt; 17:    n:969a49ec15bcd4323ff31538af321264 2018-06-15 07:59:21
-#&gt; 18: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-15 07:59:21</div><div class='input'>
+#&gt;  1:                                   rda 2018-06-15 10:20:38
+#&gt;  2:                                 Cache 2018-06-15 10:20:38
+#&gt;  3:                               numeric 2018-06-15 10:20:38
+#&gt;  4:                   2018-06-15 10:20:38 2018-06-15 10:20:38
+#&gt;  5:      85874f26b2e0c1ef689a7d379d275ebf 2018-06-15 10:20:38
+#&gt;  6:                                     a 2018-06-15 10:20:38
+#&gt;  7:                                 rnorm 2018-06-15 10:20:38
+#&gt;  8:                                   688 2018-06-15 10:20:38
+#&gt;  9:                   2018-06-15 10:20:38 2018-06-15 10:20:38
+#&gt; 10:                   withCallingHandlers 2018-06-15 10:20:38
+#&gt; 11:                               saveRDS 2018-06-15 10:20:38
+#&gt; 12:                               do.call 2018-06-15 10:20:38
+#&gt; 13:                      build_site_local 2018-06-15 10:20:38
+#&gt; 14:                       build_reference 2018-06-15 10:20:38
+#&gt; 15:                  data_reference_topic 2018-06-15 10:20:38
+#&gt; 16:                                   try 2018-06-15 10:20:38
+#&gt; 17:    n:969a49ec15bcd4323ff31538af321264 2018-06-15 10:20:38
+#&gt; 18: .FUN:7e9a928f110f80b3612e71883a6ec1f4 2018-06-15 10:20:38</div><div class='input'>
 <span class='co'># Fine control of cache elements -- pick out only the large runif object, and remove it</span>
 <span class='no'>cache1</span> <span class='kw'>&lt;-</span> <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># show only cached objects made during runif</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 21.1 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 553 bytes</span></div><div class='input'><span class='no'>toRemove</span> <span class='kw'>&lt;-</span> <span class='no'>cache1</span>[<span class='no'>tagKey</span><span class='kw'>==</span><span class='st'>"object.size"</span>][<span class='fu'>as.numeric</span>(<span class='no'>tagValue</span>) <span class='kw'>&gt;</span> <span class='fl'>700</span>]$<span class='no'>artifact</span>
 <span class='fu'>clearCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>toRemove</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 21.1 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 390 bytes</span></div><div class='input'><span class='no'>cacheAfter</span> <span class='kw'>&lt;-</span> <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># Only the small one is left</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 20.8 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 163 bytes</span></div><div class='input'>

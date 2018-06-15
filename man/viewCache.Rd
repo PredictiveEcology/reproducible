@@ -25,17 +25,17 @@ keepCache(x, userTags = character(), after, before, ...)
 \arguments{
 \item{x}{A simList or a directory containing a valid archivist repository}
 
-\item{userTags}{Character vector. If used, this will be used in place of the \code{after} and
-\code{before}. Specifying one or more \code{userTag} here will
-clear all objects that
-match those tags. Matching is via regular expresssion, meaning
-partial matches
+\item{userTags}{Character vector. If used, this will be used in place of the
+\code{after} and \code{before}.
+Specifying one or more \code{userTag} here will clear all
+objects that match those tags.
+Matching is via regular expression, meaning partial matches
 will work unless strict beginning (^) and end ($) of string
-characters are used. Matching
-will be against any of the 3 columns returned by \code{showCache()},
-i.e., artifact, tagValue or tagName. Also, length \code{userTags} > 1,
-then matching is by `and`. For `or` matching, use | in a single character
-string. See examples.}
+characters are used.
+Matching will be against any of the 3 columns returned by \code{showCache()},
+i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
+Also, length \code{userTags} > 1, then matching is by `and`.
+For `or` matching, use | in a single character string. See examples.}
 
 \item{after}{A time (POSIX, character understandable by data.table).
 Objects cached after this time will be shown or deleted.}
