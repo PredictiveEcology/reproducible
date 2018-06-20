@@ -337,12 +337,13 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
       funWArgs <- .whichExtractFn(archive[1], args)
 
-      filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
-
-      if ("Name" %in% names(filesInArchive)) {
-        # for zips, rm directories (length = 0)
-        filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
-      }
+      filesInArchive <- .listFilesInArchive(archive)
+      # filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+      #
+      # if ("Name" %in% names(filesInArchive)) {
+      #   # for zips, rm directories (length = 0)
+      #   filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
+      # }
 
       # recheck, now that we have the whole file liast
       if (is.null(neededFiles)) {
@@ -608,4 +609,25 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
 
   }
   neededFiles
+}
+
+#' List files in either a zip or tar
+#'
+#' Makes the outputs from tar or zip the same, which they aren't by default.
+#'
+#' @return
+#' A character string of all files in the archive.
+#'
+#' @param archive A character string of a single file name to list files in.
+#' @keywords internal
+#' @rdname listFilesInArchive
+.listFilesInArchive <- function(archive) {
+  funWArgs <- .whichExtractFn(archive[1], NULL)
+  filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+  if ("Name" %in% names(filesInArchive)) {
+    # for zips, rm directories (length = 0)
+    filesInArchive <-
+      filesInArchive[filesInArchive$Length != 0,]$Name
+  }
+  filesInArchive
 }

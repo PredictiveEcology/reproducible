@@ -33,7 +33,12 @@ archive(s), but they are unknown, the function will try all until it finds
 the \code{targetFile}}
 
 \item{alsoExtract}{Optional character string naming files other than
-\code{targetFile} that must be extracted from the \code{archive}.}
+\code{targetFile} that must be extracted from the \code{archive}. If
+\code{NULL}, the default, then it will extract all files. Other options:
+\code{"similiar"} will extract all files with the same filename without
+file extension as \code{targetFile}. \code{NA} will extract nothing other
+than \code{targetFile}. A character string of specific file names will cause
+only those to be extracted.}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
