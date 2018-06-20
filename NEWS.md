@@ -1,5 +1,14 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.0.9000
+=============
+
+## New features
+
+* new functions: 
+
+    - `convertPaths` and `convertRasterPaths` to assist with renaming moved files.
+
 version 0.2.0
 =============
 
