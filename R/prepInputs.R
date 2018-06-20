@@ -406,13 +406,13 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
           }
         }
       } else {
-        message("  Skipping extractFromArchive: all files already extracted.")
+        message("  Skipping extractFromArchive: all files already present")
         filesExtracted <- checkSums[checkSums$expectedFile %in%
                                       basename(filesInArchive), ]$expectedFile
       }
     }
   } else {
-    message("  Skipping extractFromArchive: targetFile (and any alsoExtract) already extracted.")
+    message("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present")
     filesExtracted <- setdiff(neededFiles, basename(archive))
   }
   list(extractedArchives = c(extractedArchives, archive),
