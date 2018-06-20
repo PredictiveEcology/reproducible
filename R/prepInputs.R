@@ -106,7 +106,12 @@ if (getRversion() >= "3.1.0") {
 #'   \code{CHECKSUMS.txt}.
 #'
 #' @param alsoExtract Optional character string naming files other than
-#'   \code{targetFile} that must be extracted from the \code{archive}.
+#'   \code{targetFile} that must be extracted from the \code{archive}. If
+#'   \code{NULL}, the default, then it will extract all files. Other options:
+#'   \code{"similiar"} will extract all files with the same filename without
+#'   file extension as \code{targetFile}. \code{NA} will extract nothing other
+#'   than \code{targetFile}. A character string of specific file names will cause
+#'   only those to be extracted.
 #'
 #' @param destinationPath Character string of a directory in which to download
 #'   and save the file that comes from \code{url} and is also where the function
@@ -332,12 +337,13 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
       funWArgs <- .whichExtractFn(archive[1], args)
 
-      filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
-
-      if ("Name" %in% names(filesInArchive)) {
-        # for zips, rm directories (length = 0)
-        filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
-      }
+      filesInArchive <- .listFilesInArchive(archive)
+      # filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+      #
+      # if ("Name" %in% names(filesInArchive)) {
+      #   # for zips, rm directories (length = 0)
+      #   filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
+      # }
 
       # recheck, now that we have the whole file liast
       if (is.null(neededFiles)) {
@@ -401,13 +407,13 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
           }
         }
       } else {
-        message("  Skipping extractFromArchive: all files already extracted.")
+        message("  Skipping extractFromArchive: all files already present")
         filesExtracted <- checkSums[checkSums$expectedFile %in%
                                       basename(filesInArchive), ]$expectedFile
       }
     }
   } else {
-    message("  Skipping extractFromArchive: targetFile (and any alsoExtract) already extracted.")
+    message("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present")
     filesExtracted <- setdiff(neededFiles, basename(archive))
   }
   list(extractedArchives = c(extractedArchives, archive),
@@ -479,6 +485,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
 #' @importFrom utils untar unzip
 .whichExtractFn <- function(archive, args) {
+  if (!(is.null(archive))) {
   ext <- tolower(file_ext(archive))
   if (ext == "zip") {
     fun <- unzip
@@ -486,7 +493,11 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   } else if (ext == "tar") {
     fun <- untar
   }
-  return(list(fun = fun, args = args))
+  out <- list(fun = fun, args = args)
+  } else {
+    out <- NULL
+  }
+  return(out)
 }
 
 #' @keywords internal
@@ -603,4 +614,29 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
 
   }
   neededFiles
+}
+
+#' List files in either a zip or tar
+#'
+#' Makes the outputs from tar or zip the same, which they aren't by default.
+#'
+#' @return
+#' A character string of all files in the archive.
+#'
+#' @param archive A character string of a single file name to list files in.
+#' @keywords internal
+#' @rdname listFilesInArchive
+.listFilesInArchive <- function(archive) {
+  funWArgs <- .whichExtractFn(archive[1], NULL)
+  if (!is.null(funWArgs$fun)) {
+    filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+    if ("Name" %in% names(filesInArchive)) {
+      # for zips, rm directories (length = 0)
+      filesInArchive <-
+        filesInArchive[filesInArchive$Length != 0,]$Name
+    }
+  } else {
+    filesInArchive <- NULL
+  }
+  return(filesInArchive)
 }
