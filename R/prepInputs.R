@@ -235,6 +235,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
 
   # Download, Checksum, Extract from Archive
+  message("Running preProcess")
   out <- preProcess(
     targetFile = targetFile,
     url = url,
@@ -263,6 +264,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (length(args) == 0) args <- NULL
 
   # Stage 1 - load into R
+  message("Loading object into R from disk")
   if (out$tryRasterFn) {
     ## Don't cache the reading of a raster
     ## -- normal reading of raster on disk is fast b/c only reads metadata
@@ -273,6 +275,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
   if (!(all(is.null(out$dots$studyArea), is.null(out$dots$rasterToMatch)))) {
+    message("Running postProcess")
     x <- Cache(do.call, postProcess, append(list(useCache = useCache, x = x, filename1 = out$targetFilePath,
                                                  destinationPath = out$destinationPath), out$dots))
   }
@@ -366,7 +369,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
           if (!nzchar(extractingTheseFiles))
             extractingTheseFiles <- paste0("all files: ", paste(basename(filesInArchive),
                                                                 collapse = ", "))
-          message("From:", basename(archive[1]), "  Extracting ", extractingTheseFiles)
+          message("From:", basename(archive[1]), "  \nExtracting\n ",
+                  paste(collapse = "\n ", extractingTheseFiles))
           filesExtracted <- c(filesExtracted,
                               .unzipOrUnTar(funWArgs$fun, funWArgs$args,
                                             files = filesInArchive[basename(filesInArchive) %in%
