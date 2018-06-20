@@ -485,6 +485,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
 #' @importFrom utils untar unzip
 .whichExtractFn <- function(archive, args) {
+  if (!(is.null(archive))) {
   ext <- tolower(file_ext(archive))
   if (ext == "zip") {
     fun <- unzip
@@ -492,7 +493,11 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   } else if (ext == "tar") {
     fun <- untar
   }
-  return(list(fun = fun, args = args))
+  out <- list(fun = fun, args = args)
+  } else {
+    out <- NULL
+  }
+  return(out)
 }
 
 #' @keywords internal
@@ -623,11 +628,15 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
   funWArgs <- .whichExtractFn(archive[1], NULL)
-  filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
-  if ("Name" %in% names(filesInArchive)) {
-    # for zips, rm directories (length = 0)
-    filesInArchive <-
-      filesInArchive[filesInArchive$Length != 0,]$Name
+  if (!is.null(funWArgs$fun)) {
+    filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+    if ("Name" %in% names(filesInArchive)) {
+      # for zips, rm directories (length = 0)
+      filesInArchive <-
+        filesInArchive[filesInArchive$Length != 0,]$Name
+    }
+  } else {
+    filesInArchive <- NULL
   }
-  filesInArchive
+  return(filesInArchive)
 }

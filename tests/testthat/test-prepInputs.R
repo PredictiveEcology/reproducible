@@ -165,7 +165,7 @@ test_that("prepInputs doesn't work", {
     file.remove(grep(pattern = "asc|zip|CHECK",
                      invert = TRUE, value = TRUE, dir(path1, full.names = TRUE)))
 
-    outsideModule <- Map(x = birdSpecies, url = urls, purge = purges,
+    outsideModule <- Map(x = birdSpecies, url = urls,
                          MoreArgs = list(path1 = path1),
                          function(x, url, path1, purge) {
                            ras <- prepInputs(
@@ -190,7 +190,7 @@ test_that("prepInputs doesn't work", {
 
     # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
     outsideModule <-
-      Map(x = birdSpecies, url = urls, purge = purges,
+      Map(x = birdSpecies, url = urls,
           MoreArgs = list(path1 = path1),
           function(x, url, path1, purge) {
             ras <- prepInputs(
