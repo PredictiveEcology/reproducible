@@ -271,10 +271,13 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     x <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args))
   }
 
-  ## postProcess
-  outPost <- Cache(do.call, postProcess, append(list(useCache = useCache, x = x, filename1 = out$targetFilePath,
-                        destinationPath = out$destinationPath), out$dots))
-  return(outPost)
+  ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
+  if (!(all(is.null(out$dots$studyArea), is.null(out$dots$rasterToMatch)))) {
+    x <- Cache(do.call, postProcess, append(list(useCache = useCache, x = x, filename1 = out$targetFilePath,
+                                                 destinationPath = out$destinationPath), out$dots))
+  }
+
+  return(x)
 }
 
 #' Extract files from archive
