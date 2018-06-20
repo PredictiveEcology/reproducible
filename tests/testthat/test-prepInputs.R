@@ -125,15 +125,90 @@ test_that("prepInputs doesn't work", {
   setwd(tempdir())
   if (interactive()) {
     # need authentication for this
+    path1 <- "data/FMA"
+    checkPath(path1, create = TRUE)
     warns <- capture_warnings(test <- prepInputs(
       targetFile = "FMA_Boundary_Updated.shp",
       url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
-      destinationPath = "data/FMA"
+      destinationPath = path1
     ))
     # There is a meaningless warning for this unit test -- ignore it :
     # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
       #                  Z-dimension discarded
     expect_is(test, "SpatialPolygons")
+
+    # From Bird/Tati project
+    birdSpecies <- c("BBWA", "YRWA")
+    urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
+              "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
+    path1 <- "data/Birds"
+    checkPath(path1, create = TRUE)
+
+    outsideModule <- Map(x = birdSpecies, url = urls,
+                         MoreArgs = list(path1 = path1),
+                         function(x, url, path1) {
+                           ras <- prepInputs(
+                             targetFile = paste0(x, "_currmean.asc"),
+                             archive = paste0(x, "_current.zip"),
+                             url = url,
+                             destinationPath = path1,
+                             overwrite = TRUE
+                           )
+                         })
+    expect_is(outsideModule[[1]], "Raster")
+    expect_is(outsideModule[[2]], "Raster")
+    expect_is(crs(outsideModule[[2]]), "CRS")
+    expect_is(crs(outsideModule[[1]]), "CRS")
+    expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+    # remove the .prj files -- test "similar"
+    file.remove(grep(pattern = "asc|zip|CHECK",
+                     invert = TRUE, value = TRUE, dir(path1, full.names = TRUE)))
+
+    outsideModule <- Map(x = birdSpecies, url = urls, purge = purges,
+                         MoreArgs = list(path1 = path1),
+                         function(x, url, path1, purge) {
+                           ras <- prepInputs(
+                             targetFile = paste0(x, "_currmean.asc"),
+                             archive = paste0(x, "_current.zip"),
+                             url = url,
+                             alsoExtract = "similar",
+                             destinationPath = path1,
+                             overwrite = TRUE
+                           )
+                         })
+    expect_is(outsideModule[[1]], "Raster")
+    expect_is(outsideModule[[2]], "Raster")
+    expect_is(crs(outsideModule[[2]]), "CRS")
+    expect_is(crs(outsideModule[[1]]), "CRS")
+    expect_true(!is.na(crs(outsideModule[[1]])))
+    expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+    # remove the .prj files -- test "similar"
+    file.remove(grep(pattern = "asc|zip|CHECK",
+                     invert = TRUE, value = TRUE, dir(path1, full.names = TRUE)))
+
+    # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
+    outsideModule <-
+      Map(x = birdSpecies, url = urls, purge = purges,
+          MoreArgs = list(path1 = path1),
+          function(x, url, path1, purge) {
+            ras <- prepInputs(
+              targetFile = paste0(x, "_currmean.asc"),
+              archive = paste0(x, "_current.zip"),
+              url = url,
+              alsoExtract = NA,
+              destinationPath = path1,
+              overwrite = TRUE
+            )
+          })
+    expect_is(outsideModule[[1]], "Raster")
+    expect_is(outsideModule[[2]], "Raster")
+    expect_is(crs(outsideModule[[1]]), "CRS")
+    expect_true(is.na(crs(outsideModule[[1]])))
+    expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+
   }
 
 
