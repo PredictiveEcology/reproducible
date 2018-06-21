@@ -16,9 +16,10 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                          purge = FALSE) {
 
   if (!is.null(url)) {
-    if (!is.null(neededFiles)) {
-      neededFiles <- .checkForAuxiliaryFiles(neededFiles)
-    }
+    # if (!is.null(neededFiles)) {
+    #   browser()
+    #   neededFiles <- .checkForAuxiliaryFiles(neededFiles)
+    # }
 
     if (is.null(neededFiles)) {
       result <- unique(checkSums$result)
@@ -137,7 +138,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     } else { # not missing any files to download
       fileAlreadyDownloaded <- if (is.null(archive[1])) {
         archivePossibly <- setdiff(checkSums$expectedFile, neededFiles)
-        if (!is.null(.isArchive(archivePossibly))) {
+        archivePossibly <- .isArchive(archivePossibly)
+        if (!is.null(archivePossibly)) {
           archivePossibly
         } else {
           neededFiles
@@ -147,7 +149,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         archive[1]
       }
 
-      downloadResults <- list(needChecksums = needChecksums, destFile = fileAlreadyDownloaded)
+      downloadResults <- list(needChecksums = needChecksums,
+                              destFile = file.path(destinationPath, basename(fileAlreadyDownloaded)))
       if (is.null(targetFile)) {
         message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
                 " If this is not correct, rerun prepInputs with purge = TRUE")
@@ -262,9 +265,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums,
                            moduleName, fileToDownload, skipDownloadMsg,
                            destinationPath, overwrite, needChecksums) {
 
-    if ((!is.null(fileToDownload) || !is.null(url) ) && # don't need to download because no url --- but need a case
-        (!is.na(fileToDownload)))  { # NA means archive already in hand
-      if (!is.null(url)) {
+  if (!is.null(url)) { # if no url, no download
+    #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
+      if (!isTRUE(is.na(fileToDownload)))  { # NA means archive already in hand
         if (grepl("drive.google.com", url)) {
           downloadResults <- dlGoogle(
             url = url,
@@ -290,10 +293,13 @@ downloadRemote <- function(url, archive, targetFile, checkSums,
           suppressWarnings(file.remove(downloadResults$destFile))
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }
-      }
+      #}
     } else {
       message(skipDownloadMsg)
       downloadResults <- list(needChecksums = 0, destFile = NULL)
     }
+  } else {
+    message("No downloading; no url")
+  }
   downloadResults
 }

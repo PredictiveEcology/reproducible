@@ -414,7 +414,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     }
   } else {
     message("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present")
-    filesExtracted <- setdiff(neededFiles, basename(archive))
+    filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) basename(archive))
   }
   list(extractedArchives = c(extractedArchives, archive),
        filesExtracted = unique(c(filesExtracted, extractedObjs$filesExtracted)),
@@ -448,7 +448,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
   if (is.null(targetFilePath)) {
     message("  targetFile was not specified. ", if (any(isShapefile)) {
-      c(" Trying raster::shapefile on ", possibleFiles[isShapefile], ".",
+      c(" Trying raster::shapefile on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
         " If that is not correct, please specify different targetFile",
         " and/or fun.")
     } else {
@@ -471,7 +471,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     }
     if (length(targetFilePath) > 1)  {
       message("  More than one possible files to load, ", paste(targetFilePath, collapse = ", "),
-              " Picking the first one. If not correct, specify a targetFile.")
+              ". Picking the first one. If not correct, specify a targetFile.")
       targetFilePath <- targetFilePath[1]
     } else {
       message("  Trying ", targetFilePath, " with ", fun, ".")
@@ -536,12 +536,21 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 #' @keywords internal
 .checkSumsMem <- memoise::memoise(.checkSums)
 
+#' @importFrom tools file_ext
 .isArchive <- function(filename) {
-  archive = if (file_ext(filename) %in% c("zip", "tar")) {
-    filename
-  } else {
-    NULL
+  if (!is.null(filename)) {
+    filename <- if (length(filename)) {
+      isArchive <- file_ext(filename) %in% c("zip", "tar")
+      if (any(isArchive)) {
+        filename[isArchive]
+      } else {
+        NULL
+      }
+    } else {
+      NULL
+    }
   }
+  return(filename)
 }
 
 #' @keywords internal

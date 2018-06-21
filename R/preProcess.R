@@ -154,11 +154,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       neededFiles <- unique(c(neededFiles, filesToGet))
     }
   }
+  if (is.null(archive)) archive <- downloadFileResult$archive
   if (is.null(alsoExtract)) neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
   if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
-  if (is.null(archive)) archive <- downloadFileResult$archive
 
   # To this point, we only have the archive in hand -- include this in the list of filesToChecksum
   filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else basename(archive)
@@ -214,6 +214,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         append = needChecksums == 2
       )
     on.exit() # remove on.exit because it is done here
+  }
+  if (!file.exists(targetFilePath)) {
+    stop("targetFile appears to be misspecified. Likely, it did not exist in the archive")
   }
   out <- list(checkSums = checkSums,
               dots = dots,
