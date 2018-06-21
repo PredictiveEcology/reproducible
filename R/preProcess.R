@@ -72,8 +72,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 
   if (!is.null(alsoExtract)) {
-    alsoExtract <- basename(alsoExtract)
-    alsoExtract <- file.path(destinationPath, alsoExtract)
+    alsoExtract <- if (isTRUE(all(is.na(alsoExtract)))) {
+      character()
+    } else {
+      file.path(destinationPath, basename(alsoExtract))
+    }
   }
 
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
@@ -121,6 +124,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
   if (is.null(neededFiles)) neededFiles <- if (!is.null(archive)) basename(archive)
+  neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
 
   # Stage 1 -- Download
   downloadFileResult <- downloadFile(
@@ -139,9 +143,24 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums <- downloadFileResult$checkSums
   needChecksums <- downloadFileResult$needChecksums
   neededFiles <- downloadFileResult$neededFiles
+
+  # archive specified, alsoExtract is NULL --> now means will extract all
+  if (!is.null(alsoExtract)) {
+    if ("similar" %in% basename(alsoExtract)) {
+      allFiles <- .listFilesInArchive(archive)
+      filePatternToKeep <- gsub(basename(targetFile),
+                                pattern = file_ext(basename(targetFile)), replacement = "")
+      filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
+      neededFiles <- unique(c(neededFiles, filesToGet))
+    }
+  }
+  if (is.null(alsoExtract)) neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
+
+  # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
   if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
   if (is.null(archive)) archive <- downloadFileResult$archive
 
+  # To this point, we only have the archive in hand -- include this in the list of filesToChecksum
   filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else basename(archive)
   on.exit({
     if (needChecksums > 0) {

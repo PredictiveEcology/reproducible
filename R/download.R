@@ -152,7 +152,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
                 " If this is not correct, rerun prepInputs with purge = TRUE")
       } else {
-        message("  Skipping download: targetFile (and any alsoExtract) already present")
+        message("  Skipping download: ",basename(fileAlreadyDownloaded)," already present")
       }
     }
     archiveReturn <- if (is.null(archive)) {
