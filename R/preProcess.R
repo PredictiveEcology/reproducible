@@ -216,7 +216,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     on.exit() # remove on.exit because it is done here
   }
   if (!file.exists(targetFilePath)) {
-    stop("targetFile appears to be misspecified. Likely, it did not exist in the archive")
+    stop("targetFile appears to be misspecified. Possibly, it does not exist in the archive, or the file doesn't exist")
   }
   out <- list(checkSums = checkSums,
               dots = dots,
