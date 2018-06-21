@@ -35,7 +35,7 @@ the \code{targetFile}}
 \item{alsoExtract}{Optional character string naming files other than
 \code{targetFile} that must be extracted from the \code{archive}. If
 \code{NULL}, the default, then it will extract all files. Other options:
-\code{"similiar"} will extract all files with the same filename without
+\code{"similar"} will extract all files with the same filename without
 file extension as \code{targetFile}. \code{NA} will extract nothing other
 than \code{targetFile}. A character string of specific file names will cause
 only those to be extracted.}
@@ -82,6 +82,41 @@ and extracting from archives (\code{extractFromArchive}), plus cleaning up of in
 arguments (e.g., paths, function names).
 This is the first stage of three used in \code{prepInputs}.
 }
+\section{Combinations of \code{targetFile}, \code{url}, \code{archive}, \code{alsoExtract}}{
+
+
+  \tabular{ccccclll}{
+ # Params \tab \code{url} \tab \code{targetFile} \tab \code{archive}\tab \code{alsoExtract} \tab Result \tab Checksum 1st time \tab Checksum 2nd time \cr
+ ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------  \cr
+\bold{1} \tab      char \tab NULL \tab NULL \tab NULL             \tab Download, extract all files if an archive, guess at \code{targetFile}, load into R \tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
+     \tab NULL \tab char \tab NULL \tab NULL             \tab load \code{targetFile} into R \tab write or append \code{targetFile} \tab no downloading, so no checksums use \cr
+     \tab NULL \tab NULL \tab char \tab NULL             \tab extract all files, guess at \code{targetFile}, load into R \tab write or append all new files \tab no downloading, so no checksums use \cr
+     \tab NULL \tab NULL \tab NULL \tab char             \tab guess at \code{targetFile} from files in \code{alsoExtract}, load into R \tab write or append all new files \tab no downloading, so no checksums use \cr
+ ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
+\bold{2} \tab char \tab char \tab NULL \tab NULL             \tab Download, extract all files if an archive, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+     \tab char \tab NULL \tab char \tab NULL             \tab Download, extract all files, guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
+     \tab char \tab NULL \tab NULL \tab char             \tab Download, extract only named files in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
+     \tab NULL \tab char \tab NULL \tab char             \tab load \code{targetFile} into R \tab write or append all new files \tab no downloading, so no checksums use \cr
+     \tab NULL \tab char \tab char \tab NULL             \tab Extract all files, load \code{targetFile} into R\tab write or append all new files \tab no downloading, so no checksums use \cr
+     \tab NULL \tab NULL \tab char \tab char             \tab Extract only named files in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab no downloading, so no checksums use \cr
+ ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
+\bold{3} \tab char \tab char \tab char \tab NULL             \tab Download, extract all files, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+     \tab char \tab NULL \tab char \tab char             \tab Download, extract files named in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+     \tab char \tab NULL \tab char \tab \code{"similar"} \tab Download, extract all files (can't understand "similar"), guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
+     \tab char \tab char \tab NULL \tab char             \tab Download, if an archive, extract files named in \code{targetFile} and \code{alsoExtract}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+     \tab char \tab char \tab NULL \tab \code{"similar"} \tab Download, if an archive, extract files with same base as \code{targetFile}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+     \tab char \tab char \tab char \tab NULL             \tab Download, extract all files from archive, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+     \tab NULL \tab char \tab char \tab char             \tab Extract  files named in \code{alsoExtract} from archive, load \code{targetFile} into R\tab write or append all new files \tab no downloading, so no checksums use \cr
+ ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
+\bold{4} \tab char \tab char \tab char \tab char             \tab Download, extract files named in \code{targetFile} and \code{alsoExtract}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+     \tab char \tab char \tab char \tab \code{"similar"} \tab Download, extract all files with same base as \code{targetFile}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+  }
+ \code{*} If the \code{url} is a file on Google Drive, checksumming will work
+ even without a \code{targetFile} specified because there is an initial attempt
+ to get the remove file information (e.g., file name). With that, the connection
+ between the \code{url} and the filename used in the CHECKSUMS.txt file can be made.
+}
+
 \author{
 Eliot McIntire
 }

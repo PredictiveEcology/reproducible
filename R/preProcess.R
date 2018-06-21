@@ -13,6 +13,39 @@
 #' and \code{tryRasterFn} (a logical whether the the \code{targetFilePath}
 #' should be loaded with \code{\link[raster]{raster}}).
 #'
+#' @section Combinations of \code{targetFile}, \code{url}, \code{archive}, \code{alsoExtract}:
+#'
+#'   \tabular{ccccclll}{
+#'  # Params \tab \code{url} \tab \code{targetFile} \tab \code{archive}\tab \code{alsoExtract} \tab Result \tab Checksum 1st time \tab Checksum 2nd time \cr
+#'  ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------  \cr
+#' \bold{1} \tab      char \tab NULL \tab NULL \tab NULL             \tab Download, extract all files if an archive, guess at \code{targetFile}, load into R \tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
+#'      \tab NULL \tab char \tab NULL \tab NULL             \tab load \code{targetFile} into R \tab write or append \code{targetFile} \tab no downloading, so no checksums use \cr
+#'      \tab NULL \tab NULL \tab char \tab NULL             \tab extract all files, guess at \code{targetFile}, load into R \tab write or append all new files \tab no downloading, so no checksums use \cr
+#'      \tab NULL \tab NULL \tab NULL \tab char             \tab guess at \code{targetFile} from files in \code{alsoExtract}, load into R \tab write or append all new files \tab no downloading, so no checksums use \cr
+#'  ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
+#' \bold{2} \tab char \tab char \tab NULL \tab NULL             \tab Download, extract all files if an archive, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+#'      \tab char \tab NULL \tab char \tab NULL             \tab Download, extract all files, guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
+#'      \tab char \tab NULL \tab NULL \tab char             \tab Download, extract only named files in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
+#'      \tab NULL \tab char \tab NULL \tab char             \tab load \code{targetFile} into R \tab write or append all new files \tab no downloading, so no checksums use \cr
+#'      \tab NULL \tab char \tab char \tab NULL             \tab Extract all files, load \code{targetFile} into R\tab write or append all new files \tab no downloading, so no checksums use \cr
+#'      \tab NULL \tab NULL \tab char \tab char             \tab Extract only named files in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab no downloading, so no checksums use \cr
+#'  ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
+#' \bold{3} \tab char \tab char \tab char \tab NULL             \tab Download, extract all files, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+#'      \tab char \tab NULL \tab char \tab char             \tab Download, extract files named in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+#'      \tab char \tab NULL \tab char \tab \code{"similar"} \tab Download, extract all files (can't understand "similar"), guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
+#'      \tab char \tab char \tab NULL \tab char             \tab Download, if an archive, extract files named in \code{targetFile} and \code{alsoExtract}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+#'      \tab char \tab char \tab NULL \tab \code{"similar"} \tab Download, if an archive, extract files with same base as \code{targetFile}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+#'      \tab char \tab char \tab char \tab NULL             \tab Download, extract all files from archive, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+#'      \tab NULL \tab char \tab char \tab char             \tab Extract  files named in \code{alsoExtract} from archive, load \code{targetFile} into R\tab write or append all new files \tab no downloading, so no checksums use \cr
+#'  ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
+#' \bold{4} \tab char \tab char \tab char \tab char             \tab Download, extract files named in \code{targetFile} and \code{alsoExtract}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+#'      \tab char \tab char \tab char \tab \code{"similar"} \tab Download, extract all files with same base as \code{targetFile}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
+#'   }
+#'  \code{*} If the \code{url} is a file on Google Drive, checksumming will work
+#'  even without a \code{targetFile} specified because there is an initial attempt
+#'  to get the remove file information (e.g., file name). With that, the connection
+#'  between the \code{url} and the filename used in the CHECKSUMS.txt file can be made.
+#'
 #' @author Eliot McIntire
 #' @export
 #' @inheritParams prepInputs
@@ -145,16 +178,22 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   neededFiles <- downloadFileResult$neededFiles
 
   # archive specified, alsoExtract is NULL --> now means will extract all
+  if (is.null(archive)) archive <- downloadFileResult$archive
   if (!is.null(alsoExtract)) {
     if ("similar" %in% basename(alsoExtract)) {
       allFiles <- .listFilesInArchive(archive)
-      filePatternToKeep <- gsub(basename(targetFile),
-                                pattern = file_ext(basename(targetFile)), replacement = "")
-      filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
-      neededFiles <- unique(c(neededFiles, filesToGet))
+      neededFiles <- if (is.null(targetFile)) {
+        message("No targetFile supplied, so can't use \"alsoExtract = 'similar'\". ",
+                "Extracting all files from archive")
+        allFiles
+      } else {
+        filePatternToKeep <- gsub(basename(targetFile),
+                                  pattern = file_ext(basename(targetFile)), replacement = "")
+        filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
+        unique(c(neededFiles, filesToGet))
+      }
     }
   }
-  if (is.null(archive)) archive <- downloadFileResult$archive
   if (is.null(alsoExtract)) neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
@@ -215,8 +254,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       )
     on.exit() # remove on.exit because it is done here
   }
-  if (!file.exists(targetFilePath)) {
-    stop("targetFile appears to be misspecified. Possibly, it does not exist in the archive, or the file doesn't exist")
+  if (!isTRUE(file.exists(targetFilePath))) {
+    stop("targetFile appears to be misspecified and can't be guessed from current arguments. ",
+         "Possibly, it does not exist in the specified archive, ",
+         "or the file doesn't exist")
   }
   out <- list(checkSums = checkSums,
               dots = dots,

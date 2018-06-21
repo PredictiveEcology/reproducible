@@ -18,6 +18,8 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @section Stage 1 - Getting data:
 #'
+#' See \code{\link{preProcess}} for combinations of arguments.
+#'
 #'   \enumerate{
 #'     \item Download from the web via either \code{\link[googledrive]{drive_download}},
 #'     \code{\link[utils]{download.file}};
@@ -108,7 +110,7 @@ if (getRversion() >= "3.1.0") {
 #' @param alsoExtract Optional character string naming files other than
 #'   \code{targetFile} that must be extracted from the \code{archive}. If
 #'   \code{NULL}, the default, then it will extract all files. Other options:
-#'   \code{"similiar"} will extract all files with the same filename without
+#'   \code{"similar"} will extract all files with the same filename without
 #'   file extension as \code{targetFile}. \code{NA} will extract nothing other
 #'   than \code{targetFile}. A character string of specific file names will cause
 #'   only those to be extracted.
@@ -413,7 +415,9 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       }
     }
   } else {
-    message("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present")
+    if (!is.null(archive)) { # if archive is null, it means there was no archive passed
+      message("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present")
+    }
     filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) basename(archive))
   }
   list(extractedArchives = c(extractedArchives, archive),
@@ -435,7 +439,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 .guessAtTargetAndFun <- function(targetFilePath, destinationPath, filesExtracted, fun) {
   #if (is.null(targetFilePath)) {
   #filesExtracted <- dir(destinationPath)
-  possibleFiles <- basename(unique(c(targetFilePath, filesExtracted)))
+  possibleFiles <- unique(basename(c(targetFilePath, filesExtracted)))
   isShapefile <- grepl("shp", file_ext(possibleFiles))
   isRaster <- file_ext(possibleFiles) %in% c("tif", "grd")
   if (is.null(fun)) { #i.e., the default

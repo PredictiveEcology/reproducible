@@ -35,7 +35,7 @@ the \code{targetFile}}
 \item{alsoExtract}{Optional character string naming files other than
 \code{targetFile} that must be extracted from the \code{archive}. If
 \code{NULL}, the default, then it will extract all files. Other options:
-\code{"similiar"} will extract all files with the same filename without
+\code{"similar"} will extract all files with the same filename without
 file extension as \code{targetFile}. \code{NA} will extract nothing other
 than \code{targetFile}. A character string of specific file names will cause
 only those to be extracted.}
@@ -84,6 +84,8 @@ This function is still experimental: use with caution.
 }
 \section{Stage 1 - Getting data}{
 
+
+See \code{\link{preProcess}} for combinations of arguments.
 
   \enumerate{
     \item Download from the web via either \code{\link[googledrive]{drive_download}},
