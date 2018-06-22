@@ -356,11 +356,12 @@ test_that("prepInputs doesn't work", {
   #            destinationPath = dataPath(sim), rasterToMatch = template)
 })
 
-
-test_that("preProces doesn't work", {
+test_that("preProcess doesn't work", {
   testthat::skip_on_cran()
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
+
+  testthat::skip_if_not(interactive())
 
   #tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
   #checkPath(tmpdir, create = TRUE)
@@ -380,7 +381,7 @@ test_that("preProces doesn't work", {
 
   runTest <- function(prod, class, numFiles, mess, expectedMess = expectedMessage, filePattern) {
     files <- dir(path1, pattern = filePattern, full.names = TRUE)
-    expect_true(length(files)==numFiles)
+    expect_true(length(files) == numFiles)
     expect_is(test, class)
     message(mess)
     print(hasMessageNum <-
@@ -388,7 +389,7 @@ test_that("preProces doesn't work", {
               lapply(strsplit(expectedMessage, "\\|")[[1]], function(m)
                 any(grepl(m, mess)))
             ))))
-    expect_true(hasMessageNum==prod) #
+    expect_true(hasMessageNum == prod) #
   }
 
   ################################################################
@@ -517,7 +518,6 @@ test_that("preProces doesn't work", {
   runTest("1_2_5_6_8_9_10", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
   unlink(dir(path1, full.names = TRUE))
 
-
   ################################################################
   ###### url, archive, targetFile                            #####
   ################################################################
@@ -577,9 +577,6 @@ test_that("preProces doesn't work", {
   runTest("1_2_5_6_7", "Raster", 1, mess, filePattern = "DEM")
   unlink(dir(path1, full.names = TRUE))
 
-
-
-
   ################################################################
   ###### url, archive, alsoExtract               #####
   ################################################################
@@ -610,8 +607,6 @@ test_that("preProces doesn't work", {
   ))))
 
   unlink(dir(path1, full.names = TRUE))
-
-
 
   ################################################################
   ###### url, targetFile, alsoExtract               #####
@@ -758,21 +753,18 @@ test_that("preProces doesn't work", {
   )))
   runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
 
-
   ################################################################
   ###### targetFile                                          #####
   ################################################################
   file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
-  mess <-
-    capture_messages(warns <- capture_warnings(
+  mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         targetFile = "Shapefile1.shp",
         destinationPath = path1
       )
     ))
   runTest("1_2_5_6_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
-  mess <-
-    capture_messages(warns <- capture_warnings(
+  mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         targetFile = "Shapefile1.shp",
         destinationPath = path1
@@ -784,8 +776,7 @@ test_that("preProces doesn't work", {
   ###### targetFile, alsoExtract                             #####
   ################################################################
   file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
-  mess <-
-    capture_messages(warns <- capture_warnings(
+  mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         targetFile = "Shapefile1.shp",
         alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
@@ -793,8 +784,7 @@ test_that("preProces doesn't work", {
       )
     ))
   runTest("1_2_5_6_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
-  mess <-
-    capture_messages(warns <- capture_warnings(
+  mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         targetFile = "Shapefile1.shp",
         alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
@@ -807,16 +797,14 @@ test_that("preProces doesn't work", {
   ###### alsoExtract                                         #####
   ################################################################
   file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
-  mess <-
-    capture_messages(warns <- capture_warnings(
+  mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
         destinationPath = path1
       )
     ))
   runTest("1_2_5_6_10_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
-  mess <-
-    capture_messages(warns <- capture_warnings(
+  mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
         destinationPath = path1
@@ -832,9 +820,6 @@ test_that("preProces doesn't work", {
         destinationPath = path1
       )
     )))
-
-
-
 
   ################################################################
   ###### archive, alsoExtract                                #####
@@ -884,7 +869,4 @@ test_that("preProces doesn't work", {
     destinationPath = path1
   )))
   runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
-
-
-
 })

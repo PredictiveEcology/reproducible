@@ -202,7 +202,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
-  googledrive::drive_auth() ## neededFiles for use on e.g., rstudio-server
+  googledrive::drive_auth() ## needed for use on e.g., rstudio-server
   if (is.null(archive)) {
     fileAttr <- googledrive::drive_get(googledrive::as_id(url))
     archive <- .isArchive(fileAttr$name)
