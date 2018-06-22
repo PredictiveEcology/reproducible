@@ -343,24 +343,23 @@ setMethod(
     .messageCacheSize(cacheTo)
 
     return(invisible(cacheTo))
-  })
-
+})
 
 #' @keywords internal
 .messageCacheSize <- function(x, artifacts = NULL) {
-
   fsTotal <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
   class(fsTotal) <- "object_size"
   preMessage1 <- "  Total (including Rasters): "
 
-  fs <- sum(file.size(dir(file.path(x, "gallery"),
-                          pattern = paste(collapse = "|",
-                                          unique(artifacts)), full.names = TRUE)))
+  allFiles <- dir(file.path(x, "gallery"), full.names = TRUE)
+  matchingIDs <- which(basename(allFiles) %in% paste0(unique(artifacts), ".rda"))
+  matchingFiles <- allFiles[matchingIDs]
+  fs <- sum(file.size(matchingFiles))
+
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
   message("Cache size: ")
   message(preMessage1, format(fsTotal, "auto"))
   message(preMessage, format(fs, "auto"))
-
 }

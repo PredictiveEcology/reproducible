@@ -16,7 +16,7 @@ version 0.2.0.9000
     
 ## bugfixes
 
-- minor
+* minor
 
 version 0.2.0
 =============
