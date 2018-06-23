@@ -19,22 +19,22 @@
 or tar archive. This is the file \emph{before} it is passed to
 \code{postProcess}. Currently, the internal checksumming does not checksum
 the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
-Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.}
+Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
+See table in \code{\link{preProcess}}.}
 
 \item{archive}{Optional character string giving the path of an archive
 containing \code{targetFile}, or a vector giving a set of nested archives
 (e.g., \code{c("xxx.tar", "inner.zip")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the \code{targetFile}}
+the \code{targetFile}. See table in \code{\link{preProcess}}.}
 
 \item{url}{Optional character string indicating the URL to download from.
-Normally, if used within a module, this url should be explicitly given as
-sourceURL for an \code{expectsInput}. In that case, it will use the
-module's checksums file to confirm that the download occurred correctly. If
-URL is used here, an ad hoc checksums will be created in the
-\code{destinationPath}. This will be used in subsequent calls to
-\code{prepInputs}, comparing the file on hand with the ad hoc
-\code{CHECKSUMS.txt}.}
+If not specified, then no download will be attempted. If not entry
+exists in the \code{CHECKSUMS.txt} (in \code{destinationPath}), an entry
+will be created or appended to. This \code{CHECKSUMS.txt} entry will be used
+in subsequent calls to
+\code{prepInputs} or \code{preProcess}, comparing the file on hand with the ad hoc
+\code{CHECKSUMS.txt}. See table in \code{\link{preProcess}}.}
 }
 \description{
 Purge individual line items from checksums file
