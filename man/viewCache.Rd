@@ -26,16 +26,23 @@ keepCache(x, userTags = character(), after, before, ...)
 \item{x}{A simList or a directory containing a valid archivist repository}
 
 \item{userTags}{Character vector. If used, this will be used in place of the
-\code{after} and \code{before}.
-Specifying one or more \code{userTag} here will clear all
-objects that match those tags.
-Matching is via regular expression, meaning partial matches
-will work unless strict beginning (^) and end ($) of string
-characters are used.
-Matching will be against any of the 3 columns returned by \code{showCache()},
-i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
-Also, length \code{userTags} > 1, then matching is by `and`.
-For `or` matching, use | in a single character string. See examples.}
+                \code{after} and \code{before}.
+                Specifying one or more \code{userTag} here will clear all
+                objects that match those tags.
+                Matching is via regular expression, meaning partial matches
+                will work unless strict beginning (^) and end ($) of string
+                characters are used.
+                Matching will be against any of the 3 columns returned by \code{showCache()},
+                i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
+                Also, length \code{userTags} > 1, then matching is by `and`.
+                For `or` matching, use \code{|} in a single character string.
+                See examples.
+
+If neither \code{after} or \code{before} are provided, nor \code{userTags},
+then all objects will be removed.
+If both \code{after} and \code{before} are specified, then all objects between
+\code{after} and \code{before} will be deleted.
+If \code{userTags} is used, this will override \code{after} or \code{before}.}
 
 \item{after}{A time (POSIX, character understandable by data.table).
 Objects cached after this time will be shown or deleted.}
@@ -43,19 +50,14 @@ Objects cached after this time will be shown or deleted.}
 \item{before}{A time (POSIX, character understandable by data.table).
 Objects cached before this time will be shown or deleted.}
 
-\item{...}{Other arguments. Currently unused.
-
-If neither \code{after} or \code{before} are provided, nor \code{userTags},
- then all objects will be removed.
-If both \code{after} and \code{before} are specified, then all objects between \code{after} and
-\code{before} will be deleted.
-If \code{userTags} is used, this will override \code{after} or \code{before}.}
+\item{...}{Other arguments. Currently unused.}
 }
 \value{
-Will clear all (or that match \code{userTags}, or between \code{after} or \code{before})
-objects from the repository located at \code{cachePath} of the sim object,
-if \code{sim} is provided, or located in \code{cacheRepo}. Also returns a data.table invisibly
-of the removed items.
+Will clear all objects (or those that match \code{userTags}, or those
+between \code{after} or \code{before}) from the repository located at
+\code{cachePath} of the sim object, if \code{sim} is provided, or located in
+\code{cacheRepo}.
+Invisibly returns a \code{data.table} of the removed items.
 }
 \description{
 These are convenience wrappers around \code{archivist} package functions.
@@ -71,8 +73,9 @@ They allow the user a bit of control over what is being cached.
 }
 }
 \note{
-If the cache is larger than 10MB, and clearCache is used, there will be a message
-and a pause, if interactive, to prevent accidentally deleting of a large cache repository.
+If the cache is larger than 10MB, and clearCache is used, there will be
+a message and a pause, if interactive, to prevent accidentally deleting of a
+large cache repository.
 }
 \examples{
 library(raster)
@@ -106,7 +109,6 @@ cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects ma
 toRemove <- cache1[tagKey=="object.size"][as.numeric(tagValue) > 700]$artifact
 clearCache(tmpDir, userTags = toRemove)
 cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
-
 
 }
 \seealso{
