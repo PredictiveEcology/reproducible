@@ -95,7 +95,7 @@ setMethod(
         formattedCacheSize <- format(cacheSize, "auto")
 
         if (cacheSize > 1e7) {
-          message("Your current cache size is ", formattedCacheSize,
+          message("Your current cache size is ", formattedCacheSize, ".\n",
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
