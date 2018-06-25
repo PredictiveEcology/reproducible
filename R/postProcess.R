@@ -455,12 +455,14 @@ projectInputs.sf <- function(x, targetCRS, ...) {
 #' @importFrom raster crs
 projectInputs.Spatial <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
-    if (!is.character(targetCRS)) {
-      if (is(targetCRS, "spatialObjects")) {
-        targetCRS <- crs(targetCRS)
-      } else {
-        stop("targetCRS in projectInputs must be a CRS object or a class from",
-             " which a crs can be extracted with raster::crs")
+    if (!is(targetCRS, "CRS")) {
+      if (!is.character(targetCRS)) {
+        if (is(targetCRS, "spatialObjects")) {
+          targetCRS <- crs(targetCRS)
+        } else {
+          stop("targetCRS in projectInputs must be a CRS object or a class from",
+               " which a crs can be extracted with raster::crs")
+        }
       }
     }
     x <- spTransform(x = x, CRSobj = targetCRS)
