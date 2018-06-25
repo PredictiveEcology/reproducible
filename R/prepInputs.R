@@ -640,15 +640,16 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
   funWArgs <- .whichExtractFn(archive[1], NULL)
+  filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
-    filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
-    if ("Name" %in% names(filesInArchive)) {
-      # for zips, rm directories (length = 0)
-      filesInArchive <-
-        filesInArchive[filesInArchive$Length != 0,]$Name
+    if (file.exists(archive[1])) {
+      filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+      if ("Name" %in% names(filesInArchive)) {
+        # for zips, rm directories (length = 0)
+        filesInArchive <-
+          filesInArchive[filesInArchive$Length != 0,]$Name
+      }
     }
-  } else {
-    filesInArchive <- NULL
   }
   return(filesInArchive)
 }
