@@ -15,6 +15,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                          checkSums, url, needChecksums, overwrite = TRUE,
                          purge = FALSE) {
 
+
   if (!is.null(url)) {
     # if (!is.null(neededFiles)) {
     #   browser()
@@ -146,7 +147,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         }
 
       } else {
-        archive[1]
+        archive
       }
 
       downloadResults <- list(needChecksums = needChecksums,
@@ -155,7 +156,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
                 " If this is not correct, rerun prepInputs with purge = TRUE")
       } else {
-        message("  Skipping download: ",basename(fileAlreadyDownloaded)," already present")
+        message("  Skipping download: ",neededFiles ," already present")
       }
     }
     archiveReturn <- if (is.null(archive)) {
