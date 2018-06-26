@@ -231,7 +231,6 @@ if (getRversion() >= "3.1.0") {
 #'                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
 #'                      destinationPath = asPath(dPath),
 #'                      studyArea = StudyArea)
-#'
 #' }
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
@@ -594,7 +593,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
     currentFilesToRbind <- data.table::as.data.table(currentFiles)
     keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
     currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
-    data.table::setnames(currentFilesToRbind, old = keepCols, new = c("file", "checksum", "algorithm", "filesize"))
+    data.table::setnames(currentFilesToRbind, old = keepCols,
+                         new = c("file", "checksum", "algorithm", "filesize"))
     currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
     writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
   }

@@ -4,25 +4,6 @@
 #' @param before A time (POSIX, character understandable by data.table).
 #'                   Objects cached before this time will be shown or deleted.
 #' @param ... Other arguments. Currently unused.
-#'
-#' If neither \code{after} or \code{before} are provided, nor \code{userTags},
-#'  then all objects will be removed.
-#' If both \code{after} and \code{before} are specified, then all objects between \code{after} and
-#' \code{before} will be deleted.
-#' If \code{userTags} is used, this will override \code{after} or \code{before}.
-#'
-#' @return Will clear all (or that match \code{userTags}, or between \code{after} or \code{before})
-#' objects from the repository located at \code{cachePath} of the sim object,
-#' if \code{sim} is provided, or located in \code{cacheRepo}. Also returns a data.table invisibly
-#' of the removed items.
-#'
-#' @note If the cache is larger than 10MB, and clearCache is used, there will be a message
-#' and a pause, if interactive, to prevent accidentally deleting of a large cache repository.
-#'
-#'
-#' @export
-#' @importFrom archivist rmFromLocalRepo searchInLocalRepo
-#' @importFrom methods setGeneric setMethod
 #' @param userTags Character vector. If used, this will be used in place of the
 #'                 \code{after} and \code{before}.
 #'                 Specifying one or more \code{userTag} here will clear all
@@ -33,8 +14,28 @@
 #'                 Matching will be against any of the 3 columns returned by \code{showCache()},
 #'                 i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
 #'                 Also, length \code{userTags} > 1, then matching is by `and`.
-#'                 For `or` matching, use | in a single character string. See examples.
+#'                 For `or` matching, use \code{|} in a single character string.
+#'                 See examples.
 #'
+#' If neither \code{after} or \code{before} are provided, nor \code{userTags},
+#' then all objects will be removed.
+#' If both \code{after} and \code{before} are specified, then all objects between
+#' \code{after} and \code{before} will be deleted.
+#' If \code{userTags} is used, this will override \code{after} or \code{before}.
+#'
+#' @return Will clear all objects (or those that match \code{userTags}, or those
+#' between \code{after} or \code{before}) from the repository located at
+#' \code{cachePath} of the sim object, if \code{sim} is provided, or located in
+#' \code{cacheRepo}.
+#' Invisibly returns a \code{data.table} of the removed items.
+#'
+#' @note If the cache is larger than 10MB, and clearCache is used, there will be
+#' a message and a pause, if interactive, to prevent accidentally deleting of a
+#' large cache repository.
+#'
+#' @export
+#' @importFrom archivist rmFromLocalRepo searchInLocalRepo
+#' @importFrom methods setGeneric setMethod
 #' @rdname viewCache
 #'
 #' @examples
@@ -70,7 +71,6 @@
 #' clearCache(tmpDir, userTags = toRemove)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
-#'
 setGeneric("clearCache", function(x, userTags = character(), after, before, ...) {
   standardGeneric("clearCache")
 })
@@ -95,7 +95,7 @@ setMethod(
         formattedCacheSize <- format(cacheSize, "auto")
 
         if (cacheSize > 1e7) {
-          message("Your current cache size is ", formattedCacheSize,
+          message("Your current cache size is ", formattedCacheSize, ".\n",
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
@@ -127,8 +127,9 @@ setMethod(
     }
 
     if (NROW(objsDT)) {
-      rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) & grepl(pattern = "Raster", tagValue)] # only Rasters* class
-      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo)>0) {
+      rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
+                                grepl(pattern = "Raster", tagValue)] # only Rasters* class
+      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
         suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
           loadFromLocalRepo(ras, repoDir = x, value = TRUE)
         }))
@@ -142,24 +143,23 @@ setMethod(
             cacheSize <- sum(cacheSize, file.size(dirLs))
           }
         }
-
       }
 
       if (interactive()) {
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
         if (cacheSize > 1e7) {
-          message("Your current cache size is ", formattedCacheSize,
+          message("Your current cache size is ", formattedCacheSize, ".\n",
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
-          if (!identical(rl, "Y")) {
+          if (!identical(toupper(rl), "Y")) {
             message("Aborting clearCache")
             return(invisible())
           }
         }
       }
 
-      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo)>0) {
+      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
         unlink(filesToRemove)
       }
 
@@ -218,7 +218,7 @@ setMethod(
       if (length(userTags) > 0) {
         for (ut in userTags) {
           objsDT2 <- objsDT[
-            grepl(tagValue, pattern = ut)   |
+            grepl(tagValue, pattern = ut) |
               grepl(tagKey, pattern = ut) |
               grepl(artifact, pattern = ut)]
           setkeyv(objsDT2, "artifact")
@@ -252,21 +252,18 @@ setMethod(
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    list(...))
 
-    objsDTAll <- showCache(x)
+    objsDTAll <- suppressMessages(showCache(x))
     objsDT <- do.call(showCache, args = args)
     keep <- unique(objsDT$artifact)
     eliminate <- unique(objsDTAll$artifact[!(objsDTAll$artifact %in% keep)])
 
     if (length(eliminate)) {
-      eliminate <- paste(eliminate, collapse = "|")
+      eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
       clearCache(x, eliminate)
     }
     return(objsDT)
 })
 
-
-##############################################################
-##############################################################
 #' Merge two cache repositories together
 #'
 #' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
