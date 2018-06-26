@@ -17,10 +17,6 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 
 
   if (!is.null(url)) {
-    # if (!is.null(neededFiles)) {
-    #   browser()
-    #   neededFiles <- .checkForAuxiliaryFiles(neededFiles)
-    # }
 
     if (is.null(neededFiles)) {
       result <- unique(checkSums$result)
@@ -56,7 +52,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                      overwrite = overwrite,
                      needChecksums = needChecksums)
       if (file.exists(checksumFile)) {
-        if (is.null(fileToDownload) || is.na(fileToDownload))  { # This is case where we didn't know what file to download, and only now
+        if (is.null(fileToDownload) || tryCatch(is.na(fileToDownload), warning = function(x) FALSE))  { # This is case where we didn't know what file to download, and only now
                                         # do we know
           fileToDownload <- downloadResults$destFile
         }
@@ -268,7 +264,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums,
 
   if (!is.null(url)) { # if no url, no download
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
-      if (!isTRUE(is.na(fileToDownload)))  { # NA means archive already in hand
+      if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  { # NA means archive already in hand
         if (grepl("drive.google.com", url)) {
           downloadResults <- dlGoogle(
             url = url,
