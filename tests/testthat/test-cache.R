@@ -198,13 +198,9 @@ test_that("test memory backed raster robustDigest", {
   dig1 <- reproducible:::.robustDigest(b1)
 
   expect_identical(dig, dig1)
-
 })
 
-
-
 test_that("test 'quick' argument", {
-
   library(raster)
   tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
