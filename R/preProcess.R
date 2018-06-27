@@ -143,7 +143,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
-  checkSums <- try(Checksums(path = destinationPath, write = FALSE), silent = TRUE)
+  checkSums <- try(Checksums(path = destinationPath, write = FALSE,
+                             files = filesToCheck), silent = TRUE)
 
   if (is(checkSums, "try-error")) {
     needChecksums <- 1
