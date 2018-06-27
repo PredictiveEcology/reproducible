@@ -666,15 +666,17 @@ setMethod(
         fromMemoise <- NA
         if (getOption("reproducible.useMemoise")) {
           fromMemoise <-
-            if (memoise::has_cache(loadFromLocalRepoMem)(isInRepo$artifact[lastOne],
+            if (memoise::has_cache(.loadFromLocalRepoMem)(isInRepo$artifact[lastOne],
                                                          repoDir = cacheRepo, value = TRUE)) {
               TRUE
             } else {
               FALSE
             }
           loadFromMgs <- "Loading from memoise version of repo"
-          output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
+          output <- .loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+          output <- unmakeMemoiseable(output)
+          #if (is(output, "simList_")) output <- as(output, "simList")
         } else {
           loadFromMgs <- "Loading from repo"
           output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
@@ -1102,7 +1104,13 @@ setMethod(
 .formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
 .namesCacheFormals <- names(.formalsCache)[]
 
-loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
+.loadFromLocalRepoMem2 <- function(md5hash, ...) {
+  out <- loadFromLocalRepo(md5hash, ...)
+  out <- makeMemoiseable(out)
+  return(out)
+
+}
+.loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
 
 
 .unlistToCharacter <- function(l, max.level = 1) {
@@ -1121,4 +1129,41 @@ loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
   } else {
     "other"
   }
+}
+
+
+
+#' Generic method to make or unmake objects memoisable
+#'
+#' This is just a pass through for all clases in reproducible.
+#' This generic is here so that downstream methods can be created.
+#'
+#' @param x  An object to make memoiseable.
+#'           See individual methods in other packages.
+#' @return The same object, but with any modifications, especially
+#' dealing with saving of environments, which memoising doesn't handle
+#' correctly in some cases.
+#'
+#' @export
+#' @rdname makeMemoiseable
+makeMemoiseable <- function(x) {
+  UseMethod("makeMemoiseable")
+}
+
+#' @export
+#' @rdname makeMemoiseable
+makeMemoiseable.default <- function(x) {
+  x
+}
+
+#' @export
+#' @rdname makeMemoiseable
+unmakeMemoiseable <- function(x) {
+  UseMethod("unmakeMemoiseable")
+}
+
+#' @export
+#' @rdname makeMemoiseable
+unmakeMemoiseable.default <- function(x) {
+  x
 }
