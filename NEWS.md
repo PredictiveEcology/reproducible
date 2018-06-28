@@ -16,7 +16,7 @@ version 0.2.1
     
 ## Bug fixes
 
-* `fileCopy` correctly handles directory names containing spaces.
+* `copyFile` correctly handles directory names containing spaces.
 * `makeMemoisable`.
 * other minor bug fixes.
 
