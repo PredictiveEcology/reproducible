@@ -725,14 +725,14 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
     robocopy <-  if (silent) {
-      paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS '",  # nolint
-             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "' '",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"),  "' ",
+      paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS \"",  # nolint
+             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
+             normalizePath(to, mustWork = FALSE, winslash = "\\"),  "\" ",
              basename(from))
     } else {
-      paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO '", # nolint
-             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "' ",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"), "' ",
+      paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO \"", # nolint
+             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
+             normalizePath(to, mustWork = FALSE, winslash = "\\"), "\" ",
              basename(from))
     }
 
@@ -741,7 +741,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     } else {
       TRUE
     }
-    if (isTRUE(grepl("ERROR", useFileCopy))) {
+    if (isTRUE(any(grepl("ERROR", useFileCopy)))) {
       useFileCopy <- TRUE
     }
   } else if ( (os == "linux") || (os == "darwin") ) { # nolint
