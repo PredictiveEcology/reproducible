@@ -148,7 +148,7 @@ test_that("prepInputs doesn't work", {
       destinationPath = path1
     ))
     files <- dir(path1, pattern = "FMA_Boundary")
-    expect_true(length(files)==9)
+    expect_true(length(files) == 9)
     expect_is(test, "SpatialPolygons")
 
     #######################################
@@ -228,28 +228,24 @@ test_that("prepInputs doesn't work", {
     ### url, targetFile, archive, alsoExtract NA ######
     #######################################
     # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
-    outsideModule <-
-      Map(x = birdSpecies, url = urls,
-          MoreArgs = list(path1 = path1),
-          function(x, url, path1, purge) {
-            ras <- prepInputs(
-              targetFile = paste0(x, "_currmean.asc"),
-              archive = paste0(x, "_current.zip"),
-              url = url,
-              alsoExtract = NA,
-              destinationPath = path1,
-              overwrite = TRUE
-            )
-          })
+    outsideModule <- Map(x = birdSpecies, url = urls,
+                         MoreArgs = list(path1 = path1),
+                         function(x, url, path1, purge) {
+                           ras <- prepInputs(
+                             targetFile = paste0(x, "_currmean.asc"),
+                             archive = paste0(x, "_current.zip"),
+                             url = url,
+                             alsoExtract = NA,
+                             destinationPath = path1,
+                             overwrite = TRUE
+                           )
+                         })
     expect_is(outsideModule[[1]], "Raster")
     expect_is(outsideModule[[2]], "Raster")
     expect_is(crs(outsideModule[[1]]), "CRS")
     expect_true(is.na(crs(outsideModule[[1]])))
     expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-
-
   }
-
 
   #######################################
   ###  archive     ######
@@ -302,10 +298,10 @@ test_that("prepInputs doesn't work", {
   expect_false(any(grepl("Skipping extractFromArchive", mess)))
   expect_true(is(LCC2005, "Raster"))
 
-  rm(LCC2005)
   #######################################
   ### archive                      ######
   #######################################
+  rm(LCC2005)
   mess <- capture_messages(LCC2005 <- prepInputs(
     archive = "LandCoverOfCanada2005_V1_4.zip",
     destinationPath = asPath(dPath),
@@ -343,7 +339,6 @@ test_that("prepInputs doesn't work", {
 
   # fix StudyArea
   x <- postProcess(x = StudyArea, destinationPath = dPath) # Not using rasterToMatch: works
-
 
   ## TODO: remove SpaDES.shiny dependency
   #studyArea2 <- SpaDES.tools::randomPolygon(x = polyMatrix, hectares = 1000)
