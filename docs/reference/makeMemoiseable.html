@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Check the GDAL version in use — getGDALVersion • reproducible</title>
+<title>Generic method to make or unmake objects memoisable — makeMemoiseable • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,9 +30,10 @@
 
 
 
-<meta property="og:title" content="Check the GDAL version in use — getGDALVersion" />
+<meta property="og:title" content="Generic method to make or unmake objects memoisable — makeMemoiseable" />
 
-<meta property="og:description" content="Check the GDAL version in use" />
+<meta property="og:description" content="This is just a pass through for all clases in reproducible.
+This generic is here so that downstream methods can be created." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -122,35 +123,53 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Check the GDAL version in use</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/gis.R'><code>R/gis.R</code></a></small>
-    <div class="hidden name"><code>getGDALVersion.Rd</code></div>
+    <h1>Generic method to make or unmake objects memoisable</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache.R'><code>R/cache.R</code></a></small>
+    <div class="hidden name"><code>makeMemoiseable.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Check the GDAL version in use</p>
+    <p>This is just a pass through for all clases in reproducible.
+This generic is here so that downstream methods can be created.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>getGDALVersion</span>()</pre>
-        
+    <pre class="usage"><span class='fu'>makeMemoiseable</span>(<span class='no'>x</span>)
+
+<span class='co'># S3 method for default</span>
+<span class='fu'>makeMemoiseable</span>(<span class='no'>x</span>)
+
+<span class='fu'>unmakeMemoiseable</span>(<span class='no'>x</span>)
+
+<span class='co'># S3 method for default</span>
+<span class='fu'>unmakeMemoiseable</span>(<span class='no'>x</span>)</pre>
+    
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x</th>
+      <td><p>An object to make memoiseable.
+See individual methods in other packages.</p></td>
+    </tr>
+    </table>
+    
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><code>numeric_version</code></p>
+    <p>The same object, but with any modifications, especially
+dealing with saving of environments, which memoising doesn't handle
+correctly in some cases.</p>
     
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
+      <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
           </ul>
-
-    <h2>Author</h2>
-    
-Alex Chubaty and Eliot McIntire
 
   </div>
 </div>

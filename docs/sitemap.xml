@@ -55,6 +55,9 @@
     <loc>http://reproducible.predictiveecology.org/reference/compareNA.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/convertPaths.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/copyFile.html</loc>
   </url>
   <url>
@@ -104,6 +107,12 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/installedVersions.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/listFilesInArchive.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/makeMemoiseable.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/maskInputs.html</loc>
