@@ -295,7 +295,7 @@ test_that("prepInputs doesn't work", {
     studyArea = StudyArea,
     purge = TRUE
   )
-  expect_false(any(grepl("Skipping extractFromArchive", mess)))
+  expect_false(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
   expect_true(is(LCC2005, "Raster"))
 
   #######################################
@@ -307,7 +307,7 @@ test_that("prepInputs doesn't work", {
     destinationPath = asPath(dPath),
     studyArea = StudyArea
   ))
-  expect_true(any(grepl("Skipping extractFromArchive", mess)))
+  expect_true(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
   expect_true(is(LCC2005, "Raster"))
 
   #######################################
