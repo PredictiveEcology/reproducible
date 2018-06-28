@@ -111,10 +111,10 @@ fastMask <- function(x, y) {
                                     match.ID = FALSE)
     }
 
-    numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
-      is.numeric(y[[x]])
-    })))[1]]
-    a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = numericfield)
+    #numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
+    #  is.numeric(y[[x]])
+    #})))[1]]
+    a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)#numericfield)
     m <- is.na(a[])
     x[m] <- NA
 
