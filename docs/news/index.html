@@ -68,7 +68,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.1</span>
       </span>
     </div>
 
@@ -123,13 +123,50 @@
       <small>Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="version-0-2-0" class="section level1">
+    <div id="version-0-2-1" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-0" class="anchor"></a>version 0.2.0<small> Unreleased </small>
+<a href="#version-0-2-1" class="anchor"></a>version 0.2.1<small> Unreleased </small>
 </h1>
 <div id="new-features" class="section level2">
 <h2 class="hasAnchor">
 <a href="#new-features" class="anchor"></a>New features</h2>
+<ul>
+<li>
+<p>new functions:</p>
+<ul>
+<li>
+<code>convertPaths</code> and <code>convertRasterPaths</code> to assist with renaming moved files.</li>
+</ul>
+</li>
+<li>
+<p><code>prepInputs</code> – new features</p>
+<ul>
+<li>
+<code>alsoExtract</code> now has more options (<code>NULL</code>, <code>NA</code>, <code>"similar"</code>) and defaults to extracting all files in an archive (<code>NULL</code>).</li>
+<li>skips <code>postProcess</code> altogether if no <code>studyArea</code> or <code>rasterToMatch</code>. Previously, this would invoke Cache even if there was nothing to <code>postProcess</code>.</li>
+</ul>
+</li>
+</ul>
+</div>
+<div id="bug-fixes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#bug-fixes" class="anchor"></a>Bug fixes</h2>
+<ul>
+<li>
+<code>copyFile</code> correctly handles directory names containing spaces.</li>
+<li>
+<code>makeMemoisable</code> fixed to handle additonal edge cases.</li>
+<li>other minor bug fixes.</li>
+</ul>
+</div>
+</div>
+    <div id="version-0-2-0" class="section level1">
+<h1 class="page-header">
+<a href="#version-0-2-0" class="anchor"></a>version 0.2.0<small> 2018-06-17 </small>
+</h1>
+<div id="new-features-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#new-features-1" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <p>new functions:</p>
@@ -255,6 +292,7 @@
     <div id="tocnav">
       <h2>Contents</h2>
       <ul class="nav nav-pills nav-stacked">
+        <li><a href="#version-0-2-1">0.2.1</a></li>
         <li><a href="#version-0-2-0">0.2.0</a></li>
         <li><a href="#version-0-1-4">0.1.4</a></li>
         <li><a href="#version-0-1-3">0.1.3</a></li>

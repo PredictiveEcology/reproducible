@@ -30,24 +30,6 @@ test_that("all exported functions have examples", {
     print(file)
     test_example(file)
   }
-
-  # sapply(fns[-omit], function(x) {
-  #   if (grepl("VIC-", Sys.info()["nodename"])) { # for debugging only
-  #     cat(paste(x, " -- ", "\n"), file = tmpExFile, append = TRUE)
-  #   }
-  #   browser()
-  #   warn <- capture_warning(
-  #     warn1 <- try(example(x, package = "reproducible", character.only = TRUE,
-  #                          echo = FALSE)))
-  #   if (grepl("VIC-", Sys.info()["nodename"])) { # for debugging only
-  #     cat(paste(x, " -- ", warn, "\n", "  ", warn1, "\n"), file = tmpExFile, append = TRUE)
-  #   }
-  #   warn <- capture_warning(
-  #     warn1 <- try(test_example(x, package = "reproducible", character.only = TRUE,
-  #                          echo = FALSE)))
-  #
-  #   #expect_true(length(warn)>0)
-  # })
 })
 
 # test_that("check all examples", {

@@ -5,7 +5,6 @@ if (getRversion() >= "3.1.0") {
 
 .reproEnv <- new.env(parent = asNamespace("reproducible"))
 
-################################################################################
 #' Cache method that accommodates environments, S4 methods, Rasters, & nested caching
 #'
 #' @details
@@ -282,7 +281,8 @@ setMethod(
                         debugCache, sideEffect, makeCopy, quick, cacheId, useCache,
                         showSimilar) {
     if (!useCache) {
-      message(crayon::green("useCache is FALSE, skipping Cache. To turn Caching on, options(reproducible.useCache = TRUE)"))
+      message(crayon::green("useCache is FALSE, skipping Cache.",
+                            "To turn Caching on, use options(reproducible.useCache = TRUE)"))
       FUN(...)
     } else {
 
@@ -302,7 +302,8 @@ setMethod(
       }
 
       # Arguments -- this puts arguments into a special reproducible environment
-      if (R.version[['minor']] <= "4.0") { # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
+      if (R.version[['minor']] <= "4.0") {
+        # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
         objs <- ls()[ls() %in% .namesCacheFormals]
         objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
         args <- mget(objs)
@@ -340,8 +341,8 @@ setMethod(
           }, add = TRUE)
         }
 
-        if (any(!prevVals)){ # don't override previous values -- except for userTags
-
+        if (any(!prevVals)) {
+          # don't override previous values -- except for userTags
           list2env(mget(namesUserCacheArgs[!prevVals]), .reproEnv)
           on.exit({
             # THe suppressWarnings is about objects that aren't there -- so far only happens
@@ -354,7 +355,8 @@ setMethod(
         }
       }
 
-      if (any(objOverride)) { # get from .reproEnv
+      if (any(objOverride)) {
+        # get from .reproEnv
         lsDotReproEnv <- ls(.reproEnv)
         prevVals <- .namesCacheFormals[objOverride] %in% lsDotReproEnv
         if (any(prevVals)) {
@@ -538,72 +540,81 @@ setMethod(
       # remove things in the Cache call that are not relevant to Caching
       if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
 
-    # Do the digesting
-    if (!is.null(omitArgs)) {
-      tmpl[omitArgs] <- NULL
-    }
-
-    dotPipe <- startsWith(names(tmpl), "._") # don't digest the dotPipe elements as they are already
-                                             # extracted individually into tmpl list elements
-    preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) {
-      .preDigestByClass(tmpl[!dotPipe][[x]])
-    })
-
-    if (verbose) {
-      startHashTime <- Sys.time()
-    }
-    preDigest <- lapply(tmpl[!dotPipe], function(x) {
-      # remove the "newCache" attribute, which is irrelevant for digest
-      if (!is.null(attr(x, "newCache"))) attr(x, "newCache") <- NULL
-      .robustDigest(x, objects = objects,
-                        length = length,
-                        algo = algo,
-                        quick = quick,
-                        classOptions = classOptions)
-    })
-    preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
-
-    if (verbose) {
-      preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
-      endHashTime <- Sys.time()
-      verboseDF <- data.frame(functionName = functionDetails$functionName,
-                              component = "Hashing",
-                              elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
-                              units = "secs",
-                              stringsAsFactors = FALSE)
-
-      hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
-        objSize <- objSize(x, quick = quick)
-
-      }))
-
-      lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
-      hashDetails <- data.frame(objectNames = rep(names(preDigestUnlist), lengths),
-                                #objSize = rep(hashObjectSize, lengths),
-                                hashElements = names(unlist(preDigestUnlist)),
-                                hash = unname(unlist(preDigestUnlist)),
-                                stringsAsFactors = FALSE)
-      preDigestUnlistNames <- unlist(lapply(strsplit(names(unlist(preDigestUnlist)), split = "\\."), function(x) paste0(tail(x, 2), collapse = ".")))
-      hashObjectSizeNames <- unlist(lapply(strsplit(names(hashObjectSize), split = "\\$"), function(x) paste0(tail(x, 2), collapse = ".")))
-      #hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\.y"), function(x) paste0(tail(x, 2), collapse = ".")))
-      hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
-      hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\."), function(x) paste0(tail(x, 2), collapse = ".")))
-      hashDetails$objSize <- NA
-      hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <- hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
-
-      if (exists("hashDetails", envir = .reproEnv)) {
-        .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
-      } else {
-        .reproEnv$hashDetails <- hashDetails
-      on.exit(
-        {
-          assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
-          print(.reproEnv$hashDetails)
-          message("The hashing details are available from .reproEnv$hashDetails")
-          rm("hashDetails", envir = .reproEnv)
-        },
-        add = TRUE)
+      # Do the digesting
+      if (!is.null(omitArgs)) {
+        tmpl[omitArgs] <- NULL
       }
+
+      # don't digest the dotPipe elements as they are already
+      # extracted individually into tmpl list elements
+      dotPipe <- startsWith(names(tmpl), "._")
+
+      preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) {
+        .preDigestByClass(tmpl[!dotPipe][[x]])
+      })
+
+      if (verbose) {
+        startHashTime <- Sys.time()
+      }
+      preDigest <- lapply(tmpl[!dotPipe], function(x) {
+        # remove the "newCache" attribute, which is irrelevant for digest
+        if (!is.null(attr(x, "newCache"))) attr(x, "newCache") <- NULL
+        .robustDigest(x, objects = objects,
+                      length = length,
+                      algo = algo,
+                      quick = quick,
+                      classOptions = classOptions)
+      })
+      preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
+
+      if (verbose) {
+        preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
+        endHashTime <- Sys.time()
+        verboseDF <- data.frame(
+          functionName = functionDetails$functionName,
+          component = "Hashing",
+          elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
+          units = "secs",
+          stringsAsFactors = FALSE
+        )
+
+        hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
+          objSize <- objSize(x, quick = quick)
+
+        }))
+
+        lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
+        hashDetails <- data.frame(
+          objectNames = rep(names(preDigestUnlist), lengths),
+          #objSize = rep(hashObjectSize, lengths),
+          hashElements = names(unlist(preDigestUnlist)),
+          hash = unname(unlist(preDigestUnlist)),
+          stringsAsFactors = FALSE
+        )
+        preDigestUnlistNames <- unlist(lapply(strsplit(names(unlist(preDigestUnlist)), split = "\\."), #nolint
+                                              function(x) paste0(tail(x, 2), collapse = ".")))
+        hashObjectSizeNames <- unlist(lapply(strsplit(names(hashObjectSize), split = "\\$"),
+                                             function(x) paste0(tail(x, 2), collapse = ".")))
+        # hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\.y"),
+        #                                      function(x) paste0(tail(x, 2), collapse = ".")))
+        hashObjectSizeNames <- gsub("\\.y", replacement = "", hashObjectSizeNames)
+        hashObjectSizeNames <- unlist(lapply(strsplit(hashObjectSizeNames, split = "\\."),
+                                             function(x) paste0(tail(x, 2), collapse = ".")))
+        hashDetails$objSize <- NA
+        hashDetails$objSize[preDigestUnlistNames %in% hashObjectSizeNames] <-
+          hashObjectSize[hashObjectSizeNames %in% preDigestUnlistNames]
+
+        if (exists("hashDetails", envir = .reproEnv)) {
+          .reproEnv$hashDetails <- rbind(.reproEnv$hashDetails, hashDetails)
+        } else {
+          .reproEnv$hashDetails <- hashDetails
+          on.exit({
+            assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
+            print(.reproEnv$hashDetails)
+            message("The hashing details are available from .reproEnv$hashDetails")
+            rm("hashDetails", envir = .reproEnv)
+          }, add = TRUE)
+        }
 
       if (exists("verboseTiming", envir = .reproEnv)) {
         verboseDF$functionName <- paste0("  ", verboseDF$functionName)
@@ -649,7 +660,7 @@ setMethod(
       }
     }
 
-    isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE] # nolint
+    isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
 
     # If it is in the existing record:
 
@@ -666,15 +677,17 @@ setMethod(
         fromMemoise <- NA
         if (getOption("reproducible.useMemoise")) {
           fromMemoise <-
-            if (memoise::has_cache(loadFromLocalRepoMem)(isInRepo$artifact[lastOne],
+            if (memoise::has_cache(.loadFromLocalRepoMem)(isInRepo$artifact[lastOne],
                                                          repoDir = cacheRepo, value = TRUE)) {
               TRUE
             } else {
               FALSE
             }
           loadFromMgs <- "Loading from memoise version of repo"
-          output <- loadFromLocalRepoMem(isInRepo$artifact[lastOne],
+          output <- .loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                  repoDir = cacheRepo, value = TRUE)
+          output <- unmakeMemoiseable(output)
+          #if (is(output, "simList_")) output <- as(output, "simList")
         } else {
           loadFromMgs <- "Loading from repo"
           output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
@@ -683,11 +696,13 @@ setMethod(
 
         if (verbose) {
           endLoadTime <- Sys.time()
-          verboseDF <- data.frame(functionName = functionDetails$functionName,
-                                  component = loadFromMgs,
-                                  elapsedTime = as.numeric(difftime(endLoadTime, startLoadTime, units = "secs")),
-                                  units = "secs",
-                                  stringsAsFactors = FALSE)
+          verboseDF <- data.frame(
+            functionName = functionDetails$functionName,
+            component = loadFromMgs,
+            elapsedTime = as.numeric(difftime(endLoadTime, startLoadTime, units = "secs")),
+            units = "secs",
+            stringsAsFactors = FALSE
+          )
 
           if (exists("verboseTiming", envir = .reproEnv)) {
             .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
@@ -792,12 +807,12 @@ setMethod(
 
         if (verbose) {
           endCacheTime <- Sys.time()
-          verboseDF <- data.frame(functionName = functionDetails$functionName,
-                                  component = "Whole Cache call",
-                                  elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
-                                                                    units = "secs")),
-                                  units = "secs",
-                                  stringsAsFactors = FALSE)
+          verboseDF <- data.frame(
+            functionName = functionDetails$functionName,
+            component = "Whole Cache call",
+            elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime, units = "secs")),
+            units = "secs",
+            stringsAsFactors = FALSE)
 
           if (exists("verboseTiming", envir = .reproEnv)) {
             .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
@@ -877,11 +892,13 @@ setMethod(
 
     if (verbose) {
       endRunTime <- Sys.time()
-      verboseDF <- data.frame(functionName = functionDetails$functionName,
-                              component = paste("Running", functionDetails$functionName),
-                              elapsedTime = as.numeric(difftime(endRunTime, startRunTime, units = "secs")),
-                              units = "secs",
-                              stringsAsFactors = FALSE)
+      verboseDF <- data.frame(
+        functionName = functionDetails$functionName,
+        component = paste("Running", functionDetails$functionName),
+        elapsedTime = as.numeric(difftime(endRunTime, startRunTime, units = "secs")),
+        units = "secs",
+        stringsAsFactors = FALSE
+      )
 
       if (exists("verboseTiming", envir = .reproEnv)) {
         .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
@@ -939,8 +956,7 @@ setMethod(
           repoTo <- file.path(cacheRepo, "gallery")
           checkPath(repoTo, create = TRUE)
           lapply(dwdFlst, function(x) {
-            file.copy(from = x,
-                      to = file.path(repoTo), recursive = TRUE)
+            file.copy(from = x, to = file.path(repoTo), recursive = TRUE)
           })
         }
       }
@@ -951,7 +967,6 @@ setMethod(
     # Can make new methods by class to add tags to outputs
     outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
                                      preDigestByClass)
-
 
     # extract other function names that are not the ones the focus of the Cache call
     otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
@@ -1020,7 +1035,7 @@ setMethod(
         Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
         written + 1
       } else {
-        - 1
+        -1
       }
     }
 
@@ -1058,7 +1073,6 @@ setMethod(
       }
       # on.exit({message("Loading from repo took ", format(endLoadTime - startLoadTime))},
       #   add = TRUE)
-
     }
 
     if (isNullOutput) return(NULL) else return(output)
@@ -1102,8 +1116,13 @@ setMethod(
 .formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
 .namesCacheFormals <- names(.formalsCache)[]
 
-loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
+.loadFromLocalRepoMem2 <- function(md5hash, ...) {
+  out <- loadFromLocalRepo(md5hash, ...)
+  out <- makeMemoiseable(out)
+  return(out)
 
+}
+.loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
 
 .unlistToCharacter <- function(l, max.level = 1) {
   if (max.level > 0) {
@@ -1121,4 +1140,39 @@ loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
   } else {
     "other"
   }
+}
+
+#' Generic method to make or unmake objects memoisable
+#'
+#' This is just a pass through for all clases in reproducible.
+#' This generic is here so that downstream methods can be created.
+#'
+#' @param x  An object to make memoiseable.
+#'           See individual methods in other packages.
+#' @return The same object, but with any modifications, especially
+#' dealing with saving of environments, which memoising doesn't handle
+#' correctly in some cases.
+#'
+#' @export
+#' @rdname makeMemoiseable
+makeMemoiseable <- function(x) {
+  UseMethod("makeMemoiseable")
+}
+
+#' @export
+#' @rdname makeMemoiseable
+makeMemoiseable.default <- function(x) {
+  x
+}
+
+#' @export
+#' @rdname makeMemoiseable
+unmakeMemoiseable <- function(x) {
+  UseMethod("unmakeMemoiseable")
+}
+
+#' @export
+#' @rdname makeMemoiseable
+unmakeMemoiseable.default <- function(x) {
+  x
 }

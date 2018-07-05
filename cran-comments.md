@@ -1,6 +1,6 @@
 ## Updated release
 
-This is a major update to our package that includes numerous enhancements and bug fixes (see NEWS.md).
+This release fixes a major bug that is holding up the submission of `SpaDES.core` (see NEWS.md).
 
 ## Test environments
 
@@ -17,17 +17,17 @@ This is a major update to our package that includes numerous enhancements and bu
 ### Current R versions
 * macOS High Sierra    (local), R 3.5.0
 * OS X El Capitan  (travis-ci), R 3.5.0
-* Ubuntu 14.04     (travis-ci), R 3.5.0
-* Ubuntu 18.04         (local), R 3.5.0
-* Windows           (appveyor), R 3.5.0
-* Windows        (win-builder), R 3.5.0
-* Windows 7            (local), R 3.5.0
+* Ubuntu 14.04     (travis-ci), R 3.5.1
+* Ubuntu 18.04         (local), R 3.5.1
+* Windows           (appveyor), R 3.5.1
+* Windows        (win-builder), R 3.5.1
+* Windows 7            (local), R 3.5.1
 
 ### Development R version
-* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-13 r74895)
-* Ubuntu 18.04         (local), R 3.6.0 (2018-06-11 r74889)
-* Windows           (appveyor), R 3.6.0 (2018-06-13 r74895)
-* Windows        (win-builder), R 3.6.0 (2018-06-11 r74889)
+* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-20 r74923)
+* Ubuntu 18.04         (local), R 3.6.0 (2018-06-28 r74935)
+* Windows           (appveyor), R 3.6.0 (2018-06-26 r74934)
+* Windows        (win-builder), R 3.6.0 (2018-07-01 r74950)
 
 ## R CMD check results
 
@@ -46,6 +46,9 @@ There was 1 NOTE:
 We have run R CMD check on downstream dependencies, and all have passed except those noted below.
 Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
 
-* `SpaDES` and `SpaDES.core` produce an error due to a non-CRAN package in Suggests, but passes once that dependency is installed.
+* `SpaDES` shows a warning due to `DISPLAY` not being set in the headless session.
+  Three other warnings regarding replaced imports are caused by having depracated and moved these functions from `SpaDES.tools` to this package.
+
+* `SpaDES.core` produce an error due to a non-CRAN package in Suggests, but passes once that dependency is installed.
 
 * `SpaDES.tools` produces an error due to an unrelated error in that package. I am a developer of `SpaDES.tools` and have prepared a fixed version for CRAN which will be submitted shortly.

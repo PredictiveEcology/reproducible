@@ -18,6 +18,8 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @section Stage 1 - Getting data:
 #'
+#' See \code{\link{preProcess}} for combinations of arguments.
+#'
 #'   \enumerate{
 #'     \item Download from the web via either \code{\link[googledrive]{drive_download}},
 #'     \code{\link[utils]{download.file}};
@@ -81,7 +83,6 @@ if (getRversion() >= "3.1.0") {
 #'    already exists)
 #'   \code{CHECKSUMS.txt} file. If the \code{CHECKSUMS.txt} is not correct, use
 #'   this argument to remove it.
-
 #'
 #' @param targetFile Character string giving the path to the eventual file
 #'   (raster, shapefile, csv, etc.) after downloading and extracting from a zip
@@ -89,24 +90,29 @@ if (getRversion() >= "3.1.0") {
 #'   \code{postProcess}. Currently, the internal checksumming does not checksum
 #'   the file after it is \code{postProcess}ed (e.g., cropped/reprojected/masked).
 #'   Using \code{Cache} around \code{prepInputs} will do a sufficient job in these cases.
+#'   See table in \code{\link{preProcess}}.
 #'
 #' @param archive Optional character string giving the path of an archive
 #'   containing \code{targetFile}, or a vector giving a set of nested archives
 #'   (e.g., \code{c("xxx.tar", "inner.zip")}). If there is/are (an) inner
 #'   archive(s), but they are unknown, the function will try all until it finds
-#'   the \code{targetFile}
+#'   the \code{targetFile}. See table in \code{\link{preProcess}}.
 #'
 #' @param url Optional character string indicating the URL to download from.
-#'   Normally, if used within a module, this url should be explicitly given as
-#'   sourceURL for an \code{expectsInput}. In that case, it will use the
-#'   module's checksums file to confirm that the download occurred correctly. If
-#'   URL is used here, an ad hoc checksums will be created in the
-#'   \code{destinationPath}. This will be used in subsequent calls to
-#'   \code{prepInputs}, comparing the file on hand with the ad hoc
-#'   \code{CHECKSUMS.txt}.
+#'   If not specified, then no download will be attempted. If not entry
+#'   exists in the \code{CHECKSUMS.txt} (in \code{destinationPath}), an entry
+#'   will be created or appended to. This \code{CHECKSUMS.txt} entry will be used
+#'   in subsequent calls to
+#'   \code{prepInputs} or \code{preProcess}, comparing the file on hand with the ad hoc
+#'   \code{CHECKSUMS.txt}. See table in \code{\link{preProcess}}.
 #'
 #' @param alsoExtract Optional character string naming files other than
-#'   \code{targetFile} that must be extracted from the \code{archive}.
+#'   \code{targetFile} that must be extracted from the \code{archive}. If
+#'   \code{NULL}, the default, then it will extract all files. Other options:
+#'   \code{"similar"} will extract all files with the same filename without
+#'   file extension as \code{targetFile}. \code{NA} will extract nothing other
+#'   than \code{targetFile}. A character string of specific file names will cause
+#'   only those to be extracted. See table in \code{\link{preProcess}}.
 #'
 #' @param destinationPath Character string of a directory in which to download
 #'   and save the file that comes from \code{url} and is also where the function
@@ -225,7 +231,6 @@ if (getRversion() >= "3.1.0") {
 #'                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
 #'                      destinationPath = asPath(dPath),
 #'                      studyArea = StudyArea)
-#'
 #' }
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
@@ -235,6 +240,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
 
   # Download, Checksum, Extract from Archive
+  message("Running preProcess")
   out <- preProcess(
     targetFile = targetFile,
     url = url,
@@ -263,6 +269,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (length(args) == 0) args <- NULL
 
   # Stage 1 - load into R
+  message("Loading object into R from disk")
   if (out$tryRasterFn) {
     ## Don't cache the reading of a raster
     ## -- normal reading of raster on disk is fast b/c only reads metadata
@@ -271,10 +278,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     x <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args))
   }
 
-  ## postProcess
-  outPost <- Cache(do.call, postProcess, append(list(useCache = useCache, x = x, filename1 = out$targetFilePath,
-                        destinationPath = out$destinationPath), out$dots))
-  return(outPost)
+  ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
+  if (!(all(is.null(out$dots$studyArea), is.null(out$dots$rasterToMatch)))) {
+    message("Running postProcess")
+    x <- Cache(do.call, postProcess, append(list(useCache = useCache, x = x, filename1 = out$targetFilePath,
+                                                 destinationPath = out$destinationPath), out$dots))
+  }
+
+  return(x)
 }
 
 #' Extract files from archive
@@ -326,12 +337,13 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
       funWArgs <- .whichExtractFn(archive[1], args)
 
-      filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
-
-      if ("Name" %in% names(filesInArchive)) {
-        # for zips, rm directories (length = 0)
-        filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
-      }
+      filesInArchive <- .listFilesInArchive(archive)
+      # filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+      #
+      # if ("Name" %in% names(filesInArchive)) {
+      #   # for zips, rm directories (length = 0)
+      #   filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
+      # }
 
       # recheck, now that we have the whole file liast
       if (is.null(neededFiles)) {
@@ -363,7 +375,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
           if (!nzchar(extractingTheseFiles))
             extractingTheseFiles <- paste0("all files: ", paste(basename(filesInArchive),
                                                                 collapse = ", "))
-          message("From:", basename(archive[1]), "  Extracting ", extractingTheseFiles)
+          message("From:", basename(archive[1]), "  \nExtracting\n ",
+                  paste(collapse = "\n ", extractingTheseFiles))
           filesExtracted <- c(filesExtracted,
                               .unzipOrUnTar(funWArgs$fun, funWArgs$args,
                                             files = filesInArchive[basename(filesInArchive) %in%
@@ -394,14 +407,16 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
           }
         }
       } else {
-        message("  Skipping extractFromArchive: all files already extracted.")
+        message("  Skipping extractFromArchive: all files already present")
         filesExtracted <- checkSums[checkSums$expectedFile %in%
                                       basename(filesInArchive), ]$expectedFile
       }
     }
   } else {
-    message("  Skipping extractFromArchive: targetFile (and any alsoExtract) already extracted.")
-    filesExtracted <- setdiff(neededFiles, basename(archive))
+    if (!is.null(archive)) { # if archive is null, it means there was no archive passed
+      message("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present")
+    }
+    filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) basename(archive))
   }
   list(extractedArchives = c(extractedArchives, archive),
        filesExtracted = unique(c(filesExtracted, extractedObjs$filesExtracted)),
@@ -422,7 +437,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 .guessAtTargetAndFun <- function(targetFilePath, destinationPath, filesExtracted, fun) {
   #if (is.null(targetFilePath)) {
   #filesExtracted <- dir(destinationPath)
-  possibleFiles <- basename(unique(c(targetFilePath, filesExtracted)))
+  possibleFiles <- unique(basename(c(targetFilePath, filesExtracted)))
   isShapefile <- grepl("shp", file_ext(possibleFiles))
   isRaster <- file_ext(possibleFiles) %in% c("tif", "grd")
   if (is.null(fun)) { #i.e., the default
@@ -435,7 +450,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
   if (is.null(targetFilePath)) {
     message("  targetFile was not specified. ", if (any(isShapefile)) {
-      c(" Trying raster::shapefile on ", possibleFiles[isShapefile], ".",
+      c(" Trying raster::shapefile on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
         " If that is not correct, please specify different targetFile",
         " and/or fun.")
     } else {
@@ -458,7 +473,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     }
     if (length(targetFilePath) > 1)  {
       message("  More than one possible files to load, ", paste(targetFilePath, collapse = ", "),
-              " Picking the first one. If not correct, specify a targetFile.")
+              ". Picking the first one. If not correct, specify a targetFile.")
       targetFilePath <- targetFilePath[1]
     } else {
       message("  Trying ", targetFilePath, " with ", fun, ".")
@@ -472,6 +487,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
 #' @importFrom utils untar unzip
 .whichExtractFn <- function(archive, args) {
+  if (!(is.null(archive))) {
   ext <- tolower(file_ext(archive))
   if (ext == "zip") {
     fun <- unzip
@@ -479,7 +495,11 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   } else if (ext == "tar") {
     fun <- untar
   }
-  return(list(fun = fun, args = args))
+  out <- list(fun = fun, args = args)
+  } else {
+    out <- NULL
+  }
+  return(out)
 }
 
 #' @keywords internal
@@ -518,12 +538,21 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 #' @keywords internal
 .checkSumsMem <- memoise::memoise(.checkSums)
 
+#' @importFrom tools file_ext
 .isArchive <- function(filename) {
-  archive = if (file_ext(filename) %in% c("zip", "tar")) {
-    filename
-  } else {
-    NULL
+  if (!is.null(filename)) {
+    filename <- if (length(filename)) {
+      isArchive <- file_ext(filename) %in% c("zip", "tar")
+      if (any(isArchive)) {
+        filename[isArchive]
+      } else {
+        NULL
+      }
+    } else {
+      NULL
+    }
   }
+  return(filename)
 }
 
 #' @keywords internal
@@ -564,7 +593,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
     currentFilesToRbind <- data.table::as.data.table(currentFiles)
     keepCols <- c("expectedFile", "checksum.x", "algorithm.x", "filesize.x")
     currentFilesToRbind <- currentFilesToRbind[, keepCols, with = FALSE]
-    data.table::setnames(currentFilesToRbind, old = keepCols, new = c("file", "checksum", "algorithm", "filesize"))
+    data.table::setnames(currentFilesToRbind, old = keepCols,
+                         new = c("file", "checksum", "algorithm", "filesize"))
     currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
     writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
   }
@@ -596,4 +626,30 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
 
   }
   neededFiles
+}
+
+#' List files in either a zip or tar
+#'
+#' Makes the outputs from tar or zip the same, which they aren't by default.
+#'
+#' @return
+#' A character string of all files in the archive.
+#'
+#' @param archive A character string of a single file name to list files in.
+#' @keywords internal
+#' @rdname listFilesInArchive
+.listFilesInArchive <- function(archive) {
+  funWArgs <- .whichExtractFn(archive[1], NULL)
+  filesInArchive <- NULL
+  if (!is.null(funWArgs$fun)) {
+    if (file.exists(archive[1])) {
+      filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+      if ("Name" %in% names(filesInArchive)) {
+        # for zips, rm directories (length = 0)
+        filesInArchive <-
+          filesInArchive[filesInArchive$Length != 0,]$Name
+      }
+    }
+  }
+  return(filesInArchive)
 }

@@ -178,37 +178,41 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       crsRTM <- NULL
     }
 
-    mess <- capture.output(type = "message",
+    #mess <- capture.output(type = "message",
                            x <- Cache(cropInputs, x = x, studyArea = studyArea,
                                       extentToMatch = extRTM,
                                       extentCRS = crsRTM,
-                                      useCache = useCache, ...))
+                                      useCache = useCache, ...)
+                           #)
 
-    .groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
+    #.groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
 
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
-      mess <- capture.output(type = "message", # no Cache at the method level because may be just passed through if raster
+      #mess <- capture.output(type = "message", # no Cache at the method level because may be just passed through if raster
                              x <- fixErrors(x = x, objectName = objectName,
-                                            useCache = useCache, ...))
-      .groupedMessage(mess, omitPattern = skipCacheMess)
+                                            useCache = useCache, ...)
+                             #)
+      #.groupedMessage(mess, omitPattern = skipCacheMess)
 
       # projectInputs
       targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch)
 
-      mess <- capture.output(type = "message",
+      #mess <- capture.output(type = "message",
                              x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
-                                        rasterToMatch = rasterToMatch, useCache = useCache, ...))
+                                        rasterToMatch = rasterToMatch, useCache = useCache, ...)
+                             #)
 
-      .groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
+      #.groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
 
       # maskInputs
-      mess <- capture.output(type = "message",
+      #mess <- capture.output(type = "message",
                              x <- Cache(maskInputs, x = x, studyArea = studyArea,
-                                        rasterToMatch = rasterToMatch, useCache = useCache, ...))
+                                        rasterToMatch = rasterToMatch, useCache = useCache, ...)
+                             #)
 
-      .groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
+      #.groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
 
       # filename
       newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, ...)
@@ -451,12 +455,14 @@ projectInputs.sf <- function(x, targetCRS, ...) {
 #' @importFrom raster crs
 projectInputs.Spatial <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
-    if (!is.character(targetCRS)) {
-      if (is(targetCRS, "spatialObjects")) {
-        targetCRS <- crs(targetCRS)
-      } else {
-        stop("targetCRS in projectInputs must be a CRS object or a class from",
-             " which a crs can be extracted with raster::crs")
+    if (!is(targetCRS, "CRS")) {
+      if (!is.character(targetCRS)) {
+        if (is(targetCRS, "spatialObjects")) {
+          targetCRS <- crs(targetCRS)
+        } else {
+          stop("targetCRS in projectInputs must be a CRS object or a class from",
+               " which a crs can be extracted with raster::crs")
+        }
       }
     }
     x <- spTransform(x = x, CRSobj = targetCRS)
@@ -514,9 +520,10 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
     x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
-      msg <- capture.output(type = "message",
-                            x <- fastMask(x = x, y = studyArea))
-      message(paste0("      ", paste(msg, collapse = "\n      ")))
+      #msg <- capture.output(type = "message",
+                            x <- fastMask(x = x, y = studyArea)
+                            #)
+      #message(paste0("      ", paste(msg, collapse = "\n      ")))
     } else {
       message("studyArea not provided, skipping masking.")
     }

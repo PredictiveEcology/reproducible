@@ -5,14 +5,16 @@ test_that("prepInputs doesn't work", {
 
   tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
   checkPath(tmpdir, create = TRUE)
-  cwd <- getwd()
-  setwd(tmpdir)
+  cwd <- setwd(tmpdir)
 
   on.exit({
     setwd(cwd)
     unlink(tmpdir, recursive = TRUE)
   }, add = TRUE)
 
+  #######################################
+  ### url  ######
+  #######################################
   dPath <- file.path(tempdir(), "ecozones")
   mess <- capture_messages(
     shpEcozone <- prepInputs(destinationPath = dPath,
@@ -32,6 +34,9 @@ test_that("prepInputs doesn't work", {
   expect_true(is(shpEcozone1, "SpatialPolygons"))
   unlink(dPath, recursive = TRUE)
 
+  #######################################
+  ### url, targetFile, alsoExtract ######
+  #######################################
   # Once this is done, can be more precise in operational code:
   #  specify targetFile, alsoExtract, and fun, wrap with Cache
   ecozoneFilename <- file.path(dPath, "ecozones.shp")
@@ -65,6 +70,9 @@ test_that("prepInputs doesn't work", {
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
   crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
+  #######################################
+  ### url, targetFile, alsoExtract -- with Cache ######
+  #######################################
   #  specify targetFile, alsoExtract, and fun, wrap with Cache
   ecozoneFilename <- file.path(dPath, "ecozones.shp")
   # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
@@ -99,6 +107,9 @@ test_that("prepInputs doesn't work", {
   url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
                    "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
 
+  #######################################
+  ### url                          ######
+  #######################################
   # messages received below may help for filling in more arguments in the subsequent call
   LCC2005 <- prepInputs(
     url = url,
@@ -110,6 +121,9 @@ test_that("prepInputs doesn't work", {
   expect_identical(extent(LCC2005)[1:4],
                    round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 
+  #######################################
+  ### url, targetFile, archive     ######
+  #######################################
   # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
   LCC2005_2 <- Cache(
     prepInputs,
@@ -122,26 +136,128 @@ test_that("prepInputs doesn't work", {
   expect_is(LCC2005_2, "Raster")
   expect_equivalent(LCC2005, LCC2005_2)
 
-  setwd(tempdir())
   if (interactive()) {
+    setwd(tempdir())
+    #######################################
+    ### url                          ######
+    #######################################
+    path1 <- "data/FMA"
+    checkPath(path1, create = TRUE)
+    warns <- capture_warnings(test <- prepInputs(
+      url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
+      destinationPath = path1
+    ))
+    files <- dir(path1, pattern = "FMA_Boundary")
+    expect_true(length(files) == 9)
+    expect_is(test, "SpatialPolygons")
+
+    #######################################
+    ### url, targetFile              ######
+    #######################################
     # need authentication for this
+    path1 <- "data/FMA"
+    checkPath(path1, create = TRUE)
     warns <- capture_warnings(test <- prepInputs(
       targetFile = "FMA_Boundary_Updated.shp",
       url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
-      destinationPath = "data/FMA"
+      destinationPath = path1
     ))
     # There is a meaningless warning for this unit test -- ignore it :
     # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
       #                  Z-dimension discarded
     expect_is(test, "SpatialPolygons")
+
+    # From Bird/Tati project
+    birdSpecies <- c("BBWA", "YRWA")
+    urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
+              "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
+    path1 <- "data/Birds"
+    checkPath(path1, create = TRUE)
+
+    #######################################
+    ### url, targetFile, archive     ######
+    #######################################
+    outsideModule <- Map(x = birdSpecies, url = urls,
+                         MoreArgs = list(path1 = path1),
+                         function(x, url, path1) {
+                           ras <- prepInputs(
+                             targetFile = paste0(x, "_currmean.asc"),
+                             archive = paste0(x, "_current.zip"),
+                             url = url,
+                             destinationPath = path1,
+                             overwrite = TRUE
+                           )
+                         })
+    expect_is(outsideModule[[1]], "Raster")
+    expect_is(outsideModule[[2]], "Raster")
+    expect_is(crs(outsideModule[[2]]), "CRS")
+    expect_is(crs(outsideModule[[1]]), "CRS")
+    expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+    # remove the .prj files -- test "similar"
+    #######################################
+    ### url, targetFile, archive, alsoExtract similar ######
+    #######################################
+    file.remove(grep(pattern = "asc|zip|CHECK",
+                     invert = TRUE, value = TRUE, dir(path1, full.names = TRUE)))
+
+    outsideModule <- Map(x = birdSpecies, url = urls,
+                         MoreArgs = list(path1 = path1),
+                         function(x, url, path1, purge) {
+                           ras <- prepInputs(
+                             targetFile = paste0(x, "_currmean.asc"),
+                             archive = paste0(x, "_current.zip"),
+                             url = url,
+                             alsoExtract = "similar",
+                             destinationPath = path1,
+                             overwrite = TRUE
+                           )
+                         })
+    expect_is(outsideModule[[1]], "Raster")
+    expect_is(outsideModule[[2]], "Raster")
+    expect_is(crs(outsideModule[[2]]), "CRS")
+    expect_is(crs(outsideModule[[1]]), "CRS")
+    expect_true(!is.na(crs(outsideModule[[1]])))
+    expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
+
+    # remove the .prj files -- test "similar"
+    file.remove(grep(pattern = "asc|zip|CHECK",
+                     invert = TRUE, value = TRUE, dir(path1, full.names = TRUE)))
+
+    #######################################
+    ### url, targetFile, archive, alsoExtract NA ######
+    #######################################
+    # because alsoExtract is NA ... no other files are unzipped, so no .prj and so no CRS
+    outsideModule <- Map(x = birdSpecies, url = urls,
+                         MoreArgs = list(path1 = path1),
+                         function(x, url, path1, purge) {
+                           ras <- prepInputs(
+                             targetFile = paste0(x, "_currmean.asc"),
+                             archive = paste0(x, "_current.zip"),
+                             url = url,
+                             alsoExtract = NA,
+                             destinationPath = path1,
+                             overwrite = TRUE
+                           )
+                         })
+    expect_is(outsideModule[[1]], "Raster")
+    expect_is(outsideModule[[2]], "Raster")
+    expect_is(crs(outsideModule[[1]]), "CRS")
+    expect_true(is.na(crs(outsideModule[[1]])))
+    expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
   }
 
-
+  #######################################
+  ###  archive     ######
+  #######################################
   # don't pass url -- use local copy of archive only - use purge = TRUE to rm checksums file, rewrite it here
   shpEcozone <- prepInputs(destinationPath = dPath,
                            archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
   expect_true(is(shpEcozone, "SpatialPolygons"))
 
+  #######################################
+  ### archive, alsoExtract char    ######
+  #######################################
   shpEcozone <- prepInputs(destinationPath = dPath,
                            archive = file.path(dPath, "ecozone_shp.zip"),
                            alsoExtract = c("ecozones.dbf", "ecozones.prj",
@@ -151,6 +267,9 @@ test_that("prepInputs doesn't work", {
   rm(shpEcozone)
   expect_false(exists("shpEcozone", inherits = FALSE))
 
+  #######################################
+  ### url, alsoExtract, archive    ######
+  #######################################
   # try again with url - should *not* download, even though checksums came from the
   #   prepInputs that had locally generated -- confirming that checksums with a manually copied file will work
   #   instead of forcing prepInputs to get the file.
@@ -165,6 +284,9 @@ test_that("prepInputs doesn't work", {
   url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
                    "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
 
+  #######################################
+  ### archive                     ######
+  #######################################
   # only archive -- i.e., skip download, but do extract and postProcess
   rm(LCC2005)
   LCC2005 <- prepInputs(
@@ -173,18 +295,24 @@ test_that("prepInputs doesn't work", {
     studyArea = StudyArea,
     purge = TRUE
   )
-  expect_false(any(grepl("Skipping extractFromArchive", mess)))
+  expect_false(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
   expect_true(is(LCC2005, "Raster"))
 
+  #######################################
+  ### archive                      ######
+  #######################################
   rm(LCC2005)
   mess <- capture_messages(LCC2005 <- prepInputs(
     archive = "LandCoverOfCanada2005_V1_4.zip",
     destinationPath = asPath(dPath),
     studyArea = StudyArea
   ))
-  expect_true(any(grepl("Skipping extractFromArchive", mess)))
+  expect_true(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
   expect_true(is(LCC2005, "Raster"))
 
+  #######################################
+  ### targetFile                   ######
+  #######################################
   # only targetFile -- i.e., skip download, extract ... but do postProcess
   rm(LCC2005)
   mess <- capture_messages(LCC2005 <- prepInputs(
@@ -212,7 +340,6 @@ test_that("prepInputs doesn't work", {
   # fix StudyArea
   x <- postProcess(x = StudyArea, destinationPath = dPath) # Not using rasterToMatch: works
 
-
   ## TODO: remove SpaDES.shiny dependency
   #studyArea2 <- SpaDES.tools::randomPolygon(x = polyMatrix, hectares = 1000)
   #studyArea2 <- spTransform(studyArea2, crs(LCC2005))
@@ -222,4 +349,519 @@ test_that("prepInputs doesn't work", {
   ## rasterToMatch: doesn't work; doesn't finish nor returns error.
   #postProcess(x = studyArea, targetFilePath = dataPath(sim),
   #            destinationPath = dataPath(sim), rasterToMatch = template)
+})
+
+test_that("preProcess doesn't work", {
+  testthat::skip_on_cran()
+  testthat::skip_on_travis()
+  testthat::skip_on_appveyor()
+
+  testthat::skip_if_not(interactive())
+
+  #tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
+  #checkPath(tmpdir, create = TRUE)
+  #cwd <- setwd(tmpdir)
+
+  urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/DEM.tif"
+  #urlTif2 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/habitatQuality.tif"
+  #urlShapefiles2Zip <- "https://drive.google.com/file/d/1eSkYU2xHycp9aC_4Hk8M1yeKIoKt2uhM/view?usp=sharing"
+  urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
+  urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
+
+  path1 <- "unitTesting"
+  checkPath(path1, create = TRUE)
+  unlink(dir(path1, full.names = TRUE))
+
+  expectedMessage <- "Running preP|Preparing:|File downloaded|From:Shapefile|Checking local|Finished checking|Downloading|Skipping download|Skipping extractFrom|targetFile was not.*Trying raster|Writing checksums.*you can specify targetFile|No targetFile supplied, so can't use"
+
+  runTest <- function(prod, class, numFiles, mess, expectedMess = expectedMessage, filePattern) {
+    files <- dir(path1, pattern = filePattern, full.names = TRUE)
+    expect_true(length(files) == numFiles)
+    expect_is(test, class)
+    message(mess)
+    print(hasMessageNum <-
+            paste(collapse = "_", which(unlist(
+              lapply(strsplit(expectedMessage, "\\|")[[1]], function(m)
+                any(grepl(m, mess)))
+            ))))
+    expect_true(hasMessageNum == prod) #
+  }
+
+  ################################################################
+  ###### url                                                 #####
+  ################################################################
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlTif1,
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_7_10_11", "Raster", 1, mess, filePattern = "DEM")
+
+  # 2nd time # no targetFile, so can't checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlTif1,
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_7_10", "Raster", 1, mess, filePattern = "DEM")
+  unlink(dir(path1, full.names = TRUE))
+
+  # url is an archive on googledrive -- can get file.info from remote -- so can do checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefiles1Zip,
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_10_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefiles1Zip,
+    destinationPath = path1
+  )))
+  runTest("1_2_4_5_6_8_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  unlink(dir(path1, full.names = TRUE))
+
+  ################################################################
+  ###### url, targetFile                                     #####
+  ################################################################
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlTif1,
+    targetFile = basename(urlTif1),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_7_11", "Raster", 1, mess, filePattern = "DEM")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlTif1,
+    targetFile = basename(urlTif1),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8", "Raster", 1, mess, filePattern = "DEM")
+  unlink(dir(path1, full.names = TRUE))
+
+  # url is an archive on googledrive --
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefiles1Zip,
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefiles1Zip,
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  unlink(dir(path1, full.names = TRUE))
+
+
+  ################################################################
+  ###### url, alsoExtract                                    #####
+  ################################################################
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlTif1,
+    alsoExtract = "DEM.tif",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_7_10_11", "Raster", 1, mess, filePattern = "DEM")
+
+  # 2nd time # can't use checksums because don't have targetFile
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlTif1,
+    alsoExtract = "DEM.tif",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_7_10", "Raster", 1, mess, filePattern = "DEM")
+  unlink(dir(path1, full.names = TRUE))
+
+  # url is an archive on googledrive --
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefiles1Zip,
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_10_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefiles1Zip,
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  unlink(dir(path1, full.names = TRUE))
+
+  ################################################################
+  ###### url, archive                                        #####
+  ################################################################
+  # url is an archive on googledrive -- here, zip has 2 Shapefile filesets -- Shapefile1* and Shapefile2*
+  #   should extract all
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    archive = "Shapefiles1.zip",
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_10_11", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    archive = "Shapefiles1.zip",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9_10", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
+  unlink(dir(path1, full.names = TRUE))
+
+  ################################################################
+  ###### url, archive, targetFile                            #####
+  ################################################################
+  # url is an archive on googledrive --
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefiles1Zip,
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefiles1Zip,
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  unlink(dir(path1, full.names = TRUE))
+
+  ################################################################
+  ###### url, targetFile, alsoExtract                        #####
+  ################################################################
+  # url is an archive on googledrive --
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    targetFile = "Shapefile1.shp",
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shx"),
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    targetFile = "Shapefile1.shp",
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shx"),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  unlink(dir(path1, full.names = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    targetFile = "Shapefile1.shp",
+    alsoExtract = c("similar"),
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlTif1,
+    targetFile = "DEM.tif",
+    alsoExtract = c("DEM.tif"),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_7", "Raster", 1, mess, filePattern = "DEM")
+  unlink(dir(path1, full.names = TRUE))
+
+  ################################################################
+  ###### url, archive, alsoExtract               #####
+  ################################################################
+  # url is an archive on googledrive --
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    archive = "Shapefiles1.zip",
+    alsoExtract = "similar",
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_10_11_12", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    archive = "Shapefiles1.zip",
+    alsoExtract = "similar",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
+
+  unlink(dir(path1, full.names = TRUE))
+  expect_error(mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    archive = "Shapefiles1.zip",
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shx"),
+    destinationPath = path1
+  ))))
+
+  unlink(dir(path1, full.names = TRUE))
+
+  ################################################################
+  ###### url, targetFile, alsoExtract               #####
+  ################################################################
+  # url is an archive on googledrive --
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    alsoExtract = "similar",
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    alsoExtract = "similar",
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  unlink(dir(path1, full.names = TRUE))
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shx"),
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shx"),
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  unlink(dir(path1, full.names = TRUE))
+
+  ################################################################
+  ###### url, archive, targetFile, alsoExtract               #####
+  ################################################################
+  # url is an archive on googledrive --
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    archive = "Shapefiles1.zip",
+    alsoExtract = "similar",
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_3_4_5_6_7_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    url = urlShapefilesZip,
+    archive = "Shapefiles1.zip",
+    alsoExtract = "similar",
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_8_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  #unlink(dir(path1, full.names = TRUE))
+
+  ################################################################
+  ###### archive                                             #####
+  ################################################################
+  # archive exists locally
+  # remove all non archive files
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    destinationPath = path1
+  )))
+  runTest("1_2_4_5_6_10_11", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_9_10", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
+
+  ################################################################
+  ###### archive, targetFile                                 #####
+  ################################################################
+  # archive exists locally
+  # remove all non archive files
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_4_5_6_11", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_9", "SpatialPolygons", 9, mess, filePattern = "Shapefile")
+
+  ################################################################
+  ###### archive, targetFile, alsoExtract                    #####
+  ################################################################
+  # archive exists locally
+  # remove all non archive files
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+    destinationPath = path1
+  )))
+  runTest("1_2_4_5_6_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    alsoExtract = "similar",
+    destinationPath = path1
+  )))
+  runTest("1_2_4_5_6_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    alsoExtract = c("similar"),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  ################################################################
+  ###### targetFile                                          #####
+  ################################################################
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(
+      test <- prepInputs(
+        targetFile = "Shapefile1.shp",
+        destinationPath = path1
+      )
+    ))
+  runTest("1_2_5_6_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  mess <- capture_messages(warns <- capture_warnings(
+      test <- prepInputs(
+        targetFile = "Shapefile1.shp",
+        destinationPath = path1
+      )
+    ))
+  runTest("1_2_5_6", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  ################################################################
+  ###### targetFile, alsoExtract                             #####
+  ################################################################
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(
+      test <- prepInputs(
+        targetFile = "Shapefile1.shp",
+        alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+        destinationPath = path1
+      )
+    ))
+  runTest("1_2_5_6_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  mess <- capture_messages(warns <- capture_warnings(
+      test <- prepInputs(
+        targetFile = "Shapefile1.shp",
+        alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+        destinationPath = path1
+      )
+    ))
+  runTest("1_2_5_6", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  ################################################################
+  ###### alsoExtract                                         #####
+  ################################################################
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(
+      test <- prepInputs(
+        alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+        destinationPath = path1
+      )
+    ))
+  runTest("1_2_5_6_10_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  mess <- capture_messages(warns <- capture_warnings(
+      test <- prepInputs(
+        alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+        destinationPath = path1
+      )
+    ))
+  runTest("1_2_5_6_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  expect_error(mess <-
+    capture_messages(warns <- capture_warnings(
+      test <- prepInputs(
+        alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shx"),
+        destinationPath = path1
+      )
+    )))
+
+  ################################################################
+  ###### archive, alsoExtract                                #####
+  ################################################################
+  # archive exists locally
+  # remove all non archive files
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+    destinationPath = path1
+  )))
+  runTest("1_2_4_5_6_10_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_9_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # Try without .shp -- fail
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  expect_error(mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shx"),
+    destinationPath = path1
+  ))))
+
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(path1, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    alsoExtract = "similar",
+    destinationPath = path1
+  )))
+  runTest("1_2_4_5_6_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+  # 2nd time # can checksums
+  mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
+    archive = "Shapefiles1.zip",
+    targetFile = "Shapefile1.shp",
+    alsoExtract = c("similar"),
+    destinationPath = path1
+  )))
+  runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
 })

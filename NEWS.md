@@ -1,5 +1,25 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.1
+=============
+
+## New features
+
+* new functions: 
+
+    - `convertPaths` and `convertRasterPaths` to assist with renaming moved files.
+    
+* `prepInputs` -- new features
+
+    - `alsoExtract` now has more options (`NULL`, `NA`, `"similar"`) and defaults to extracting all files in an archive (`NULL`).
+    - skips `postProcess` altogether if no `studyArea` or `rasterToMatch`. Previously, this would invoke Cache even if there was nothing to `postProcess`.
+    
+## Bug fixes
+
+* `copyFile` correctly handles directory names containing spaces.
+* `makeMemoisable` fixed to handle additonal edge cases.
+* other minor bug fixes.
+
 version 0.2.0
 =============
 

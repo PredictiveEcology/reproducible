@@ -79,7 +79,7 @@ See examples." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.1</span>
       </span>
     </div>
 
@@ -164,18 +164,18 @@ See examples.</p>
 or tar archive. This is the file <em>before</em> it is passed to
 <code>postProcess</code>. Currently, the internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
-Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.</p></td>
+Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
+See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>url</th>
       <td><p>Optional character string indicating the URL to download from.
-Normally, if used within a module, this url should be explicitly given as
-sourceURL for an <code>expectsInput</code>. In that case, it will use the
-module's checksums file to confirm that the download occurred correctly. If
-URL is used here, an ad hoc checksums will be created in the
-<code>destinationPath</code>. This will be used in subsequent calls to
-<code>prepInputs</code>, comparing the file on hand with the ad hoc
-<code>CHECKSUMS.txt</code>.</p></td>
+If not specified, then no download will be attempted. If not entry
+exists in the <code>CHECKSUMS.txt</code> (in <code>destinationPath</code>), an entry
+will be created or appended to. This <code>CHECKSUMS.txt</code> entry will be used
+in subsequent calls to
+<code>prepInputs</code> or <code>preProcess</code>, comparing the file on hand with the ad hoc
+<code>CHECKSUMS.txt</code>. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>archive</th>
@@ -183,12 +183,17 @@ URL is used here, an ad hoc checksums will be created in the
 containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code>c("xxx.tar", "inner.zip")</code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the <code>targetFile</code></p></td>
+the <code>targetFile</code>. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>alsoExtract</th>
       <td><p>Optional character string naming files other than
-<code>targetFile</code> that must be extracted from the <code>archive</code>.</p></td>
+<code>targetFile</code> that must be extracted from the <code>archive</code>. If
+<code>NULL</code>, the default, then it will extract all files. Other options:
+<code>"similar"</code> will extract all files with the same filename without
+file extension as <code>targetFile</code>. <code>NA</code> will extract nothing other
+than <code>targetFile</code>. A character string of specific file names will cause
+only those to be extracted. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>destinationPath</th>
@@ -241,7 +246,8 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
     <h2 class="hasAnchor" id="stage-getting-data"><a class="anchor" href="#stage-getting-data"></a>Stage 1 - Getting data</h2>
 
     
-    <p></p><ol>
+    <p>See <code><a href='preProcess.html'>preProcess</a></code> for combinations of arguments.</p>
+<p></p><ol>
 <li><p>Download from the web via either <code><a href='http://www.rdocumentation.org/packages/googledrive/topics/drive_download'>drive_download</a></code>,
     <code><a href='http://www.rdocumentation.org/packages/utils/topics/download.file'>download.file</a></code>;</p></li>
 <li><p>Extract from archive using <code>unzip</code> or <code>untar</code>;</p></li>
@@ -383,7 +389,6 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
                      <span class='kw'>archive</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='st'>"LandCoverOfCanada2005_V1_4.zip"</span>),
                      <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='no'>dPath</span>),
                      <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)
-
 <span class='co'># }</span><div class='input'>
 </div></pre>
   </div>
