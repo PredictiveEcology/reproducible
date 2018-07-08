@@ -32,11 +32,11 @@ test_that("test file-backed raster caching", {
 
   aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
   expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-  clearCache(tmpdir, userTags = c("something$", "testing$"))
+  clearCache(tmpdir, userTags = c("something$", "testing$"), regexp = TRUE)
   expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-  clearCache(tmpdir, userTags = c("something2$", "testing$"))
+  clearCache(tmpdir, userTags = c("something2$", "testing$"), regexp = TRUE)
   expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-  clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"))
+  clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"), regexp = TRUE)
   expect_equal(NROW(showCache(tmpdir)), 0)
 
   aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")

@@ -50,7 +50,10 @@ Objects cached after this time will be shown or deleted.}
 \item{before}{A time (POSIX, character understandable by data.table).
 Objects cached before this time will be shown or deleted.}
 
-\item{...}{Other arguments. Currently unused.}
+\item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
+This must be \code{TRUE} if the use is passing a regular expression.
+Otherwise, \code{userTags} will need to be exact matches. Default is
+missing, which is the same as \code{FALSE}.}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
