@@ -6,7 +6,8 @@
 #' @param ... Other arguments. Currently, \code{regexp}, a logical, can be provided.
 #'            This must be \code{TRUE} if the use is passing a regular expression.
 #'            Otherwise, \code{userTags} will need to be exact matches. Default is
-#'            missing, which is the same as \code{FALSE}.
+#'            missing, which is the same as \code{TRUE}. If there are errors due
+#'            to regular expression problem, try \code{FALSE}.
 #' @param userTags Character vector. If used, this will be used in place of the
 #'                 \code{after} and \code{before}.
 #'                 Specifying one or more \code{userTag} here will clear all
@@ -220,20 +221,24 @@ setMethod(
                                                 (tagValue >= after)][!duplicated(artifact)]
       objsDT <- objsDT[artifact %in% objsDT3$artifact]
       if (length(userTags) > 0) {
-        if (isTRUE(list(...)$regexp)) {
+        if (!isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           for (ut in userTags) {
             #objsDT$artifact %in% ut
             objsDT2 <- objsDT[
               grepl(tagValue, pattern = ut) |
                 grepl(tagKey, pattern = ut) |
                 grepl(artifact, pattern = ut)]
+            setkeyv(objsDT2, "artifact")
+            shortDT <- unique(objsDT2, by = "artifact")[, artifact]
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
           }
         } else {
           objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
+          setkeyv(objsDT2, "artifact")
+          shortDT <- unique(objsDT2, by = "artifact")[, artifact]
+          objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+
         }
-        setkeyv(objsDT2, "artifact")
-        shortDT <- unique(objsDT2, by = "artifact")[, artifact]
-        objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
       }
     }
     verboseMessaging <- TRUE

@@ -53,7 +53,8 @@ Objects cached before this time will be shown or deleted.}
 \item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
 This must be \code{TRUE} if the use is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
-missing, which is the same as \code{FALSE}.}
+missing, which is the same as \code{TRUE}. If there are errors due
+to regular expression problem, try \code{FALSE}.}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
