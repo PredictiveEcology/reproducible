@@ -221,7 +221,7 @@ setMethod(
                                                 (tagValue >= after)][!duplicated(artifact)]
       objsDT <- objsDT[artifact %in% objsDT3$artifact]
       if (length(userTags) > 0) {
-        if (!isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
+        if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           for (ut in userTags) {
             #objsDT$artifact %in% ut
             objsDT2 <- objsDT[
@@ -280,7 +280,7 @@ setMethod(
 
     if (length(eliminate)) {
       #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
-      clearCache(x, eliminate, verboseMessaging = FALSE)
+      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE)
     }
     return(objsDT)
 })

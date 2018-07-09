@@ -32,11 +32,11 @@ test_that("test file-backed raster caching", {
 
   aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
   expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-  clearCache(tmpdir, userTags = c("something$", "testing$"), regexp = TRUE)
+  clearCache(tmpdir, userTags = c("something$", "testing$"))
   expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-  clearCache(tmpdir, userTags = c("something2$", "testing$"), regexp = TRUE)
+  clearCache(tmpdir, userTags = c("something2$", "testing$"))
   expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-  clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"), regexp = TRUE)
+  clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"))
   expect_equal(NROW(showCache(tmpdir)), 0)
 
   aa <- Cache(randomPolyToDisk, tmpRasterfile, cacheRepo = tmpdir, userTags = "something2")
@@ -287,7 +287,6 @@ test_that("test keepCache", {
   Cache(sample, 10, cacheRepo = tmpdir)
   Cache(length, 10, cacheRepo = tmpdir)
   Cache(sum, runif(4), cacheRepo = tmpdir)
-  showCache(tmpdir, after = st)
   expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 10)
   expect_true(NROW(keepCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 10)
   expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 10)
