@@ -1,7 +1,6 @@
 ## be sure to update the 'Package Options' section of the package help file
 ##   in R/reproducible-package.R
 ##
-#' @importFrom future plan
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
   opts <- options()
@@ -10,7 +9,7 @@
     reproducible.cachePath = file.path(.reproducibleTempDir),
     reproducible.verbose = FALSE,
     reproducible.useCache = TRUE, #memoise
-    reproducible.futurePlan = future::plan("multiprocess"), #memoise
+    reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.useMemoise = TRUE, #memoise
     reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
     reproducible.quick = FALSE

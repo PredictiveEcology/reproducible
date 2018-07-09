@@ -32,7 +32,6 @@ Imports:
     dplyr,
     fastdigest,
     fasterize,
-    future,
     gdalUtils,
     git2r (>= 0.18),
     googledrive,
@@ -54,6 +53,7 @@ Imports:
     versions
 Suggests:
     covr,
+    future,
     knitr,
     rmarkdown,
     testthat,

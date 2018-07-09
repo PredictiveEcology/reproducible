@@ -255,7 +255,6 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
-#' @importFrom future future
 #' @importFrom archivist createLocalRepo addTagsRepo
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD
@@ -1029,14 +1028,11 @@ setMethod(
 
       written <- 0
 
-      if (!isFALSE(getOption("reproducible.futurePlan"))) {
-        browser()
+      if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future")) {
         saved <- future::futureCall(FUN = writeFuture, args = list(written, outputToSave, cacheRepo, userTags),
                       globals = list(written = written, saveToLocalRepo = archivist::saveToLocalRepo,
                                      outputToSave = outputToSave,
-                                     cacheRepo = cacheRepo, userTags = userTags),
-                      envir = environment(),
-                      lazy = FALSE)
+                                     cacheRepo = cacheRepo, userTags = userTags))
       } else {
         while (written >= 0) {
           saved <- suppressWarnings(try(silent = TRUE,
