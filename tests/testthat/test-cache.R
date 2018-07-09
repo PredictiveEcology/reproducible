@@ -755,44 +755,13 @@ test_that("test reproducible.verbose", {
 
 
 ##########################
-test_that("test reproducible.verbose", {
+test_that("test regexp = FALSE", {
+  skip("New test, not ready yet")
   cacheDir1 <- paste(sample(letters, 5), collapse = "")
-  cacheDir2 <- paste(sample(letters, 5), collapse = "")
-
-  cacheDir1 <- file.path(tempdir(), cacheDir1)
-  cacheDir2 <- file.path(tempdir(), cacheDir2)
-
   checkPath(cacheDir1, create = TRUE)
-  checkPath(cacheDir2, create = TRUE)
-
-  options(reproducible.verbose = FALSE)
-
-  on.exit({
-    options(reproducible.verbose = FALSE)
-    unlink(cacheDir1, recursive = TRUE)
-    unlink(cacheDir2, recursive = TRUE)
-  }, add = TRUE)
-  Cache(rnorm, 1, cacheRepo = cacheDir1)
-  Cache(rnorm, 2, cacheRepo = cacheDir2)
-  Cache(rnorm, 3, cacheRepo = cacheDir1)
-  Cache(rnorm, 4, cacheRepo = cacheDir2)
-  library(raster)
-  r <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
-  r <- Cache(writeRaster, r, filename = tempfile(fileext = ".tif"), cacheRepo = cacheDir2)
-  preCacheDir1Items <- data.table::copy(showCache(cacheDir1))
-  preCacheDir2Items <- data.table::copy(showCache(cacheDir2))
-  cacheDir1 <- mergeCache(cacheDir1, cacheDir2)
-  postCache <- showCache(cacheDir1)[tagKey != "date"]
-  expect_true(identical(sort(unique(postCache[tagKey=="cacheId"]$tagValue)),
-                      sort(c(unique(preCacheDir1Items[tagKey=="cacheId"]$tagValue),
-                        unique(preCacheDir2Items[tagKey=="cacheId"]$tagValue)))))
-  preCacheRbindlist <- data.table::setkey(data.table::rbindlist(
-    list(preCacheDir1Items[tagKey != "date"], preCacheDir2Items[tagKey != "date"])), artifact)
-
-  postCache[,`:=`(artifact=NULL, createdDate=NULL)]
-  data.table::setkey(postCache, tagKey, tagValue)
-  preCacheRbindlist[,`:=`(artifact=NULL, createdDate=NULL)]
-  data.table::setkey(preCacheRbindlist, tagKey, tagValue)
-  expect_true(all.equal(postCache,preCacheRbindlist))
-
+  try(unlink(cacheDir1, recursive = TRUE))
+  profvis::profvis({for(i in 1:30) a <- Cache(cacheRepo = cacheDir1, rnorm, i)})
+  system.time({for(i in 1:10) a <- Cache(cacheRepo = cacheDir1, rnorm, i)})
 })
+
+

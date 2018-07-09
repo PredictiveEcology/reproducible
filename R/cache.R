@@ -255,6 +255,7 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
+#' @importFrom future future
 #' @importFrom archivist createLocalRepo addTagsRepo
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD
@@ -1027,28 +1028,42 @@ setMethod(
                           preDigestUnlistTrunc, sep = ":"))
 
       written <- 0
-      while (written >= 0) {
-        saved <- suppressWarnings(try(silent = TRUE,
-                                      saveToLocalRepo(
-                                        outputToSave,
-                                        repoDir = cacheRepo,
-                                        artifactName = "Cache",
-                                        archiveData = FALSE,
-                                        archiveSessionInfo = FALSE,
-                                        archiveMiniature = FALSE,
-                                        rememberName = FALSE,
-                                        silent = TRUE,
-                                        userTags = userTags
-                                      )))
 
-        # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-        written <- if (is(saved, "try-error")) {
-          Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-          written + 1
-        } else {
-          -1
+      if (!isFALSE(getOption("reproducible.futurePlan"))) {
+        browser()
+        saved <- future::futureCall(FUN = writeFuture, args = list(written, outputToSave, cacheRepo, userTags),
+                      globals = list(written = written, saveToLocalRepo = archivist::saveToLocalRepo,
+                                     outputToSave = outputToSave,
+                                     cacheRepo = cacheRepo, userTags = userTags),
+                      envir = environment(),
+                      lazy = FALSE)
+      } else {
+        while (written >= 0) {
+          saved <- suppressWarnings(try(silent = TRUE,
+                                        saveToLocalRepo(
+                                          outputToSave,
+                                          repoDir = cacheRepo,
+                                          artifactName = NULL,
+                                          archiveData = FALSE,
+                                          archiveSessionInfo = FALSE,
+                                          archiveMiniature = FALSE,
+                                          rememberName = FALSE,
+                                          silent = TRUE,
+                                          userTags = userTags
+                                        )
+          ))
+
+          # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+          written <- if (is(saved, "try-error")) {
+            Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+            written + 1
+          } else {
+            -1
+          }
         }
+
       }
+
 
       if (verbose) {
         endSaveTime <- Sys.time()
@@ -1204,3 +1219,33 @@ showLocalRepo3 <- function(repoDir, dig) {
 
 showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 
+
+#' @export
+writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
+  while (written >= 0) {
+    #future::plan(multiprocess)
+    saved <- #suppressWarnings(try(silent = TRUE,
+      saveToLocalRepo(
+        outputToSave,
+        repoDir = cacheRepo,
+        artifactName = NULL,
+        archiveData = FALSE,
+        archiveSessionInfo = FALSE,
+        archiveMiniature = FALSE,
+        rememberName = FALSE,
+        silent = TRUE,
+        userTags = userTags
+      )
+    #))
+
+    # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+    written <- if (is(saved, "try-error")) {
+      Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+      written + 1
+    } else {
+      -1
+    }
+  }
+  return(saved)
+
+}

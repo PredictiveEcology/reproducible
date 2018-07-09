@@ -32,6 +32,7 @@ Imports:
     dplyr,
     fastdigest,
     fasterize,
+    future,
     gdalUtils,
     git2r (>= 0.18),
     googledrive,
