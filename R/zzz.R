@@ -17,6 +17,7 @@
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
 
+  backports::import(pkgname, obj = "isFALSE")
   invisible()
 }
 

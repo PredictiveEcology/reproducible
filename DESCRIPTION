@@ -25,6 +25,7 @@ Depends:
     R (>= 3.3.0)
 Imports:
     archivist (>= 2.1.2),
+    backports,
     crayon,
     data.table (>= 1.10.4),
     devtools,
