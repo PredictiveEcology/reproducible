@@ -759,9 +759,22 @@ test_that("test regexp = FALSE", {
   skip("New test, not ready yet")
   cacheDir1 <- paste(sample(letters, 5), collapse = "")
   checkPath(cacheDir1, create = TRUE)
+
   try(unlink(cacheDir1, recursive = TRUE))
+  options("reproducible.futurePlan" = TRUE)
+  (aa <- system.time({for(i in 1:10) a <- Cache(cacheRepo = cacheDir1, rnorm, i)}))
+
+  try(unlink(cacheDir1, recursive = TRUE))
+  options("reproducible.futurePlan" = "multiprocess")
+  (aa <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, i)}))
+
+  options("reproducible.futurePlan" = FALSE)
+  try(unlink(cacheDir1, recursive = TRUE))
+  (bb <- system.time({for(i in 1:10) a <- Cache(cacheRepo = cacheDir1, rnorm, i)}))
+
+
   profvis::profvis({for(i in 1:30) a <- Cache(cacheRepo = cacheDir1, rnorm, i)})
-  system.time({for(i in 1:10) a <- Cache(cacheRepo = cacheDir1, rnorm, i)})
+
 })
 
 

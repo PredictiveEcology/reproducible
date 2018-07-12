@@ -4,7 +4,9 @@ version 0.2.1.9000
 =============
 
 ## New features
-* option to use `future` for `Cache` saving, via options("reproducible.futurePlan"), which is `FALSE` by default
+* option to use `future` for `Cache` saving, via `options("reproducible.futurePlan")`, 
+if the `future` package is installed. This is `FALSE` by default.
+* `future` package is now in suggests
 
 ## Bug fixes
 * 
