@@ -1,11 +1,13 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 0.2.2
+version 0.2.1.9000
 =============
 
 ## New features
-
 * option to use `future` for `Cache` saving, via options("reproducible.futurePlan"), which is `FALSE` by default
+
+## Bug fixes
+* 
 
 version 0.2.1
 =============
