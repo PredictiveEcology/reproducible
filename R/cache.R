@@ -651,7 +651,8 @@ setMethod(
 
     written <- 0
     while (written >= 0) {
-      localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
+      localTags <- suppressWarnings(try(showLocalRepo2(cacheRepo), silent = TRUE))
+      #localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
       written <- if (is(localTags, "try-error")) {
         Sys.sleep(sum(runif(written + 1,0.05, 0.2)))
         written + 1
@@ -1176,3 +1177,20 @@ unmakeMemoiseable <- function(x) {
 unmakeMemoiseable.default <- function(x) {
   x
 }
+
+
+#' @inheritParams archivist showLocalRepo
+#' @inheritParams fastdigest fastdigest
+showLocalRepo2 <- function(repoDir) {
+  aa <- showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
+  dig <- fastdigest(aa$md5hash)
+  bb <- showLocalRepo3Mem(repoDir, dig)
+  return(bb)
+}
+
+showLocalRepo3 <- function(repoDir, dig) {
+  showLocalRepo(repoDir, "tags")
+}
+
+showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
+

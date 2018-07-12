@@ -1,4 +1,4 @@
-if (packageVersion("devtools") < "1.13.5.9000") {
+if (packageVersion("devtools") < "1.13.6.9000") {
   library("devtools")
 
   revdep_check()

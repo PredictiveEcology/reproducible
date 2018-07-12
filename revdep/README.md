@@ -10,15 +10,15 @@
 |language |en_CA:en                     |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-06-28                   |
+|date     |2018-07-05                   |
 
 ## Packages
 
-|package      |*  |version    |date       |source                                          |
-|:------------|:--|:----------|:----------|:-----------------------------------------------|
-|memoise      |   |1.1.0      |2018-06-28 |Github (hadley/memoise@06d16ec)                 |
-|quickPlot    |   |0.1.4      |2018-06-28 |Github (PredictiveEcology/quickPlot@cba38b4)    |
-|reproducible |   |0.2.0.9003 |2018-06-28 |Github (PredictiveEcology/reproducible@5378668) |
+|package      |*  |version |date       |source                                          |
+|:------------|:--|:-------|:----------|:-----------------------------------------------|
+|memoise      |   |1.1.0   |2018-07-05 |Github (hadley/memoise@06d16ec)                 |
+|quickPlot    |   |0.1.4   |2018-07-05 |Github (PredictiveEcology/quickPlot@cba38b4)    |
+|reproducible |*  |0.2.1   |2018-07-05 |Github (PredictiveEcology/reproducible@242b2f7) |
 
 # Check results
 
