@@ -568,7 +568,7 @@ setMethod(
       }
       preDigest <- lapply(tmpl[!dotPipe], function(x) {
         # remove the "newCache" attribute, which is irrelevant for digest
-        if (!is.null(attr(x, "newCache"))) attr(x, "newCache") <- NULL
+        if (!is.null(attr(x, ".Cache")$newCache)) attr(x, ".Cache")$newCache <- NULL
         .robustDigest(x, objects = objects,
                       length = length,
                       algo = algo,
@@ -814,7 +814,7 @@ setMethod(
             if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
               output <- .debugCache(output, preDigest, ...)
           }
-          attr(output, "newCache") <- FALSE
+          attr(output, ".Cache")$newCache <- FALSE
 
           if (verbose) {
             endCacheTime <- Sys.time()
@@ -936,7 +936,7 @@ setMethod(
       if (isNullOutput) output <- "NULL"
 
       attr(output, "tags") <- paste0("cacheId:", outputHash)
-      attr(output, "newCache") <- TRUE
+      attr(output, ".Cache")$newCache <- TRUE
       attr(output, "call") <- ""
 
       if (sideEffect != FALSE) {
@@ -997,7 +997,7 @@ setMethod(
         }
         attr(outputToSave, "tags") <- attr(output, "tags")
         attr(outputToSave, "call") <- attr(output, "call")
-        attr(outputToSave, "newCache") <- attr(output, "newCache")
+        attr(outputToSave, ".Cache")$newCache <- attr(output, ".Cache")$newCache
         if (isS4(FUN))
           attr(outputToSave, "function") <- attr(output, "function")
         output <- outputToSave

@@ -1,6 +1,6 @@
 all.equalWONewCache <- function(a, b) {
-  attr(a, "newCache") <- NULL
-  attr(b, "newCache") <- NULL
+  attr(a, ".Cache")$newCache <- NULL
+  attr(b, ".Cache")$newCache <- NULL
   all.equal(a,b)
 }
 

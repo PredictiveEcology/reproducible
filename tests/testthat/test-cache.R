@@ -60,8 +60,8 @@ test_that("test file-backed raster caching", {
     nOT <- Sys.time() - 100
   }
 
-  attr(a1, "newCache") <- NULL
-  attr(a2, "newCache") <- NULL
+  attr(a1, ".Cache")$newCache <- NULL
+  attr(a2, ".Cache")$newCache <- NULL
   # test that they are identical
   expect_equal(a1, a2)
 
@@ -336,7 +336,7 @@ test_that("test environments", {
   out <- Cache(shortFn, a = a, cacheRepo = tmpdir)
   out2 <- Cache(shortFn, a = b, cacheRepo = tmpdir)
   out3 <- Cache(shortFn, a = g, cacheRepo = tmpdir)
-  attr(out2, "newCache") <- TRUE
+  attr(out2, ".Cache")$newCache <- TRUE
   expect_true(identical(attributes(out)["tags"], attributes(out2)["tags"]))
   expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
 
