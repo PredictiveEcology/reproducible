@@ -1028,7 +1028,9 @@ setMethod(
 
       written <- 0
 
-      if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future")) {
+      browser()
+      if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future") &&
+          (.Platform$OS.type != "windows")) {
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess"\n',
                   'Please specify a plan by name, e.g., options("reproducible.futurePlan" = "multiprocess")')
@@ -1040,9 +1042,9 @@ setMethod(
           }
         }
         saved <- future::futureCall(FUN = writeFuture, args = list(written, outputToSave, cacheRepo, userTags),
-                      globals = list(written = written, saveToLocalRepo = archivist::saveToLocalRepo,
-                                     outputToSave = outputToSave,
-                                     cacheRepo = cacheRepo, userTags = userTags))
+                                    globals = list(written = written, saveToLocalRepo = archivist::saveToLocalRepo,
+                                                   outputToSave = outputToSave,
+                                                   cacheRepo = cacheRepo, userTags = userTags))
       } else {
         while (written >= 0) {
           saved <- suppressWarnings(try(silent = TRUE,
