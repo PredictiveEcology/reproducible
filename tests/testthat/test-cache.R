@@ -755,26 +755,31 @@ test_that("test reproducible.verbose", {
 
 
 ##########################
-test_that("test regexp = FALSE", {
-  skip("New test, not ready yet")
-  cacheDir1 <- paste(sample(letters, 5), collapse = "")
-  checkPath(cacheDir1, create = TRUE)
+test_that("test future", {
+  skip_on_cran()
+  if (.Platform$OS.type != "windows") {
+    if (require("future")) {
+      cacheDir1 <- file.path(tempdir(), paste(sample(letters, 5), collapse = ""))
+      checkPath(cacheDir1, create = TRUE)
 
-  try(unlink(cacheDir1, recursive = TRUE))
-  options("reproducible.futurePlan" = TRUE)
-  (aa <- system.time({for(i in 1:10) a <- Cache(cacheRepo = cacheDir1, rnorm, i)}))
+      try(unlink(cacheDir1, recursive = TRUE))
+      options("reproducible.futurePlan" = TRUE)
+      mess <- capture_messages(a <- Cache(cacheRepo = cacheDir1, rnorm, i))
+      expect_true(grepl("Please specify", mess))
 
-  try(unlink(cacheDir1, recursive = TRUE))
-  options("reproducible.futurePlan" = "multiprocess")
-  (aa <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, i)}))
+      try(unlink(cacheDir1, recursive = TRUE))
+      options("reproducible.futurePlan" = "multiprocess")
+      (aa <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, 1e7 + i)}))
 
-  options("reproducible.futurePlan" = FALSE)
-  try(unlink(cacheDir1, recursive = TRUE))
-  (bb <- system.time({for(i in 1:10) a <- Cache(cacheRepo = cacheDir1, rnorm, i)}))
+      options("reproducible.futurePlan" = FALSE)
+      try(unlink(cacheDir1, recursive = TRUE))
+      (bb <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, 1e7 + i)}))
 
+      expect_true(aa[3] < bb[3])
 
-  profvis::profvis({for(i in 1:30) a <- Cache(cacheRepo = cacheDir1, rnorm, i)})
-
+    }
+    #    profvis::profvis({for(i in 1:30) a <- Cache(cacheRepo = cacheDir1, rnorm, i)})
+  }
 })
 
 
