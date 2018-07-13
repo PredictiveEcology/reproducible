@@ -4,8 +4,7 @@ version 0.2.1.9000
 =============
 
 ## New features
-* option to use `future` for `Cache` saving, via `options("reproducible.futurePlan")`, 
-if the `future` package is installed. This is `FALSE` by default.
+* option on non-Windows OSs to use `future` for `Cache` saving to SQLite database, via `options("reproducible.futurePlan")`, if the `future` package is installed. This is `FALSE` by default.
 * `future` package is now in suggests
 
 ## Bug fixes
