@@ -277,6 +277,44 @@ setMethod(
     object
 })
 
+
+#####################################
+################################################################################
+#' Add an attribute to an object indicating which named elements change
+#'
+#' This is a generic definition that can be extended according to class.
+#'
+#' @param object Any R object returned from a function
+#' @param preDigest The full, element by element hash of the input arguments to that same function,
+#' e.g., from \code{.robustDigest}
+#' @param origArguments These are the actual arguments (i.e., the values, not the names) that
+#'        were the source for \code{preDigest}
+#'
+#' @return The object, modified
+#'
+#' @author Eliot McIntire
+#' @export
+#' @importFrom archivist showLocalRepo rmFromLocalRepo
+#' @rdname prepareOutput
+#' @examples
+#' a <- 1
+#' .addChangedAttr(a) # does nothing because default method is just a pass through
+setGeneric(".addChangedAttr", function(object, preDigest, origArguments, ...) {
+  standardGeneric(".addChangedAttr")
+})
+
+
+#' @export
+#' @rdname prepareOutput
+setMethod(
+  ".addChangedAttr",
+  signature = "ANY",
+  definition = function(object, preDigest, origArguments, ...) {
+    object
+  })
+
+
+
 #' A set of helpers for Cache
 #'
 #' These are internal only.

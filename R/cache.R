@@ -136,13 +136,13 @@ if (getRversion() >= "3.1.0") {
 #'            \code{quote}.
 #'
 #' @param objects Character vector of objects to be digested. This is only applicable
-#'                if there is a list, environment or simList with named objects
+#'                if there is a list, environment (or similar) named objects
 #'                within it. Only this/these objects will be considered for caching,
 #'                i.e., only use a subset of
-#'                the list, environment or simList objects.
+#'                the list, environment or similar objects.
 #'
 #' @param outputObjects Optional character vector indicating which objects to
-#'                      return. This is only relevant for \code{simList} objects
+#'                      return. This is only relevant for list, environment (or similar) objects
 #'
 #' @param cacheRepo A repository used for storing cached objects.
 #'                  This is optional if \code{Cache} is used inside a SpaDES module.
@@ -900,6 +900,10 @@ setMethod(
       } else {
         output <- do.call(FUN, originalDots)
       }
+
+      output <- .addChangedAttr(output, preDigest, origArguments = tmpl[!dotPipe],
+                                 objects = objects, length = length,
+                                 algo = algo, quick = quick, classOptions = classOptions, ...)
 
       if (verbose) {
         endRunTime <- Sys.time()
