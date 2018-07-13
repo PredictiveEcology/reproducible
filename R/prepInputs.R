@@ -318,6 +318,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                needChecksums, filesExtracted = character()) {
 
 
+  browser()
   if (!is.null(archive)) {
     if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
