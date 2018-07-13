@@ -1032,11 +1032,23 @@ setMethod(
 
       written <- 0
 
-      if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future")) {
+      browser()
+      if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future") &&
+          (.Platform$OS.type != "windows")) {
+        if (isTRUE(getOption("reproducible.futurePlan"))) {
+          message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess"\n',
+                  'Please specify a plan by name, e.g., options("reproducible.futurePlan" = "multiprocess")')
+          future::plan("multiprocess")
+        } else {
+          if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
+            thePlan <- getOption("reproducible.futurePlan")
+            future::plan(thePlan)
+          }
+        }
         saved <- future::futureCall(FUN = writeFuture, args = list(written, outputToSave, cacheRepo, userTags),
-                      globals = list(written = written, saveToLocalRepo = archivist::saveToLocalRepo,
-                                     outputToSave = outputToSave,
-                                     cacheRepo = cacheRepo, userTags = userTags))
+                                    globals = list(written = written, saveToLocalRepo = archivist::saveToLocalRepo,
+                                                   outputToSave = outputToSave,
+                                                   cacheRepo = cacheRepo, userTags = userTags))
       } else {
         while (written >= 0) {
           saved <- suppressWarnings(try(silent = TRUE,
@@ -1220,7 +1232,18 @@ showLocalRepo3 <- function(repoDir, dig) {
 showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 
 
+#' Write to archivist repository, using \code{future::future}
+#'
+#' This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.
+#' This is still experimental.
+#'
 #' @export
+#' @param written Integer If zero or positive then it needs to be written still.
+#'                Should be 0 to start.
+#' @param outputToSave The R object to save to repository
+#' @param cacheRepo The file path of the repository
+#' @param userTags Character string of tags to attach to this \code{outputToSave} in
+#'                 the \code{CacheRepo}
 writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   while (written >= 0) {
     #future::plan(multiprocess)

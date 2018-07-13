@@ -1,11 +1,14 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 0.2.2
+version 0.2.1.9000
 =============
 
 ## New features
+* option on non-Windows OSs to use `future` for `Cache` saving to SQLite database, via `options("reproducible.futurePlan")`, if the `future` package is installed. This is `FALSE` by default.
+* `future` package is now in suggests
 
-* option to use `future` for `Cache` saving, via options("reproducible.futurePlan"), which is `FALSE` by default
+## Bug fixes
+* 
 
 version 0.2.1
 =============
