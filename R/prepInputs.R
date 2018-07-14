@@ -306,6 +306,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @param needChecksums A numeric, with \code{0} indicating do not write a new checksums,
 #'                      \code{1} write a new one,
 #'                      \code{2} append new information to existing one.
+#' @param checkSumFilePath The full path to the checksum.txt file
+#' @param quick Passed to \code{Checksums}
 #' @param ... Passed to \code{unzip} or \code{untar}, e.g., \code{overwrite}
 #'
 #' @return A character vector listing the paths of the extracted archives.
@@ -315,10 +317,10 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                neededFiles, extractedArchives = NULL, checkSums,
-                               needChecksums, filesExtracted = character()) {
+                               needChecksums, filesExtracted = character(),
+                               checkSumFilePath, quick) {
 
 
-  browser()
   if (!is.null(archive)) {
     if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
@@ -339,6 +341,28 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       funWArgs <- .whichExtractFn(archive[1], args)
 
       filesInArchive <- .listFilesInArchive(archive)
+
+      # need to re-Checksums because
+      checkSums <- if (file.exists(checkSumFilePath)) {
+        try(Checksums(
+          files = file.path(destinationPath, basename(neededFiles)),
+          checksumFile = checkSumFilePath,
+          path = destinationPath,
+          quickCheck = quick,
+          write = FALSE
+        ), silent = TRUE)
+      } else {
+        needChecksums <- 1
+        checkSums <- .emptyChecksumsResult
+      }
+
+      isOK <-
+        checkSums[checkSums$expectedFile %in% basename(neededFiles) |
+                    checkSums$actualFile %in% basename(neededFiles),]$result
+      #checkSums[compareNA(checkSums$expectedFile, basename(neededFiles)) |
+      #              compareNA(checkSums$actualFile, basename(neededFiles)),]$result
+      isOK <- isOK[!is.na(isOK)] == "OK"
+
       # filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
       #
       # if ("Name" %in% names(filesInArchive)) {

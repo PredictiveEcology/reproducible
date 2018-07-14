@@ -143,7 +143,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
-  browser()
   checkSums <- try(Checksums(path = destinationPath, write = FALSE,
                              files = filesToCheck), silent = TRUE)
 
@@ -204,7 +203,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # To this point, we only have the archive in hand -- include this in the list of filesToChecksum
   filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else basename(archive)
   on.exit({
-    browser()
     if (needChecksums > 0) {
       # needChecksums 1 --> write a new checksums.txt file
       # needChecksums 2 --> append  a new checksums.txt file
@@ -217,7 +215,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
   filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                        neededFiles = neededFiles,
-                                       checkSums = checkSums, needChecksums = needChecksums)
+                                       checkSums = checkSums, needChecksums = needChecksums,
+                                       checkSumFilePath = checkSumFilePath, quick = quick)
 
   filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
                               basename(filesExtracted$filesExtracted)))
@@ -245,7 +244,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
 
-  browser()
   if (needChecksums > 0) {
     # needChecksums 1 --> write a new checksums.txt file
     # needChecksums 2 --> append  a new checksums.txt file
