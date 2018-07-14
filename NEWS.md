@@ -1,13 +1,9 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 0.2.1.9000
+version 0.2.2
 =============
 
-## New features
-*
-
-## Bug fixes
-* 
+* fix problems with tests introduced by recent `git2r` update (@stewid, #36).
 
 version 0.2.1
 =============
