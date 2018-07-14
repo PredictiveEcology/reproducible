@@ -133,6 +133,23 @@ test_that("prepInputs doesn't work", {
     destinationPath = asPath(dPath),
     studyArea = StudyArea
   )
+
+  # Test the no allow overwrite if two functions (here postProcess and prepInputs)
+  #  return same file-backed raster
+  clearCache(userTags = "prepInputs")
+  # previously, this would cause an error because prepINputs file is gone b/c of previous
+  #  line, but postProcess is still in a Cache recovery situation, to same file, which is
+  #  not there. Now should be no error
+  expect_message(regexp = "loading", LCC2005_2 <- Cache(
+    prepInputs,
+    url = url,
+    targetFile = lcc2005Filename,
+    archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+    destinationPath = asPath(dPath),
+    studyArea = StudyArea
+  ))
+
+  ##
   expect_is(LCC2005_2, "Raster")
   expect_equivalent(LCC2005, LCC2005_2)
 
@@ -384,7 +401,17 @@ test_that("preProcess doesn't work", {
               lapply(strsplit(expectedMessage, "\\|")[[1]], function(m)
                 any(grepl(m, mess)))
             ))))
-    expect_true(hasMessageNum == prod) #
+
+    isOK <- hasMessageNum == prod
+    if (!isOK) {
+      expe <- as.numeric(strsplit(prod, split = "_")[[1]])
+      getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
+
+      expectedMessVec <- strsplit(expectedMessage, split = "\\|")[[1]]
+      message("expecting, but didn't get ", expectedMessVec[setdiff(expe, getting)])
+      message("got, but didn't expect ", paste(collapse = ", ", expectedMessVec[setdiff(getting, expe)]))
+    }
+    expect_true(isOK) #
   }
 
   ################################################################
@@ -483,13 +510,13 @@ test_that("preProcess doesn't work", {
   )))
   runTest("1_2_3_4_5_6_7_10_11", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
 
-  # 2nd time # can checksums
+  # 2nd time # can't checksums because no targetfile
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     url = urlShapefiles1Zip,
     alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
     destinationPath = path1
   )))
-  runTest("1_2_5_6_8_9_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  runTest("1_2_3_5_6_7_9_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
   unlink(dir(path1, full.names = TRUE))
 
   ################################################################
