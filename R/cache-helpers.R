@@ -291,13 +291,14 @@ setMethod(
 #' e.g., from \code{.robustDigest}
 #' @param origArguments These are the actual arguments (i.e., the values, not the names) that
 #'        were the source for \code{preDigest}
+#' @param ... Anything passed to methods.
 #'
 #' @return The object, modified
 #'
 #' @author Eliot McIntire
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo
-#' @rdname prepareOutput
+#' @rdname addChangedAttr
 #' @examples
 #' a <- 1
 #' .addChangedAttr(a) # does nothing because default method is just a pass through
@@ -307,7 +308,7 @@ setGeneric(".addChangedAttr", function(object, preDigest, origArguments, ...) {
 
 
 #' @export
-#' @rdname prepareOutput
+#' @rdname addChangedAttr
 setMethod(
   ".addChangedAttr",
   signature = "ANY",

@@ -5,8 +5,6 @@
 \alias{.prepareOutput}
 \alias{.prepareOutput,RasterLayer-method}
 \alias{.prepareOutput,ANY-method}
-\alias{.addChangedAttr}
-\alias{.addChangedAttr,ANY-method}
 \title{Make any modifications to object recovered from cacheRepo}
 \usage{
 .prepareOutput(object, cacheRepo, ...)
@@ -14,10 +12,6 @@
 \S4method{.prepareOutput}{RasterLayer}(object, cacheRepo, ...)
 
 \S4method{.prepareOutput}{ANY}(object, cacheRepo, ...)
-
-.addChangedAttr(object, preDigest, origArguments, ...)
-
-\S4method{.addChangedAttr}{ANY}(object, preDigest, origArguments, ...)
 }
 \arguments{
 \item{object}{Any R object}
@@ -26,23 +20,11 @@
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{...}{Arguments of \code{FUN} function .}
-
-\item{preDigest}{The full, element by element hash of the input arguments to that same function,
-e.g., from \code{.robustDigest}}
-
-\item{origArguments}{These are the actual arguments (i.e., the values, not the names) that
-were the source for \code{preDigest}}
-
-\item{object}{Any R object returned from a function}
 }
 \value{
 The object, modified
-
-The object, modified
 }
 \description{
-This is a generic definition that can be extended according to class.
-
 This is a generic definition that can be extended according to class.
 }
 \examples{
@@ -63,11 +45,7 @@ r <- writeRaster(r, file = tempfile())
 
 # copy it to the cache repository
 r <- .prepareOutput(r, tempdir())
-a <- 1
-.addChangedAttr(a) # does nothing because default method is just a pass through
 }
 \author{
-Eliot McIntire
-
 Eliot McIntire
 }
