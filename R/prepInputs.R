@@ -374,7 +374,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       if (is.null(neededFiles)) {
         result <- checkSums[checkSums$expectedFile %in% basename(filesInArchive), ]$result
       }
-      if (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
+      if (!(all(isOK)) ||
           NROW(result) == 0) {
         # don't extract if we already have all files and they are fine
 

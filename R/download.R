@@ -67,8 +67,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                 write = FALSE
               )
             isOK <-
-              checkSums[compareNA(checkSums$expectedFile, basename(fileToDownload)) |
-                          compareNA(checkSums$actualFile, basename(fileToDownload)),]$result
+              checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
+                          checkSums$actualFile %in% basename(fileToDownload),]$result
             isOK <- isOK[!is.na(isOK)] == "OK"
             if (length(isOK) > 0) {
               if (!isTRUE(all(isOK))) {
