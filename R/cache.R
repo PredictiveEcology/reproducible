@@ -456,11 +456,13 @@ setMethod(
         }
       }
 
-      if (functionDetails$functionName == "do.call") {
-        possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
-                                               deparse, backtick = TRUE)
-        whatArg <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))$what
-        functionDetails$functionName <- whatArg
+      if (!is.null(functionDetails$functionName)) {
+        if (functionDetails$functionName == "do.call") {
+          possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
+                                                 deparse, backtick = TRUE)
+          whatArg <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))$what
+          functionDetails$functionName <- whatArg
+        }
       }
       # get function name and convert the contents to text so digestible
       functionDetails$.FUN <- format(FUN) # nolint
