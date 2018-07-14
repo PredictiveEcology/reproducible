@@ -995,9 +995,10 @@ setMethod(
       if (any(rasters)) {
         if (outputToSaveIsList) {
           outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-            .prepareFileBackedRaster(x, repoDir = cacheRepo))
+            .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE))
         } else {
-          outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo)
+          outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
+                                                   overwrite = FALSE)
         }
         attr(outputToSave, "tags") <- attr(output, "tags")
         attr(outputToSave, "call") <- attr(output, "call")
@@ -1032,7 +1033,6 @@ setMethod(
 
       written <- 0
 
-      browser()
       if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future") &&
           (.Platform$OS.type != "windows")) {
         if (isTRUE(getOption("reproducible.futurePlan"))) {
