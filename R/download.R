@@ -203,14 +203,15 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   if (is.null(archive)) {
     fileAttr <- googledrive::drive_get(googledrive::as_id(url))
     archive <- .isArchive(fileAttr$name)
-    archive <- file.path(destinationPath, basename(archive))
-    downloadFilename <- archive
     if (is.null(archive)) {
       if (is.null(targetFile)) {
         # make the guess
         targetFile <- fileAttr$name
-        downloadFilename <- targetFile # override if the targetFile is not an archive
       }
+      downloadFilename <- targetFile # override if the targetFile is not an archive
+    } else {
+      archive <- file.path(destinationPath, basename(archive))
+      downloadFilename <- archive
     }
   } else {
     downloadFilename <- archive

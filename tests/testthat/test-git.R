@@ -35,7 +35,16 @@ test_that("git-related functions work", {
     expect_true(git2r::is_local(git2r::branches(testRepo)$master))
     expect_identical(git2r::remote_url(testRepo),
                      "https://github.com/PredictiveEcology/reproducible.git")
-    expect_identical(git2r::head(testRepo)@sha, specificCommit)
+
+    ## Backwards compatibility with git2r
+    ## S4 <= 0.21.0
+    ## S3 >= 0.22.0
+    if (isS4(testRepo)) {
+      expect_identical(git2r::head(testRepo)@sha, specificCommit)
+    } else {
+      expect_identical(git2r::sha(git2r::repository_head(testRepo)), specificCommit)
+    }
+
     rm(testRepo)
     unlink(tmpDir, force = TRUE, recursive = TRUE)
 
@@ -48,7 +57,16 @@ test_that("git-related functions work", {
     expect_true(git2r::is_local(git2r::branches(testRepo)$master))
     expect_identical(git2r::remote_url(testRepo),
                      "https://github.com/PredictiveEcology/reproducible.git")
-    expect_identical(git2r::head(testRepo)@name, "master")
+
+    ## Backwards compatibility with git2r
+    ## S4 <= 0.21.0
+    ## S3 >= 0.22.0
+    if (isS4(testRepo)) {
+      expect_identical(git2r::head(testRepo)@name, "master")
+    } else {
+      expect_identical(git2r::repository_head(testRepo)$name, "master")
+    }
+
     rm(testRepo)
     unlink(tmpDir, force = TRUE, recursive = TRUE)
 
