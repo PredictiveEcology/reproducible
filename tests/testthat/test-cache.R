@@ -763,11 +763,6 @@ test_that("test future", {
       checkPath(cacheDir1, create = TRUE)
 
       try(unlink(cacheDir1, recursive = TRUE))
-      options("reproducible.futurePlan" = TRUE)
-      mess <- capture_messages(a <- Cache(cacheRepo = cacheDir1, rnorm, i))
-      expect_true(grepl("Please specify", mess))
-
-      try(unlink(cacheDir1, recursive = TRUE))
       options("reproducible.futurePlan" = "multiprocess")
       (aa <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, 1e7 + i)}))
 
