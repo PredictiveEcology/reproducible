@@ -6,7 +6,7 @@ test_that("prepInputs doesn't work", {
   library(sp)
   library(raster)
 
-  tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
+  tmpdir <- file.path(tempdir(), rndstr(1,6))
   checkPath(tmpdir, create = TRUE)
   cwd <- setwd(tmpdir)
 
@@ -141,7 +141,7 @@ test_that("prepInputs doesn't work", {
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
   #  not there. Now should be no error
-  expect_message(regexp = "loading", LCC2005_2 <- Cache(
+  mess <- capture_messages(LCC2005_2 <- Cache(
     prepInputs,
     url = url,
     targetFile = lcc2005Filename,
@@ -149,6 +149,7 @@ test_that("prepInputs doesn't work", {
     destinationPath = asPath(dPath),
     studyArea = StudyArea
   ))
+  expect_true(isTRUE(any(grepl(pattern = "Loading", mess))))
 
   ##
   expect_is(LCC2005_2, "Raster")
@@ -325,7 +326,7 @@ test_that("prepInputs doesn't work", {
     destinationPath = asPath(dPath),
     studyArea = StudyArea
   ))
-  expect_true(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
+  expect_true(any(grepl("Skipping extractFromArchive", mess)))
   expect_true(is(LCC2005, "Raster"))
 
   #######################################

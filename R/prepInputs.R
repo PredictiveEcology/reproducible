@@ -356,12 +356,22 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
         checkSums <- .emptyChecksumsResult
       }
 
-      isOK <-
-        checkSums[checkSums$expectedFile %in% basename(neededFiles) |
-                    checkSums$actualFile %in% basename(neededFiles),]$result
+      # join the neededFiles with the checkSums -- find out which are missing
+      checkSumsDT <- data.table(checkSums)
+      neededFilesDT <- data.table(neededFiles = basename(neededFiles))
+      isOKDT <- checkSumsDT[neededFilesDT, on = c(expectedFile = "neededFiles")]
+      isOKDT2 <- checkSumsDT[neededFilesDT, on = c(actualFile = "neededFiles")]
+      # fill in any OKs from "actualFile" intot he isOKDT
+      isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+      isOK <- compareNA(isOKDT$result, "OK")
+
+      #basename(neededFiles) %in% checkSums$expectedFile
+      #isOK <-
+      #  checkSums[checkSums$expectedFile %in% basename(neededFiles) |
+      #              checkSums$actualFile %in% basename(neededFiles),]$result
       #checkSums[compareNA(checkSums$expectedFile, basename(neededFiles)) |
       #              compareNA(checkSums$actualFile, basename(neededFiles)),]$result
-      isOK <- isOK[!is.na(isOK)] == "OK"
+      #isOK3 <- isOK$result[!is.na(isOK$result)] == "OK"
 
       # filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
       #
