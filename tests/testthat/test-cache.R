@@ -774,16 +774,18 @@ test_that("test future", {
   skip_on_cran()
   if (.Platform$OS.type != "windows") {
     if (require("future")) {
-      cacheDir1 <- file.path(tempdir(), paste(sample(letters, 5), collapse = ""))
+      cacheDir1 <- file.path(tempdir(), rndstr(1,6))
       checkPath(cacheDir1, create = TRUE)
 
       try(unlink(cacheDir1, recursive = TRUE))
       options("reproducible.futurePlan" = "multiprocess")
-      (aa <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, 1e7 + i)}))
+      (aa <- system.time({for(i in 1:3) a <- Cache(cacheRepo = cacheDir1, seq, 5, 1e7 + i)}))
+      clearCache(cacheDir1, ask = FALSE)
 
       options("reproducible.futurePlan" = FALSE)
       try(unlink(cacheDir1, recursive = TRUE))
-      (bb <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, 1e7 + i)}))
+      (bb <- system.time({for(i in 1:3) a <- Cache(cacheRepo = cacheDir1, seq, 5, 1e7 + i)}))
+      clearCache(cacheDir1, ask = FALSE)
 
       expect_true(aa[3] < bb[3])
 

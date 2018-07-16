@@ -689,8 +689,9 @@ setMethod(
           #suppressWarnings(
             saveFilename <- unlist(lapply(seq_along(curFilename),
                    function(x) {
+                     # change filename if it already exists
                      if (file.exists(saveFilename[x])) {
-                       suff <- paste0("_", paste(collapse="", sample(LETTERS, 5)))
+                       suff <- paste0("_", rndstr(1,5))
                        saveFilename[x] <- .suffix(saveFilename[x], suff)
                      }
                      copyFile(to = saveFilename[x],
@@ -816,14 +817,21 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         useFileCopy <- TRUE
       }
     } else if ( (os == "linux") || (os == "darwin") ) { # nolint
-      if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
-      rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
-      opts <- if (silent) " -a " else " -avP "
-      rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
-                      normalizePath(from, mustWork = TRUE), " ",
-                      normalizePath(toDir, mustWork = FALSE), "/")
+      if (!identical(basename(from), basename(to))) {
+        # rsync can't handle file renaming on copy
+        useFileCopy <- TRUE
+      } else {
 
-      useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
+        if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
+        rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
+        opts <- if (silent) " -a " else " -avP "
+        rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
+                        normalizePath(from, mustWork = TRUE), " ",
+                        normalizePath(toDir, mustWork = FALSE), "/")
+
+        useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
+      }
+
     } else {
       useFileCopy <- TRUE
     }

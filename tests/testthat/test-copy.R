@@ -19,7 +19,7 @@ test_that("test Copy", {
   # same content
   expect_true(all(unlist(lapply(seq_along(li), function(i) {
     if (is(li[[i]], "Raster")) {
-       all.equal(li[[i]][], li2[[i]][])
+       all.equal(getValues(li[[i]]), raster::getValues(li2[[i]]))
      } else {
       all.equal(li[[i]], li2[[i]])
     }
