@@ -3,6 +3,7 @@
 #'                  Objects cached after this time will be shown or deleted.
 #' @param before A time (POSIX, character understandable by data.table).
 #'                   Objects cached before this time will be shown or deleted.
+#' @param ask Logical. If \code{FALSE}, then it will not ask to confirm deletions
 #' @param ... Other arguments. Currently, \code{regexp}, a logical, can be provided.
 #'            This must be \code{TRUE} if the use is passing a regular expression.
 #'            Otherwise, \code{userTags} will need to be exact matches. Default is
@@ -84,7 +85,7 @@ setGeneric("clearCache", function(x, userTags = character(), after, before, ...)
 #' @importFrom archivist createLocalRepo
 setMethod(
   "clearCache",
-  definition = function(x, userTags, after, before, ...) {
+  definition = function(x, userTags, after, before, ask = TRUE, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
@@ -98,13 +99,15 @@ setMethod(
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
 
-        if (cacheSize > 1e7) {
-          message("Your current cache size is ", formattedCacheSize, ".\n",
-                  " Are you sure you would like to delete it all? Y or N")
-          rl <- readline()
-          if (!identical(toupper(rl), "Y")) {
-            message("Aborting clearCache")
-            return(invisible())
+        if (isTRUE(ask)) {
+          if (interactive()) {
+            message("Your current cache size is ", formattedCacheSize, ".\n",
+                    " Are you sure you would like to delete it all? Y or N")
+            rl <- readline()
+            if (!identical(toupper(rl), "Y")) {
+              message("Aborting clearCache")
+              return(invisible())
+            }
           }
         }
       }
@@ -153,13 +156,16 @@ setMethod(
       if (interactive()) {
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
-        if (cacheSize > 1e7) {
-          message("Your size of your selected objects is ", formattedCacheSize, ".\n",
-                  " Are you sure you would like to delete it all? Y or N")
-          rl <- readline()
-          if (!identical(toupper(rl), "Y")) {
-            message("Aborting clearCache")
-            return(invisible())
+        if (isTRUE(ask)) {
+          if (interactive()) {
+
+            message("Your size of your selected objects is ", formattedCacheSize, ".\n",
+                    " Are you sure you would like to delete it all? Y or N")
+            rl <- readline()
+            if (!identical(toupper(rl), "Y")) {
+              message("Aborting clearCache")
+              return(invisible())
+            }
           }
         }
       }

@@ -12,7 +12,7 @@
 \usage{
 clearCache(x, userTags = character(), after, before, ...)
 
-\S4method{clearCache}{ANY}(x, userTags = character(), after, before, ...)
+\S4method{clearCache}{ANY}(x, userTags, after, before, ask = TRUE, ...)
 
 showCache(x, userTags = character(), after, before, ...)
 
@@ -55,6 +55,8 @@ This must be \code{TRUE} if the use is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}.}
+
+\item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
