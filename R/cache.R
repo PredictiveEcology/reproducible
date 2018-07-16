@@ -1055,10 +1055,15 @@ setMethod(
             future::plan(thePlan)
           }
         }
-        saved <- future::futureCall(FUN = writeFuture, args = list(written, outputToSave, cacheRepo, userTags),
-                                    globals = list(written = written, saveToLocalRepo = archivist::saveToLocalRepo,
-                                                   outputToSave = outputToSave,
-                                                   cacheRepo = cacheRepo, userTags = userTags))
+        saved <- future::futureCall(
+          FUN = writeFuture,
+          args = list(written, outputToSave, cacheRepo, userTags),
+          globals = list(written = written,
+                         saveToLocalRepo = archivist::saveToLocalRepo,
+                         outputToSave = outputToSave,
+                         cacheRepo = cacheRepo,
+                         userTags = userTags)
+        )
       } else {
         while (written >= 0) {
           saved <- suppressWarnings(try(silent = TRUE,

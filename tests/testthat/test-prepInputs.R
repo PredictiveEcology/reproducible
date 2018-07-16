@@ -3,6 +3,9 @@ test_that("prepInputs doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
+  library(sp)
+  library(raster)
+
   tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
   checkPath(tmpdir, create = TRUE)
   cwd <- setwd(tmpdir)
@@ -60,8 +63,6 @@ test_that("prepInputs doesn't work", {
 
   # Add a study area to Crop and Mask to
   # Create a "study area"
-  library(sp)
-  library(raster)
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98,
                         59.9, 65.73, 63.58, 54.79, 59.9),
                       .Dim = c(5L, 2L))
@@ -137,7 +138,7 @@ test_that("prepInputs doesn't work", {
   # Test the no allow overwrite if two functions (here postProcess and prepInputs)
   #  return same file-backed raster
   clearCache(userTags = "prepInputs")
-  # previously, this would cause an error because prepINputs file is gone b/c of previous
+  # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
   #  not there. Now should be no error
   expect_message(regexp = "loading", LCC2005_2 <- Cache(

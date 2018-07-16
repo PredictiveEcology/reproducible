@@ -16,6 +16,9 @@
     <loc>http://reproducible.predictiveecology.org/reference/Require.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/addChangedAttr.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/addTagsToOutput.html</loc>
   </url>
   <url>
@@ -203,6 +206,9 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/viewCache.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/writeFuture.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/writeOutputs.html</loc>

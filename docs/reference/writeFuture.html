@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Copy the file-backing of a file-backed Raster* object — .prepareFileBackedRaster • reproducible</title>
+<title>Write to archivist repository, using <code>future::future</code> — writeFuture • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,13 +30,10 @@
 
 
 
-<meta property="og:title" content="Copy the file-backing of a file-backed Raster* object — .prepareFileBackedRaster" />
+<meta property="og:title" content="Write to archivist repository, using <code>future::future</code> — writeFuture" />
 
-<meta property="og:description" content="Rasters are sometimes file-based, so the normal save and copy and assign
-mechanisms in R don't work for saving, copying and assigning.
-This function creates an explicit file copy of the file that is backing the raster,
-and changes the pointer (i.e., filename(object)) so that it is pointing
-to the new file." />
+<meta property="og:description" content="This will be used internally if options(&quot;reproducible.futurePlan&quot; = TRUE).
+This is still experimental." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -126,88 +123,50 @@ to the new file." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Copy the file-backing of a file-backed Raster* object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R'><code>R/cache-helpers.R</code></a></small>
-    <div class="hidden name"><code>prepareFileBackedRaster.Rd</code></div>
+    <h1>Write to archivist repository, using <code>future::future</code></h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache.R'><code>R/cache.R</code></a></small>
+    <div class="hidden name"><code>writeFuture.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Rasters are sometimes file-based, so the normal save and copy and assign
-mechanisms in R don't work for saving, copying and assigning.
-This function creates an explicit file copy of the file that is backing the raster,
-and changes the pointer (i.e., <code>filename(object)</code>) so that it is pointing
-to the new file.</p>
+    <p>This will be used internally if <code>options("reproducible.futurePlan" = TRUE)</code>.
+This is still experimental.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>.prepareFileBackedRaster</span>(<span class='no'>obj</span>, <span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>writeFuture</span>(<span class='no'>written</span>, <span class='no'>outputToSave</span>, <span class='no'>cacheRepo</span>, <span class='no'>userTags</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>obj</th>
-      <td><p>The raster object to save to the repository.</p></td>
+      <th>written</th>
+      <td><p>Integer If zero or positive then it needs to be written still.
+Should be 0 to start.</p></td>
     </tr>
     <tr>
-      <th>repoDir</th>
-      <td><p>Character denoting an existing directory in which an artifact will be saved.</p></td>
+      <th>outputToSave</th>
+      <td><p>The R object to save to repository</p></td>
     </tr>
     <tr>
-      <th>overwrite</th>
-      <td><p>Logical. Should the raster be saved to disk, overwriting existing file.</p></td>
+      <th>cacheRepo</th>
+      <td><p>The file path of the repository</p></td>
     </tr>
     <tr>
-      <th>...</th>
-      <td><p>passed to <code><a href='http://www.rdocumentation.org/packages/archivist/topics/saveToRepo'>archivist::saveToRepo</a></code></p></td>
+      <th>userTags</th>
+      <td><p>Character string of tags to attach to this <code>outputToSave</code> in
+the <code>CacheRepo</code></p></td>
     </tr>
     </table>
     
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A raster object and its newly located file backing.
-        Note that if this is a legitimate archivist repository, the new location
-        will be a subdirectory called <code class="file">rasters/</code> of <code class="file">repoDir/</code>.
-        If this is not a repository, the new location will be within <code>repoDir</code>.</p>
-    
-
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>library</span>(<span class='no'>raster</span>)
-<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/archivist/topics/createEmptyRepo'>createLocalRepo</a></span>(<span class='fu'>tempdir</span>())</div><div class='output co'>#&gt; <span class='message'>Directory /tmp/RtmpWeV1uz does exist and contain the backpack.db file. Use force=TRUE to reinitialize.</span></div><div class='input'>
-<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/extent'>extent</a></span>(<span class='fl'>0</span>,<span class='fl'>10</span>,<span class='fl'>0</span>,<span class='fl'>10</span>), <span class='kw'>vals</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>100</span>)
-
-<span class='co'># write to disk manually -- will be in tempdir()</span>
-<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='fu'>tempfile</span>())
-
-<span class='co'># copy it to the cache repository</span>
-<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'>.prepareFileBackedRaster</span>(<span class='no'>r</span>, <span class='fu'>tempdir</span>())
-
-<span class='no'>r</span> <span class='co'># now in "rasters" subfolder of tempdir()</span></div><div class='output co'>#&gt; class       : RasterLayer 
-#&gt; dimensions  : 10, 10, 100  (nrow, ncol, ncell)
-#&gt; resolution  : 1, 1  (x, y)
-#&gt; extent      : 0, 10, 0, 10  (xmin, xmax, ymin, ymax)
-#&gt; coord. ref. : NA 
-#&gt; data source : /tmp/RtmpWeV1uz/rasters/file1e417a2080d3.grd 
-#&gt; names       : layer 
-#&gt; values      : 1, 100  (min, max)
-#&gt; </div><div class='input'>
-
-</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-      
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire
+                </ul>
 
   </div>
 </div>

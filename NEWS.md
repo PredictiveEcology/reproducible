@@ -4,11 +4,11 @@ version 0.2.2
 =============
 
 ## New features
-* 
+
 * option on non-Windows OSs to use `future` for `Cache` saving to SQLite database, via `options("reproducible.futurePlan")`, if the `future` package is installed. This is `FALSE` by default.
 * `future` package is now in suggests
 * fix problems with tests introduced by recent `git2r` update (@stewid, #36).
-* If a do.call function is Cached, previously, it would be labelled in the database as `do.call`. Now it attempts to extract the actual function being called by the `do.call`. Messaging is similarly changed.
+* If a `do.call` function is Cached, previously, it would be labelled in the database as `do.call`. Now it attempts to extract the actual function being called by the `do.call`. Messaging is similarly changed.
 
 ## Bug fixes
 

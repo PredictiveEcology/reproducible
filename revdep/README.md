@@ -10,13 +10,13 @@
 |language |en_CA:en                     |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-07-13                   |
+|date     |2018-07-16                   |
 
 ## Packages
 
-|package      |*  |version    |date       |source                                          |
-|:------------|:--|:----------|:----------|:-----------------------------------------------|
-|reproducible |   |0.2.1.9000 |2018-07-14 |Github (PredictiveEcology/reproducible@66659a1) |
+|package      |*  |version |date       |source                                          |
+|:------------|:--|:-------|:----------|:-----------------------------------------------|
+|reproducible |   |0.2.2   |2018-07-16 |Github (PredictiveEcology/reproducible@1ed8d10) |
 
 # Check results
 
@@ -24,17 +24,37 @@
 
 |package      |version | errors| warnings| notes|
 |:------------|:-------|------:|--------:|-----:|
-|SpaDES.core  |0.2.0   |      0|        1|     1|
+|SpaDES.core  |0.2.0   |      1|        1|     1|
 |SpaDES       |2.0.2   |      0|        1|     0|
-|SpaDES.tools |0.2.0   |      0|        0|     0|
+|SpaDES.tools |0.3.0   |      0|        0|     0|
 
 ## SpaDES.core (0.2.0)
 Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
-0 errors | 1 warning  | 1 note 
+1 error  | 1 warning  | 1 note 
 
 ```
+checking tests ... ERROR
+  Running ‘test-all.R’ [158s/158s]
+Running the tests in ‘tests/test-all.R’ failed.
+Last 13 lines of output:
+    Using memoised copy of .inputObjects event in test module
+    Using cached copy of .inputObjects event in test module. Adding to memoised copy.
+  ── 2. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#10
+  all.equal(simA, simB) isn't true.
+  
+    Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
+  ══ testthat results  ═══════════════════════════════════════════════════════════
+  OK: 362 SKIPPED: 35 FAILED: 2
+  1. Failure: test .prepareOutput (@test-cache.R#233) 
+  2. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#106) 
+  
+  Error: testthat unit tests failed
+  In addition: Warning message:
+  no DISPLAY variable so Tk is not available 
+  Execution halted
+
 checking whether package ‘SpaDES.core’ can be installed ... WARNING
 Found the following significant warnings:
   Warning: no DISPLAY variable so Tk is not available
@@ -57,13 +77,10 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES/issues
 checking whether package ‘SpaDES’ can be installed ... WARNING
 Found the following significant warnings:
   Warning: no DISPLAY variable so Tk is not available
-  Warning: replacing previous import ‘SpaDES.tools::checkGDALVersion’ by ‘reproducible::checkGDALVersion’ when loading ‘SpaDES’
-  Warning: replacing previous import ‘SpaDES.tools::getGDALVersion’ by ‘reproducible::getGDALVersion’ when loading ‘SpaDES’
-  Warning: replacing previous import ‘SpaDES.tools::fastMask’ by ‘reproducible::fastMask’ when loading ‘SpaDES’
 See ‘/home/achubaty/Documents/GitHub/SpaDES/reproducible/revdep/checks/SpaDES.Rcheck/00install.out’ for details.
 ```
 
-## SpaDES.tools (0.2.0)
+## SpaDES.tools (0.3.0)
 Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES.tools/issues
 

@@ -135,7 +135,7 @@
 
     <pre class="usage"><span class='fu'>extractFromArchive</span>(<span class='no'>archive</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>dirname</span>(<span class='no'>archive</span>), <span class='no'>neededFiles</span>,
   <span class='kw'>extractedArchives</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>checkSums</span>, <span class='no'>needChecksums</span>,
-  <span class='kw'>filesExtracted</span> <span class='kw'>=</span> <span class='fu'>character</span>())</pre>
+  <span class='kw'>filesExtracted</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>checkSumFilePath</span>, <span class='no'>quick</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -171,6 +171,14 @@ extracted. Defaults to the archive directory.</p></td>
     <tr>
       <th>filesExtracted</th>
       <td><p>Used internally to track files that have been extracted.</p></td>
+    </tr>
+    <tr>
+      <th>checkSumFilePath</th>
+      <td><p>The full path to the checksum.txt file</p></td>
+    </tr>
+    <tr>
+      <th>quick</th>
+      <td><p>Passed to <code>Checksums</code></p></td>
     </tr>
     <tr>
       <th>...</th>
