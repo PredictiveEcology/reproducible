@@ -687,7 +687,7 @@ setMethod(
           copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
         } else {
           #suppressWarnings(
-            lapply(seq_along(curFilename),
+            saveFilename <- unlist(lapply(seq_along(curFilename),
                    function(x) {
                      if (file.exists(saveFilename[x])) {
                        suff <- paste0("_", paste(collapse="", sample(LETTERS, 5)))
@@ -696,7 +696,7 @@ setMethod(
                      copyFile(to = saveFilename[x],
                                         overwrite = TRUE,
                                         from = curFilename[x], silent = TRUE)
-                   })#)
+                   }))
         }
       }
       # for a stack with independent Raster Layers (each with own file)

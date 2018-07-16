@@ -1,7 +1,7 @@
 test_that("test file-backed raster caching", {
   library(raster)
 
-  tmpdir <- file.path(tempdir(), "test_Cache") %>% checkPath(create = TRUE)
+  tmpdir <- file.path(tempdir(), rndstr(1,6)) %>% checkPath(create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
   tmpRasterfile <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   file.create(tmpRasterfile)
@@ -47,6 +47,21 @@ test_that("test file-backed raster caching", {
                                             basename(tmpRasterfile)), split = "[\\/]")))
   expect_true(any(grepl(pattern = basename(tmpRasterfile),
                         dir(file.path(tmpdir, "rasters")))))
+
+  ### Test for 2 caching events with same file-backing name
+  randomPolyToDisk2 <- function(tmpRasterfile, rand) {
+    r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+    writeRaster(r, tmpRasterfile, overwrite = TRUE)
+    r <- raster(tmpRasterfile)
+    r
+  }
+
+  a <- Cache(randomPolyToDisk2, tmpRasterfile, runif(1))
+  b <- Cache(randomPolyToDisk2, tmpRasterfile, runif(1))
+
+  expect_false(identical(filename(a), filename(b)))
+
+
 
   # Caching a raster as an input works
   rasterTobinary <- function(raster) {
