@@ -12,7 +12,7 @@ version 0.2.2
 
 ## Bug fixes
 
-* .prepareRasterBackedFile -- now will postpend a random string to a cached copy of a file-backed Raster object. Previous, if 2 Cache events returned the same Raster object, it would allow the same file name. Once deleted, it would cause the other one to break.
+* .prepareRasterBackedFile -- now will postpend a random string to a cached copy of a file-backed Raster object, if it already exists. This mirrors the behaviour of the `.rda` file. Previously, if 2 Cache events returned the same file name backing a Raster object, even if the content was different, it would allow the same file name. If either cached object was deleted, therefore, it would cause the other one to break as its file-backing would be missing.
 * options were wrongly pointing to spades.XX and should have been reproducible.XX
 * `extractFromArchive` needed a new `Checksum` function call under some circumstances
 * several other minor bug fixes.
