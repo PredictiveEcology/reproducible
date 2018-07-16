@@ -4,7 +4,7 @@ test_that("test Copy", {
 
   ras <- raster(extent(0, 10, 0, 10), vals = 1)
   tmpRasFilename <- tempfile("tmpRas", fileext = ".tif")
-  tmpDir <- file.path(tempdir(), "ras")
+  tmpDir <- file.path(tempdir(), rndstr(1,6))
   checkPath(tmpDir, create = TRUE); on.exit(unlink(tmpDir, recursive = TRUE), add = TRUE)
   ras <- writeRaster(ras, filename = tmpRasFilename, overwrite = TRUE)
   ras2 <- Copy(ras, tmpDir)

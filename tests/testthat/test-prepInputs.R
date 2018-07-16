@@ -377,13 +377,7 @@ test_that("preProcess doesn't work", {
 
   testthat::skip_if_not(interactive())
 
-  #tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
-  #checkPath(tmpdir, create = TRUE)
-  #cwd <- setwd(tmpdir)
-
   urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/DEM.tif"
-  #urlTif2 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/habitatQuality.tif"
-  #urlShapefiles2Zip <- "https://drive.google.com/file/d/1eSkYU2xHycp9aC_4Hk8M1yeKIoKt2uhM/view?usp=sharing"
   urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
   urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 
