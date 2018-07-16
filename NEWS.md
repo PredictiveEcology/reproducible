@@ -4,9 +4,18 @@ version 0.2.2
 =============
 
 ## New features
+* 
 * option on non-Windows OSs to use `future` for `Cache` saving to SQLite database, via `options("reproducible.futurePlan")`, if the `future` package is installed. This is `FALSE` by default.
 * `future` package is now in suggests
 * fix problems with tests introduced by recent `git2r` update (@stewid, #36).
+* If a do.call function is Cached, previously, it would be labelled in the database as `do.call`. Now it attempts to extract the actual function being called by the `do.call`. Messaging is similarly changed.
+
+## Bug fixes
+
+* .prepareRasterBackedFile -- now will postpend a random string to a cached copy of a file-backed Raster object. Previous, if 2 Cache events returned the same Raster object, it would allow the same file name. Once deleted, it would cause the other one to break.
+* options were wrongly pointing to spades.XX and should have been reproducible.XX
+* `extractFromArchive` needed a new `Checksum` function call under some circumstances
+* several other minor bug fixes.
 
 version 0.2.1
 =============
