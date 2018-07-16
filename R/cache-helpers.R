@@ -812,7 +812,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       }
 
       # means that the file didn't get copied because it is actually the same directory
-      if (!nzchar(useFileCopy)) {
+      if (any(!nzchar(useFileCopy))) {
         useFileCopy <- TRUE
       }
     } else if ( (os == "linux") || (os == "darwin") ) { # nolint
