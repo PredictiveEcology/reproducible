@@ -11,8 +11,8 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-07-13
-Version: 0.2.2
+Date: 2018-07-15
+Version: 0.2.2.9003
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre")),
@@ -25,6 +25,7 @@ Depends:
     R (>= 3.3.0)
 Imports:
     archivist (>= 2.1.2),
+    backports,
     crayon,
     data.table (>= 1.10.4),
     devtools,
@@ -53,6 +54,7 @@ Imports:
     versions
 Suggests:
     covr,
+    future,
     knitr,
     rmarkdown,
     testthat,

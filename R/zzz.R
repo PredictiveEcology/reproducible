@@ -9,6 +9,7 @@
     reproducible.cachePath = file.path(.reproducibleTempDir),
     reproducible.verbose = FALSE,
     reproducible.useCache = TRUE, #memoise
+    reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.useMemoise = TRUE, #memoise
     reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
     reproducible.quick = FALSE
@@ -16,6 +17,7 @@
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
 
+  backports::import(pkgname, obj = "isFALSE")
   invisible()
 }
 

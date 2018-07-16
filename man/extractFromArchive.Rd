@@ -6,7 +6,7 @@
 \usage{
 extractFromArchive(archive, destinationPath = dirname(archive), neededFiles,
   extractedArchives = NULL, checkSums, needChecksums,
-  filesExtracted = character())
+  filesExtracted = character(), checkSumFilePath, quick)
 }
 \arguments{
 \item{archive}{Character string giving the path of the archive
@@ -26,6 +26,10 @@ extracted. Defaults to the archive directory.}
 \code{2} append new information to existing one.}
 
 \item{filesExtracted}{Used internally to track files that have been extracted.}
+
+\item{checkSumFilePath}{The full path to the checksum.txt file}
+
+\item{quick}{Passed to \code{Checksums}}
 
 \item{...}{Passed to \code{unzip} or \code{untar}, e.g., \code{overwrite}}
 }

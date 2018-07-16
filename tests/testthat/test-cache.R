@@ -60,8 +60,8 @@ test_that("test file-backed raster caching", {
     nOT <- Sys.time() - 100
   }
 
-  attr(a1, "newCache") <- NULL
-  attr(a2, "newCache") <- NULL
+  attr(a1, ".Cache")$newCache <- NULL
+  attr(a2, ".Cache")$newCache <- NULL
   # test that they are identical
   expect_equal(a1, a2)
 
@@ -287,7 +287,6 @@ test_that("test keepCache", {
   Cache(sample, 10, cacheRepo = tmpdir)
   Cache(length, 10, cacheRepo = tmpdir)
   Cache(sum, runif(4), cacheRepo = tmpdir)
-  showCache(tmpdir, after = st)
   expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 10)
   expect_true(NROW(keepCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 10)
   expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 10)
@@ -337,7 +336,7 @@ test_that("test environments", {
   out <- Cache(shortFn, a = a, cacheRepo = tmpdir)
   out2 <- Cache(shortFn, a = b, cacheRepo = tmpdir)
   out3 <- Cache(shortFn, a = g, cacheRepo = tmpdir)
-  attr(out2, "newCache") <- TRUE
+  attr(out2, ".Cache")$newCache <- TRUE
   expect_true(identical(attributes(out)["tags"], attributes(out2)["tags"]))
   expect_true(identical(attributes(out)["tags"], attributes(out3)["tags"]))
 
@@ -756,44 +755,26 @@ test_that("test reproducible.verbose", {
 
 
 ##########################
-test_that("test reproducible.verbose", {
-  cacheDir1 <- paste(sample(letters, 5), collapse = "")
-  cacheDir2 <- paste(sample(letters, 5), collapse = "")
+test_that("test future", {
+  skip_on_cran()
+  if (.Platform$OS.type != "windows") {
+    if (require("future")) {
+      cacheDir1 <- file.path(tempdir(), paste(sample(letters, 5), collapse = ""))
+      checkPath(cacheDir1, create = TRUE)
 
-  cacheDir1 <- file.path(tempdir(), cacheDir1)
-  cacheDir2 <- file.path(tempdir(), cacheDir2)
+      try(unlink(cacheDir1, recursive = TRUE))
+      options("reproducible.futurePlan" = "multiprocess")
+      (aa <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, 1e7 + i)}))
 
-  checkPath(cacheDir1, create = TRUE)
-  checkPath(cacheDir2, create = TRUE)
+      options("reproducible.futurePlan" = FALSE)
+      try(unlink(cacheDir1, recursive = TRUE))
+      (bb <- system.time({for(i in 1:1) a <- Cache(cacheRepo = cacheDir1, rnorm, 1e7 + i)}))
 
-  options(reproducible.verbose = FALSE)
+      expect_true(aa[3] < bb[3])
 
-  on.exit({
-    options(reproducible.verbose = FALSE)
-    unlink(cacheDir1, recursive = TRUE)
-    unlink(cacheDir2, recursive = TRUE)
-  }, add = TRUE)
-  Cache(rnorm, 1, cacheRepo = cacheDir1)
-  Cache(rnorm, 2, cacheRepo = cacheDir2)
-  Cache(rnorm, 3, cacheRepo = cacheDir1)
-  Cache(rnorm, 4, cacheRepo = cacheDir2)
-  library(raster)
-  r <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
-  r <- Cache(writeRaster, r, filename = tempfile(fileext = ".tif"), cacheRepo = cacheDir2)
-  preCacheDir1Items <- data.table::copy(showCache(cacheDir1))
-  preCacheDir2Items <- data.table::copy(showCache(cacheDir2))
-  cacheDir1 <- mergeCache(cacheDir1, cacheDir2)
-  postCache <- showCache(cacheDir1)[tagKey != "date"]
-  expect_true(identical(sort(unique(postCache[tagKey=="cacheId"]$tagValue)),
-                      sort(c(unique(preCacheDir1Items[tagKey=="cacheId"]$tagValue),
-                        unique(preCacheDir2Items[tagKey=="cacheId"]$tagValue)))))
-  preCacheRbindlist <- data.table::setkey(data.table::rbindlist(
-    list(preCacheDir1Items[tagKey != "date"], preCacheDir2Items[tagKey != "date"])), artifact)
-
-  postCache[,`:=`(artifact=NULL, createdDate=NULL)]
-  data.table::setkey(postCache, tagKey, tagValue)
-  preCacheRbindlist[,`:=`(artifact=NULL, createdDate=NULL)]
-  data.table::setkey(preCacheRbindlist, tagKey, tagValue)
-  expect_true(all.equal(postCache,preCacheRbindlist))
-
+    }
+    #    profvis::profvis({for(i in 1:30) a <- Cache(cacheRepo = cacheDir1, rnorm, i)})
+  }
 })
+
+

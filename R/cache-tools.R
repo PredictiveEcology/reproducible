@@ -3,7 +3,11 @@
 #'                  Objects cached after this time will be shown or deleted.
 #' @param before A time (POSIX, character understandable by data.table).
 #'                   Objects cached before this time will be shown or deleted.
-#' @param ... Other arguments. Currently unused.
+#' @param ... Other arguments. Currently, \code{regexp}, a logical, can be provided.
+#'            This must be \code{TRUE} if the use is passing a regular expression.
+#'            Otherwise, \code{userTags} will need to be exact matches. Default is
+#'            missing, which is the same as \code{TRUE}. If there are errors due
+#'            to regular expression problem, try \code{FALSE}.
 #' @param userTags Character vector. If used, this will be used in place of the
 #'                 \code{after} and \code{before}.
 #'                 Specifying one or more \code{userTag} here will clear all
@@ -82,8 +86,8 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("spades.cachePath"))
-      x <- getOption("spades.cachePath")
+      message("x not specified; using ", getOption("reproducible.cachePath"))
+      x <- getOption("reproducible.cachePath")
     }
     if (is(x, "simList")) x <- x@paths$cachePath
 
@@ -122,8 +126,9 @@ setMethod(
     objsDT <- do.call(showCache, args = args)
 
     if (interactive()) {
-      rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
-      cacheSize <- sum(file.size(rdaFiles))
+      cacheSize <- sum(as.numeric(objsDT[tagKey=="object.size"]$tagValue))/4
+      #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
+      #cacheSize <- sum(file.size(rdaFiles))
     }
 
     if (NROW(objsDT)) {
@@ -149,7 +154,7 @@ setMethod(
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
         if (cacheSize > 1e7) {
-          message("Your current cache size is ", formattedCacheSize, ".\n",
+          message("Your size of your selected objects is ", formattedCacheSize, ".\n",
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
@@ -201,8 +206,8 @@ setMethod(
   "showCache",
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("spades.cachePath"))
-      x <- getOption("spades.cachePath")
+      message("x not specified; using ", getOption("reproducible.cachePath"))
+      x <- getOption("reproducible.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
@@ -216,18 +221,34 @@ setMethod(
                                                 (tagValue >= after)][!duplicated(artifact)]
       objsDT <- objsDT[artifact %in% objsDT3$artifact]
       if (length(userTags) > 0) {
-        for (ut in userTags) {
-          objsDT2 <- objsDT[
-            grepl(tagValue, pattern = ut) |
-              grepl(tagKey, pattern = ut) |
-              grepl(artifact, pattern = ut)]
+        if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
+          for (ut in userTags) {
+            #objsDT$artifact %in% ut
+            objsDT2 <- objsDT[
+              grepl(tagValue, pattern = ut) |
+                grepl(tagKey, pattern = ut) |
+                grepl(artifact, pattern = ut)]
+            setkeyv(objsDT2, "artifact")
+            shortDT <- unique(objsDT2, by = "artifact")[, artifact]
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+          }
+        } else {
+          objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
           setkeyv(objsDT2, "artifact")
           shortDT <- unique(objsDT2, by = "artifact")[, artifact]
           objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+
         }
       }
     }
-    .messageCacheSize(x, artifacts = unique(objsDT$artifact))
+    verboseMessaging <- TRUE
+    if (!is.null(list(...)$verboseMessaging)) {
+      if (!isTRUE(list(...)$verboseMessaging)) {
+        verboseMessaging <- FALSE
+      }
+    }
+    if (verboseMessaging)
+      .messageCacheSize(x, artifacts = unique(objsDT$artifact))
     objsDT
 })
 
@@ -242,8 +263,8 @@ setMethod(
   "keepCache",
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("spades.cachePath"))
-      x <- getOption("spades.cachePath")
+      message("x not specified; using ", getOption("reproducible.cachePath"))
+      x <- getOption("reproducible.cachePath")
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
@@ -258,8 +279,8 @@ setMethod(
     eliminate <- unique(objsDTAll$artifact[!(objsDTAll$artifact %in% keep)])
 
     if (length(eliminate)) {
-      eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
-      clearCache(x, eliminate)
+      #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
+      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE)
     }
     return(objsDT)
 })
@@ -344,14 +365,16 @@ setMethod(
 
 #' @keywords internal
 .messageCacheSize <- function(x, artifacts = NULL) {
-  fsTotal <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
+  a <- showLocalRepo2(x);
+  b <- a[startsWith(a$tag, "object.size"),]
+  fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+  fsTotalRasters <- sum(file.size(dir(file.path(x, "rasters"), full.names = TRUE, recursive = TRUE)))
+  fsTotal <- fsTotal + fsTotalRasters
   class(fsTotal) <- "object_size"
   preMessage1 <- "  Total (including Rasters): "
 
-  allFiles <- dir(file.path(x, "gallery"), full.names = TRUE)
-  matchingIDs <- which(basename(allFiles) %in% paste0(unique(artifacts), ".rda"))
-  matchingFiles <- allFiles[matchingIDs]
-  fs <- sum(file.size(matchingFiles))
+  b <- a[a$artifact %in% artifacts & startsWith(a$tag, "object.size"),]
+  fs <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
 
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
