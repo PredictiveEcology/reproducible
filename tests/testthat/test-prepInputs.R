@@ -15,7 +15,7 @@ test_that("prepInputs doesn't work", {
   #######################################
   ### url  ######
   #######################################
-  dPath <- file.path(tempdir(), "ecozones")
+  dPath <- file.path(tempdir(), rndstr(1,5), "ecozones")
   mess <- capture_messages(
     shpEcozone <- prepInputs(destinationPath = dPath,
                              url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
