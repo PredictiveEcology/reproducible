@@ -779,15 +779,20 @@ test_that("test future", {
 
       try(unlink(cacheDir1, recursive = TRUE))
       options("reproducible.futurePlan" = "multiprocess")
-      (aa <- system.time({for(i in 1:3) a <- Cache(cacheRepo = cacheDir1, seq, 5, 1e7 + i)}))
-      clearCache(cacheDir1, ask = FALSE)
+      (aa <- system.time({for(i in c(1:3)) a <- Cache(cacheRepo = cacheDir1, seq, 5, 1e7 + i)}))
+      #bb <- futureOf(NULL)
+      a <- showCache(cacheDir1)
+      #clearCache(cacheDir1, ask = FALSE)
 
       options("reproducible.futurePlan" = FALSE)
       try(unlink(cacheDir1, recursive = TRUE))
       (bb <- system.time({for(i in 1:3) a <- Cache(cacheRepo = cacheDir1, seq, 5, 1e7 + i)}))
-      clearCache(cacheDir1, ask = FALSE)
+      #clearCache(cacheDir1, ask = FALSE)
 
-      expect_true(aa[3] < bb[3])
+      #expect_true(aa[3] < bb[3])
+
+      # Test the speed of rerunning same line
+      (aa <- system.time({for(i in c(1,1)) a <- Cache(cacheRepo = cacheDir1, seq, 5, 1e7 + i)}))
 
     }
     #    profvis::profvis({for(i in 1:30) a <- Cache(cacheRepo = cacheDir1, rnorm, i)})

@@ -219,6 +219,9 @@ setMethod(
     if (missing(before)) before <- Sys.time() + 1e5
     if (is(x, "simList")) x <- x@paths$cachePath
 
+    # Clear the futures that are resolved
+    checkFutures()
+
     objsDT <- showLocalRepo(x) %>% data.table()
     setkeyv(objsDT, "md5hash")
     if (NROW(objsDT) > 0) {
@@ -388,4 +391,16 @@ setMethod(
   message("Cache size: ")
   message(preMessage1, format(fsTotal, "auto"))
   message(preMessage, format(fs, "auto"))
+}
+
+checkFutures <- function() {
+  # This takes a long time -- can't use it if
+  resol <- resolved(.reproEnv)
+
+  while(any(!resol)) {
+    #numSleeps <<- numSleeps+1
+    Sys.sleep(0.001)
+    resol <- resolved(.reproEnv)
+  }
+  rm(list = names(resol)[resol], envir = .reproEnv)
 }

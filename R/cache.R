@@ -1055,7 +1055,9 @@ setMethod(
             future::plan(thePlan)
           }
         }
-        saved <- future::futureCall(
+        .reproEnv[[paste0("future_", rndstr(1,10))]] <-
+        #saved <-
+          future::futureCall(
           FUN = writeFuture,
           args = list(written, outputToSave, cacheRepo, userTags),
           globals = list(written = written,
@@ -1064,6 +1066,10 @@ setMethod(
                          cacheRepo = cacheRepo,
                          userTags = userTags)
         )
+        message("  Cache saved in a separate 'future' process. ",
+                "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour")
+
+
       } else {
         while (written >= 0) {
           saved <- suppressWarnings(try(silent = TRUE,
@@ -1234,6 +1240,7 @@ unmakeMemoiseable.default <- function(x) {
 #' @inheritParams archivist showLocalRepo
 #' @inheritParams fastdigest fastdigest
 showLocalRepo2 <- function(repoDir) {
+  #checkFutures() # will pause until all futures are done
   aa <- showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
   dig <- fastdigest(aa$md5hash)
   bb <- showLocalRepo3Mem(repoDir, dig)
