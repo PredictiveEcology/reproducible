@@ -42,6 +42,7 @@
 #' @export
 #' @importFrom archivist rmFromLocalRepo searchInLocalRepo
 #' @importFrom methods setGeneric setMethod
+#' @importFrom data.table setindex
 #' @rdname viewCache
 #'
 #' @examples
@@ -178,6 +179,7 @@ setMethod(
       suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
     }
     memoise::forget(.loadFromLocalRepoMem)
+    try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
 })
 
