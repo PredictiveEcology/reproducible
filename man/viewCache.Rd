@@ -12,15 +12,17 @@
 \usage{
 clearCache(x, userTags = character(), after, before, ...)
 
-\S4method{clearCache}{ANY}(x, userTags, after, before, ask = TRUE, ...)
+\S4method{clearCache}{ANY}(x, userTags, after, before,
+  ask = getOption("reproducible.ask"), ...)
 
 showCache(x, userTags = character(), after, before, ...)
 
 \S4method{showCache}{ANY}(x, userTags = character(), after, before, ...)
 
-keepCache(x, userTags = character(), after, before, ...)
+keepCache(x, userTags = character(), after, before, ask, ...)
 
-\S4method{keepCache}{ANY}(x, userTags = character(), after, before, ...)
+\S4method{keepCache}{ANY}(x, userTags = character(), after, before,
+  ask = getOption("reproducible.ask"), ...)
 }
 \arguments{
 \item{x}{A simList or a directory containing a valid archivist repository}
@@ -56,7 +58,8 @@ Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}.}
 
-\item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions}
+\item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions using
+\code{clearCache} or \code{keepCache}. Default is \code{TRUE}}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
