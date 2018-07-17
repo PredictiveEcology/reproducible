@@ -220,7 +220,8 @@ setMethod(
     if (is(x, "simList")) x <- x@paths$cachePath
 
     # Clear the futures that are resolved
-    checkFutures()
+    if (requireNamespace("future"))
+      future::checkFutures()
 
     objsDT <- showLocalRepo(x) %>% data.table()
     setkeyv(objsDT, "md5hash")
@@ -393,14 +394,15 @@ setMethod(
   message(preMessage, format(fs, "auto"))
 }
 
+
 checkFutures <- function() {
   # This takes a long time -- can't use it if
-  resol <- resolved(.reproEnv)
+  resol <- future::resolved(.reproEnv)
 
   while(any(!resol)) {
     #numSleeps <<- numSleeps+1
     Sys.sleep(0.001)
-    resol <- resolved(.reproEnv)
+    resol <- future::resolved(.reproEnv)
   }
   rm(list = names(resol)[resol], envir = .reproEnv)
 }

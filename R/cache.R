@@ -1240,7 +1240,8 @@ unmakeMemoiseable.default <- function(x) {
 #' @inheritParams archivist showLocalRepo
 #' @inheritParams fastdigest fastdigest
 showLocalRepo2 <- function(repoDir) {
-  #checkFutures() # will pause until all futures are done
+  #if (requireNamespace("future"))
+  #  future::checkFutures() # will pause until all futures are done
   aa <- showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
   dig <- fastdigest(aa$md5hash)
   bb <- showLocalRepo3Mem(repoDir, dig)
