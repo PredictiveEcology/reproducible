@@ -1044,8 +1044,13 @@ setMethod(
 
       written <- 0
 
-      if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future") &&
-          (.Platform$OS.type != "windows")) {
+      useFuture <- FALSE
+      if (.Platform$OS.type != "windows") {
+        if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future")) {
+          useFuture <- TRUE
+        }
+      }
+      if (useFuture) {
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess"\n',
                   'Please specify a plan by name, e.g., options("reproducible.futurePlan" = "multiprocess")')
@@ -1069,7 +1074,6 @@ setMethod(
         )
         message("  Cache saved in a separate 'future' process. ",
                 "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour")
-
 
       } else {
         while (written >= 0) {
