@@ -453,9 +453,14 @@ test_that("test wrong ways of calling Cache", {
 })
 
 test_that("test pipe for Cache", {
-  tmpdir <- file.path(tempdir(), "testCache")
+  tmpdir <- file.path(tempdir(), rndstr(1,6))
   checkPath(tmpdir, create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  opts <- options("reproducible.ask" = FALSE)
+  on.exit({
+    unlink(tmpdir, recursive = TRUE)
+    options("reproducible.ask" = opts[[1]])
+    }
+    , add = TRUE)
 
   a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
   b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
@@ -507,7 +512,12 @@ test_that("test pipe for Cache", {
 test_that("test quoted FUN in Cache", {
   tmpdir <- file.path(tempdir(), "testCache")
   checkPath(tmpdir, create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  opts <- options("reproducible.ask" = FALSE)
+  on.exit({
+    unlink(tmpdir, recursive = TRUE)
+    options("reproducible.ask" = opts[[1]])
+  }
+  , add = TRUE)
 
   A <- Cache(rnorm, 10, 16, cacheRepo = tmpdir) # nolint
 
@@ -524,7 +534,12 @@ test_that("test quoted FUN in Cache", {
 test_that("test multiple pipe Cache calls", {
   tmpdir <- file.path(tempdir(), "testCache")
   checkPath(tmpdir, create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  opts <- options("reproducible.ask" = FALSE)
+  on.exit({
+    unlink(tmpdir, recursive = TRUE)
+    options("reproducible.ask" = opts[[1]])
+  }
+  , add = TRUE)
 
   d <- list()
   mess <- list()
@@ -584,7 +599,12 @@ test_that("test multiple pipe Cache calls", {
 test_that("test masking of %>% error message", {
   tmpdir <- file.path(tempdir(), "testCache")
   checkPath(tmpdir, create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  opts <- options("reproducible.ask" = FALSE)
+  on.exit({
+    unlink(tmpdir, recursive = TRUE)
+    options("reproducible.ask" = opts[[1]])
+  }
+  , add = TRUE)
   on.exit(try(detach("package:magrittr"), silent = TRUE), add = TRUE)
 
   mess <- capture_messages(library(magrittr))
@@ -619,7 +639,12 @@ test_that("test Cache argument inheritance to inner functions", {
   cacheDir <- paste(sample(letters, 5), collapse = "")
   tmpdir <- file.path(tempdir(), cacheDir)
   checkPath(tmpdir, create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  opts <- options("reproducible.ask" = FALSE)
+  on.exit({
+    unlink(tmpdir, recursive = TRUE)
+    options("reproducible.ask" = opts[[1]])
+  }
+  , add = TRUE)
 
   outer <- function(n) {
     Cache(rnorm, n)

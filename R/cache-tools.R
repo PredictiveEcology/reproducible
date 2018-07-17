@@ -86,7 +86,7 @@ setGeneric("clearCache", function(x, userTags = character(), after, before, ...)
 #' @importFrom archivist createLocalRepo
 setMethod(
   "clearCache",
-  definition = function(x, userTags, after, before, ask = TRUE, ...) {
+  definition = function(x, userTags, after, before, ask = getOption("reproducible.ask"), ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
@@ -272,7 +272,7 @@ setGeneric("keepCache", function(x, userTags = character(), after, before, ask, 
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask = TRUE, ...) {
+  definition = function(x, userTags, after, before, ask = getOption("reproducible.ask"), ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
