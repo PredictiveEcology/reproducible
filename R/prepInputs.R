@@ -401,6 +401,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                               neededFiles = neededFiles,
                                               extractedArchives = extractedArchives,
                                               checkSums = checkSums,
+                                              quick = quick,
                                               needChecksums = needChecksums,
                                               checkSumFilePath = checkSumFilePath,
                                               filesExtracted = filesExtracted)
@@ -437,7 +438,10 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                      neededFiles = neededFiles,
                                      extractedArchives = extractedArchives,
                                      filesExtracted = filesExtracted,
-                                     checkSums, needChecksums))
+                                     checkSums = checkSums,
+                                     needChecksums = needChecksums,
+                                     checkSumFilePath = checkSumFilePath,
+                                     quick = quick))
               )
             )
           }
