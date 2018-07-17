@@ -3,7 +3,8 @@
 #'                  Objects cached after this time will be shown or deleted.
 #' @param before A time (POSIX, character understandable by data.table).
 #'                   Objects cached before this time will be shown or deleted.
-#' @param ask Logical. If \code{FALSE}, then it will not ask to confirm deletions
+#' @param ask Logical. If \code{FALSE}, then it will not ask to confirm deletions using
+#'            \code{clearCache} or \code{keepCache}. Default is \code{TRUE}
 #' @param ... Other arguments. Currently, \code{regexp}, a logical, can be provided.
 #'            This must be \code{TRUE} if the use is passing a regular expression.
 #'            Otherwise, \code{userTags} will need to be exact matches. Default is
@@ -263,7 +264,7 @@ setMethod(
 })
 
 #' @rdname viewCache
-setGeneric("keepCache", function(x, userTags = character(), after, before, ...) {
+setGeneric("keepCache", function(x, userTags = character(), after, before, ask, ...) {
   standardGeneric("keepCache")
 })
 
@@ -271,7 +272,7 @@ setGeneric("keepCache", function(x, userTags = character(), after, before, ...) 
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ...) {
+  definition = function(x, userTags, after, before, ask = TRUE, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
@@ -290,7 +291,7 @@ setMethod(
 
     if (length(eliminate)) {
       #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
-      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE)
+      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE, ask = ask)
     }
     return(objsDT)
 })
