@@ -10,13 +10,13 @@
 |language |en_CA:en                     |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-07-16                   |
+|date     |2018-07-17                   |
 
 ## Packages
 
 |package      |*  |version |date       |source                                          |
 |:------------|:--|:-------|:----------|:-----------------------------------------------|
-|reproducible |   |0.2.2   |2018-07-16 |Github (PredictiveEcology/reproducible@1ed8d10) |
+|reproducible |   |0.2.2   |2018-07-17 |Github (PredictiveEcology/reproducible@ac54f5d) |
 
 # Check results
 
@@ -35,23 +35,23 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [158s/158s]
+  Running ‘test-all.R’ [155s/167s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-    Using memoised copy of .inputObjects event in test module
-    Using cached copy of .inputObjects event in test module. Adding to memoised copy.
-  ── 2. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#10
-  all.equal(simA, simB) isn't true.
+     })
+  12: FUN(X[[i]], ...)
+  13: copyFile(to = saveFilename[x], overwrite = TRUE, from = curFilename[x], silent = TRUE)
+  14: file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
+  15: stop("file can not be copied both 'from' and 'to'")
   
+  Failed with error:  'there is no package called 'future''
     Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
   ══ testthat results  ═══════════════════════════════════════════════════════════
-  OK: 362 SKIPPED: 35 FAILED: 2
+  OK: 361 SKIPPED: 35 FAILED: 2
   1. Failure: test .prepareOutput (@test-cache.R#233) 
-  2. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#106) 
+  2. Error: test checkpointing with disk-backed raster (@test-checkpoint.R#82) 
   
   Error: testthat unit tests failed
-  In addition: Warning message:
-  no DISPLAY variable so Tk is not available 
   Execution halted
 
 checking whether package ‘SpaDES.core’ can be installed ... WARNING
