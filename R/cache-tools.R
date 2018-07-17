@@ -221,7 +221,7 @@ setMethod(
 
     # Clear the futures that are resolved
     if (requireNamespace("future"))
-      future::checkFutures()
+      checkFutures()
 
     objsDT <- showLocalRepo(x) %>% data.table()
     setkeyv(objsDT, "md5hash")
