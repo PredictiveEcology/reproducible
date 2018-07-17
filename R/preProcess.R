@@ -289,6 +289,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums
 }
 
-.emptyChecksumsResult <- data.table(expectedFile = character(), result = character())
+.emptyChecksumsResult <- data.table(expectedFile = character(), actualFile = character(), result = character())
 .emptyChecksumsFileContent <- data.frame(file = character(), checksum = character(), filesize = character(),
                               algorithm = character())

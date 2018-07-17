@@ -6,7 +6,7 @@ test_that("prepInputs doesn't work", {
   library(sp)
   library(raster)
 
-  tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
+  tmpdir <- file.path(tempdir(), rndstr(1,6))
   checkPath(tmpdir, create = TRUE)
   cwd <- setwd(tmpdir)
 
@@ -137,11 +137,11 @@ test_that("prepInputs doesn't work", {
 
   # Test the no allow overwrite if two functions (here postProcess and prepInputs)
   #  return same file-backed raster
-  clearCache(userTags = "prepInputs")
+  clearCache(userTags = "prepInputs", ask = FALSE)
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
   #  not there. Now should be no error
-  expect_message(regexp = "loading", LCC2005_2 <- Cache(
+  mess <- capture_messages(LCC2005_2 <- Cache(
     prepInputs,
     url = url,
     targetFile = lcc2005Filename,
@@ -149,6 +149,7 @@ test_that("prepInputs doesn't work", {
     destinationPath = asPath(dPath),
     studyArea = StudyArea
   ))
+  expect_true(isTRUE(any(grepl(pattern = "Loading", mess))))
 
   ##
   expect_is(LCC2005_2, "Raster")
@@ -325,7 +326,7 @@ test_that("prepInputs doesn't work", {
     destinationPath = asPath(dPath),
     studyArea = StudyArea
   ))
-  expect_true(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
+  expect_true(any(grepl("Skipping extractFromArchive", mess)))
   expect_true(is(LCC2005, "Raster"))
 
   #######################################
@@ -376,13 +377,7 @@ test_that("preProcess doesn't work", {
 
   testthat::skip_if_not(interactive())
 
-  #tmpdir <- file.path(tempdir(), paste(collapse = "", sample(LETTERS, 5)))
-  #checkPath(tmpdir, create = TRUE)
-  #cwd <- setwd(tmpdir)
-
   urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/DEM.tif"
-  #urlTif2 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/habitatQuality.tif"
-  #urlShapefiles2Zip <- "https://drive.google.com/file/d/1eSkYU2xHycp9aC_4Hk8M1yeKIoKt2uhM/view?usp=sharing"
   urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
   urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 

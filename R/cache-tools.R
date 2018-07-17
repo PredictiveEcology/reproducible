@@ -3,6 +3,8 @@
 #'                  Objects cached after this time will be shown or deleted.
 #' @param before A time (POSIX, character understandable by data.table).
 #'                   Objects cached before this time will be shown or deleted.
+#' @param ask Logical. If \code{FALSE}, then it will not ask to confirm deletions using
+#'            \code{clearCache} or \code{keepCache}. Default is \code{TRUE}
 #' @param ... Other arguments. Currently, \code{regexp}, a logical, can be provided.
 #'            This must be \code{TRUE} if the use is passing a regular expression.
 #'            Otherwise, \code{userTags} will need to be exact matches. Default is
@@ -40,6 +42,7 @@
 #' @export
 #' @importFrom archivist rmFromLocalRepo searchInLocalRepo
 #' @importFrom methods setGeneric setMethod
+#' @importFrom data.table setindex
 #' @rdname viewCache
 #'
 #' @examples
@@ -84,7 +87,7 @@ setGeneric("clearCache", function(x, userTags = character(), after, before, ...)
 #' @importFrom archivist createLocalRepo
 setMethod(
   "clearCache",
-  definition = function(x, userTags, after, before, ...) {
+  definition = function(x, userTags, after, before, ask = getOption("reproducible.ask"), ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
@@ -98,13 +101,15 @@ setMethod(
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
 
-        if (cacheSize > 1e7) {
-          message("Your current cache size is ", formattedCacheSize, ".\n",
-                  " Are you sure you would like to delete it all? Y or N")
-          rl <- readline()
-          if (!identical(toupper(rl), "Y")) {
-            message("Aborting clearCache")
-            return(invisible())
+        if (isTRUE(ask)) {
+          if (interactive()) {
+            message("Your current cache size is ", formattedCacheSize, ".\n",
+                    " Are you sure you would like to delete it all? Y or N")
+            rl <- readline()
+            if (!identical(toupper(rl), "Y")) {
+              message("Aborting clearCache")
+              return(invisible())
+            }
           }
         }
       }
@@ -153,13 +158,16 @@ setMethod(
       if (interactive()) {
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
-        if (cacheSize > 1e7) {
-          message("Your size of your selected objects is ", formattedCacheSize, ".\n",
-                  " Are you sure you would like to delete it all? Y or N")
-          rl <- readline()
-          if (!identical(toupper(rl), "Y")) {
-            message("Aborting clearCache")
-            return(invisible())
+        if (isTRUE(ask)) {
+          if (interactive()) {
+
+            message("Your size of your selected objects is ", formattedCacheSize, ".\n",
+                    " Are you sure you would like to delete it all? Y or N")
+            rl <- readline()
+            if (!identical(toupper(rl), "Y")) {
+              message("Aborting clearCache")
+              return(invisible())
+            }
           }
         }
       }
@@ -171,6 +179,7 @@ setMethod(
       suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
     }
     memoise::forget(.loadFromLocalRepoMem)
+    try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
 })
 
@@ -213,6 +222,10 @@ setMethod(
     if (missing(before)) before <- Sys.time() + 1e5
     if (is(x, "simList")) x <- x@paths$cachePath
 
+    # Clear the futures that are resolved
+    if (requireNamespace("future"))
+      checkFutures()
+
     objsDT <- showLocalRepo(x) %>% data.table()
     setkeyv(objsDT, "md5hash")
     if (NROW(objsDT) > 0) {
@@ -253,7 +266,7 @@ setMethod(
 })
 
 #' @rdname viewCache
-setGeneric("keepCache", function(x, userTags = character(), after, before, ...) {
+setGeneric("keepCache", function(x, userTags = character(), after, before, ask, ...) {
   standardGeneric("keepCache")
 })
 
@@ -261,7 +274,7 @@ setGeneric("keepCache", function(x, userTags = character(), after, before, ...) 
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ...) {
+  definition = function(x, userTags, after, before, ask = getOption("reproducible.ask"), ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
@@ -280,7 +293,7 @@ setMethod(
 
     if (length(eliminate)) {
       #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
-      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE)
+      clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE, ask = ask)
     }
     return(objsDT)
 })
@@ -382,4 +395,17 @@ setMethod(
   message("Cache size: ")
   message(preMessage1, format(fsTotal, "auto"))
   message(preMessage, format(fs, "auto"))
+}
+
+
+checkFutures <- function() {
+  # This takes a long time -- can't use it if
+  resol <- future::resolved(.reproEnv)
+
+  while(any(!resol)) {
+    #numSleeps <<- numSleeps+1
+    Sys.sleep(0.001)
+    resol <- future::resolved(.reproEnv)
+  }
+  rm(list = names(resol)[resol], envir = .reproEnv)
 }

@@ -660,8 +660,7 @@ setMethod(
       saveFilename[sameFilenames] <- unlist(lapply(seq_along(curFilename[sameFilenames]),
              function(x) {
                if (file.exists(saveFilename[x])) {
-                 suff <- paste0("_", paste(collapse="", sample(LETTERS, 5)))
-                 .suffix(saveFilename[x], suff)
+                 nextNumericName(saveFilename[x])
                } else {
                  saveFilename[x]
                }
@@ -689,9 +688,10 @@ setMethod(
           #suppressWarnings(
             saveFilename <- unlist(lapply(seq_along(curFilename),
                    function(x) {
+                     # change filename if it already exists
+
                      if (file.exists(saveFilename[x])) {
-                       suff <- paste0("_", paste(collapse="", sample(LETTERS, 5)))
-                       saveFilename[x] <- .suffix(saveFilename[x], suff)
+                       saveFilename[x] <- nextNumericName(saveFilename[x])
                      }
                      copyFile(to = saveFilename[x],
                                         overwrite = TRUE,
@@ -816,14 +816,21 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         useFileCopy <- TRUE
       }
     } else if ( (os == "linux") || (os == "darwin") ) { # nolint
-      if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
-      rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
-      opts <- if (silent) " -a " else " -avP "
-      rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
-                      normalizePath(from, mustWork = TRUE), " ",
-                      normalizePath(toDir, mustWork = FALSE), "/")
+      if (!identical(basename(from), basename(to))) {
+        # rsync can't handle file renaming on copy
+        useFileCopy <- TRUE
+      } else {
 
-      useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
+        if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
+        rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
+        opts <- if (silent) " -a " else " -avP "
+        rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
+                        normalizePath(from, mustWork = TRUE), " ",
+                        normalizePath(toDir, mustWork = FALSE), "/")
+
+        useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
+      }
+
     } else {
       useFileCopy <- TRUE
     }
@@ -1058,4 +1065,21 @@ setMethod("Copy",
     otherFns <- c(paste0("module:", module), otherFns)
   }
   unique(otherFns)
+}
+
+#' @importFrom tools file_path_sans_ext file_ext
+nextNumericName <- function(string) {
+  theExt <- file_ext(string)
+  saveFilenameSansExt <- file_path_sans_ext(string)
+  alreadyHasNumeric <- grepl(saveFilenameSansExt, pattern = "_[[:digit:]]*")
+  if (isTRUE(any(alreadyHasNumeric))) {
+    splits <- strsplit(saveFilenameSansExt, split = "_")
+    numericEnd <- as.numeric(tail(splits[[1]],1))
+    suff <- paste0("_", numericEnd + 1) # keep rndstr in here, so that both streams keep same rnd number state
+    out <- gsub(saveFilenameSansExt, pattern = "_[[:digit:]]*", replacement = suff)
+  } else {
+    out <- paste0(saveFilenameSansExt, "_1")
+  }
+
+  paste0(out, ".", theExt)
 }

@@ -4,7 +4,7 @@ test_that("test Copy", {
 
   ras <- raster(extent(0, 10, 0, 10), vals = 1)
   tmpRasFilename <- tempfile("tmpRas", fileext = ".tif")
-  tmpDir <- file.path(tempdir(), "ras")
+  tmpDir <- file.path(tempdir(), rndstr(1,6))
   checkPath(tmpDir, create = TRUE); on.exit(unlink(tmpDir, recursive = TRUE), add = TRUE)
   ras <- writeRaster(ras, filename = tmpRasFilename, overwrite = TRUE)
   ras2 <- Copy(ras, tmpDir)
@@ -19,7 +19,7 @@ test_that("test Copy", {
   # same content
   expect_true(all(unlist(lapply(seq_along(li), function(i) {
     if (is(li[[i]], "Raster")) {
-       all.equal(li[[i]][], li2[[i]][])
+       all.equal(getValues(li[[i]]), raster::getValues(li2[[i]]))
      } else {
       all.equal(li[[i]], li2[[i]])
     }
