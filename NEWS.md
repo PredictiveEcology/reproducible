@@ -9,10 +9,11 @@ version 0.2.2
 * `future` package is now in suggests
 * fix problems with tests introduced by recent `git2r` update (@stewid, #36).
 * If a `do.call` function is Cached, previously, it would be labelled in the database as `do.call`. Now it attempts to extract the actual function being called by the `do.call`. Messaging is similarly changed.
+* new option `reproducible.ask`, logical, indicating whether `clearCache` should ask for deletions when in an interactive session
 
 ## Bug fixes
 
-* .prepareRasterBackedFile -- now will postpend a random string to a cached copy of a file-backed Raster object, if it already exists. This mirrors the behaviour of the `.rda` file. Previously, if 2 Cache events returned the same file name backing a Raster object, even if the content was different, it would allow the same file name. If either cached object was deleted, therefore, it would cause the other one to break as its file-backing would be missing.
+* .prepareRasterBackedFile -- now will postpend an incremented numeric to a cached copy of a file-backed Raster object, if it already exists. This mirrors the behaviour of the `.rda` file. Previously, if 2 Cache events returned the same file name backing a Raster object, even if the content was different, it would allow the same file name. If either cached object was deleted, therefore, it would cause the other one to break as its file-backing would be missing.
 * options were wrongly pointing to spades.XX and should have been reproducible.XX
 * `extractFromArchive` needed a new `Checksum` function call under some circumstances
 * several other minor bug fixes.
