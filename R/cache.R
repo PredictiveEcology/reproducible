@@ -941,7 +941,8 @@ setMethod(
       if (nrow(isInRepo) > 0) {
         # flush it if notOlderThan is violated
         if (notOlderThan >= lastEntry) {
-          suppressMessages(clearCache(userTags = isInRepo$artifact[lastOne], x = cacheRepo))
+          suppressMessages(clearCache(userTags = isInRepo$artifact[lastOne], x = cacheRepo,
+                                      ask = FALSE))
         }
       }
 
