@@ -178,14 +178,11 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       crsRTM <- NULL
     }
 
-    #mess <- capture.output(type = "message",
                            x <- Cache(cropInputs, x = x, studyArea = studyArea,
                                       extentToMatch = extRTM,
                                       extentCRS = crsRTM,
                                       useCache = useCache, ...)
                            #)
-
-    #.groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
 
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
