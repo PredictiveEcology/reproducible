@@ -4,7 +4,7 @@ test_that("test Copy", {
 
   ras <- raster(extent(0, 10, 0, 10), vals = 1)
   tmpRasFilename <- normPath(tempfile("tmpRas", fileext = ".tif"))
-  tmpDir <- normPath(file.path(tempdir(), rndstr(1,6)))
+  tmpDir <- normPath(file.path(tempdir(), rndstr(1, 6)))
   checkPath(tmpDir, create = TRUE); on.exit(unlink(tmpDir, recursive = TRUE), add = TRUE)
   ras <- writeRaster(ras, filename = tmpRasFilename, overwrite = TRUE)
   ras2 <- Copy(ras, tmpDir)
@@ -13,6 +13,7 @@ test_that("test Copy", {
 
   dt <- data.table(a = 1:2, b = rev(LETTERS[1:2]))
   tmpDir <- normPath(file.path(tempdir(), "ras2"))
+  checkPath(tmpDir, create = TRUE); on.exit(unlink(tmpDir, recursive = TRUE), add = TRUE)
   li <- list(dt = dt, ras = ras, ras2 = ras2)
   li2 <- Copy(li, tmpDir)
 
