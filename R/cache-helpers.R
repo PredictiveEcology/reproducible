@@ -859,7 +859,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                          extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
-    filename <- if (endsWith(basename(object@file@name), suffix = ".grd")) {
+    filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
       sub(object@file@name, pattern = ".grd$", replacement = ".gri")
     } else {
       object@file@name
