@@ -15,8 +15,8 @@ This release fixes failing tests caused by a recent `git2r` change.
 * Windows              (appveyor), R 3.4.0
 
 ### Current R versions
-* macOS High Sierra    (local), R 3.5.0
-* OS X El Capitan  (travis-ci), R 3.5.0
+* macOS Sierra     (travis-ci), R 3.5.0
+* macOS High Sierra    (local), R 3.5.1
 * Ubuntu 14.04     (travis-ci), R 3.5.1
 * Ubuntu 18.04         (local), R 3.5.1
 * Windows           (appveyor), R 3.5.1
