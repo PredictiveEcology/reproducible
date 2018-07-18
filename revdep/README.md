@@ -10,13 +10,13 @@
 |language |en_CA:en                     |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-07-17                   |
+|date     |2018-07-18                   |
 
 ## Packages
 
 |package      |*  |version |date       |source                                          |
 |:------------|:--|:-------|:----------|:-----------------------------------------------|
-|reproducible |   |0.2.2   |2018-07-17 |Github (PredictiveEcology/reproducible@ac54f5d) |
+|reproducible |   |0.2.2   |2018-07-18 |Github (PredictiveEcology/reproducible@5f138c0) |
 
 # Check results
 
@@ -36,7 +36,7 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [155s/167s]
+  Running ‘test-all.R’ [178s/183s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
      })
