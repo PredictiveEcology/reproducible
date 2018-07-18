@@ -689,8 +689,7 @@ setMethod(
             saveFilename <- unlist(lapply(seq_along(curFilename),
                    function(x) {
                      # change filename if it already exists
-
-                     if (file.exists(saveFilename[x])) {
+                    if (file.exists(saveFilename[x])) {
                        saveFilename[x] <- nextNumericName(saveFilename[x])
                      }
                      copyFile(to = saveFilename[x],
@@ -1071,7 +1070,7 @@ setMethod("Copy",
 nextNumericName <- function(string) {
   theExt <- file_ext(string)
   saveFilenameSansExt <- file_path_sans_ext(string)
-  alreadyHasNumeric <- grepl(saveFilenameSansExt, pattern = "_[[:digit:]]*")
+  alreadyHasNumeric <- grepl(saveFilenameSansExt, pattern = "_[[:digit:]]*$")
   if (isTRUE(any(alreadyHasNumeric))) {
     splits <- strsplit(saveFilenameSansExt, split = "_")
     numericEnd <- as.numeric(tail(splits[[1]],1))

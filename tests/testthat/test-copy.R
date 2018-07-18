@@ -1,21 +1,20 @@
 test_that("test Copy", {
-  library(raster)
-  library(data.table)
+  testInitOut <- testInit(c("raster", "data.table"), tmpFileExt = ".tif")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   ras <- raster(extent(0, 10, 0, 10), vals = 1)
-  tmpRasFilename <- normPath(tempfile("tmpRas", fileext = ".tif"))
-  tmpDir <- normPath(file.path(tempdir(), rndstr(1, 6)))
-  checkPath(tmpDir, create = TRUE); on.exit(unlink(tmpDir, recursive = TRUE), add = TRUE)
-  ras <- writeRaster(ras, filename = tmpRasFilename, overwrite = TRUE)
-  ras2 <- Copy(ras, tmpDir)
+  ras <- writeRaster(ras, filename = tmpfile, overwrite = TRUE)
+  ras2 <- Copy(ras, tmpdir)
   expect_true(all.equal(ras2[], ras[]))
   expect_false(filename(ras2) == filename(ras))
 
   dt <- data.table(a = 1:2, b = rev(LETTERS[1:2]))
-  tmpDir <- normPath(file.path(tempdir(), "ras2"))
-  checkPath(tmpDir, create = TRUE); on.exit(unlink(tmpDir, recursive = TRUE), add = TRUE)
+  tmpdir <- normPath(file.path(tempdir(), "ras2"))
+  checkPath(tmpdir, create = TRUE); on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
   li <- list(dt = dt, ras = ras, ras2 = ras2)
-  li2 <- Copy(li, tmpDir)
+  li2 <- Copy(li, tmpdir)
 
   # same content
   expect_true(all(unlist(lapply(seq_along(li), function(i) {
@@ -40,8 +39,8 @@ test_that("test Copy", {
   li <- list(dt = dt, ras = ras, ras2 = ras2)
   li <- list2env(li, env = new.env())
 
-  tmpDir <- file.path(tempdir(), "ras3")
-  li2 <- Copy(li, tmpDir)
+  tmpdir <- file.path(tempdir(), "ras3")
+  li2 <- Copy(li, tmpdir)
 
   expect_true(all(unlist(lapply(names(li), function(i) {
     if (is(li[[i]], "Raster")) {
@@ -68,8 +67,8 @@ test_that("test Copy", {
   liEnv <- list2env(li, env = env1)
   liEnv[["env"]] <- li
 
-  tmpDir <- file.path(tempdir(), "ras3")
-  liEnv2 <- Copy(liEnv, tmpDir)
+  tmpdir <- file.path(tempdir(), "ras3")
+  liEnv2 <- Copy(liEnv, tmpdir)
 
   expect_true(all(unlist(lapply(names(liEnv[["env"]]), function(i) {
     if (is(li[[i]], "Raster")) {
