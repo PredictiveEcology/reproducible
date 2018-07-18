@@ -400,8 +400,10 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                               destinationPath = destinationPath,
                                               neededFiles = neededFiles,
                                               extractedArchives = extractedArchives,
-                                              checkSums,
-                                              needChecksums,
+                                              checkSums = checkSums,
+                                              quick = quick,
+                                              needChecksums = needChecksums,
+                                              checkSumFilePath = checkSumFilePath,
                                               filesExtracted = filesExtracted)
         } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
           extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in%
@@ -436,7 +438,10 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                      neededFiles = neededFiles,
                                      extractedArchives = extractedArchives,
                                      filesExtracted = filesExtracted,
-                                     checkSums, needChecksums))
+                                     checkSums = checkSums,
+                                     needChecksums = needChecksums,
+                                     checkSumFilePath = checkSumFilePath,
+                                     quick = quick))
               )
             )
           }
