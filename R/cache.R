@@ -461,7 +461,10 @@ setMethod(
           if (functionDetails$functionName == "do.call") {
             possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
                                                    deparse, backtick = TRUE)
-            whatArg <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))$what
+            doCallMatched <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))
+            whatArg <- doCallMatched$what
+            whArgs <- which(names(tmpl) %in% "args")
+            tmpl <- append(tmpl[-whArgs], tmpl[[whArgs]])
             functionDetails$functionName <- whatArg
           }
         }
@@ -912,7 +915,7 @@ setMethod(
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = tmpl[!dotPipe],
-                                 objects = objects, length = length,
+                                 objects = outputObjects, length = length,
                                  algo = algo, quick = quick, classOptions = classOptions, ...)
 
       if (verbose) {
