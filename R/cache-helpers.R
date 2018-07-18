@@ -820,13 +820,13 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         # rsync can't handle file renaming on copy
         useFileCopy <- TRUE
       } else {
+
         if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
-        checkPath(toDir, create = TRUE)
         rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
         opts <- if (silent) " -a " else " -avP "
         rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
                         normalizePath(from, mustWork = TRUE), " ",
-                        normalizePath(toDir, mustWork = TRUE), "/")
+                        normalizePath(toDir, mustWork = FALSE), "/")
 
         useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
       }
