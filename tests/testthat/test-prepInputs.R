@@ -390,7 +390,13 @@ test_that("preProcess doesn't work", {
   urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
   urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 
-  expectedMessage <- "Running preP|Preparing:|File downloaded|From:Shapefile|Checking local|Finished checking|Downloading|Skipping download|Skipping extractFrom|targetFile was not.*Trying raster|Writing checksums.*you can specify targetFile|No targetFile supplied, so can't use"
+  expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
+                          "From:Shapefile", "Checking local", "Finished checking",
+                          "Downloading", "Skipping download", "Skipping extractFrom",
+                          "targetFile was not.*Trying raster",
+                          "Writing checksums.*you can specify targetFile",
+                          "No targetFile supplied, so can't use")
+  expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
 
   runTest <- function(prod, class, numFiles, mess, expectedMess = expectedMessage, filePattern) {
     files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
@@ -444,7 +450,7 @@ test_that("preProcess doesn't work", {
     url = urlShapefiles1Zip,
     destinationPath = tmpdir
   )))
-  runTest("1_2_4_5_6_8_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+  runTest("1_2_5_6_8_9_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
   unlink(dir(tmpdir, full.names = TRUE))
 
   ################################################################
