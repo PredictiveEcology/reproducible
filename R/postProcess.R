@@ -136,7 +136,7 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        overwrite = TRUE, useSAcrs = FALSE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
-
+#browser()
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   if (!is.null(studyArea) & !is(studyArea, "Spatial")) {
     stop("The 'studyArea' provided is not a Spatial* object.")
@@ -163,9 +163,6 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
   if (!is.null(studyArea) || !is.null(rasterToMatch)) {
 
     # fix errors if methods available
-    if (identical(useCache, FALSE)) {
-      message("useCache is FALSE, skipping Cache during post-processing.")
-    }
     skipCacheMess <- "useCache is FALSE, skipping Cache"
     skipCacheMess2 <- "No cacheRepo supplied"
 
@@ -177,6 +174,7 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       extRTM <- NULL
       crsRTM <- NULL
     }
+    #browser()
 
                            x <- Cache(cropInputs, x = x, studyArea = studyArea,
                                       extentToMatch = extRTM,

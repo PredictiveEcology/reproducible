@@ -64,6 +64,7 @@ test_that("prepInputs doesn't work", {
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
   crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
+
   #######################################
   ### url, targetFile, alsoExtract -- with Cache ######
   #######################################
@@ -92,8 +93,33 @@ test_that("prepInputs doesn't work", {
   expect_true(is(shpEcozoneSm, "SpatialPolygons"))
   expect_identical(extent(shpEcozoneSm), extent(StudyArea))
 
-  #plot(shpEcozone)
-  #plot(shpEcozoneSm, add = TRUE, col = "red")
+  # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
+  mess <- capture_messages(shpEcozoneSm <- Cache(
+    prepInputs,
+    url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+    targetFile = reproducible::asPath(ecozoneFilename),
+    alsoExtract = reproducible::asPath(ecozoneFiles),
+    studyArea = StudyArea,
+    fun = "shapefile",
+    destinationPath = dPath,
+    filename2 = "EcozoneFile.shp",
+    useCache = FALSE
+  ))
+  expect_false(all(grepl("loading", mess)))
+
+  # Test useCache -- doesn't error and loads from cache
+  mess <- capture_messages(shpEcozoneSm <- Cache(
+    prepInputs,
+    url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+    targetFile = reproducible::asPath(ecozoneFilename),
+    alsoExtract = reproducible::asPath(ecozoneFiles),
+    studyArea = StudyArea,
+    fun = "shapefile",
+    destinationPath = dPath,
+    filename2 = "EcozoneFile.shp",
+    useCache = TRUE
+  ))
+  expect_true(any(grepl("loading", mess)))
 
   # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
   #   but the StudyArea does get reprojected, need to use rasterToMatch
@@ -898,4 +924,24 @@ test_that("preProcess doesn't work", {
     destinationPath = tmpdir
   )))
   runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
+
+})
+
+
+test_that("prepInputs doesn't work", {
+  testthat::skip_on_cran()
+  testthat::skip_on_travis()
+  testthat::skip_on_appveyor()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/DEM.tif"
+  test <- prepInputs(
+    targetFile = "DEM.tif"
+    url = urlTif1,
+    destinationPath = tmpdir,
+    useCache = TRUE
+  )
 })
