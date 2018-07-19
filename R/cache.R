@@ -347,11 +347,17 @@ setMethod(
             forms <- formalArgs(selectMethod(fnName, signature = class(mc[[1]])))
             functionDetails$functionName <- fnName
           } else {
-            info <- attr(utils::methods(whatArg), "info")
+            suppressWarnings(info <- attr(utils::methods(whatArg), "info")) # from hadley/sloop package s3_method_generic
             classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
+            classes <- gsub("-method$", "", classes)
             mc <- as.list(match.call(doCallFUN, as.call(append(whatArg, tmpl[[whArgs]])))[-1])
             theClass <- classes[unlist(lapply(classes, function(x) inherits(mc[[1]], x)))]
-            forms <- formalArgs(paste0(whatArg, ".", theClass))
+            forms <- if (length(theClass)) {
+              formalArgs(paste0(whatArg, ".", theClass))
+            } else {
+              formalArgs(whatArg)
+            }
+
           }
         }
       }
