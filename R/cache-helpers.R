@@ -789,7 +789,6 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   checkPath(dirname(to), create = create)
 
   os <- tolower(Sys.info()[["sysname"]])
-  if (isTRUE(os == "darwin")) useFileCopy <- TRUE
   if (!useFileCopy) {
     if (os == "windows") {
       if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
