@@ -691,7 +691,15 @@ writeOutputs <- function(x, filename2, overwrite, ...) {
 
 #' @rdname writeOutputs
 writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
-  if (!is.null(filename2)) {
+
+  dots <- list(...)
+
+    if (!is.null(filename2)) {
+
+    if (dataType(x) != dots$datatype)
+      message(paste("chosen 'datatype' seems inadequate for the range of values in", names(x),
+                    "\n consider changing to", dataType(x)))
+
     xTmp <- writeRaster(x = x, filename = filename2, overwrite = overwrite, ...)
 
     # This is a bug in writeRaster was spotted with crs of xTmp became
