@@ -939,7 +939,7 @@ test_that("prepInputs doesn't work", {
   }, add = TRUE)
   urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/DEM.tif"
   test <- prepInputs(
-    targetFile = "DEM.tif"
+    targetFile = "DEM.tif",
     url = urlTif1,
     destinationPath = tmpdir,
     useCache = TRUE
