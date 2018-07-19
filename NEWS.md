@@ -17,6 +17,12 @@ version 0.2.2
 * options were wrongly pointing to spades.XX and should have been reproducible.XX
 * `extractFromArchive` needed a new `Checksum` function call under some circumstances
 * several other minor bug fixes.
+* prepInputs -- arguments that were same as Cache were not being correctly passed internally to Cache, and if wrapped in Cache, it was not passed into prepInputs. Fixed.
+* extracxtFromArchive - when dealing with nested zips, not all args were passed in recursively (fix c/o Ceres Barros)
+
+## Minor changes
+
+- most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistent test building
 
 version 0.2.1
 =============
