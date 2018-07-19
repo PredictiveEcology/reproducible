@@ -275,7 +275,16 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     ## -- normal reading of raster on disk is fast b/c only reads metadata
     x <- do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
   } else {
+    if (identical(out$fun, load)){
+      objs <- do.call(out$fun, list(file = out$targetFilePath, envir = environment()))
+      x <- lapply(objs, FUN = function(x){
+        tempObj <- get(x)
+        return(tempObj)
+      })
+      names(x) <- objs
+    } else {
     x <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args))
+    }
   }
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
