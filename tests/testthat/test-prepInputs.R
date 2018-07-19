@@ -731,7 +731,7 @@ test_that("preProcess doesn't work", {
   ################################################################
   # archive exists locally
   # remove all non archive files
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))], pattern = "\\.zip", invert = TRUE, value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
@@ -750,7 +750,7 @@ test_that("preProcess doesn't work", {
   ################################################################
   # archive exists locally
   # remove all non archive files
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))], pattern = "\\.zip", invert = TRUE, value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     targetFile = "Shapefile1.shp",
@@ -771,7 +771,8 @@ test_that("preProcess doesn't work", {
   ################################################################
   # archive exists locally
   # remove all non archive files
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "\\.zip", invert = TRUE, value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     targetFile = "Shapefile1.shp",
@@ -789,8 +790,10 @@ test_that("preProcess doesn't work", {
   )))
   runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
 
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     targetFile = "Shapefile1.shp",
@@ -830,7 +833,8 @@ test_that("preProcess doesn't work", {
   ################################################################
   ###### targetFile, alsoExtract                             #####
   ################################################################
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         targetFile = "Shapefile1.shp",
@@ -851,7 +855,8 @@ test_that("preProcess doesn't work", {
   ################################################################
   ###### alsoExtract                                         #####
   ################################################################
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
@@ -867,7 +872,8 @@ test_that("preProcess doesn't work", {
     ))
   runTest("1_2_5_6_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
 
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "CHECKSUMS.txt", value = TRUE))
   expect_error(mess <-
     capture_messages(warns <- capture_warnings(
       test <- prepInputs(
@@ -881,8 +887,10 @@ test_that("preProcess doesn't work", {
   ################################################################
   # archive exists locally
   # remove all non archive files
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
@@ -899,15 +907,18 @@ test_that("preProcess doesn't work", {
   runTest("1_2_5_6_9_10", "SpatialPolygons", 5, mess, filePattern = "Shapefile")
 
   # Try without .shp -- fail
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "\\.zip", invert = TRUE, value = TRUE))
   expect_error(mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shx"),
     destinationPath = tmpdir
   ))))
 
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "\\.zip", invert = TRUE, value = TRUE))
-  file.remove(grep(dir(tmpdir, full.names = TRUE), pattern = "CHECKSUMS.txt", value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+                   pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     targetFile = "Shapefile1.shp",
