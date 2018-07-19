@@ -290,17 +290,107 @@ setMethod(
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick, cacheId, useCache,
                         showSimilar) {
+
+    if (missing(FUN)) stop("Cache requires the FUN argument")
+    tmpl <- list(...)
+    isPipe <- isTRUE(!is.null(tmpl$._pipe))
+    originalDots <- tmpl
+
+    # If passed with 'quote'
+    if (!is.function(FUN)) {
+      parsedFun <- parse(text = FUN)
+      evaledParsedFun <- eval(parsedFun[[1]])
+      if (is.function(evaledParsedFun)) {
+        tmpFUN <- evaledParsedFun
+        mc <- match.call(tmpFUN, FUN)
+        FUN <- tmpFUN # nolint
+        originalDots <- append(originalDots, as.list(mc[-1]))
+        tmpl <- append(tmpl, as.list(mc[-1]))
+      }
+      functionDetails <- list(functionName = as.character(parsedFun[[1]]))
+    } else {
+      if (!isPipe) {
+        functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
+
+        # i.e., if it did extract the name
+        if (!is.na(functionDetails$functionName)) {
+          if (is.primitive(FUN)) {
+            tmpl <- list(...)
+          } else {
+            tmpl <- as.list(
+              match.call(FUN, as.call(list(FUN, ...))))[-1]
+          }
+        }
+      } else {
+        functionDetails <- list()
+      }
+    }
+
+    isDoCall <- FALSE
+    forms <- formalArgs(FUN)
+    if (!is.null(functionDetails$functionName)) {
+      if (!is.na(functionDetails$functionName)) {
+        if (functionDetails$functionName == "do.call") {
+          isDoCall <- TRUE
+          possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
+                                 deparse, backtick = TRUE)
+          #doCallMatched <- as.list(match.call(tmpl$what, call = as.call(append(list(tmpl$what), tmpl$args))))
+          doCallMatched <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))
+          whatArg <- doCallMatched$what
+
+          whArgs <- which(names(tmpl) %in% "args")
+          doCallFUN <- tmpl$what
+          forms <- formalArgs(doCallFUN)
+          if (isS4(doCallFUN)) {
+            fnName <- doCallFUN@generic
+            mc <- as.list(match.call(doCallFUN, as.call(append(fnName, tmpl[[whArgs]]))))
+            forms <- formalArgs(selectMethod(fnName, signature = class(mc[[1]])))
+            functionDetails$functionName <- fnName
+          } else {
+            info <- attr(utils::methods(whatArg), "info")
+            classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
+            mc <- as.list(match.call(doCallFUN, as.call(append(whatArg, tmpl[[whArgs]])))[-1])
+            theClass <- classes[unlist(lapply(classes, function(x) inherits(mc[[1]], x)))]
+            forms <- formalArgs(paste0(whatArg, ".", theClass))
+          }
+        }
+      }
+    }
+
+    # Determine if some of the Cache arguments are also arguments to FUN
+    if (isDoCall) {
+      argNamesOfAllClasses <- forms
+      functionDetails$.FUN <- format(doCallFUN) # nolint
+      formalsInCacheAndFUN <- argNamesOfAllClasses[argNamesOfAllClasses %in% formalArgs(Cache)]
+    } else {
+      functionDetails$.FUN <- format(FUN) # nolint
+      formalsInCacheAndFUN <- formalArgs(FUN)[formalArgs(FUN) %in% formalArgs(Cache)]
+    }
+
+    # If arguments to FUN and Cache are identical, pass them through to FUN
+    if (length(formalsInCacheAndFUN)) {
+      formalsInCacheAndFUN <- grep("\\.\\.\\.", formalsInCacheAndFUN, value = TRUE, invert = TRUE)
+      commonArguments <- mget(formalsInCacheAndFUN, inherits = FALSE)
+      if (isDoCall) {
+        tmpl$args[formalsInCacheAndFUN] <- commonArguments
+      } else {
+        tmpl[formalsInCacheAndFUN] <- commonArguments
+      }
+    }
+
     if (!useCache) {
       message(crayon::green("useCache is FALSE, skipping Cache.",
                             "To turn Caching on, use options(reproducible.useCache = TRUE)"))
-      FUN(...)
+      if (isDoCall) {
+        do.call(tmpl$what, args = tmpl$args)
+      } else {
+        do.call(FUN, args = tmpl)
+      }
     } else {
 
       if (verbose) {
         startCacheTime <- Sys.time()
       }
-
-      if (missing(FUN)) stop("Cache requires the FUN argument")
 
       if (!missing(compareRasterFileLength)) {
         message("compareRasterFileLength argument being deprecated. Use 'length'")
@@ -374,103 +464,12 @@ setMethod(
         }
       }
 
-      tmpl <- list(...)
-
       # get cacheRepo if not supplied
       if (is.null(cacheRepo)) {
         cacheRepo <- .checkCacheRepo(tmpl, create = TRUE)
       } else {
         cacheRepo <- checkPath(cacheRepo, create = TRUE)
       }
-
-      # memoised part -- NA comes from next few lines -- if quick is NA, then it is a memoise event
-      # if (!is.na(quick)) {
-      #   if (getOption("reproducible.useMemoise")) {
-      #     if (quick) {
-      #       rawFunName <- deparse(substitute(FUN, env = whereInStack("Cache")))
-      #       funName <- paste0("Cache_", rawFunName)
-      #       if (!is.memoised(.memoisedCacheFuns[[funName]])) {
-      #         .memoisedCacheFuns[[funName]] <- CacheMem
-      #       }
-      #       if (!is.null(notOlderThan)) {
-      #         if (Sys.time() > notOlderThan) {
-      #           forget(.memoisedCacheFuns[[funName]])
-      #         }
-      #       }
-      #       mc <- match.call(expand.dots = TRUE)
-      #       mc[[1]] <- as.name(funName)
-      #       mc <- as.list(mc)
-      #       mc$quick <- NA
-      #       mc[[1]] <- NULL
-      #       mc$userTags <- c(paste0("memoisedFunction:",funName), mc$userTags)
-      #       out <- do.call(.memoisedCacheFuns[[funName]], mc)#)
-      #       if (!is.null(out)) {
-      #         if (!attr(out, "newCache")) {
-      #           md5Hash <- searchInLocalRepo(pattern = attr(out, "tags"), repoDir = cacheRepo)
-      #           suppressWarnings( # warning is about time zone
-      #             archivist::addTagsRepo(md5Hash,
-      #                                  repoDir = cacheRepo,
-      #                                  tags = c(paste0("MemAccessed:", Sys.time())))
-      #           )
-      #           .cacheMessage("", paste("Memoised",rawFunName))
-      #         }
-      #       }
-      #       return(out)
-      #     }
-      #   }
-      # } else {
-      #   # if it was NA, then it means TRUE, but memoised too
-      #   quick <- TRUE
-      # }
-
-      originalDots <- tmpl
-      isPipe <- isTRUE(!is.null(tmpl$._pipe))
-
-      # If passed with 'quote'
-      if (!is.function(FUN)) {
-        parsedFun <- parse(text = FUN)
-        evaledParsedFun <- eval(parsedFun[[1]])
-        if (is.function(evaledParsedFun)) {
-          tmpFUN <- evaledParsedFun
-          mc <- match.call(tmpFUN, FUN)
-          FUN <- tmpFUN # nolint
-          originalDots <- append(originalDots, as.list(mc[-1]))
-          tmpl <- append(tmpl, as.list(mc[-1]))
-        }
-        functionDetails <- list(functionName = as.character(parsedFun[[1]]))
-      } else {
-        if (!isPipe) {
-          functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
-
-          # i.e., if it did extract the name
-          if (!is.na(functionDetails$functionName)) {
-            if (is.primitive(FUN)) {
-              tmpl <- list(...)
-            } else {
-              tmpl <- as.list(
-                match.call(FUN, as.call(list(FUN, ...))))[-1]
-            }
-          }
-        } else {
-          functionDetails <- list()
-        }
-      }
-
-      if (!is.null(functionDetails$functionName)) {
-        if (!is.na(functionDetails$functionName)) {
-          if (functionDetails$functionName == "do.call") {
-            possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
-                                                   deparse, backtick = TRUE)
-            doCallMatched <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))
-            whatArg <- doCallMatched$what
-            whArgs <- which(names(tmpl) %in% "args")
-            tmpl <- append(tmpl[-whArgs], tmpl[[whArgs]])
-            functionDetails$functionName <- whatArg
-          }
-        }
-      }
-      # get function name and convert the contents to text so digestible
-      functionDetails$.FUN <- format(FUN) # nolint
 
       if (isPipe) {
         if (!is.call(tmpl$._lhs)) {

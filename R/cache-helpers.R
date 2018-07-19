@@ -337,6 +337,7 @@ setMethod(
 #' @rdname cacheHelper
 getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
   if (isS4(FUN)) {
+    #browser()
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
     firstElems <- lapply(firstElems, function(x) {
@@ -385,28 +386,32 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
+    #browser()
+    scalls <- sys.calls()
     if (!missing(overrideCall)) {
-      functionCall <- grep(sys.calls(), pattern = paste0("^", overrideCall), value = TRUE)
+      callIndices <- grep(scalls, pattern = paste0("^", overrideCall))
+      functionCall <- scalls[callIndices]
     } else {
-      functionCall <- grep(sys.calls(),
-                           pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache", value = TRUE)
+      callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+      functionCall <- scalls[callIndices]
     }
     if (length(functionCall)) {
       # for() loop is a work around for R-devel that produces a different final call in the
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
-      for (fns in rev(functionCall)) {
+      for (callIndex in rev(callIndices)) {
         if (!missing(overrideCall)) {
-          matchedCall <- match.call(get(overrideCall), parse(text = fns))
+          matchedCall <- match.call(get(overrideCall), scalls[[callIndex]])#parse(text = callIndex))
           functionName <- matchedCall$FUN
         } else {
-          matchedCall <- match.call(Cache, parse(text = fns))
+          matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
           functionName <- matchedCall$FUN
         }
         functionName <- deparse(functionName, width.cutoff = 300)
-        if (all(functionName != "FUN")) break
+        if (all(functionName != c("FUN"))) break
       }
     } else {
       functionName <- ""
+      callIndex <- numeric()
     }
     .FUN <- FUN  # nolint
   }
@@ -420,7 +425,7 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
   if (isTRUE(grepl(functionName, pattern = "\\(")))
     functionName <- NA_character_
 
-  return(list(functionName = functionName, .FUN = .FUN))
+  return(list(functionName = functionName, .FUN = .FUN, callIndex = callIndex))
 }
 
 #' @exportClass Path

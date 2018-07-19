@@ -275,6 +275,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     ## -- normal reading of raster on disk is fast b/c only reads metadata
     x <- do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
   } else {
+    #browser()
     x <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
                useCache = useCache)
   }
