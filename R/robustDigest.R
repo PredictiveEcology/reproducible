@@ -163,17 +163,22 @@ setMethod(
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
   if (!quick) {
-      if (any(unlist(lapply(object, dir.exists)))) {
+      # if (any(unlist(lapply(object, dir.exists)))) {
+      #   bbb <<- bbb + 1
+      #   unlist(lapply(object, function(x) {
+      #     if (dir.exists(x)) {
+      #       fastdigest(basename(x))
+      #     } else {
+      #       fastdigest(x)
+      #     }
+      #   }))
+      #} else
+    #aaa <<- aaa + length(object)
+      if (any(unlist(lapply(object, file.exists)))) {
         unlist(lapply(object, function(x) {
           if (dir.exists(x)) {
             fastdigest(basename(x))
-          } else {
-            fastdigest(x)
-          }
-        }))
-      } else if (any(unlist(lapply(object, file.exists)))) {
-        unlist(lapply(object, function(x) {
-          if (file.exists(x)) {
+          } else if (file.exists(x)) {
             digest::digest(file = x, length = length, algo = algo)
           } else {
             fastdigest(x)

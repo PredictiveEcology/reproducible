@@ -290,8 +290,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
   if (!(all(is.null(out$dots$studyArea), is.null(out$dots$rasterToMatch)))) {
     message("Running postProcess")
-    x <- Cache(do.call, postProcess, append(list(useCache = useCache, x = x, filename1 = out$targetFilePath,
-                                                 destinationPath = out$destinationPath), out$dots))
+    x <- Cache(do.call, postProcess, append(list(x = x, filename1 = out$targetFilePath,
+                                                 destinationPath = out$destinationPath), out$dots),
+               useCache = useCache)
   }
 
   return(x)
@@ -315,6 +316,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @param needChecksums A numeric, with \code{0} indicating do not write a new checksums,
 #'                      \code{1} write a new one,
 #'                      \code{2} append new information to existing one.
+#' @param checkSumFilePath The full path to the checksum.txt file
+#' @param quick Passed to \code{Checksums}
 #' @param ... Passed to \code{unzip} or \code{untar}, e.g., \code{overwrite}
 #'
 #' @return A character vector listing the paths of the extracted archives.
@@ -324,7 +327,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                neededFiles, extractedArchives = NULL, checkSums,
-                               needChecksums, filesExtracted = character()) {
+                               needChecksums, filesExtracted = character(),
+                               checkSumFilePath, quick) {
 
 
   if (!is.null(archive)) {
@@ -347,6 +351,38 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       funWArgs <- .whichExtractFn(archive[1], args)
 
       filesInArchive <- .listFilesInArchive(archive)
+
+      # need to re-Checksums because
+      checkSums <- if (file.exists(checkSumFilePath)) {
+        try(Checksums(
+          files = file.path(destinationPath, basename(neededFiles)),
+          checksumFile = checkSumFilePath,
+          path = destinationPath,
+          quickCheck = quick,
+          write = FALSE
+        ), silent = TRUE)
+      } else {
+        needChecksums <- 1
+        checkSums <- .emptyChecksumsResult
+      }
+
+      # join the neededFiles with the checkSums -- find out which are missing
+      checkSumsDT <- data.table(checkSums)
+      neededFilesDT <- data.table(neededFiles = basename(neededFiles))
+      isOKDT <- checkSumsDT[neededFilesDT, on = c(expectedFile = "neededFiles")]
+      isOKDT2 <- checkSumsDT[neededFilesDT, on = c(actualFile = "neededFiles")]
+      # fill in any OKs from "actualFile" intot he isOKDT
+      isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+      isOK <- compareNA(isOKDT$result, "OK")
+
+      #basename(neededFiles) %in% checkSums$expectedFile
+      #isOK <-
+      #  checkSums[checkSums$expectedFile %in% basename(neededFiles) |
+      #              checkSums$actualFile %in% basename(neededFiles),]$result
+      #checkSums[compareNA(checkSums$expectedFile, basename(neededFiles)) |
+      #              compareNA(checkSums$actualFile, basename(neededFiles)),]$result
+      #isOK3 <- isOK$result[!is.na(isOK$result)] == "OK"
+
       # filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
       #
       # if ("Name" %in% names(filesInArchive)) {
@@ -358,7 +394,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       if (is.null(neededFiles)) {
         result <- checkSums[checkSums$expectedFile %in% basename(filesInArchive), ]$result
       }
-      if (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
+      if (!(all(isOK)) ||
           NROW(result) == 0) {
         # don't extract if we already have all files and they are fine
 
@@ -374,8 +410,10 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                               destinationPath = destinationPath,
                                               neededFiles = neededFiles,
                                               extractedArchives = extractedArchives,
-                                              checkSums,
-                                              needChecksums,
+                                              checkSums = checkSums,
+                                              quick = quick,
+                                              needChecksums = needChecksums,
+                                              checkSumFilePath = checkSumFilePath,
                                               filesExtracted = filesExtracted)
         } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
           extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in%
@@ -410,7 +448,10 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                      neededFiles = neededFiles,
                                      extractedArchives = extractedArchives,
                                      filesExtracted = filesExtracted,
-                                     checkSums, needChecksums))
+                                     checkSums = checkSums,
+                                     needChecksums = needChecksums,
+                                     checkSumFilePath = checkSumFilePath,
+                                     quick = quick))
               )
             )
           }

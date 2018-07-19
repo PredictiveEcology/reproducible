@@ -175,15 +175,15 @@ The special assign operator %&amp;lt;% is equivalent to Cache. See examples at t
     <tr>
       <th>objects</th>
       <td><p>Character vector of objects to be digested. This is only applicable
-if there is a list, environment or simList with named objects
+if there is a list, environment (or similar) named objects
 within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
-the list, environment or simList objects.</p></td>
+the list, environment or similar objects.</p></td>
     </tr>
     <tr>
       <th>outputObjects</th>
       <td><p>Optional character vector indicating which objects to
-return. This is only relevant for <code>simList</code> objects</p></td>
+return. This is only relevant for list, environment (or similar) objects</p></td>
     </tr>
     <tr>
       <th>algo</th>
@@ -260,13 +260,20 @@ set to <code>TRUE</code> during the first run of <code>Cache</code>. Default is 
       <th>quick</th>
       <td><p>Logical. If <code>TRUE</code>,
 little or no disk-based information will be assessed, i.e., mostly its
-memory content. This is relevant for objects of class
-<code>Path</code> and <code>Raster</code> currently.
-For class <code>Path</code> objects, the file's metadata (i.e., filename and file size)
-will be hashed instead of the file contents. If set to <code>FALSE</code> (default),
+memory content. This is relevant for objects of class <code>character</code>,
+<code>Path</code> and <code>Raster</code> currently. For class <code>character</code>, it is ambiguous
+whether this represents a character string or a vector of file paths. The function
+will assess if it is a path to a file or directory first. If not, it will treat
+the object as a character string. If it is known that character strings should
+not be treated as paths, then <code>quick = TRUE</code> will be much faster, with no loss
+of information. If it is file or directory, then it will digest the file content,
+or <code>basename(object)</code>. For class <code>Path</code> objects, the file's metadata
+(i.e., filename and file size)
+will be hashed instead of the file contents if <code>quick = TRUE</code>.
+If set to <code>FALSE</code> (default),
 the contents of the file(s) are hashed.
-If <code>quick = TRUE</code>, <code>length</code> is ignored.
-<em>NOTE: this argument is experimental and may change in future releases.</em></p></td>
+If <code>quick = TRUE</code>, <code>length</code> is ignored. <code>Raster</code> objects are treated
+as paths, if they are file-backed.</p></td>
     </tr>
     <tr>
       <th>verbose</th>
@@ -277,9 +284,11 @@ Caching, which may help diagnose Caching challenges.</p></td>
       <th>cacheId</th>
       <td><p>Character string. If passed, this will override the calculated hash
 of the inputs, and return the result from this cacheId in the cacheRepo.
-In general, this is not used; however, in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs, this can stabilize
-the return value.</p></td>
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.</p></td>
     </tr>
     <tr>
       <th>useCache</th>
@@ -454,7 +463,7 @@ Subsequent calls to this function
 </div><span class='co'># NOT RUN {</span>
   <span class='fu'>browseVignettes</span>(<span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"reproducible"</span>)
 <span class='co'># }</span><div class='input'><span class='co'># Equivalent</span>
-<span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='input'><span class='no'>b</span> <span class='kw'>%&lt;%</span> <span class='fu'>rnorm</span>(<span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous FUN call, adding to memoised copy</span></div><div class='input'>
+<span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous rnorm call, adding to memoised copy</span></div><div class='input'><span class='no'>b</span> <span class='kw'>%&lt;%</span> <span class='fu'>rnorm</span>(<span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous FUN call.</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

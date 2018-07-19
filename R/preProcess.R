@@ -215,7 +215,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
   filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                        neededFiles = neededFiles,
-                                       checkSums = checkSums, needChecksums = needChecksums)
+                                       checkSums = checkSums, needChecksums = needChecksums,
+                                       checkSumFilePath = checkSumFilePath, quick = quick)
 
   filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
                               basename(filesExtracted$filesExtracted)))
@@ -288,6 +289,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums
 }
 
-.emptyChecksumsResult <- data.table(expectedFile = character(), result = character())
+.emptyChecksumsResult <- data.table(expectedFile = character(), actualFile = character(), result = character())
 .emptyChecksumsFileContent <- data.frame(file = character(), checksum = character(), filesize = character(),
                               algorithm = character())

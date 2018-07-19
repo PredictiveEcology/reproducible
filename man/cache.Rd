@@ -36,13 +36,13 @@ lhs \%<\% rhs
 \item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 
 \item{objects}{Character vector of objects to be digested. This is only applicable
-if there is a list, environment or simList with named objects
+if there is a list, environment (or similar) named objects
 within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
-the list, environment or simList objects.}
+the list, environment or similar objects.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
-return. This is only relevant for \code{simList} objects}
+return. This is only relevant for list, environment (or similar) objects}
 
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
@@ -95,22 +95,31 @@ set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}
 
 \item{quick}{Logical. If \code{TRUE},
 little or no disk-based information will be assessed, i.e., mostly its
-memory content. This is relevant for objects of class
-\code{Path} and \code{Raster} currently.
-For class \code{Path} objects, the file's metadata (i.e., filename and file size)
-will be hashed instead of the file contents. If set to \code{FALSE} (default),
+memory content. This is relevant for objects of class \code{character},
+\code{Path} and \code{Raster} currently. For class \code{character}, it is ambiguous
+whether this represents a character string or a vector of file paths. The function
+will assess if it is a path to a file or directory first. If not, it will treat
+the object as a character string. If it is known that character strings should
+not be treated as paths, then \code{quick = TRUE} will be much faster, with no loss
+of information. If it is file or directory, then it will digest the file content,
+or \code{basename(object)}. For class \code{Path} objects, the file's metadata
+(i.e., filename and file size)
+will be hashed instead of the file contents if \code{quick = TRUE}.
+If set to \code{FALSE} (default),
 the contents of the file(s) are hashed.
-If \code{quick = TRUE}, \code{length} is ignored.
-\emph{NOTE: this argument is experimental and may change in future releases.}}
+If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
+as paths, if they are file-backed.}
 
 \item{verbose}{Logical. This will output much more information about the internals of
 Caching, which may help diagnose Caching challenges.}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
 of the inputs, and return the result from this cacheId in the cacheRepo.
-In general, this is not used; however, in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs, this can stabilize
-the return value.}
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.}
 
 \item{useCache}{Logical. If \code{FALSE}, then the entire Caching mechanism is bypassed
 and the function is evaluated as if it was not being Cached.

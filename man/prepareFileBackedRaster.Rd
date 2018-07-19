@@ -4,12 +4,14 @@
 \alias{.prepareFileBackedRaster}
 \title{Copy the file-backing of a file-backed Raster* object}
 \usage{
-.prepareFileBackedRaster(obj, repoDir = NULL)
+.prepareFileBackedRaster(obj, repoDir = NULL, overwrite = FALSE, ...)
 }
 \arguments{
 \item{obj}{The raster object to save to the repository.}
 
 \item{repoDir}{Character denoting an existing directory in which an artifact will be saved.}
+
+\item{overwrite}{Logical. Should the raster be saved to disk, overwriting existing file.}
 
 \item{...}{passed to \code{archivist::saveToRepo}}
 }
