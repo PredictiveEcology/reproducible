@@ -261,7 +261,8 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom fastdigest fastdigest
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
-#' @importFrom utils object.size tail
+#' @importFrom utils object.size tail methods
+#' @importFrom methods formalArgs
 #' @rdname cache
 #'
 #' @example inst/examples/example_Cache.R
@@ -347,15 +348,23 @@ setMethod(
             forms <- formalArgs(selectMethod(fnName, signature = class(mc[[1]])))
             functionDetails$functionName <- fnName
           } else {
-            suppressWarnings(info <- attr(utils::methods(whatArg), "info")) # from hadley/sloop package s3_method_generic
-            classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
-            classes <- gsub("-method$", "", classes)
+            classes <- try({
+              suppressWarnings(info <- attr(utils::methods(whatArg), "info")) # from hadley/sloop package s3_method_generic
+              classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
+              gsub("-method$", "", classes)
+            }, silent = TRUE)
+            if (is(classes, "try-error")) classes <- NA_character_
             mc <- as.list(match.call(doCallFUN, as.call(append(whatArg, tmpl[[whArgs]])))[-1])
             theClass <- classes[unlist(lapply(classes, function(x) inherits(mc[[1]], x)))]
             forms <- if (length(theClass)) {
               formalArgs(paste0(whatArg, ".", theClass))
             } else {
-              formalArgs(whatArg)
+              if (is.na(classes)) {
+                formalArgs(doCallFUN)
+              } else {
+                formalArgs(whatArg)
+              }
+
             }
 
           }
