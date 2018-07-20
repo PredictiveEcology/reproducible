@@ -386,7 +386,7 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
-    #browser()
+    # browser()
     scalls <- sys.calls()
     if (!missing(overrideCall)) {
       callIndices <- grep(scalls, pattern = paste0("^", overrideCall))
@@ -420,6 +420,9 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
   } else {
     .FUN <- NULL # nolint
   }
+
+  if(!exists("callIndex"))
+    callIndex <- numeric()
 
   # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
   if (isTRUE(grepl(functionName, pattern = "\\(")))
