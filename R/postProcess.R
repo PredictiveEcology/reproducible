@@ -761,8 +761,9 @@ assessDataType <- function(ras) {
   UseMethod("assessDataType")
 }
 
+#' @export
 #' @rdname assessDataType
-assessDataType <- function(ras) {
+assessDataType.Raster <- function(ras) {
   minVal <- ras@data@min              ## using ras@data@... is faster than using raster functions
   maxVal <- ras@data@max
   signVal <- minVal < 0
@@ -796,4 +797,16 @@ assessDataType <- function(ras) {
         datatype <- if(minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
   }
   datatype
+}
+
+#' @export
+#' @rdname assessDataType
+assessDataType.RasterStack <- function(ras) {
+  unlist(lapply(names(sta), function(x) assessDataType(sta[[x]])))
+}
+
+#' @export
+#' @rdname assessDataType
+assessDataType.default <- function(ras) {
+  stop("No method for assessDataType for class ", class(ras))
 }
