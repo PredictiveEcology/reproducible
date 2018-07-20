@@ -336,6 +336,7 @@ setMethod(
 #' @keywords internal
 #' @rdname cacheHelper
 getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
+  callIndex <- numeric()
   if (isS4(FUN)) {
     #browser()
     # Have to extract the correct dispatched method
@@ -411,7 +412,6 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
       }
     } else {
       functionName <- ""
-      callIndex <- numeric()
     }
     .FUN <- FUN  # nolint
   }
@@ -421,10 +421,7 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     .FUN <- NULL # nolint
   }
 
-  if(!exists("callIndex"))
-    callIndex <- numeric()
-
-  # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
+  # if it can't deduce clean name (i.e., still has a "(" in it), return NA
   if (isTRUE(grepl(functionName, pattern = "\\(")))
     functionName <- NA_character_
 
