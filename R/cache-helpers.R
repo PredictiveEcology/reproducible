@@ -261,7 +261,7 @@ setMethod(
   definition = function(object, cacheRepo, ...) {
     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
     #  overwrite is ok
-    .prepareFileBackedRaster(object, repoDir = cacheRepo, overwrite = TRUE, ...)
+    .prepareFileBackedRaster(object, repoDir = cacheRepo, ...)
 })
 
 #' @export
