@@ -386,7 +386,7 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
-    #browser()
+    # browser()
     scalls <- sys.calls()
     if (!missing(overrideCall)) {
       callIndices <- grep(scalls, pattern = paste0("^", overrideCall))
@@ -420,6 +420,9 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
   } else {
     .FUN <- NULL # nolint
   }
+
+  if(!exists("callIndex"))
+    callIndex <- numeric()
 
   # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
   if (isTRUE(grepl(functionName, pattern = "\\(")))
@@ -864,7 +867,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                          extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
-    filename <- if (endsWith(basename(object@file@name), suffix = ".grd")) {
+    filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
       sub(object@file@name, pattern = ".grd$", replacement = ".gri")
     } else {
       object@file@name

@@ -140,7 +140,7 @@ if (getRversion() >= "3.1.0") {
 #'  \code{...} will also be passed into the inner
 #'  functions, e.g., \code{\link{cropInputs}}. See details and examples.
 #'
-#' @param useCache Passed to Cache in various places. Default \code{FALSE}
+#' @param useCache Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}
 #'
 #' @author Eliot McIntire
 #' @author Jean Marchal

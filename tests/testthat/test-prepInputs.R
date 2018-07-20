@@ -278,8 +278,6 @@ test_that("prepInputs doesn't work", {
   #            destinationPath = dataPath(sim), rasterToMatch = template)
 })
 
-
-
 test_that("interactive prepInputs", {
   testInitOut <- testInit("raster")
   on.exit({
@@ -938,7 +936,6 @@ test_that("preProcess doesn't work", {
 
 })
 
-
 test_that("prepInputs doesn't work", {
   testthat::skip_on_cran()
   testthat::skip_on_travis()
@@ -955,4 +952,105 @@ test_that("prepInputs doesn't work", {
     destinationPath = tmpdir,
     useCache = TRUE
   )
+})
+
+test_that("assessDataType doesn't work", {
+  ## LOG1S
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- c(0, NaN, rep(c(0,1),49))
+  expect_true(assessDataType(ras) == "LOG1S")
+
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- rep(c(0,1),50)
+  expect_true(assessDataType(ras) == "LOG1S")
+
+  ras[] <- rep(c(TRUE,FALSE),50)
+  expect_true(assessDataType(ras) == "LOG1S")
+
+  ras[] <- c(NA, NA, rep(c(0,1),49))
+  expect_true(assessDataType(ras) == "LOG1S")
+
+  ## INT1S
+  ras[] <- -1:98
+  expect_true(assessDataType(ras) == "INT1S")
+
+  ras[] <- c(NA, -1:97)
+  expect_true(assessDataType(ras) == "INT1S")
+
+  ## INT1U
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- 1:100
+  expect_true(assessDataType(ras) == "INT1U")
+
+  ras[] <- c(NA, 2:100)
+  expect_true(assessDataType(ras) == "INT1U")
+
+  ## INT2U
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = 64000, max = 65000))
+  expect_true(assessDataType(ras) == "INT2U")
+
+  ## INT2S
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = -32767, max = 32767))
+  expect_true(assessDataType(ras) == "INT2S")
+
+  ras[54] <- NA
+  expect_true(assessDataType(ras) == "INT2S")
+
+  ## INT4U
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = 0, max = 500000000))
+  expect_true(assessDataType(ras) == "INT4U")
+
+  ras[14] <- NA
+  expect_true(assessDataType(ras) == "INT4U")
+
+  ## INT4S
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = -200000000, max = 200000000))
+  expect_true(assessDataType(ras) == "INT4S")
+
+  ras[14] <- NA
+  expect_true(assessDataType(ras) == "INT4S")
+
+  ## FLT4S
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- runif(100, min = -10, max = 87)
+  expect_true(assessDataType(ras) == "FLT4S")
+
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = -3.4e+26, max = 3.4e+28))
+  expect_true(assessDataType(ras) == "FLT4S")
+
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = 3.4e+26, max = 3.4e+28))
+  expect_true(assessDataType(ras) == "FLT4S")
+
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = -3.4e+26, max = -1))
+  expect_true(assessDataType(ras) == "FLT4S")
+
+  ## FLT8S
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = -1.7e+30, max = 1.7e+308))
+  expect_true(assessDataType(ras) == "FLT8S")
+
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = 1.7e+30, max = 1.7e+308))
+  expect_true(assessDataType(ras) == "FLT8S")
+
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- round(runif(100, min = -1.7e+308, max = -1))
+  expect_true(assessDataType(ras) == "FLT8S")
+
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- c(-Inf, 1, rep(c(0,1),49))
+  expect_true(assessDataType(ras) == "FLT8S")
+
+
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- c(Inf, 1, rep(c(0,1),49))
+  expect_true(assessDataType(ras) == "FLT8S")
+
 })

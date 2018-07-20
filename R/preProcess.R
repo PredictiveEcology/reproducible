@@ -261,10 +261,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
          "Possibly, it does not exist in the specified archive, ",
          "or the file doesn't exist")
   }
+
   out <- list(checkSums = checkSums,
               dots = dots,
               fun = fun,
               targetFilePath = targetFilePath,
+              destinationPath = destinationPath,
               tryRasterFn = tryRasterFn)
   return(out)
 }
