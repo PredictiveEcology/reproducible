@@ -268,12 +268,10 @@ test_that("test date-based cache removal", {
 })
 
 test_that("test keepCache", {
-  library(raster)
-
-  tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
-
-  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
   Cache(rnorm, 10, cacheRepo = tmpdir)
   Cache(runif, 10, cacheRepo = tmpdir)
   Cache(round, runif(4), cacheRepo = tmpdir)
@@ -312,12 +310,11 @@ test_that("test keepCache", {
 })
 
 test_that("test environments", {
-  library(raster)
+  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
-  tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
-
-  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
   # make several unique environments
   a <- new.env()
   b <- new.env()
@@ -377,12 +374,11 @@ test_that("test environments", {
 })
 
 test_that("test asPath", {
-  library(raster)
+  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
-  tmpdir <- file.path(tempdir(), "testCache") %>% checkPath(create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
-
-  try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
   obj <- 1:10
   origDir <- getwd()
   on.exit(setwd(origDir))
@@ -430,9 +426,10 @@ test_that("test asPath", {
 })
 
 test_that("test wrong ways of calling Cache", {
-  tmpdir <- file.path(tempdir(), "testCache")
-  checkPath(tmpdir, create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   expect_error(Cache(sample(1), cacheRepo = tmpdir), "Can't understand")
   expect_error(Cache(a <- sample(1), cacheRepo = tmpdir), "Can't understand")
@@ -497,14 +494,10 @@ test_that("test pipe for Cache", {
 })
 
 test_that("test quoted FUN in Cache", {
-  tmpdir <- file.path(tempdir(), "testCache")
-  checkPath(tmpdir, create = TRUE)
-  opts <- options("reproducible.ask" = FALSE)
+  testInitOut <- testInit()
   on.exit({
-    unlink(tmpdir, recursive = TRUE)
-    options("reproducible.ask" = opts[[1]])
-  }
-  , add = TRUE)
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   A <- Cache(rnorm, 10, 16, cacheRepo = tmpdir) # nolint
 
