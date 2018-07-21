@@ -227,11 +227,27 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   #targetFilePath might still be NULL, need destinationPath too
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
-                                       c(unique(filesToChecksum, filesExtracted$filesExtracted)),
+                                       unique(c(filesToChecksum,
+                                                if (is.null(filesExtracted$filesExtracted) ||
+                                                    length(filesExtracted$filesExtracted) == 0)
+                                                  basename(downloadFileResult$downloaded)
+                                                else
+                                                  filesExtracted$filesExtracted)),
                                        fun) # passes through if all known
   targetFile <- basename(targetParams$targetFilePath)
   targetFilePath <- targetParams$targetFilePath
   fun <- targetParams$fun
+
+  #targetFilePath might still be NULL, need destinationPath too
+  if (is.null(targetFilePath)) if (is.null(filesExtracted$filesExtracted)) {
+    if (!is.null(downloadFileResult$downloaded))
+      targetFilePath <- downloadFileResult$downloaded
+  } else {
+    targetFilePath <- filesExtracted$filesExtracted
+  }
+
+  if (is.null(targetFile)) if (!is.null(targetFilePath)) targetFile <- basename(targetFilePath)
+
 
   # Now that all files are downloaded and extracted from archive, deal with missing targetFilePath
   tryRasterFn <- if (endsWith(suffix = "raster", fun)) TRUE else FALSE

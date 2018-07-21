@@ -170,8 +170,9 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     downloadResults <- list(needChecksums = needChecksums, destFile = NULL)
     archiveReturn <- archive
   }
-  list(needChecksums = downloadResults$needChecksums, archive = archiveReturn, neededFiles = neededFiles,
-       downloaded = downloadResults$destFile, checkSums = checkSums)
+  list(needChecksums = downloadResults$needChecksums, archive = archiveReturn,
+       neededFiles = c(unique(basename(downloadResults$destFile), neededFiles)),
+       downloaded = downloadResults$destFile, checkSums = checkSums, object = downloadResults$out)
 }
 
 .getSourceURL <- function(pattern, x) {
@@ -206,7 +207,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
   if (!is.null(googledrive::drive_token()))
-  googledrive::drive_auth() ## needed for use on e.g., rstudio-server
+    googledrive::drive_auth() ## needed for use on e.g., rstudio-server
   if (is.null(archive)) {
     fileAttr <- googledrive::drive_get(googledrive::as_id(url))
     archive <- .isArchive(fileAttr$name)
