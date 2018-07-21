@@ -624,7 +624,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
                                  append = TRUE) {
   if (append) {
     # a checksums file already existed, need to keep some of it
-    cs <- try(read.table(checkSumFilePath, header = TRUE), silent = TRUE)
+    cs <- suppressWarnings(try(read.table(checkSumFilePath, header = TRUE), silent = TRUE))
     if (is(cs, "try-error")) {
       # meant that it was an empty CHECKSUMS.txt file -- rebuild it
       append <- FALSE
