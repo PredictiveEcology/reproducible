@@ -236,7 +236,7 @@ if (getRversion() >= "3.1.0") {
 #' # Using dlFun -- a custom download function
 #' test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
 #'                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-#'                     path = tmpdir)
+#'                     path = dPath)
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL,

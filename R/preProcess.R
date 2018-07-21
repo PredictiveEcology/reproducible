@@ -49,6 +49,7 @@
 #' @author Eliot McIntire
 #' @export
 #' @inheritParams prepInputs
+#' @inheritParams downloadFile
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL, dlFun = NULL,
                        quick = getOption("reproducible.quick"),
