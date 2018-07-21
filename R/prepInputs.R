@@ -265,14 +265,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   ## dots will contain too many things for some functions
   ## -- need to remove those that are known going into prepInputs
-  argsToRemove <- unique(c(names(formals(prepInputs)),
-                           names(formals(fixErrors)),
-                           names(formals(writeRaster)),
-                           names(formals(projectRaster)),
-                           names(formals(determineFilename)),
-                           names(formals(writeOutputs)),
-                           unlist(lapply(methods("postProcess"), function(x) names(formals(x))))))
-  args <- out$dots[!(names(out$dots) %in% argsToRemove)]
+  args <- out$dots[!(names(out$dots) %in% .argsToRemove)]
   if (length(args) == 0) args <- NULL
 
   # Stage 1 - load into R
