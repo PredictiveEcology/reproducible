@@ -5,7 +5,7 @@
 \alias{.digestRasterLayer}
 \title{A set of helpers for Cache}
 \usage{
-getFunctionName(FUN, ..., overrideCall, isPipe)
+getFunctionName(FUN, originalDots, ..., overrideCall, isPipe)
 
 .digestRasterLayer(object, length, algo, quick)
 }
