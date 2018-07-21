@@ -261,6 +261,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
+  fun <- .fnCleanup(out$fun)
+
   ## dots will contain too many things for some functions
   ## -- need to remove those that are known going into prepInputs
   argsToRemove <- unique(c(names(formals(prepInputs)),
