@@ -328,8 +328,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           downloadResults <- dlGeneric(url = url, needChecksums = needChecksums)
         }
         # if destinationPath is tempdir, then don't copy and remove
-        if (!(identical(dirname(downloadResults$destFile),
-                        normalizePath(destinationPath, winslash = "/", mustWork = FALSE)))) {
+        if (!(identical(dirname(normPath(downloadResults$destFile)),
+                        normPath(destinationPath)))) {
           suppressWarnings(file.copy(downloadResults$destFile, destinationPath))
           suppressWarnings(file.remove(downloadResults$destFile))
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
