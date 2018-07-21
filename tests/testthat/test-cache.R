@@ -613,15 +613,6 @@ test_that("test Cache argument inheritance to inner functions", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  tmpCache <- paste(sample(letters, 5), collapse = "")
-  tmpdir <- file.path(tempdir(), tmpCache)
-  checkPath(tmpdir, create = TRUE)
-  opts <- options("reproducible.ask" = FALSE)
-  on.exit({
-    unlink(tmpdir, recursive = TRUE)
-    options("reproducible.ask" = opts[[1]])
-  }
-  , add = TRUE)
 
   outer <- function(n) {
     Cache(rnorm, n)

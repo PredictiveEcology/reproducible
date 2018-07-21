@@ -47,6 +47,9 @@ will look for \code{archive} or \code{targetFile}.}
 \item{fun}{Character string indicating the function to use to load
 \code{targetFile} into an \code{R} object.}
 
+\item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
+custom downloading, in addition to loading into R. Still experimental.}
+
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to
 \code{\link{Cache}} (the quick argument). This results in faster, though
