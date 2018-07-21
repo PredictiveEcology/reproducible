@@ -253,15 +253,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   tryRasterFn <- if (endsWith(suffix = "raster", fun)) TRUE else FALSE
 
   # fun is a charcter string, convert to function
-  if (grepl("::", fun)) {
-    fun2 <- strsplit(fun, "::")[[1]]
-    pkg <- fun2[1]
-    fun <- fun2[2]
-    fun <- getFromNamespace(fun, pkg)
-  } else {
-    fun <- get(fun)
-  }
-
+  fun <- .extractFunction(fun)
 
   if (needChecksums > 0) {
     # needChecksums 1 --> write a new checksums.txt file
@@ -313,4 +305,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 .emptyChecksumsResult <- data.table(expectedFile = character(), actualFile = character(), result = character())
 .emptyChecksumsFileContent <- data.frame(file = character(), checksum = character(), filesize = character(),
-                              algorithm = character())
+                                         algorithm = character())
+
+.extractFunction <- function(fun) {
+  if (grepl("::", fun)) {
+    fun2 <- strsplit(fun, "::")[[1]]
+    pkg <- fun2[1]
+    fun <- fun2[2]
+    fun <- getFromNamespace(fun, pkg)
+  } else {
+    fun <- get(fun)
+  }
+
+}
