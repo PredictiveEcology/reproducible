@@ -5,8 +5,8 @@
 \title{A wrapper around a set of downloading functions}
 \usage{
 downloadFile(archive, targetFile, neededFiles, destinationPath, quick,
-  checksumFile, checkSums, url, needChecksums, overwrite = TRUE,
-  purge = FALSE)
+  checksumFile, dlFun = NULL, checkSums, url, needChecksums,
+  overwrite = TRUE, purge = FALSE, ...)
 }
 \arguments{
 \item{archive}{Optional character string giving the path of an archive
@@ -37,6 +37,9 @@ less robust checking of inputs. See the respective functions.}
 \item{checksumFile}{A character string indicating the absolute path to the \code{CHECKSUMS.txt}
 file.}
 
+\item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
+custom downloading, in addition to loading into R. Still experimental.}
+
 \item{checkSums}{A checksums file, e.g., created by Checksums(..., write = TRUE)}
 
 \item{url}{Optional character string indicating the URL to download from.
@@ -58,6 +61,8 @@ even if they pass the checksums or the files are all there.}
 \code{CHECKSUMS.txt} file and
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
+
+\item{...}{Passed to \code{dlFun}. Still experimental.}
 }
 \description{
 Currently, this only deals with \code{\link[googledrive]{drive_download}},

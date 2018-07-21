@@ -5,7 +5,7 @@
 \title{Download, Checksum, Extract files}
 \usage{
 preProcess(targetFile = NULL, url = NULL, archive = NULL,
-  alsoExtract = NULL, destinationPath = ".", fun = NULL,
+  alsoExtract = NULL, destinationPath = ".", fun = NULL, dlFun = NULL,
   quick = getOption("reproducible.quick"), overwrite = FALSE,
   purge = FALSE, useCache = getOption("reproducible.useCache", FALSE), ...)
 }

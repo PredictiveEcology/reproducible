@@ -233,6 +233,11 @@ if (getRversion() >= "3.1.0") {
 #'                      studyArea = StudyArea)
 #' }
 #'
+#' # Using dlFun -- a custom download function
+#' test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+#'                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+#'                     path = tmpdir)
+#'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL,
                        quick = getOption("reproducible.quick"),
@@ -269,15 +274,19 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (length(args) == 0) args <- NULL
 
   # Stage 1 - load into R
-  message("Loading object into R from disk")
-  if (out$tryRasterFn) {
-    ## Don't cache the reading of a raster
-    ## -- normal reading of raster on disk is fast b/c only reads metadata
-    x <- do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
+
+  x <- if (is.null(out$object)) {
+    message("Loading object into R from disk")
+    if (out$tryRasterFn) {
+      ## Don't cache the reading of a raster
+      ## -- normal reading of raster on disk is fast b/c only reads metadata
+      do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
+    } else {
+      Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                 useCache = useCache)
+    }
   } else {
-    #browser()
-    x <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-               useCache = useCache)
+    out$object
   }
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise

@@ -50,7 +50,7 @@
 #' @export
 #' @inheritParams prepInputs
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
-                       destinationPath = ".", fun = NULL,
+                       destinationPath = ".", fun = NULL, dlFun = NULL,
                        quick = getOption("reproducible.quick"),
                        overwrite = FALSE, purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -168,11 +168,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     destinationPath = destinationPath,
     quick = quick,
     checkSums = checkSums,
+    dlFun = dlFun,
     url = url,
     checksumFile = asPath(checkSumFilePath),
     needChecksums = needChecksums,
     overwrite = overwrite,
-    purge = purge # may need to try purging again if no target, archive or alsoExtract were known yet
+    purge = purge, # may need to try purging again if no target, archive or alsoExtract were known yet
+    ...
   )#, moduleName = moduleName, modulePath = modulePath)
   checkSums <- downloadFileResult$checkSums
   needChecksums <- downloadFileResult$needChecksums
@@ -195,6 +197,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   }
+
   if (is.null(alsoExtract)) neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
@@ -267,7 +270,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               fun = fun,
               targetFilePath = targetFilePath,
               destinationPath = destinationPath,
-              tryRasterFn = tryRasterFn)
+              tryRasterFn = tryRasterFn,
+              object = downloadFileResult$object)
   return(out)
 }
 

@@ -235,6 +235,11 @@ LCC2005 <- Cache(prepInputs, url = url,
                      studyArea = StudyArea)
 }
 
+# Using dlFun -- a custom download function
+test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+                    dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                    path = tmpdir)
+
 }
 \seealso{
 \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
