@@ -937,21 +937,75 @@ test_that("preProcess doesn't work", {
 })
 
 test_that("prepInputs doesn't work", {
-  testthat::skip_on_cran()
-  testthat::skip_on_travis()
-  testthat::skip_on_appveyor()
-
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/DEM.tif"
-  test <- prepInputs(
+  mess1 <- capture_messages(test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+                                            #destinationPath = ".",
+                                            dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                                            path = tmpdir))
+  mess2 <- capture_messages(test2 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+                                            dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                                            path = tmpdir))
+  runTest("1_2_5_6", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage, filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+          test = test1)
+  runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage, filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+          test = test1)
+
+  # Add a study area to Crop and Mask to
+  # Create a "study area"
+  coords <- structure(c(6, 6.1, 6.2, 6.15, 6,
+                        49.5, 49.7, 49.8, 49.6, 49.5),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  mess2 <- capture_messages(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+                                                dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                                                path = tmpdir, studyArea = StudyArea))
+  runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+          filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+          test = test3)
+
+  testOnExit(testInitOut)
+  testInitOut <- testInit()
+  mess2 <- capture_messages(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+                                                dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                                                path = tmpdir, studyArea = StudyArea))
+  runTest("1_2_5_6", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+          filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+          test = test3)
+
+  runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessagePostProcess,
+          filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+          test = test3)
+
+  testOnExit(testInitOut)
+  testInitOut <- testInit()
+  googledrive::drive_auth_config(active = FALSE)
+  a <- prepInputs(url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
+                  studyArea = StudyArea,
+                  fun = "base::readRDS")
+  googledrive::drive_auth_config(active = TRUE)
+  runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessagePostProcess,
+          filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir,
+          test = test3)
+
+  testOnExit(testInitOut)
+  testInitOut <- testInit()
+  mess1 <- capture_messages(test <- prepInputs(
     targetFile = "DEM.tif",
     url = urlTif1,
     destinationPath = tmpdir,
     useCache = TRUE
-  )
+  ))
+  runTest("1_2_5_6_7_11", "Raster", 1, mess1, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir,
+          test = test)
+
+
 })
 
 test_that("assessDataType doesn't work", {
