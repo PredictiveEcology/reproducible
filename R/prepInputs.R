@@ -489,16 +489,20 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 #' @param destinationPath Full path of the directory where the target file should be
 #' @keywords internal
 .guessAtTargetAndFun <- function(targetFilePath, destinationPath, filesExtracted, fun) {
-  #if (is.null(targetFilePath)) {
-  #filesExtracted <- dir(destinationPath)
   possibleFiles <- unique(basename(c(targetFilePath, filesExtracted)))
-  isShapefile <- grepl("shp", file_ext(possibleFiles))
-  isRaster <- file_ext(possibleFiles) %in% c("tif", "grd")
+  fileExt <- file_ext(possibleFiles)
+  isShapefile <- grepl("shp", fileExt)
+  isRaster <- fileExt %in% c("tif", "grd")
+  isRDS <- fileExt %in% c("rds")
   if (is.null(fun)) { #i.e., the default
     fun <- if (any(isShapefile)) {
       "raster::shapefile"
-    } else {
+    } else if (any(isRaster)) {
       "raster::raster"
+    } else if (any(isRDS)) {
+      "base::readRDS"
+    } else {
+      stop("Don't know what fun to use for loading targetFile")
     }
   }
 
