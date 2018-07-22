@@ -749,7 +749,7 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' Can be used to write prepared inputs on disk.
 #'
-#' @param ras  The RasterLayer for which data type will be assessed. Only single layers supported.
+#' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @author Eliot McIntire
 #' @author CeresBbarros
 #' @export
@@ -802,7 +802,7 @@ assessDataType.Raster <- function(ras) {
 #' @export
 #' @rdname assessDataType
 assessDataType.RasterStack <- function(ras) {
-  unlist(lapply(names(sta), function(x) assessDataType(sta[[x]])))
+  unlist(lapply(names(ras), function(x) assessDataType(ras[[x]])))
 }
 
 #' @export
