@@ -227,13 +227,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   needChecksums <- filesExtracted$needChecksums
 
   #targetFilePath might still be NULL, need destinationPath too
+  filesExtr <- c(filesToChecksum,
+                                 if (is.null(filesExtracted$filesExtracted) ||
+                                     length(filesExtracted$filesExtracted) == 0)
+                                   downloadFileResult$downloaded
+                                 else
+                                   filesExtracted$filesExtracted)
+  if (!is.null(filesExtr)) filesExtr <- unique(basename(filesExtr))
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
-                                       unique(c(filesToChecksum,
-                                                if (is.null(filesExtracted$filesExtracted) ||
-                                                    length(filesExtracted$filesExtracted) == 0)
-                                                  basename(downloadFileResult$downloaded)
-                                                else
-                                                  filesExtracted$filesExtracted)),
+                                       filesExtracted = filesExtr,
                                        fun) # passes through if all known
   targetFile <- basename(targetParams$targetFilePath)
   targetFilePath <- targetParams$targetFilePath

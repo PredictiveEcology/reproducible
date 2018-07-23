@@ -18,7 +18,6 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                          checkSums, url, needChecksums, overwrite = TRUE,
                          purge = FALSE, ...) {
 
-
   if (!is.null(url) || !is.null(dlFun)) {
 
     if (is.null(neededFiles)) {
@@ -166,12 +165,14 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     } else {
       archive
     }
+    if (!is.null(downloadResults$destFile))
+      neededFiles <- basename(unique(c(downloadResults$destFile, neededFiles)))
   } else {
     downloadResults <- list(needChecksums = needChecksums, destFile = NULL)
     archiveReturn <- archive
   }
   list(needChecksums = downloadResults$needChecksums, archive = archiveReturn,
-       neededFiles = c(unique(basename(downloadResults$destFile), neededFiles)),
+       neededFiles = neededFiles,
        downloaded = downloadResults$destFile, checkSums = checkSums, object = downloadResults$out)
 }
 
