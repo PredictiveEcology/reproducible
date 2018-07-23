@@ -843,8 +843,8 @@ setMethod(
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
-                                 objects = outputObjects, length = length,
-                                 algo = algo, quick = quick, classOptions = classOptions, ...)
+                                objects = outputObjects, length = length,
+                                algo = algo, quick = quick, classOptions = classOptions, ...)
 
       if (verbose) {
         endRunTime <- Sys.time()
@@ -994,16 +994,16 @@ setMethod(
           }
         }
         .reproEnv[[paste0("future_", rndstr(1,10))]] <-
-        #saved <-
+          #saved <-
           future::futureCall(
-          FUN = writeFuture,
-          args = list(written, outputToSave, cacheRepo, userTags),
-          globals = list(written = written,
-                         saveToLocalRepo = archivist::saveToLocalRepo,
-                         outputToSave = outputToSave,
-                         cacheRepo = cacheRepo,
-                         userTags = userTags)
-        )
+            FUN = writeFuture,
+            args = list(written, outputToSave, cacheRepo, userTags),
+            globals = list(written = written,
+                           saveToLocalRepo = archivist::saveToLocalRepo,
+                           outputToSave = outputToSave,
+                           cacheRepo = cacheRepo,
+                           userTags = userTags)
+          )
         message("  Cache saved in a separate 'future' process. ",
                 "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour")
 
@@ -1254,8 +1254,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   } else {
     if (!isPipe) {
       fnDetails <- getFunctionName(FUN, #...,
-                                         originalDots = originalDots,
-                                         isPipe = isPipe)
+                                   originalDots = originalDots,
+                                   isPipe = isPipe)
 
       # i.e., if it did extract the name
       if (!is.na(fnDetails$functionName)) {
