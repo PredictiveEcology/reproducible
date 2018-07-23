@@ -972,7 +972,8 @@ setMethod(
 
       useFuture <- FALSE
       if (.Platform$OS.type != "windows") {
-        if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future")) {
+        if (!isFALSE(getOption("reproducible.futurePlan")) &&
+            requireNamespace("future", quietly = TRUE)) {
           useFuture <- TRUE
         }
       }
