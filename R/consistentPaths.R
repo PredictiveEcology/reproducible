@@ -102,7 +102,7 @@ setMethod(
       } else {
         path <- normPath(path)
 
-        if (!file.exists(path)) {
+        if (!dir.exists(path)) {
           if (create == TRUE) {
             dir.create(file.path(path), recursive = TRUE, showWarnings = FALSE)
           } else {
