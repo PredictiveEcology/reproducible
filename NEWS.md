@@ -5,20 +5,34 @@ version 0.2.2
 
 ## New features
 
-* option on non-Windows OSs to use `future` for `Cache` saving to SQLite database, via `options("reproducible.futurePlan")`, if the `future` package is installed. This is `FALSE` by default.
+* option on non-Windows OSs to use `future` for `Cache` saving to SQLite database, via `options("reproducible.futurePlan")`, if the `future` package is installed. This is `FALSE` by default. Though `future` works on Windows, there were no speed advantages to using it.
 * `future` package is now in suggests
 * fix problems with tests introduced by recent `git2r` update (@stewid, #36).
 * If a `do.call` function is Cached, previously, it would be labelled in the database as `do.call`. Now it attempts to extract the actual function being called by the `do.call`. Messaging is similarly changed.
 * new option `reproducible.ask`, logical, indicating whether `clearCache` should ask for deletions when in an interactive session
+* `prepInputs`, `preProcess` and `downloadFile` now have `dlFun`, to pass a custom function for downloading (e.g., "raster::getData")
+* `prepInputs` will automatically use `readRDS` if the file is a `.rds` 
+* `prepInputs` will return a `list` if `fun = "base::load"`, with a message; can still pass an `envir` to obtain standard behaviour of `base::load`
+* `clearCache` - new argument "ask"
+* new functions
+
+    - `assessDataType` (c/o Ceres Barros) - used in `postProcess` to identify smallest `datatype` for Raster* objects, if user does not pass an explicity `datatype` in `prepInputs` or `postProcess`
 
 ## Bug fixes
 
 * .prepareRasterBackedFile -- now will postpend an incremented numeric to a cached copy of a file-backed Raster object, if it already exists. This mirrors the behaviour of the `.rda` file. Previously, if 2 Cache events returned the same file name backing a Raster object, even if the content was different, it would allow the same file name. If either cached object was deleted, therefore, it would cause the other one to break as its file-backing would be missing.
 * options were wrongly pointing to spades.XX and should have been reproducible.XX
+* `copyFile` did not perform correctly under all cases; now better handling of these cases, often sending to `file.copy` (slower, but more reliable)
 * `extractFromArchive` needed a new `Checksum` function call under some circumstances
 * several other minor bug fixes.
-* prepInputs -- arguments that were same as Cache were not being correctly passed internally to Cache, and if wrapped in Cache, it was not passed into prepInputs. Fixed.
+* prepInputs -- arguments that were same as Cache (e.g., `useCache`) were not being correctly passed internally to Cache, and if wrapped in Cache, it was not passed into prepInputs. Fixed.
 * extracxtFromArchive - when dealing with nested zips, not all args were passed in recursively (fix c/o Ceres Barros)
+* `.prepareFileBackedRaster` was failing in some cases (specifically if it was inside a `do.call`). Identified by Ceres Barros.
+* `Cache` was failing under some cases of `Cache(do.call, ...)`. Fixed.
+* `Cache` - when arguments to Cache were the same as the arguments in `FUN`, Cache would "take" them. Now, they are correctly passed to the `FUN`.
+* `preProcess` -- writing to checksums may have produced a warning if `CHECKSUMS.txt` was not present. Now it does not.
+* numerous other minor bugfixes
+
 
 ## Minor changes
 
