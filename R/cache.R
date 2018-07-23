@@ -744,10 +744,11 @@ setMethod(
           }
 
           # This allows for any class specific things
-          output <- .prepareOutput(output, cacheRepo, ...)
+          output <- do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots$args))
 
           if (length(debugCache)) {
             if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
+              #output <- do.call(.debugCache, args = append(list(output, preDigest), modifiedDots$args))
               output <- .debugCache(output, preDigest, ...)
           }
           attr(output, ".Cache")$newCache <- FALSE
