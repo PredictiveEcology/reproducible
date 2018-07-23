@@ -296,7 +296,7 @@ setMethod(
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
     #  have modifications under many circumstances, e.g., do.call, specific methods etc.
-    fnDetails <- .fnCleanup(FUN = FUN, ...)
+    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
 
     FUN <- fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
@@ -1230,7 +1230,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 }
 
 
-.fnCleanup <- function(FUN, ...) {
+.fnCleanup <- function(FUN, ..., callingFun) {
   modifiedDots <- list(...)
   isPipe <- isTRUE(!is.null(modifiedDots$._pipe))
   originalDots <- modifiedDots
@@ -1313,23 +1313,24 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
     }
   }
   # Determine if some of the Cache arguments are also arguments to FUN
+  callingFunFormals <- if (callingFun == "Cache") .namesCacheFormals else names(formals(callingFun))
   if (isDoCall) {
     argNamesOfAllClasses <- forms
     fnDetails$.FUN <- format(doCallFUN) # nolint
-    formalsInCacheAndFUN <- argNamesOfAllClasses[argNamesOfAllClasses %in% names(.formalsCache)]
+    formalsInCallingAndFUN <- argNamesOfAllClasses[argNamesOfAllClasses %in% callingFunFormals]
   } else {
     fnDetails$.FUN <- format(FUN) # nolint
-    formalsInCacheAndFUN <- forms[forms %in% names(.formalsCache)]
+    formalsInCallingAndFUN <- forms[forms %in% callingFunFormals]
   }
 
   # If arguments to FUN and Cache are identical, pass them through to FUN
-  if (length(formalsInCacheAndFUN)) {
-    formalsInCacheAndFUN <- grep("\\.\\.\\.", formalsInCacheAndFUN, value = TRUE, invert = TRUE)
-    commonArguments <- mget(formalsInCacheAndFUN, inherits = FALSE, envir = parent.frame())
+  if (length(formalsInCallingAndFUN)) {
+    formalsInCallingAndFUN <- grep("\\.\\.\\.", formalsInCallingAndFUN, value = TRUE, invert = TRUE)
+    commonArguments <- mget(formalsInCallingAndFUN, inherits = FALSE, envir = parent.frame())
     if (isDoCall) {
-      modifiedDots$args[formalsInCacheAndFUN] <- commonArguments
+      modifiedDots$args[formalsInCallingAndFUN] <- commonArguments
     } else {
-      modifiedDots[formalsInCacheAndFUN] <- commonArguments
+      modifiedDots[formalsInCallingAndFUN] <- commonArguments
     }
   }
   return(append(fnDetails, list(originalDots = originalDots, FUN = FUN, isPipe = isPipe,

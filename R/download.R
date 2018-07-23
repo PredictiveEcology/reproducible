@@ -278,7 +278,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         if (!is.null(dlFun)) {
           dlFunName <- dlFun
           dlFun <- .extractFunction(dlFun)
-          ff <- .fnCleanup(dlFun, ...)
+          fun <- .fnCleanup(out$fun, callingFun = "downloadRemote", ...)
           forms <- .argsToRemove
           dots <- list(...)
           overlappingForms <- ff$formalArgs[ff$formalArgs %in% forms]
