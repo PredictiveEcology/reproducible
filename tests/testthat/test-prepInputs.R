@@ -981,6 +981,26 @@ test_that("prepInputs doesn't work", {
 
 })
 
+test_that("load rdata in prepInputs", {
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  a <- 1
+  b <- 2
+  save(a, b, file = tmpfile)
+  aa <- prepInputs(tmpfile, fun = "base::load")
+  expect_true(identical(aa, list(a = a, b = b)))
+
+  d <- new.env()
+  aa <- prepInputs(tmpfile, fun = "base::load", envir = d)
+  expect_false(identical(aa, list(a = a, b = b))) # not in aa, because loaded to d
+  expect_true(identical(as.list(d), list(a = a, b = b)))
+
+
+})
+
+
 test_that("assessDataType doesn't work", {
   ## LOG1S
   ras <- raster(ncol = 10, nrow = 10)

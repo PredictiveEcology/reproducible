@@ -273,28 +273,33 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 
   # Stage 1 - load into R
-
   x <- if (is.null(out$object)) {
-    message("Loading object into R from disk")
+    message("Loading object into R")
     if (out$tryRasterFn) {
       ## Don't cache the reading of a raster
       ## -- normal reading of raster on disk is fast b/c only reads metadata
       do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
     } else {
-      Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                 useCache = useCache)
+      if (identical(out$fun, load)){
+        if (is.null(args$envir)) {
+          message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
+                  "if you would like it loaded to a specific environment")
+          tmpEnv <- new.env()
+          returnAsList <- TRUE
+        } else {
+          tmpEnv <- args$envir
+          args$envir <- NULL
+          returnAsList <- FALSE
+        }
+        objs <- do.call(out$fun, append(list(file = out$targetFilePath, envir = tmpEnv), args))
+        if (returnAsList)
+          as.list(tmpEnv, all.names = TRUE)
+      } else {
+        Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                   useCache = useCache)
+      }
     }
   } else {
-    if (identical(out$fun, load)){
-      objs <- do.call(out$fun, list(file = out$targetFilePath, envir = environment()))
-      x <- lapply(objs, FUN = function(x){
-        tempObj <- get(x)
-        return(tempObj)
-      })
-      names(x) <- objs
-    } else {
-    x <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args))
-    }
     out$object
   }
 
