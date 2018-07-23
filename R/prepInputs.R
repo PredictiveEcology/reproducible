@@ -231,7 +231,7 @@ if (getRversion() >= "3.1.0") {
 #'                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
 #'                      destinationPath = asPath(dPath),
 #'                      studyArea = StudyArea)
-#' # Using dlFun -- a custom download function
+#' # Using dlFun -- a custom download function -- passed to preProcess
 #' test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
 #'                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
 #'                     path = dPath)
@@ -261,7 +261,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
-  fun <- .fnCleanup(out$fun)
+  fun <- .fnCleanup(out$fun, callingFun = "prepInputs", ...)
 
   ## dots will contain too many things for some functions
   ## -- need to remove those that are known going into prepInputs
@@ -273,16 +273,31 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 
   # Stage 1 - load into R
-
   x <- if (is.null(out$object)) {
-    message("Loading object into R from disk")
+    message("Loading object into R")
     if (out$tryRasterFn) {
       ## Don't cache the reading of a raster
       ## -- normal reading of raster on disk is fast b/c only reads metadata
       do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
     } else {
-      Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                 useCache = useCache)
+      if (identical(out$fun, load)){
+        if (is.null(args$envir)) {
+          message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
+                  "if you would like it loaded to a specific environment")
+          tmpEnv <- new.env()
+          returnAsList <- TRUE
+        } else {
+          tmpEnv <- args$envir
+          args$envir <- NULL
+          returnAsList <- FALSE
+        }
+        objs <- do.call(out$fun, append(list(file = out$targetFilePath, envir = tmpEnv), args))
+        if (returnAsList)
+          as.list(tmpEnv, all.names = TRUE)
+      } else {
+        Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                   useCache = useCache)
+      }
     }
   } else {
     out$object
