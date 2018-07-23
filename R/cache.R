@@ -1268,7 +1268,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   }
 
   isDoCall <- FALSE
-  forms <- suppressWarnings(formalArgs(FUN))
+  forms <- suppressWarnings(names(formals(FUN)))
   if (!is.null(fnDetails$functionName)) {
     if (!is.na(fnDetails$functionName)) {
       if (fnDetails$functionName == "do.call") {
@@ -1282,11 +1282,11 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
         whArgs <- which(names(modifiedDots) %in% "args")
         doCallFUN <- modifiedDots$what
 
-        forms <- formalArgs(doCallFUN)
+        forms <- names(formals(doCallFUN))
         if (isS4(doCallFUN)) {
           fnName <- doCallFUN@generic
           mc <- as.list(match.call(doCallFUN, as.call(append(fnName, modifiedDots[[whArgs]]))))
-          forms <- formalArgs(selectMethod(fnName, signature = class(mc[[1]])))
+          forms <- names(formals(selectMethod(fnName, signature = class(mc[[1]]))))
           fnDetails$functionName <- fnName
         } else {
           classes <- try({
@@ -1298,12 +1298,13 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
           mc <- as.list(match.call(doCallFUN, as.call(append(whatArg, modifiedDots[[whArgs]])))[-1])
           theClass <- classes[unlist(lapply(classes, function(x) inherits(mc[[1]], x)))]
           forms <- if (length(theClass)) {
-            formalArgs(paste0(whatArg, ".", theClass))
+            aa <- try(names(formals(paste0(whatArg, ".", theClass))))
+            aa
           } else {
             if (is.na(classes)) {
-              formalArgs(doCallFUN)
+              names(formals(doCallFUN))
             } else {
-              formalArgs(whatArg)
+              names(formals(whatArg))
             }
 
           }
