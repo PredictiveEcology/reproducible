@@ -8,10 +8,21 @@ test_that("prepInputs doesn't work", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  #######################################
+  # Add a study area to Crop and Mask to
+  # Create a "study area"
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98,
+                        59.9, 65.73, 63.58, 54.79, 59.9),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  dPath <- file.path(tmpdir, "ecozones")
+
+    #######################################
   ### url  ######
   #######################################
-  dPath <- file.path(tmpdir, "ecozones")
   mess <- capture_messages(
     shpEcozone <- prepInputs(destinationPath = dPath,
                              url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
@@ -53,16 +64,6 @@ test_that("prepInputs doesn't work", {
   )
   expect_true(is(shpEcozone2, "SpatialPolygons"))
   expect_equivalent(shpEcozone1, shpEcozone2) # different attribute newCache
-
-  # Add a study area to Crop and Mask to
-  # Create a "study area"
-  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98,
-                        59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
 
   #######################################
@@ -315,6 +316,8 @@ test_that("interactive prepInputs", {
     expect_is(test, "SpatialPolygons")
 
     # From Bird/Tati project
+    testOnExit(testInitOut)
+    testInitOut <- testInit("raster")
     birdSpecies <- c("BBWA", "YRWA")
     urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
               "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
@@ -322,14 +325,13 @@ test_that("interactive prepInputs", {
     #######################################
     ### url, targetFile, archive     ######
     #######################################
-    testOnExit(testInitOut)
-    testInitOut <- testInit("raster")
     outsideModule <- Map(x = birdSpecies, url = urls,
                          MoreArgs = list(tmpdir = tmpdir),
                          function(x, url, tmpdir) {
                            ras <- prepInputs(
                              targetFile = paste0(x, "_currmean.asc"),
                              archive = paste0(x, "_current.zip"),
+                             fun = "raster::raster",
                              url = url,
                              destinationPath = tmpdir,
                              overwrite = TRUE
@@ -356,6 +358,7 @@ test_that("interactive prepInputs", {
                              targetFile = paste0(x, "_currmean.asc"),
                              archive = paste0(x, "_current.zip"),
                              url = url,
+                             fun = "raster::raster",
                              alsoExtract = "similar",
                              destinationPath = tmpdir,
                              overwrite = TRUE
@@ -384,6 +387,7 @@ test_that("interactive prepInputs", {
                              targetFile = paste0(x, "_currmean.asc"),
                              archive = paste0(x, "_current.zip"),
                              url = url,
+                             fun = "raster::raster",
                              alsoExtract = NA,
                              destinationPath = tmpdir,
                              overwrite = TRUE
@@ -394,7 +398,7 @@ test_that("interactive prepInputs", {
     expect_is(crs(outsideModule[[1]]), "CRS")
     expect_true(is.na(crs(outsideModule[[1]])))
     expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
-  }
+   }
 
 })
 
@@ -807,7 +811,7 @@ test_that("preProcess doesn't work", {
         destinationPath = tmpdir
       )
     ))
-  runTest("1_2_5_6_11", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_11", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         targetFile = "Shapefile1.shp",
@@ -815,7 +819,7 @@ test_that("preProcess doesn't work", {
         destinationPath = tmpdir
       )
     ))
-  runTest("1_2_5_6", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
   ###### alsoExtract                                         #####
@@ -828,14 +832,14 @@ test_that("preProcess doesn't work", {
         destinationPath = tmpdir
       )
     ))
-  runTest("1_2_5_6_10_11", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_10_11", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   mess <- capture_messages(warns <- capture_warnings(
       test <- prepInputs(
         alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
         destinationPath = tmpdir
       )
     ))
-  runTest("1_2_5_6_10", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_10", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
                    pattern = "CHECKSUMS.txt", value = TRUE))
@@ -861,7 +865,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
     destinationPath = tmpdir
   )))
-  runTest("1_2_4_5_6_10_11", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_4_5_6_10_11", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -869,7 +873,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = c("Shapefile1.dbf", "Shapefile1.prj", "Shapefile1.shp", "Shapefile1.shx"),
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_9_10", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_9_10", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # Try without .shp -- fail
   file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
@@ -890,7 +894,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = "similar",
     destinationPath = tmpdir
   )))
-  runTest("1_2_4_5_6_11", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_4_5_6_11", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -899,7 +903,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = c("similar"),
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
 })
 
@@ -930,18 +934,19 @@ test_that("prepInputs doesn't work", {
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
   crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-  mess2 <- capture_messages(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+  mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
                                                 dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                                                path = tmpdir, studyArea = StudyArea))
+                                                path = tmpdir, studyArea = StudyArea)))
+  expect_true(isTRUE(grepl("Field names abbrev", warn)))
   runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
           filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
           test = test3)
 
   testOnExit(testInitOut)
   testInitOut <- testInit()
-  mess2 <- capture_messages(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+  mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
                                                 dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                                                path = tmpdir, studyArea = StudyArea))
+                                                path = tmpdir, studyArea = StudyArea)))
   runTest("1_2_5_6", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
           filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
           test = test3)
@@ -953,11 +958,12 @@ test_that("prepInputs doesn't work", {
   testOnExit(testInitOut)
   testInitOut <- testInit()
   googledrive::drive_auth_config(active = FALSE)
-  a <- prepInputs(url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
+  mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
                   studyArea = StudyArea,
-                  fun = "base::readRDS")
+                  fun = "base::readRDS")))
   googledrive::drive_auth_config(active = TRUE)
-  runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessagePostProcess,
+  runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+          expectedMess = expectedMessagePostProcess,
           filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir,
           test = test3)
 
