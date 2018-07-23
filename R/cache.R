@@ -744,7 +744,12 @@ setMethod(
           }
 
           # This allows for any class specific things
-          output <- do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots$args))
+          output <- if (fnDetails$isDoCall) {
+            do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots$args))
+          } else {
+            do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots))
+          }
+
 
           if (length(debugCache)) {
             if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
