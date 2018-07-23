@@ -608,7 +608,6 @@ setMethod(
       }
 
       isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
-
       # If it is in the existing record:
 
       if (NROW(isInRepo) > 0) {
@@ -1289,9 +1288,32 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 
         forms <- names(formals(doCallFUN))
         if (isS4(doCallFUN)) {
+
           fnName <- doCallFUN@generic
-          mc <- as.list(match.call(doCallFUN, as.call(append(fnName, modifiedDots[[whArgs]]))))
-          forms <- names(formals(selectMethod(fnName, signature = class(mc[[1]]))))
+
+          # Not easy to selectMethod -- can't have trailing "ANY" -- see ?selectMethod last
+          #  paragraph of "Using findMethod()" which says:
+          # "Notice also that the length of the signature must be what the corresponding
+          #  package used. If thisPkg had only methods for one argument, only length-1
+          # signatures will match (no trailing "ANY"), even if another currently loaded
+          # package had signatures with more arguments.
+          numArgsInSig <- try({
+            suppressWarnings(info <- attr(utils::methods(fnName), "info")) # from hadley/sloop package s3_method_generic
+            max(unlist(lapply(strsplit(rownames(info), split = ","), length) ) - 1)
+          }, silent = TRUE)
+          matchOn <- doCallFUN@signature[seq(numArgsInSig)]
+
+          mc <- as.list(match.call(doCallFUN, as.call(append(fnName, modifiedDots[[whArgs]])))[-1])
+          mc <- mc[!unlist(lapply(mc, is.null))]
+          argsClasses <- unlist(lapply(mc, class))
+          argsClasses <- argsClasses[names(argsClasses) %in% matchOn]
+          missingArgs <- matchOn[!(matchOn %in% names(argsClasses))]
+
+          missings <- rep("missing", length(missingArgs))
+          names(missings) <- missingArgs
+          argsClasses <- c(argsClasses, missings)
+
+          forms <- names(formals(selectMethod(fnName, signature = argsClasses)))
           fnDetails$functionName <- fnName
         } else {
           classes <- try({
