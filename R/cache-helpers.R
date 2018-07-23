@@ -339,7 +339,6 @@ getFunctionName <- function(FUN, originalDots, ...,
                             overrideCall, isPipe) { # nolint
   callIndex <- numeric()
   if (isS4(FUN)) {
-    #browser()
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
     firstElems <- lapply(firstElems, function(x) {
@@ -388,7 +387,6 @@ getFunctionName <- function(FUN, originalDots, ...,
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
-    # browser()
     scalls <- sys.calls()
     if (!missing(overrideCall)) {
       callIndices <- grep(scalls, pattern = paste0("^", overrideCall))
