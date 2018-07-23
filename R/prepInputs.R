@@ -140,7 +140,7 @@ if (getRversion() >= "3.1.0") {
 #'  \code{...} will also be passed into the inner
 #'  functions, e.g., \code{\link{cropInputs}}. See details and examples.
 #'
-#' @param useCache Passed to Cache in various places. Default \code{FALSE}
+#' @param useCache Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}
 #'
 #' @author Eliot McIntire
 #' @author Jean Marchal
@@ -231,7 +231,12 @@ if (getRversion() >= "3.1.0") {
 #'                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
 #'                      destinationPath = asPath(dPath),
 #'                      studyArea = StudyArea)
+#' # Using dlFun -- a custom download function
+#' test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+#'                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+#'                     path = dPath)
 #' }
+#'
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL,
@@ -256,24 +261,29 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
+  fun <- .fnCleanup(out$fun)
+
   ## dots will contain too many things for some functions
   ## -- need to remove those that are known going into prepInputs
-  argsToRemove <- unique(c(names(formals(prepInputs)),
-                           names(formals(fixErrors)),
-                           names(formals(writeRaster)),
-                           names(formals(projectRaster)),
-                           names(formals(determineFilename)),
-                           names(formals(writeOutputs)),
-                           unlist(lapply(methods("postProcess"), function(x) names(formals(x))))))
-  args <- out$dots[!(names(out$dots) %in% argsToRemove)]
+  args <- out$dots[!(names(out$dots) %in% .argsToRemove)]
+
+  # Only accept the ones that are the formals of the function -- above removals may be redunant
+  args <- args[(names(args) %in% fun$formalArgs)]
   if (length(args) == 0) args <- NULL
 
+
   # Stage 1 - load into R
-  message("Loading object into R from disk")
-  if (out$tryRasterFn) {
-    ## Don't cache the reading of a raster
-    ## -- normal reading of raster on disk is fast b/c only reads metadata
-    x <- do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
+
+  x <- if (is.null(out$object)) {
+    message("Loading object into R from disk")
+    if (out$tryRasterFn) {
+      ## Don't cache the reading of a raster
+      ## -- normal reading of raster on disk is fast b/c only reads metadata
+      do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
+    } else {
+      Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                 useCache = useCache)
+    }
   } else {
     if (identical(out$fun, load)){
       objs <- do.call(out$fun, list(file = out$targetFilePath, envir = environment()))
@@ -285,6 +295,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     } else {
     x <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args))
     }
+    out$object
   }
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
@@ -485,16 +496,20 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 #' @param destinationPath Full path of the directory where the target file should be
 #' @keywords internal
 .guessAtTargetAndFun <- function(targetFilePath, destinationPath, filesExtracted, fun) {
-  #if (is.null(targetFilePath)) {
-  #filesExtracted <- dir(destinationPath)
   possibleFiles <- unique(basename(c(targetFilePath, filesExtracted)))
-  isShapefile <- grepl("shp", file_ext(possibleFiles))
-  isRaster <- file_ext(possibleFiles) %in% c("tif", "grd")
+  fileExt <- file_ext(possibleFiles)
+  isShapefile <- grepl("shp", fileExt)
+  isRaster <- fileExt %in% c("tif", "grd")
+  isRDS <- fileExt %in% c("rds")
   if (is.null(fun)) { #i.e., the default
     fun <- if (any(isShapefile)) {
       "raster::shapefile"
-    } else {
+    } else if (any(isRaster)) {
       "raster::raster"
+    } else if (any(isRDS)) {
+      "base::readRDS"
+    } else {
+      stop("Don't know what fun to use for loading targetFile")
     }
   }
 
@@ -516,6 +531,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     } else {
       if (any(isRaster)) {
         possibleFiles[isRaster]
+      } else if (any(isRDS)) {
+        possibleFiles[isRDS]
       } else {
         message("  Don't know which file to load. Please specify targetFile.")
       }
@@ -619,7 +636,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
                                  append = TRUE) {
   if (append) {
     # a checksums file already existed, need to keep some of it
-    cs <- try(read.table(checkSumFilePath, header = TRUE), silent = TRUE)
+    cs <- suppressWarnings(try(read.table(checkSumFilePath, header = TRUE), silent = TRUE))
     if (is(cs, "try-error")) {
       # meant that it was an empty CHECKSUMS.txt file -- rebuild it
       append <- FALSE

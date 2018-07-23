@@ -36,3 +36,12 @@
   }
 }
 .reproducibleTempDir <- file.path(tempdir(), "reproducibleCache")
+
+.argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
+                                          names(formals(cropInputs)),
+                                          names(formals(fixErrors)),
+                                          names(formals(writeRaster)),
+                                          names(formals(projectRaster)),
+                                          names(formals(determineFilename)),
+                                          names(formals(writeOutputs)),
+                                          unlist(lapply(methods("postProcess"), function(x) names(formals(x))))))

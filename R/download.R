@@ -7,16 +7,18 @@
 #' @inheritParams prepInputs
 #' @include checksums.R
 #' @inheritParams extractFromArchive
+#' @param dlFun Optional "download function" name, such as \code{"raster::getData"}, which does
+#'              custom downloading, in addition to loading into R. Still experimental.
+#' @param ... Passed to \code{dlFun}. Still experimental.
 #' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
 #'                     file.
 #' @author Eliot McIntire
 downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quick,
-                         checksumFile,
+                         checksumFile, dlFun = NULL,
                          checkSums, url, needChecksums, overwrite = TRUE,
-                         purge = FALSE) {
+                         purge = FALSE, ...) {
 
-
-  if (!is.null(url)) {
+  if (!is.null(url) || !is.null(dlFun)) {
 
     if (is.null(neededFiles)) {
       result <- unique(checkSums$result)
@@ -50,9 +52,10 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                      targetFile = targetFile, fileToDownload = fileToDownload,
                      skipDownloadMsg = skipDownloadMsg,
                      checkSums = checkSums,
+                     dlFun = dlFun,
                      destinationPath = destinationPath,
                      overwrite = overwrite,
-                     needChecksums = needChecksums)
+                     needChecksums = needChecksums, ...)
       if (file.exists(checksumFile)) {
         if (is.null(fileToDownload) || tryCatch(is.na(fileToDownload), warning = function(x) FALSE))  { # This is case where we didn't know what file to download, and only now
                                         # do we know
@@ -162,12 +165,15 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     } else {
       archive
     }
+    if (!is.null(downloadResults$destFile))
+      neededFiles <- basename(unique(c(downloadResults$destFile, neededFiles)))
   } else {
     downloadResults <- list(needChecksums = needChecksums, destFile = NULL)
     archiveReturn <- archive
   }
-  list(needChecksums = downloadResults$needChecksums, archive = archiveReturn, neededFiles = neededFiles,
-       downloaded = downloadResults$destFile, checkSums = checkSums)
+  list(needChecksums = downloadResults$needChecksums, archive = archiveReturn,
+       neededFiles = neededFiles,
+       downloaded = downloadResults$destFile, checkSums = checkSums, object = downloadResults$out)
 }
 
 .getSourceURL <- function(pattern, x) {
@@ -201,7 +207,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
-  googledrive::drive_auth() ## needed for use on e.g., rstudio-server
+  if (!is.null(googledrive::drive_token()))
+    googledrive::drive_auth() ## needed for use on e.g., rstudio-server
   if (is.null(archive)) {
     fileAttr <- googledrive::drive_get(googledrive::as_id(url))
     archive <- .isArchive(fileAttr$name)
@@ -261,14 +268,51 @@ dlGeneric <- function(url, needChecksums) {
   list(destFile = destFile, needChecksums = needChecksums)
 }
 
-downloadRemote <- function(url, archive, targetFile, checkSums,
-                           moduleName, fileToDownload, skipDownloadMsg,
-                           destinationPath, overwrite, needChecksums) {
+downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
+                           fileToDownload, skipDownloadMsg,
+                           destinationPath, overwrite, needChecksums, ...) {
 
-  if (!is.null(url)) { # if no url, no download
+  if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
       if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  { # NA means archive already in hand
-        if (grepl("drive.google.com", url)) {
+        if (!is.null(dlFun)) {
+          dlFunName <- dlFun
+          dlFun <- .extractFunction(dlFun)
+          ff <- .fnCleanup(dlFun, ...)
+          forms <- .argsToRemove
+          dots <- list(...)
+          overlappingForms <- ff$formalArgs[ff$formalArgs %in% forms]
+          overlappingForms <- grep("\\.\\.\\.", overlappingForms, invert = TRUE, value = TRUE)
+          dots <- list(...)
+          # remove arguments that are in .argsToRemove, i.e., the sequence
+          args <- if (length(overlappingForms)) {
+            append(list(...), mget(overlappingForms))
+          } else {
+            list(...)
+          }
+          args <- args[!names(args) %in% forms]
+          if (is.null(targetFile)) {
+            fileInfo <- file.info(dir(destinationPath))
+          }
+          out <- do.call(dlFun, args = args)
+          needSave <- TRUE
+          if (is.null(targetFile)) {
+            fileInfoAfter <- file.info(dir(destinationPath))
+            possibleTargetFile <- setdiff(rownames(fileInfoAfter), rownames(fileInfo))
+            if (length(possibleTargetFile)) {
+              destFile <- targetFile <- possibleTargetFile
+              needSave <- FALSE
+            } else {
+              destFile <- file.path(destinationPath, tempfile(fileext = ".rds"))
+            }
+          } else {
+            destFile <- file.path(destinationPath, targetFile)
+          }
+          if (needSave) {
+            saveRDS(out, file = destFile)
+          }
+          downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
+        } else if (grepl("drive.google.com", url)) {
           downloadResults <- dlGoogle(
             url = url,
             archive = archive,
@@ -287,8 +331,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums,
           downloadResults <- dlGeneric(url = url, needChecksums = needChecksums)
         }
         # if destinationPath is tempdir, then don't copy and remove
-        if (!(identical(dirname(downloadResults$destFile),
-                        normalizePath(destinationPath, winslash = "/", mustWork = FALSE)))) {
+        if (!(identical(dirname(normPath(downloadResults$destFile)),
+                        normPath(destinationPath)))) {
           suppressWarnings(file.copy(downloadResults$destFile, destinationPath))
           suppressWarnings(file.remove(downloadResults$destFile))
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))

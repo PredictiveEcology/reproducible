@@ -5,7 +5,7 @@
 \title{Download, Checksum, Extract files}
 \usage{
 preProcess(targetFile = NULL, url = NULL, archive = NULL,
-  alsoExtract = NULL, destinationPath = ".", fun = NULL,
+  alsoExtract = NULL, destinationPath = ".", fun = NULL, dlFun = NULL,
   quick = getOption("reproducible.quick"), overwrite = FALSE,
   purge = FALSE, useCache = getOption("reproducible.useCache", FALSE), ...)
 }
@@ -47,6 +47,9 @@ will look for \code{archive} or \code{targetFile}.}
 \item{fun}{Character string indicating the function to use to load
 \code{targetFile} into an \code{R} object.}
 
+\item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
+custom downloading, in addition to loading into R. Still experimental.}
+
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to
 \code{\link{Cache}} (the quick argument). This results in faster, though
@@ -60,7 +63,7 @@ even if they pass the checksums or the files are all there.}
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
 
-\item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
+\item{useCache}{Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}}
 
 \item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
  \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.

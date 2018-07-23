@@ -60,7 +60,7 @@ even if they pass the checksums or the files are all there.}
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
 
-\item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
+\item{useCache}{Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}}
 
 \item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
  \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
@@ -233,7 +233,12 @@ LCC2005 <- Cache(prepInputs, url = url,
                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
                      destinationPath = asPath(dPath),
                      studyArea = StudyArea)
+# Using dlFun -- a custom download function
+test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+                    dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                    path = dPath)
 }
+
 
 }
 \seealso{

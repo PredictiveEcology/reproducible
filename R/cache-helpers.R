@@ -261,7 +261,7 @@ setMethod(
   definition = function(object, cacheRepo, ...) {
     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
     #  overwrite is ok
-    .prepareFileBackedRaster(object, repoDir = cacheRepo, overwrite = TRUE, ...)
+    .prepareFileBackedRaster(object, repoDir = cacheRepo, ...)
 })
 
 #' @export
@@ -335,7 +335,9 @@ setMethod(
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
-getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
+getFunctionName <- function(FUN, originalDots, ...,
+                            overrideCall, isPipe) { # nolint
+  callIndex <- numeric()
   if (isS4(FUN)) {
     #browser()
     # Have to extract the correct dispatched method
@@ -386,7 +388,7 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
-    #browser()
+    # browser()
     scalls <- sys.calls()
     if (!missing(overrideCall)) {
       callIndices <- grep(scalls, pattern = paste0("^", overrideCall))
@@ -411,7 +413,6 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
       }
     } else {
       functionName <- ""
-      callIndex <- numeric()
     }
     .FUN <- FUN  # nolint
   }
@@ -421,11 +422,11 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     .FUN <- NULL # nolint
   }
 
-  # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
+  # if it can't deduce clean name (i.e., still has a "(" in it), return NA
   if (isTRUE(grepl(functionName, pattern = "\\(")))
     functionName <- NA_character_
 
-  return(list(functionName = functionName, .FUN = .FUN, callIndex = callIndex))
+  return(list(functionName = functionName, .FUN = .FUN))#, callIndex = callIndex))
 }
 
 #' @exportClass Path
@@ -864,7 +865,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                          extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
-    filename <- if (endsWith(basename(object@file@name), suffix = ".grd")) {
+    filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
       sub(object@file@name, pattern = ".grd$", replacement = ".gri")
     } else {
       object@file@name
