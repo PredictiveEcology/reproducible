@@ -5,7 +5,7 @@
 \title{Download, Checksum, Extract files}
 \usage{
 preProcess(targetFile = NULL, url = NULL, archive = NULL,
-  alsoExtract = NULL, destinationPath = ".", fun = NULL,
+  alsoExtract = NULL, destinationPath = ".", fun = NULL, dlFun = NULL,
   quick = getOption("reproducible.quick"), overwrite = FALSE,
   purge = FALSE, useCache = getOption("reproducible.useCache", FALSE), ...)
 }
@@ -46,6 +46,9 @@ will look for \code{archive} or \code{targetFile}.}
 
 \item{fun}{Character string indicating the function to use to load
 \code{targetFile} into an \code{R} object.}
+
+\item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
+custom downloading, in addition to loading into R. Still experimental.}
 
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to

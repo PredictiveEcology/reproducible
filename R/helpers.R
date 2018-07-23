@@ -78,3 +78,4 @@ rndstr <- function(n = 1, len = 8) {
                        replace = TRUE), collapse = "")
   }))
 }
+

@@ -58,3 +58,45 @@ testOnExit <- function(testInitOut) {
   )
 
 }
+
+runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir,
+                    test) {
+  files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
+  expect_true(length(files) == numFiles)
+  expect_is(test, class)
+  message(mess)
+  print(hasMessageNum <-
+          paste(collapse = "_", which(unlist(
+            lapply(strsplit(expectedMess, "\\|")[[1]], function(m)
+              any(grepl(m, mess)))
+          ))))
+
+  isOK <- hasMessageNum == prod
+  if (!isOK) {
+    expe <- as.numeric(strsplit(prod, split = "_")[[1]])
+    getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
+
+    expectedMessVec <- strsplit(expectedMess, split = "\\|")[[1]]
+    message("expecting, but didn't get ", paste(collapse = ", ", expectedMessVec[setdiff(expe, getting)]))
+    message("got, but didn't expect ", paste(collapse = ", ", expectedMessVec[setdiff(getting, expe)]))
+  }
+  expect_true(isOK) #
+}
+
+
+expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
+                        "From:Shapefile", "Checking local", "Finished checking",
+                        "Downloading", "Skipping download", "Skipping extractFrom",
+                        "targetFile was not.*Trying raster",
+                        "Writing checksums.*you can specify targetFile",
+                        "No targetFile supplied, so can't use")
+expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
+
+expectedMessagePostProcessRaw <- c("cropping", "Checking for errors", "Found no errors",
+                                   "intersecting", "masking")
+expectedMessagePostProcess <- paste0(collapse = "|", expectedMessagePostProcessRaw)
+
+urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/DEM.tif"
+urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
+urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
+

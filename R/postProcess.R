@@ -802,7 +802,7 @@ assessDataType.Raster <- function(ras) {
 #' @export
 #' @rdname assessDataType
 assessDataType.RasterStack <- function(ras) {
-  unlist(lapply(names(sta), function(x) assessDataType(sta[[x]])))
+  unlist(lapply(names(ras), function(x) assessDataType(ras[[x]])))
 }
 
 #' @export
