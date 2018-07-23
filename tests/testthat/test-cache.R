@@ -251,7 +251,7 @@ test_that("test 'quick' argument", {
 })
 
 test_that("test date-based cache removal", {
-  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  testInitOut <- testInit("raster", tmpFileExt = ".pdf")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -310,7 +310,7 @@ test_that("test keepCache", {
 })
 
 test_that("test environments", {
-  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  testInitOut <- testInit("raster", tmpFileExt = ".pdf")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -419,14 +419,14 @@ test_that("test asPath", {
   expect_true(grepl("loading cached", a2))
   expect_true(grepl("loading memoised result from previous saveRDS call", a3))
 
-  setwd(origDir)
-  unlink(tmpdir, recursive = TRUE)
+  # setwd(origDir)
+  # unlink(tmpdir, recursive = TRUE)
 
   # make several unique environments
 })
 
 test_that("test wrong ways of calling Cache", {
-  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  testInitOut <- try(testInit(tmpFileExt = ".pdf"))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -440,7 +440,7 @@ test_that("test pipe for Cache", {
   skip_on_cran()
   skip_on_travis()
   skip("Not possible to test automatically ... testthat now exports pipe")
-  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  testInitOut <- testInit("raster", tmpFileExt = ".pdf")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -763,7 +763,7 @@ test_that("test reproducible.verbose", {
 test_that("test future", {
   skip_on_cran()
   if (.Platform$OS.type != "windows") {
-    if (require("future")) {
+    if (requireNamespace("future", quietly = TRUE)) {
       testInitOut <- testInit("raster", verbose = TRUE, tmpFileExt = ".rds")
       on.exit({
         testOnExit(testInitOut)
