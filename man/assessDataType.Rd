@@ -129,7 +129,7 @@ ras <- raster(ncol = 10, nrow = 10)
 ras[] <- rep(c(0,1),50)
 ras1 <- raster(ncol = 10, nrow = 10)
 ras1[] <- round(runif(100, min = -1.7e+308, max = -1))
-sta <- stack(ras, ras)
+sta <- stack(ras, ras1)
 assessDataType(sta)
 }
 \author{

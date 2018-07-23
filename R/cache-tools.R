@@ -223,9 +223,10 @@ setMethod(
     if (is(x, "simList")) x <- x@paths$cachePath
 
     # Clear the futures that are resolved
-    if (.Platform$OS.type != "windows")
-      if (requireNamespace("future"))
+    if (.Platform$OS.type != "windows") {
+      if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE)))
         checkFutures()
+    }
 
     objsDT <- showLocalRepo(x) %>% data.table()
     setkeyv(objsDT, "md5hash")

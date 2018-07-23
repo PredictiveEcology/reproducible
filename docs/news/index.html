@@ -127,14 +127,18 @@
 <h1 class="page-header">
 <a href="#version-0-2-2" class="anchor"></a>version 0.2.2<small> Unreleased </small>
 </h1>
+<div id="dependency-changes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#dependency-changes" class="anchor"></a>Dependency changes</h2>
+<ul>
+<li>Add <code>future</code> to Suggests.</li>
+</ul>
+</div>
 <div id="new-features" class="section level2">
 <h2 class="hasAnchor">
 <a href="#new-features" class="anchor"></a>New features</h2>
 <ul>
-<li>option on non-Windows OSs to use <code>future</code> for <code>Cache</code> saving to SQLite database, via <code>options("reproducible.futurePlan")</code>, if the <code>future</code> package is installed. This is <code>FALSE</code> by default.</li>
-<li>
-<code>future</code> package is now in suggests</li>
-<li>fix problems with tests introduced by recent <code>git2r</code> update (<a href='http://github.com/stewid'>@stewid</a>, <a href='https://github.com/PredictiveEcology/reproducible/issues/36'>#36</a>).</li>
+<li>new option on non-Windows OSs to use <code>future</code> for <code>Cache</code> saving to SQLite database, via <code>options("reproducible.futurePlan")</code>, if the <code>future</code> package is installed. This is <code>FALSE</code> by default.</li>
 <li>If a <code>do.call</code> function is Cached, previously, it would be labelled in the database as <code>do.call</code>. Now it attempts to extract the actual function being called by the <code>do.call</code>. Messaging is similarly changed.</li>
 <li>new option <code>reproducible.ask</code>, logical, indicating whether <code>clearCache</code> should ask for deletions when in an interactive session</li>
 </ul>
@@ -143,11 +147,24 @@
 <h2 class="hasAnchor">
 <a href="#bug-fixes" class="anchor"></a>Bug fixes</h2>
 <ul>
-<li>.prepareRasterBackedFile – now will postpend an incremented numeric to a cached copy of a file-backed Raster object, if it already exists. This mirrors the behaviour of the <code>.rda</code> file. Previously, if 2 Cache events returned the same file name backing a Raster object, even if the content was different, it would allow the same file name. If either cached object was deleted, therefore, it would cause the other one to break as its file-backing would be missing.</li>
-<li>options were wrongly pointing to spades.XX and should have been reproducible.XX</li>
+<li>fix problems with tests introduced by recent <code>git2r</code> update (<a href='http://github.com/stewid'>@stewid</a>, <a href='https://github.com/PredictiveEcology/reproducible/issues/36'>#36</a>).</li>
+<li>
+<code>.prepareRasterBackedFile</code> – now will postpend an incremented numeric to a cached copy of a file-backed Raster object, if it already exists. This mirrors the behaviour of the <code>.rda</code> file. Previously, if 2 Cache events returned the same file name backing a Raster object, even if the content was different, it would allow the same file name. If either cached object was deleted, therefore, it would cause the other one to break as its file-backing would be missing.</li>
+<li>options were wrongly pointing to <code>spades.XXX</code> and should have been <code>reproducible.XXX</code>.</li>
 <li>
 <code>extractFromArchive</code> needed a new <code>Checksum</code> function call under some circumstances</li>
 <li>several other minor bug fixes.</li>
+<li>
+<code>prepInputs</code> – arguments that were same as <code>Cache</code> were not being correctly passed internally to <code>Cache</code>, and if wrapped in Cache, it was not passed into prepInputs. Fixed.</li>
+<li>
+<code>extractFromArchive</code> – when dealing with nested zips, not all args were passed in recursively (<a href='https://github.com/PredictiveEcology/reproducible/issues/37'>#37</a>, <a href='http://github.com/CeresBarros'>@CeresBarros</a>)</li>
+</ul>
+</div>
+<div id="minor-changes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-changes" class="anchor"></a>Minor changes</h2>
+<ul>
+<li>most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistent test building</li>
 </ul>
 </div>
 </div>

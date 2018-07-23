@@ -18,6 +18,11 @@ postProcess.default <- function(x, ...) {
   x
 }
 
+#' @export
+postProcess.list <- function(x, ...) {
+  lapply(x, function(y) postProcess(y, ...))
+}
+
 #' Post processing for \code{spatialObjects}
 #'
 #' The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will

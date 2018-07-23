@@ -293,113 +293,22 @@ setMethod(
                         showSimilar) {
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
-    tmpl <- list(...)
-    isPipe <- isTRUE(!is.null(tmpl$._pipe))
-    originalDots <- tmpl
 
-    # If passed with 'quote'
-    if (!is.function(FUN)) {
-      parsedFun <- parse(text = FUN)
-      evaledParsedFun <- eval(parsedFun[[1]])
-      if (is.function(evaledParsedFun)) {
-        tmpFUN <- evaledParsedFun
-        mc <- match.call(tmpFUN, FUN)
-        FUN <- tmpFUN # nolint
-        originalDots <- append(originalDots, as.list(mc[-1]))
-        tmpl <- append(tmpl, as.list(mc[-1]))
-      }
-      functionDetails <- list(functionName = as.character(parsedFun[[1]]))
-    } else {
-      if (!isPipe) {
-        functionDetails <- getFunctionName(FUN, ..., isPipe = isPipe)
+    # returns "modifiedDots", "originalDots", "FUN", "funName", which will
+    #  have modifications under many circumstances, e.g., do.call, specific methods etc.
+    fnDetails <- .fnCleanup(FUN = FUN, callingFun = "Cache", ...)
 
-        # i.e., if it did extract the name
-        if (!is.na(functionDetails$functionName)) {
-          if (is.primitive(FUN)) {
-            tmpl <- list(...)
-          } else {
-            tmpl <- as.list(
-              match.call(FUN, as.call(list(FUN, ...))))[-1]
-          }
-        }
-      } else {
-        functionDetails <- list()
-      }
-    }
-
-    isDoCall <- FALSE
-    forms <- formalArgs(FUN)
-    if (!is.null(functionDetails$functionName)) {
-      if (!is.na(functionDetails$functionName)) {
-        if (functionDetails$functionName == "do.call") {
-          isDoCall <- TRUE
-          possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
-                                 deparse, backtick = TRUE)
-          #doCallMatched <- as.list(match.call(tmpl$what, call = as.call(append(list(tmpl$what), tmpl$args))))
-          doCallMatched <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))
-          whatArg <- doCallMatched$what
-
-          whArgs <- which(names(tmpl) %in% "args")
-          doCallFUN <- tmpl$what
-          forms <- formalArgs(doCallFUN)
-          if (isS4(doCallFUN)) {
-            fnName <- doCallFUN@generic
-            mc <- as.list(match.call(doCallFUN, as.call(append(fnName, tmpl[[whArgs]]))))
-            forms <- formalArgs(selectMethod(fnName, signature = class(mc[[1]])))
-            functionDetails$functionName <- fnName
-          } else {
-            classes <- try({
-              suppressWarnings(info <- attr(utils::methods(whatArg), "info")) # from hadley/sloop package s3_method_generic
-              classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
-              gsub("-method$", "", classes)
-            }, silent = TRUE)
-            if (is(classes, "try-error")) classes <- NA_character_
-            mc <- as.list(match.call(doCallFUN, as.call(append(whatArg, tmpl[[whArgs]])))[-1])
-            theClass <- classes[unlist(lapply(classes, function(x) inherits(mc[[1]], x)))]
-            forms <- if (length(theClass)) {
-              formalArgs(paste0(whatArg, ".", theClass))
-            } else {
-              if (is.na(classes)) {
-                formalArgs(doCallFUN)
-              } else {
-                formalArgs(whatArg)
-              }
-
-            }
-
-          }
-        }
-      }
-    }
-
-    # Determine if some of the Cache arguments are also arguments to FUN
-    if (isDoCall) {
-      argNamesOfAllClasses <- forms
-      functionDetails$.FUN <- format(doCallFUN) # nolint
-      formalsInCacheAndFUN <- argNamesOfAllClasses[argNamesOfAllClasses %in% formalArgs(Cache)]
-    } else {
-      functionDetails$.FUN <- format(FUN) # nolint
-      formalsInCacheAndFUN <- formalArgs(FUN)[formalArgs(FUN) %in% formalArgs(Cache)]
-    }
-
-    # If arguments to FUN and Cache are identical, pass them through to FUN
-    if (length(formalsInCacheAndFUN)) {
-      formalsInCacheAndFUN <- grep("\\.\\.\\.", formalsInCacheAndFUN, value = TRUE, invert = TRUE)
-      commonArguments <- mget(formalsInCacheAndFUN, inherits = FALSE)
-      if (isDoCall) {
-        tmpl$args[formalsInCacheAndFUN] <- commonArguments
-      } else {
-        tmpl[formalsInCacheAndFUN] <- commonArguments
-      }
-    }
+    FUN <- fnDetails$FUN
+    modifiedDots <- fnDetails$modifiedDots
+    originalDots <- fnDetails$originalDots
 
     if (!useCache) {
       message(crayon::green("useCache is FALSE, skipping Cache.",
                             "To turn Caching on, use options(reproducible.useCache = TRUE)"))
-      if (isDoCall) {
-        do.call(tmpl$what, args = tmpl$args)
+      if (fnDetails$isDoCall) {
+        do.call(modifiedDots$what, args = modifiedDots$args)
       } else {
-        do.call(FUN, args = tmpl)
+        do.call(FUN, args = modifiedDots)
       }
     } else {
 
@@ -481,48 +390,48 @@ setMethod(
 
       # get cacheRepo if not supplied
       if (is.null(cacheRepo)) {
-        cacheRepo <- .checkCacheRepo(tmpl, create = TRUE)
+        cacheRepo <- .checkCacheRepo(modifiedDots, create = TRUE)
       } else {
         cacheRepo <- checkPath(cacheRepo, create = TRUE)
       }
 
-      if (isPipe) {
-        if (!is.call(tmpl$._lhs)) {
+      if (fnDetails$isPipe) {
+        if (!is.call(modifiedDots$._lhs)) {
           # usually means it is the result of a pipe
-          tmpl$._pipeFn <- "constant" # nolint
+          modifiedDots$._pipeFn <- "constant" # nolint
         }
 
-        pipeFns <- paste(lapply(tmpl$._rhss, function(x) x[[1]]), collapse = ", ") %>%
-          paste(tmpl$._pipeFn, ., sep = ", ") %>%
+        pipeFns <- paste(lapply(modifiedDots$._rhss, function(x) x[[1]]), collapse = ", ") %>%
+          paste(modifiedDots$._pipeFn, ., sep = ", ") %>%
           gsub(., pattern = ", $", replacement = "") %>%
           paste0("'", ., "' pipe sequence")
 
-        functionDetails$functionName <- pipeFns
+        fnDetails$functionName <- pipeFns
         if (is.function(FUN)) {
-          firstCall <- match.call(FUN, tmpl$._lhs)
-          tmpl <- append(tmpl, lapply(as.list(firstCall[-1]), function(x) {
-            eval(x, envir = tmpl$._envir)
+          firstCall <- match.call(FUN, modifiedDots$._lhs)
+          modifiedDots <- append(modifiedDots, lapply(as.list(firstCall[-1]), function(x) {
+            eval(x, envir = modifiedDots$._envir)
           }))
         } else {
-          tmpl <- append(tmpl, as.list(FUN))
+          modifiedDots <- append(modifiedDots, as.list(FUN))
         }
 
-        for (fns in seq_along(tmpl$._rhss)) {
-          functionName <- as.character(tmpl$._rhss[[fns]][[1]])
+        for (fns in seq_along(modifiedDots$._rhss)) {
+          functionName <- as.character(modifiedDots$._rhss[[fns]][[1]])
           FUN <- eval(parse(text = functionName)) # nolint
           if (is.primitive(FUN)) {
-            otherCall <- tmpl$._rhss[[fns]]
+            otherCall <- modifiedDots$._rhss[[fns]]
           } else {
-            otherCall <- match.call(definition = FUN, tmpl$._rhss[[fns]])
+            otherCall <- match.call(definition = FUN, modifiedDots$._rhss[[fns]])
           }
-          tmpl[[paste0("functionName", fns)]] <- as.character(tmpl$._rhss[[fns]][[1]])
-          tmpl[[paste0(".FUN", fns)]] <-
-            eval(parse(text = tmpl[[paste0("functionName", fns)]]))
-          tmpl <- append(tmpl, as.list(otherCall[-1]))
+          modifiedDots[[paste0("functionName", fns)]] <- as.character(modifiedDots$._rhss[[fns]][[1]])
+          modifiedDots[[paste0(".FUN", fns)]] <-
+            eval(parse(text = modifiedDots[[paste0("functionName", fns)]]))
+          modifiedDots <- append(modifiedDots, as.list(otherCall[-1]))
         }
       }
 
-      tmpl$.FUN <- functionDetails$.FUN # put in tmpl for digesting  # nolint
+      modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
 
       # This is for Pipe operator -- needs special consideration
       if (!is(FUN, "function")) {
@@ -559,7 +468,7 @@ setMethod(
 
       # if a simList is in ...
       # userTags added based on object class
-      userTags <- c(userTags, unlist(lapply(tmpl, .tagsByClass)))
+      userTags <- c(userTags, unlist(lapply(modifiedDots, .tagsByClass)))
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
@@ -575,25 +484,25 @@ setMethod(
       }
 
       # remove things in the Cache call that are not relevant to Caching
-      if (!is.null(tmpl$progress)) if (!is.na(tmpl$progress)) tmpl$progress <- NULL
+      if (!is.null(modifiedDots$progress)) if (!is.na(modifiedDots$progress)) modifiedDots$progress <- NULL
 
       # Do the digesting
       if (!is.null(omitArgs)) {
-        tmpl[omitArgs] <- NULL
+        modifiedDots[omitArgs] <- NULL
       }
 
       # don't digest the dotPipe elements as they are already
-      # extracted individually into tmpl list elements
-      dotPipe <- startsWith(names(tmpl), "._")
+      # extracted individually into modifiedDots list elements
+      dotPipe <- startsWith(names(modifiedDots), "._")
 
-      preDigestByClass <- lapply(seq_along(tmpl[!dotPipe]), function(x) {
-        .preDigestByClass(tmpl[!dotPipe][[x]])
+      preDigestByClass <- lapply(seq_along(modifiedDots[!dotPipe]), function(x) {
+        .preDigestByClass(modifiedDots[!dotPipe][[x]])
       })
 
       if (verbose) {
         startHashTime <- Sys.time()
       }
-      preDigest <- lapply(tmpl[!dotPipe], function(x) {
+      preDigest <- lapply(modifiedDots[!dotPipe], function(x) {
         # remove the "newCache" attribute, which is irrelevant for digest
         if (!is.null(attr(x, ".Cache")$newCache)) attr(x, ".Cache")$newCache <- NULL
         .robustDigest(x, objects = objects,
@@ -608,14 +517,14 @@ setMethod(
         preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
         endHashTime <- Sys.time()
         verboseDF <- data.frame(
-          functionName = functionDetails$functionName,
+          functionName = fnDetails$functionName,
           component = "Hashing",
           elapsedTime = as.numeric(difftime(endHashTime, startHashTime, units = "secs")),
           units = "secs",
           stringsAsFactors = FALSE
         )
 
-        hashObjectSize <- unlist(lapply(tmpl[!dotPipe], function(x) {
+        hashObjectSize <- unlist(lapply(modifiedDots[!dotPipe], function(x) {
           objSize <- objSize(x, quick = quick)
 
         }))
@@ -735,7 +644,7 @@ setMethod(
           if (verbose) {
             endLoadTime <- Sys.time()
             verboseDF <- data.frame(
-              functionName = functionDetails$functionName,
+              functionName = fnDetails$functionName,
               component = loadFromMgs,
               elapsedTime = as.numeric(difftime(endLoadTime, startLoadTime, units = "secs")),
               units = "secs",
@@ -751,7 +660,7 @@ setMethod(
           }
 
           # Class-specific message
-          .cacheMessage(output, functionDetails$functionName,
+          .cacheMessage(output, fnDetails$functionName,
                         fromMemoise = fromMemoise)
 
           written <- 0
@@ -835,10 +744,16 @@ setMethod(
           }
 
           # This allows for any class specific things
-          output <- .prepareOutput(output, cacheRepo, ...)
+          output <- if (fnDetails$isDoCall) {
+            do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots$args))
+          } else {
+            do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots))
+          }
+
 
           if (length(debugCache)) {
             if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
+              #output <- do.call(.debugCache, args = append(list(output, preDigest), modifiedDots$args))
               output <- .debugCache(output, preDigest, ...)
           }
           attr(output, ".Cache")$newCache <- FALSE
@@ -846,7 +761,7 @@ setMethod(
           if (verbose) {
             endCacheTime <- Sys.time()
             verboseDF <- data.frame(
-              functionName = functionDetails$functionName,
+              functionName = fnDetails$functionName,
               component = "Whole Cache call",
               elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime, units = "secs")),
               units = "secs",
@@ -922,21 +837,21 @@ setMethod(
         startRunTime <- Sys.time()
       }
 
-      if (isPipe) {
-        output <- eval(tmpl$._pipe, envir = tmpl$._envir)
+      if (fnDetails$isPipe) {
+        output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
       } else {
-        output <- do.call(FUN, originalDots)
+        output <- do.call(FUN, fnDetails$originalDots)
       }
 
-      output <- .addChangedAttr(output, preDigest, origArguments = tmpl[!dotPipe],
+      output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
                                  objects = outputObjects, length = length,
                                  algo = algo, quick = quick, classOptions = classOptions, ...)
 
       if (verbose) {
         endRunTime <- Sys.time()
         verboseDF <- data.frame(
-          functionName = functionDetails$functionName,
-          component = paste("Running", functionDetails$functionName),
+          functionName = fnDetails$functionName,
+          component = paste("Running", fnDetails$functionName),
           elapsedTime = as.numeric(difftime(endRunTime, startRunTime, units = "secs")),
           units = "secs",
           stringsAsFactors = FALSE
@@ -946,7 +861,7 @@ setMethod(
           .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
         }
 
-        # on.exit({message("Running ", functionDetails$functionName, " took ", format(endRunTime - startRunTime))},
+        # on.exit({message("Running ", fnDetails$functionName, " took ", format(endRunTime - startRunTime))},
         #         add = TRUE)
 
       }
@@ -1051,8 +966,8 @@ setMethod(
 
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
-                    if (!is.na(functionDetails$functionName))
-                      paste0("function:", functionDetails$functionName),
+                    if (!is.na(fnDetails$functionName))
+                      paste0("function:", fnDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0(otherFns),
@@ -1063,7 +978,8 @@ setMethod(
 
       useFuture <- FALSE
       if (.Platform$OS.type != "windows") {
-        if (!isFALSE(getOption("reproducible.futurePlan")) && requireNamespace("future")) {
+        if (!isFALSE(getOption("reproducible.futurePlan")) &&
+            requireNamespace("future", quietly = TRUE)) {
           useFuture <- TRUE
         }
       }
@@ -1124,7 +1040,7 @@ setMethod(
         endSaveTime <- Sys.time()
         verboseDF <-
           data.frame(
-            functionName = functionDetails$functionName,
+            functionName = fnDetails$functionName,
             component = "Saving to repo",
             elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
             units = "secs",
@@ -1134,7 +1050,7 @@ setMethod(
         if (exists("verboseTiming", envir = .reproEnv)) {
           .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
         }
-        # on.exit({message("Saving ", functionDetails$functionName, " to repo took ",
+        # on.exit({message("Saving ", fnDetails$functionName, " to repo took ",
         #                  format(endSaveTime - startSaveTime))},
         #         add = TRUE)
 
@@ -1142,7 +1058,7 @@ setMethod(
 
       if (verbose) {
         endCacheTime <- Sys.time()
-        verboseDF <- data.frame(functionName = functionDetails$functionName,
+        verboseDF <- data.frame(functionName = fnDetails$functionName,
                                 component = "Whole Cache call",
                                 elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
                                                                   units = "secs")),
@@ -1315,5 +1231,115 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
     }
   }
   return(saved)
+
+}
+
+
+.fnCleanup <- function(FUN, ..., callingFun) {
+  modifiedDots <- list(...)
+  isPipe <- isTRUE(!is.null(modifiedDots$._pipe))
+  originalDots <- modifiedDots
+
+  # If passed with 'quote'
+  if (!is.function(FUN)) {
+    parsedFun <- parse(text = FUN)
+    evaledParsedFun <- eval(parsedFun[[1]])
+    if (is.function(evaledParsedFun)) {
+      tmpFUN <- evaledParsedFun
+      mc <- match.call(tmpFUN, FUN)
+      FUN <- tmpFUN # nolint
+      originalDots <- append(originalDots, as.list(mc[-1]))
+      modifiedDots <- append(modifiedDots, as.list(mc[-1]))
+    }
+    fnDetails <- list(functionName = as.character(parsedFun[[1]]))
+  } else {
+    if (!isPipe) {
+      fnDetails <- getFunctionName(FUN, #...,
+                                         originalDots = originalDots,
+                                         isPipe = isPipe)
+
+      # i.e., if it did extract the name
+      if (!is.na(fnDetails$functionName)) {
+        if (is.primitive(FUN)) {
+          modifiedDots <- list(...)
+        } else {
+          modifiedDots <- as.list(
+            match.call(FUN, as.call(list(FUN, ...))))[-1]
+        }
+      }
+    } else {
+      fnDetails <- list()
+    }
+  }
+
+  isDoCall <- FALSE
+  forms <- suppressWarnings(names(formals(FUN)))
+  if (!is.null(fnDetails$functionName)) {
+    if (!is.na(fnDetails$functionName)) {
+      if (fnDetails$functionName == "do.call") {
+        isDoCall <- TRUE
+        possFunNames <- lapply(substitute(placeholderFunction(...))[-1],
+                               deparse, backtick = TRUE)
+        #doCallMatched <- as.list(match.call(modifiedDots$what, call = as.call(append(list(modifiedDots$what), modifiedDots$args))))
+        doCallMatched <- as.list(match.call(do.call, as.call(append(list(do.call), possFunNames))))
+        whatArg <- doCallMatched$what
+
+        whArgs <- which(names(modifiedDots) %in% "args")
+        doCallFUN <- modifiedDots$what
+
+        forms <- names(formals(doCallFUN))
+        if (isS4(doCallFUN)) {
+          fnName <- doCallFUN@generic
+          mc <- as.list(match.call(doCallFUN, as.call(append(fnName, modifiedDots[[whArgs]]))))
+          forms <- names(formals(selectMethod(fnName, signature = class(mc[[1]]))))
+          fnDetails$functionName <- fnName
+        } else {
+          classes <- try({
+            suppressWarnings(info <- attr(utils::methods(whatArg), "info")) # from hadley/sloop package s3_method_generic
+            classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
+            gsub("-method$", "", classes)
+          }, silent = TRUE)
+          if (is(classes, "try-error")) classes <- NA_character_
+          mc <- as.list(match.call(doCallFUN, as.call(append(whatArg, modifiedDots[[whArgs]])))[-1])
+          theClass <- classes[unlist(lapply(classes, function(x) inherits(mc[[1]], x)))]
+          forms <- if (length(theClass)) {
+            aa <- try(names(formals(paste0(whatArg, ".", theClass))))
+            aa
+          } else {
+            if (is.na(classes)) {
+              names(formals(doCallFUN))
+            } else {
+              names(formals(whatArg))
+            }
+
+          }
+        }
+      }
+    }
+  }
+  # Determine if some of the Cache arguments are also arguments to FUN
+  callingFunFormals <- if (callingFun == "Cache") .namesCacheFormals else names(formals(callingFun))
+  if (isDoCall) {
+    argNamesOfAllClasses <- forms
+    fnDetails$.FUN <- format(doCallFUN) # nolint
+    formalsInCallingAndFUN <- argNamesOfAllClasses[argNamesOfAllClasses %in% callingFunFormals]
+  } else {
+    fnDetails$.FUN <- format(FUN) # nolint
+    formalsInCallingAndFUN <- forms[forms %in% callingFunFormals]
+  }
+
+  # If arguments to FUN and Cache are identical, pass them through to FUN
+  if (length(formalsInCallingAndFUN)) {
+    formalsInCallingAndFUN <- grep("\\.\\.\\.", formalsInCallingAndFUN, value = TRUE, invert = TRUE)
+    commonArguments <- mget(formalsInCallingAndFUN, inherits = FALSE, envir = parent.frame())
+    if (isDoCall) {
+      modifiedDots$args[formalsInCallingAndFUN] <- commonArguments
+    } else {
+      modifiedDots[formalsInCallingAndFUN] <- commonArguments
+    }
+  }
+  return(append(fnDetails, list(originalDots = originalDots, FUN = FUN, isPipe = isPipe,
+                                modifiedDots = modifiedDots, isDoCall = isDoCall,
+                                formalArgs = forms)))
 
 }

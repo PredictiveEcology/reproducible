@@ -136,8 +136,8 @@ and <code><a href='http://www.rdocumentation.org/packages/utils/topics/download.
     </div>
 
     <pre class="usage"><span class='fu'>downloadFile</span>(<span class='no'>archive</span>, <span class='no'>targetFile</span>, <span class='no'>neededFiles</span>, <span class='no'>destinationPath</span>, <span class='no'>quick</span>,
-  <span class='no'>checksumFile</span>, <span class='no'>checkSums</span>, <span class='no'>url</span>, <span class='no'>needChecksums</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+  <span class='no'>checksumFile</span>, <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>checkSums</span>, <span class='no'>url</span>, <span class='no'>needChecksums</span>,
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -183,6 +183,11 @@ less robust checking of inputs. See the respective functions.</p></td>
 file.</p></td>
     </tr>
     <tr>
+      <th>dlFun</th>
+      <td><p>Optional "download function" name, such as <code>"raster::getData"</code>, which does
+custom downloading, in addition to loading into R. Still experimental.</p></td>
+    </tr>
+    <tr>
       <th>checkSums</th>
       <td><p>A checksums file, e.g., created by Checksums(..., write = TRUE)</p></td>
     </tr>
@@ -213,6 +218,10 @@ even if they pass the checksums or the files are all there.</p></td>
 <code>CHECKSUMS.txt</code> file and
 <code>prepInputs</code> will write or append to it. <code>1/TRUE</code> will deleted the entire
 <code>CHECKSUMS.txt</code> file. Other options, see details.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Passed to <code>dlFun</code>. Still experimental.</p></td>
     </tr>
     </table>
     

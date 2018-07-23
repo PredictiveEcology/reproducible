@@ -233,7 +233,12 @@ LCC2005 <- Cache(prepInputs, url = url,
                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
                      destinationPath = asPath(dPath),
                      studyArea = StudyArea)
+# Using dlFun -- a custom download function -- passed to preProcess
+test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+                    dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                    path = dPath)
 }
+
 
 }
 \seealso{

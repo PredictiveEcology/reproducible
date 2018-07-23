@@ -340,7 +340,8 @@ setMethod(
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
-getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
+getFunctionName <- function(FUN, originalDots, ...,
+                            overrideCall, isPipe) { # nolint
   callIndex <- numeric()
   if (isS4(FUN)) {
     #browser()
@@ -430,7 +431,7 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
   if (isTRUE(grepl(functionName, pattern = "\\(")))
     functionName <- NA_character_
 
-  return(list(functionName = functionName, .FUN = .FUN, callIndex = callIndex))
+  return(list(functionName = functionName, .FUN = .FUN))#, callIndex = callIndex))
 }
 
 #' @exportClass Path
