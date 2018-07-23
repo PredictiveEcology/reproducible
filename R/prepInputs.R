@@ -521,6 +521,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     } else {
       if (any(isRaster)) {
         possibleFiles[isRaster]
+      } else if (any(isRDS)) {
+        possibleFiles[isRDS]
       } else {
         message("  Don't know which file to load. Please specify targetFile.")
       }
