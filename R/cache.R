@@ -1305,7 +1305,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 
           mc <- as.list(match.call(doCallFUN, as.call(append(fnName, modifiedDots[[whArgs]])))[-1])
           mc <- mc[!unlist(lapply(mc, is.null))]
-          argsClasses <- unlist(lapply(mc, class))
+          argsClasses <- unlist(lapply(mc, function(x) class(x)[1]))
           argsClasses <- argsClasses[names(argsClasses) %in% matchOn]
           missingArgs <- matchOn[!(matchOn %in% names(argsClasses))]
 
