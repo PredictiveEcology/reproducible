@@ -227,7 +227,7 @@ even if they pass the checksums or the files are all there.</p></td>
     </tr>
     <tr>
       <th>useCache</th>
-      <td><p>Passed to Cache in various places. Default <code>FALSE</code></p></td>
+      <td><p>Passed to Cache in various places. Defaults to <code>getOption("reproducible.useCache")</code></p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -389,7 +389,12 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
                      <span class='kw'>archive</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='st'>"LandCoverOfCanada2005_V1_4.zip"</span>),
                      <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='no'>dPath</span>),
                      <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)
+<span class='co'># Using dlFun -- a custom download function</span>
+<span class='no'>test1</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='st'>"GADM_2.8_LUX_adm0.rds"</span>, <span class='co'># must specify currently</span>
+                    <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='st'>"raster::getData"</span>, <span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"GADM"</span>, <span class='kw'>country</span> <span class='kw'>=</span> <span class='st'>"LUX"</span>, <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>0</span>,
+                    <span class='kw'>path</span> <span class='kw'>=</span> <span class='no'>dPath</span>)
 <span class='co'># }</span><div class='input'>
+
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

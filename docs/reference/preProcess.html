@@ -140,7 +140,7 @@ This is the first stage of three used in <code>prepInputs</code>.</p>
     </div>
 
     <pre class="usage"><span class='fu'>preProcess</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='st'>"."</span>, <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='st'>"."</span>, <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>), <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
     
@@ -197,6 +197,11 @@ will look for <code>archive</code> or <code>targetFile</code>.</p></td>
 <code>targetFile</code> into an <code>R</code> object.</p></td>
     </tr>
     <tr>
+      <th>dlFun</th>
+      <td><p>Optional "download function" name, such as <code>"raster::getData"</code>, which does
+custom downloading, in addition to loading into R. Still experimental.</p></td>
+    </tr>
+    <tr>
       <th>quick</th>
       <td><p>Logical. This is passed internally to <code><a href='Checksums.html'>Checksums</a></code>
 (the quickCheck argument), and to
@@ -217,7 +222,7 @@ even if they pass the checksums or the files are all there.</p></td>
     </tr>
     <tr>
       <th>useCache</th>
-      <td><p>Passed to Cache in various places. Default <code>FALSE</code></p></td>
+      <td><p>Passed to Cache in various places. Defaults to <code>getOption("reproducible.useCache")</code></p></td>
     </tr>
     <tr>
       <th>...</th>

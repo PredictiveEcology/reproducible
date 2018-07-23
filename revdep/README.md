@@ -10,13 +10,13 @@
 |language |en_CA:en                     |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-07-18                   |
+|date     |2018-07-23                   |
 
 ## Packages
 
 |package      |*  |version |date       |source                                          |
 |:------------|:--|:-------|:----------|:-----------------------------------------------|
-|reproducible |   |0.2.2   |2018-07-18 |Github (PredictiveEcology/reproducible@5f138c0) |
+|reproducible |   |0.2.2   |2018-07-23 |Github (PredictiveEcology/reproducible@597dc9d) |
 
 # Check results
 
@@ -25,7 +25,7 @@
 |package      |version | errors| warnings| notes|
 |:------------|:-------|------:|--------:|-----:|
 |SpaDES.core  |0.2.0   |      1|        1|     1|
-|SpaDES       |2.0.2   |      0|        1|     0|
+|SpaDES       |2.0.2   |      0|        2|     0|
 |SpaDES.tools |0.3.0   |      0|        0|     0|
 
 ## SpaDES.core (0.2.0)
@@ -36,23 +36,23 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [178s/183s]
+  Running ‘test-all.R’ [154s/154s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-     })
-  12: FUN(X[[i]], ...)
-  13: copyFile(to = saveFilename[x], overwrite = TRUE, from = curFilename[x], silent = TRUE)
-  14: file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
-  15: stop("file can not be copied both 'from' and 'to'")
+  all.equal(simA, simB) isn't true.
   
-  Failed with error:  'there is no package called 'future''
     Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
   ══ testthat results  ═══════════════════════════════════════════════════════════
-  OK: 361 SKIPPED: 35 FAILED: 2
-  1. Failure: test .prepareOutput (@test-cache.R#233) 
-  2. Error: test checkpointing with disk-backed raster (@test-checkpoint.R#82) 
+  OK: 358 SKIPPED: 35 FAILED: 5
+  1. Failure: test cache (@test-cache.R#42) 
+  2. Error: test event-level cache (@test-cache.R#98) 
+  3. Error: test module-level cache (@test-cache.R#162) 
+  4. Failure: test .prepareOutput (@test-cache.R#233) 
+  5. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#106) 
   
   Error: testthat unit tests failed
+  In addition: Warning message:
+  no DISPLAY variable so Tk is not available 
   Execution halted
 
 checking whether package ‘SpaDES.core’ can be installed ... WARNING
@@ -71,13 +71,36 @@ checking installed package size ... NOTE
 Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES/issues
 
-0 errors | 1 warning  | 0 notes
+0 errors | 2 warnings | 0 notes
 
 ```
 checking whether package ‘SpaDES’ can be installed ... WARNING
 Found the following significant warnings:
   Warning: no DISPLAY variable so Tk is not available
 See ‘/home/achubaty/Documents/GitHub/SpaDES/reproducible/revdep/checks/SpaDES.Rcheck/00install.out’ for details.
+
+checking re-building of vignette outputs ... WARNING
+Error in re-building vignettes:
+  ...
+loading reproducible     0.2.2
+loading quickPlot        0.1.4
+loading SpaDES.core      0.2.1
+loading SpaDES.tools     0.3.0
+loading SpaDES.addins    0.1.1
+
+Default paths for SpaDES directories set to:
+... 8 lines ...
+/tmp/RtmphJLqUh/R-lib/SpaDES.core/sampleModules/randomLandscapes/randomLandscapes.R
+randomLandscapes: defineParameter: '.useCache' is not of specified type 'logical'.
+randomLandscapes: module code appears clean
+/tmp/RtmphJLqUh/R-lib/SpaDES.core/sampleModules/fireSpread/fireSpread.R
+fireSpread: module code: landscape, testStats are declared in inputObjects, but no default(s) are provided in .inputObjects
+fireSpread: inputObjects: DEM, Fires are used from sim inside doEvent.fireSpread, but are not declared in inputObjects
+###### Module Code Checking ########
+Quitting from lines 133-141 (iii-cache.Rmd) 
+Error: processing vignette 'iii-cache.Rmd' failed with diagnostics:
+use of NULL environment is defunct
+Execution halted
 ```
 
 ## SpaDES.tools (0.3.0)

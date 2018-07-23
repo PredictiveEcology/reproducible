@@ -148,6 +148,15 @@
 <li>
 <code>extractFromArchive</code> needed a new <code>Checksum</code> function call under some circumstances</li>
 <li>several other minor bug fixes.</li>
+<li>prepInputs – arguments that were same as Cache were not being correctly passed internally to Cache, and if wrapped in Cache, it was not passed into prepInputs. Fixed.</li>
+<li>extracxtFromArchive - when dealing with nested zips, not all args were passed in recursively (fix c/o Ceres Barros)</li>
+</ul>
+</div>
+<div id="minor-changes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#minor-changes" class="anchor"></a>Minor changes</h2>
+<ul>
+<li>most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistent test building</li>
 </ul>
 </div>
 </div>

@@ -48,7 +48,5 @@ We have run R CMD check on downstream dependencies, and all have passed except t
 Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
 
 * `SpaDES` shows a warning due to `DISPLAY` not being set in the headless session.
-  Three other warnings regarding replaced imports are caused by having deprecated and moved these functions from `SpaDES.tools` to this package.
-  I am a co-developer of `SpaDES.tools`, and we are submitting an update to address this problem.
 
 * `SpaDES.core` shows a warning due to `DISPLAY` not being set in the headless session.
