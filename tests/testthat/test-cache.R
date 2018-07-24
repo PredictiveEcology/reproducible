@@ -762,7 +762,8 @@ test_that("test reproducible.verbose", {
 ##########################
 test_that("test future", {
   skip_on_cran()
-  if (.Platform$OS.type != "windows") {
+  .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
+  if (.onLinux) {
     if (requireNamespace("future", quietly = TRUE)) {
       testInitOut <- testInit("raster", verbose = TRUE, tmpFileExt = ".rds")
       on.exit({

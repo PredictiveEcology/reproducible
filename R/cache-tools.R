@@ -223,7 +223,8 @@ setMethod(
     if (is(x, "simList")) x <- x@paths$cachePath
 
     # Clear the futures that are resolved
-    if (.Platform$OS.type != "windows") {
+    .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
+    if (.onLinux) {
       if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE)))
         checkFutures()
     }
