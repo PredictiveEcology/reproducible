@@ -24,8 +24,8 @@ readLinesRcpp <- function(path) {
 }
 
 getCRANrepos <- function(repos = NULL) {
-  if (is.null(repos) | any(repos == "" | "@CRAN@" %in% repos)) {
-    repos <- "https://cran.rstudio.com"
+  if (is.null(repos) || isTRUE(any("" == repos | "@CRAN@" %in% repos))) {
+    repos <- getOption("repos", "https://cran.rstudio.com")
   }
   return(repos)
 }
