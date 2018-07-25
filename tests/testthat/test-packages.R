@@ -1,9 +1,4 @@
 test_that("package-related functions work", {
-  repos <- getOption("repos", "https://cran.rstudio.com")
-  if (is.null(repos) | any(repos == "" | "@CRAN@" %in% repos)) {
-    repos <- "https://cran.rstudio.com"
-  }
-  if (length(repos) > 1) repos <- repos[(names(repos) %in% "CRAN")]
 
   packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
   packageDir1 <- normalizePath(file.path(tempdir(), "test6"), winslash = "/", mustWork = FALSE)
