@@ -9,9 +9,7 @@
 #' A list with 5 elements, \code{checkSums} (the result of a \code{Checksums}
 #' after downloading), \code{dots} (cleaned up ..., including deprecated argument checks),
 #' \code{fun} (the function to be used to load the preProcessed object from disk),
-#' \code{targetFilePath} (the fully qualified path to the \code{targetFile}),
-#' and \code{tryRasterFn} (a logical whether the the \code{targetFilePath}
-#' should be loaded with \code{\link[raster]{raster}}).
+#' and \code{targetFilePath} (the fully qualified path to the \code{targetFile}).
 #'
 #' @section Combinations of \code{targetFile}, \code{url}, \code{archive}, \code{alsoExtract}:
 #'
@@ -251,11 +249,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   if (is.null(targetFile)) if (!is.null(targetFilePath)) targetFile <- basename(targetFilePath)
 
-
-  # Now that all files are downloaded and extracted from archive, deal with missing targetFilePath
-  tryRasterFn <- if (endsWith(suffix = "raster", fun)) TRUE else FALSE
-
-  # fun is a charcter string, convert to function
+  # Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)
 
   if (needChecksums > 0) {
@@ -281,7 +275,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               fun = fun,
               targetFilePath = targetFilePath,
               destinationPath = destinationPath,
-              tryRasterFn = tryRasterFn,
               object = downloadFileResult$object)
   return(out)
 }
@@ -311,13 +304,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                          algorithm = character())
 
 .extractFunction <- function(fun) {
-  if (grepl("::", fun)) {
-    fun2 <- strsplit(fun, "::")[[1]]
-    pkg <- fun2[1]
-    fun <- fun2[2]
-    fun <- getFromNamespace(fun, pkg)
-  } else {
-    fun <- get(fun)
+  if (!is.null(fun)) {
+    if (!is.function(fun)) {
+      if (grepl("::", fun)) {
+        fun2 <- strsplit(fun, "::")[[1]]
+        pkg <- fun2[1]
+        fun <- fun2[2]
+        fun <- getFromNamespace(fun, pkg)
+      } else {
+        fun <- get(fun)
+      }
+    }
   }
-
+  fun
 }
