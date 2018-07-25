@@ -24,8 +24,12 @@ readLinesRcpp <- function(path) {
 }
 
 getCRANrepos <- function(repos = NULL) {
-  if (is.null(repos) || isTRUE(any("" == repos | "@CRAN@" %in% repos))) {
+  if (is.null(repos) ) {
     repos <- getOption("repos", "https://cran.rstudio.com")
+  }
+  # still might be illegal repository, specifically "" or @CRAN@, so override
+  if (isTRUE(any("" == repos | "@CRAN@" %in% repos))) {
+    repos <- "https://cran.rstudio.com"
   }
   return(repos)
 }
