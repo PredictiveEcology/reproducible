@@ -514,7 +514,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     } else if (any(isRDS)) {
       "base::readRDS"
     } else {
-      stop("Don't know what fun to use for loading targetFile")
+      NULL
+      #stop("Don't know what fun to use for loading targetFile. Please supply a 'fun'", call. = FALSE)
     }
   }
 
