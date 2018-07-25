@@ -193,8 +193,9 @@ will look for <code>archive</code> or <code>targetFile</code>.</p></td>
     </tr>
     <tr>
       <th>fun</th>
-      <td><p>Character string indicating the function to use to load
-<code>targetFile</code> into an <code>R</code> object.</p></td>
+      <td><p>Function or character string indicating the function to use to load
+<code>targetFile</code> into an <code>R</code> object, e.g., in form wtih package name:
+<code>"raster::raster"</code>.</p></td>
     </tr>
     <tr>
       <th>dlFun</th>
@@ -239,9 +240,7 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
     <p>A list with 5 elements, <code>checkSums</code> (the result of a <code>Checksums</code>
 after downloading), <code>dots</code> (cleaned up ..., including deprecated argument checks),
 <code>fun</code> (the function to be used to load the preProcessed object from disk),
-<code>targetFilePath</code> (the fully qualified path to the <code>targetFile</code>),
-and <code>tryRasterFn</code> (a logical whether the the <code>targetFilePath</code>
-should be loaded with <code><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></code>).</p>
+and <code>targetFilePath</code> (the fully qualified path to the <code>targetFile</code>).</p>
     
     <h2 class="hasAnchor" id="combinations-of-targetfile-url-archive-alsoextract"><a class="anchor" href="#combinations-of-targetfile-url-archive-alsoextract"></a>Combinations of <code>targetFile</code>, <code>url</code>, <code>archive</code>, <code>alsoExtract</code></h2>
 
