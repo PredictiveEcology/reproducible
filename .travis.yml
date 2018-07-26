@@ -1,9 +1,8 @@
 sudo: required
 language: r
 cran: https://cran.rstudio.com/
-env:
-  global:
-    - cranRepo=https://cran.rstudio.com
+repos:
+  CRAN: https://cloud.r-project.org
 matrix:
   include:
   - os: linux
