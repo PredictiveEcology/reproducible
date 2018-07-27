@@ -788,6 +788,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   checkPath(dirname(to), create = create)
 
   os <- tolower(Sys.info()[["sysname"]])
+  .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
   if (!useFileCopy) {
     if (os == "windows") {
       if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
@@ -818,7 +819,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       if (any(!nzchar(useFileCopy))) {
         useFileCopy <- TRUE
       }
-    } else if ( (os == "linux") || (os == "darwin") ) { # nolint
+    } else if ( (.onLinux) ) { # nolint
       if (!identical(basename(from), basename(to))) {
         # rsync can't handle file renaming on copy
         useFileCopy <- TRUE
