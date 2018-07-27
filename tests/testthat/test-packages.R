@@ -1,6 +1,14 @@
 test_that("package-related functions work", {
 
-  if (nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@") {
+  # cat("\nstart here really", file = "~/test.txt")
+  # cat("Start here: " , getCRANrepos()["CRAN"], file = "~/test.txt", append = TRUE)
+  # cat("\nX: " , getCRANrepos(), file = "~/test.txt", append = TRUE)
+  # cat("\nA: ", getCRANrepos()["CRAN"][1], file = "~/test.txt", append = TRUE)
+  # cat("\nB: ", nchar(getCRANrepos()["CRAN"][1]), file = "~/test.txt", append = TRUE)
+  # cat("\nC: ", getCRANrepos()["CRAN"] != "@CRAN@", file = "~/test.txt", append = TRUE)
+  # cat("\nD: ", nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@", file = "~/test.txt", append = TRUE)
+  skip_on_cran()
+  if (isTRUE(nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@")) {
     packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
     packageDir1 <- normalizePath(file.path(tempdir(), "test6"), winslash = "/", mustWork = FALSE)
     suppressWarnings(Require("TimeWarp", libPath = packageDir1, standAlone = TRUE))
