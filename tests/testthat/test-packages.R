@@ -1,6 +1,6 @@
 test_that("package-related functions work", {
 
-  if (nchar(getCRANrepos()["CRAN"][1]) > 0) {
+  if (nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@") {
     packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
     packageDir1 <- normalizePath(file.path(tempdir(), "test6"), winslash = "/", mustWork = FALSE)
     suppressWarnings(Require("TimeWarp", libPath = packageDir1, standAlone = TRUE))
