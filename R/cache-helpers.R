@@ -262,11 +262,8 @@ setMethod(
     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
     #  overwrite is ok
 
-    ## workaround. sometimes ... is a list of lists, assigning a non-logical (i.e. whatever is
-    ## the first entry of the list) to overwrite. In that case, specify overwrite.
-    if("overwrite" %in% names(list(...)))
-      .prepareFileBackedRaster(object, repoDir = cacheRepo, ...) else
-        .prepareFileBackedRaster(object, repoDir = cacheRepo, overwrite = FALSE, ...)
+    .prepareFileBackedRaster(object, repoDir = cacheRepo, ...)
+
 })
 
 #' @export
