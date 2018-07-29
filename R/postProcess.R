@@ -429,9 +429,18 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       message("    no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
     }
   } else {
-    message("    no reprojecting because no rasterToMatch.")
+    if (!is.null(targetCRS)) {
+      if (!identical(crs(x), targetCRS)) {
+        message("    reprojecting ...")
+        x <- projectRaster(from = x, crs = targetCRS, ...)
+      } else {
+        message("    no reprojecting because target CRS is same as input CRS.")
+      }
+    } else {
+      message("     no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
+    }
+    x
   }
-  x
 }
 
 #' @export
