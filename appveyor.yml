@@ -20,6 +20,7 @@ version: 1.0.{build}-{branch}
 environment:
   global:
     R_ARCH: x64
+    cranRepo: https://cran.rstudio.com
     USE_RTOOLS: true
     WARNINGS_ARE_ERRORS: 1
 

@@ -118,8 +118,9 @@ if (getRversion() >= "3.1.0") {
 #'   and save the file that comes from \code{url} and is also where the function
 #'   will look for \code{archive} or \code{targetFile}.
 #'
-#' @param fun Character string indicating the function to use to load
-#'   \code{targetFile} into an \code{R} object.
+#' @param fun Function or character string indicating the function to use to load
+#'   \code{targetFile} into an \code{R} object, e.g., in form wtih package name:
+#'   \code{"raster::raster"}.
 #'
 #' @param quick Logical. This is passed internally to \code{\link{Checksums}}
 #'   (the quickCheck argument), and to
@@ -261,7 +262,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
-  fun <- .fnCleanup(out$fun, callingFun = "prepInputs", ...)
+  fun <- .fnCleanup(out$fun, callingFun = "prepInputs")
 
   ## dots will contain too many things for some functions
   ## -- need to remove those that are known going into prepInputs
@@ -275,12 +276,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Stage 1 - load into R
   x <- if (is.null(out$object)) {
     message("Loading object into R")
-    if (out$tryRasterFn) {
+    if (identical(out$fun, raster::raster)) {
       ## Don't cache the reading of a raster
       ## -- normal reading of raster on disk is fast b/c only reads metadata
       do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
     } else {
-      if (identical(out$fun, load)){
+      if (identical(out$fun, base::load)){
         if (is.null(args$envir)) {
           message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
                   "if you would like it loaded to a specific environment")
@@ -514,7 +515,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     } else if (any(isRDS)) {
       "base::readRDS"
     } else {
-      stop("Don't know what fun to use for loading targetFile")
+      NULL
+      #stop("Don't know what fun to use for loading targetFile. Please supply a 'fun'", call. = FALSE)
     }
   }
 

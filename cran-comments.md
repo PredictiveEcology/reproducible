@@ -26,9 +26,9 @@ This release fixes failing tests caused by a recent `git2r` change.
 
 ### Development R version
 * Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-20 r74923)
-* Ubuntu 18.04         (local), R 3.6.0 (2018-06-28 r74935)
-* Windows           (appveyor), R 3.6.0 (2018-07-01 r74950)
-* Windows        (win-builder), R 3.6.0 (2018-07-15 r74966)
+* Ubuntu 18.04         (local), R 3.6.0 (2018-07-24 r75005)
+* Windows           (appveyor), R 3.6.0 (2018-07-23 r75001)
+* Windows        (win-builder), R 3.6.0 (2018-07-23 r75001)
 
 ## R CMD check results
 

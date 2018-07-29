@@ -344,7 +344,6 @@ getFunctionName <- function(FUN, originalDots, ...,
                             overrideCall, isPipe) { # nolint
   callIndex <- numeric()
   if (isS4(FUN)) {
-    #browser()
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
     firstElems <- lapply(firstElems, function(x) {
@@ -393,7 +392,6 @@ getFunctionName <- function(FUN, originalDots, ...,
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
-    # browser()
     scalls <- sys.calls()
     if (!missing(overrideCall)) {
       callIndices <- grep(scalls, pattern = paste0("^", overrideCall))
@@ -795,6 +793,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   checkPath(dirname(to), create = create)
 
   os <- tolower(Sys.info()[["sysname"]])
+  .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
   if (!useFileCopy) {
     if (os == "windows") {
       if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
@@ -825,7 +824,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       if (any(!nzchar(useFileCopy))) {
         useFileCopy <- TRUE
       }
-    } else if ( (os == "linux") || (os == "darwin") ) { # nolint
+    } else if ( (.onLinux) ) { # nolint
       if (!identical(basename(from), basename(to))) {
         # rsync can't handle file renaming on copy
         useFileCopy <- TRUE

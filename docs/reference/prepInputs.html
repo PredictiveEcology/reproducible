@@ -203,8 +203,9 @@ will look for <code>archive</code> or <code>targetFile</code>.</p></td>
     </tr>
     <tr>
       <th>fun</th>
-      <td><p>Character string indicating the function to use to load
-<code>targetFile</code> into an <code>R</code> object.</p></td>
+      <td><p>Function or character string indicating the function to use to load
+<code>targetFile</code> into an <code>R</code> object, e.g., in form wtih package name:
+<code>"raster::raster"</code>.</p></td>
     </tr>
     <tr>
       <th>quick</th>
@@ -389,7 +390,7 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
                      <span class='kw'>archive</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='st'>"LandCoverOfCanada2005_V1_4.zip"</span>),
                      <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='no'>dPath</span>),
                      <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)
-<span class='co'># Using dlFun -- a custom download function</span>
+<span class='co'># Using dlFun -- a custom download function -- passed to preProcess</span>
 <span class='no'>test1</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='st'>"GADM_2.8_LUX_adm0.rds"</span>, <span class='co'># must specify currently</span>
                     <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='st'>"raster::getData"</span>, <span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"GADM"</span>, <span class='kw'>country</span> <span class='kw'>=</span> <span class='st'>"LUX"</span>, <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>0</span>,
                     <span class='kw'>path</span> <span class='kw'>=</span> <span class='no'>dPath</span>)

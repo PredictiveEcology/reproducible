@@ -32,7 +32,3 @@ test_that("all exported functions have examples", {
   }
 })
 
-# test_that("check all examples", {
-#   browser()
-#   test_examples(path = "../../man")
-# })
