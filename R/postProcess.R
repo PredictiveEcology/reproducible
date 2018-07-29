@@ -437,8 +437,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
     } else {
       message("     no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
     }
-    x
   }
+  x
 }
 
 #' @export
