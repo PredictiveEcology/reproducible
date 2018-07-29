@@ -427,9 +427,18 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       message("    no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
     }
   } else {
-    message("    no reprojecting because no rasterToMatch.")
+    if (!is.null(targetCRS)) {
+      if (!identical(crs(x), targetCRS)) {
+        message("    reprojecting ...")
+        x <- projectRaster(from = x, crs = targetCRS, ...)
+      } else {
+        message("    no reprojecting because target CRS is same as input CRS.")
+      }
+    } else {
+      message("     no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
+    }
+    x
   }
-  x
 }
 
 #' @export
@@ -752,7 +761,7 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' Can be used to write prepared inputs on disk.
 #'
-#' @param ras  The RasterLayer for which data type will be assessed. Only single layers supported.
+#' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @author Eliot McIntire
 #' @author CeresBbarros
 #' @export
