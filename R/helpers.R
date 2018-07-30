@@ -35,7 +35,7 @@ getCRANrepos <- function(repos = NULL) {
 
   # if @CRAN@, and non interactive session
   if (isTRUE("@CRAN@" %in% repos)) {
-    cranRepo <- Sys.getenv("cranRepo")
+    cranRepo <- Sys.getenv("CRAN_REPO")
     if (nchar(cranRepo) > 0) {
       repos <- cranRepo
     }

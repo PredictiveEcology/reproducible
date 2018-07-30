@@ -3,7 +3,7 @@ language: r
 cran: https://cran.rstudio.com/
 env:
   global:
-    - cranRepo=https://cran.rstudio.com
+    - CRAN_REPO=https://cran.rstudio.com
 matrix:
   include:
   - os: linux
