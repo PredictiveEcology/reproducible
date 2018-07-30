@@ -7,14 +7,15 @@
 \alias{\%<\%}
 \title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
 \usage{
-Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
-  algo = "xxhash64", cacheRepo = NULL, length = 1e+06,
-  compareRasterFileLength, userTags = c(), digestPathContent,
-  omitArgs = NULL, classOptions = list(), debugCache = character(),
-  sideEffect = FALSE, makeCopy = FALSE,
+Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
+  outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
+  length = 1e+06, compareRasterFileLength, userTags = c(),
+  digestPathContent, omitArgs = NULL, classOptions = list(),
+  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
-  useCache = getOption("reproducible.useCache", TRUE), showSimilar = NULL)
+  useCache = getOption("reproducible.useCache", TRUE),
+  showSimilar = NULL)
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
@@ -23,7 +24,8 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL,
   debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
-  useCache = getOption("reproducible.useCache", TRUE), showSimilar = NULL)
+  useCache = getOption("reproducible.useCache", TRUE),
+  showSimilar = NULL)
 
 lhs \%<\% rhs
 }
