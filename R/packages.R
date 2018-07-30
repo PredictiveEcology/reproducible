@@ -721,7 +721,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
             }
             if (!any(archiveReposSuccess)) {
               archiveReposAttempts <- archiveReposAttempts + 1
-              repos <- getCRANrepos()
+              repos <- getCRANrepos() ## TODO: why isn't this line `getCRANrepos(repos)` ?
             }
             if (archiveReposAttempts > 1) archiveReposSuccess <- TRUE
           }
