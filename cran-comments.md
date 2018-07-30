@@ -1,6 +1,7 @@
 ## Updated release
 
 This release fixes failing tests caused by a recent `git2r` change.
+It also removes hardcoding of the CRAN mirror used for installing packages by the user.
 
 ## Test environments
 
