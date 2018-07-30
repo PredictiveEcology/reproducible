@@ -76,7 +76,6 @@ test_that("test Copy", {
     } else {
       all.equal(liEnv[["env"]][[i]], liEnv2[["env"]][[i]])
     }
-
   }))))
 
   # different filenames for Rasters
