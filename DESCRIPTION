@@ -59,6 +59,7 @@ Suggests:
     rmarkdown,
     testthat,
     TimeWarp
+Encoding: UTF-8
 Language: en-CA
 LinkingTo: Rcpp
 License: GPL-3
