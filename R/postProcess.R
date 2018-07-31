@@ -18,6 +18,11 @@ postProcess.default <- function(x, ...) {
   x
 }
 
+#' @export
+postProcess.list <- function(x, ...) {
+  lapply(x, function(y) postProcess(y, ...))
+}
+
 #' Post processing for \code{spatialObjects}
 #'
 #' The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
@@ -136,7 +141,6 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        overwrite = TRUE, useSAcrs = FALSE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
-
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   if (!is.null(studyArea) & !is(studyArea, "Spatial")) {
     stop("The 'studyArea' provided is not a Spatial* object.")
@@ -163,9 +167,6 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
   if (!is.null(studyArea) || !is.null(rasterToMatch)) {
 
     # fix errors if methods available
-    if (identical(useCache, FALSE)) {
-      message("useCache is FALSE, skipping Cache during post-processing.")
-    }
     skipCacheMess <- "useCache is FALSE, skipping Cache"
     skipCacheMess2 <- "No cacheRepo supplied"
 
@@ -178,14 +179,11 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       crsRTM <- NULL
     }
 
-    #mess <- capture.output(type = "message",
                            x <- Cache(cropInputs, x = x, studyArea = studyArea,
                                       extentToMatch = extRTM,
                                       extentCRS = crsRTM,
                                       useCache = useCache, ...)
                            #)
-
-    #.groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
 
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
@@ -691,7 +689,18 @@ writeOutputs <- function(x, filename2, overwrite, ...) {
 
 #' @rdname writeOutputs
 writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
+  dots <- list(...)
+  datatype2 <- assessDataType(x)
+
   if (!is.null(filename2)) {
+    if (is.null(dots$datatype)) {
+      message(paste("no 'datatype' chosen.",
+                    "\n saving", names(x), "as", datatype2))
+      dots$datatype <- datatype2
+    } else if (datatype2 != dots$datatype)
+      message(paste("chosen 'datatype' may be inadequate for the range/type of values in", names(x),
+                    "\n consider changing to", datatype2))
+
     xTmp <- writeRaster(x = x, filename = filename2, overwrite = overwrite, ...)
 
     # This is a bug in writeRaster was spotted with crs of xTmp became
@@ -738,3 +747,69 @@ writeOutputs.default <- function(x, filename2, ...) {
   stop("Don't know how to write object of class ", class(x), " on disk.")
 }
 
+
+#' Assess the appropriate raster layer data type
+#'
+#' Can be used to write prepared inputs on disk.
+#'
+#' @param ras  The RasterLayer for which data type will be assessed. Only single layers supported.
+#' @author Eliot McIntire
+#' @author CeresBbarros
+#' @export
+#' @rdname assessDataType
+#' @example inst/examples/example_assessDataType.R
+#' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
+
+assessDataType <- function(ras) {
+  UseMethod("assessDataType")
+}
+
+#' @export
+#' @rdname assessDataType
+assessDataType.Raster <- function(ras) {
+  minVal <- ras@data@min              ## using ras@data@... is faster than using raster functions
+  maxVal <- ras@data@max
+  signVal <- minVal < 0
+  doubVal <-  any(floor(ras@data@values) != ras@data@values, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
+
+  ## writeRaster deals with infinite values as FLT8S
+  # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
+
+  if(!doubVal & !signVal) {
+    ## only check for binary if there are no decimals and no signs
+    logi <- all(!is.na(.bincode(na.omit(ras@data@values), c(-1,1))))  ## range needs to include 0
+
+    if(logi) {
+      datatype <- "LOG1S"
+    } else {
+      ## if() else is faster than if
+      datatype <- if(maxVal <= 255) "INT1U" else
+        if(maxVal <= 65534) "INT2U" else
+          if(maxVal <= 4294967296) "INT4U" else    ## note that: dataType doc. advises against INT4U
+            if(maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+    }
+  } else {
+    if(signVal & !doubVal) {
+      ## if() else is faster than if
+      datatype <- if(minVal >= -127 & maxVal <= 127) "INT1S" else
+        if(minVal >= -32767 & maxVal <= 32767) "INT2S" else
+          if(minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else    ## note that: dataType doc. advises against INT4U
+            if(minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+    } else
+      if(doubVal)
+        datatype <- if(minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+  }
+  datatype
+}
+
+#' @export
+#' @rdname assessDataType
+assessDataType.RasterStack <- function(ras) {
+  unlist(lapply(names(ras), function(x) assessDataType(ras[[x]])))
+}
+
+#' @export
+#' @rdname assessDataType
+assessDataType.default <- function(ras) {
+  stop("No method for assessDataType for class ", class(ras))
+}

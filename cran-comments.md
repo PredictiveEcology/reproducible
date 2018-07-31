@@ -1,6 +1,7 @@
 ## Updated release
 
 This release fixes failing tests caused by a recent `git2r` change.
+It also removes hardcoding of the CRAN mirror used for installing packages by the user.
 
 ## Test environments
 
@@ -15,8 +16,9 @@ This release fixes failing tests caused by a recent `git2r` change.
 * Windows              (appveyor), R 3.4.0
 
 ### Current R versions
-* macOS High Sierra    (local), R 3.5.0
-* OS X El Capitan  (travis-ci), R 3.5.0
+* macOS El Capitan     (r-hub), R 3.5.0
+* macOS Sierra     (travis-ci), R 3.5.0
+* macOS High Sierra    (local), R 3.5.1
 * Ubuntu 14.04     (travis-ci), R 3.5.1
 * Ubuntu 18.04         (local), R 3.5.1
 * Windows           (appveyor), R 3.5.1
@@ -25,9 +27,9 @@ This release fixes failing tests caused by a recent `git2r` change.
 
 ### Development R version
 * Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-20 r74923)
-* Ubuntu 18.04         (local), R 3.6.0 (2018-06-28 r74935)
-* Windows           (appveyor), R 3.6.0 (2018-07-01 r74950)
-* Windows        (win-builder), R 3.6.0 (2018-07-12 r74955)
+* Ubuntu 18.04         (local), R 3.6.0 (2018-07-30 r75011)
+* Windows           (appveyor), R 3.6.0 (2018-07-23 r75001)
+* Windows        (win-builder), R 3.6.0 (2018-07-23 r75001)
 
 ## R CMD check results
 
@@ -47,7 +49,6 @@ We have run R CMD check on downstream dependencies, and all have passed except t
 Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
 
 * `SpaDES` shows a warning due to `DISPLAY` not being set in the headless session.
-  Three other warnings regarding replaced imports are caused by having deprecated and moved these functions from `SpaDES.tools` to this package.
-  I am a co-developer of `SpaDES.tools`, and we are submitting an update to address this problem.
 
-* `SpaDES.core` shows a warning due to `DISPLAY` not being set in the headless session.
+* `SpaDES.core` throws some ERRORs, which are fixed in the next version (will be submitted shortly).
+  Also shows a warning due to `DISPLAY` not being set in the headless session.

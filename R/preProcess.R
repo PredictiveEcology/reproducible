@@ -9,9 +9,7 @@
 #' A list with 5 elements, \code{checkSums} (the result of a \code{Checksums}
 #' after downloading), \code{dots} (cleaned up ..., including deprecated argument checks),
 #' \code{fun} (the function to be used to load the preProcessed object from disk),
-#' \code{targetFilePath} (the fully qualified path to the \code{targetFile}),
-#' and \code{tryRasterFn} (a logical whether the the \code{targetFilePath}
-#' should be loaded with \code{\link[raster]{raster}}).
+#' and \code{targetFilePath} (the fully qualified path to the \code{targetFile}).
 #'
 #' @section Combinations of \code{targetFile}, \code{url}, \code{archive}, \code{alsoExtract}:
 #'
@@ -49,8 +47,9 @@
 #' @author Eliot McIntire
 #' @export
 #' @inheritParams prepInputs
+#' @inheritParams downloadFile
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
-                       destinationPath = ".", fun = NULL,
+                       destinationPath = ".", fun = NULL, dlFun = NULL,
                        quick = getOption("reproducible.quick"),
                        overwrite = FALSE, purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -168,11 +167,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     destinationPath = destinationPath,
     quick = quick,
     checkSums = checkSums,
+    dlFun = dlFun,
     url = url,
     checksumFile = asPath(checkSumFilePath),
     needChecksums = needChecksums,
     overwrite = overwrite,
-    purge = purge # may need to try purging again if no target, archive or alsoExtract were known yet
+    purge = purge, # may need to try purging again if no target, archive or alsoExtract were known yet
+    ...
   )#, moduleName = moduleName, modulePath = modulePath)
   checkSums <- downloadFileResult$checkSums
   needChecksums <- downloadFileResult$needChecksums
@@ -195,6 +196,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   }
+
   if (is.null(alsoExtract)) neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
@@ -215,33 +217,40 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
   filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                        neededFiles = neededFiles,
-                                       checkSums = checkSums, needChecksums = needChecksums)
+                                       checkSums = checkSums, needChecksums = needChecksums,
+                                       checkSumFilePath = checkSumFilePath, quick = quick)
 
   filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
                               basename(filesExtracted$filesExtracted)))
   needChecksums <- filesExtracted$needChecksums
 
   #targetFilePath might still be NULL, need destinationPath too
+  filesExtr <- c(filesToChecksum,
+                                 if (is.null(filesExtracted$filesExtracted) ||
+                                     length(filesExtracted$filesExtracted) == 0)
+                                   downloadFileResult$downloaded
+                                 else
+                                   filesExtracted$filesExtracted)
+  if (!is.null(filesExtr)) filesExtr <- unique(basename(filesExtr))
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
-                                       c(unique(filesToChecksum, filesExtracted$filesExtracted)),
+                                       filesExtracted = filesExtr,
                                        fun) # passes through if all known
   targetFile <- basename(targetParams$targetFilePath)
   targetFilePath <- targetParams$targetFilePath
   fun <- targetParams$fun
 
-  # Now that all files are downloaded and extracted from archive, deal with missing targetFilePath
-  tryRasterFn <- if (endsWith(suffix = "raster", fun)) TRUE else FALSE
-
-  # fun is a charcter string, convert to function
-  if (grepl("::", fun)) {
-    fun2 <- strsplit(fun, "::")[[1]]
-    pkg <- fun2[1]
-    fun <- fun2[2]
-    fun <- getFromNamespace(fun, pkg)
+  #targetFilePath might still be NULL, need destinationPath too
+  if (is.null(targetFilePath)) if (is.null(filesExtracted$filesExtracted)) {
+    if (!is.null(downloadFileResult$downloaded))
+      targetFilePath <- downloadFileResult$downloaded
   } else {
-    fun <- get(fun)
+    targetFilePath <- filesExtracted$filesExtracted
   }
 
+  if (is.null(targetFile)) if (!is.null(targetFilePath)) targetFile <- basename(targetFilePath)
+
+  # Convert the fun as character string to function class, if not already
+  fun <- .extractFunction(fun)
 
   if (needChecksums > 0) {
     # needChecksums 1 --> write a new checksums.txt file
@@ -256,15 +265,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     on.exit() # remove on.exit because it is done here
   }
   if (!isTRUE(file.exists(targetFilePath))) {
-    stop("targetFile appears to be misspecified and can't be guessed from current arguments. ",
+    stop("targetFile appears to be misspecified. ",
          "Possibly, it does not exist in the specified archive, ",
-         "or the file doesn't exist")
+         "or the file doesn't exist in destinationPath")
   }
+
   out <- list(checkSums = checkSums,
               dots = dots,
               fun = fun,
               targetFilePath = targetFilePath,
-              tryRasterFn = tryRasterFn)
+              destinationPath = destinationPath,
+              object = downloadFileResult$object)
   return(out)
 }
 
@@ -288,6 +299,22 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums
 }
 
-.emptyChecksumsResult <- data.table(expectedFile = character(), result = character())
+.emptyChecksumsResult <- data.table(expectedFile = character(), actualFile = character(), result = character())
 .emptyChecksumsFileContent <- data.frame(file = character(), checksum = character(), filesize = character(),
-                              algorithm = character())
+                                         algorithm = character())
+
+.extractFunction <- function(fun) {
+  if (!is.null(fun)) {
+    if (!is.function(fun)) {
+      if (grepl("::", fun)) {
+        fun2 <- strsplit(fun, "::")[[1]]
+        pkg <- fun2[1]
+        fun <- fun2[2]
+        fun <- getFromNamespace(fun, pkg)
+      } else {
+        fun <- get(fun)
+      }
+    }
+  }
+  fun
+}

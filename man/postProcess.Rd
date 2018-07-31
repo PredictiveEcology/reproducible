@@ -7,10 +7,10 @@
 \usage{
 postProcess(x, ...)
 
-\method{postProcess}{spatialObjects}(x, filename1 = NULL, filename2 = TRUE,
-  studyArea = NULL, rasterToMatch = NULL, overwrite = TRUE,
-  useSAcrs = FALSE, useCache = getOption("reproducible.useCache", FALSE),
-  ...)
+\method{postProcess}{spatialObjects}(x, filename1 = NULL,
+  filename2 = TRUE, studyArea = NULL, rasterToMatch = NULL,
+  overwrite = TRUE, useSAcrs = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE), ...)
 }
 \arguments{
 \item{x}{An object of postProcessing, e.g., \code{spatialObjects}.
@@ -75,11 +75,9 @@ will be taken from \code{rasterToMatch} or none at all.
 If \code{TRUE}, it will be taken from \code{studyArea}. See table
 in details below.}
 
-\item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
+\item{useCache}{Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}}
 }
 \description{
-Generic function to post process objects
-
 The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
 crop, reproject, and mask, in that order.  This function is a wrapper for
 \code{\link{cropInputs}}, \code{\link{fixErrors}}, \code{\link{projectInputs}},

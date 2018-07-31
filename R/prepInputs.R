@@ -118,8 +118,9 @@ if (getRversion() >= "3.1.0") {
 #'   and save the file that comes from \code{url} and is also where the function
 #'   will look for \code{archive} or \code{targetFile}.
 #'
-#' @param fun Character string indicating the function to use to load
-#'   \code{targetFile} into an \code{R} object.
+#' @param fun Function or character string indicating the function to use to load
+#'   \code{targetFile} into an \code{R} object, e.g., in form wtih package name:
+#'   \code{"raster::raster"}.
 #'
 #' @param quick Logical. This is passed internally to \code{\link{Checksums}}
 #'   (the quickCheck argument), and to
@@ -140,7 +141,7 @@ if (getRversion() >= "3.1.0") {
 #'  \code{...} will also be passed into the inner
 #'  functions, e.g., \code{\link{cropInputs}}. See details and examples.
 #'
-#' @param useCache Passed to Cache in various places. Default \code{FALSE}
+#' @param useCache Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}
 #'
 #' @author Eliot McIntire
 #' @author Jean Marchal
@@ -231,7 +232,12 @@ if (getRversion() >= "3.1.0") {
 #'                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
 #'                      destinationPath = asPath(dPath),
 #'                      studyArea = StudyArea)
+#' # Using dlFun -- a custom download function -- passed to preProcess
+#' test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+#'                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+#'                     path = dPath)
 #' }
+#'
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL,
@@ -256,33 +262,54 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
+  fun <- .fnCleanup(out$fun, callingFun = "prepInputs")
+
   ## dots will contain too many things for some functions
   ## -- need to remove those that are known going into prepInputs
-  argsToRemove <- unique(c(names(formals(prepInputs)),
-                           names(formals(fixErrors)),
-                           names(formals(writeRaster)),
-                           names(formals(projectRaster)),
-                           names(formals(determineFilename)),
-                           names(formals(writeOutputs)),
-                           unlist(lapply(methods("postProcess"), function(x) names(formals(x))))))
-  args <- out$dots[!(names(out$dots) %in% argsToRemove)]
+  args <- out$dots[!(names(out$dots) %in% .argsToRemove)]
+
+  # Only accept the ones that are the formals of the function -- above removals may be redunant
+  args <- args[(names(args) %in% fun$formalArgs)]
   if (length(args) == 0) args <- NULL
 
+
   # Stage 1 - load into R
-  message("Loading object into R from disk")
-  if (out$tryRasterFn) {
-    ## Don't cache the reading of a raster
-    ## -- normal reading of raster on disk is fast b/c only reads metadata
-    x <- do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
+  x <- if (is.null(out$object)) {
+    message("Loading object into R")
+    if (identical(out$fun, raster::raster)) {
+      ## Don't cache the reading of a raster
+      ## -- normal reading of raster on disk is fast b/c only reads metadata
+      do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
+    } else {
+      if (identical(out$fun, base::load)){
+        if (is.null(args$envir)) {
+          message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
+                  "if you would like it loaded to a specific environment")
+          tmpEnv <- new.env()
+          returnAsList <- TRUE
+        } else {
+          tmpEnv <- args$envir
+          args$envir <- NULL
+          returnAsList <- FALSE
+        }
+        objs <- do.call(out$fun, append(list(file = out$targetFilePath, envir = tmpEnv), args))
+        if (returnAsList)
+          as.list(tmpEnv, all.names = TRUE)
+      } else {
+        Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                   useCache = useCache)
+      }
+    }
   } else {
-    x <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args))
+    out$object
   }
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
   if (!(all(is.null(out$dots$studyArea), is.null(out$dots$rasterToMatch)))) {
     message("Running postProcess")
-    x <- Cache(do.call, postProcess, append(list(useCache = useCache, x = x, filename1 = out$targetFilePath,
-                                                 destinationPath = out$destinationPath), out$dots))
+    x <- Cache(do.call, postProcess, append(list(x = x, filename1 = out$targetFilePath,
+                                                 destinationPath = out$destinationPath), out$dots),
+               useCache = useCache)
   }
 
   return(x)
@@ -306,6 +333,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @param needChecksums A numeric, with \code{0} indicating do not write a new checksums,
 #'                      \code{1} write a new one,
 #'                      \code{2} append new information to existing one.
+#' @param checkSumFilePath The full path to the checksum.txt file
+#' @param quick Passed to \code{Checksums}
 #' @param ... Passed to \code{unzip} or \code{untar}, e.g., \code{overwrite}
 #'
 #' @return A character vector listing the paths of the extracted archives.
@@ -315,7 +344,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                neededFiles, extractedArchives = NULL, checkSums,
-                               needChecksums, filesExtracted = character()) {
+                               needChecksums, filesExtracted = character(),
+                               checkSumFilePath, quick) {
 
 
   if (!is.null(archive)) {
@@ -338,6 +368,38 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       funWArgs <- .whichExtractFn(archive[1], args)
 
       filesInArchive <- .listFilesInArchive(archive)
+
+      # need to re-Checksums because
+      checkSums <- if (file.exists(checkSumFilePath)) {
+        try(Checksums(
+          files = file.path(destinationPath, basename(neededFiles)),
+          checksumFile = checkSumFilePath,
+          path = destinationPath,
+          quickCheck = quick,
+          write = FALSE
+        ), silent = TRUE)
+      } else {
+        needChecksums <- 1
+        checkSums <- .emptyChecksumsResult
+      }
+
+      # join the neededFiles with the checkSums -- find out which are missing
+      checkSumsDT <- data.table(checkSums)
+      neededFilesDT <- data.table(neededFiles = basename(neededFiles))
+      isOKDT <- checkSumsDT[neededFilesDT, on = c(expectedFile = "neededFiles")]
+      isOKDT2 <- checkSumsDT[neededFilesDT, on = c(actualFile = "neededFiles")]
+      # fill in any OKs from "actualFile" intot he isOKDT
+      isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+      isOK <- compareNA(isOKDT$result, "OK")
+
+      #basename(neededFiles) %in% checkSums$expectedFile
+      #isOK <-
+      #  checkSums[checkSums$expectedFile %in% basename(neededFiles) |
+      #              checkSums$actualFile %in% basename(neededFiles),]$result
+      #checkSums[compareNA(checkSums$expectedFile, basename(neededFiles)) |
+      #              compareNA(checkSums$actualFile, basename(neededFiles)),]$result
+      #isOK3 <- isOK$result[!is.na(isOK$result)] == "OK"
+
       # filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
       #
       # if ("Name" %in% names(filesInArchive)) {
@@ -349,7 +411,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       if (is.null(neededFiles)) {
         result <- checkSums[checkSums$expectedFile %in% basename(filesInArchive), ]$result
       }
-      if (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
+      if (!(all(isOK)) ||
           NROW(result) == 0) {
         # don't extract if we already have all files and they are fine
 
@@ -365,8 +427,10 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                               destinationPath = destinationPath,
                                               neededFiles = neededFiles,
                                               extractedArchives = extractedArchives,
-                                              checkSums,
-                                              needChecksums,
+                                              checkSums = checkSums,
+                                              quick = quick,
+                                              needChecksums = needChecksums,
+                                              checkSumFilePath = checkSumFilePath,
                                               filesExtracted = filesExtracted)
         } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
           extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in%
@@ -401,7 +465,10 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                      neededFiles = neededFiles,
                                      extractedArchives = extractedArchives,
                                      filesExtracted = filesExtracted,
-                                     checkSums, needChecksums))
+                                     checkSums = checkSums,
+                                     needChecksums = needChecksums,
+                                     checkSumFilePath = checkSumFilePath,
+                                     quick = quick))
               )
             )
           }
@@ -435,16 +502,21 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 #' @param destinationPath Full path of the directory where the target file should be
 #' @keywords internal
 .guessAtTargetAndFun <- function(targetFilePath, destinationPath, filesExtracted, fun) {
-  #if (is.null(targetFilePath)) {
-  #filesExtracted <- dir(destinationPath)
   possibleFiles <- unique(basename(c(targetFilePath, filesExtracted)))
-  isShapefile <- grepl("shp", file_ext(possibleFiles))
-  isRaster <- file_ext(possibleFiles) %in% c("tif", "grd")
+  fileExt <- file_ext(possibleFiles)
+  isShapefile <- grepl("shp", fileExt)
+  isRaster <- fileExt %in% c("tif", "grd")
+  isRDS <- fileExt %in% c("rds")
   if (is.null(fun)) { #i.e., the default
     fun <- if (any(isShapefile)) {
       "raster::shapefile"
-    } else {
+    } else if (any(isRaster)) {
       "raster::raster"
+    } else if (any(isRDS)) {
+      "base::readRDS"
+    } else {
+      NULL
+      #stop("Don't know what fun to use for loading targetFile. Please supply a 'fun'", call. = FALSE)
     }
   }
 
@@ -466,6 +538,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     } else {
       if (any(isRaster)) {
         possibleFiles[isRaster]
+      } else if (any(isRDS)) {
+        possibleFiles[isRDS]
       } else {
         message("  Don't know which file to load. Please specify targetFile.")
       }
@@ -569,7 +643,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
                                  append = TRUE) {
   if (append) {
     # a checksums file already existed, need to keep some of it
-    cs <- try(read.table(checkSumFilePath, header = TRUE), silent = TRUE)
+    cs <- suppressWarnings(try(read.table(checkSumFilePath, header = TRUE), silent = TRUE))
     if (is(cs, "try-error")) {
       # meant that it was an empty CHECKSUMS.txt file -- rebuild it
       append <- FALSE

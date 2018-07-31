@@ -6,8 +6,9 @@
 \usage{
 preProcess(targetFile = NULL, url = NULL, archive = NULL,
   alsoExtract = NULL, destinationPath = ".", fun = NULL,
-  quick = getOption("reproducible.quick"), overwrite = FALSE,
-  purge = FALSE, useCache = getOption("reproducible.useCache", FALSE), ...)
+  dlFun = NULL, quick = getOption("reproducible.quick"),
+  overwrite = FALSE, purge = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE), ...)
 }
 \arguments{
 \item{targetFile}{Character string giving the path to the eventual file
@@ -44,8 +45,12 @@ only those to be extracted. See table in \code{\link{preProcess}}.}
 and save the file that comes from \code{url} and is also where the function
 will look for \code{archive} or \code{targetFile}.}
 
-\item{fun}{Character string indicating the function to use to load
-\code{targetFile} into an \code{R} object.}
+\item{fun}{Function or character string indicating the function to use to load
+\code{targetFile} into an \code{R} object, e.g., in form wtih package name:
+\code{"raster::raster"}.}
+
+\item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
+custom downloading, in addition to loading into R. Still experimental.}
 
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to
@@ -60,7 +65,7 @@ even if they pass the checksums or the files are all there.}
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
 
-\item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
+\item{useCache}{Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}}
 
 \item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
  \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
@@ -72,9 +77,7 @@ functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 A list with 5 elements, \code{checkSums} (the result of a \code{Checksums}
 after downloading), \code{dots} (cleaned up ..., including deprecated argument checks),
 \code{fun} (the function to be used to load the preProcessed object from disk),
-\code{targetFilePath} (the fully qualified path to the \code{targetFile}),
-and \code{tryRasterFn} (a logical whether the the \code{targetFilePath}
-should be loaded with \code{\link[raster]{raster}}).
+and \code{targetFilePath} (the fully qualified path to the \code{targetFile}).
 }
 \description{
 This does downloading (via \code{downloadFile}), checksumming (\code{Checksums}),

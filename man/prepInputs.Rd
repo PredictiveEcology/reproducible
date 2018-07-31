@@ -7,7 +7,8 @@
 prepInputs(targetFile = NULL, url = NULL, archive = NULL,
   alsoExtract = NULL, destinationPath = ".", fun = NULL,
   quick = getOption("reproducible.quick"), overwrite = FALSE,
-  purge = FALSE, useCache = getOption("reproducible.useCache", FALSE), ...)
+  purge = FALSE, useCache = getOption("reproducible.useCache", FALSE),
+  ...)
 }
 \arguments{
 \item{targetFile}{Character string giving the path to the eventual file
@@ -44,8 +45,9 @@ only those to be extracted. See table in \code{\link{preProcess}}.}
 and save the file that comes from \code{url} and is also where the function
 will look for \code{archive} or \code{targetFile}.}
 
-\item{fun}{Character string indicating the function to use to load
-\code{targetFile} into an \code{R} object.}
+\item{fun}{Function or character string indicating the function to use to load
+\code{targetFile} into an \code{R} object, e.g., in form wtih package name:
+\code{"raster::raster"}.}
 
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to
@@ -60,7 +62,7 @@ even if they pass the checksums or the files are all there.}
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
 
-\item{useCache}{Passed to Cache in various places. Default \code{FALSE}}
+\item{useCache}{Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}}
 
 \item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
  \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
@@ -233,7 +235,12 @@ LCC2005 <- Cache(prepInputs, url = url,
                      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
                      destinationPath = asPath(dPath),
                      studyArea = StudyArea)
+# Using dlFun -- a custom download function -- passed to preProcess
+test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+                    dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                    path = dPath)
 }
+
 
 }
 \seealso{

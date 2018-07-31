@@ -23,10 +23,32 @@ readLinesRcpp <- function(path) {
   inst
 }
 
+#' @importFrom utils chooseCRANmirror
 getCRANrepos <- function(repos = NULL) {
-  if (is.null(repos) | any(repos == "" | "@CRAN@" %in% repos)) {
-    repos <- "https://cran.rstudio.com"
+  if (is.null(repos)) {
+    repos <- getOption("repos")["CRAN"]
   }
+
+  # still might be imprecise repository, specifically ""
+  if (isTRUE("" == repos)) {
+    repos <- "@CRAN@"
+  }
+
+  # if @CRAN@, and non interactive session
+  if (isTRUE("@CRAN@" %in% repos)) {
+    cranRepo <- Sys.getenv("CRAN_REPO")
+    repos <- if (nzchar(cranRepo)) {
+      cranRepo
+    } else {
+      if (interactive()) {
+        utils::chooseCRANmirror() ## sets repo option
+        getOption("repos")["CRAN"]
+      } else {
+        "https://cloud.R-project.org"
+      }
+    }
+  }
+
   return(repos)
 }
 
@@ -71,3 +93,11 @@ getCRANrepos <- function(repos = NULL) {
 .formalsNotInCurrentDots <- function(fun, ...) {
   names(list(...))[!(names(list(...)) %in% names(formals(fun)))]
 }
+
+rndstr <- function(n = 1, len = 8) {
+  unlist(lapply(character(n), function(x) {
+    x <- paste0(sample(c(0:9, letters, LETTERS), size = len,
+                       replace = TRUE), collapse = "")
+  }))
+}
+

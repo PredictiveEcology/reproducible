@@ -135,14 +135,15 @@ The special assign operator %&amp;lt;% is equivalent to Cache. See examples at t
     
     </div>
 
-    <pre class="usage"><span class='fu'>Cache</span>(<span class='no'>FUN</span>, <span class='no'>...</span>, <span class='kw'>notOlderThan</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>objects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>outputObjects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>,
-  <span class='no'>compareRasterFileLength</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(), <span class='no'>digestPathContent</span>,
-  <span class='kw'>omitArgs</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>(), <span class='kw'>debugCache</span> <span class='kw'>=</span> <span class='fu'>character</span>(),
-  <span class='kw'>sideEffect</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>makeCopy</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+    <pre class="usage"><span class='fu'>Cache</span>(<span class='no'>FUN</span>, <span class='no'>...</span>, <span class='kw'>notOlderThan</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>objects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>outputObjects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>1e+06</span>, <span class='no'>compareRasterFileLength</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(),
+  <span class='no'>digestPathContent</span>, <span class='kw'>omitArgs</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'>list</span>(),
+  <span class='kw'>debugCache</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='kw'>sideEffect</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>makeCopy</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>FALSE</span>), <span class='kw'>cacheId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>TRUE</span>), <span class='kw'>showSimilar</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>TRUE</span>),
+  <span class='kw'>showSimilar</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
 
 <span class='co'># S4 method for ANY</span>
 <span class='fu'>Cache</span>(<span class='no'>FUN</span>, <span class='no'>...</span>, <span class='kw'>notOlderThan</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>objects</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -152,7 +153,8 @@ The special assign operator %&amp;lt;% is equivalent to Cache. See examples at t
   <span class='kw'>debugCache</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='kw'>sideEffect</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>makeCopy</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>FALSE</span>), <span class='kw'>cacheId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>TRUE</span>), <span class='kw'>showSimilar</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>TRUE</span>),
+  <span class='kw'>showSimilar</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
 
 <span class='no'>lhs</span> <span class='kw'>%&lt;%</span> <span class='no'>rhs</span></pre>
     
@@ -175,15 +177,15 @@ The special assign operator %&amp;lt;% is equivalent to Cache. See examples at t
     <tr>
       <th>objects</th>
       <td><p>Character vector of objects to be digested. This is only applicable
-if there is a list, environment or simList with named objects
+if there is a list, environment (or similar) named objects
 within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
-the list, environment or simList objects.</p></td>
+the list, environment or similar objects.</p></td>
     </tr>
     <tr>
       <th>outputObjects</th>
       <td><p>Optional character vector indicating which objects to
-return. This is only relevant for <code>simList</code> objects</p></td>
+return. This is only relevant for list, environment (or similar) objects</p></td>
     </tr>
     <tr>
       <th>algo</th>
@@ -200,7 +202,7 @@ This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
     <tr>
       <th>length</th>
       <td><p>Numeric. If the element passed to Cache is a <code>Path</code> class
-object (from e.g., <code>asPath(filename)</code>) or it is a <code>Raster</code> with file-backing, then this will be
+object (from e.g., <code><a href='Path-class.html'>asPath(filename)</a></code>) or it is a <code>Raster</code> with file-backing, then this will be
 passed to <code><a href='http://www.rdocumentation.org/packages/digest/topics/digest'>digest::digest</a></code>, essentially limiting the number of bytes
 to digest (for speed). This will only be used if <code>quick = FALSE</code>.</p></td>
     </tr>
@@ -260,13 +262,20 @@ set to <code>TRUE</code> during the first run of <code>Cache</code>. Default is 
       <th>quick</th>
       <td><p>Logical. If <code>TRUE</code>,
 little or no disk-based information will be assessed, i.e., mostly its
-memory content. This is relevant for objects of class
-<code>Path</code> and <code>Raster</code> currently.
-For class <code>Path</code> objects, the file's metadata (i.e., filename and file size)
-will be hashed instead of the file contents. If set to <code>FALSE</code> (default),
+memory content. This is relevant for objects of class <code>character</code>,
+<code>Path</code> and <code>Raster</code> currently. For class <code>character</code>, it is ambiguous
+whether this represents a character string or a vector of file paths. The function
+will assess if it is a path to a file or directory first. If not, it will treat
+the object as a character string. If it is known that character strings should
+not be treated as paths, then <code>quick = TRUE</code> will be much faster, with no loss
+of information. If it is file or directory, then it will digest the file content,
+or <code>basename(object)</code>. For class <code>Path</code> objects, the file's metadata
+(i.e., filename and file size)
+will be hashed instead of the file contents if <code>quick = TRUE</code>.
+If set to <code>FALSE</code> (default),
 the contents of the file(s) are hashed.
-If <code>quick = TRUE</code>, <code>length</code> is ignored.
-<em>NOTE: this argument is experimental and may change in future releases.</em></p></td>
+If <code>quick = TRUE</code>, <code>length</code> is ignored. <code>Raster</code> objects are treated
+as paths, if they are file-backed.</p></td>
     </tr>
     <tr>
       <th>verbose</th>
@@ -277,9 +286,11 @@ Caching, which may help diagnose Caching challenges.</p></td>
       <th>cacheId</th>
       <td><p>Character string. If passed, this will override the calculated hash
 of the inputs, and return the result from this cacheId in the cacheRepo.
-In general, this is not used; however, in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs, this can stabilize
-the return value.</p></td>
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.</p></td>
     </tr>
     <tr>
       <th>useCache</th>
@@ -403,7 +414,7 @@ done. Possibilities include:</p><ol>
 <li><p>hash the <code>basename(path)</code>;</p></li>
 <li><p>hash the contents of the file.</p></li>
 </ol><p>If paths are passed in as is (i.e,. character string), the result will not be predictable.
-Instead, one should use the wrapper function <code>asPath(path)</code>, which sets the
+Instead, one should use the wrapper function <code><a href='Path-class.html'>asPath(path)</a></code>, which sets the
 class of the string to a <code>Path</code>, and one should decide whether one wants
 to digest the content of the file (using <code>quick = FALSE</code>),
 or just the filename (<code>(quick = TRUE)</code>). See examples.</p>

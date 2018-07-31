@@ -152,7 +152,8 @@ See examples.</p>
     <pre class="usage"><span class='fu'>prepInputs</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='st'>"."</span>, <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>), <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
+  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
+  <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -203,8 +204,9 @@ will look for <code>archive</code> or <code>targetFile</code>.</p></td>
     </tr>
     <tr>
       <th>fun</th>
-      <td><p>Character string indicating the function to use to load
-<code>targetFile</code> into an <code>R</code> object.</p></td>
+      <td><p>Function or character string indicating the function to use to load
+<code>targetFile</code> into an <code>R</code> object, e.g., in form wtih package name:
+<code>"raster::raster"</code>.</p></td>
     </tr>
     <tr>
       <th>quick</th>
@@ -227,7 +229,7 @@ even if they pass the checksums or the files are all there.</p></td>
     </tr>
     <tr>
       <th>useCache</th>
-      <td><p>Passed to Cache in various places. Default <code>FALSE</code></p></td>
+      <td><p>Passed to Cache in various places. Defaults to <code>getOption("reproducible.useCache")</code></p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -359,8 +361,8 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
                   <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span>)
 <span class='no'>shpEcozoneSm</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>,
                          <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
-                         <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'>asPath</span>(<span class='no'>ecozoneFilename</span>),
-                         <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'>asPath</span>(<span class='no'>ecozoneFiles</span>),
+                         <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFilename</span>),
+                         <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFiles</span>),
                          <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>,
                          <span class='kw'>fun</span> <span class='kw'>=</span> <span class='st'>"shapefile"</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>,
                          <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='st'>"EcozoneFile.shp"</span>) <span class='co'># passed to determineFilename</span>
@@ -378,7 +380,7 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
 
 <span class='co'># messages received below may help for filling in more arguments in the subsequent call</span>
 <span class='no'>LCC2005</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>url</span> <span class='kw'>=</span> <span class='no'>url</span>,
-                     <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='no'>dPath</span>),
+                     <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>dPath</span>),
                      <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)
 
 <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/plot'>plot</a></span>(<span class='no'>LCC2005</span>)
@@ -386,10 +388,15 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
 <span class='co'># if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)</span>
 <span class='no'>LCC2005</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='no'>url</span>,
                      <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='no'>lcc2005Filename</span>,
-                     <span class='kw'>archive</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='st'>"LandCoverOfCanada2005_V1_4.zip"</span>),
-                     <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>asPath</span>(<span class='no'>dPath</span>),
+                     <span class='kw'>archive</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='st'>"LandCoverOfCanada2005_V1_4.zip"</span>),
+                     <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>dPath</span>),
                      <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)
+<span class='co'># Using dlFun -- a custom download function -- passed to preProcess</span>
+<span class='no'>test1</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='st'>"GADM_2.8_LUX_adm0.rds"</span>, <span class='co'># must specify currently</span>
+                    <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='st'>"raster::getData"</span>, <span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"GADM"</span>, <span class='kw'>country</span> <span class='kw'>=</span> <span class='st'>"LUX"</span>, <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>0</span>,
+                    <span class='kw'>path</span> <span class='kw'>=</span> <span class='no'>dPath</span>)
 <span class='co'># }</span><div class='input'>
+
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

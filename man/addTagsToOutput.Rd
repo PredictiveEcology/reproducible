@@ -8,13 +8,14 @@
 \usage{
 .addTagsToOutput(object, outputObjects, FUN, preDigestByClass)
 
-\S4method{.addTagsToOutput}{ANY}(object, outputObjects, FUN, preDigestByClass)
+\S4method{.addTagsToOutput}{ANY}(object, outputObjects, FUN,
+  preDigestByClass)
 }
 \arguments{
 \item{object}{Any R object.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
-return. This is only relevant for \code{simList} objects}
+return. This is only relevant for list, environment (or similar) objects}
 
 \item{FUN}{A function}
 

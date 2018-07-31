@@ -17,7 +17,8 @@
 \title{Create reproducible digests of objects in R}
 \usage{
 .robustDigest(object, objects, length = 1e+06, algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE), classOptions = list())
+  quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
 \S4method{.robustDigest}{ANY}(object, objects, length = 1e+06,
   algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
@@ -84,13 +85,20 @@ to digest (for speed). This will only be used if \code{quick = FALSE}.}
 
 \item{quick}{Logical. If \code{TRUE},
 little or no disk-based information will be assessed, i.e., mostly its
-memory content. This is relevant for objects of class
-\code{Path} and \code{Raster} currently.
-For class \code{Path} objects, the file's metadata (i.e., filename and file size)
-will be hashed instead of the file contents. If set to \code{FALSE} (default),
+memory content. This is relevant for objects of class \code{character},
+\code{Path} and \code{Raster} currently. For class \code{character}, it is ambiguous
+whether this represents a character string or a vector of file paths. The function
+will assess if it is a path to a file or directory first. If not, it will treat
+the object as a character string. If it is known that character strings should
+not be treated as paths, then \code{quick = TRUE} will be much faster, with no loss
+of information. If it is file or directory, then it will digest the file content,
+or \code{basename(object)}. For class \code{Path} objects, the file's metadata
+(i.e., filename and file size)
+will be hashed instead of the file contents if \code{quick = TRUE}.
+If set to \code{FALSE} (default),
 the contents of the file(s) are hashed.
-If \code{quick = TRUE}, \code{length} is ignored.
-\emph{NOTE: this argument is experimental and may change in future releases.}}
+If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
+as paths, if they are file-backed.}
 
 \item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
 specific classes. Should be options that the \code{.robustDigest} knows what

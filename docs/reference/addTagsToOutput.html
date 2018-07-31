@@ -138,7 +138,8 @@ This function and methods should do "deep" copy for archiving purposes.</p>
     <pre class="usage"><span class='fu'>.addTagsToOutput</span>(<span class='no'>object</span>, <span class='no'>outputObjects</span>, <span class='no'>FUN</span>, <span class='no'>preDigestByClass</span>)
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>.addTagsToOutput</span>(<span class='no'>object</span>, <span class='no'>outputObjects</span>, <span class='no'>FUN</span>, <span class='no'>preDigestByClass</span>)</pre>
+<span class='fu'>.addTagsToOutput</span>(<span class='no'>object</span>, <span class='no'>outputObjects</span>, <span class='no'>FUN</span>,
+  <span class='no'>preDigestByClass</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -150,7 +151,7 @@ This function and methods should do "deep" copy for archiving purposes.</p>
     <tr>
       <th>outputObjects</th>
       <td><p>Optional character vector indicating which objects to
-return. This is only relevant for <code>simList</code> objects</p></td>
+return. This is only relevant for list, environment (or similar) objects</p></td>
     </tr>
     <tr>
       <th>FUN</th>

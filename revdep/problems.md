@@ -6,17 +6,17 @@
 |:--------|:----------------------------|
 |version  |R version 3.4.4 (2018-03-15) |
 |system   |x86_64, linux-gnu            |
-|ui       |X11                          |
-|language |en_CA:en                     |
+|ui       |RStudio (1.1.456)            |
+|language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-07-13                   |
+|date     |2018-07-30                   |
 
 ## Packages
 
-|package      |*  |version    |date       |source                                          |
-|:------------|:--|:----------|:----------|:-----------------------------------------------|
-|reproducible |   |0.2.1.9000 |2018-07-14 |Github (PredictiveEcology/reproducible@66659a1) |
+|package      |*  |version |date       |source                                          |
+|:------------|:--|:-------|:----------|:-----------------------------------------------|
+|reproducible |   |0.2.2   |2018-07-30 |Github (PredictiveEcology/reproducible@41f46c2) |
 
 # Check results
 
@@ -24,20 +24,40 @@
 
 |package     |version | errors| warnings| notes|
 |:-----------|:-------|------:|--------:|-----:|
-|SpaDES.core |0.2.0   |      0|        1|     1|
+|SpaDES.core |0.2.0   |      1|        1|     1|
 |SpaDES      |2.0.2   |      0|        1|     0|
 
 ## SpaDES.core (0.2.0)
 Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
-0 errors | 1 warning  | 1 note 
+1 error  | 1 warning  | 1 note 
 
 ```
+checking tests ... ERROR
+  Running ‘test-all.R’ [119s/114s]
+Running the tests in ‘tests/test-all.R’ failed.
+Last 13 lines of output:
+  [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
+  [39m[31m──[39m [31m3. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#106) [39m [31m────────────────────────────────[39m
+  all.equal(simA, simB) isn't true.
+  
+  [34m  Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
+  [39m══ testthat results  ═══════════════════════════════════════════════════════════════════════════════════════════════
+  OK: 361 SKIPPED: 35 FAILED: 3
+  1. Failure: test cache (@test-cache.R#42) 
+  2. Failure: test .prepareOutput (@test-cache.R#233) 
+  3. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#106) 
+  
+  Error: testthat unit tests failed
+  In addition: Warning message:
+  no DISPLAY variable so Tk is not available 
+  Execution halted
+
 checking whether package ‘SpaDES.core’ can be installed ... WARNING
 Found the following significant warnings:
   Warning: no DISPLAY variable so Tk is not available
-See ‘/home/achubaty/Documents/GitHub/SpaDES/reproducible/revdep/checks/SpaDES.core.Rcheck/00install.out’ for details.
+See ‘/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/revdep/checks/SpaDES.core.Rcheck/00install.out’ for details.
 
 checking installed package size ... NOTE
   installed size is 12.4Mb
@@ -56,9 +76,6 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES/issues
 checking whether package ‘SpaDES’ can be installed ... WARNING
 Found the following significant warnings:
   Warning: no DISPLAY variable so Tk is not available
-  Warning: replacing previous import ‘SpaDES.tools::checkGDALVersion’ by ‘reproducible::checkGDALVersion’ when loading ‘SpaDES’
-  Warning: replacing previous import ‘SpaDES.tools::getGDALVersion’ by ‘reproducible::getGDALVersion’ when loading ‘SpaDES’
-  Warning: replacing previous import ‘SpaDES.tools::fastMask’ by ‘reproducible::fastMask’ when loading ‘SpaDES’
-See ‘/home/achubaty/Documents/GitHub/SpaDES/reproducible/revdep/checks/SpaDES.Rcheck/00install.out’ for details.
+See ‘/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/revdep/checks/SpaDES.Rcheck/00install.out’ for details.
 ```
 

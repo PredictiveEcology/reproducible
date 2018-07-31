@@ -6,16 +6,19 @@
   opts <- options()
   checkPath(.reproducibleTempDir, create = TRUE)
   opts.reproducible <- list( # nolint
+    reproducible.ask = TRUE,
     reproducible.cachePath = file.path(.reproducibleTempDir),
-    reproducible.verbose = FALSE,
-    reproducible.useCache = TRUE, #memoise
+    reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
+    reproducible.quick = FALSE,
+    reproducible.useCache = TRUE, # override Cache function
     reproducible.useMemoise = TRUE, #memoise
     reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
-    reproducible.quick = FALSE
+    reproducible.verbose = FALSE
   )
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
 
+  backports::import(pkgname, obj = "isFALSE")
   invisible()
 }
 
@@ -33,3 +36,12 @@
   }
 }
 .reproducibleTempDir <- file.path(tempdir(), "reproducibleCache")
+
+.argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
+                                          names(formals(cropInputs)),
+                                          names(formals(fixErrors)),
+                                          names(formals(writeRaster)),
+                                          names(formals(projectRaster)),
+                                          names(formals(determineFilename)),
+                                          names(formals(writeOutputs)),
+                                          unlist(lapply(methods("postProcess"), function(x) names(formals(x))))))

@@ -9,8 +9,8 @@
 \usage{
 projectInputs(x, targetCRS, ...)
 
-\method{projectInputs}{Raster}(x, targetCRS = NULL, rasterToMatch = NULL,
-  ...)
+\method{projectInputs}{Raster}(x, targetCRS = NULL,
+  rasterToMatch = NULL, ...)
 
 \method{projectInputs}{sf}(x, targetCRS, ...)
 

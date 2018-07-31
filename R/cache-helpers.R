@@ -259,7 +259,9 @@ setMethod(
   ".prepareOutput",
   signature = "RasterLayer",
   definition = function(object, cacheRepo, ...) {
-    .prepareFileBackedRaster(object, repoDir = cacheRepo)
+    # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
+    #  overwrite is ok
+    .prepareFileBackedRaster(object, repoDir = cacheRepo, ...)
 })
 
 #' @export
@@ -276,6 +278,45 @@ setMethod(
     }
     object
 })
+
+
+#####################################
+################################################################################
+#' Add an attribute to an object indicating which named elements change
+#'
+#' This is a generic definition that can be extended according to class.
+#'
+#' @param object Any R object returned from a function
+#' @param preDigest The full, element by element hash of the input arguments to that same function,
+#' e.g., from \code{.robustDigest}
+#' @param origArguments These are the actual arguments (i.e., the values, not the names) that
+#'        were the source for \code{preDigest}
+#' @param ... Anything passed to methods.
+#'
+#' @return The object, modified
+#'
+#' @author Eliot McIntire
+#' @export
+#' @importFrom archivist showLocalRepo rmFromLocalRepo
+#' @rdname addChangedAttr
+#' @examples
+#' a <- 1
+#' .addChangedAttr(a) # does nothing because default method is just a pass through
+setGeneric(".addChangedAttr", function(object, preDigest, origArguments, ...) {
+  standardGeneric(".addChangedAttr")
+})
+
+
+#' @export
+#' @rdname addChangedAttr
+setMethod(
+  ".addChangedAttr",
+  signature = "ANY",
+  definition = function(object, preDigest, origArguments, ...) {
+    object
+  })
+
+
 
 #' A set of helpers for Cache
 #'
@@ -294,7 +335,9 @@ setMethod(
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
-getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
+getFunctionName <- function(FUN, originalDots, ...,
+                            overrideCall, isPipe) { # nolint
+  callIndex <- numeric()
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -344,25 +387,27 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
+    scalls <- sys.calls()
     if (!missing(overrideCall)) {
-      functionCall <- grep(sys.calls(), pattern = paste0("^", overrideCall), value = TRUE)
+      callIndices <- grep(scalls, pattern = paste0("^", overrideCall))
+      functionCall <- scalls[callIndices]
     } else {
-      functionCall <- grep(sys.calls(),
-                           pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache", value = TRUE)
+      callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+      functionCall <- scalls[callIndices]
     }
     if (length(functionCall)) {
       # for() loop is a work around for R-devel that produces a different final call in the
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
-      for (fns in rev(functionCall)) {
+      for (callIndex in rev(callIndices)) {
         if (!missing(overrideCall)) {
-          matchedCall <- match.call(get(overrideCall), parse(text = fns))
+          matchedCall <- match.call(get(overrideCall), scalls[[callIndex]])#parse(text = callIndex))
           functionName <- matchedCall$FUN
         } else {
-          matchedCall <- match.call(Cache, parse(text = fns))
+          matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
           functionName <- matchedCall$FUN
         }
         functionName <- deparse(functionName, width.cutoff = 300)
-        if (all(functionName != "FUN")) break
+        if (all(functionName != c("FUN"))) break
       }
     } else {
       functionName <- ""
@@ -375,11 +420,11 @@ getFunctionName <- function(FUN, ..., overrideCall, isPipe) { # nolint
     .FUN <- NULL # nolint
   }
 
-  # if it can't deduce clean name (i.e., still has a "(" in it), return "internal"
+  # if it can't deduce clean name (i.e., still has a "(" in it), return NA
   if (isTRUE(grepl(functionName, pattern = "\\(")))
     functionName <- NA_character_
 
-  return(list(functionName = functionName, .FUN = .FUN))
+  return(list(functionName = functionName, .FUN = .FUN))#, callIndex = callIndex))
 }
 
 #' @exportClass Path
@@ -524,6 +569,8 @@ setMethod(
 #'
 #' @param repoDir Character denoting an existing directory in which an artifact will be saved.
 #'
+#' @param overwrite Logical. Should the raster be saved to disk, overwriting existing file.
+#'
 #' @param ... passed to \code{archivist::saveToRepo}
 #'
 #' @return A raster object and its newly located file backing.
@@ -552,7 +599,7 @@ setMethod(
 #' r # now in "rasters" subfolder of tempdir()
 #'
 #'
-.prepareFileBackedRaster <- function(obj, repoDir = NULL) {
+.prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
@@ -591,12 +638,13 @@ setMethod(
       normalizePath(file.path(repoDir, splittedFilenames2), winslash = "/", mustWork = FALSE)
     }
     if (any(!file.exists(trySaveFilename))) {
-      stop("The following rasters are supposed to be on disk but appear to have been deleted:\n",
+      stop("The following file-backed rasters are supposed to be on disk ",
+           "but appear to have been deleted:\n",
            paste("    ", curFilename, collapse = "\n"),
-           "\n\nThese files must be recreated, e.g., try:\n",
-           "  showCache(userTags = \"writeRaster\").\n",
-           "\nExamine that and possibly [with caution!]:\n",
-           "  reproducible::clearCache(userTags = \"writeRaster\")")
+           "The most likely reason is that two functions had the same output ",
+           "and one of them was removed with clearCache(...). ",
+           "The best solution to this is never have two functions create the same ",
+           "file-backed raster.")
     } else {
       slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
     }
@@ -610,6 +658,19 @@ setMethod(
     saveFilename <- normalizePath(saveFilename, winslash = "/", mustWork = FALSE)
   }
 
+  sameFilenames <- saveFilename == curFilename
+  if (any(sameFilenames)) {
+    if (!overwrite) {
+      saveFilename[sameFilenames] <- unlist(lapply(seq_along(curFilename[sameFilenames]),
+             function(x) {
+               if (file.exists(saveFilename[x])) {
+                 nextNumericName(saveFilename[x])
+               } else {
+                 saveFilename[x]
+               }
+             }))
+    }
+  }
   # filenames are not the same
   if (any(saveFilename != curFilename)) {
     if (isFilebacked) {
@@ -621,17 +682,24 @@ setMethod(
             unique() %>%
             sapply(., dir.create, recursive = TRUE)
         }
+
         if (any(saveFilename %>% grepl(., pattern = "[.]grd$"))) {
           copyFile(from = curFilename, to = saveFilename, overwrite = TRUE, silent = TRUE)
           griFilename <- sub(saveFilename, pattern = "[.]grd$", replacement = ".gri")
           curGriFilename <- sub(curFilename, pattern = "[.]grd$", replacement = ".gri")
           copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
         } else {
-          suppressWarnings(
-            lapply(seq_along(curFilename),
-                   function(x) copyFile(to = saveFilename[x],
+          #suppressWarnings(
+            saveFilename <- unlist(lapply(seq_along(curFilename),
+                   function(x) {
+                     # change filename if it already exists
+                    if (file.exists(saveFilename[x])) {
+                       saveFilename[x] <- nextNumericName(saveFilename[x])
+                     }
+                     copyFile(to = saveFilename[x],
                                         overwrite = TRUE,
-                                        from = curFilename[x], silent = TRUE)))
+                                        from = curFilename[x], silent = TRUE)
+                   }))
         }
       }
       # for a stack with independent Raster Layers (each with own file)
@@ -715,49 +783,64 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                      #copyRasterFile=TRUE, clearRepo=TRUE,
                      create = TRUE, silent = FALSE) {
   origDir <- getwd()
-  useFileCopy <- FALSE
+  useFileCopy <- identical(dirname(from), dirname(to))
 
   checkPath(dirname(to), create = create)
 
   os <- tolower(Sys.info()[["sysname"]])
-  if (os == "windows") {
-    if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
-    robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
+  .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
+  if (!useFileCopy) {
+    if (os == "windows") {
+      if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
+      robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
-    robocopy <-  if (silent) {
-      paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS \"",  # nolint
-             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"),  "\" ",
-             basename(from))
-    } else {
-      paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO \"", # nolint
-             normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
-             normalizePath(to, mustWork = FALSE, winslash = "\\"), "\" ",
-             basename(from))
-    }
+      robocopy <-  if (silent) {
+        paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO /NDL /NFL /NJH /NJS \"",  # nolint
+               normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
+               normalizePath(toDir, mustWork = FALSE, winslash = "\\"),  "\" ",
+               basename(from))
+      } else {
+        paste0(robocopyBin, " /purge"[delDestination], " /ETA /XJ /XO \"", # nolint
+               normalizePath(dirname(from), mustWork = TRUE, winslash = "\\"), "\" \"",
+               normalizePath(toDir, mustWork = FALSE, winslash = "\\"), "\" ",
+               basename(from))
+      }
 
-    useFileCopy <- if (useRobocopy && !is.na(robocopyBin)) {
-      suppressWarnings(tryCatch(system(robocopy, intern = TRUE), error = function(x) TRUE))
+      useFileCopy <- if (useRobocopy && !is.na(robocopyBin)) {
+        suppressWarnings(tryCatch(system(robocopy, intern = TRUE), error = function(x) TRUE))
+      } else {
+        TRUE
+      }
+      if (isTRUE(any(grepl("ERROR", useFileCopy)))) {
+        useFileCopy <- TRUE
+      }
+
+      # means that the file didn't get copied because it is actually the same directory
+      if (any(!nzchar(useFileCopy))) {
+        useFileCopy <- TRUE
+      }
+    } else if ( (.onLinux) ) { # nolint
+      if (!identical(basename(from), basename(to))) {
+        # rsync can't handle file renaming on copy
+        useFileCopy <- TRUE
+      } else {
+
+        if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
+        rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
+        opts <- if (silent) " -a " else " -avP "
+        rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
+                        normalizePath(from, mustWork = TRUE), " ",
+                        normalizePath(toDir, mustWork = FALSE), "/")
+
+        useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
+      }
+
     } else {
-      TRUE
-    }
-    if (isTRUE(any(grepl("ERROR", useFileCopy)))) {
       useFileCopy <- TRUE
     }
-  } else if ( (os == "linux") || (os == "darwin") ) { # nolint
-    if (!dir.exists(to)) to <- dirname(to) # extract just the directory part
-    rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
-    opts <- if (silent) " -a " else " -avP "
-    rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
-                    normalizePath(from, mustWork = TRUE), " ",
-                    normalizePath(to, mustWork = FALSE), "/")
-
-    useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
-  } else {
-    useFileCopy <- TRUE
   }
   if (isTRUE(useFileCopy)) {
-    dir.create(dirname(to))
+    checkPath(dirname(to), create = TRUE)
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
   }
 
@@ -781,7 +864,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                          extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
-    filename <- if (endsWith(basename(object@file@name), suffix = ".grd")) {
+    filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
       sub(object@file@name, pattern = ".grd$", replacement = ".gri")
     } else {
       object@file@name
@@ -986,4 +1069,21 @@ setMethod("Copy",
     otherFns <- c(paste0("module:", module), otherFns)
   }
   unique(otherFns)
+}
+
+#' @importFrom tools file_path_sans_ext file_ext
+nextNumericName <- function(string) {
+  theExt <- file_ext(string)
+  saveFilenameSansExt <- file_path_sans_ext(string)
+  alreadyHasNumeric <- grepl(saveFilenameSansExt, pattern = "_[[:digit:]]*$")
+  if (isTRUE(any(alreadyHasNumeric))) {
+    splits <- strsplit(saveFilenameSansExt, split = "_")
+    numericEnd <- as.numeric(tail(splits[[1]],1))
+    suff <- paste0("_", numericEnd + 1) # keep rndstr in here, so that both streams keep same rnd number state
+    out <- gsub(saveFilenameSansExt, pattern = "_[[:digit:]]*", replacement = suff)
+  } else {
+    out <- paste0(saveFilenameSansExt, "_1")
+  }
+
+  paste0(out, ".", theExt)
 }

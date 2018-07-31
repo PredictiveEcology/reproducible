@@ -549,7 +549,7 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' }
 installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
                             libPath = .libPaths()[1], standAlone = FALSE,
-                            repos = getOption("repos")) {
+                            repos = getOption("repos")["CRAN"]) {
 
   if (file.exists(packageVersionFile)) {
     libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
@@ -685,7 +685,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           if (internetExists) {
             lapply(canInstDirectFromCRAN$instPkgs, function(pkg) {
               system(paste0(rpath, " --quiet --vanilla -e \"do.call(install.packages,list('",
-                            pkg, "',lib='", libPath, "',dependencies=FALSE,repos='", repos,
+                            pkg, "', lib='", libPath, "', dependencies = FALSE,  = '", repos,
                             "'))\""), wait = TRUE)
             })
           } else {
@@ -713,15 +713,15 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
             for (pkg in packageURLs) {
               if (url.exists(pkg)) {
                 system(paste0(rpath, " --quiet --vanilla -e \"install.packages('", pkg,
-                              "',lib='", libPath,
-                              "',dependencies=FALSE,repos=NULL,type='source')\""), wait = TRUE)
+                              "', lib='", libPath,
+                              "', dependencies = FALSE, repos = NULL, type = 'source')\""), wait = TRUE)
                 archiveReposSuccess <- TRUE
                 break
               }
             }
             if (!any(archiveReposSuccess)) {
               archiveReposAttempts <- archiveReposAttempts + 1
-              repos <- getCRANrepos()
+              repos <- getCRANrepos(repos)
             }
             if (archiveReposAttempts > 1) archiveReposSuccess <- TRUE
           }
