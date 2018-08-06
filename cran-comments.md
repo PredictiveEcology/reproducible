@@ -1,7 +1,9 @@
 ## Updated release
 
-This release fixes failing tests caused by a recent `git2r` change.
-It also removes hardcoding of the CRAN mirror used for installing packages by the user.
+This release fixes failing tests involving file downloads.
+We have limited these tests on CRAN due to rate-limits imposed on the downloads.
+
+NOTE: an updated version of `SpaDES.core` will be submitted following the acceptance of `reproducible` to CRAN.
 
 ## Test environments
 
@@ -26,10 +28,10 @@ It also removes hardcoding of the CRAN mirror used for installing packages by th
 * Windows 7            (local), R 3.5.1
 
 ### Development R version
-* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-20 r74923)
+* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-08-02 r75051)
 * Ubuntu 18.04         (local), R 3.6.0 (2018-07-30 r75011)
-* Windows           (appveyor), R 3.6.0 (2018-07-23 r75001)
-* Windows        (win-builder), R 3.6.0 (2018-07-23 r75001)
+* Windows           (appveyor), R 3.6.0 (2018-08-02 r75051)
+* Windows        (win-builder), R 3.6.0 (2018-08-02 r75051)
 
 ## R CMD check results
 

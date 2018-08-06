@@ -72,7 +72,7 @@ The special assign operator %&amp;lt;% is equivalent to Cache. See examples at t
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.2</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
       </span>
     </div>
 
@@ -465,7 +465,7 @@ Subsequent calls to this function
 </div><span class='co'># NOT RUN {</span>
   <span class='fu'>browseVignettes</span>(<span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"reproducible"</span>)
 <span class='co'># }</span><div class='input'><span class='co'># Equivalent</span>
-<span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='input'><span class='no'>b</span> <span class='kw'>%&lt;%</span> <span class='fu'>rnorm</span>(<span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous FUN call, adding to memoised copy</span></div><div class='input'>
+<span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading cached result from previous rnorm call, adding to memoised copy</span></div><div class='input'><span class='no'>b</span> <span class='kw'>%&lt;%</span> <span class='fu'>rnorm</span>(<span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous FUN call.</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

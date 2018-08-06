@@ -6,17 +6,18 @@
 |:--------|:----------------------------|
 |version  |R version 3.4.4 (2018-03-15) |
 |system   |x86_64, linux-gnu            |
-|ui       |RStudio (1.1.456)            |
+|ui       |X11                          |
 |language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-07-30                   |
+|date     |2018-08-07                   |
 
 ## Packages
 
 |package      |*  |version |date       |source                                          |
 |:------------|:--|:-------|:----------|:-----------------------------------------------|
-|reproducible |   |0.2.2   |2018-07-30 |Github (PredictiveEcology/reproducible@41f46c2) |
+|reproducible |   |0.2.2   |2018-08-06 |Github (PredictiveEcology/reproducible@99f329f) |
+|rgdal        |   |1.3-4   |2018-08-03 |cran (@1.3-4)                                   |
 
 # Check results
 
@@ -36,15 +37,15 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [119s/114s]
+  Running ‘test-all.R’ [111s/106s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-  [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
-  [39m[31m──[39m [31m3. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#106) [39m [31m────────────────────────────────[39m
+    Using cached copy of .inputObjects event in test module. Adding to memoised copy.
+  ── 3. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#10
   all.equal(simA, simB) isn't true.
   
-  [34m  Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
-  [39m══ testthat results  ═══════════════════════════════════════════════════════════════════════════════════════════════
+    Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
+  ══ testthat results  ═══════════════════════════════════════════════════════════
   OK: 361 SKIPPED: 35 FAILED: 3
   1. Failure: test cache (@test-cache.R#42) 
   2. Failure: test .prepareOutput (@test-cache.R#233) 
