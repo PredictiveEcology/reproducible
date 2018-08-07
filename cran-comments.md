@@ -1,7 +1,9 @@
 ## Updated release
 
-This release fixes failing tests caused by a recent `git2r` change.
-It also removes hardcoding of the CRAN mirror used for installing packages by the user.
+Our previous submission last week showed errors during windows build process.
+This update fixes those errors in downloading files during tests.
+
+NOTE: an updated version of `SpaDES.core` will be submitted following the acceptance of `reproducible` to CRAN.
 
 ## Test environments
 
@@ -26,18 +28,22 @@ It also removes hardcoding of the CRAN mirror used for installing packages by th
 * Windows 7            (local), R 3.5.1
 
 ### Development R version
-* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-06-20 r74923)
+* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-08-02 r75051)
 * Ubuntu 18.04         (local), R 3.6.0 (2018-07-30 r75011)
-* Windows           (appveyor), R 3.6.0 (2018-07-23 r75001)
-* Windows        (win-builder), R 3.6.0 (2018-07-23 r75001)
+* Windows           (appveyor), R 3.6.0 (2018-08-02 r75051)
+* Windows        (win-builder), R 3.6.0 (2018-08-05 r75062)
 
 ## R CMD check results
 
 There were no ERRORs nor WARNINGs.
 
-There was 1 NOTE:
+There were 2 NOTEs:
 
-1. spell-check reports false positives: 
+1. As requested by CRAN, we have fixed problems enconutered during the Windows build process last week.
+
+    Days since last update: 6
+
+2. spell-check reports false positives: 
 
     Possibly mis-spelled words in DESCRIPTION:
       Reproducibility (3:36)

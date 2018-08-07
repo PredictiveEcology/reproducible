@@ -1,12 +1,16 @@
 test_that("test cached downloads", {
+  skip_on_cran()
+
   outdir <- file.path(tempdir(), paste0(sample(LETTERS), collapse = ""))
   expect_true(dir.create(outdir))
 
   on.exit({
     unlink(outdir, recursive = TRUE)
-  })
+  }, add = TRUE)
   setwd(outdir)
-  url <- "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/archive/vector/cli_itc_50k/land_use/L040J03.zip" # nolint
+  ## https://open.canada.ca/data/en/dataset/9e1efe92-e5a3-4f70-b313-68fb1283eadf
+  ## (Record ID: 9e1efe92-e5a3-4f70-b313-68fb1283eadf)
+  url <- "http://www.agr.gc.ca/atlas/data_donnees/lcv/aafcLand_Use/tif/2010/IMG_AAFC_LANDUSE_Z07_2010.zip" # nolint
 
    # ensure the file does not exist before testing
   if (file.exists(file.path(outdir, basename(url)))) {
