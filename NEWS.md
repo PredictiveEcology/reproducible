@@ -3,7 +3,7 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.2.3
 =============
 
-* skip downloading test on CRAN
+* fix and skip downloading test on CRAN
 
 version 0.2.2
 =============
