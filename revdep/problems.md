@@ -16,7 +16,7 @@
 
 |package      |*  |version |date       |source                                          |
 |:------------|:--|:-------|:----------|:-----------------------------------------------|
-|reproducible |   |0.2.2   |2018-08-06 |Github (PredictiveEcology/reproducible@99f329f) |
+|reproducible |   |0.2.3   |2018-08-07 |Github (PredictiveEcology/reproducible@8e0b0c1) |
 |rgdal        |   |1.3-4   |2018-08-03 |cran (@1.3-4)                                   |
 
 # Check results
@@ -36,7 +36,7 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [111s/106s]
+  Running ‘test-all.R’ [111s/107s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
     Using cached copy of .inputObjects event in test module. Adding to memoised copy.
