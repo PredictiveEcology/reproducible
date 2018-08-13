@@ -78,7 +78,8 @@
 #' clearCache(tmpDir, userTags = toRemove)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
-setGeneric("clearCache", function(x, userTags = character(), after, before, ...) {
+setGeneric("clearCache", function(x, userTags = character(), after, before,
+                                  ask = getOption("reproducible.ask"), ...) {
   standardGeneric("clearCache")
 })
 
@@ -87,7 +88,7 @@ setGeneric("clearCache", function(x, userTags = character(), after, before, ...)
 #' @importFrom archivist createLocalRepo
 setMethod(
   "clearCache",
-  definition = function(x, userTags, after, before, ask = getOption("reproducible.ask"), ...) {
+  definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
@@ -269,7 +270,8 @@ setMethod(
 })
 
 #' @rdname viewCache
-setGeneric("keepCache", function(x, userTags = character(), after, before, ask, ...) {
+setGeneric("keepCache", function(x, userTags = character(), after, before,
+                                 ask  = getOption("reproducible.ask"), ...) {
   standardGeneric("keepCache")
 })
 
@@ -277,7 +279,7 @@ setGeneric("keepCache", function(x, userTags = character(), after, before, ask, 
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask = getOption("reproducible.ask"), ...) {
+  definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
