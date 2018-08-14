@@ -501,6 +501,7 @@ package_dependenciesMem <- memoise(tools::package_dependencies, ~timeout(360)) #
 #' @keywords internal
 available.packagesMem <- function(contriburl, method, fields, type, filters, repos) {
   stop("This function is for internal use only")# This will be replaced upon first calls to
+                                                #   .installPackages
   return(invisible(NULL))
 }
 
