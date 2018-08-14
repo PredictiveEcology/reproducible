@@ -150,7 +150,7 @@ setMethod(
           filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
           if (interactive()) {
             dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
-            dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
+            dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE))
             cacheSize <- sum(cacheSize, file.size(dirLs))
           }
         }
@@ -350,7 +350,8 @@ setMethod(
         if (is(outputToSave, "Raster")) {
           outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
         }
-        userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "class", "date", "cacheId"),
+        userTags <- cacheFromList[artifact][!tagKey %in%
+                                              c("format", "name", "class", "date", "cacheId"),
                                             list(tagKey, tagValue)]
         userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
         while (!written) {

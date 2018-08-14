@@ -118,9 +118,9 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
 
   # Convert a single name to a character
   subpackages <- substitute(packages)
-  if (is.name(subpackages)) { # single, non quoted object
-    subpackages <- deparse(subpackages)
-    if (!exists(subpackages, envir = parent.frame())) # if it does exist, then it is not a name, but an object
+  if (is.name(subpackages)) {
+    subpackages <- deparse(subpackages) # single, non quoted object
+    if (!exists(subpackages, envir = parent.frame())) # if it exists, its not a name, but an object
       packages <- subpackages
   }
 
@@ -499,8 +499,8 @@ package_dependenciesMem <- memoise(tools::package_dependencies, ~timeout(360)) #
 #' This have a 6 minute memory time window.
 #' @inheritParams utils::available.packages
 #' @keywords internal
-available.packagesMem <- function(contriburl, method, fields, type, filters, repos) {# This will be replaced upon first calls to
-  stop("This function is for internal use only")
+available.packagesMem <- function(contriburl, method, fields, type, filters, repos) {
+  stop("This function is for internal use only")# This will be replaced upon first calls to
   return(invisible(NULL))
 }
 

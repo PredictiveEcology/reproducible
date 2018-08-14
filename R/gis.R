@@ -131,4 +131,3 @@ fastMask <- function(x, y) {
     raster::mask(x, y)
   }
 }
-
