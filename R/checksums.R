@@ -1,5 +1,5 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("checksum.x", "checksum.y", "filesize.x", "filesize.y", "result" ))
+  utils::globalVariables(c("checksum.x", "checksum.y", "filesize.x", "filesize.y", "result"))
 }
 
 
@@ -148,7 +148,7 @@ setMethod(
 
     if (!is.null(txt$algorithm)) {
       if (!write) {
-        dots$algo <- unique(txt[txt$file %in% basename(filesToCheck),"algorithm"])
+        dots$algo <- unique(txt[txt$file %in% basename(filesToCheck), "algorithm"])
         dots$algo <- na.omit(dots$algo)[1]
         if (is.na(dots$algo)) dots$algo <- defaultWriteHashAlgo
       }
@@ -206,9 +206,8 @@ setMethod(
       # txt <- txt[wh,]
 
     }
-    results.df <- out %>%
-      dplyr::mutate(actualFile = file) %>%
-      {
+    results.df <- out %>% #nolint
+      dplyr::mutate(actualFile = file) %>% {
         if (write) {
           dplyr::right_join(txt, ., by = "file")
         } else {
@@ -216,16 +215,14 @@ setMethod(
         }
       } %>%
       dplyr::rename(expectedFile = file) %>%
-      dplyr::group_by(expectedFile) %>%
-      {
+      dplyr::group_by(expectedFile) %>% {
         if (quickCheck) {
           mutate(., result = ifelse(filesize.x != filesize.y, "FAIL", "OK"))
         } else {
           mutate(., result = ifelse(checksum.x != checksum.y, "FAIL", "OK"))
         }
       } %>%
-      dplyr::arrange(desc(result)) %>%
-      {
+      dplyr::arrange(desc(result)) %>% {
         #if (quickCheck) {
         select(
           .,

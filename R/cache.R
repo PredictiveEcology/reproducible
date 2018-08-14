@@ -148,9 +148,9 @@ if (getRversion() >= "3.1.0") {
 #'                  This is optional if \code{Cache} is used inside a SpaDES module.
 #'
 #' @param length Numeric. If the element passed to Cache is a \code{Path} class
-#'        object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing, then this will be
-#'        passed to \code{digest::digest}, essentially limiting the number of bytes
-#'        to digest (for speed). This will only be used if \code{quick = FALSE}.
+#'        object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing,
+#'        then this will be passed to \code{digest::digest}, essentially limiting the number of
+#'        bytes to digest (for speed). This will only be used if \code{quick = FALSE}.
 #'
 #' @param compareRasterFileLength Being deprecated; use \code{length}.
 #'
@@ -326,7 +326,7 @@ setMethod(
       }
 
       # Arguments -- this puts arguments into a special reproducible environment
-      if (R.version[['minor']] <= "4.0") {
+      if (R.version[["minor"]] <= "4.0") {
         # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
         objs <- ls()[ls() %in% .namesCacheFormals]
         objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
@@ -595,16 +595,14 @@ setMethod(
 
       # compare outputHash to existing Cache record
 
-      written <- 0
-      while (written >= 0) {
-        localTags <- suppressWarnings(try(showLocalRepo2(cacheRepo), silent = TRUE))
-        #localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
-        written <- if (is(localTags, "try-error")) {
-          Sys.sleep(sum(runif(written + 1,0.05, 0.2)))
-          written + 1
-        } else {
-          -1
-        }
+    written <- 0
+    while (written >= 0) {
+      localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
+      written <- if (is(localTags, "try-error")) {
+        Sys.sleep(sum(runif(written + 1, 0.05, 0.2)))
+        written + 1
+      } else {
+        -1
       }
 
       isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
@@ -662,18 +660,21 @@ setMethod(
           .cacheMessage(output, fnDetails$functionName,
                         fromMemoise = fromMemoise)
 
-          written <- 0
-          while (written >= 0) {
-            saved <- suppressWarnings(try(silent = TRUE,
-                                          addTagsRepo(isInRepo$artifact[lastOne],
-                                                      repoDir = cacheRepo,
-                                                      tags = paste0("accessed:", Sys.time()))))
-            written <- if (is(saved, "try-error")) {
-              Sys.sleep(sum(runif(written + 1,0.05, 0.1)))
-              written + 1
-            } else {
-              -1
-            }
+        # Class-specific message
+        .cacheMessage(output, functionDetails$functionName,
+                      fromMemoise = fromMemoise)
+
+        written <- 0
+        while (written >= 0) {
+          saved <- suppressWarnings(try(silent = TRUE,
+                                        addTagsRepo(isInRepo$artifact[lastOne],
+                                                    repoDir = cacheRepo,
+                                                    tags = paste0("accessed:", Sys.time()))))
+          written <- if (is(saved, "try-error")) {
+            Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+            written + 1
+          } else {
+            -1
           }
 
           if (sideEffect != FALSE) {
@@ -809,17 +810,23 @@ setMethod(
               message("... different ", paste(similar2[differs %in% TRUE]$fun, collapse = ", "))
             }
 
-            if (length(similar2[is.na(differs)]$differs)) {
-              differed <- TRUE
-              message("... possible, unknown, differences in a nested list that is deeper than 3 in ",
-                      paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)))
-            }
-            missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
-            if (length(missingArgs)) {
-              differed <- TRUE
-              message("... because of an ",
-                      "argument currently not specified: ",
-                      paste(as.character(missingArgs), collapse = ", "))
+        return(output)
+      }
+    } else {
+      # find similar -- in progress
+      if (!is.null(showSimilar)) { # TODO: Needs testing #nolint
+        setDT(localTags)
+        userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
+        userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc),
+                                        preDigestUnlistTrunc, sep = ":"))
+        userTags3 <- c(userTags, userTags2)
+        aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
+        setkeyv(aa, "N")
+        similar <- localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N == max(N)]
+        if (NROW(similar)) {
+          similar2 <- similar[grepl("preDigest", tag)]
+          cacheIdOfSimilar <- similar[grepl("cacheId", tag)]$tag
+          cacheIdOfSimilar <- unlist(strsplit(cacheIdOfSimilar, split = ":"))[2]
 
             }
             print(paste0("artifact with cacheId ", cacheIdOfSimilar))
@@ -828,6 +835,19 @@ setMethod(
           } else {
             message("There is no similar item in the cacheRepo")
           }
+          missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
+          if (length(missingArgs)) {
+            differed <- TRUE
+            message("... because of an ",
+                    "argument currently not specified: ",
+                    paste(as.character(missingArgs), collapse = ", "))
+
+          }
+          print(paste0("artifact with cacheId ", cacheIdOfSimilar))
+          print(similar2[, c("fun", "differs")])
+
+        } else {
+          message("There is no similar item in the cacheRepo")
         }
       }
 
@@ -856,9 +876,9 @@ setMethod(
           stringsAsFactors = FALSE
         )
 
-        if (exists("verboseTiming", envir = .reproEnv)) {
-          .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-        }
+      # on.exit({message("Running ", functionDetails$functionName, " took ",
+      #format(endRunTime - startRunTime))},
+      #         add = TRUE)
 
         # on.exit({message("Running ", fnDetails$functionName, " took ", format(endRunTime - startRunTime))},
         #         add = TRUE)

@@ -25,8 +25,6 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     } else {
       result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
     }
-    if (length(result) == 0) result <- NA
-
     missingNeededFiles <- (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
                              is.null(targetFile) || is.null(neededFiles))
     if (missingNeededFiles) {
@@ -57,9 +55,9 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                      overwrite = overwrite,
                      needChecksums = needChecksums, ...)
       if (file.exists(checksumFile)) {
-        if (is.null(fileToDownload) || tryCatch(is.na(fileToDownload), warning = function(x) FALSE))  { # This is case where we didn't know what file to download, and only now
-                                        # do we know
-          fileToDownload <- downloadResults$destFile
+        if (is.null(fileToDownload) || tryCatch(is.na(fileToDownload),
+                                                warning = function(x) FALSE)) {
+          fileToDownload <- downloadResults$destFile  # only now do we know what is downloaded
         }
         if (!is.null(fileToDownload)) {
           if ((length(readLines(checksumFile)) > 0)) {
@@ -72,8 +70,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                 write = FALSE
               )
             isOK <-
-              checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
-                          checkSums$actualFile %in% basename(fileToDownload),]$result
+              checkSums[compareNA(checkSums$expectedFile, basename(fileToDownload)) |
+                          compareNA(checkSums$actualFile, basename(fileToDownload)), ]$result
             isOK <- isOK[!is.na(isOK)] == "OK"
             if (length(isOK) > 0) {
               if (!isTRUE(all(isOK))) {
@@ -159,7 +157,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
                 " If this is not correct, rerun prepInputs with purge = TRUE")
       } else {
-        message("  Skipping download: ", paste(neededFiles, collapse = ", ") ," already present")
+        message("  Skipping download: ", paste(neededFiles, collapse = ", ")," already present")
       }
     }
     archiveReturn <- if (is.null(archive)) {
@@ -173,9 +171,9 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     downloadResults <- list(needChecksums = needChecksums, destFile = NULL)
     archiveReturn <- archive
   }
-  list(needChecksums = downloadResults$needChecksums, archive = archiveReturn,
-       neededFiles = neededFiles,
-       downloaded = downloadResults$destFile, checkSums = checkSums, object = downloadResults$out)
+  list(needChecksums = downloadResults$needChecksums,
+       archive = archiveReturn, neededFiles = neededFiles,
+       downloaded = downloadResults$destFile, checkSums = checkSums)
 }
 
 .getSourceURL <- function(pattern, x) {
@@ -274,47 +272,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, skipDownloadMsg,
                            destinationPath, overwrite, needChecksums, ...) {
 
-  if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
+  if (!is.null(url)) {
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
-      if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  { # NA means archive already in hand
-        if (!is.null(dlFun)) {
-          dlFunName <- dlFun
-          dlFun <- .extractFunction(dlFun)
-          fun <- .fnCleanup(dlFun, callingFun = "downloadRemote")
-          forms <- .argsToRemove
-          dots <- list(...)
-          overlappingForms <- fun$formalArgs[fun$formalArgs %in% forms]
-          overlappingForms <- grep("\\.\\.\\.", overlappingForms, invert = TRUE, value = TRUE)
-          dots <- list(...)
-          # remove arguments that are in .argsToRemove, i.e., the sequence
-          args <- if (length(overlappingForms)) {
-            append(list(...), mget(overlappingForms))
-          } else {
-            list(...)
-          }
-          args <- args[!names(args) %in% forms]
-          if (is.null(targetFile)) {
-            fileInfo <- file.info(dir(destinationPath))
-          }
-          out <- do.call(dlFun, args = args)
-          needSave <- TRUE
-          if (is.null(targetFile)) {
-            fileInfoAfter <- file.info(dir(destinationPath))
-            possibleTargetFile <- setdiff(rownames(fileInfoAfter), rownames(fileInfo))
-            if (length(possibleTargetFile)) {
-              destFile <- targetFile <- possibleTargetFile
-              needSave <- FALSE
-            } else {
-              destFile <- file.path(destinationPath, tempfile(fileext = ".rds"))
-            }
-          } else {
-            destFile <- file.path(destinationPath, targetFile)
-          }
-          if (needSave) {
-            saveRDS(out, file = destFile)
-          }
-          downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
-        } else if (grepl("drive.google.com", url)) {
+      if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  {
+        # NA means archive already in hand
+        if (grepl("drive.google.com", url)) {
           downloadResults <- dlGoogle(
             url = url,
             archive = archive,
