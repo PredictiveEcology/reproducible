@@ -411,15 +411,36 @@ projectInputs <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
+#' @importFrom raster crs
+#' @importFrom raster res
+#' @importFrom raster dataType
+#' @importFrom gdalUtils gdalwarp
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
 
+  dots <- list(...)
   if (!is.null(rasterToMatch)) {
     if (!is.null(targetCRS)) {
       if (!identical(crs(x), targetCRS) |
           !identical(res(x), res(rasterToMatch)) |
           !identical(extent(x), extent(rasterToMatch))) {
         message("    reprojecting ...")
-        x <- projectRaster(from = x, to = rasterToMatch, ...)
+        if(canProcessInMemory(x, 4)){
+          x <- projectRaster(from = x, to = rasterToMatch, ...)
+        } else {
+          message("   large raster: reprojecting after writing to temp drive...")
+          tempRaster <- file.path(tempfile(), ".tif", fsep = "")
+          writeRaster(x, filename = tempRaster, datatype = dataType(x), overwrite = TRUE)
+          gdalUtils::gdalwarp(srcfile = tempRaster,
+                              dstfile = file.path(dots$destinationPath,
+                                                  paste(x@data@names,"_reproj", ".tif", sep = "")),
+                              s_srs = as.character(crs(x)),
+                              t_srs = as.character(crs(rasterToMatch)),
+                              tr = res(rasterToMatch)
+          )
+          x <- raster(file.path(dots$destinationPath,
+                                paste(x@data@names,"_reproj", ".tif", sep = "")))
+          file.remove(tempRaster)
+        }
       } else {
         message("    no reprojecting because target characteristics same as input Raster.")
       }
