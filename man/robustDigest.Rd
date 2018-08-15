@@ -17,7 +17,8 @@
 \title{Create reproducible digests of objects in R}
 \usage{
 .robustDigest(object, objects, length = 1e+06, algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE), classOptions = list())
+  quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
 
 \S4method{.robustDigest}{ANY}(object, objects, length = 1e+06,
   algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),

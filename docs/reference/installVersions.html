@@ -76,7 +76,7 @@ Require, and so often doesn't need to be used by a user." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.2</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
       </span>
     </div>
 
@@ -143,9 +143,10 @@ use <code><a href='http://www.rdocumentation.org/packages/devtools/topics/instal
     
     </div>
 
-    <pre class="usage"><span class='fu'>installVersions</span>(<span class='no'>gitHubPackages</span>, <span class='kw'>packageVersionFile</span> <span class='kw'>=</span> <span class='st'>".packageVersions.txt"</span>,
+    <pre class="usage"><span class='fu'>installVersions</span>(<span class='no'>gitHubPackages</span>,
+  <span class='kw'>packageVersionFile</span> <span class='kw'>=</span> <span class='st'>".packageVersions.txt"</span>,
   <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='fu'>.libPaths</span>()[<span class='fl'>1</span>], <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"repos"</span>))</pre>
+  <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"repos"</span>)[<span class='st'>"CRAN"</span>])</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">

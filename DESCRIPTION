@@ -11,13 +11,13 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-07-25
-Version: 0.2.2
+Date: 2018-08-14
+Version: 0.2.3.9000
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
-    role = c("aut", "cre")),
+    role = c("aut", "cre"), comment=c(ORCID = "https://orcid.org/0000-0002-6914-8316")),
     person("Alex M", "Chubaty", email = "alex.chubaty@gmail.com",
-    role = c("aut")),
+    role = c("aut"), comment = c(ORCID = "https://orcid.org/0000-0001-7146-8135")),
     person("Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada",
     role = "cph")
     )
@@ -59,13 +59,14 @@ Suggests:
     rmarkdown,
     testthat,
     TimeWarp
+Encoding: UTF-8
 Language: en-CA
 LinkingTo: Rcpp
 License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Collate: 
     'RcppExports.R'
     'cache-helpers.R'

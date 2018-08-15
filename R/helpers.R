@@ -23,9 +23,10 @@ readLinesRcpp <- function(path) {
   inst
 }
 
+#' @importFrom utils chooseCRANmirror
 getCRANrepos <- function(repos = NULL) {
-  if (is.null(repos) ) {
-    repos <- getOption("repos")
+  if (is.null(repos)) {
+    repos <- getOption("repos")["CRAN"]
   }
 
   # still might be imprecise repository, specifically ""
@@ -35,9 +36,16 @@ getCRANrepos <- function(repos = NULL) {
 
   # if @CRAN@, and non interactive session
   if (isTRUE("@CRAN@" %in% repos)) {
-    cranRepo <- Sys.getenv("cranRepo")
-    if (nchar(cranRepo) > 0) {
-      repos <- cranRepo
+    cranRepo <- Sys.getenv("CRAN_REPO")
+    repos <- if (nzchar(cranRepo)) {
+      cranRepo
+    } else {
+      if (interactive()) {
+        utils::chooseCRANmirror() ## sets repo option
+        getOption("repos")["CRAN"]
+      } else {
+        "https://cloud.R-project.org"
+      }
     }
   }
 

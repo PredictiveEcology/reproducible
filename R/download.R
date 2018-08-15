@@ -139,10 +139,12 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
       } # checksum file doesn't exist
     } else { # not missing any files to download
       fileAlreadyDownloaded <- if (is.null(archive[1])) {
-        archivePossibly <- setdiff(checkSums$expectedFile, neededFiles)
+        expectedFile <- checkSums[compareNA(checkSums$result, "OK"),]$expectedFile
+
+        archivePossibly <- setdiff(expectedFile, neededFiles)
         archivePossibly <- .isArchive(archivePossibly)
         if (!is.null(archivePossibly)) {
-          archivePossibly
+           archivePossibly
         } else {
           neededFiles
         }
@@ -166,7 +168,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
       archive
     }
     if (!is.null(downloadResults$destFile))
-      neededFiles <- basename(unique(c(downloadResults$destFile, neededFiles)))
+      neededFiles <- unique(basename(c(downloadResults$destFile, neededFiles)))
   } else {
     downloadResults <- list(needChecksums = needChecksums, destFile = NULL)
     archiveReturn <- archive

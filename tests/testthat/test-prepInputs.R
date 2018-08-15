@@ -889,21 +889,27 @@ test_that("preProcess doesn't work", {
 })
 
 test_that("prepInputs doesn't work", {
+  skip_on_cran()
+
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  mess1 <- capture_messages(test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
-                                            #destinationPath = ".",
-                                            dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                                            path = tmpdir))
-  mess2 <- capture_messages(test2 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
-                                            dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                                            path = tmpdir))
-  runTest("1_2_5_6", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage, filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
-          test = test1)
-  runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage, filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
-          test = test1)
+  mess1 <- capture_messages({
+    test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+                        #destinationPath = ".",
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpdir)
+  })
+  mess2 <- capture_messages({
+    test2 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpdir)
+  })
+  runTest("1_2_5_6", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
+          filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir, test = test1)
+  runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+          filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir, test = test1)
 
   # Add a study area to Crop and Mask to
   # Create a "study area"
