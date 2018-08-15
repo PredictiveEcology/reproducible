@@ -445,7 +445,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         message("    no reprojecting because target characteristics same as input Raster.")
       }
     } else {
-      message("    no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
+      message("    no reprojecting because rasterToMatch is missing & useSAcrs is FALSE.")
     }
   } else {
     if (!is.null(targetCRS)) {
