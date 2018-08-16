@@ -425,21 +425,23 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           !identical(extent(x), extent(rasterToMatch))) {
         message("    reprojecting ...")
         if(canProcessInMemory(x, 4)){
-          x <- projectRaster(from = x, to = rasterToMatch, ...)
+          tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
+          x <- projectRaster(from = x, to = tempRas, ...)
         } else {
           message("   large raster: reprojecting after writing to temp drive...")
-          tempRaster <- file.path(tempfile(), ".tif", fsep = "")
-          writeRaster(x, filename = tempRaster, datatype = dataType(x), overwrite = TRUE)
-          gdalUtils::gdalwarp(srcfile = tempRaster,
-                              dstfile = file.path(dots$destinationPath,
-                                                  paste(x@data@names,"_reproj", ".tif", sep = "")),
+          tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
+          tempDstRaster <- file.path(dirname(tempfile()),
+                                     paste0(x@data@names,"_reproj", ".tif"))
+          writeRaster(x, filename = tempSrcRaster, datatype = assessDataType(x), overwrite = TRUE)
+          gdalUtils::gdalwarp(srcfile = tempSrcRaster,
+                              dstfile = tempDstRaster,
                               s_srs = as.character(crs(x)),
-                              t_srs = as.character(crs(rasterToMatch)),
-                              tr = res(rasterToMatch)
-          )
-          x <- raster(file.path(dots$destinationPath,
-                                paste(x@data@names,"_reproj", ".tif", sep = "")))
-          file.remove(tempRaster)
+                              t_srs = as.character(targetCRS),
+                              tr = res(rasterToMatch),
+                              tap = TRUE, overwrite = TRUE)
+          x <- raster(tempDstRaster)
+          x[] <- x[]    ## bring it to memory to update metadata
+          file.remove(c(tempSrcRaster, tempDstRaster))
         }
       } else {
         message("    no reprojecting because target characteristics same as input Raster.")
