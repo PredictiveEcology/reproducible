@@ -383,6 +383,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
         checkSums <- .emptyChecksumsResult
       }
 
+      if (is(checkSums, "try-error")) stop("checkSumFilePath is not a CHECKSUMS.txt file")
+
       # join the neededFiles with the checkSums -- find out which are missing
       checkSumsDT <- data.table(checkSums)
       neededFilesDT <- data.table(neededFiles = basename(neededFiles))
