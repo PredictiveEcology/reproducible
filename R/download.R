@@ -20,15 +20,48 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 
   if (!is.null(url) || !is.null(dlFun)) {
 
-    if (is.null(neededFiles)) {
-      result <- unique(checkSums$result)
-    } else {
-      result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
-    }
-    if (length(result) == 0) result <- NA
+    missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
 
-    missingNeededFiles <- (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
-                             is.null(targetFile) || is.null(neededFiles))
+    # if (is.null(neededFiles)) {
+    #   result <- unique(checkSums$result)
+    # } else {
+    #   result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
+    # }
+    # if (length(result) == 0) result <- NA
+    #
+    # missingNeededFiles <- (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile)) ||
+    #                          is.null(targetFile) || is.null(neededFiles))
+
+    if (missingNeededFiles) { # needed may be missing, but maybe can skip download b/c archive exists
+      if (!is.null(archive)) {
+        localArchivesExist <- file.exists(archive)
+        if (any(localArchivesExist)) {
+          filesInLocalArchives <- unique(basename(unlist(lapply(archive, .listFilesInArchive))))
+          if (all(neededFiles %in% filesInLocalArchives)) { # local archive has all files needed
+            extractedFromArchive <- extractFromArchive(archive = archive[localArchivesExist],
+                                     destinationPath = destinationPath,
+                                     neededFiles = neededFiles, checkSums = checkSums,
+                                     needChecksums = needChecksums,
+                                     checkSumFilePath = checksumFile,
+                                     quick = quick)
+            checkSums <-
+              Checksums(
+                files = file.path(destinationPath, basename(neededFiles)),
+                checksumFile = checksumFile,
+                path = destinationPath,
+                quickCheck = quick,
+                write = FALSE
+              )
+            # Check again, post extract ... If FALSE now, then it got it from local, already existing archive
+            missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
+            if (!missingNeededFiles) {
+              archive <- archive[localArchivesExist]
+            }
+          }
+        }
+      }
+    }
+
     if (missingNeededFiles) {
       if (needChecksums == 0) needChecksums <- 2 # use binary addition -- 1 is new file, 2 is append
     }
@@ -159,7 +192,13 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
                 " If this is not correct, rerun prepInputs with purge = TRUE")
       } else {
-        message("  Skipping download: ", paste(neededFiles, collapse = ", ") ," already present")
+        if (exists("extractedFromArchive", inherits = FALSE)) {
+          message("  Skipping download: ", paste(neededFiles, collapse = ", ") ,
+                  ": extracted from local archive:\n    ",
+                  archive)
+        } else {
+          message("  Skipping download: ", paste(neededFiles, collapse = ", ") ," already present")
+        }
       }
     }
     archiveReturn <- if (is.null(archive)) {
@@ -167,8 +206,12 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
     } else {
       archive
     }
-    if (!is.null(downloadResults$destFile))
-      neededFiles <- unique(basename(c(downloadResults$destFile, neededFiles)))
+
+
+    # This was commented out because of LandWeb -- removed b/c of this case:
+    #  have local archive, but not yet have the targetFile
+    # if (!is.null(downloadResults$destFile))
+    #   neededFiles <- unique(basename(c(downloadResults$destFile, neededFiles)))
   } else {
     downloadResults <- list(needChecksums = needChecksums, destFile = NULL)
     archiveReturn <- archive
@@ -349,3 +392,17 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
   }
   downloadResults
 }
+
+missingFiles <- function(files, checkSums, targetFile) {
+  if (is.null(files)) {
+    result <- unique(checkSums$result)
+  } else {
+    result <- checkSums[checkSums$expectedFile %in% files, ]$result
+  }
+  if (length(result) == 0) result <- NA
+
+  (!(all(compareNA(result, "OK")) && all(files %in% checkSums$expectedFile)) ||
+                           is.null(targetFile) || is.null(files))
+
+}
+
