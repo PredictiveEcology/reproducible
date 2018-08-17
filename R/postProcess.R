@@ -179,11 +179,10 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       crsRTM <- NULL
     }
 
-                           x <- Cache(cropInputs, x = x, studyArea = studyArea,
-                                      extentToMatch = extRTM,
-                                      extentCRS = crsRTM,
-                                      useCache = useCache, ...)
-                           #)
+    x <- Cache(cropInputs, x = x, studyArea = studyArea,
+               extentToMatch = extRTM,
+               extentCRS = crsRTM,
+               useCache = useCache, ...)
 
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
@@ -719,8 +718,9 @@ writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
                     "\n saving", names(x), "as", datatype2))
       dots$datatype <- datatype2
     } else if (datatype2 != dots$datatype)
-      message(paste("chosen 'datatype' may be inadequate for the range/type of values in", names(x),
-                    "\n consider changing to", datatype2))
+      message("chosen 'datatype', ",dots$datatype,", may be inadequate for the ",
+                    "range/type of values in ", names(x),
+                    "\n consider changing to ", datatype2)
 
     xTmp <- writeRaster(x = x, filename = filename2, overwrite = overwrite, ...)
 
