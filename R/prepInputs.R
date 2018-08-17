@@ -347,7 +347,6 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                needChecksums, filesExtracted = character(),
                                checkSumFilePath, quick) {
 
-
   if (!is.null(archive)) {
     if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
@@ -672,7 +671,18 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
     data.table::setnames(currentFilesToRbind, old = keepCols,
                          new = c("file", "checksum", "algorithm", "filesize"))
     currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
-    writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
+
+    # Attempt to not change CHECKSUMS.txt file if nothing new occurred
+    currentFilesToRbind <- unique(currentFilesToRbind)
+    anyDuplicates <- duplicated(currentFilesToRbind)
+    if (any(anyDuplicates)) {
+      message("The current targetFile is not the same as the expected targetFile in the ",
+              "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
+              "desired, please check files for discrepancies")
+    }
+    cs$filesize <- as.character(cs$filesize)
+    if (!identical(cs, as.data.frame(currentFilesToRbind)))
+      writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
   }
   return(currentFiles)
 }
