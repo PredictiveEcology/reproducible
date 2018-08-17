@@ -389,10 +389,12 @@ getFunctionName <- function(FUN, originalDots, ...,
   } else {
     scalls <- sys.calls()
     if (!missing(overrideCall)) {
-      callIndices <- grep(scalls, pattern = paste0("^", overrideCall))
+      callIndices <- .grepSysCalls(scalls, pattern = paste0("^", overrideCall))
       functionCall <- scalls[callIndices]
     } else {
-      callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+      callIndices <- .grepSysCalls(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+      # The next line takes too long to grep if scalls has enormous objects
+      # callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
       functionCall <- scalls[callIndices]
     }
     if (length(functionCall)) {
@@ -1052,18 +1054,23 @@ setMethod("Copy",
     scalls <- sys.calls()
   }
 
-  otherFns <- grepl(scalls, pattern = paste0("(test_code)|(with_reporter)|(force)|",
+  otherFns <- .grepSysCalls(scalls, pattern = paste0("(test_code)|(with_reporter)|(force)|",
                                              "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
                                              "(Cache)|(tryCatch)|(doTryCatch)"))
-  otherFns <- unlist(lapply(scalls[!otherFns], function(x) {
-    tryCatch(as.character(x[[1]]), error = function(y) "")
-  }))
-  otherFns <- otherFns[nzchar(otherFns)]
-  otherFns <- otherFns[!startsWith(otherFns, prefix = ".")]
-  otherFns <- paste0("otherFunctions:", otherFns)
+  if (length(otherFns)) {
+    otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
+      tryCatch(as.character(x[[1]]), error = function(y) "")
+    }))
+    otherFns <- otherFns[nzchar(otherFns)]
+    otherFns <- otherFns[!startsWith(otherFns, prefix = ".")]
+    otherFns <- paste0("otherFunctions:", otherFns)
+  } else {
+    otherFns <- character()
+  }
 
   # Figure out if it is in a .parseModule call, if yes, then extract the module
-  doEventFrameNum <- which(startsWith(as.character(scalls), prefix = ".parseModule"))
+  doEventFrameNum <- grepSysCalls(scalls, "\\.parseModule")
+  #doEventFrameNum <- which(startsWith(as.character(scalls), prefix = ".parseModule"))
   if (length(doEventFrameNum)) {
     module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
     otherFns <- c(paste0("module:", module), otherFns)
@@ -1086,4 +1093,22 @@ nextNumericName <- function(string) {
   }
 
   paste0(out, ".", theExt)
+}
+
+#' Internal function
+#'
+#' A faster way of grepping the system call stack than just
+#' \code{grep(sys.calls(), pattern = "test")}
+#'
+#' @keywords internal
+#' @export
+#' @rdname grepSysCalls
+#' @param sysCalls The return from sys.calls()
+#' @param pattern Character, passed to grep
+#' @return
+#' Numeric vector, equivalent to return from \code{grep(sys.calls(), pattern = "test")},
+#' but faster if \code{sys.calls()} is very big.
+.grepSysCalls <- function(sysCalls, pattern) {
+  scallsFirstElement <- lapply(sysCalls, function(x) x[1])
+  grep(scallsFirstElement, pattern = pattern)
 }
