@@ -1069,7 +1069,7 @@ setMethod("Copy",
   }
 
   # Figure out if it is in a .parseModule call, if yes, then extract the module
-  doEventFrameNum <- grepSysCalls(scalls, "\\.parseModule")
+  doEventFrameNum <- .grepSysCalls(scalls, "\\.parseModule")
   #doEventFrameNum <- which(startsWith(as.character(scalls), prefix = ".parseModule"))
   if (length(doEventFrameNum)) {
     module <- get("m", envir = sys.frame(doEventFrameNum[2])) # always 2
