@@ -425,30 +425,41 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           !identical(extent(x), extent(rasterToMatch))) {
         message("    reprojecting ...")
         if(canProcessInMemory(x, 4)){
-          x <- projectRaster(from = x, to = rasterToMatch, ...)
+          tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
+          x <- projectRaster(from = x, to = tempRas, ...)
         } else {
           message("   large raster: reprojecting after writing to temp drive...")
-          tempRaster <- file.path(tempfile(), ".tif", fsep = "")
-          writeRaster(x, filename = tempRaster, datatype = dataType(x), overwrite = TRUE)
-          gdalUtils::gdalwarp(srcfile = tempRaster,
-                              dstfile = file.path(dots$destinationPath,
-                                                  paste(x@data@names,"_reproj", ".tif", sep = "")),
+          tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
+          tempDstRaster <- file.path(dirname(tempfile()),
+                                     paste0(x@data@names,"_reproj", ".tif"))
+          writeRaster(x, filename = tempSrcRaster, datatype = assessDataType(x), overwrite = TRUE)
+          gdalUtils::gdalwarp(srcfile = tempSrcRaster,
+                              dstfile = tempDstRaster,
                               s_srs = as.character(crs(x)),
-                              t_srs = as.character(crs(rasterToMatch)),
-                              tr = res(rasterToMatch)
-          )
-          x <- raster(file.path(dots$destinationPath,
-                                paste(x@data@names,"_reproj", ".tif", sep = "")))
-          file.remove(tempRaster)
+                              t_srs = as.character(targetCRS),
+                              tr = res(rasterToMatch),
+                              tap = TRUE, overwrite = TRUE)
+          x <- raster(tempDstRaster)
+          x[] <- x[]    ## bring it to memory to update metadata
+          file.remove(c(tempSrcRaster, tempDstRaster))
         }
       } else {
         message("    no reprojecting because target characteristics same as input Raster.")
       }
     } else {
-      message("    no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
+      message("    no reprojecting because rasterToMatch is missing & useSAcrs is FALSE.")
     }
   } else {
-    message("    no reprojecting because no rasterToMatch.")
+    if (!is.null(targetCRS)) {
+      if (!identical(crs(x), targetCRS)) {
+        message("    reprojecting ...")
+        x <- projectRaster(from = x, crs = targetCRS, ...)
+      } else {
+        message("    no reprojecting because target CRS is same as input CRS.")
+      }
+    } else {
+      message("     no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
+    }
   }
   x
 }
@@ -774,7 +785,7 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' Can be used to write prepared inputs on disk.
 #'
-#' @param ras  The RasterLayer for which data type will be assessed. Only single layers supported.
+#' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @author Eliot McIntire
 #' @author CeresBbarros
 #' @export
