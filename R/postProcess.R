@@ -411,9 +411,7 @@ projectInputs <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @importFrom raster crs
-#' @importFrom raster res
-#' @importFrom raster dataType
+#' @importFrom raster crs res dataType
 #' @importFrom gdalUtils gdalwarp
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
 
