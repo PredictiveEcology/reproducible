@@ -400,6 +400,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 #'                      See details in \code{\link{postProcess}}.
 #'
 #' @rdname projectInputs
+#' @importFrom raster canProcessInMemory
 #' @return
 #' A file of the same type as starting, but with projection (and possibly other
 #' characteristics, including resolution, origin, extent if changed.
