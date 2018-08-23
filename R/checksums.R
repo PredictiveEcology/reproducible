@@ -80,9 +80,9 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
 })
 
 #' @rdname Checksums
-#' @importFrom utils read.table write.table
-#' @importFrom methods formalArgs
 #' @importFrom crayon magenta
+#' @importFrom methods formalArgs
+#' @importFrom utils read.table write.table
 setMethod(
   "Checksums",
   signature = c(path = "character", quickCheck = "ANY",
