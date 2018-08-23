@@ -368,6 +368,11 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
       filesInArchive <- .listFilesInArchive(archive)
 
+      if (is.null(neededFiles)) {
+        neededFiles <- basename(filesInArchive)
+        result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
+      }
+
       # need to re-Checksums because
       checkSums <- if (file.exists(checkSumFilePath)) {
         try(Checksums(
@@ -409,9 +414,6 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       # }
 
       # recheck, now that we have the whole file liast
-      if (is.null(neededFiles)) {
-        result <- checkSums[checkSums$expectedFile %in% basename(filesInArchive), ]$result
-      }
       if (!(all(isOK)) ||
           NROW(result) == 0) {
         # don't extract if we already have all files and they are fine

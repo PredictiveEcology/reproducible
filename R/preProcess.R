@@ -214,7 +214,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   })
 
   # Stage 1 - Extract from archive
-  neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
+  neededFiles <- c(neededFiles, if (!is.null(alsoExtract)) basename(alsoExtract))
   filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                        neededFiles = neededFiles,
                                        checkSums = checkSums, needChecksums = needChecksums,
