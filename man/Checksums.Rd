@@ -17,7 +17,8 @@ Checksums(path, write, quickCheck = FALSE,
   checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
 }
 \arguments{
-\item{path}{Character string giving the path to the module directory.}
+\item{path}{Character string giving the directory path containing \code{CHECKSUMS.txt}
+file, or where it will be written if \code{checksumFile = TRUE}.}
 
 \item{write}{Logical indicating whether to overwrite \code{CHECKSUMS.txt}.
 Default is \code{FALSE}, as users should not change this file.

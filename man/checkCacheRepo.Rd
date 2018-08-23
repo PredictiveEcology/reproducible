@@ -19,8 +19,8 @@
 A character string with a path to a cache repository.
 }
 \description{
-This is a generic definition that can be extended according to class. Normally,
-checkPath can be called directly, but does not have class-specific methods.
+This is a generic definition that can be extended according to class.
+Normally, \code{checkPath} can be called directly, but does not have class-specific methods.
 }
 \examples{
 a <- "test"

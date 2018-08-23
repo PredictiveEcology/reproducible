@@ -178,8 +178,8 @@ setMethod(
 ################################################################################
 #' Check for cache repository info in ...
 #'
-#' This is a generic definition that can be extended according to class. Normally,
-#' checkPath can be called directly, but does not have class-specific methods.
+#' This is a generic definition that can be extended according to class.
+#' Normally, \code{checkPath} can be called directly, but does not have class-specific methods.
 #'
 #' @param object An R object
 #' @param create Logical. If TRUE, then it will create the path for cache.
@@ -194,7 +194,7 @@ setMethod(
 #' a <- "test"
 #' .checkCacheRepo(a) # no cache repository supplied
 #'
-setGeneric(".checkCacheRepo", function(object, create=FALSE) {
+setGeneric(".checkCacheRepo", function(object, create = FALSE) {
   standardGeneric(".checkCacheRepo")
 })
 
