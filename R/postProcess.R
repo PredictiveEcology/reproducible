@@ -427,6 +427,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         if(canProcessInMemory(x, 4)){
           tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
           x <- projectRaster(from = x, to = tempRas, ...)
+          res(x) <- res(rasterToMatch)
         } else {
           message("   large raster: reprojecting after writing to temp drive...")
           tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
