@@ -1082,12 +1082,13 @@ setMethod("Copy",
 nextNumericName <- function(string) {
   theExt <- file_ext(string)
   saveFilenameSansExt <- file_path_sans_ext(string)
-  alreadyHasNumeric <- grepl(saveFilenameSansExt, pattern = "_[[:digit:]]*$")
+  finalNumericPattern <- "_[[:digit:]]*$"
+  alreadyHasNumeric <- grepl(saveFilenameSansExt, pattern = finalNumericPattern)
   if (isTRUE(any(alreadyHasNumeric))) {
     splits <- strsplit(saveFilenameSansExt, split = "_")
     numericEnd <- as.numeric(tail(splits[[1]],1))
     suff <- paste0("_", numericEnd + 1) # keep rndstr in here, so that both streams keep same rnd number state
-    out <- gsub(saveFilenameSansExt, pattern = "_[[:digit:]]*", replacement = suff)
+    out <- gsub(saveFilenameSansExt, pattern = finalNumericPattern, replacement = suff)
   } else {
     out <- paste0(saveFilenameSansExt, "_1")
   }
