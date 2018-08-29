@@ -430,7 +430,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           ## projectRaster doesn't always ensure equal res (floating point no issue)
           ## if resolutions are close enough, re-write res(x)
           if (any(res(x) != res(rasterToMatch)))
-            if (res(x) %==% res(rasterToMatch)) {
+            if (all(res(x) %==% res(rasterToMatch))) {
               res(x) <- res(rasterToMatch)
             } else
               stop(paste0("Error: input and outpout resolutions are not similar after using projectRaster.",
