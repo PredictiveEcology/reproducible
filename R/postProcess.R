@@ -411,7 +411,8 @@ projectInputs <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @importFrom raster crs res dataType
+#' @importFrom fpCompare %==%
+#' @importFrom raster crs res res<- dataType
 #' @importFrom gdalUtils gdalwarp
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
 
@@ -425,6 +426,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         if(canProcessInMemory(x, 4)){
           tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
           x <- projectRaster(from = x, to = tempRas, ...)
+          ## projectRaster doesn't always ensure equal res (floating point no issue)
+          ## if resolutions are close enough, re-write res(x)
+          if (any(res(x) != res(rasterToMatch)))
+          if (all(res(x) %==% res(rasterToMatch))) {
+            res(x) <- res(rasterToMatch)
+          } else
+            stop(paste0("Error: input and outpout resolutions are not similar after using projectRaster.",
+                 "\n You can try increasing error tolerance in options('fpCompare.tolerance')"))
         } else {
           message("   large raster: reprojecting after writing to temp drive...")
           tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
