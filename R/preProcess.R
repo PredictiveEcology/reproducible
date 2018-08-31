@@ -207,9 +207,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   on.exit({
     if (needChecksums > 0) {
       # needChecksums 1 --> write a new checksums.txt file
-      # needChecksums 2 --> append  a new checksums.txt file
-      appendChecksumsTable(checkSumFilePath = checkSumFilePath, filesToChecksum = basename(filesToChecksum),
-                           destinationPath = destinationPath, append = needChecksums == 2)
+      # needChecksums 2 --> append to checksums.txt file
+      appendChecksumsTable(checkSumFilePath = checkSumFilePath,
+                           filesToChecksum = basename(filesToChecksum),
+                           destinationPath = destinationPath,
+                           append = (needChecksums == 2))
     }
   })
 
@@ -224,13 +226,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                               basename(filesExtracted$filesExtracted)))
   needChecksums <- filesExtracted$needChecksums
 
-  #targetFilePath might still be NULL, need destinationPath too
+  ## targetFilePath might still be NULL, need destinationPath too
   filesExtr <- c(filesToChecksum,
-                                 if (is.null(filesExtracted$filesExtracted) ||
-                                     length(filesExtracted$filesExtracted) == 0)
-                                   downloadFileResult$downloaded
-                                 else
-                                   filesExtracted$filesExtracted)
+                 if (is.null(filesExtracted$filesExtracted) ||
+                     length(filesExtracted$filesExtracted) == 0)
+                   downloadFileResult$downloaded
+                 else
+                   filesExtracted$filesExtracted)
   if (!is.null(filesExtr)) filesExtr <- unique(basename(filesExtr))
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
                                        filesExtracted = filesExtr,
@@ -239,7 +241,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   targetFilePath <- targetParams$targetFilePath
   fun <- targetParams$fun
 
-  #targetFilePath might still be NULL, need destinationPath too
+  ## targetFilePath might still be NULL, need destinationPath too
   if (is.null(targetFilePath)) if (is.null(filesExtracted$filesExtracted)) {
     if (!is.null(downloadFileResult$downloaded))
       targetFilePath <- downloadFileResult$downloaded
@@ -249,19 +251,18 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   if (is.null(targetFile)) if (!is.null(targetFilePath)) targetFile <- basename(targetFilePath)
 
-  # Convert the fun as character string to function class, if not already
+  ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)
 
   if (needChecksums > 0) {
-    # needChecksums 1 --> write a new checksums.txt file
-    # needChecksums 2 --> append  a new checksums.txt file
-    checkSums <-
-      appendChecksumsTable(
-        checkSumFilePath = checkSumFilePath,
-        filesToChecksum = basename(filesToChecksum),
-        destinationPath = destinationPath,
-        append = needChecksums == 2
-      )
+    ## needChecksums 1 --> write a new checksums.txt file
+    ## needChecksums 2 --> append  a new checksums.txt file
+    checkSums <-appendChecksumsTable(
+      checkSumFilePath = checkSumFilePath,
+      filesToChecksum = basename(filesToChecksum),
+      destinationPath = destinationPath,
+      append = needChecksums == 2
+    )
     on.exit() # remove on.exit because it is done here
   }
   if (!isTRUE(file.exists(targetFilePath))) {
