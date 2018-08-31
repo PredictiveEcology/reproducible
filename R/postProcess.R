@@ -411,7 +411,8 @@ projectInputs <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @importFrom raster crs res dataType
+#' @importFrom fpCompare %==%
+#' @importFrom raster crs res res<- dataType
 #' @importFrom gdalUtils gdalwarp
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
 
@@ -422,17 +423,19 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           !identical(res(x), res(rasterToMatch)) |
           !identical(extent(x), extent(rasterToMatch))) {
         message("    reprojecting ...")
-        if(canProcessInMemory(x, 4)){
+        if (canProcessInMemory(x, 4)) {
           tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
           x <- projectRaster(from = x, to = tempRas, ...)
-          ## projectRaster doesn't always ensure equal res (floating point no issue)
+          ## projectRaster doesn't always ensure equal res (floating point number issue)
           ## if resolutions are close enough, re-write res(x)
-          if (any(res(x) != res(rasterToMatch)))
-          if (all(res(x) %==% res(rasterToMatch))) {
-            res(x) <- res(rasterToMatch)
-          } else
-            stop(paste0("Error: input and outpout resolutions are not similar after using projectRaster.",
-                 "\n You can try increasing error tolerance in options('fpCompare.tolerance')"))
+          if (any(res(x) != res(rasterToMatch))) {
+            if (all(res(x) %==% res(rasterToMatch))) {
+              res(x) <- res(rasterToMatch)
+            } else {
+              stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
+                   "You can try increasing error tolerance in options('fpCompare.tolerance')."))
+            }
+          }
         } else {
           message("   large raster: reprojecting after writing to temp drive...")
           tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
@@ -570,7 +573,6 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 #' @export
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, ...) {
-
   if (!is.null(studyArea)) {
     message("    intersecting ...")
     studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
@@ -580,8 +582,7 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
       warning("  Could not mask with studyArea, for unknown reasons.",
               " Returning object without masking.")
       return(x)
-    }
-    )
+    })
     return(x)
   } else {
     return(x)
