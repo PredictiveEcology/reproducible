@@ -181,7 +181,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # archive specified, alsoExtract is NULL --> now means will extract all
   if (is.null(archive)) archive <- downloadFileResult$archive
-  if (!is.null(alsoExtract)) {
+  if (is.null(alsoExtract)) {
+    neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
+  } else {
     if ("similar" %in% basename(alsoExtract)) {
       allFiles <- .listFilesInArchive(archive)
       neededFiles <- if (is.null(targetFile)) {
@@ -196,8 +198,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   }
-
-  if (is.null(alsoExtract)) neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
   if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
@@ -242,14 +242,18 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun <- targetParams$fun
 
   ## targetFilePath might still be NULL, need destinationPath too
-  if (is.null(targetFilePath)) if (is.null(filesExtracted$filesExtracted)) {
-    if (!is.null(downloadFileResult$downloaded))
-      targetFilePath <- downloadFileResult$downloaded
-  } else {
-    targetFilePath <- filesExtracted$filesExtracted
+  if (is.null(targetFilePath)) {
+    if (is.null(filesExtracted$filesExtracted)) {
+      if (!is.null(downloadFileResult$downloaded))
+        targetFilePath <- downloadFileResult$downloaded
+    } else {
+      targetFilePath <- filesExtracted$filesExtracted
+    }
   }
 
-  if (is.null(targetFile)) if (!is.null(targetFilePath)) targetFile <- basename(targetFilePath)
+  if (is.null(targetFile) && !is.null(targetFilePath)) {
+    targetFile <- basename(targetFilePath)
+  }
 
   ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)

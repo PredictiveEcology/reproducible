@@ -166,7 +166,6 @@ setMethod(
       }
     }
 
-
     if (is.null(txt$filesize)) {
       quickCheck <- FALSE
       message(crayon::magenta("  Not possible to use quickCheck;\n ",
@@ -205,7 +204,6 @@ setMethod(
       #   txt[wh,"filesize"] <- checksums[[2]]
       # }
       # txt <- txt[wh,]
-
     }
     results.df <- out %>%
       dplyr::mutate(actualFile = file) %>%
@@ -259,8 +257,7 @@ setMethod(
   definition = function(path, quickCheck, checksumFile, files, ...) {
     Checksums(path, write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
               files = files, ...)
-  })
-
+})
 
 writeChecksumsTable <- function(out, checksumFile, dots) {
   do.call(write.table,
@@ -269,7 +266,6 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
                              row.names = FALSE),
                         dots))
 }
-
 
 #' Calculate the hashes of multiple files
 #'
