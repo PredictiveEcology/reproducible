@@ -179,11 +179,10 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       crsRTM <- NULL
     }
 
-                           x <- Cache(cropInputs, x = x, studyArea = studyArea,
-                                      extentToMatch = extRTM,
-                                      extentCRS = crsRTM,
-                                      useCache = useCache, ...)
-                           #)
+    x <- Cache(cropInputs, x = x, studyArea = studyArea,
+               extentToMatch = extRTM,
+               extentCRS = crsRTM,
+               useCache = useCache, ...)
 
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
@@ -401,6 +400,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 #'                      See details in \code{\link{postProcess}}.
 #'
 #' @rdname projectInputs
+#' @importFrom raster canProcessInMemory
 #' @return
 #' A file of the same type as starting, but with projection (and possibly other
 #' characteristics, including resolution, origin, extent if changed.
@@ -411,9 +411,8 @@ projectInputs <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @importFrom raster crs
-#' @importFrom raster res
-#' @importFrom raster dataType
+#' @importFrom fpCompare %==%
+#' @importFrom raster crs res res<- dataType
 #' @importFrom gdalUtils gdalwarp
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
 
@@ -424,18 +423,20 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           !identical(res(x), res(rasterToMatch)) |
           !identical(extent(x), extent(rasterToMatch))) {
         message("    reprojecting ...")
-        if(canProcessInMemory(x, 4)){
+        if (canProcessInMemory(x, 4)) {
           tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
           x <- projectRaster(from = x, to = tempRas, ...)
-          ## projectRaster doesn't always ensure equal res (floating point no issue)
+          ## projectRaster doesn't always ensure equal res (floating point number issue)
           ## if resolutions are close enough, re-write res(x)
-          if (any(res(x) != res(rasterToMatch)))
+          if (any(res(x) != res(rasterToMatch))) {
             if (all(res(x) %==% res(rasterToMatch))) {
               res(x) <- res(rasterToMatch)
-            } else
-              stop(paste0("Error: input and outpout resolutions are not similar after using projectRaster.",
-                          "\n You can try increasing error tolerance in options('fpCompare.tolerance')"))
-          } else {
+            } else {
+              stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
+                   "You can try increasing error tolerance in options('fpCompare.tolerance')."))
+            }
+          }
+        } else {
           message("   large raster: reprojecting after writing to temp drive...")
           tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
           tempDstRaster <- file.path(dirname(tempfile()),
@@ -572,7 +573,6 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 #' @export
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, ...) {
-
   if (!is.null(studyArea)) {
     message("    intersecting ...")
     studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
@@ -582,8 +582,7 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
       warning("  Could not mask with studyArea, for unknown reasons.",
               " Returning object without masking.")
       return(x)
-    }
-    )
+    })
     return(x)
   } else {
     return(x)
@@ -738,8 +737,9 @@ writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
                     "\n saving", names(x), "as", datatype2))
       dots$datatype <- datatype2
     } else if (datatype2 != dots$datatype)
-      message(paste("chosen 'datatype' may be inadequate for the range/type of values in", names(x),
-                    "\n consider changing to", datatype2))
+      message("chosen 'datatype', ",dots$datatype,", may be inadequate for the ",
+                    "range/type of values in ", names(x),
+                    "\n consider changing to ", datatype2)
 
     xTmp <- writeRaster(x = x, filename = filename2, overwrite = overwrite, ...)
 
@@ -807,17 +807,19 @@ assessDataType <- function(ras) {
 #' @export
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras) {
-  minVal <- ras@data@min              ## using ras@data@... is faster than using raster functions
+  ## using ras@data@... is faster, but won't work for @values in large rasters
+  rasVals <- getValues(ras)
+  minVal <- ras@data@min
   maxVal <- ras@data@max
   signVal <- minVal < 0
-  doubVal <-  any(floor(ras@data@values) != ras@data@values, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
+  doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
 
   ## writeRaster deals with infinite values as FLT8S
   # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
 
   if(!doubVal & !signVal) {
     ## only check for binary if there are no decimals and no signs
-    logi <- all(!is.na(.bincode(na.omit(ras@data@values), c(-1,1))))  ## range needs to include 0
+    logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
 
     if(logi) {
       datatype <- "LOG1S"

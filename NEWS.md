@@ -1,5 +1,11 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.4
+=============
+
+* speed up of Cache when deeply nested, due to grep(sys.calls(), ...) that would take long and hang
+* minor bugfixes
+
 version 0.2.3
 =============
 

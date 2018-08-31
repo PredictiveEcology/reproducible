@@ -16,7 +16,7 @@ assessDataType(ras)
 \method{assessDataType}{default}(ras)
 }
 \arguments{
-\item{ras}{The RasterLayer for which data type will be assessed. Only single layers supported.}
+\item{ras}{The RasterLayer or RasterStack for which data type will be assessed.}
 }
 \value{
 The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.

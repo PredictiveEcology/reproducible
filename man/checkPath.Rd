@@ -7,7 +7,7 @@
 \alias{checkPath,character,missing-method}
 \alias{checkPath,NULL,ANY-method}
 \alias{checkPath,missing,ANY-method}
-\title{Check filepath}
+\title{Check directory path}
 \usage{
 checkPath(path, create)
 
@@ -20,7 +20,7 @@ checkPath(path, create)
 \S4method{checkPath}{missing,ANY}()
 }
 \arguments{
-\item{path}{A character string corresponding to a filepath.}
+\item{path}{A character string corresponding to a directory path.}
 
 \item{create}{A logical indicating whether the path should
 be created if it doesn't exist. Default is \code{FALSE}.}
@@ -29,8 +29,14 @@ be created if it doesn't exist. Default is \code{FALSE}.}
 Character string denoting the cleaned up filepath.
 }
 \description{
-Checks the specified filepath for formatting consistencies,
+Checks the specified path to a directory for formatting consistencies,
 such as trailing slashes, etc.
+}
+\note{
+This will not work for paths to files.
+To check for existence of files, use \code{\link{file.exists}}, or use
+\code{\link[utils]{file_test}} with \code{op = "-f"}.
+To normalize a path to a file, use \code{\link{normPath}} or \code{\link{normalizePath}}.
 }
 \examples{
 ## normalize file paths

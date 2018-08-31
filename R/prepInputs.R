@@ -347,7 +347,6 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
                                needChecksums, filesExtracted = character(),
                                checkSumFilePath, quick) {
 
-
   if (!is.null(archive)) {
     if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
@@ -369,6 +368,11 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 
       filesInArchive <- .listFilesInArchive(archive)
 
+      if (is.null(neededFiles)) {
+        neededFiles <- basename(filesInArchive)
+        result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
+      }
+
       # need to re-Checksums because
       checkSums <- if (file.exists(checkSumFilePath)) {
         try(Checksums(
@@ -382,6 +386,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
         needChecksums <- 1
         checkSums <- .emptyChecksumsResult
       }
+
+      if (is(checkSums, "try-error")) stop("checkSumFilePath is not a CHECKSUMS.txt file")
 
       # join the neededFiles with the checkSums -- find out which are missing
       checkSumsDT <- data.table(checkSums)
@@ -408,9 +414,6 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       # }
 
       # recheck, now that we have the whole file liast
-      if (is.null(neededFiles)) {
-        result <- checkSums[checkSums$expectedFile %in% basename(filesInArchive), ]$result
-      }
       if (!(all(isOK)) ||
           NROW(result) == 0) {
         # don't extract if we already have all files and they are fine
@@ -670,7 +673,18 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
     data.table::setnames(currentFilesToRbind, old = keepCols,
                          new = c("file", "checksum", "algorithm", "filesize"))
     currentFilesToRbind <- rbindlist(list(nonCurrentFiles, currentFilesToRbind), fill = TRUE)
-    writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
+
+    # Attempt to not change CHECKSUMS.txt file if nothing new occurred
+    currentFilesToRbind <- unique(currentFilesToRbind)
+    anyDuplicates <- duplicated(currentFilesToRbind)
+    if (any(anyDuplicates)) {
+      message("The current targetFile is not the same as the expected targetFile in the ",
+              "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
+              "desired, please check files for discrepancies")
+    }
+    cs$filesize <- as.character(cs$filesize)
+    if (!identical(cs, as.data.frame(currentFilesToRbind)))
+      writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
   }
   return(currentFiles)
 }

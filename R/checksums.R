@@ -17,7 +17,7 @@ if (getRversion() >= "3.1.0") {
 #' To update your \file{CHECKSUMS.txt} files using the new algorithm, see
 #' \url{https://github.com/PredictiveEcology/SpaDES/issues/295#issuecomment-246513405}.
 #'
-#' @param path    Character string giving the path containing the \code{CHECKSUMS.txt}
+#' @param path    Character string giving the directory path containing \code{CHECKSUMS.txt}
 #'                file, or where it will be written if \code{checksumFile = TRUE}.
 #'
 #' @param write   Logical indicating whether to overwrite \code{CHECKSUMS.txt}.
@@ -80,9 +80,9 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
 })
 
 #' @rdname Checksums
-#' @importFrom utils read.table write.table
-#' @importFrom methods formalArgs
 #' @importFrom crayon magenta
+#' @importFrom methods formalArgs
+#' @importFrom utils read.table write.table
 setMethod(
   "Checksums",
   signature = c(path = "character", quickCheck = "ANY",
@@ -166,7 +166,6 @@ setMethod(
       }
     }
 
-
     if (is.null(txt$filesize)) {
       quickCheck <- FALSE
       message(crayon::magenta("  Not possible to use quickCheck;\n ",
@@ -205,7 +204,6 @@ setMethod(
       #   txt[wh,"filesize"] <- checksums[[2]]
       # }
       # txt <- txt[wh,]
-
     }
     results.df <- out %>%
       dplyr::mutate(actualFile = file) %>%
@@ -259,17 +257,16 @@ setMethod(
   definition = function(path, quickCheck, checksumFile, files, ...) {
     Checksums(path, write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
               files = files, ...)
-  })
-
+})
 
 writeChecksumsTable <- function(out, checksumFile, dots) {
+  out <- out[order(out$file), ] ## sort by filename alphabetically
   do.call(write.table,
           args = append(list(x = out, file = checksumFile, eol = "\n",
                              col.names = !isTRUE(dots$append),
                              row.names = FALSE),
                         dots))
 }
-
 
 #' Calculate the hashes of multiple files
 #'
