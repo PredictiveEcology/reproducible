@@ -928,6 +928,12 @@ setMethod(
       # extract other function names that are not the ones the focus of the Cache call
       otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
 
+      # Remove from otherFunctions if it is "function"
+      alreadyIn <- gsub(otherFns, pattern = "otherFunctions:", replacement = "") %in%
+        as.character(attr(output, "function"))
+      if (isTRUE(any(alreadyIn)))
+        otherFns <- otherFns[!alreadyIn]
+
       outputToSaveIsList <- is.list(outputToSave)
       if (outputToSaveIsList) {
         rasters <- unlist(lapply(outputToSave, is, "Raster"))
