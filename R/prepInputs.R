@@ -682,7 +682,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationP
               "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
               "desired, please check files for discrepancies")
     }
-    cs$filesize <- as.character(cs$filesize)
+
+    # Sometimes a checksums file doesn't have filesize
+    if (!is.null(cs$filesize)) {
+      if (!is.character(cs$filesize))
+        cs$filesize <- as.character(cs$filesize)
+    }
+
     if (!identical(cs, as.data.frame(currentFilesToRbind)))
       writeChecksumsTable(as.data.frame(currentFilesToRbind), checkSumFilePath, dots = list())
   }
