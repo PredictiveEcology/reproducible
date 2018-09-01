@@ -794,9 +794,10 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @author Eliot McIntire
-#' @author CeresBbarros
+#' @author CeresBarros
 #' @export
 #' @rdname assessDataType
+#' @importFrom raster getValues
 #' @example inst/examples/example_assessDataType.R
 #' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
 

@@ -7,8 +7,8 @@
 \alias{Checksums,character,missing-method}
 \title{Calculate checksum}
 \usage{
-Checksums(path, write, quickCheck = FALSE,
-  checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
+Checksums(path, write, quickCheck = FALSE, checksumFile = file.path(path,
+  "CHECKSUMS.txt"), files = NULL, ...)
 
 \S4method{Checksums}{character,logical}(path, write, quickCheck = FALSE,
   checksumFile = file.path(path, "CHECKSUMS.txt"), files = NULL, ...)
