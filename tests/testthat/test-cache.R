@@ -787,3 +787,58 @@ test_that("test future", {
 })
 
 
+##########################
+test_that("test miscellaneous unit tests cache-helpers", {
+      testInitOut <- testInit()
+      on.exit({
+        testOnExit(testInitOut)
+      }, add = TRUE)
+
+      a <- 1
+      mess <- capture_message(.cacheMessage(a, "test", TRUE))
+      expect_true(any(grepl("loading memoised", mess)))
+
+      mess <- capture_message(.cacheMessage(a, "test", FALSE))
+      expect_true(any(grepl("loading cached.*adding", mess)))
+
+      mess <- capture_message(.cacheMessage(a, "test", NA))
+      expect_true(any(grepl("loading cached", mess)))
+      expect_false(all(grepl("adding", mess)))
+
+      # .checkCacheRepo
+      mess <- capture_message(.checkCacheRepo(a))
+      expect_true(any(grepl("No cacheRepo supplied.*getOption", mess)))
+
+      opt <- options("reproducible.cachePath" = NULL)
+      on.exit({
+        options(opt)
+      }, add = TRUE)
+      mess <- capture_message(.checkCacheRepo(a))
+      expect_true(any(grepl("No cacheRepo supplied. Using tempdir()", mess)))
+
+
+      # getFunctionName
+      fn <- function(a) {
+        getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
+      }
+      expect_true(fn(1)$functionName == "1")
+
+      fn <- function(FUN) {
+        getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
+      }
+      expect_true(fn(2)$functionName == "2")
+
+      fn <- function(FUN) {
+        getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
+      }
+      expect_true(fn(2)$functionName == "2")
+      expect_true(is.null(fn(2)$.FUN))
+
+
+      fn <- function(FUN) {
+        getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
+      }
+      expect_true(is.na(fn(log(1))$functionName))
+})
+
+

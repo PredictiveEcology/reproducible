@@ -205,7 +205,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
-      cacheRepo <- if (nzchar(getOption("reproducible.cachePath"))) {
+      cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")))) {
         message("No cacheRepo supplied. Using value in getOption('reproducible.cachePath')")
         getOption("reproducible.cachePath", tempdir())
       } else {
@@ -403,7 +403,11 @@ getFunctionName <- function(FUN, originalDots, ...,
       for (callIndex in rev(callIndices)) {
         if (!missing(overrideCall)) {
           matchedCall <- match.call(get(overrideCall), scalls[[callIndex]])#parse(text = callIndex))
-          functionName <- matchedCall$FUN
+          if ("FUN" %in% formalArgs(overrideCall)) {
+            functionName <- matchedCall$FUN
+          } else {
+            functionName <- matchedCall[[2]]
+          }
         } else {
           matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
           functionName <- matchedCall$FUN
@@ -416,6 +420,7 @@ getFunctionName <- function(FUN, originalDots, ...,
     }
     .FUN <- FUN  # nolint
   }
+
   if (is(FUN, "function")) {
     .FUN <- format(FUN)  # nolint
   } else {
