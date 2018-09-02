@@ -839,6 +839,11 @@ test_that("test miscellaneous unit tests cache-helpers", {
         getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
       }
       expect_true(is.na(fn(log(1))$functionName))
+
+      ## nextNumericName
+      b <- nextNumericName("test.pdf")
+      b1 <- nextNumericName(b)
+      expect_true(grepl("_2.pdf", b1))
 })
 
 
