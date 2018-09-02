@@ -402,8 +402,10 @@ getFunctionName <- function(FUN, originalDots, ...,
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
       for (callIndex in rev(callIndices)) {
         if (!missing(overrideCall)) {
-          matchedCall <- match.call(get(overrideCall), scalls[[callIndex]])#parse(text = callIndex))
-          if ("FUN" %in% formalArgs(overrideCall)) {
+          env <- sys.frames()[[callIndices]]
+          matchedCall <- match.call(get(overrideCall, envir = env), scalls[[callIndex]])#parse(text = callIndex))
+          forms <- tryCatch("FUN" %in% formalArgs(overrideCall), error = function(x) NULL)
+          if (!is.null(forms)) {
             functionName <- matchedCall$FUN
           } else {
             functionName <- matchedCall[[2]]
