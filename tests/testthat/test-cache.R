@@ -862,12 +862,22 @@ test_that("test miscellaneous unit tests cache-helpers", {
       expect_true(any(grepl("memoise", dMess)))
 
       ## showSimilar
-      try(clearCache(ask = FALSE, cacheRepo = tmpCache))
+      try(clearCache(ask = FALSE, cacheRepo = tmpCache), silent = TRUE)
       aMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
       bMess <- capture_messages(b <- Cache(rnorm, 2, showSimilar = TRUE, cacheRepo = tmpCache))
       expect_true(any(grepl("different n", bMess)))
 
       ## debugCache
+
+
+      ## .unlistToCharacter
+      expect_true(grepl("not list", unlist(.unlistToCharacter(1, 1))))
+      expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
+
+      ## writeFuture
+      expect_true(identical("dda1fbb70d256e6b3b696ef0176c63de",
+                            writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "")))
+      expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
 })
 
 
