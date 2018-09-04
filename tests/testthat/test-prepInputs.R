@@ -1090,3 +1090,60 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "FLT8S")
 
 })
+
+
+
+test_that("lightweight tests for code coverage", {
+  testthat::skip_on_cran()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+
+  checkPath(tmpdir, create = TRUE)
+  checkSums <- .emptyChecksumsResult
+  checkSumFilePath <- file.path(tmpdir, "CHECKSUMS.txt")
+
+  downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
+               archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
+               destinationPath = tmpdir, checksumFile = checkSumFilePath)
+  expect_true(file.exists(dir(tmpdir, pattern = "ecozone", full.names = TRUE)))
+
+
+  # have local copy
+  unzip("ecozone_shp.zip", exdir = tmpdir)
+  file.copy(dir(file.path(tmpdir, "Ecozones"), full.names = TRUE), tmpdir)
+  checkSums <- Checksums(path = tmpdir, write = TRUE)
+  #dir(tmpdir)
+
+  aMess <- capture_messages(downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
+               targetFile = "ecozones.shp",
+               archive = NULL, needChecksums = TRUE, quick = FALSE,
+               destinationPath = file.path(tmpdir, "Ecozones"),
+               checksumFile = file.path(tmpdir, "CHECKSUMS.txt")))
+
+  expect_true(any(grepl("Skipping download", aMess)))
+
+
+  # Test when wrong archive exists, wrong checkSums
+  #checkSums <- Checksums(path = tmpdir)
+  file.remove(file.path(tmpdir, "ecozone_shp.zip"))
+  file.remove(dir(file.path(tmpdir), pattern = "ecozones", full.names = TRUE))
+  file.create(file.path(tmpdir, "ecozone_shp.zip"))
+  checkSums <- Checksums(path = tmpdir, write = TRUE)
+  file.remove(file.path(tmpdir, "ecozone_shp.zip"))
+  checkSums <- Checksums(path = tmpdir)
+
+
+  expect_error(downloadFile(url = url,
+                            neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
+                                            "ecozones.shp", "ecozones.shx"),
+                            checkSums = checkSums,
+                            targetFile = "ecozones.shp",
+                            archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
+                            destinationPath = tmpdir, checksumFile = checkSumFilePath))
+
+})
