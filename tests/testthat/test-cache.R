@@ -849,6 +849,17 @@ test_that("test miscellaneous unit tests cache-helpers", {
       expect_false(identical(a,b))
       expect_true(grepl("skipping Cache", aMess))
       expect_true(grepl("skipping Cache", bMess))
+
+      ## getOption("reproducible.useMemoise" = FALSE)
+      opt <- options("reproducible.useMemoise" = FALSE)
+      aMess <- capture_messages(a <- Cache(rnorm, 1))
+      bMess <- capture_messages(a <- Cache(rnorm, 1))
+      options(opt)
+      cMess <- capture_messages(a <- Cache(rnorm, 1))
+      dMess <- capture_messages(a <- Cache(rnorm, 1))
+      expect_true(identical(aMess, bMess[1]))
+      expect_false(any(grepl("memoise", bMess)))
+      expect_true(any(grepl("memoise", dMess)))
 })
 
 
