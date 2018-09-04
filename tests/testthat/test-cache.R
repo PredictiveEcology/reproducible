@@ -867,7 +867,17 @@ test_that("test miscellaneous unit tests cache-helpers", {
       bMess <- capture_messages(b <- Cache(rnorm, 2, showSimilar = TRUE, cacheRepo = tmpCache))
       expect_true(any(grepl("different n", bMess)))
 
-      ## debugCache
+      ## debugCache -- "complete"
+      thing <- 1
+      aa <- Cache(rnorm, thing, debugCache = "complete", cacheRepo = tmpCache)
+      expect_true(identical(thing, attr(aa, "debugCache1")[[1]]))
+      expect_true(identical(.robustDigest(thing), attr(aa, "debugCache2")$n))
+      expect_true(is.numeric(aa))
+
+      ## debugCache -- "quick"
+      aa <- Cache(rnorm, thing, debugCache = "quick", cacheRepo = tmpCache)
+      expect_true(identical(.robustDigest(thing), aa$hash$n))
+      expect_true(identical(thing, aa$content[[1]]))
 
       ## cache -- deprecated
       aMess <- capture_warnings(a <- reproducible::cache(cacheRepo = tmpCache, rnorm, 1))
