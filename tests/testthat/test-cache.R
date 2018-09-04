@@ -844,6 +844,11 @@ test_that("test miscellaneous unit tests cache-helpers", {
       b <- nextNumericName("test.pdf")
       b1 <- nextNumericName(b)
       expect_true(grepl("_2.pdf", b1))
+      aMess <- capture_messages(a <- Cache(rnorm, 1, useCache = FALSE))
+      bMess <- capture_messages(b <- Cache(rnorm, 1, useCache = FALSE))
+      expect_false(identical(a,b))
+      expect_true(grepl("skipping Cache", aMess))
+      expect_true(grepl("skipping Cache", bMess))
 })
 
 
