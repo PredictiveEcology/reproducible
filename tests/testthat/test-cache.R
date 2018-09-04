@@ -891,6 +891,19 @@ test_that("test miscellaneous unit tests cache-helpers", {
       expect_true(identical("dda1fbb70d256e6b3b696ef0176c63de",
                             writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "")))
       expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
+
+      ## verbose -- need 2 nested levels to run all lin
+      fn <- function(a) {
+        Cache(fn1, cacheRepo = tmpCache, verbose = TRUE)
+      }
+      fn1 <- function() {
+        2
+      }
+
+      try(silent = TRUE, clearCache(tmpCache))
+      bMess <- capture_output(aMess <- capture_messages(aa <- Cache(fn, 1, verbose = TRUE, cacheRepo = tmpCache)))
+      expect_true(any(grepl("fn1", bMess)))
+      expect_true(any(grepl("The hashing details", aMess)))
 })
 
 
