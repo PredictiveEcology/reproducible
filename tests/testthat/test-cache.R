@@ -860,6 +860,14 @@ test_that("test miscellaneous unit tests cache-helpers", {
       expect_true(identical(aMess, bMess[1]))
       expect_false(any(grepl("memoise", bMess)))
       expect_true(any(grepl("memoise", dMess)))
+
+      ## showSimilar
+      clearCache(ask = FALSE)
+      aMess <- capture_messages(a <- Cache(rnorm, 1))
+      bMess <- capture_messages(b <- Cache(rnorm, 2, showSimilar = TRUE))
+      expect_true(any(grepl("different n", bMess)))
+
+      ## debugCache
 })
 
 
