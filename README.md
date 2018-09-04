@@ -31,6 +31,7 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE) # stable
 
 ### Development version (unstable)
 
+[![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=development)](https://travis-ci.org/PredictiveEcology/reproducible)
 [![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=development)
 
 **Install from GitHub:**
