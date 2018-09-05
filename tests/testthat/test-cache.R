@@ -907,3 +907,38 @@ test_that("test miscellaneous unit tests cache-helpers", {
 })
 
 
+
+##########################
+test_that("test mergeCache", {
+  testInitOut <- testInit("data.table")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  a <- Cache(rnorm, 1, cacheRepo = tmpdir)
+  b <- Cache(rnorm, 1, cacheRepo = tmpCache)
+
+  aCache <- showCache(tmpdir)
+  bCache <- showCache(tmpCache)
+
+  d <- mergeCache(tmpCache, tmpdir)
+
+  dCache <- showCache(d)
+  abCache <- rbindlist(list(aCache,bCache))
+
+  # Remove date and accessed time stamps
+  dCache <- dCache[!tagKey %in% c("date", "accessed")]
+  abCache <- abCache[!tagKey %in% c("date", "accessed")]
+
+  # remove keys
+  setkey(dCache, artifact)
+  setkey(abCache, artifact)
+
+  expect_true(identical(abCache[,list(artifact, tagKey, tagValue)],
+            dCache[,list(artifact, tagKey, tagValue)]))
+
+  mess <- capture_messages(d1 <- mergeCache(tmpCache, tmpdir))
+  expect_true(any(grepl("Skipping", mess)))
+  expect_true(identical(d, d1))
+
+})
