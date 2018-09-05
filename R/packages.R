@@ -49,7 +49,8 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @export
 #' @importFrom devtools install_github
-#' @importFrom utils install.packages
+#' @importFrom utils install.packages capture.output
+#' @importFrom testthat capture_warnings
 #' @param packages Character vector of packages to install via
 #'        \code{install.packages}, then load (i.e., with \code{library}). If it is
 #'        one package, it can be unquoted (as in \code{require})
@@ -170,13 +171,18 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       libPathListFiles <- libPathListFiles[basename(libPathListFiles) %in% allPkgsNeeded]
       currentVersions <- installedVersionsQuick(libPathListFiles, libPath, standAlone = standAlone,
                              basename(libPathListFiles))
-      if (is.null(names(currentVersions))) names(currentVersions) <- allPkgsNeeded
+      if (is.null(names(currentVersions)))
+        if (identical(length(currentVersions), length(allPkgsNeeded))) {
+          names(currentVersions) <- allPkgsNeeded
+        }
     }
 
     autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
     if (is.null(aa$haveVers)) {
-      pkgsToSnapshot <- pickFirstVersion(names(currentVersions), unlist(currentVersions))
-      .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+      if (length(currentVersions)) {
+        pkgsToSnapshot <- pickFirstVersion(names(currentVersions), unlist(currentVersions))
+        .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+      }
     } else {
       .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
       pkgSnapshot <- aa
@@ -184,14 +190,25 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
 
     oldLibPath <- .libPaths()
     if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
-    packagesLoaded <- unlist(lapply(packages, function(p) {
+
+    # Actual package loading
+    warns <- capture_warnings(
+      mess <- capture.output(type = "message",
+                                       packagesLoaded <- unlist(lapply(packages, function(p) {
       try(require(p, character.only = TRUE))
-    }))
+    }))))
     .libPaths(oldLibPath)
+
     if (any(!packagesLoaded)) {
-      message("Simultaneous package versions being used.",
-              " Can only load first version(s) loaded in this session:\n",
-              paste(packages[!packagesLoaded], collapse = ", "))
+      if (length(warns) > 0) {
+        warning(warns)
+      } else if (any(grepl("Failed with error", mess))) {
+        message(paste(mess, collapse = "\n"))
+      } else {
+        message("Simultaneous package versions being used.",
+                " Can only load first version(s) loaded in this session:\n",
+                paste(packages[!packagesLoaded], collapse = ", "))
+      }
       packagesLoaded2 <- unlist(lapply(packages[!packagesLoaded], function(p) {
         try(require(p, character.only = TRUE, quietly = TRUE))
       }))

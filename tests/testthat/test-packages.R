@@ -107,3 +107,38 @@ test_that("package-related functions work", {
 
   #}
 })
+
+test_that("package-related functions work", {
+  skip_on_cran()
+  skip_on_appveyor()
+
+  testInitOut <- testInit(libraries = c("data.table", "versions"))
+  on.exit({
+    try(testOnExit(testInitOut))
+  }, add = TRUE)
+
+  unlink(dir(tmpdir, full.names = TRUE, all.files = TRUE), recursive = TRUE)
+  # wrong packages arg
+  expect_error(Require(1), "packages should be")
+
+  # Try to cause fail
+  warns <- capture_warnings(Require("testsdfsd"))
+  expect_true(any(grepl("there is no", warns)))
+
+  packageVersionFile <- file.path(tmpdir, ".packageVersion.txt")
+
+  suppressWarnings(versions::install.versions("TimeWarp", lib = tmpdir, "1.0.11"))
+  pkgVers <- as.data.table(pkgSnapshot(libPath=tmpdir, packageVersionFile, standAlone = TRUE))
+
+  pkgVers <- pkgVers[instPkgs=="TimeWarp",]
+  pkgVers[, instVers:= "1.0-7"]
+
+  fwrite(pkgVers, file = packageVersionFile)
+
+  detach("package:TimeWarp", unload = TRUE)
+  Mess <- capture_messages(Require("TimeWarp", libPath = tmpdir,
+                                   packageVersionFile = packageVersionFile, standAlone = TRUE))
+  expect_true(any(grepl("Already have", Mess)))
+  expect_true(any(grepl("Trying to install", Mess)))
+
+})
