@@ -50,6 +50,7 @@ Imports:
     quickPlot,
     sf,
     sp,
+    testthat,
     tools,
     utils,
     versions
@@ -58,7 +59,6 @@ Suggests:
     future,
     knitr,
     rmarkdown,
-    testthat,
     TimeWarp
 Encoding: UTF-8
 Language: en-CA
