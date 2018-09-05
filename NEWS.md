@@ -5,6 +5,7 @@ version 0.2.4
 
 * speed up of Cache when deeply nested, due to grep(sys.calls(), ...) that would take long and hang
 * minor bugfixes
+* added checks for float point number issues in raster resolutions produced by raster::projectRaster
 
 version 0.2.3
 =============

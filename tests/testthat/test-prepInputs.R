@@ -989,7 +989,11 @@ test_that("load rdata in prepInputs", {
 
 
 test_that("assessDataType doesn't work", {
-  require(raster)
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
   ## LOG1S
   ras <- raster(ncol = 10, nrow = 10)
   ras[] <- c(0, NaN, rep(c(0,1),49))

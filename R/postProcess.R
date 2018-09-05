@@ -794,7 +794,7 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @author Eliot McIntire
-#' @author CeresBarros
+#' @author Ceres Barros
 #' @export
 #' @rdname assessDataType
 #' @importFrom raster getValues
