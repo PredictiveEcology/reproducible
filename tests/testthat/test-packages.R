@@ -121,24 +121,24 @@ test_that("package-related functions work", {
   # wrong packages arg
   expect_error(Require(1), "packages should be")
 
-  # Try to cause fail
-  warns <- capture_warnings(Require("testsdfsd"))
-  expect_true(any(grepl("there is no", warns)))
-
-  packageVersionFile <- file.path(tmpdir, ".packageVersion.txt")
-
-  Require("TimeWarp", libPath = tmpdir, standAlone = TRUE)
-  pkgVers <- as.data.table(pkgSnapshot(libPath=tmpdir, packageVersionFile, standAlone = TRUE))
-
-  pkgVers <- pkgVers[instPkgs=="TimeWarp",]
-  pkgVers[, instVers:= "1.0-7"]
-
-  fwrite(pkgVers, file = packageVersionFile)
-
-  try(detach("package:TimeWarp", unload = TRUE))
-  Mess <- capture_messages(Require("TimeWarp", libPath = tmpdir,
-                                   packageVersionFile = packageVersionFile, standAlone = TRUE))
-  expect_true(any(grepl("Already have", Mess)))
-  expect_true(any(grepl("Trying to install", Mess)))
+  # # Try to cause fail
+  # warns <- capture_warnings(Require("testsdfsd"))
+  # expect_true(any(grepl("there is no", warns)))
+  #
+  # packageVersionFile <- file.path(tmpdir, ".packageVersion.txt")
+  #
+  # Require("TimeWarp", libPath = tmpdir, standAlone = TRUE)
+  # pkgVers <- as.data.table(pkgSnapshot(libPath=tmpdir, packageVersionFile, standAlone = TRUE))
+  #
+  # pkgVers <- pkgVers[instPkgs=="TimeWarp",]
+  # pkgVers[, instVers:= "1.0-7"]
+  #
+  # fwrite(pkgVers, file = packageVersionFile)
+  #
+  # try(detach("package:TimeWarp", unload = TRUE))
+  # Mess <- capture_messages(Require("TimeWarp", libPath = tmpdir,
+  #                                  packageVersionFile = packageVersionFile, standAlone = TRUE))
+  # expect_true(any(grepl("Already have", Mess)))
+  # expect_true(any(grepl("Trying to install", Mess)))
 
 })
