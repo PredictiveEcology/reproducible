@@ -928,6 +928,12 @@ setMethod(
       # extract other function names that are not the ones the focus of the Cache call
       otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
 
+      # Remove from otherFunctions if it is "function"
+      alreadyIn <- gsub(otherFns, pattern = "otherFunctions:", replacement = "") %in%
+        as.character(attr(output, "function"))
+      if (isTRUE(any(alreadyIn)))
+        otherFns <- otherFns[!alreadyIn]
+
       outputToSaveIsList <- is.list(outputToSave)
       if (outputToSaveIsList) {
         rasters <- unlist(lapply(outputToSave, is, "Raster"))
@@ -1206,9 +1212,11 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #' @param userTags Character string of tags to attach to this \code{outputToSave} in
 #'                 the \code{CacheRepo}
 writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
+  counter <- 0
   while (written >= 0) {
     #future::plan(multiprocess)
-    saved <- #suppressWarnings(try(silent = TRUE,
+    saved <- #suppressWarnings(
+      try(#silent = TRUE,
       saveToLocalRepo(
         outputToSave,
         repoDir = cacheRepo,
@@ -1220,7 +1228,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
         silent = TRUE,
         userTags = userTags
       )
-    #))
+    #)
+    )
 
     # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
     written <- if (is(saved, "try-error")) {
@@ -1229,6 +1238,10 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
     } else {
       -1
     }
+    counter <- counter + 1
+    if (isTRUE(startsWith(saved[1], "Error in checkDirectory")))
+      stop(saved)
+    if (counter > 10) stop("Can't write to cacheRepo")
   }
   return(saved)
 

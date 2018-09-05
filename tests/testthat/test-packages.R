@@ -8,7 +8,7 @@ test_that("package-related functions work", {
   # cat("\nC: ", getCRANrepos()["CRAN"] != "@CRAN@", file = "~/test.txt", append = TRUE)
   # cat("\nD: ", nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@", file = "~/test.txt", append = TRUE)
   skip_on_cran()
-  if (isTRUE(nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@")) {
+  #if (isTRUE(nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@")) {
     packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
     packageDir1 <- normalizePath(file.path(tempdir(), "test6"), winslash = "/", mustWork = FALSE)
     suppressWarnings(Require("TimeWarp", libPath = packageDir1, standAlone = TRUE))
@@ -105,5 +105,40 @@ test_that("package-related functions work", {
 
     unlink(packageDir, recursive = TRUE, force = TRUE)
 
-  }
+  #}
+})
+
+test_that("package-related functions work", {
+  skip_on_cran()
+  skip_on_appveyor()
+
+  testInitOut <- testInit(libraries = c("data.table", "versions"))
+  on.exit({
+    try(testOnExit(testInitOut))
+  }, add = TRUE)
+
+  unlink(dir(tmpdir, full.names = TRUE, all.files = TRUE), recursive = TRUE)
+  # wrong packages arg
+  expect_error(Require(1), "packages should be")
+
+  # # Try to cause fail
+  # warns <- capture_warnings(Require("testsdfsd"))
+  # expect_true(any(grepl("there is no", warns)))
+  #
+  # packageVersionFile <- file.path(tmpdir, ".packageVersion.txt")
+  #
+  # Require("TimeWarp", libPath = tmpdir, standAlone = TRUE)
+  # pkgVers <- as.data.table(pkgSnapshot(libPath=tmpdir, packageVersionFile, standAlone = TRUE))
+  #
+  # pkgVers <- pkgVers[instPkgs=="TimeWarp",]
+  # pkgVers[, instVers:= "1.0-7"]
+  #
+  # fwrite(pkgVers, file = packageVersionFile)
+  #
+  # try(detach("package:TimeWarp", unload = TRUE))
+  # Mess <- capture_messages(Require("TimeWarp", libPath = tmpdir,
+  #                                  packageVersionFile = packageVersionFile, standAlone = TRUE))
+  # expect_true(any(grepl("Already have", Mess)))
+  # expect_true(any(grepl("Trying to install", Mess)))
+
 })

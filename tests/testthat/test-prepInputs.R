@@ -891,9 +891,11 @@ test_that("preProcess doesn't work", {
 test_that("prepInputs doesn't work", {
   skip_on_cran()
 
-  testInitOut <- testInit("raster")
-  on.exit({
-    testOnExit(testInitOut)
+  if (getRversion() > "3.3.0") {
+
+    testInitOut <- testInit("raster")
+    on.exit({
+      testOnExit(testInitOut)
   }, add = TRUE)
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
@@ -921,13 +923,13 @@ test_that("prepInputs doesn't work", {
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
   crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-  mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
-                                                dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                                                path = tmpdir, studyArea = StudyArea)))
-  expect_true(isTRUE(grepl("Field names abbrev", warn)))
-  runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-          filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
-          test = test3)
+    mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+                                                  dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                                                  path = tmpdir, studyArea = StudyArea)))
+    expect_true(isTRUE(any(grepl("Field names abbrev", warn))))
+    runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+            filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+            test = test3)
 
   testOnExit(testInitOut)
   testInitOut <- testInit()
@@ -961,10 +963,10 @@ test_that("prepInputs doesn't work", {
     url = urlTif1,
     destinationPath = tmpdir,
     useCache = TRUE
-  ))
-  runTest("1_2_5_6_7_11", "Raster", 1, mess1, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir,
-          test = test)
-
+    ))
+    runTest("1_2_5_6_7_11", "Raster", 1, mess1, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir,
+            test = test)
+  }
 
 })
 
@@ -1091,5 +1093,62 @@ test_that("assessDataType doesn't work", {
   ras <- raster(ncol = 10, nrow = 10)
   ras[] <- c(Inf, 1, rep(c(0,1),49))
   expect_true(assessDataType(ras) == "FLT8S")
+
+})
+
+
+
+test_that("lightweight tests for code coverage", {
+  testthat::skip_on_cran()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+
+  checkPath(tmpdir, create = TRUE)
+  checkSums <- .emptyChecksumsResult
+  checkSumFilePath <- file.path(tmpdir, "CHECKSUMS.txt")
+
+  downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
+               archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
+               destinationPath = tmpdir, checksumFile = checkSumFilePath)
+  expect_true(file.exists(dir(tmpdir, pattern = "ecozone", full.names = TRUE)))
+
+
+  # have local copy
+  unzip("ecozone_shp.zip", exdir = tmpdir)
+  file.copy(dir(file.path(tmpdir, "Ecozones"), full.names = TRUE), tmpdir)
+  checkSums <- Checksums(path = tmpdir, write = TRUE)
+  #dir(tmpdir)
+
+  aMess <- capture_messages(downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
+               targetFile = "ecozones.shp",
+               archive = NULL, needChecksums = TRUE, quick = FALSE,
+               destinationPath = file.path(tmpdir, "Ecozones"),
+               checksumFile = file.path(tmpdir, "CHECKSUMS.txt")))
+
+  expect_true(any(grepl("Skipping download", aMess)))
+
+
+  # Test when wrong archive exists, wrong checkSums
+  #checkSums <- Checksums(path = tmpdir)
+  file.remove(file.path(tmpdir, "ecozone_shp.zip"))
+  file.remove(dir(file.path(tmpdir), pattern = "ecozones", full.names = TRUE))
+  file.create(file.path(tmpdir, "ecozone_shp.zip"))
+  checkSums <- Checksums(path = tmpdir, write = TRUE)
+  file.remove(file.path(tmpdir, "ecozone_shp.zip"))
+  checkSums <- Checksums(path = tmpdir)
+
+
+  expect_error(downloadFile(url = url,
+                            neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
+                                            "ecozones.shp", "ecozones.shx"),
+                            checkSums = checkSums,
+                            targetFile = "ecozones.shp",
+                            archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
+                            destinationPath = tmpdir, checksumFile = checkSumFilePath))
 
 })

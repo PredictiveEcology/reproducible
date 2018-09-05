@@ -11,8 +11,8 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-08-30
-Version: 0.2.3.9002
+Date: 2018-09-01
+Version: 0.2.3.9004
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment=c(ORCID = "https://orcid.org/0000-0002-6914-8316")),
@@ -50,6 +50,7 @@ Imports:
     quickPlot,
     sf,
     sp,
+    testthat,
     tools,
     utils,
     versions
@@ -58,7 +59,6 @@ Suggests:
     future,
     knitr,
     rmarkdown,
-    testthat,
     TimeWarp
 Encoding: UTF-8
 Language: en-CA

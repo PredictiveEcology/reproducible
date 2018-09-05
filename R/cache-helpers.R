@@ -205,7 +205,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
-      cacheRepo <- if (nzchar(getOption("reproducible.cachePath"))) {
+      cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")))) {
         message("No cacheRepo supplied. Using value in getOption('reproducible.cachePath')")
         getOption("reproducible.cachePath", tempdir())
       } else {
@@ -402,8 +402,14 @@ getFunctionName <- function(FUN, originalDots, ...,
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
       for (callIndex in rev(callIndices)) {
         if (!missing(overrideCall)) {
-          matchedCall <- match.call(get(overrideCall), scalls[[callIndex]])#parse(text = callIndex))
-          functionName <- matchedCall$FUN
+          env <- sys.frames()[[callIndices]]
+          matchedCall <- match.call(get(overrideCall, envir = env), scalls[[callIndex]])#parse(text = callIndex))
+          forms <- tryCatch("FUN" %in% formalArgs(overrideCall), error = function(x) NULL)
+          if (!is.null(forms)) {
+            functionName <- matchedCall$FUN
+          } else {
+            functionName <- matchedCall[[2]]
+          }
         } else {
           matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
           functionName <- matchedCall$FUN
@@ -416,6 +422,7 @@ getFunctionName <- function(FUN, originalDots, ...,
     }
     .FUN <- FUN  # nolint
   }
+
   if (is(FUN, "function")) {
     .FUN <- format(FUN)  # nolint
   } else {
