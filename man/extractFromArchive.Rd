@@ -4,8 +4,8 @@
 \alias{extractFromArchive}
 \title{Extract files from archive}
 \usage{
-extractFromArchive(archive, destinationPath = dirname(archive),
-  neededFiles, extractedArchives = NULL, checkSums, needChecksums,
+extractFromArchive(archive, destinationPath = dirname(archive), neededFiles,
+  extractedArchives = NULL, checkSums, needChecksums,
   filesExtracted = character(), checkSumFilePath, quick)
 }
 \arguments{

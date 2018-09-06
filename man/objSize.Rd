@@ -15,8 +15,7 @@ objSize(x, quick)
 \method{objSize}{environment}(x, quick = getOption("reproducible.quick",
   FALSE))
 
-\method{objSize}{default}(x, quick = getOption("reproducible.quick",
-  FALSE))
+\method{objSize}{default}(x, quick = getOption("reproducible.quick", FALSE))
 
 \method{objSize}{Path}(x, quick = getOption("reproducible.quick", FALSE))
 }

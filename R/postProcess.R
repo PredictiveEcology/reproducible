@@ -794,9 +794,10 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @author Eliot McIntire
-#' @author CeresBbarros
+#' @author Ceres Barros
 #' @export
 #' @rdname assessDataType
+#' @importFrom raster getValues
 #' @example inst/examples/example_assessDataType.R
 #' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
 
@@ -807,17 +808,19 @@ assessDataType <- function(ras) {
 #' @export
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras) {
-  minVal <- ras@data@min              ## using ras@data@... is faster than using raster functions
+  ## using ras@data@... is faster, but won't work for @values in large rasters
+  rasVals <- getValues(ras)
+  minVal <- ras@data@min
   maxVal <- ras@data@max
   signVal <- minVal < 0
-  doubVal <-  any(floor(ras@data@values) != ras@data@values, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
+  doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
 
   ## writeRaster deals with infinite values as FLT8S
   # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
 
   if(!doubVal & !signVal) {
     ## only check for binary if there are no decimals and no signs
-    logi <- all(!is.na(.bincode(na.omit(ras@data@values), c(-1,1))))  ## range needs to include 0
+    logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
 
     if(logi) {
       datatype <- "LOG1S"

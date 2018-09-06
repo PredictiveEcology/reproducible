@@ -1,10 +1,11 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 0.2.4
+version 0.2.3.9000
 =============
 
 * speed up of Cache when deeply nested, due to `grep(sys.calls(), ...)` that would take long and hang
 * files in `CHECKSUMS` now sorted alphabetically
+* added checks for float point number issues in raster resolutions produced by `raster::projectRaster`
 * minor bugfixes
 
 version 0.2.3

@@ -4,9 +4,9 @@
 \alias{package_dependenciesMem}
 \title{Memoised version of package_dependencies}
 \usage{
-package_dependenciesMem(packages = NULL, db = NULL,
-  which = c("Depends", "Imports", "LinkingTo"), recursive = FALSE,
-  reverse = FALSE, verbose = getOption("verbose"))
+package_dependenciesMem(packages = NULL, db = NULL, which = c("Depends",
+  "Imports", "LinkingTo"), recursive = FALSE, reverse = FALSE,
+  verbose = getOption("verbose"))
 }
 \arguments{
 \item{packages}{a character vector of package names.}

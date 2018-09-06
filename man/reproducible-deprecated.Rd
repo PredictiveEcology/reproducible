@@ -6,8 +6,8 @@
 \alias{cache,ANY-method}
 \title{Deprecated functions}
 \usage{
-cache(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,
-  objects = NULL, outputObjects = NULL, algo = "xxhash64")
+cache(cacheRepo = NULL, FUN, ..., notOlderThan = NULL, objects = NULL,
+  outputObjects = NULL, algo = "xxhash64")
 
 \S4method{cache}{ANY}(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,
   objects = NULL, outputObjects = NULL, algo = "xxhash64")

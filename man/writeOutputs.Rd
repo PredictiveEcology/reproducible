@@ -10,11 +10,9 @@
 \usage{
 writeOutputs(x, filename2, overwrite, ...)
 
-\method{writeOutputs}{Raster}(x, filename2 = NULL, overwrite = FALSE,
-  ...)
+\method{writeOutputs}{Raster}(x, filename2 = NULL, overwrite = FALSE, ...)
 
-\method{writeOutputs}{Spatial}(x, filename2 = NULL, overwrite = FALSE,
-  ...)
+\method{writeOutputs}{Spatial}(x, filename2 = NULL, overwrite = FALSE, ...)
 
 \method{writeOutputs}{sf}(x, filename2 = NULL, overwrite = FALSE, ...)
 
