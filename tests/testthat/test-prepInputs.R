@@ -1167,4 +1167,36 @@ test_that("lightweight tests for code coverage", {
 
   mess <- capture_messages(postProcess(ras, targetFilePath = "test"))
   expect_true(all(grepl("targetFilePath is being deprecated", mess)))
+
+  ## cropInputs.default
+  b <- 1
+  a <- cropInputs(b)
+  expect_true(identical(a, b))
+
+  ras2 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
+  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  a <- cropInputs(ras, extentToMatch = extent(ras2), extentCRS = crs(ras2))
+  expect_is(a, "RasterLayer")
+
+  ras4 <- raster(extent(6,10,6,10), res = 1, vals = 1:16)
+  sp4 <- as(raster::extent(ras4), "SpatialPolygons")
+  crs(sp4) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  expect_error(cropInputs(ras2, studyArea = sp4), "extents do not overlap")
+
+  ras3 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
+  crs(ras3) <- "+init=epsg:4326 +proj=longlat +datum=NAD83 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  ################################################
+  # Different crs
+  # Because studyArea is a Raster, then it doesn't work correctly
+  a <- cropInputs(ras2, studyArea = ras3)
+  expect_is(a, "RasterLayer")
+  expect_true(identical(crs(a), crs(ras2)))
+
+  # Now rasterToMatch used -- internally reprojects it to x
+  a <- cropInputs(ras2, rasterToMatch = ras3)
+  expect_is(a, "RasterLayer")
+  expect_true(identical(crs(a), crs(ras2)))
+  expect_is(a, "RasterLayer")
 })
