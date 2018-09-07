@@ -1146,4 +1146,25 @@ test_that("lightweight tests for code coverage", {
                             archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
                             destinationPath = tmpdir, checksumFile = checkSumFilePath))
 
+
+  ## postProcess.default
+  b <- 1
+  a <- postProcess(b)
+  expect_true(identical(a, b))
+
+  ## postProcess.list
+  b <- list(1,1)
+  a <- postProcess(b)
+  expect_true(identical(a, b))
+
+  ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
+  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  expect_error(postProcess(ras, studyArea = 1), "The 'studyArea")
+  expect_error(postProcess(ras, rasterToMatch = 1), "The 'rasterToMatch")
+  mess <- capture_messages(postProcess(ras, inputFilePath = "test"))
+  expect_true(all(grepl("inputFilePath is being deprecated", mess)))
+
+  mess <- capture_messages(postProcess(ras, targetFilePath = "test"))
+  expect_true(all(grepl("targetFilePath is being deprecated", mess)))
 })

@@ -213,8 +213,6 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
 
       # filename
       newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, ...)
-      if (!is.null(dots$filename1)) stop("Can't pass filename1; use filename2")
-      if (!is.null(dots$filename2)) dots$filename2 <- NULL
 
       # writeOutputs
       x <- do.call(writeOutputs, append(list(x = x, filename2 = newFilename,
