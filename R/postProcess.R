@@ -268,14 +268,13 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #'                      passed.
 #' @param extentCRS     Optional. Can pass a \code{crs} here with an extent to
 #'                      \code{extentTomatch} instead of \code{rasterToMatch}
-cropInputs.spatialObjects <- function(x, studyArea, rasterToMatch = NULL, extentToMatch = NULL,
+cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL, extentToMatch = NULL,
                                       extentCRS = NULL, ...) {
-
 
   if (!is.null(studyArea) ||
       !is.null(rasterToMatch) || !is.null(extentToMatch)) {
-    rasterToMatch <- if (!is.null(extentToMatch)) {
-      raster(extentToMatch, crs = extentCRS)
+    if (!is.null(extentToMatch)) {
+      rasterToMatch <- raster(extentToMatch, crs = extentCRS)
     }
     cropTo <-
       if (!is.null(rasterToMatch)) {
