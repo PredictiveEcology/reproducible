@@ -406,6 +406,13 @@ projectInputs <- function(x, targetCRS, ...) {
   UseMethod("projectInputs")
 }
 
+
+#' @export
+#' @rdname projectInputs
+projectInputs.default <- function(x, targetCRS, ...) {
+  x
+}
+
 #' @export
 #' @rdname projectInputs
 #' @importFrom fpCompare %==%
