@@ -422,45 +422,47 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 
   dots <- list(...)
   if (!is.null(rasterToMatch)) {
-    if (!is.null(targetCRS)) {
-      if (!identical(crs(x), targetCRS) |
-          !identical(res(x), res(rasterToMatch)) |
-          !identical(extent(x), extent(rasterToMatch))) {
-        message("    reprojecting ...")
-        if (canProcessInMemory(x, 4)) {
-          tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
-          x <- projectRaster(from = x, to = tempRas, ...)
-          ## projectRaster doesn't always ensure equal res (floating point number issue)
-          ## if resolutions are close enough, re-write res(x)
-          if (any(res(x) != res(rasterToMatch))) {
-            if (all(res(x) %==% res(rasterToMatch))) {
-              res(x) <- res(rasterToMatch)
-            } else {
-              stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
-                   "You can try increasing error tolerance in options('fpCompare.tolerance')."))
-            }
+    if (is.null(targetCRS)) {
+      targetCRS <- crs(rasterToMatch)
+    }
+
+    if (!identical(crs(x), targetCRS) |
+        !identical(res(x), res(rasterToMatch)) |
+        !identical(extent(x), extent(rasterToMatch))) {
+      message("    reprojecting ...")
+      if (canProcessInMemory(x, 4)) {
+        tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
+        warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
+        warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
+        warnings(warn)
+        ## projectRaster doesn't always ensure equal res (floating point number issue)
+        ## if resolutions are close enough, re-write res(x)
+        if (any(res(x) != res(rasterToMatch))) {
+          if (all(res(x) %==% res(rasterToMatch))) {
+            res(x) <- res(rasterToMatch)
+          } else {
+            stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
+                 "You can try increasing error tolerance in options('fpCompare.tolerance')."))
           }
-        } else {
-          message("   large raster: reprojecting after writing to temp drive...")
-          tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
-          tempDstRaster <- file.path(dirname(tempfile()),
-                                     paste0(x@data@names,"_reproj", ".tif"))
-          writeRaster(x, filename = tempSrcRaster, datatype = assessDataType(x), overwrite = TRUE)
-          gdalUtils::gdalwarp(srcfile = tempSrcRaster,
-                              dstfile = tempDstRaster,
-                              s_srs = as.character(crs(x)),
-                              t_srs = as.character(targetCRS),
-                              tr = res(rasterToMatch),
-                              tap = TRUE, overwrite = TRUE)
-          x <- raster(tempDstRaster)
-          x[] <- x[]    ## bring it to memory to update metadata
-          file.remove(c(tempSrcRaster, tempDstRaster))
         }
       } else {
-        message("    no reprojecting because target characteristics same as input Raster.")
+        message("   large raster: reprojecting after writing to temp drive...")
+        tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
+        tempDstRaster <- file.path(dirname(tempfile()),
+                                   paste0(x@data@names,"_reproj", ".tif"))
+        writeRaster(x, filename = tempSrcRaster, datatype = assessDataType(x), overwrite = TRUE)
+        gdalUtils::gdalwarp(srcfile = tempSrcRaster,
+                            dstfile = tempDstRaster,
+                            s_srs = as.character(crs(x)),
+                            t_srs = as.character(targetCRS),
+                            tr = res(rasterToMatch),
+                            tap = TRUE, overwrite = TRUE)
+        x <- raster(tempDstRaster)
+        x[] <- x[]    ## bring it to memory to update metadata
+        file.remove(c(tempSrcRaster, tempDstRaster))
       }
     } else {
-      message("    no reprojecting because rasterToMatch is missing & useSAcrs is FALSE.")
+      message("    no reprojecting because target characteristics same as input Raster.")
     }
   } else {
     if (!is.null(targetCRS)) {
