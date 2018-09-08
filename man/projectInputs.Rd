@@ -2,6 +2,7 @@
 % Please edit documentation in R/postProcess.R
 \name{projectInputs}
 \alias{projectInputs}
+\alias{projectInputs.default}
 \alias{projectInputs.Raster}
 \alias{projectInputs.sf}
 \alias{projectInputs.Spatial}
@@ -9,8 +10,10 @@
 \usage{
 projectInputs(x, targetCRS, ...)
 
-\method{projectInputs}{Raster}(x, targetCRS = NULL, rasterToMatch = NULL,
-  ...)
+\method{projectInputs}{default}(x, targetCRS, ...)
+
+\method{projectInputs}{Raster}(x, targetCRS = NULL,
+  rasterToMatch = NULL, ...)
 
 \method{projectInputs}{sf}(x, targetCRS, ...)
 

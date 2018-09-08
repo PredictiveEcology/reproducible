@@ -89,7 +89,7 @@ expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
                         "Downloading", "Skipping download", "Skipping extractFrom",
                         "targetFile was not.*Trying raster",
                         "Writing checksums.*you can specify targetFile",
-                        "No targetFile supplied, so can't use")
+                        "No targetFile supplied. Extracting")
 expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
 
 expectedMessagePostProcessRaw <- c("cropping", "Checking for errors", "Found no errors",

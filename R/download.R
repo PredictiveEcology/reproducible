@@ -19,7 +19,6 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                          purge = FALSE, ...) {
 
   if (!is.null(url) || !is.null(dlFun)) {
-
     missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
 
     # if (is.null(neededFiles)) {
@@ -44,7 +43,10 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                                      needChecksums = needChecksums,
                                      checkSumFilePath = checksumFile,
                                      quick = quick)
-            checkSums <-
+            checkSums <- if (!file.exists(checksumFile)) {
+              needChecksums <- 1
+              .emptyChecksumsResult
+            } else {
               Checksums(
                 files = file.path(destinationPath, basename(neededFiles)),
                 checksumFile = checksumFile,
@@ -52,6 +54,9 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                 quickCheck = quick,
                 write = FALSE
               )
+            }
+
+
             # Check again, post extract ... If FALSE now, then it got it from local, already existing archive
             missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
             if (!missingNeededFiles) {
@@ -189,7 +194,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
       downloadResults <- list(needChecksums = needChecksums,
                               destFile = file.path(destinationPath, basename(fileAlreadyDownloaded)))
       if (is.null(targetFile)) {
-        message("   Skipping download because all files listed in CHECKSUMS.txt file are present.",
+        message("   Skipping download because all needed files are listed in ",
+                "CHECKSUMS.txt file and are present.",
                 " If this is not correct, rerun prepInputs with purge = TRUE")
       } else {
         if (exists("extractedFromArchive", inherits = FALSE)) {
@@ -252,25 +258,14 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
-  if (!is.null(googledrive::drive_token()))
-    googledrive::drive_auth() ## needed for use on e.g., rstudio-server
-  if (is.null(archive)) {
-    fileAttr <- googledrive::drive_get(googledrive::as_id(url))
-    archive <- .isArchive(fileAttr$name)
-    if (is.null(archive)) {
-      if (is.null(targetFile)) {
-        # make the guess
-        targetFile <- fileAttr$name
-      }
-      downloadFilename <- targetFile # override if the targetFile is not an archive
-    } else {
-      archive <- file.path(destinationPath, basename(archive))
-      downloadFilename <- archive
-    }
-  } else {
-    downloadFilename <- archive
-  }
-  destFile <- file.path(tempdir(), basename(downloadFilename))
+
+  downloadFilename <- assessGoogle(url = url, archive = archive,
+                                   targetFile = targetFile,
+                                   destinationPath = destinationPath)
+
+  #destFile <- tempfile(fileext = paste0(".",tools::file_ext(downloadFilename)))
+  destFile <- file.path(tempdir(), rndstr(len = 5), basename(downloadFilename))
+  checkPath(dirname(destFile), create = TRUE)
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     message("  Downloading from Google Drive.")
     googledrive::drive_download(googledrive::as_id(url), path = destFile,
@@ -402,7 +397,30 @@ missingFiles <- function(files, checkSums, targetFile) {
   if (length(result) == 0) result <- NA
 
   (!(all(compareNA(result, "OK")) && all(files %in% checkSums$expectedFile)) ||
-                           is.null(targetFile) || is.null(files))
+      #                     is.null(targetFile) ||
+      is.null(files))
 
 }
 
+assessGoogle <- function(url, archive = NULL, targetFile = NULL, destinationPath) {
+  if (!is.null(googledrive::drive_token()))
+    googledrive::drive_auth() ## needed for use on e.g., rstudio-server
+
+  if (is.null(archive)) {
+    fileAttr <- googledrive::drive_get(googledrive::as_id(url))
+    archive <- .isArchive(fileAttr$name)
+    if (is.null(archive)) {
+      if (is.null(targetFile)) {
+        # make the guess
+        targetFile <- fileAttr$name
+      }
+      downloadFilename <- targetFile # override if the targetFile is not an archive
+    } else {
+      archive <- file.path(destinationPath, basename(archive))
+      downloadFilename <- archive
+    }
+  } else {
+    downloadFilename <- archive
+  }
+
+}
