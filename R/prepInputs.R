@@ -343,9 +343,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @importFrom tools file_ext
 #'
 extractFromArchive <- function(archive, destinationPath = dirname(archive),
-                               neededFiles, extractedArchives = NULL, checkSums,
-                               needChecksums, filesExtracted = character(),
-                               checkSumFilePath, quick) {
+                               neededFiles = NULL, extractedArchives = NULL, checkSums = NULL,
+                               needChecksums = 0, filesExtracted = character(),
+                               checkSumFilePath = character(), quick = FALSE) {
 
   if (!is.null(archive)) {
     if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
@@ -361,7 +361,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   } else {
     "NotOK"
   }
-  extractedObjs <- list(filesExtraced = character())
+  extractedObjs <- list(filesExtracted = character())
   # needs to pass checkSums & have all neededFiles files
   hasAllFiles <- if (NROW(checkSums)) {
     all(neededFiles %in% checkSums$expectedFile)
@@ -370,8 +370,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   }
   if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
     if (!is.null(archive)) {
-      if (!file.exists(archive))
-        stop("No archive exists with filename: ",archive,
+      if (!file.exists(archive[1]))
+        stop("No archive exists with filename: ", archive,
              ". Please pass an archive name to a path that exists")
       args <- list(archive[1], exdir = destinationPath[1])
 
@@ -385,7 +385,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
       }
 
       # need to re-Checksums because
-      checkSums <- if (file.exists(checkSumFilePath)) {
+      checkSums <- if (isTRUE(file.exists(checkSumFilePath))) {
         try(Checksums(
           files = file.path(destinationPath, basename(neededFiles)),
           checksumFile = checkSumFilePath,
@@ -468,23 +468,18 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
             filesExtracted <- c(filesExtracted,
                                 .unzipOrUnTar(funWArgs$fun, funWArgs$args, files = arch))
 
-            # lapply(file.path(destinationPath, arch), function(archi)
-            #   extractFromArchive(archi, destinationPath, neededFiles, extractedArchives))
+            prevExtract <- lapply(file.path(destinationPath, arch), function(ap)
+              extractFromArchive(archive = ap, destinationPath = destinationPath,
+                                 neededFiles = neededFiles,
+                                 extractedArchives = extractedArchives,
+                                 filesExtracted = filesExtracted,
+                                 checkSums = checkSums,
+                                 needChecksums = needChecksums,
+                                 checkSumFilePath = checkSumFilePath,
+                                 quick = quick))
 
-            extractedArchives <- c(
-              extractedArchives,
-              unlist(
-                lapply(file.path(destinationPath, arch), function(ap)
-                  extractFromArchive(archive = ap, destinationPath = destinationPath,
-                                     neededFiles = neededFiles,
-                                     extractedArchives = extractedArchives,
-                                     filesExtracted = filesExtracted,
-                                     checkSums = checkSums,
-                                     needChecksums = needChecksums,
-                                     checkSumFilePath = checkSumFilePath,
-                                     quick = quick))
-              )
-            )
+            extractedArchives <- c(prevExtract[[1]]$extractedArchives, extractedArchives)
+            filesExtracted <- unique(c(prevExtract[[1]]$filesExtracted, filesExtracted))
           }
         }
       } else {

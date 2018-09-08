@@ -1224,5 +1224,65 @@ test_that("lightweight tests for code coverage", {
 
   # sp::CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"))
 
+
 })
 
+test_that("lightweight tests 2 for code coverage", {
+  testthat::skip_on_cran()
+
+  testInitOut <- testInit("data.table")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  theZipFile <- tempfile(fileext = ".zip")
+  theZipFile2 <- tempfile(fileext = ".zip")
+  theZipFile3 <- tempfile(fileext = ".zip")
+  theZipName <- file.path(tmpdir, "hi.zip")
+  theZapFile <- tempfile(fileext = ".zap")
+  theRDSFile <- tempfile(fileext = ".rds")
+  a <- 1
+  saveRDS(a, file = theRDSFile)
+  origWD <- setwd(dirname(theRDSFile))
+  zip(zipfile = theZipFile, files = basename(theRDSFile))
+  zip(zipfile = theZipFile2, files = basename(theZipFile))
+  zip(zipfile = theZipFile3, files = basename(theZipFile2))
+  setwd(origWD)
+  expect_error(extractFromArchive(theZapFile), "Archives of type zap are not currently supported")
+
+  expect_error(extractFromArchive(theZipName), "No archive exists with filename")
+
+  extractFromArchive(theZipFile, neededFiles = character())
+
+  csfp <- file.path(tmpdir, "CHECKSUMS.txt")
+  fwrite(.emptyChecksumsFileContent, file = csfp, sep = "\t")
+
+  # check Checksums fn
+  a <- extractFromArchive(theZipFile, neededFiles = character(), checkSumFilePath = csfp,
+                     destinationPath = tmpdir)
+  expect_true(file.exists(a$filesExtracted))
+  # check Checksums fn
+
+  expect_error(suppressWarnings(extractFromArchive(theZipFile, neededFiles = character(), checkSumFilePath = theRDSFile,
+                          destinationPath = tmpdir)), "checkSumFilePath is not a CHECKSUMS.txt")
+
+  # Doubley nested zips -- extract inner, inner
+  a <- extractFromArchive(c(theZipFile2, theZipFile), neededFiles = character(), checkSumFilePath = csfp,
+                     destinationPath = tmpdir)
+  expect_true(isTRUE(all(file.exists(a$filesExtracted))))
+
+  # triply
+  a <- extractFromArchive(theZipFile3, neededFiles = theRDSFile, checkSumFilePath = csfp,
+                     destinationPath = tmpdir)
+  expect_true(length(a$extractedArchives)==3)
+  expect_true(length(a$filesExtracted)==3)
+  expect_true(all(basename(a$filesExtracted) %in% basename(c(theZipFile, theZipFile2, theRDSFile))))
+  expect_true(all(basename(a$extractedArchives) %in% basename(c(theZipFile, theZipFile2, theZipFile3))))
+
+  allZipsAndRDS <- c(theZipFile, theZipFile2, theZipFile3, theRDSFile)
+  Checksums(tmpdir, write = TRUE, files = allZipsAndRDS, overwrite = TRUE)
+  a <- extractFromArchive(theZipFile3, neededFiles = theRDSFile, checkSumFilePath = csfp,
+                          destinationPath = tmpdir, checkSums = Checksums(tmpdir, files = allZipsAndRDS))
+
+
+})
