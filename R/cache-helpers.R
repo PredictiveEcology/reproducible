@@ -796,13 +796,13 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   origDir <- getwd()
   useFileCopy <- identical(dirname(from), dirname(to))
 
-  checkPath(dirname(to), create = create)
+  lapply(unique(dirname(to)), checkPath, create = create)
 
   os <- tolower(Sys.info()[["sysname"]])
   .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
   if (!useFileCopy) {
     if (os == "windows") {
-      if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
+      if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
       robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
       robocopy <-  if (silent) {
@@ -851,7 +851,7 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     }
   }
   if (isTRUE(useFileCopy)) {
-    checkPath(dirname(to), create = TRUE)
+    lapply(unique(dirname(to)), checkPath, create = create)
     file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
   }
 

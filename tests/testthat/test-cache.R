@@ -986,5 +986,31 @@ test_that("test cache-helpers", {
   b <- .prepareFileBackedRaster(r, tmpCache)
   expect_true(file.exists(filename(b)))
 
+  # Check that it makes  anew name if already in Cache
+  checkPath(file.path(tmpCache, "rasters"), create = TRUE)
+  r1 <- writeRaster(r1, filename = file.path(tmpCache, "rasters", basename(tmpfile2)), overwrite = TRUE)
+  b <- .prepareFileBackedRaster(r1, tmpCache)
+  expect_true(identical(normalizePath(filename(b), winslash = "/", mustWork = FALSE),
+                        normalizePath(nextNumericName(filename(r1)), winslash = "/", mustWork = FALSE)))
 
-})
+  #
+  r <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+  r1 <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+  tmpfile <- tempfile(fileext = ".grd")
+  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
+  s <- addLayer(r, r1)
+  b1 <- .prepareFileBackedRaster(s, repoDir = tmpCache)
+  expect_true(is(b1, "RasterStack"))
+  expect_true(identical(filename(b1), ""))
+  expect_true(identical(normalizePath(filename(b1$layer.1), winslash = "/", mustWork = FALSE),
+                        normalizePath(file.path(tmpCache, "rasters", basename(filename(r))), winslash = "/", mustWork = FALSE)))
+
+  # Give them same name
+  r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  b <- raster::stack(r, r1)
+  b1 <- .prepareFileBackedRaster(b, tmpCache)
+  expect_true(identical(b1$layer.1@file@name, b1$layer.2@file@name))
+
+
+  })
