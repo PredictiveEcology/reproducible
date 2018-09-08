@@ -8,7 +8,8 @@
 \usage{
 .addTagsToOutput(object, outputObjects, FUN, preDigestByClass)
 
-\S4method{.addTagsToOutput}{ANY}(object, outputObjects, FUN, preDigestByClass)
+\S4method{.addTagsToOutput}{ANY}(object, outputObjects, FUN,
+  preDigestByClass)
 }
 \arguments{
 \item{object}{Any R object.}

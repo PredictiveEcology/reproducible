@@ -5,9 +5,10 @@
 \title{Download, Checksum, Extract files}
 \usage{
 preProcess(targetFile = NULL, url = NULL, archive = NULL,
-  alsoExtract = NULL, destinationPath = ".", fun = NULL, dlFun = NULL,
-  quick = getOption("reproducible.quick"), overwrite = FALSE,
-  purge = FALSE, useCache = getOption("reproducible.useCache", FALSE), ...)
+  alsoExtract = NULL, destinationPath = ".", fun = NULL,
+  dlFun = NULL, quick = getOption("reproducible.quick"),
+  overwrite = FALSE, purge = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE), ...)
 }
 \arguments{
 \item{targetFile}{Character string giving the path to the eventual file

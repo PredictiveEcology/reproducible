@@ -4,8 +4,8 @@
 \alias{dlGoogle}
 \title{Download file from Google Drive}
 \usage{
-dlGoogle(url, archive = NULL, targetFile = NULL, checkSums, skipDownloadMsg,
-  destinationPath, overwrite, needChecksums)
+dlGoogle(url, archive = NULL, targetFile = NULL, checkSums,
+  skipDownloadMsg, destinationPath, overwrite, needChecksums)
 }
 \arguments{
 \item{url}{The url (link) to the file.}

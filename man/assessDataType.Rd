@@ -135,5 +135,5 @@ assessDataType(sta)
 \author{
 Eliot McIntire
 
-CeresBarros
+Ceres Barros
 }

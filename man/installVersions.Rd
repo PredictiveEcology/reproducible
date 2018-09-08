@@ -4,7 +4,8 @@
 \alias{installVersions}
 \title{Install exact package versions from a package version text file & GitHub}
 \usage{
-installVersions(gitHubPackages, packageVersionFile = ".packageVersions.txt",
+installVersions(gitHubPackages,
+  packageVersionFile = ".packageVersions.txt",
   libPath = .libPaths()[1], standAlone = FALSE,
   repos = getOption("repos")["CRAN"])
 }
