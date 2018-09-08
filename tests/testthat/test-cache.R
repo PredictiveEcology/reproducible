@@ -942,3 +942,49 @@ test_that("test mergeCache", {
   expect_true(identical(d, d1))
 
 })
+
+
+
+##########################
+test_that("test cache-helpers", {
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  tmpfile <- tempfile(fileext = ".grd")
+  tmpfile2 <- tempfile(fileext = ".grd")
+  tmpfile3 <- tempfile(fileext = ".grd")
+  r <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+  levels(r) <- data.frame(ID = 1:2, Val = 3:4)
+  b <- .prepareFileBackedRaster(r, tmpCache)
+  is(b, "RasterLayer")
+  expect_true(!nzchar(filename(b)))
+
+  r1 <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+  s <- raster::stack(r, r1)
+  b <- .prepareFileBackedRaster(s, tmpCache)
+
+  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
+  s <- addLayer(r, r1)
+
+  # Test deleted raster backed file
+  file.remove(tmpfile2)
+  expect_error(b <- .prepareFileBackedRaster(s, tmpCache), "The following file-backed rasters")
+  expect_error(b <- .prepareFileBackedRaster(r1, tmpCache), "The following file-backed rasters")
+
+  # Test wrong folder names
+  tmpfile <- file.path(tmpCache, basename(tempfile(fileext = ".grd")))
+  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  r@file@name <- gsub(pattern = normalizePath(tempdir(), winslash = "/", mustWork = FALSE),
+                      normalizePath(tmpfile, winslash = "/", mustWork = FALSE),
+                      replacement = basename(tempdir()))
+  # show it is not there, so it is the wrong name
+  expect_false(file.exists(filename(r)))
+  # fix it, by giving correct tmpCache path
+  b <- .prepareFileBackedRaster(r, tmpCache)
+  expect_true(file.exists(filename(b)))
+
+
+})

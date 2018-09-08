@@ -616,7 +616,7 @@ setMethod(
 
   if (inMemory(obj)) {
     isFilebacked <- FALSE
-    if (is.factor(obj)) {
+    if (isTRUE(any(raster::is.factor(obj)))) {
       fileExt <- ".grd"
     } else {
       fileExt <- ".tif"
@@ -624,7 +624,7 @@ setMethod(
     curFilename <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
   } else {
     isFilebacked <- TRUE
-    if (is(obj, "RasterLayer")) {
+    if (is(obj, "RasterLayer") || is(obj, "RasterBrick")) {
       curFilename <- normalizePath(filename(obj), winslash = "/", mustWork = FALSE)
     } else  {
       curFilenames <- unlist(lapply(obj@layers, function(x)
@@ -634,6 +634,8 @@ setMethod(
   }
 
   if (any(!file.exists(curFilename)) & isFilebacked & isRasterLayer) {
+
+    # File is in wrong folder, usually the result of a copy of cache bewteen 2 machines
     splittedFilenames <- strsplit(curFilename, split = basename(repoDir))
     trySaveFilename <- if (length(splittedFilenames) == 1) {
       normalizePath(
@@ -650,7 +652,7 @@ setMethod(
       stop("The following file-backed rasters are supposed to be on disk ",
            "but appear to have been deleted:\n",
            paste("    ", curFilename, collapse = "\n"),
-           "The most likely reason is that two functions had the same output ",
+           ". The most likely reason is that two functions had the same output ",
            "and one of them was removed with clearCache(...). ",
            "The best solution to this is never have two functions create the same ",
            "file-backed raster.")
