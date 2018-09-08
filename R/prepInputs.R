@@ -353,6 +353,9 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
            "Try extracting manually then placing extracted files in ", destinationPath)
     }
   }
+  if (!is.null(archive) && !is.null(neededFiles))
+    neededFiles <- setdiff(basename(neededFiles), basename(archive))
+  if (length(neededFiles) == 0) neededFiles <- NULL
   result <- if (!is.null(neededFiles)) {
     checkSums[checkSums$expectedFile %in% basename(neededFiles), ]$result
   } else {
@@ -360,8 +363,16 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
   }
   extractedObjs <- list(filesExtraced = character())
   # needs to pass checkSums & have all neededFiles files
-  if (!(all(compareNA(result, "OK")) && all(neededFiles %in% checkSums$expectedFile))) {
+  hasAllFiles <- if (NROW(checkSums)) {
+    all(neededFiles %in% checkSums$expectedFile)
+  } else {
+    FALSE
+  }
+  if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
     if (!is.null(archive)) {
+      if (!file.exists(archive))
+        stop("No archive exists with filename: ",archive,
+             ". Please pass an archive name to a path that exists")
       args <- list(archive[1], exdir = destinationPath[1])
 
       funWArgs <- .whichExtractFn(archive[1], args)

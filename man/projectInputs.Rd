@@ -2,12 +2,15 @@
 % Please edit documentation in R/postProcess.R
 \name{projectInputs}
 \alias{projectInputs}
+\alias{projectInputs.default}
 \alias{projectInputs.Raster}
 \alias{projectInputs.sf}
 \alias{projectInputs.Spatial}
 \title{Project \code{Raster*} or {Spatial*} or \code{sf} objects}
 \usage{
 projectInputs(x, targetCRS, ...)
+
+\method{projectInputs}{default}(x, targetCRS, ...)
 
 \method{projectInputs}{Raster}(x, targetCRS = NULL,
   rasterToMatch = NULL, ...)

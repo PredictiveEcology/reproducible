@@ -48,6 +48,8 @@
 #' @export
 #' @inheritParams prepInputs
 #' @inheritParams downloadFile
+#' @importFrom data.table fread
+#' @importFrom tools file_path_sans_ext
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL, dlFun = NULL,
                        quick = getOption("reproducible.quick"),
@@ -94,12 +96,22 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
+  checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
 
   if (is.null(targetFile)) {
     targetFilePath <- NULL
   } else {
     targetFile <- basename(targetFile)
     targetFilePath <- file.path(destinationPath, targetFile)
+    if (is.null(alsoExtract)) {
+      if (file.exists(checkSumFilePath)) {
+      # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with same base name, without extension
+        checksumsTmp <- fread(checkSumFilePath)
+        alsoExtract <- grep(paste0(file_path_sans_ext(targetFile),"\\."), checksumsTmp$file,
+                                    value = TRUE)
+        rm(checksumsTmp) # clean up
+      }
+    }
   }
 
 
@@ -111,7 +123,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
 
-  checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
   if (!dir.exists(destinationPath)) {
     if (isFile(destinationPath)) {
       stop("destinationPath must be a directory")
@@ -123,21 +134,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   needChecksums <- 0
 
+  filesToCheck <- c(targetFilePath, alsoExtract)
   if (!is.null(archive)) {
     archive <- file.path(destinationPath, basename(archive))
-    filesToCheck <- c(targetFilePath, archive, alsoExtract)
-  } else {
-    if (!is.null(url)) {
-      archive <- .isArchive(file.path(destinationPath, basename(url)))
-    }
-    filesToCheck <- c(targetFilePath, alsoExtract)
-  }
-
-  needEmptyChecksums <- FALSE
-  if (is.logical(purge)) purge <- as.numeric(purge)
-  if (purge == 1) {
-    unlink(checkSumFilePath)
-    needChecksums <- 1
+    filesToCheck <- c(filesToCheck, archive)
   }
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
@@ -150,6 +150,32 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums <- .emptyChecksumsResult
   }
 
+  # This will populate a NULL archive if archive is local or
+  if (is.null(archive)) {
+    if (!is.null(url)) {
+      allOK <- .similarFilesInCheckSums(targetFile, checkSums)
+
+      if (!allOK) { # skip identification of archive if we have all files with same basename as targetFile
+        # BUT if we don't have all files with identical root name (basename sans ext), then assess for
+        #   an archive, either remotely, in the case of google or from the basename of url
+        archiveGuess <- .guessAtArchive(url = url, archive = archive,
+                                        targetFile = targetFile, destinationPath = destinationPath)
+        archive <- .isArchive(archiveGuess)
+        checkSums <- .checkSumsUpdate(destinationPath = destinationPath, newFilesToCheck = archive,
+                                      checkSums = checkSums)
+
+      }
+
+    }
+  }
+
+  needEmptyChecksums <- FALSE
+  if (is.logical(purge)) purge <- as.numeric(purge)
+  if (purge == 1) {
+    unlink(checkSumFilePath)
+    needChecksums <- 1
+  }
+
   if (purge > 1)  {
     checkSums <- .purge(checkSums = checkSums, purge = purge)
     needChecksums <- 2
@@ -158,6 +184,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   neededFiles <- c(targetFile, if (!is.null(alsoExtract)) basename(alsoExtract))
   if (is.null(neededFiles)) neededFiles <- if (!is.null(archive)) basename(archive)
   neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
+
+  # Deal with "similar" in alsoExtract -- maybe this is obsolete with new feature that uses file_name_sans_ext
+  if (is.null(alsoExtract)) {
+    neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
+  } else {
+    outFromSimilar <- .checkForSimilar(neededFiles, alsoExtract, archive, targetFile,
+                                       destinationPath = destinationPath, checkSums, url)
+    neededFiles <- outFromSimilar$neededFiles
+    checkSums <- outFromSimilar$checkSums
+  }
 
   # Stage 1 -- Download
   downloadFileResult <- downloadFile(
@@ -181,23 +217,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # archive specified, alsoExtract is NULL --> now means will extract all
   if (is.null(archive)) archive <- downloadFileResult$archive
-  if (is.null(alsoExtract)) {
-    neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
-  } else {
-    if ("similar" %in% basename(alsoExtract)) {
-      allFiles <- .listFilesInArchive(archive)
-      neededFiles <- if (is.null(targetFile)) {
-        message("No targetFile supplied, so can't use \"alsoExtract = 'similar'\". ",
-                "Extracting all files from archive")
-        allFiles
-      } else {
-        filePatternToKeep <- gsub(basename(targetFile),
-                                  pattern = file_ext(basename(targetFile)), replacement = "")
-        filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
-        unique(c(neededFiles, filesToGet))
-      }
-    }
-  }
+
+  # redo "similar" after download
+  outFromSimilar <- .checkForSimilar(neededFiles, alsoExtract, archive, targetFile,
+                                     destinationPath, checkSums, url)
+  neededFiles <- outFromSimilar$neededFiles
+  checkSums <- outFromSimilar$checkSums
 
   # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
   if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
@@ -216,7 +241,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   })
 
   # Stage 1 - Extract from archive
-  neededFiles <- c(neededFiles, if (!is.null(alsoExtract)) basename(alsoExtract))
+  neededFiles <- unique(c(neededFiles, if (!is.null(alsoExtract)) basename(alsoExtract)))
+  # if (!is.null(neededFiles) && !is.null(archive)) {
+  #   # remove archive from "neededFiles" now that we are headed
+  #   neededFiles <- setdiff(basename(neededFiles), basename(archive))
+  # }
+  neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
+
   filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                        neededFiles = neededFiles,
                                        checkSums = checkSums, needChecksums = needChecksums,
@@ -322,4 +353,79 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
   fun
+}
+
+.guessAtArchive <- function(url, archive, targetFile, destinationPath) {
+  fileToCheckIfArchive <- if (grepl("drive.google.com", url)) {
+    assessGoogle(url = url, archive = archive,
+                 targetFile = targetFile,
+                 destinationPath = destinationPath)
+  } else {
+    file.path(destinationPath, basename(url))
+  }
+  fileToCheckIfArchive
+}
+
+.checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums) {
+  if (!file.exists(file.path(destinationPath, "CHECKSUMS.txt"))) {
+    checkSums
+  } else {
+    checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
+                                files = basename(newFilesToCheck)), silent = TRUE)
+    checkSums <- rbindlist(list(checkSums, checkSums2))
+    data.table::setkey(checkSums, result)
+    checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
+    rbindlist(list(checkSums[compareNA("OK", result)], checkSums[is.na(result)]))
+  }
+}
+
+.similarFilesInCheckSums <- function(file, checkSums) {
+  if (NROW(checkSums)) {
+    isTRUE(all(compareNA("OK",
+                         checkSums[grepl(paste0(file_path_sans_ext(file),"\\."),
+                                         checkSums$expectedFile),]$result)))
+  } else {
+    FALSE
+  }
+}
+
+.checkForSimilar <- function(neededFiles, alsoExtract, archive, targetFile,
+                             destinationPath, checkSums, url) {
+  lookForSimilar <- if (is.null(alsoExtract)) {
+    TRUE
+  } else {
+    if ("similar" %in% basename(alsoExtract)) {
+      TRUE
+    } else {
+      FALSE
+    }
+  }
+
+  if (lookForSimilar) {
+    allFiles <- .listFilesInArchive(archive)
+    if (is.null(targetFile)) {
+      message("No targetFile supplied. ",
+              "Extracting all files from archive")
+      neededFiles <- allFiles
+    } else {
+      allOK <- .similarFilesInCheckSums(targetFile, checkSums)
+      if (!allOK) {
+        filePatternToKeep <- gsub(basename(targetFile),
+                                  pattern = file_ext(basename(targetFile)), replacement = "")
+        filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
+        neededFiles <- unique(c(neededFiles, filesToGet))
+      }
+    }
+    rerunChecksums <- TRUE
+    if (exists("filesToGet", inherits = FALSE)) {
+      if (length(filesToGet) == 0)
+        rerunChecksums <- FALSE
+
+    }
+    if (!is.null(neededFiles) && rerunChecksums) {
+      checkSums <- .checkSumsUpdate(destinationPath = destinationPath, newFilesToCheck = neededFiles,
+                                    checkSums = checkSums)
+    }
+  }
+  list(neededFiles = neededFiles, checkSums = checkSums)
 }
