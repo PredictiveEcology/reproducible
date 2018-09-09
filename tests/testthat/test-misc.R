@@ -39,4 +39,25 @@ test_that("test miscellaneous fns", {
   r1 <- writeRaster(r1, tmpfile[1], overwrite = TRUE)
   r3 <- convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)
   expect_true(identical(normPath(filename(r3)), path.expand(file.path(newPaths, basename(filename(r1))))))
+
+  # helpers.R
+  a <- getCRANrepos(NULL)
+  is.character(a)
+
+  opt <- getOption("repos")
+  on.exit(options("repos" = opt),
+          add = TRUE)
+  namedSite <- c(CRAN = "https://cloud.R-project.org")
+
+  with_mock(
+    `isInteractive` = function() TRUE,
+    `chooseCRANmirror` = function () options("repos" = namedSite),
+    #expect_true(isInteractive())
+    a <- getCRANrepos(""),
+    expect_true(identical(tolower(unname(a)) , tolower(unname(getOption("repos")["CRAN"])))),
+    a <- getCRANrepos("@CRAN@"),
+    expect_true(identical(tolower(unname(a)) , tolower(unname(getOption("repos")["CRAN"]))))
+  )
+
+
 })
