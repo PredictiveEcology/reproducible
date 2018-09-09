@@ -38,5 +38,5 @@ test_that("test miscellaneous fns", {
 
   r1 <- writeRaster(r1, tmpfile[1], overwrite = TRUE)
   r3 <- convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)
-  d
+  expect_true(identical(normPath(filename(r3)), path.expand(file.path(newPaths, basename(filename(r1))))))
 })
