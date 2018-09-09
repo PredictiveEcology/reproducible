@@ -5,8 +5,9 @@
 \title{Extract files from archive}
 \usage{
 extractFromArchive(archive, destinationPath = dirname(archive),
-  neededFiles, extractedArchives = NULL, checkSums, needChecksums,
-  filesExtracted = character(), checkSumFilePath, quick)
+  neededFiles = NULL, extractedArchives = NULL, checkSums = NULL,
+  needChecksums = 0, filesExtracted = character(),
+  checkSumFilePath = character(), quick = FALSE)
 }
 \arguments{
 \item{archive}{Character string giving the path of the archive

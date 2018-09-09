@@ -14,10 +14,13 @@ searchFullEx()
 calling environment, i.e., \code{parent.frame()}}
 
 \item{simplify}{Logical. Should the output be simplified to character,
-where possible}
+if possible (usually it is not possible because environments
+don't always coerce correctly)}
 }
 \value{
-Similar to \code{readLines}. It may not return identical results.
+A list of environments that is the actual search path, unlike \code{search()}
+which only prints from \code{.GlobalEnv} up to \code{base} through user attached
+packages.
 }
 \description{
 This is like \code{base::search} but when used inside a function, it will
@@ -31,6 +34,9 @@ whose only function is to show the Scope of a package function.
 
 
 }
+\details{
+\code{searchFullEx} can be used to show an example of the use of \code{searchFull}.
+}
 \examples{
 seeScope <- function() {
   searchFull()
@@ -39,4 +45,7 @@ seeScope()
 searchFull()
 
 searchFullEx()
+}
+\seealso{
+\code{\link[base]{search}}
 }

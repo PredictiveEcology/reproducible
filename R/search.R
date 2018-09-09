@@ -15,9 +15,12 @@
 #' @param env The environment to start searching at. Default is
 #'                calling environment, i.e., \code{parent.frame()}
 #' @param simplify Logical. Should the output be simplified to character,
-#'                 where possible
+#'                 if possible (usually it is not possible because environments
+#'                 don't always coerce correctly)
 #' @return
-#' Similar to \code{readLines}. It may not return identical results.
+#' A list of environments that is the actual search path, unlike \code{search()}
+#' which only prints from \code{.GlobalEnv} up to \code{base} through user attached
+#' packages.
 #'
 #' @export
 #' @examples
@@ -28,6 +31,7 @@
 #' searchFull()
 #'
 #' @rdname search
+#' @seealso \code{\link[base]{search}}
 searchFull <- function(env = parent.frame(), simplify = TRUE) {
   envs <- list()
   counter <- 0
@@ -43,6 +47,9 @@ searchFull <- function(env = parent.frame(), simplify = TRUE) {
   }
 }
 
+#' @details
+#' \code{searchFullEx} can be used to show an example of the use of \code{searchFull}.
+#'
 #' @export
 #' @examples
 #' searchFullEx()
