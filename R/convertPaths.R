@@ -33,6 +33,9 @@
 convertPaths <- function(x, patterns, replacements) {
   stopifnot(is(x, "character"))
   stopifnot(length(patterns) == length(replacements))
+  patterns <- normPath(patterns)
+  replacements <- normPath(replacements)
+  x = normPath(x)
   for (i in seq_along(patterns)) {
     x <- gsub(x = x, pattern = patterns[i], replacement = replacements[i])
   }
