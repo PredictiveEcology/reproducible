@@ -35,11 +35,12 @@ objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE)) {
 #' @importFrom utils object.size
 objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   xName <- deparse(substitute(x))
-  os <- objSize(as.list(x))
+  os <- objSize(as.list(x, all.names = TRUE))
   names(os) <- paste0(xName, "$", names(os))
   osCur <- list(object.size(x))
   names(osCur) <- xName
   os <- append(os, osCur)
+  return(os)
 }
 
 #' @export
