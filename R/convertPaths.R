@@ -54,7 +54,7 @@ convertRasterPaths <- function(x, patterns, replacements) {
       if (length(x) > 1) {
         x <- lapply(x, convertRasterPaths, patterns, replacements)
       } else {
-        x <- raster()
+        x <- raster(x)
       }
     }
 
