@@ -266,7 +266,7 @@ test_that("interactive prepInputs", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  if (interactive()) {
+  if (isInteractive()) {
     #######################################
     ### url                          ######
     #######################################
@@ -393,7 +393,7 @@ test_that("preProcess doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
-  testthat::skip_if_not(interactive())
+  testthat::skip_if_not(isInteractive())
 
   # Note urlShapefiles1Zip, urlShapefilesZip, and urlTif1 are in helper-allEqual.R
 

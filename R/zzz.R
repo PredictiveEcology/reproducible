@@ -24,7 +24,7 @@
 
 #' @importFrom utils packageVersion
 .onAttach <- function(libname, pkgname) {
-  if (interactive()) {
+  if (isInteractive()) {
     packageStartupMessage("Using reproducible version ", utils::packageVersion("reproducible"), ".")
   }
 }

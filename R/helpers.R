@@ -40,8 +40,8 @@ getCRANrepos <- function(repos = NULL) {
     repos <- if (nzchar(cranRepo)) {
       cranRepo
     } else {
-      if (interactive()) {
-        utils::chooseCRANmirror() ## sets repo option
+      if (isInteractive()) {
+        chooseCRANmirror() ## sets repo option
         getOption("repos")["CRAN"]
       } else {
         "https://cloud.R-project.org"
@@ -101,3 +101,5 @@ rndstr <- function(n = 1, len = 8) {
   }))
 }
 
+
+isInteractive <- function() interactive()

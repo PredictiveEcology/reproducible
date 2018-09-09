@@ -97,13 +97,13 @@ setMethod(
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
     if (all(missing(userTags), missing(after), missing(before))) {
-      if (interactive()) {
+      if (isInteractive()) {
         cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
 
         if (isTRUE(ask)) {
-          if (interactive()) {
+          if (isInteractive()) {
             message("Your current cache size is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")
             rl <- readline()
@@ -131,7 +131,7 @@ setMethod(
 
     objsDT <- do.call(showCache, args = args)
 
-    if (interactive()) {
+    if (isInteractive()) {
       cacheSize <- sum(as.numeric(objsDT[tagKey=="object.size"]$tagValue))/4
       #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
       #cacheSize <- sum(file.size(rdaFiles))
@@ -148,7 +148,7 @@ setMethod(
                                   error = function(x) NULL)
         if (!is.null(filesToRemove)) {
           filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
-          if (interactive()) {
+          if (isInteractive()) {
             dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
             cacheSize <- sum(cacheSize, file.size(dirLs))
@@ -156,11 +156,11 @@ setMethod(
         }
       }
 
-      if (interactive()) {
+      if (isInteractive()) {
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
         if (isTRUE(ask)) {
-          if (interactive()) {
+          if (isInteractive()) {
 
             message("Your size of your selected objects is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")

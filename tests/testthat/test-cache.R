@@ -593,7 +593,7 @@ test_that("test masking of %>% error message", {
     }
   }
   expect_true(masker)
-  if (interactive()) {
+  if (isInteractive()) {
 
     # somehow, in a non-interactive session, R is finding reproducible::`%>%`
     # even though it is after magrittr on the search path -- somehow reproducible is
