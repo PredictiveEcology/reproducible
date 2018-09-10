@@ -372,11 +372,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   } else {
     checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
                                 files = basename(newFilesToCheck)), silent = TRUE)
-    checkSums <- rbindlist(list(checkSums, checkSums2))
-    data.table::setkey(checkSums, result)
-    checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
-    rbindlist(list(checkSums[compareNA("OK", result)], checkSums[is.na(result)]))
+    if (!is(checkSums2, "try-error")) {
+      checkSums <- rbindlist(list(checkSums, checkSums2))
+      data.table::setkey(checkSums, result)
+      checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
+      checkSums <- rbindlist(list(checkSums[compareNA("OK", result)], checkSums[is.na(result)]))
+    }
   }
+  checkSums
 }
 
 .similarFilesInCheckSums <- function(file, checkSums) {
