@@ -106,7 +106,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (is.null(alsoExtract)) {
       if (file.exists(checkSumFilePath)) {
       # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with same base name, without extension
-        checksumsTmp <- fread(checkSumFilePath)
+        checksumsTmp <- as.data.table(read.table(checkSumFilePath))
         alsoExtract <- grep(paste0(file_path_sans_ext(targetFile),"\\."), checksumsTmp$file,
                                     value = TRUE)
         rm(checksumsTmp) # clean up
