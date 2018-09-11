@@ -47,7 +47,7 @@ all.equal(newStack1, newStack2)
 newStack1 <- stack(newStack1)
 newStack2 <- stack(newStack2)
 
-if (interactive()) {
+if (isInteractive()) {
   plot(newStack2[[1]])
   plot(shp, add = TRUE)
 }

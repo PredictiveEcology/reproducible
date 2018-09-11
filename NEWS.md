@@ -7,6 +7,7 @@ version 0.2.3.9000
 * files in `CHECKSUMS` now sorted alphabetically
 * added checks for float point number issues in raster resolutions produced by `raster::projectRaster`
 * minor bugfixes
+* many new unit tests written, which caught several minor bugs
 
 version 0.2.3
 =============

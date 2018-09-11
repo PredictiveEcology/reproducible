@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Check filepath — checkPath • reproducible</title>
+<title>Check directory path — checkPath • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Check filepath — checkPath" />
+<meta property="og:title" content="Check directory path — checkPath" />
 
-<meta property="og:description" content="Checks the specified filepath for formatting consistencies,
+<meta property="og:description" content="Checks the specified path to a directory for formatting consistencies,
 such as trailing slashes, etc." />
 <meta name="twitter:card" content="summary" />
 
@@ -72,7 +72,7 @@ such as trailing slashes, etc." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3.9004</span>
       </span>
     </div>
 
@@ -123,14 +123,14 @@ such as trailing slashes, etc." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Check filepath</h1>
+    <h1>Check directory path</h1>
     <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/consistentPaths.R'><code>R/consistentPaths.R</code></a></small>
     <div class="hidden name"><code>checkPath.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Checks the specified filepath for formatting consistencies,
+    <p>Checks the specified path to a directory for formatting consistencies,
 such as trailing slashes, etc.</p>
     
     </div>
@@ -154,7 +154,7 @@ such as trailing slashes, etc.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>path</th>
-      <td><p>A character string corresponding to a filepath.</p></td>
+      <td><p>A character string corresponding to a directory path.</p></td>
     </tr>
     <tr>
       <th>create</th>
@@ -166,6 +166,13 @@ be created if it doesn't exist. Default is <code>FALSE</code>.</p></td>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>Character string denoting the cleaned up filepath.</p>
+    
+    <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
+
+    <p>This will not work for paths to files.
+To check for existence of files, use <code>file.exists</code>, or use
+<code><a href='http://www.rdocumentation.org/packages/utils/topics/filetest'>file_test</a></code> with <code>op = "-f"</code>.
+To normalize a path to a file, use <code><a href='normPath.html'>normPath</a></code> or <code>normalizePath</code>.</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -188,7 +195,7 @@ be created if it doesn't exist. Default is <code>FALSE</code>.</p></td>
 <span class='no'>tmpdir</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>(), <span class='st'>"example_checkPath"</span>)
 
 <span class='fu'>dir.exists</span>(<span class='no'>tmpdir</span>) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'><span class='fu'>tryCatch</span>(<span class='fu'>checkPath</span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>), <span class='kw'>error</span> <span class='kw'>=</span> <span class='kw'>function</span>(<span class='no'>e</span>) <span class='fl'>FALSE</span>) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'>
-<span class='fu'>checkPath</span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "/tmp/RtmpasTKTc/example_checkPath"</div><div class='input'><span class='fu'>dir.exists</span>(<span class='no'>tmpdir</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
+<span class='fu'>checkPath</span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "C:/Temp/RtmpOuNGrl/example_checkPath"</div><div class='input'><span class='fu'>dir.exists</span>(<span class='no'>tmpdir</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='fu'>unlink</span>(<span class='no'>tmpdir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -197,6 +204,8 @@ be created if it doesn't exist. Default is <code>FALSE</code>.</p></td>
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#note">Note</a></li>
 
       <li><a href="#see-also">See also</a></li>
       

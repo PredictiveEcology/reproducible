@@ -77,7 +77,7 @@ whose only function is to show the Scope of a package function." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3.9004</span>
       </span>
     </div>
 
@@ -160,13 +160,24 @@ calling environment, i.e., <code>parent.frame()</code></p></td>
     <tr>
       <th>simplify</th>
       <td><p>Logical. Should the output be simplified to character,
-where possible</p></td>
+if possible (usually it is not possible because environments
+don't always coerce correctly)</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>Similar to <code>readLines</code>. It may not return identical results.</p>
+    <p>A list of environments that is the actual search path, unlike <code>search()</code>
+which only prints from <code>.GlobalEnv</code> up to <code>base</code> through user attached
+packages.</p>
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p><code>searchFullEx</code> can be used to show an example of the use of <code>searchFull</code>.</p>
+    
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='http://www.rdocumentation.org/packages/base/topics/search'>search</a></code></p></div>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -174,10 +185,10 @@ where possible</p></td>
   <span class='fu'>searchFull</span>()
 }
 <span class='fu'>seeScope</span>()</div><div class='output co'>#&gt; [[1]]
-#&gt; &lt;environment: 0x55ecd7abac30&gt;
+#&gt; &lt;environment: 0x0000000029715240&gt;
 #&gt; 
 #&gt; [[2]]
-#&gt; &lt;environment: 0x55ecd7abb380&gt;
+#&gt; &lt;environment: 0x0000000029718858&gt;
 #&gt; 
 #&gt; [[3]]
 #&gt; &lt;environment: R_GlobalEnv&gt;
@@ -218,7 +229,7 @@ where possible</p></td>
 #&gt; [[15]]
 #&gt; &lt;environment: base&gt;
 #&gt; </div><div class='input'><span class='fu'>searchFull</span>()</div><div class='output co'>#&gt; [[1]]
-#&gt; &lt;environment: 0x55ecd7abb380&gt;
+#&gt; &lt;environment: 0x0000000029718858&gt;
 #&gt; 
 #&gt; [[2]]
 #&gt; &lt;environment: R_GlobalEnv&gt;
@@ -314,6 +325,10 @@ where possible</p></td>
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#details">Details</a></li>
+
+      <li><a href="#see-also">See also</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

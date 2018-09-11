@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>List files in either a zip or tar — .listFilesInArchive • reproducible</title>
+<title>Internal function — .grepSysCalls • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,9 +30,10 @@
 
 
 
-<meta property="og:title" content="List files in either a zip or tar — .listFilesInArchive" />
+<meta property="og:title" content="Internal function — .grepSysCalls" />
 
-<meta property="og:description" content="Makes the outputs from tar or zip the same, which they aren't by default." />
+<meta property="og:description" content="A faster way of grepping the system call stack than just
+grep(sys.calls(), pattern = &quot;test&quot;)" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -122,31 +123,37 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>List files in either a zip or tar</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/prepInputs.R'><code>R/prepInputs.R</code></a></small>
-    <div class="hidden name"><code>listFilesInArchive.Rd</code></div>
+    <h1>Internal function</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R'><code>R/cache-helpers.R</code></a></small>
+    <div class="hidden name"><code>grepSysCalls.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Makes the outputs from tar or zip the same, which they aren't by default.</p>
+    <p>A faster way of grepping the system call stack than just
+<code>grep(sys.calls(), pattern = "test")</code></p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>.listFilesInArchive</span>(<span class='no'>archive</span>)</pre>
+    <pre class="usage"><span class='fu'>.grepSysCalls</span>(<span class='no'>sysCalls</span>, <span class='no'>pattern</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>archive</th>
-      <td><p>A character string of a single file name to list files in.</p></td>
+      <th>sysCalls</th>
+      <td><p>The return from sys.calls()</p></td>
+    </tr>
+    <tr>
+      <th>pattern</th>
+      <td><p>Character, passed to grep</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A character string of all files in the archive.</p>
+    <p>Numeric vector, equivalent to return from <code>grep(sys.calls(), pattern = "test")</code>,
+but faster if <code>sys.calls()</code> is very big.</p>
     
 
   </div>

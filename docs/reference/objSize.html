@@ -73,7 +73,7 @@ it will return the object.size separately for each element." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3.9004</span>
       </span>
     </div>
 
@@ -174,8 +174,15 @@ used instead of <code>object.size</code>.</p></td>
 <span class='no'>a</span>$<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
 <span class='no'>a</span>$<span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
 
-<span class='fu'>objSize</span>(<span class='no'>a</span>) <span class='co'># all the elements in the environment</span>
-<span class='fu'>object.size</span>(<span class='no'>a</span>) <span class='co'># different - only measuring the environment as an object</span></div><div class='output co'>#&gt; 56 bytes</div></pre>
+<span class='fu'>objSize</span>(<span class='no'>a</span>) <span class='co'># all the elements in the environment</span></div><div class='output co'>#&gt; $`a$b`
+#&gt; 96 bytes
+#&gt; 
+#&gt; $`a$d`
+#&gt; 96 bytes
+#&gt; 
+#&gt; $a
+#&gt; 56 bytes
+#&gt; </div><div class='input'><span class='fu'>object.size</span>(<span class='no'>a</span>) <span class='co'># different - only measuring the environment as an object</span></div><div class='output co'>#&gt; 56 bytes</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
