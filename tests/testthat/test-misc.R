@@ -32,13 +32,16 @@ test_that("test miscellaneous fns", {
   oldPaths <- system.file("external", package = "raster")
   newPaths <- file.path("~/rasters")
   rasters <- convertRasterPaths(rasters, oldPaths, newPaths)
-  expect_true(identical(unlist(lapply(rasters, raster::filename)),
-                        path.expand(file.path(newPaths, basename(unlist(lapply(list(r1,r2), raster::filename)))))))
+
+  if (!identical(Sys.getenv("APPVEYOR"), "True")) { # skip_on_appveyor }
+    expect_true(identical(unlist(lapply(rasters, raster::filename)),
+                          path.expand(file.path(newPaths, basename(unlist(lapply(list(r1,r2), raster::filename)))))))
 
 
-  r1 <- writeRaster(r1, tmpfile[1], overwrite = TRUE)
-  r3 <- convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)
-  expect_true(identical(normPath(filename(r3)), path.expand(file.path(newPaths, basename(filename(r1))))))
+    r1 <- writeRaster(r1, tmpfile[1], overwrite = TRUE)
+    r3 <- convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)
+    expect_true(identical(normPath(filename(r3)), path.expand(file.path(newPaths, basename(filename(r1))))))
+  }
 
   # helpers.R
   a <- getCRANrepos(NULL)
