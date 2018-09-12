@@ -9,7 +9,7 @@ This extends beyond the package management utilites of `packrat` and `checkpoint
 
 ## Installation
 
-### Current stable release
+### Current release (on CRAN)
 
 [![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=master)](https://travis-ci.org/PredictiveEcology/reproducible)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/master?svg=true)](https://ci.appveyor.com/project/achubaty/reproducible/branch/master)
