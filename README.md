@@ -1,8 +1,5 @@
 # reproducible
 
-[![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=development)](https://travis-ci.org/PredictiveEcology/reproducible)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/development?svg=true)](https://ci.appveyor.com/project/achubaty/reproducible/branch/development)
-[![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=development)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/reproducible)](https://cran.r-project.org/package=reproducible)
 [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
 
@@ -29,12 +26,13 @@ install.packages("reproducible")
 ```r
 #install.packages("devtools")
 library("devtools")
-install_github("PredictiveEcology/reproducible", dependencies = TRUE) # stable
+install_github("PredictiveEcology/reproducible", dependencies = TRUE) 
 ```
 
-### Development version (unstable)
+### Development version
 
 [![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=development)](https://travis-ci.org/PredictiveEcology/reproducible)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/development?svg=true)](https://ci.appveyor.com/project/achubaty/reproducible/branch/development)
 [![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=development)
 
 **Install from GitHub:**
@@ -42,6 +40,6 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE) # stable
 ```r
 #install.packages("devtools")
 library("devtools")
-install_github("PredictiveEcology/reproducible", ref = "development", dependencies = TRUE) # unstable
+install_github("PredictiveEcology/reproducible", ref = "development", dependencies = TRUE) 
 ```
 
