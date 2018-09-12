@@ -1,8 +1,10 @@
 # reproducible
 
+[![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=development)](https://travis-ci.org/PredictiveEcology/reproducible)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/development?svg=true)](https://ci.appveyor.com/project/achubaty/reproducible/branch/development)
+[![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=development)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/reproducible)](https://cran.r-project.org/package=reproducible)
-[![Downloads](http://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
-[![Downloads](http://cranlogs.r-pkg.org/badges/last-month/reproducible)](https://cran.r-project.org/package=reproducible)
+[![CRAN Downloads](http://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
 
 A set of tools for R that enhance reproducibility beyond package management.
 Built on top of `git2r` and `archivist`, this package aims at making high-level, robust, machine and OS independent tools for making deeply reproducible and reusable content in R.
