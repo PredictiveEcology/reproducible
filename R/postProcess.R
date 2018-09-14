@@ -437,7 +437,10 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         warnings(warn)
         ## projectRaster doesn't always ensure equal res (floating point number issue)
         ## if resolutions are close enough, re-write res(x)
-        if (any(res(x) != res(rasterToMatch))) {
+        ## note that when useSAcrs = TRUE, the different resolutions may be due to
+        ## the different projections (e.g. degree based and meter based). This should be fine
+        if (identical(crs(x), crs(rasterToMatch)) &
+            any(res(x) != res(rasterToMatch))) {
           if (all(res(x) %==% res(rasterToMatch))) {
             res(x) <- res(rasterToMatch)
           } else {
