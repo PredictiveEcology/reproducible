@@ -402,8 +402,9 @@ missingFiles <- function(files, checkSums, targetFile) {
 
 }
 
+#' @importFrom quickPlot isRstudioServer
 assessGoogle <- function(url, archive = NULL, targetFile = NULL, destinationPath) {
-  if (!identical(.Platform$OS.type, "windows")) {
+  if (isRstudioServer()) {
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
   }
