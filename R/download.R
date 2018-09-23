@@ -403,6 +403,11 @@ missingFiles <- function(files, checkSums, targetFile) {
 }
 
 assessGoogle <- function(url, archive = NULL, targetFile = NULL, destinationPath) {
+  if (!identical(.Platform$OS.type, "windows")) {
+    opts <- options(httr_oob_default = TRUE)
+    on.exit(options(opts))
+  }
+
   if (!is.null(googledrive::drive_token()))
     googledrive::drive_auth() ## needed for use on e.g., rstudio-server
 
