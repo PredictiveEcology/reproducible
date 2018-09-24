@@ -99,7 +99,8 @@ setMethod(
     checksumFile <- file.path(path, basename(checksumFile))
 
     if (!file.exists(checksumFile)) {
-      file.create(checksumFile)
+      #file.create(checksumFile)
+      writeChecksumsTable(.emptyChecksumsFileContent, checksumFile, dotsWriteTable)
     }
 
     if (is.null(files)) {
@@ -107,7 +108,7 @@ setMethod(
         grep(basename(checksumFile), ., value = TRUE, invert = TRUE)
     }
 
-    txt <- if (file.size(checksumFile) == 0 || !file.exists(checksumFile)) {
+    txt <- if (file.size(checksumFile) == 0) {
       .emptyChecksumsFileContent
     } else {
       read.table(checksumFile,
