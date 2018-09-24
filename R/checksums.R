@@ -98,10 +98,9 @@ setMethod(
     # If it is a SpaDES module, then CHECKSUM.txt must be in the data folder
     checksumFile <- file.path(path, basename(checksumFile))
 
-    if (!write) {
-      stopifnot(file.exists(checksumFile))
-    } else if (!file.exists(checksumFile)) {
-      file.create(checksumFile)
+    if (!file.exists(checksumFile)) {
+      #file.create(checksumFile)
+      writeChecksumsTable(.emptyChecksumsFileContent, checksumFile, dotsWriteTable)
     }
 
     if (is.null(files)) {
@@ -109,7 +108,7 @@ setMethod(
         grep(basename(checksumFile), ., value = TRUE, invert = TRUE)
     }
 
-    txt <- if (file.size(checksumFile) == 0 || !file.exists(checksumFile)) {
+    txt <- if (file.size(checksumFile) == 0) {
       .emptyChecksumsFileContent
     } else {
       read.table(checksumFile,

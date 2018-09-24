@@ -965,9 +965,9 @@ test_that("prepInputs doesn't work", {
     url = urlTif1,
     destinationPath = tmpdir,
     useCache = TRUE
-    ))
-    runTest("1_2_5_6_7_11", "Raster", 1, mess1, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir,
-            test = test)
+  ))
+  runTest("1_2_5_6_7_13", "Raster", 1, mess1, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir,
+          test = test)
   }
 
 })
