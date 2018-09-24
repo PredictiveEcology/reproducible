@@ -910,7 +910,7 @@ test_that("prepInputs doesn't work", {
                         dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                         path = tmpdir)
   })
-  runTest("1_2_5_6", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
+  runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
           filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir, test = test1)
   runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
           filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir, test = test1)
@@ -938,7 +938,7 @@ test_that("prepInputs doesn't work", {
   mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
                                                 dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                                                 path = tmpdir, studyArea = StudyArea)))
-  runTest("1_2_5_6", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+  runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
           filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
           test = test3)
 
