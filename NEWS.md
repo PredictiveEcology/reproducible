@@ -3,7 +3,7 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.2.3.9000
 =============
 
-* New option `reproducible.inputPaths`, which will be used in `prepInputs` as possible sources for files. This allows the using of local copies of files in (an)other location(s) instead of downloading them.
+* New option `reproducible.inputPaths`, which will be used in `prepInputs` as possible sources for files being downloaded/extracted/prepared. This allows the using of local copies of files in (an)other location(s) instead of downloading them. If local location does not have the required files, it will proceed to download so there is little cost in setting this option.
 * deal with new `raster` package changes in development version of `raster` package
 * `glDownload` now sets `options(httr_oob_default = TRUE)` if using Rstudio Server
 * speed up of Cache when deeply nested, due to `grep(sys.calls(), ...)` that would take long and hang

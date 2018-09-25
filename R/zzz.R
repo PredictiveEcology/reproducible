@@ -9,7 +9,7 @@
   opts.reproducible <- list( # nolint
     reproducible.ask = TRUE,
     reproducible.cachePath = file.path(.reproducibleTempCacheDir),
-    reproducible.inputPaths = file.path(.reproducibleTempInputDir),
+    reproducible.inputPaths = NULL,
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.quick = FALSE,
     reproducible.useCache = TRUE, # override Cache function
