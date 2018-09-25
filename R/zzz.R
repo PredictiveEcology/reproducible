@@ -4,10 +4,12 @@
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
   opts <- options()
-  checkPath(.reproducibleTempDir, create = TRUE)
+  checkPath(.reproducibleTempCacheDir, create = TRUE)
+  checkPath(.reproducibleTempInputDir, create = TRUE)
   opts.reproducible <- list( # nolint
     reproducible.ask = TRUE,
-    reproducible.cachePath = file.path(.reproducibleTempDir),
+    reproducible.cachePath = file.path(.reproducibleTempCacheDir),
+    reproducible.inputPaths = NULL,
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.quick = FALSE,
     reproducible.useCache = TRUE, # override Cache function
@@ -30,12 +32,20 @@
 }
 
 .onUnload <- function(libpath) {
-  ## if temp session dir is being used, ensure it gets reset each session
-  if (getOption("reproducible.cachePath") == file.path(.reproducibleTempDir, "cache")) {
-    options(reproducible.cachePath = NULL)
-  }
+  ## unset reproducible options on unload
+  o <- options()
+  o[startsWith(names(o), prefix = "reproducible.")] <- NULL
+  options(o)
+  # if (getOption("reproducible.cachePath") == file.path(.reproducibleTempCacheDir)) {
+  #   options(reproducible.cachePath = NULL)
+  # }
+  # if (getOption("reproducible.inputPaths") == file.path(.reproducibleTempInputDir)) {
+  #   options(reproducible.inputPaths = NULL)
+  # }
 }
-.reproducibleTempDir <- file.path(tempdir(), "reproducibleCache")
+
+.reproducibleTempCacheDir <- file.path(tempdir(), "reproducible", "cache")
+.reproducibleTempInputDir <- file.path(tempdir(), "reproducible", "inputs")
 
 .argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
                                           names(formals(cropInputs)),
