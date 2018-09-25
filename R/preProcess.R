@@ -195,6 +195,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums <- outFromSimilar$checkSums
   }
 
+  # Check for local copies in all values of getOption("reproducible.inputPaths")
+  checkSums <- .checkLocalSources(neededFiles, checkSums,
+                                  otherPaths = getOption("reproducible.inputPaths"),
+                                  destinationPath)
+
   # Stage 1 -- Download
   downloadFileResult <- downloadFile(
     archive = archive,
@@ -371,7 +376,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums
   } else {
     checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
-                                files = basename(newFilesToCheck)), silent = TRUE)
+                                files = newFilesToCheck), silent = TRUE)
     if (!is(checkSums2, "try-error")) {
       checkSums <- rbindlist(list(checkSums, checkSums2))
       data.table::setkey(checkSums, result)
@@ -431,4 +436,32 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
   list(neededFiles = neededFiles, checkSums = checkSums)
+}
+
+.checkLocalSources <- function(neededFiles, checkSums, otherPaths, destinationPath) {
+  if (!any(is.na(neededFiles))) {
+    filesInHand <- checkSums[compareNA(checkSums$result, "OK"),]$expectedFile
+    if (!all(neededFiles %in% filesInHand)) {
+      for (op in otherPaths) {
+        if (any(neededFiles %in% dir(op))) {
+          checkSumsInputPath <- Checksums(path = op, write = FALSE,
+                                          files = file.path(op, neededFiles),
+                                          checksumFile = file.path(op, "CHECKSUMS.txt"))
+          checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"),]
+          filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
+          filesInHandIPLogical <- neededFiles %in% filesInHandIP
+          if (any(filesInHandIPLogical)) {
+            message("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",op," to ", destinationPath)
+            file.copy(file.path(op, filesInHandIP), destinationPath)
+            checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
+            checkSums <- unique(checkSums, by = "expectedFile")
+          }
+          if (isTRUE(all(filesInHandIPLogical))) {
+            break
+          }
+        }
+      }
+    }
+  }
+  checkSums
 }
