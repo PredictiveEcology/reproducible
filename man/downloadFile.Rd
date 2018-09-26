@@ -27,7 +27,11 @@ See table in \code{\link{preProcess}}.}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
-will look for \code{archive} or \code{targetFile}.}
+will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
+To prevent repeated downloads in different locations, the user can also set
+\code{options("reproducible.inputPaths")} to one or more local file paths to
+search for the file before attempting to download. Default for that option is
+\code{NULL} meaning do not search locally.}
 
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to

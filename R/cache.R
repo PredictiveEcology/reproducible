@@ -213,12 +213,17 @@ if (getRversion() >= "3.1.0") {
 #'        where Cache is not correctly detecting unchanged inputs. This will guarantee
 #'        the object will be identical each time; this may be useful in operational code.
 #'
-#' @param useCache Logical. If \code{FALSE}, then the entire Caching mechanism is bypassed
+#' @param useCache Logical or \code{"overwrite"}. If \code{FALSE},
+#'                 then the entire Caching mechanism is bypassed
 #'                 and the function is evaluated as if it was not being Cached.
 #'                 Default is \code{getOption("reproducible.useCache")}),
 #'                 which is \code{FALSE} by default, meaning use the Cache mechanism. This
 #'                 may be useful to turn all Caching on or off in very complex scripts and
-#'                 nested functions.
+#'                 nested functions. If \code{"overwrite"} (which can be set with
+#'                 \code{options("reproducible.useCache" = "overwrite")}),
+#'                 then the function invoke the caching mechanism but will purge
+#'                 any entry that is matched, and it will be replaced with the
+#'                 results of the current call.
 #'
 #' @param showSimilar A logical or numeric. Useful for debugging.
 #'        If \code{TRUE} or \code{1}, then if the Cache
@@ -302,7 +307,7 @@ setMethod(
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots
 
-    if (!useCache) {
+    if (isFALSE(useCache)) {
       message(crayon::green("useCache is FALSE, skipping Cache.",
                             "To turn Caching on, use options(reproducible.useCache = TRUE)"))
       if (fnDetails$isDoCall) {
@@ -608,6 +613,13 @@ setMethod(
       }
 
       isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+      if (identical("overwrite", useCache) && NROW(isInRepo)>0) {
+        clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE)
+        isInRepo <- isInRepo[isInRepo$tag != paste0("cacheId:", outputHash), , drop = FALSE]
+        message("Overwriting Cache entry with function '",fnDetails$functionName ,"'")
+
+      }
+
       # If it is in the existing record:
 
       if (NROW(isInRepo) > 0) {
