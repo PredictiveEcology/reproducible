@@ -9,7 +9,8 @@ options(reproducible.verbose = FALSE)
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
-testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "") {
+testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
+                     opts = NULL) {
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else
@@ -28,6 +29,9 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "") {
   tmpCache <- normPath(file.path(tmpdir, "testCache"))
   checkPath(tmpCache, create = TRUE)
 
+  if (!is.null(opts)) {
+    opts <- options(opts)
+  }
   if (!is.null(tmpFileExt)) {
     ranfiles <- unlist(lapply(tmpFileExt, function(x) paste0(rndstr(1,7), ".", x)))
     tmpfile <- file.path(tmpdir, ranfiles)
@@ -41,7 +45,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "") {
 
   outList <- list(tmpdir = tmpdir, origDir = origDir, libs = libraries,
                   tmpCache = tmpCache, optsAsk = optsAsk,
-                  optsVerbose = optsVerbose, tmpfile = tmpfile)
+                  optsVerbose = optsVerbose, tmpfile = tmpfile,
+                  opts = opts)
   list2env(outList, envir = parent.frame())
   return(outList)
 }
@@ -51,6 +56,8 @@ testOnExit <- function(testInitOut) {
     options("reproducible.verbose" = testInitOut$optsVerbose[[1]])
   if (length(testInitOut$optsAsk))
     options("reproducible.ask" = testInitOut$optsAsk[[1]])
+  if (length(testInitOut$opts))
+    options(testInitOut$opts)
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
   lapply(testInitOut$libs, function(lib) {

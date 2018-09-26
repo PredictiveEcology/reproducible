@@ -302,7 +302,7 @@ setMethod(
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots
 
-    if (!useCache) {
+    if (isFALSE(useCache)) {
       message(crayon::green("useCache is FALSE, skipping Cache.",
                             "To turn Caching on, use options(reproducible.useCache = TRUE)"))
       if (fnDetails$isDoCall) {
@@ -608,6 +608,13 @@ setMethod(
       }
 
       isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+      if (identical("overwrite", useCache) && NROW(isInRepo)>0) {
+        clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE)
+        isInRepo <- isInRepo[isInRepo$tag != paste0("cacheId:", outputHash), , drop = FALSE]
+        message("Overwriting Cache entry with function '",fnDetails$functionName ,"'")
+
+      }
+
       # If it is in the existing record:
 
       if (NROW(isInRepo) > 0) {
