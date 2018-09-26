@@ -4,7 +4,7 @@ version 0.2.3.9000
 =============
 
 * New value possible for `options(reproducible.useCache = 'overwrite')`, which allows use of `Cache` in cases where the function call has an entry in the `cacheRepo`, will purge it and add the output of the current call instead. 
-* New option `reproducible.inputPaths`, which will be used in `prepInputs` as possible sources for files being downloaded/extracted/prepared. This allows the using of local copies of files in (an)other location(s) instead of downloading them. If local location does not have the required files, it will proceed to download so there is little cost in setting this option.
+* New option `reproducible.inputPaths` (default NULL) and `reproducible.inputPathsRecursive` (default FALSE), which will be used in `prepInputs` as possible directory sources (searched recursively or not) for files being downloaded/extracted/prepared. This allows the using of local copies of files in (an)other location(s) instead of downloading them. If local location does not have the required files, it will proceed to download so there is little cost in setting this option.
 * deal with new `raster` package changes in development version of `raster` package
 * `glDownload` now sets `options(httr_oob_default = TRUE)` if using Rstudio Server
 * speed up of Cache when deeply nested, due to `grep(sys.calls(), ...)` that would take long and hang

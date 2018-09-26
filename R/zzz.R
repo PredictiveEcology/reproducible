@@ -11,6 +11,7 @@
     reproducible.cachePath = file.path(.reproducibleTempCacheDir),
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.inputPaths = NULL,
+    reproducible.inputPathsRecursive = FALSE,
     reproducible.quick = FALSE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useMemoise = TRUE, #memoise

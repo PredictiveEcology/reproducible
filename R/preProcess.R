@@ -196,9 +196,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   # Check for local copies in all values of getOption("reproducible.inputPaths")
-  checkSums <- .checkLocalSources(neededFiles, checkSums,
+  localChecks <- .checkLocalSources(neededFiles, checkSums,
                                   otherPaths = getOption("reproducible.inputPaths"),
-                                  destinationPath)
+                                  destinationPath, needChecksums = needChecksums)
+  checkSums <- localChecks$checkSums
+  needChecksums <- localChecks$needChecksums
 
   # Stage 1 -- Download
   downloadFileResult <- downloadFile(
@@ -438,12 +440,24 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   list(neededFiles = neededFiles, checkSums = checkSums)
 }
 
-.checkLocalSources <- function(neededFiles, checkSums, otherPaths, destinationPath) {
+.checkLocalSources <- function(neededFiles, checkSums, otherPaths, needChecksums, destinationPath) {
   if (!any(is.na(neededFiles))) {
     filesInHand <- checkSums[compareNA(checkSums$result, "OK"),]$expectedFile
     if (!all(neededFiles %in% filesInHand)) {
       for (op in otherPaths) {
-        if (any(neededFiles %in% dir(op))) {
+        recursively <- if (!is.null(getOption("reproducible.inputPathsRecursive"))) {
+          getOption("reproducible.inputPathsRecursive")
+        } else {
+          FALSE
+        }
+        opDir <- dir(op, recursive = recursively, full.names = TRUE)
+        if (any(neededFiles %in% basename(opDir))) {
+
+          isNeeded <- basename(opDir) %in% neededFiles
+          op <- dirname(opDir[isNeeded])
+          if (length(op) > 1)
+            message("There is more than one local file named ", neededFiles,
+                    " Using the first one.")
           checkSumsInputPath <- Checksums(path = op, write = FALSE,
                                           files = file.path(op, neededFiles),
                                           checksumFile = file.path(op, "CHECKSUMS.txt"))
@@ -455,6 +469,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             file.copy(file.path(op, filesInHandIP), destinationPath)
             checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
             checkSums <- unique(checkSums, by = "expectedFile")
+            needChecksums <- 2
           }
           if (isTRUE(all(filesInHandIPLogical))) {
             break
@@ -463,5 +478,5 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   }
-  checkSums
+  list(checkSums = checkSums, needChecksums = needChecksums)
 }
