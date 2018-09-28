@@ -158,7 +158,7 @@ test_that("prepInputs doesn't work", {
 
   # Test the no allow overwrite if two functions (here postProcess and prepInputs)
   #  return same file-backed raster
-  clearCache(userTags = "prepInputs", ask = FALSE)
+  reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
   #  not there. Now should be no error
