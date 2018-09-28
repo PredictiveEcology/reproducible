@@ -288,7 +288,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
   if (!is.null(getOption("reproducible.inputPaths"))) {
     anyTopLevel <- !(filesExtr %in% foundRecursively)
-    if (anyTopLevel) {
+    if (isTRUE(any(anyTopLevel))) {
       logicalFilesExistIP <- file.exists(file.path(destinationPath, filesExtr))
       if (!isTRUE(all(logicalFilesExistIP))) {
         linkOrCopy(file.path(destinationPathUser, filesExtr[!logicalFilesExistIP]),
