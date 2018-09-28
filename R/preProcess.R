@@ -563,7 +563,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' dir.create(d2)
 #' f2 <- file.path(tmpDir, "file2.csv")
 #'
-#' # Windows
 #' ## create link to a file
 #' linkOrCopy(f0, f2)
 #' file.exists(f2) ## TRUE
@@ -586,31 +585,32 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' isTRUE(all.equal(r3a, r4a)) # TRUE
 #'
-#' file.exists(f3) ## TRUE
-#' file.exists(f4) ## TRUE
-#' r4 <- try(raster(f4)) ## hardlink fails
-#'
-#' f5 <- file.path(tmpDir, "raster5.grd")
-#' linkOrCopy(f3, f5, TRUE) ## SYMLINK
-#' file.exists(f5) ## TRUE
-#' r5 <- raster(f5) ## symlink works
-#' identical(r3, r5) ## TRUE
-#'
 #' ## cleanup
 #' unlink(tmpDir, recursive = TRUE)
 linkOrCopy <- function (from, to, symlink = TRUE) {
-  if (identical("windows", .Platform$OS.type)) {
-    result <- suppressWarnings(file.link(from, to))
-    if (isTRUE(result)) {
-      message("Hardlinked version of file created at: ", to, ", which points to "
-              ,from,"; no copy was made")
-    } else {
-      result <- file.copy(from, to)
-      message("Copy of file: ", from, ", was created at: ", to)
-    }
 
-  } else {
-    flink(from, to, symlink = symlink)
+  # Try hard link first -- the only type that R deeply recognizes
+  result <- suppressWarnings(file.link(from, to))
+  if (isTRUE(result)) {
+    message("Hardlinked version of file created at: ", to, ", which points to "
+            ,from,"; no copy was made")
   }
-    return(invisible(result))
+
+  # On *nix types -- try symlink
+  if (isFALSE(result) && isTRUE(symlink)) {
+    if (!identical(.Platform$OS.type, "windows")) {
+      result <- suppressWarnings(file.symlink(from, to))
+      if (isTRUE(result)) {
+        message("Symlinked version of file created at: ", to, ", which points to "
+                ,from,"; no copy was made")
+      }
+    }
+  }
+
+  if (isFALSE(result)) {
+    result <- file.copy(from, to)
+    message("Copy of file: ", from, ", was created at: ", to)
+  }
+
+  return(result)
 }

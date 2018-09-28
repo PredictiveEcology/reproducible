@@ -1300,10 +1300,6 @@ test_that("options inputPaths", {
   }, add = TRUE)
   theFile <- "GADM_2.8_LUX_adm0.rds"
 
-  skip_on_os("linux")
-  skip_on_os("mac")
-  skip_on_os("solaris")
-
   if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
   options("reproducible.inputPaths" = NULL)
   options("reproducible.inputPathsRecursive" = FALSE)
