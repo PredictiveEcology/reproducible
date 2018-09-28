@@ -21,13 +21,12 @@ linkOrCopy(from, to, symlink = TRUE)
 Default \code{FALSE}.}
 }
 \description{
-This is OS depdent. See details.
+Attempt first to make a hardlink. If that fails, try to make
+a symlink (on non-windows systems and \code{symlink = TRUE}).
+If that fails, copy the file.
 }
 \details{
-On Windows, tries
-Creates a hard link to a file if possible, falling back to a symbolic link (symlink).
-Hard links are for files only, and won't work across different physical drives.
-Symlinks won't work on Windows without admin privileges.
+
 }
 \note{
 Use caution with files-backed objects (e.g., rasters). See examples.
@@ -78,7 +77,7 @@ isTRUE(all.equal(r3a, r4a)) # TRUE
 unlink(tmpDir, recursive = TRUE)
 }
 \seealso{
-\code{\link{file.link}}, \code{\link{file.symlink}}
+\code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{file.copy}}
 }
 \author{
 Alex Chubaty and Eliot McIntire

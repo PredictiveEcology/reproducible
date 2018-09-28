@@ -522,7 +522,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 #' Hardlink, symlink, or copy a file
 #'
-#' This is OS depdent. See details.
+#' Attempt first to make a hardlink. If that fails, try to make
+#' a symlink (on non-windows systems and \code{symlink = TRUE}).
+#' If that fails, copy the file.
 #'
 #' @note Use caution with files-backed objects (e.g., rasters). See examples.
 #'
@@ -530,14 +532,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @param symlink  Logical indicating whether to use symlink (instead of hardlink).
 #'                 Default \code{FALSE}.
 #'
-#' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}
+#' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{file.copy}}
 #' @details
-#' On Windows, tries
-#' Creates a hard link to a file if possible, falling back to a symbolic link (symlink).
-#' Hard links are for files only, and won't work across different physical drives.
-#' Symlinks won't work on Windows without admin privileges.
-#'
-#'
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
