@@ -28,7 +28,7 @@ test_that("prepInputs doesn't work", {
                              url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
   )
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
-  expect_true(any(grepl(mess, pattern = "Writing")))
+  expect_true(any(grepl(mess, pattern = "Appending")))
   expect_true(any(grepl(mess, pattern = "Finished")))
   expect_true(is(shpEcozone, "SpatialPolygons"))
 
