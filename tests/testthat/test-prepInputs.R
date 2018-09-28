@@ -1300,95 +1300,97 @@ test_that("options inputPaths", {
   }, add = TRUE)
   theFile <- "GADM_2.8_LUX_adm0.rds"
 
-  if (getRversion() > "3.3.0") { # Not sure why this fails on 3.3.0
-    options("reproducible.inputPaths" = NULL)
-    options("reproducible.inputPathsRecursive" = FALSE)
-    mess1 <- capture_messages({
-      test1 <- prepInputs(targetFile = theFile,
-                          destinationPath = tmpdir,
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                          path = tmpdir)
-    })
+  if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
+  options("reproducible.inputPaths" = NULL)
+  options("reproducible.inputPathsRecursive" = FALSE)
+  mess1 <- capture_messages({
+    test1 <- prepInputs(targetFile = theFile,
+                        destinationPath = tmpdir,
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpdir)
+  })
 
-    # Use inputPaths -- should do a link to tmpCache (the destinationPath)
-    options("reproducible.inputPaths" = tmpdir)
-    options("reproducible.inputPathsRecursive" = FALSE)
-    mess1 <- capture_messages({
-      test1 <- prepInputs(targetFile = theFile,
-                          destinationPath = tmpCache,
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                          path = tmpCache)
-    })
-    expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1))==1)
+  # Use inputPaths -- should do a link to tmpCache (the destinationPath)
+  options("reproducible.inputPaths" = tmpdir)
+  options("reproducible.inputPathsRecursive" = FALSE)
+  mess1 <- capture_messages({
+    test1 <- prepInputs(targetFile = theFile,
+                        destinationPath = tmpCache,
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpCache)
+  })
+  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1))==1)
 
-    # Now recursive
-    options("reproducible.inputPaths" = c(tmpdir, tmpCache))
-    options("reproducible.inputPathsRecursive" = TRUE)
-    file.remove(file.path(tmpdir, theFile))
-    mess1 <- capture_messages({
-      test1 <- prepInputs(targetFile = theFile,
-                          destinationPath = file.path(tmpCache, "test"),
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                          path = file.path(tmpCache, "test"))
-    })
-    expect_true(sum(grepl("Copying local copy of", mess1))==1)
+  # Now recursive
+  options("reproducible.inputPaths" = c(tmpdir, tmpCache))
+  options("reproducible.inputPathsRecursive" = TRUE)
+  file.remove(file.path(tmpdir, theFile))
+  tmpdir3 <- file.path(tmpCache, "test")
+  mess1 <- capture_messages({
+    test1 <- prepInputs(targetFile = theFile,
+                        destinationPath = tmpdir3,
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpdir3)
+  })
+  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1))==1)
 
-    #  should copy from 2nd directory (tmpCache) because it is removed in the lower
-    #  tmpdir directory & has a CHECKSUMS.txt
-    options("reproducible.inputPaths" = tmpdir)
-    file.remove(file.path(tmpCache, theFile))
-    mess1 <- capture_messages({
-      test1 <- prepInputs(targetFile = theFile,
-                          destinationPath = file.path(tmpCache, "test1"),
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                          path = file.path(tmpCache, "test1"))
-    })
-    expect_true(sum(grepl("Copying local copy of", mess1))==1)
-    expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile)==2)
+  #  should copy from 2nd directory (tmpCache) because it is removed in the lower
+  #  tmpdir directory & has a CHECKSUMS.txt
+  options("reproducible.inputPaths" = tmpdir)
+  file.remove(file.path(tmpCache, theFile))
+  tmpdir1 <- file.path(tmpCache, "test1")
+  mess1 <- capture_messages({
+    test1 <- prepInputs(targetFile = theFile,
+                        destinationPath = tmpdir1,
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpdir1)
+  })
+  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", file.path(tmpdir1, theFile)), mess1))==1)
+  expect_true(sum(grepl(paste0("which points to ", file.path(tmpdir3, theFile)), mess1))==1)
+  expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile)==2)
 
 
-    ####
-    # Try download to inputPath, intercepting the destination, creating a link
-    testOnExit(testInitOut)
-    testInitOut <- testInit("raster",
-                            opts = list("reproducible.inputPaths" = NULL,
-                                        "reproducible.inputPathsRecursive" = FALSE))
-    options("reproducible.inputPaths" = tmpdir)
-    tmpdir2 <- file.path(tmpdir, rndstr(1,5))
-    mess1 <- capture_messages({
-      test1 <- prepInputs(targetFile = theFile,
-                          destinationPath = tmpdir2,
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                          path = tmpCache)
-    })
-    expect_true(sum(grepl("Hardlinked version of file created", mess1))==1)
+  ####
+  # Try download to inputPath, intercepting the destination, creating a link
+  testOnExit(testInitOut)
+  testInitOut <- testInit("raster",
+                          opts = list("reproducible.inputPaths" = NULL,
+                                      "reproducible.inputPathsRecursive" = FALSE))
+  options("reproducible.inputPaths" = tmpdir)
+  tmpdir2 <- file.path(tmpdir, rndstr(1,5))
+  mess1 <- capture_messages({
+    test1 <- prepInputs(targetFile = theFile,
+                        destinationPath = tmpdir2,
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpCache)
+  })
+  expect_true(sum(grepl("Hardlinked version of file created", mess1))==1)
 
-    # Have file in inputPath, not in destinationPath
-    unlink(file.path(tmpdir2, theFile))
-    expect_false(file.exists(file.path(tmpdir2, theFile))) # FALSE -- confirm previous line
-    expect_true(file.exists(file.path(tmpdir, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
-    tmpdir2 <- file.path(tmpdir, rndstr(1,5))
-    mess1 <- capture_messages({
-      test1 <- prepInputs(targetFile = theFile,
-                          destinationPath = tmpdir2,
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                          path = tmpCache)
-    })
-    expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version
-    expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
+  # Have file in inputPath, not in destinationPath
+  unlink(file.path(tmpdir2, theFile))
+  expect_false(file.exists(file.path(tmpdir2, theFile))) # FALSE -- confirm previous line
+  expect_true(file.exists(file.path(tmpdir, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
+  tmpdir2 <- file.path(tmpdir, rndstr(1,5))
+  mess1 <- capture_messages({
+    test1 <- prepInputs(targetFile = theFile,
+                        destinationPath = tmpdir2,
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpCache)
+  })
+  expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version
+  expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
 
-    # Have file in destinationPath, not in inputPath
-    unlink(file.path(tmpdir, theFile))
-    expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
-    expect_true(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
-    mess1 <- capture_messages({
-      test1 <- prepInputs(targetFile = theFile,
-                          destinationPath = tmpdir2,
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                          path = tmpCache)
-    })
-    expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version
-    expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
+  # Have file in destinationPath, not in inputPath
+  unlink(file.path(tmpdir, theFile))
+  expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
+  expect_true(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
+  mess1 <- capture_messages({
+    test1 <- prepInputs(targetFile = theFile,
+                        destinationPath = tmpdir2,
+                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        path = tmpCache)
+  })
+  expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version
+  expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
 
-  }
 })

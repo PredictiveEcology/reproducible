@@ -198,7 +198,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Check for local copies in all values of getOption("reproducible.inputPaths")
   # At the end of this function, the files will be present in destinationPath, if they existed
   #  in options("reproducible.inputPaths")
-  browser()
   localChecks <- .checkLocalSources(neededFiles, checkSums,
                                     otherPaths = getOption("reproducible.inputPaths"),
                                     destinationPath, needChecksums = needChecksums)
@@ -286,12 +285,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 
   # link back to destinationPath if options("reproducible.inputPaths") was used.
+  #  destinationPath had been overwritten to be options("reproducible.inputPaths")
   if (!is.null(getOption("reproducible.inputPaths"))) {
-    browser()
-    logicalFilesExistIP <- file.exists(file.path(destinationPath, filesExtr))
-    if (!isTRUE(all(logicalFilesExistIP))) {
-      linkOrCopy(file.path(destinationPathUser, filesExtr[!logicalFilesExistIP]),
-                 file.path(destinationPath, filesExtr[!logicalFilesExistIP]))
+    anyTopLevel <- !(filesExtr %in% foundRecursively)
+    if (anyTopLevel) {
+      logicalFilesExistIP <- file.exists(file.path(destinationPath, filesExtr))
+      if (!isTRUE(all(logicalFilesExistIP))) {
+        linkOrCopy(file.path(destinationPathUser, filesExtr[!logicalFilesExistIP]),
+                   file.path(destinationPath, filesExtr[!logicalFilesExistIP]))
+      }
     }
     logicalFilesExistDP <- file.exists(file.path(destinationPathUser, filesExtr))
     if (!isTRUE(all(logicalFilesExistDP))) {
@@ -483,7 +485,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           FALSE
         }
         opDir <- dir(op, recursive = recursively, full.names = TRUE)
-        browser()
         if (any(neededFiles %in% basename(opDir))) {
 
           isNeeded <- basename(opDir) %in% neededFiles
@@ -502,7 +503,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
           filesInHandIPLogical <- neededFiles %in% filesInHandIP
           if (any(filesInHandIPLogical)) {
-            browser()
             #message("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",op," to ", destinationPath)
             linkOrCopy(file.path(op, filesInHandIP), file.path(destinationPath, filesInHandIP))
             checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
@@ -600,8 +600,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' unlink(tmpDir, recursive = TRUE)
 linkOrCopy <- function (from, to, symlink = TRUE) {
   if (identical("windows", .Platform$OS.type)) {
-    browser()
-
     result <- suppressWarnings(file.link(from, to))
     if (isTRUE(result)) {
       message("Hardlinked version of file created at: ", to, ", which points to "
