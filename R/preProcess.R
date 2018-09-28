@@ -526,13 +526,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @note Use caution with files-backed objects (e.g., rasters). See examples.
 #'
-#' @param from,to  character vectors, containing file names or paths (can alternatively
-#'                 be the path to a single existing directory).
+#' @inheritParams base::file.link
 #' @param symlink  Logical indicating whether to use symlink (instead of hardlink).
 #'                 Default \code{FALSE}.
 #'
-#' @importFrom amc
-#' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{Sys.readlink}}
+#' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}
 #' @details
 #' On Windows, tries
 #' Creates a hard link to a file if possible, falling back to a symbolic link (symlink).

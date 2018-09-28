@@ -7,8 +7,15 @@
 linkOrCopy(from, to, symlink = TRUE)
 }
 \arguments{
-\item{from, to}{character vectors, containing file names or paths (can alternatively
-be the path to a single existing directory).}
+\item{from}{character vectors, containing file names or paths.
+    For \code{file.copy} and \code{file.symlink}
+    and \code{Sys.junction}
+    \code{to} can alternatively be the path to a single existing directory.}
+
+\item{to}{character vectors, containing file names or paths.
+    For \code{file.copy} and \code{file.symlink}
+    and \code{Sys.junction}
+    \code{to} can alternatively be the path to a single existing directory.}
 
 \item{symlink}{Logical indicating whether to use symlink (instead of hardlink).
 Default \code{FALSE}.}
@@ -71,7 +78,7 @@ isTRUE(all.equal(r3a, r4a)) # TRUE
 unlink(tmpDir, recursive = TRUE)
 }
 \seealso{
-\code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{Sys.readlink}}
+\code{\link{file.link}}, \code{\link{file.symlink}}
 }
 \author{
 Alex Chubaty and Eliot McIntire
