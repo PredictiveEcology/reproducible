@@ -211,9 +211,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       destinationPath <- destinationPathUser
     }, add = TRUE)
     destinationPath <- getOption("reproducible.inputPaths")[1]
-    if (isTRUE(any(grepl(archive, pattern = destinationPathUser))))
-      archive <- gsub(archive, pattern = destinationPathUser,
+    if (isTRUE(any(grepl(archive, pattern = destinationPathUser)))) {
+      # might have a "." as destinationPath -- messes with grepl
+      patt <- if (grepl("^\\.", destinationPathUser))
+        gsub("^\\.", "^\\\\.", destinationPathUser)
+      else
+        destinationPathUser
+      archive <- gsub(archive, pattern = patt,
                       replacement = destinationPath)
+
+    }
   }
 
   # Stage 1 -- Download
