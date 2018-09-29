@@ -158,7 +158,6 @@ test_that("prepInputs doesn't work", {
 
   # Test the no allow overwrite if two functions (here postProcess and prepInputs)
   #  return same file-backed raster
-  browser()
   reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
@@ -483,7 +482,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = "DEM.tif",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_8_9_10", "Raster", 1, mess, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_8_10", "Raster", 1, mess, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
   # url is an archive on googledrive --
@@ -1322,9 +1321,8 @@ test_that("options inputPaths", {
   })
   expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1))==1)
 
-  # Now recursive
+  # Now two folders
   options("reproducible.inputPaths" = c(tmpdir, tmpCache))
-  options("reproducible.inputPathsRecursive" = TRUE)
   file.remove(file.path(tmpdir, theFile))
   tmpdir3 <- file.path(tmpCache, "test")
   mess1 <- capture_messages({
@@ -1338,6 +1336,7 @@ test_that("options inputPaths", {
   #  should copy from 2nd directory (tmpCache) because it is removed in the lower
   #  tmpdir directory & has a CHECKSUMS.txt
   options("reproducible.inputPaths" = tmpdir)
+  options("reproducible.inputPathsRecursive" = TRUE)
   file.remove(file.path(tmpCache, theFile))
   tmpdir1 <- file.path(tmpCache, "test1")
   mess1 <- capture_messages({

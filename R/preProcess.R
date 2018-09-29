@@ -204,7 +204,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                     destinationPath, needChecksums = needChecksums)
   checkSums <- localChecks$checkSums
   needChecksums <- localChecks$needChecksums
-  foundRecursively <- localChecks$foundRecursively
+
   if (!is.null(getOption("reproducible.inputPaths"))) {
     destinationPathUser <- destinationPath
     on.exit({
@@ -294,11 +294,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # link back to destinationPath if options("reproducible.inputPaths") was used.
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
   if (!is.null(getOption("reproducible.inputPaths"))) {
-    anyTopLevel <- !(filesExtr %in% foundRecursively)
+    #foundRecursively <- localChecks$foundRecursively
+    foundInInputPaths <- localChecks$foundInInputPaths
+    copyToIP <- (!filesExtr %in% foundInInputPaths)
     # Make sure they are all in options("reproducible.inputPaths"), accounting for
     #   the fact that some may have been in sub-folders -- i.e., don't deal with these
-    if (isTRUE(any(anyTopLevel))) {
-      logicalFilesExistIP <- file.exists(file.path(destinationPath, filesExtr))
+    if (isTRUE(any(copyToIP))) {
+      logicalFilesExistIP <- file.exists(file.path(destinationPath, filesExtr[copyToIP]))
       if (!isTRUE(all(logicalFilesExistIP))) {
         linkOrCopy(file.path(destinationPathUser, filesExtr[!logicalFilesExistIP]),
                    file.path(destinationPath, filesExtr[!logicalFilesExistIP]))
@@ -484,9 +486,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 }
 
 .checkLocalSources <- function(neededFiles, checkSumFilePath, checkSums, otherPaths, needChecksums, destinationPath) {
-  foundRecursively <- character()
+  #foundRecursively <- character()
+  foundInInputPaths <- character()
   if (!is.null(neededFiles)) {
-  #if (!any(is.na(neededFiles))) {
 
     filesInHand <- checkSums[compareNA(checkSums$result, "OK"),]$expectedFile
     if (!all(neededFiles %in% filesInHand)) {
@@ -502,8 +504,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           isNeeded <- basename(opFiles) %in% neededFiles
           dirNameOPFiles <- dirname(opFiles[isNeeded])
 
-          foundRecursively <- dirNameOPFiles != dirname(opFiles[isNeeded])
-          foundRecursively <- basename(opFiles[isNeeded][foundRecursively])
+          #foundRecursively <- dirNameOPFiles != dirname(opFiles[isNeeded])
+          #foundRecursively <- basename(opFiles[isNeeded][foundRecursively])
 
           uniqueDirsOPFiles <- unique(dirNameOPFiles)
           for (dirOPFiles in uniqueDirsOPFiles) {
@@ -520,6 +522,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               checkSums <- unique(checkSums, by = "expectedFile")
               needChecksums <- 2
             }
+            foundInInputPaths <- c(foundInInputPaths, filesInHandIP)
           }
           if (isTRUE(all(filesInHandIPLogical))) {
             break
@@ -529,7 +532,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
   list(checkSums = checkSums, needChecksums = needChecksums,
-       foundRecursively = foundRecursively)
+       #foundRecursively = foundRecursively,
+       foundInInputPaths = foundInInputPaths)
 }
 
 #' Hardlink, symlink, or copy a file
@@ -545,7 +549,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'                 Default \code{FALSE}.
 #'
 #' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{file.copy}}
-#' @details
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
