@@ -348,6 +348,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           } else {
             destFile <- file.path(destinationPath, targetFile)
           }
+
+          # some functions will load the object, not just download them, since we may not know
+          #   where the function actually downloaded the file, we save it as an RDS file
           if (needSave) {
             saveRDS(out, file = destFile)
           }

@@ -196,11 +196,32 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   # Check for local copies in all values of getOption("reproducible.inputPaths")
+  # At the end of this function, the files will be present in destinationPath, if they existed
+  #  in options("reproducible.inputPaths")
   localChecks <- .checkLocalSources(neededFiles, checkSums,
-                                  otherPaths = getOption("reproducible.inputPaths"),
-                                  destinationPath, needChecksums = needChecksums)
+                                    checkSumFilePath = checkSumFilePath,
+                                    otherPaths = getOption("reproducible.inputPaths"),
+                                    destinationPath, needChecksums = needChecksums)
   checkSums <- localChecks$checkSums
   needChecksums <- localChecks$needChecksums
+
+  if (!is.null(getOption("reproducible.inputPaths"))) {
+    destinationPathUser <- destinationPath
+    on.exit({
+      destinationPath <- destinationPathUser
+    }, add = TRUE)
+    destinationPath <- getOption("reproducible.inputPaths")[1]
+    if (isTRUE(any(grepl(archive, pattern = destinationPathUser)))) {
+      # might have a "." as destinationPath -- messes with grepl
+      patt <- if (grepl("^\\.", destinationPathUser))
+        gsub("^\\.", "^\\\\.", destinationPathUser)
+      else
+        destinationPathUser
+      archive <- gsub(archive, pattern = patt,
+                      replacement = destinationPath)
+
+    }
+  }
 
   # Stage 1 -- Download
   downloadFileResult <- downloadFile(
@@ -271,7 +292,38 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                    downloadFileResult$downloaded
                  else
                    filesExtracted$filesExtracted)
-  if (!is.null(filesExtr)) filesExtr <- unique(basename(filesExtr))
+  if (!is.null(filesExtr)) {
+    filesExtrTemp <- filesExtr # keep this non-uniqued version... contains full paths
+    filesExtr <- unique(basename(filesExtr))
+  }
+
+
+  # link back to destinationPath if options("reproducible.inputPaths") was used.
+  #  destinationPath had been overwritten to be options("reproducible.inputPaths")
+  if (!is.null(getOption("reproducible.inputPaths"))) {
+    #foundRecursively <- localChecks$foundRecursively
+    foundInInputPaths <- localChecks$foundInInputPaths
+    copyToIP <- (!filesExtr %in% foundInInputPaths)
+    # Make sure they are all in options("reproducible.inputPaths"), accounting for
+    #   the fact that some may have been in sub-folders -- i.e., don't deal with these
+    if (isTRUE(any(copyToIP))) {
+      logicalFilesExistIP <- file.exists(file.path(destinationPath, filesExtr[copyToIP]))
+      if (!isTRUE(all(logicalFilesExistIP))) {
+        linkOrCopy(file.path(destinationPathUser, filesExtr[!logicalFilesExistIP]),
+                   file.path(destinationPath, filesExtr[!logicalFilesExistIP]))
+      }
+    }
+
+    # Now make sure all are in original destinationPath
+    logicalFilesExistDP <- file.exists(file.path(destinationPathUser, filesExtr))
+    if (!isTRUE(all(logicalFilesExistDP))) {
+      linkOrCopy(file.path(destinationPath, filesExtr[!logicalFilesExistDP]),
+                 file.path(destinationPathUser, filesExtr[!logicalFilesExistDP]))
+    }
+    destinationPath <- destinationPathUser
+  }
+
+
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
                                        filesExtracted = filesExtr,
                                        fun) # passes through if all known
@@ -440,8 +492,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   list(neededFiles = neededFiles, checkSums = checkSums)
 }
 
-.checkLocalSources <- function(neededFiles, checkSums, otherPaths, needChecksums, destinationPath) {
-  if (!any(is.na(neededFiles))) {
+.checkLocalSources <- function(neededFiles, checkSumFilePath, checkSums, otherPaths, needChecksums, destinationPath) {
+  #foundRecursively <- character()
+  foundInInputPaths <- character()
+  if (!is.null(neededFiles)) {
+
     filesInHand <- checkSums[compareNA(checkSums$result, "OK"),]$expectedFile
     if (!all(neededFiles %in% filesInHand)) {
       for (op in otherPaths) {
@@ -450,26 +505,31 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         } else {
           FALSE
         }
-        opDir <- dir(op, recursive = recursively, full.names = TRUE)
-        if (any(neededFiles %in% basename(opDir))) {
+        opFiles <- dir(op, recursive = recursively, full.names = TRUE)
+        if (any(neededFiles %in% basename(opFiles))) {
 
-          isNeeded <- basename(opDir) %in% neededFiles
-          op <- dirname(opDir[isNeeded])
-          if (length(op) > 1)
-            message("There is more than one local file named ", neededFiles,
-                    " Using the first one.")
-          checkSumsInputPath <- Checksums(path = op, write = FALSE,
-                                          files = file.path(op, neededFiles),
-                                          checksumFile = file.path(op, "CHECKSUMS.txt"))
-          checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"),]
-          filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
-          filesInHandIPLogical <- neededFiles %in% filesInHandIP
-          if (any(filesInHandIPLogical)) {
-            message("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",op," to ", destinationPath)
-            file.copy(file.path(op, filesInHandIP), destinationPath)
-            checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
-            checkSums <- unique(checkSums, by = "expectedFile")
-            needChecksums <- 2
+          isNeeded <- basename(opFiles) %in% neededFiles
+          dirNameOPFiles <- dirname(opFiles[isNeeded])
+
+          #foundRecursively <- dirNameOPFiles != dirname(opFiles[isNeeded])
+          #foundRecursively <- basename(opFiles[isNeeded][foundRecursively])
+
+          uniqueDirsOPFiles <- unique(dirNameOPFiles)
+          for (dirOPFiles in uniqueDirsOPFiles) {
+            checkSumsInputPath <- Checksums(path = dirOPFiles, write = FALSE,
+                                            files = file.path(dirNameOPFiles, neededFiles),
+                                            checksumFile = checkSumFilePath)
+            checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"),]
+            filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
+            filesInHandIPLogical <- neededFiles %in% filesInHandIP
+            if (any(filesInHandIPLogical)) {
+              #message("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",dirNameOPFiles," to ", destinationPath)
+              linkOrCopy(file.path(dirNameOPFiles, filesInHandIP), file.path(destinationPath, filesInHandIP))
+              checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
+              checkSums <- unique(checkSums, by = "expectedFile")
+              needChecksums <- 2
+            }
+            foundInInputPaths <- c(foundInInputPaths, filesInHandIP)
           }
           if (isTRUE(all(filesInHandIPLogical))) {
             break
@@ -478,5 +538,100 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   }
-  list(checkSums = checkSums, needChecksums = needChecksums)
+  list(checkSums = checkSums, needChecksums = needChecksums,
+       #foundRecursively = foundRecursively,
+       foundInInputPaths = foundInInputPaths)
+}
+
+#' Hardlink, symlink, or copy a file
+#'
+#' Attempt first to make a hardlink. If that fails, try to make
+#' a symlink (on non-windows systems and \code{symlink = TRUE}).
+#' If that fails, copy the file.
+#'
+#' @note Use caution with files-backed objects (e.g., rasters). See examples.
+#'
+#' @inheritParams base::file.link
+#' @param symlink  Logical indicating whether to use symlink (instead of hardlink).
+#'                 Default \code{FALSE}.
+#'
+#' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{file.copy}}
+#'
+#' @author Alex Chubaty and Eliot McIntire
+#' @export
+#' @examples
+#' library(datasets)
+#' library(magrittr)
+#' library(raster)
+#'
+#' tmpDir <- file.path(tempdir(), 'symlink-test') %>%
+#'   normalizePath(winslash = '/', mustWork = FALSE)
+#' dir.create(tmpDir)
+#'
+#' f0 <- file.path(tmpDir, "file0.csv")
+#' write.csv(iris, f0)
+#'
+#' d1 <- file.path(tmpDir, "dir1")
+#' dir.create(d1)
+#' write.csv(iris, file.path(d1, "file1.csv"))
+#'
+#' d2 <- file.path(tmpDir, "dir2")
+#' dir.create(d2)
+#' f2 <- file.path(tmpDir, "file2.csv")
+#'
+#' ## create link to a file
+#' linkOrCopy(f0, f2)
+#' file.exists(f2) ## TRUE
+#' identical(read.table(f0), read.table(f2)) ## TRUE
+#'
+#' ## deleting the link shouldn't delete the original file
+#' unlink(f0)
+#' file.exists(f0) ## FALSE
+#' file.exists(f2) ## TRUE
+#'
+#' ## using rasters and other file-backed objects
+#' f3a <- system.file("external/test.grd", package = "raster")
+#' f3b <- system.file("external/test.gri", package = "raster")
+#' r3a <- raster(f3a)
+#' f4a <- file.path(tmpDir, "raster4.grd")
+#' f4b <- file.path(tmpDir, "raster4.gri")
+#' linkOrCopy(f3a, f4a) ## hardlink
+#' linkOrCopy(f3b, f4b) ## hardlink
+#' r4a <- raster(f4a)
+#'
+#' isTRUE(all.equal(r3a, r4a)) # TRUE
+#'
+#' ## cleanup
+#' unlink(tmpDir, recursive = TRUE)
+linkOrCopy <- function (from, to, symlink = TRUE) {
+
+  toDirs <- unique(dirname(to))
+  dirDoesntExist <- !dir.exists(toDirs)
+  if (any(dirDoesntExist)) {
+    lapply(toDirs[dirDoesntExist], dir.create)
+  }
+  # Try hard link first -- the only type that R deeply recognizes
+  result <- suppressWarnings(file.link(from, to))
+  if (isTRUE(result)) {
+    message("Hardlinked version of file created at: ", to, ", which points to "
+            ,from,"; no copy was made")
+  }
+
+  # On *nix types -- try symlink
+  if (isFALSE(result) && isTRUE(symlink)) {
+    if (!identical(.Platform$OS.type, "windows")) {
+      result <- suppressWarnings(file.symlink(from, to))
+      if (isTRUE(result)) {
+        message("Symlinked version of file created at: ", to, ", which points to "
+                ,from,"; no copy was made")
+      }
+    }
+  }
+
+  if (isFALSE(result)) {
+    result <- file.copy(from, to)
+    message("Copy of file: ", from, ", was created at: ", to)
+  }
+
+  return(result)
 }

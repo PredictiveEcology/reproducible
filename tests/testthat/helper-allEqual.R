@@ -24,6 +24,15 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   unlist(lapply(libraries, require, character.only = TRUE))
   require("testthat")
   tmpdir <- normPath(file.path(tempdir(), rndstr(1,6)))
+
+  if (interactive()) {
+    if (file.exists("~/.httr-oauth")) {
+      linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
+    } else {
+      googledrive::drive_auth()
+      file.copy(".httr-oauth", "~/.httr-oauth")
+    }
+  }
   checkPath(tmpdir, create = TRUE)
   origDir <- setwd(tmpdir)
   tmpCache <- normPath(file.path(tmpdir, "testCache"))
