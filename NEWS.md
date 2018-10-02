@@ -1,6 +1,6 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 0.2.3.9000
+version 0.2.4
 =============
 
 * New value possible for `options(reproducible.useCache = 'overwrite')`, which allows use of `Cache` in cases where the function call has an entry in the `cacheRepo`, will purge it and add the output of the current call instead. 

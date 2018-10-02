@@ -1,9 +1,7 @@
 ## Updated release
 
-Our previous submission last week showed errors during windows build process.
-This update fixes those errors in downloading files during tests.
+This is an enhancement release. Several new functions and new options. 
 
-NOTE: an updated version of `SpaDES.core` will be submitted following the acceptance of `reproducible` to CRAN.
 
 ## Test environments
 
