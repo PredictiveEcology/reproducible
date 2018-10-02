@@ -60,8 +60,6 @@ Suggests:
     knitr,
     rmarkdown,
     TimeWarp
-Remotes:
-    PredictiveEcology/quickPlot@development
 Encoding: UTF-8
 Language: en-CA
 LinkingTo: Rcpp
