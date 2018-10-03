@@ -25,9 +25,6 @@ Attempt first to make a hardlink. If that fails, try to make
 a symlink (on non-windows systems and \code{symlink = TRUE}).
 If that fails, copy the file.
 }
-\details{
-
-}
 \note{
 Use caution with files-backed objects (e.g., rasters). See examples.
 }

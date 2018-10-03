@@ -125,7 +125,8 @@ fastMask <- function(x, y) {
 
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)){
-        writeRaster(x, filename = tempSrcRaster, datatype = assessDataTypeGDAL(x), overwrite = TRUE)
+        dType <- assessDataType(raster(x))
+        writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
         rm(x)
         gc()
       } else {
@@ -142,13 +143,14 @@ fastMask <- function(x, y) {
       if (.Platform$OS.type == "windows") {
         exe <- ".exe"
       } else exe <- ""
+      dType <- assessDataTypeGDAL(raster(tempSrcRaster))
       system(
         paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-               " -multi ",
+               "-multi ",
                "-ot ",
                "-crop_to_cutline ",
                "-cutline ", tempSrcShape, " ",
-               assessDataTypeGDAL(tempSrcRaster),
+               dType,
                " -overwrite ",
                "-tr ", paste(tr, collapse = " "), " ",
                "\"", tempSrcRaster, "\"", " ",

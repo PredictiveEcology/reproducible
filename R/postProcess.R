@@ -178,12 +178,12 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       extRTM <- NULL
       crsRTM <- NULL
     }
-    if(class(x) != "RasterLayer" | canProcessInMemory(x, 4)) {
-      x <- Cache(cropInputs, x = x, studyArea = studyArea,
-                 extentToMatch = extRTM,
-                 extentCRS = crsRTM,
-                 useCache = useCache, ...)
-    }
+
+    x <- Cache(cropInputs, x = x, studyArea = studyArea,
+               extentToMatch = extRTM,
+               extentCRS = crsRTM,
+               useCache = useCache, ...)
+
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
@@ -215,9 +215,14 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, ...)
 
       # writeOutputs
+
       x <- do.call(writeOutputs, append(list(x = x, filename2 = newFilename,
                                               overwrite = overwrite), dots))
-      unlink(tempdir(), recursive = TRUE) #clear any temp files
+
+      if(dir.exists(file.path(raster::tmpDir(), "bigRasters"))){
+        unlink(file.path(raster::tmpDir(), "bigRasters"), recursive = TRUE) #Delete gdalwarp results in temp
+      }
+
     }
   }
   return(x)
@@ -257,6 +262,7 @@ cropInputs <- function(x, studyArea, rasterToMatch, ...) {
 #' @export
 #' @rdname cropInputs
 cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
+
   x
 }
 
@@ -431,7 +437,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         !identical(res(x), res(rasterToMatch)) |
         !identical(extent(x), extent(rasterToMatch))) {
       message("    reprojecting ...")
-      if (canProcessInMemory(x, 400)) {
+      if (canProcessInMemory(x, 4)) {
         tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
         warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
@@ -459,7 +465,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 
        # the raster is in memory, but large enough to trigger this function: write it to disk
         if (inMemory(x)){
-          writeRaster(x, filename = tempSrcRaster, datatype = assessDataTypeGDAL(x), overwrite = TRUE)
+          dType <- assessDataType(x)
+          writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
           rm(x)
           gc()
         } else {
@@ -473,13 +480,15 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         if (.Platform$OS.type == "windows") {
           exe <- ".exe"
         } else exe <- ""
+
+        dType <- assessDataTypeGDAL(raster(tempSrcRaster))
         system(
           paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                  "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
                  " -t_srs \"", as.character(targetCRS), "\"",
                  " -multi ",
                  "-ot ",
-                 assessDataTypeGDAL(tempSrcRaster),
+                 dType,
                  " -overwrite ",
                  "-tr ", paste(tr, collapse = " "), " ",
                  "\"", tempSrcRaster, "\"", " ",
@@ -773,11 +782,12 @@ writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
       dots$datatype <- datatype2
     } else if (datatype2 != dots$datatype)
       message("chosen 'datatype', ",dots$datatype,", may be inadequate for the ",
-                    "range/type of values in ", names(x),
-                    "\n consider changing to ", datatype2)
+              "range/type of values in ", names(x),
+              "\n consider changing to ", datatype2)
 
-    xTmp <- writeRaster(x = x, filename = filename2, overwrite = overwrite, ...)
 
+    xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
+    #Before changing to do.call, dots were not being added.
     # This is a bug in writeRaster was spotted with crs of xTmp became
     # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
     # should have stayed at
@@ -787,12 +797,6 @@ writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
 
     x <- xTmp
   }
-
-  #Delete any big rasters in temp drive
-  if(dir.exists(file.path(raster::tmpDir(), "bigRasters"))){
-    unlink(file.path(raster::tmpDir(), "bigRasters"), recursive = TRUE)
-  }
-
   x
 }
 
@@ -913,7 +917,8 @@ assessDataType.default <- function(ras) {
 #' @return The appropriate data type for the range of values in \code{ras} for using gdal. See \code{\link[raster]{dataType}} for details.
 
 assessDataTypeGDAL <- function(ras) {
-  ras <- raster(ras)
+
+
   ## using ras@data@... is faster, but won't work for @values in large rasters
   minVal <- ras@data@min
   maxVal <- ras@data@max
@@ -934,7 +939,12 @@ assessDataTypeGDAL <- function(ras) {
     }
 
   } else {
-    rasVals <- raster::sampleRandom(x = ras, size = 100000) #assumes 100,000 pixels in raster
+    if (ncell(ras) > 100000) {
+      rasVals <- raster::sampleRandom(x = ras, size = 100000) #assumes 100,000 pixels in raster
+    } else {
+      rasVals <- raster::getValues(ras)
+    }
+
     #This method is slower but safer than getValues. Alternatives?
     doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)
 
