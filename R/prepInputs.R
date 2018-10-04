@@ -599,6 +599,38 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     c(argList)
   }
   extractedFiles <- do.call(fun, c(args, argList))
+  if (!all(file.path(args$exdir, argList[[1]]) %in% extractedFiles)) {
+    message(
+      paste0(
+        "File unzipping do not appear to have worked properly.",
+        " Trying a system call of unzip..."
+      )
+    )
+    wd <- getwd()
+    tempDir <- file.path(args$exdir, "extractedFiles")
+    dir.create(tempDir, showWarnings = FALSE)
+    setwd(tempDir)
+    system2("unzip",
+            args = args[1],
+            wait = TRUE,
+            stdout = NULL)
+    extractedFiles <-
+      list.files(path = getwd(),
+                 # list of full paths of all extracted files!
+                 recursive = TRUE,
+                 include.dirs = TRUE)
+    invisible(lapply(
+      X = extractedFiles,
+      FUN = function(fileToMove) {
+        file.rename(from = file.path(tempDir, fileToMove),
+                    to = file.path(args$exdir, fileToMove))
+      }
+    ))
+    extractedFiles <- file.path(wd, extractedFiles)
+    unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
+    setwd(wd)
+    rm(wd)
+  }
   if (!isUnzip) {
     extractedFiles <- files
   }
