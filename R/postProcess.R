@@ -845,12 +845,12 @@ writeOutputs.default <- function(x, filename2, ...) {
 #' @importFrom raster getValues
 #' @example inst/examples/example_assessDataType.R
 #' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
-
 assessDataType <- function(ras) {
   UseMethod("assessDataType")
 }
 
 #' @export
+#' @importFrom raster getValues ncell
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras) {
   ## using ras@data@... is faster, but won't work for @values in large rasters
@@ -912,10 +912,9 @@ assessDataType.default <- function(ras) {
 #' @author Tati Micheletti
 #' @export
 #' @rdname assessDataTypeGDAL
-#' @importFrom raster getValues
+#' @importFrom raster getValues ncell
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @return The appropriate data type for the range of values in \code{ras} for using gdal. See \code{\link[raster]{dataType}} for details.
-
 assessDataTypeGDAL <- function(ras) {
 
 
