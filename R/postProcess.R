@@ -215,8 +215,14 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, ...)
 
       # writeOutputs
+
       x <- do.call(writeOutputs, append(list(x = x, filename2 = newFilename,
                                               overwrite = overwrite), dots))
+
+      if(dir.exists(file.path(raster::tmpDir(), "bigRasters"))){
+        unlink(file.path(raster::tmpDir(), "bigRasters"), recursive = TRUE) #Delete gdalwarp results in temp
+      }
+
     }
   }
   return(x)
@@ -256,6 +262,7 @@ cropInputs <- function(x, studyArea, rasterToMatch, ...) {
 #' @export
 #' @rdname cropInputs
 cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
+
   x
 }
 
@@ -450,19 +457,46 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         }
       } else {
         message("   large raster: reprojecting after writing to temp drive...")
-        tempSrcRaster <- file.path(tempfile(), ".tif", fsep = "")
-        tempDstRaster <- file.path(dirname(tempfile()),
-                                   paste0(x@data@names,"_reproj", ".tif"))
-        writeRaster(x, filename = tempSrcRaster, datatype = assessDataType(x), overwrite = TRUE)
-        gdalUtils::gdalwarp(srcfile = tempSrcRaster,
-                            dstfile = tempDstRaster,
-                            s_srs = as.character(crs(x)),
-                            t_srs = as.character(targetCRS),
-                            tr = res(rasterToMatch),
-                            tap = TRUE, overwrite = TRUE)
+        #rasters need to go to same file so it can be unlinked at end without losing other temp files
+
+        tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
+        tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
+        tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_reproj.tif")) #fails if x = stack
+
+       # the raster is in memory, but large enough to trigger this function: write it to disk
+        if (inMemory(x)){
+          dType <- assessDataType(x)
+          writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
+          rm(x)
+          gc()
+        } else {
+          tempSrcRaster <- x@file@name #Keep original raster
+        }
+        #Will use Nearest Neighbour - fastest, safest, but worst interpolation for continuous
+        res(rasterToMatch) <- c(30,30)
+        tr <- res(rasterToMatch)
+
+        gdalUtils::gdal_setInstallation()
+        if (.Platform$OS.type == "windows") {
+          exe <- ".exe"
+        } else exe <- ""
+
+        dType <- assessDataTypeGDAL(raster(tempSrcRaster))
+        system(
+          paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+                 "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
+                 " -t_srs \"", as.character(targetCRS), "\"",
+                 " -multi ",
+                 "-ot ",
+                 dType,
+                 " -overwrite ",
+                 "-tr ", paste(tr, collapse = " "), " ",
+                 "\"", tempSrcRaster, "\"", " ",
+                 "\"", tempDstRaster, "\""),
+          wait = TRUE)
+        ##
         x <- raster(tempDstRaster)
-        x[] <- x[]    ## bring it to memory to update metadata
-        file.remove(c(tempSrcRaster, tempDstRaster))
+        #file exists in temp drive. Can copy to filename2
       }
     } else {
       message("    no reprojecting because target characteristics same as input Raster.")
@@ -568,6 +602,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
     x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
+
       #msg <- capture.output(type = "message",
                             x <- fastMask(x = x, y = studyArea)
                             #)
@@ -747,11 +782,12 @@ writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
       dots$datatype <- datatype2
     } else if (datatype2 != dots$datatype)
       message("chosen 'datatype', ",dots$datatype,", may be inadequate for the ",
-                    "range/type of values in ", names(x),
-                    "\n consider changing to ", datatype2)
+              "range/type of values in ", names(x),
+              "\n consider changing to ", datatype2)
 
-    xTmp <- writeRaster(x = x, filename = filename2, overwrite = overwrite, ...)
 
+    xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
+    #Before changing to do.call, dots were not being added.
     # This is a bug in writeRaster was spotted with crs of xTmp became
     # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
     # should have stayed at
@@ -865,3 +901,69 @@ assessDataType.RasterStack <- function(ras) {
 assessDataType.default <- function(ras) {
   stop("No method for assessDataType for class ", class(ras))
 }
+#' Assess the appropriate raster layer data type for gdal
+#'
+#' Can be used to write prepared inputs on disk.
+#'
+#' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
+#' @author Eliot McIntire
+#' @author Ceres Barros
+#' @author Ian Eddy
+#' @author Tati Micheletti
+#' @export
+#' @rdname assessDataTypeGDAL
+#' @importFrom raster getValues
+#' @example inst/examples/example_assessDataTypeGDAL.R
+#' @return The appropriate data type for the range of values in \code{ras} for using gdal. See \code{\link[raster]{dataType}} for details.
+
+assessDataTypeGDAL <- function(ras) {
+
+
+  ## using ras@data@... is faster, but won't work for @values in large rasters
+  minVal <- ras@data@min
+  maxVal <- ras@data@max
+  signVal <- minVal < 0
+
+  if (ras@file@datanotation != "FLT4S") {
+    ## gdal deals with infinite values as Float32
+    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
+
+    if(!signVal) {
+      ## only check for binary if there are no decimals and no signs
+      datatype <- if(maxVal <= 255) "Byte" else
+       if(maxVal <= 65534) "UInt16" else
+        if(maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
+    } else {
+      if(minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
+        if(minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
+    }
+
+  } else {
+    if (ncell(ras) > 100000) {
+      rasVals <- raster::sampleRandom(x = ras, size = 100000) #assumes 100,000 pixels in raster
+    } else {
+      rasVals <- raster::getValues(ras)
+    }
+
+    #This method is slower but safer than getValues. Alternatives?
+    doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)
+
+    if(signVal & !doubVal) {
+      datatype <- if(minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
+        if(minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
+    } else
+      if(doubVal) {
+        datatype <- "Float32"
+      } else {
+        #data was FLT4S but doesn't need sign or decimal
+        datatype <- if(maxVal <= 255) "Byte" else
+          if(maxVal <= 65534) "UInt16" else
+            if(maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
+      }
+  }
+
+  datatype
+}
+
+#' @export
+#' @rdname assessDataTypeGDAL
