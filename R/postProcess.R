@@ -437,6 +437,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         !identical(res(x), res(rasterToMatch)) |
         !identical(extent(x), extent(rasterToMatch))) {
       message("    reprojecting ...")
+
       if (canProcessInMemory(x, 4)) {
         tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
         warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
@@ -448,6 +449,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         ## the different projections (e.g. degree based and meter based). This should be fine
         if (identical(crs(x), crs(rasterToMatch)) &
             any(res(x) != res(rasterToMatch))) {
+
           if (all(res(x) %==% res(rasterToMatch))) {
             res(x) <- res(rasterToMatch)
           } else {
@@ -473,7 +475,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           tempSrcRaster <- x@file@name #Keep original raster
         }
         #Will use Nearest Neighbour - fastest, safest, but worst interpolation for continuous
-        res(rasterToMatch) <- c(30,30)
         tr <- res(rasterToMatch)
 
         gdalUtils::gdal_setInstallation()
