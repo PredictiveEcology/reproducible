@@ -10,7 +10,7 @@ options(reproducible.verbose = FALSE)
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
-                     opts = NULL) {
+                     opts = NULL, needGoogle = FALSE) {
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else
@@ -25,7 +25,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   require("testthat")
   tmpdir <- normPath(file.path(tempdir(), rndstr(1,6)))
 
-  if (interactive()) {
+  if (interactive() && isTRUE(needGoogle)) {
     if (file.exists("~/.httr-oauth")) {
       linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
     } else {

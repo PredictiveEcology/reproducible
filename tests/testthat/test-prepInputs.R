@@ -262,7 +262,7 @@ test_that("prepInputs doesn't work", {
 })
 
 test_that("interactive prepInputs", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -384,7 +384,7 @@ test_that("interactive prepInputs", {
 })
 
 test_that("preProcess doesn't work", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
