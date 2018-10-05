@@ -1397,6 +1397,12 @@ test_that("options inputPaths", {
 
 test_that("system call to gdalwarp works", {
   skip_on_cran()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
   ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
   crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
@@ -1413,7 +1419,7 @@ test_that("system call to gdalwarp works", {
   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
   expect_true(dataType(test1) == "INT1U") #correct datatype
 
-  ras <- setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
+  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
   test1 <- prepInputs(targetFile = ras@file@name,
                       destinationPath = tempdir(),

@@ -913,7 +913,7 @@ assessDataType.default <- function(ras) {
 #' @author Tati Micheletti
 #' @export
 #' @rdname assessDataTypeGDAL
-#' @importFrom raster getValues
+#' @importFrom raster getValues sampleRandom
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @return The appropriate data type for the range of values in \code{ras} for using gdal. See \code{\link[raster]{dataType}} for details.
 
