@@ -189,15 +189,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (is.null(alsoExtract)) {
     filesInsideArchive <- .listFilesInArchive(archive)
     if (isTRUE(length(filesInsideArchive)>0)) {
-      checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
-                                  files = file.path(destinationPath, filesInsideArchive)),
-                        silent = TRUE)
-      setDT(checkSums2)
-      checkSums2 <- checkSums2[compareNA(result, "OK")]
-      checkSums <- rbindlist(list(checkSums2, checkSums), use.names = TRUE)
-      setkeyv(checkSums, "result")
-      checkSums <- unique(checkSums, by = "expectedFile", fromLast = TRUE)
-
+      checkSums <- .checkSumsUpdate(destinationPath, file.path(destinationPath, filesInsideArchive),
+                                    checkSums = checkSums)
     }
     neededFiles <- unique(c(neededFiles, filesInsideArchive))
   } else {
@@ -459,9 +452,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 .similarFilesInCheckSums <- function(file, checkSums) {
   if (NROW(checkSums)) {
-    isTRUE(all(compareNA("OK",
-                         checkSums[grepl(paste0(file_path_sans_ext(file),"\\."),
-                                         checkSums$expectedFile),]$result)))
+    anySimilarInCS <- checkSums[grepl(paste0(file_path_sans_ext(file),"\\."),
+                                      checkSums$expectedFile),]$result
+    if (length(anySimilarInCS)) {
+      isTRUE(all(compareNA("OK", anySimilarInCS)))
+    } else {
+      FALSE
+    }
   } else {
     FALSE
   }
