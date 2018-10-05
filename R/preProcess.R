@@ -428,9 +428,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 .guessAtArchive <- function(url, archive, targetFile, destinationPath) {
   fileToCheckIfArchive <- if (grepl("drive.google.com", url)) {
+    if (url.exists(url)) { # likely offline
     assessGoogle(url = url, archive = archive,
                  targetFile = targetFile,
                  destinationPath = destinationPath)
+    } else {
+      file.path(destinationPath, basename(url))
+    }
   } else {
     file.path(destinationPath, basename(url))
   }
@@ -617,17 +621,24 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' unlink(tmpDir, recursive = TRUE)
 linkOrCopy <- function (from, to, symlink = TRUE) {
 
-  toDirs <- unique(dirname(to))
-  dirDoesntExist <- !dir.exists(toDirs)
-  if (any(dirDoesntExist)) {
+  existsLogical <- file.exists(from)
+  if (any(existsLogical)) {
+    toDirs <- unique(dirname(to))
+    dirDoesntExist <- !dir.exists(toDirs)
+    if (any(dirDoesntExist)) {
     lapply(toDirs[dirDoesntExist], dir.create)
   }
+    dups <- duplicated(basename(from))
   # Try hard link first -- the only type that R deeply recognizes
-  result <- suppressWarnings(file.link(from, to))
+    warns <- capture_warnings(result <- file.link(from[!dups], to))
   if (isTRUE(result)) {
     message("Hardlinked version of file created at: ", to, ", which points to "
             ,from,"; no copy was made")
   }
+    if (any(grepl("file already exists", warns))) {
+      message("File named ", paste(to, collapse = ", "), " already exists; will try to use it/them")
+      result <- TRUE
+    }
 
   # On *nix types -- try symlink
   if (isFALSE(result) && isTRUE(symlink)) {
@@ -641,9 +652,12 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   }
 
   if (isFALSE(result)) {
-    result <- file.copy(from, to)
-    message("Copy of file: ", from, ", was created at: ", to)
+      result <- file.copy(from, to)
+      message("Copy of file: ", from, ", was created at: ", to)
+    }
+  } else {
+    message("File ", from, " does not exist. Not copying")
+    result <- FALSE
   }
-
   return(result)
 }
