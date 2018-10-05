@@ -48,7 +48,7 @@
 #' @export
 #' @inheritParams prepInputs
 #' @inheritParams downloadFile
-#' @importFrom data.table fread
+#' @importFrom data.table fread setDT
 #' @importFrom tools file_path_sans_ext
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = ".", fun = NULL, dlFun = NULL,
@@ -187,7 +187,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Deal with "similar" in alsoExtract -- maybe this is obsolete with new feature that uses file_name_sans_ext
   if (is.null(alsoExtract)) {
-    neededFiles <- unique(c(neededFiles, .listFilesInArchive(archive)))
+    filesInsideArchive <- .listFilesInArchive(archive)
+    if (isTRUE(length(filesInsideArchive)>0)) {
+      checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
+                                  files = file.path(destinationPath, filesInsideArchive)),
+                        silent = TRUE)
+      setDT(checkSums2)
+      checkSums2 <- checkSums2[compareNA(result, "OK")]
+      checkSums <- rbindlist(list(checkSums2, checkSums), use.names = TRUE)
+      setkeyv(checkSums, "result")
+      checkSums <- unique(checkSums, by = "expectedFile", fromLast = TRUE)
+
+    }
+    neededFiles <- unique(c(neededFiles, filesInsideArchive))
   } else {
     outFromSimilar <- .checkForSimilar(neededFiles, alsoExtract, archive, targetFile,
                                        destinationPath = destinationPath, checkSums, url)
