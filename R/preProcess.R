@@ -543,7 +543,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               if (length(isOK))
                 if (all(compareNA(isOK, "OK")))
                   break
-              checkSumFilePathTry <- file.path(dirNameOPFiles, "CHECKSUMS.txt")
+              checkSumFilePathTry <- file.path(dirOPFiles, "CHECKSUMS.txt")
             }
             checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"),]
             filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
