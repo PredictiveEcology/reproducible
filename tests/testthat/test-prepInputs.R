@@ -512,7 +512,7 @@ test_that("preProcess doesn't work", {
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
   )))
-  runTest("1_2_3_4_5_6_7_10_12_13", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_3_4_5_6_7_10_12_13", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -520,7 +520,7 @@ test_that("preProcess doesn't work", {
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
   ################################################################
@@ -594,7 +594,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = "similar",
     destinationPath = tmpdir
   )))
-  runTest("1_2_3_4_5_6_7_10_12_13", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_3_4_5_6_7_10_11_12", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -603,7 +603,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = "similar",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   unlink(dir(tmpdir, full.names = TRUE))
   expect_error(mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -688,14 +688,14 @@ test_that("preProcess doesn't work", {
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
   )))
-  runTest("1_2_4_5_6_10_12_13", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_4_5_6_10_12_13", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_9_10_12", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_9_10_12", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
   ###### archive, targetFile                                 #####
@@ -708,7 +708,7 @@ test_that("preProcess doesn't work", {
     targetFile = "Shapefile1.shp",
     destinationPath = tmpdir
   )))
-  runTest("1_2_4_5_6_13", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_4_5_6_13", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -716,7 +716,7 @@ test_that("preProcess doesn't work", {
     targetFile = "Shapefile1.shp",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_9", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
   ###### archive, targetFile, alsoExtract                    #####
@@ -930,7 +930,6 @@ test_that("prepInputs doesn't work", {
     mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = targetFileLuxRDS,
                                                                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                                                                            path = tmpdir, studyArea = StudyArea)))
-    expect_true(isTRUE(any(grepl("Field names abbrev", warn))))
     runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
             filePattern = targetFileLuxRDS, tmpdir = tmpdir,
             test = test3)
