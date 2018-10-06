@@ -599,7 +599,7 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
     c(argList)
   }
   extractedFiles <- do.call(fun, c(args, argList))
-  if (!all(file.path(args$exdir, argList[[1]]) %in% extractedFiles)) {
+  if (!all(file.path(args$exdir, basename(argList[[1]])) %in% extractedFiles)) {
     message(
       paste0(
         "File unzipping do not appear to have worked properly.",
