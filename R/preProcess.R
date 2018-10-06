@@ -210,6 +210,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums <- localChecks$checkSums
   needChecksums <- localChecks$needChecksums
 
+  # Change the destinationPath to the reproducible.inputPaths temporarily, so
+  #   download happens there. Later it will be linked to the user destinationPath
   if (!is.null(getOption("reproducible.inputPaths"))) {
     destinationPathUser <- destinationPath
     on.exit({
@@ -505,7 +507,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   list(neededFiles = neededFiles, checkSums = checkSums)
 }
 
-.checkLocalSources <- function(neededFiles, checkSumFilePath, checkSums, otherPaths, needChecksums, destinationPath) {
+.checkLocalSources <- function(neededFiles, checkSumFilePath, checkSums, otherPaths, needChecksums,
+                               destinationPath) {
   #foundRecursively <- character()
   foundInInputPaths <- character()
   if (!is.null(neededFiles)) {
@@ -529,15 +532,26 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
           uniqueDirsOPFiles <- unique(dirNameOPFiles)
           for (dirOPFiles in uniqueDirsOPFiles) {
-            checkSumsInputPath <- Checksums(path = dirOPFiles, write = FALSE,
-                                            files = file.path(dirNameOPFiles, neededFiles),
-                                            checksumFile = checkSumFilePath)
+
+            checkSumFilePathTry <- checkSumFilePath
+            # check CHECKSUMS.txt files, first the one in destinationPath, then ones in inputPaths
+            for (i in seq(1 + length(uniqueDirsOPFiles))) {
+              checkSumsInputPath <- Checksums(path = dirOPFiles, write = FALSE,
+                                              files = file.path(dirNameOPFiles, neededFiles),
+                                              checksumFile = checkSumFilePathTry)
+              isOK <- checkSumsInputPath[checkSumsInputPath$expectedFile %in% neededFiles, ]$result
+              if (length(isOK))
+                if (all(compareNA(isOK, "OK")))
+                  break
+              checkSumFilePathTry <- file.path(dirNameOPFiles, "CHECKSUMS.txt")
+            }
             checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"),]
             filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
             filesInHandIPLogical <- neededFiles %in% filesInHandIP
             if (any(filesInHandIPLogical)) {
               #message("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",dirNameOPFiles," to ", destinationPath)
-              linkOrCopy(file.path(dirNameOPFiles, filesInHandIP), file.path(destinationPath, filesInHandIP))
+              linkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
+                         file.path(destinationPath, filesInHandIP))
               checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
               checkSums <- unique(checkSums, by = "expectedFile")
               needChecksums <- 2
