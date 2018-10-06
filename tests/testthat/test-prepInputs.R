@@ -903,7 +903,7 @@ test_that("prepInputs doesn't work", {
       test1 <- prepInputs(#targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
                           targetFile = targetFileLuxRDS,
                           #destinationPath = ".",
-                          dlFun = "getDatatmp", name = "GADM", country = "LUX", level = 0,
+                          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                           #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                           path = tmpdir)
     })

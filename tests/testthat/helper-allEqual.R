@@ -120,11 +120,6 @@ urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR1
 ### Raster package function getData is failing for GADM objects because that site seems to have changed its url
 
 targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
-if (utils::packageVersion("raster") <= "2.6.7") {
-  getDataFn <- "getDatatmp"
-} else {
-  getDataFn <- "raster::getData"
-}
 
 .GADMtmp <- function (country, level, download, path, version)
 {
@@ -202,4 +197,10 @@ getDatatmp <- function (name = "GADM", download = TRUE, path = "", ...)
   else {
     stop(name, " not recognized as a valid name.")
   }
+}
+
+if (utils::packageVersion("raster") <= "2.6.7") {
+  getDataFn <- getDatatmp
+} else {
+  getDataFn <- raster::getData
 }
