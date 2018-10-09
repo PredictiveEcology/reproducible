@@ -262,7 +262,7 @@ test_that("prepInputs doesn't work", {
 })
 
 test_that("interactive prepInputs", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -384,7 +384,7 @@ test_that("interactive prepInputs", {
 })
 
 test_that("preProcess doesn't work", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -512,7 +512,7 @@ test_that("preProcess doesn't work", {
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
   )))
-  runTest("1_2_3_4_5_6_7_10_12_13", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_3_4_5_6_7_10_12_13", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -520,7 +520,7 @@ test_that("preProcess doesn't work", {
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
 
   ################################################################
@@ -594,7 +594,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = "similar",
     destinationPath = tmpdir
   )))
-  runTest("1_2_3_4_5_6_7_10_12_13", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_3_4_5_6_7_10_11_12", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -603,7 +603,7 @@ test_that("preProcess doesn't work", {
     alsoExtract = "similar",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_8_9_10_12", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   unlink(dir(tmpdir, full.names = TRUE))
   expect_error(mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -688,14 +688,14 @@ test_that("preProcess doesn't work", {
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
   )))
-  runTest("1_2_4_5_6_10_12_13", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_4_5_6_10_12_13", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
     archive = "Shapefiles1.zip",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_9_10_12", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_9_10_12", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
   ###### archive, targetFile                                 #####
@@ -708,7 +708,7 @@ test_that("preProcess doesn't work", {
     targetFile = "Shapefile1.shp",
     destinationPath = tmpdir
   )))
-  runTest("1_2_4_5_6_13", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_4_5_6_13", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # 2nd time # can checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -716,7 +716,7 @@ test_that("preProcess doesn't work", {
     targetFile = "Shapefile1.shp",
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_9", "SpatialPolygons", 9, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, expectedMess = expectedMessage, filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   ################################################################
   ###### archive, targetFile, alsoExtract                    #####
@@ -900,20 +900,22 @@ test_that("prepInputs doesn't work", {
       testOnExit(testInitOut)
     }, add = TRUE)
     mess1 <- capture_messages({
-      test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
+      test1 <- prepInputs(#targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
+                          targetFile = targetFileLuxRDS,
                           #destinationPath = ".",
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+                          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                           path = tmpdir)
     })
     mess2 <- capture_messages({
-      test2 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
-                          dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+      test2 <- prepInputs(targetFile = targetFileLuxRDS,
+                          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                           path = tmpdir)
     })
     runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
-            filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir, test = test1)
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
     runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-            filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir, test = test1)
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
 
     # Add a study area to Crop and Mask to
     # Create a "study area"
@@ -925,25 +927,24 @@ test_that("prepInputs doesn't work", {
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
     crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-    mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
-                                                                           dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+    mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = targetFileLuxRDS,
+                                                                           dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                                                                            path = tmpdir, studyArea = StudyArea)))
-    expect_true(isTRUE(any(grepl("Field names abbrev", warn))))
     runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-            filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir,
             test = test3)
 
     testOnExit(testInitOut)
     testInitOut <- testInit()
-    mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds",
-                                                                           dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+    mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = targetFileLuxRDS,
+                                                                           dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                                                                            path = tmpdir, studyArea = StudyArea)))
     runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-            filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir,
             test = test3)
 
     runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessagePostProcess,
-            filePattern = "GADM_2.8_LUX_adm0.rds", tmpdir = tmpdir,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir,
             test = test3)
 
     testOnExit(testInitOut)
@@ -1298,15 +1299,16 @@ test_that("options inputPaths", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  theFile <- "GADM_2.8_LUX_adm0.rds"
+  theFile <- targetFileLuxRDS
 
   if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
   options("reproducible.inputPaths" = NULL)
   options("reproducible.inputPathsRecursive" = FALSE)
+
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir,
-                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpdir)
   })
 
@@ -1316,7 +1318,7 @@ test_that("options inputPaths", {
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpCache,
-                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
   expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1))==1)
@@ -1328,7 +1330,7 @@ test_that("options inputPaths", {
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir3,
-                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpdir3)
   })
   expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1))==1)
@@ -1342,7 +1344,7 @@ test_that("options inputPaths", {
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir1,
-                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpdir1)
   })
   expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", file.path(tmpdir1, theFile)), mess1))==1)
@@ -1361,7 +1363,7 @@ test_that("options inputPaths", {
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir2,
-                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
   expect_true(sum(grepl("Hardlinked version of file created", mess1))==1)
@@ -1374,7 +1376,7 @@ test_that("options inputPaths", {
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir2,
-                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
   expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version
@@ -1387,7 +1389,7 @@ test_that("options inputPaths", {
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir2,
-                        dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
   expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version

@@ -96,7 +96,8 @@ setMethod(
     checkPath(path, create = write)
 
     # If it is a SpaDES module, then CHECKSUM.txt must be in the data folder
-    checksumFile <- file.path(path, basename(checksumFile))
+    # Eliot -- removed this Oct 5
+    # checksumFile <- file.path(path, basename(checksumFile))
 
     if (!file.exists(checksumFile)) {
       #file.create(checksumFile)

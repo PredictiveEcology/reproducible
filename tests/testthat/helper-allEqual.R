@@ -10,7 +10,7 @@ options(reproducible.verbose = FALSE)
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
-                     opts = NULL) {
+                     opts = NULL, needGoogle = FALSE) {
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else
@@ -25,7 +25,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   require("testthat")
   tmpdir <- normPath(file.path(tempdir(), rndstr(1,6)))
 
-  if (interactive()) {
+  if (interactive() && isTRUE(needGoogle)) {
     if (file.exists("~/.httr-oauth")) {
       linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
     } else {
@@ -116,3 +116,91 @@ urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master
 urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
 urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 
+
+### Raster package function getData is failing for GADM objects because that site seems to have changed its url
+
+targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
+
+.GADMtmp <- function (country, level, download, path, version)
+{
+  country <- raster:::.getCountry(country)
+  if (missing(level)) {
+    stop("provide a \"level=\" argument; levels can be 0, 1, or 2 for most countries, and higher for some")
+  }
+  filename <- paste(path, "GADM_", version, "_", country, "_adm",
+                    level, ".rds", sep = "")
+  if (!file.exists(filename)) {
+    if (download) {
+      baseurl <- paste0("https://biogeo.ucdavis.edu/data/gadm",version,"/Rsp/gadm36")
+      #baseurl <- paste0("http://biogeo.ucdavis.edu/data/gadm",
+      #    version)
+      if (version == 2) {
+        theurl <- paste(baseurl, "/R/", country, "_adm",
+                        level, ".RData", sep = "")
+      } else if (version == 3.6) {
+        # https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds
+        theurl <- paste(baseurl, "_", country, "_",
+                        level, "_sp.rds", sep = "")
+      } else {
+        theurl <- paste(baseurl, "/rds/", country, "_adm",
+                        level, ".rds", sep = "")
+      }
+      raster:::.download(theurl, filename)
+      if (!file.exists(filename)) {
+        message("\nCould not download file -- perhaps it does not exist")
+      }
+    }
+    else {
+      message("File not available locally. Use 'download = TRUE'")
+    }
+  }
+  if (file.exists(filename)) {
+    if (version == 2) {
+      thisenvir <- new.env()
+      data <- get(load(filename, thisenvir), thisenvir)
+    }
+    else {
+      data <- readRDS(filename)
+    }
+    return(data)
+  }
+  else {
+    return(NULL)
+  }
+}
+
+
+getDatatmp <- function (name = "GADM", download = TRUE, path = "", ...)
+{
+  path <- raster:::.getDataPath(path)
+  if (name == "GADM") {
+    .GADMtmp(..., download = download, path = path, version = 3.6)
+  }
+  else if (name == "SRTM") {
+    raster:::.SRTM(..., download = download, path = path)
+  }
+  else if (name == "alt") {
+    raster:::.raster(..., name = name, download = download, path = path)
+  }
+  else if (name == "worldclim") {
+    raster:::.worldclim(..., download = download, path = path)
+  }
+  else if (name == "CMIP5") {
+    raster:::.cmip5(..., download = download, path = path)
+  }
+  else if (name == "ISO3") {
+    raster:::ccodes()[, c(2, 1)]
+  }
+  else if (name == "countries") {
+    raster:::.countries(download = download, path = path, ...)
+  }
+  else {
+    stop(name, " not recognized as a valid name.")
+  }
+}
+
+if (utils::packageVersion("raster") <= "2.6.7") {
+  getDataFn <- getDatatmp
+} else {
+  getDataFn <- raster::getData
+}

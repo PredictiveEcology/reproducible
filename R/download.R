@@ -43,7 +43,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                                      needChecksums = needChecksums,
                                      checkSumFilePath = checksumFile,
                                      quick = quick)
-            checkSums <- if (!file.exists(checksumFile)) {
+            checkSums <- if (!file.exists(checksumFile) || is.null(neededFiles)) {
               needChecksums <- 1
               .emptyChecksumsResult
             } else {
