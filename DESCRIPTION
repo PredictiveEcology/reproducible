@@ -69,7 +69,7 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 6.1.0.9000
+RoxygenNote: 6.1.0
 Collate: 
     'RcppExports.R'
     'cache-helpers.R'
