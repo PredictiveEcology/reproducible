@@ -313,7 +313,14 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
+        if (canProcessInMemory(x, 4)) {
         x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
+        } else {
+          x <- do.call(raster::crop, args = append(list(x = x,
+                                                        y = cropExtent,
+                                                        filename = paste0(tempfile(), ".tif")),
+                                                   dots))
+        }
         if (is.null(x)) {
           message("    polygons do not intersect.")
         }
