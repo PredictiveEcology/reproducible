@@ -573,9 +573,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             # needChecksums <- 2
           }
           foundInInputPaths <- c(foundInInputPaths, filesInHandIP)
-        }
-        if (isTRUE(all(filesInHandIPLogical))) {
-          break
+          if (isTRUE(all(filesInHandIPLogical))) {
+            break
+          }
         }
       }
     }
