@@ -1396,39 +1396,3 @@ test_that("options inputPaths", {
   expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
 
 })
-
-test_that("system call to gdalwarp works", {
-  skip_on_cran()
-
-  testInitOut <- testInit("raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
-  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
-
-  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=NAD83 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-  raster::rasterOptions(todisk = TRUE) #to triger gdalwarp system call
-
-  test1 <- prepInputs(targetFile = ras@file@name,
-                      destinationPath = tempdir(),
-                      rasterToMatch = ras2, useCache = FALSE)
-
-  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
-  expect_true(dataType(test1) == "INT1U") #correct datatype
-
-  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
-  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
-  test1 <- prepInputs(targetFile = ras@file@name,
-                      destinationPath = tempdir(),
-                      rasterToMatch = ras2, useCache = FALSE)
-
-  expect_true(dataType(test1) == "FLT4S") #correct datatype
-
-  raster::rasterOptions(todisk = FALSE)
-})
-

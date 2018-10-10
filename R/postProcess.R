@@ -458,6 +458,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
         }
       } else {
+
         message("   large raster: reprojecting after writing to temp drive...")
         #rasters need to go to same file so it can be unlinked at end without losing other temp files
 
@@ -855,7 +856,11 @@ assessDataType <- function(ras) {
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras) {
   ## using ras@data@... is faster, but won't work for @values in large rasters
-  rasVals <- getValues(ras)
+  if (ncell(ras) > 100000) {
+    rasVals <- raster::sampleRandom(x = ras, size = 100000)
+  } else {
+    rasVals <- raster::getValues(ras)
+  }
   minVal <- ras@data@min
   maxVal <- ras@data@max
   signVal <- minVal < 0
@@ -913,7 +918,7 @@ assessDataType.default <- function(ras) {
 #' @author Tati Micheletti
 #' @export
 #' @rdname assessDataTypeGDAL
-#' @importFrom raster getValues ncell
+#' @importFrom raster getValues ncell sampleRandom
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @return The appropriate data type for the range of values in \code{ras} for using gdal. See \code{\link[raster]{dataType}} for details.
 assessDataTypeGDAL <- function(ras) {
@@ -940,7 +945,7 @@ assessDataTypeGDAL <- function(ras) {
 
   } else {
     if (ncell(ras) > 100000) {
-      rasVals <- raster::sampleRandom(x = ras, size = 100000) #assumes 100,000 pixels in raster
+      rasVals <- raster::sampleRandom(x = ras, size = 100000)
     } else {
       rasVals <- raster::getValues(ras)
     }
