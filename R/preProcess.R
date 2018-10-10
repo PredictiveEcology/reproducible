@@ -370,9 +370,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         destinationPath = destinationPathUser,
         append = needChecksums == 2
       ))
+      destinationPath <- destinationPathUser # reset to original argument AFTER checksums
     }
 
-    destinationPath <- destinationPathUser # reset to original argument AFTER checksums
 
     on.exit() # remove on.exit because it is done here
   }
