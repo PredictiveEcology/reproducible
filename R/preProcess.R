@@ -613,11 +613,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @note Use caution with files-backed objects (e.g., rasters). See examples.
 #'
-#' @inheritParams base::file.link
+#' @param from,to  Character vectors, containing file names or paths.
+#'                 \code{to} can alternatively be the path to a single existing directory.
 #' @param symlink  Logical indicating whether to use symlink (instead of hardlink).
 #'                 Default \code{FALSE}.
 #'
-#' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{file.copy}}
+#' @seealso \code{\link{file.link}}, \code{\link{file.symlink}}, \code{\link{file.copy}}.
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
@@ -626,7 +627,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' library(magrittr)
 #' library(raster)
 #'
-#' tmpDir <- file.path(tempdir(), 'symlink-test') %>%
+#' tmpDir <- file.path(tempdir(), "symlink-test") %>%
 #'   normalizePath(winslash = '/', mustWork = FALSE)
 #' dir.create(tmpDir)
 #'
@@ -666,43 +667,44 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' ## cleanup
 #' unlink(tmpDir, recursive = TRUE)
 linkOrCopy <- function (from, to, symlink = TRUE) {
-
   existsLogical <- file.exists(from)
   if (any(existsLogical)) {
     toDirs <- unique(dirname(to))
     dirDoesntExist <- !dir.exists(toDirs)
     if (any(dirDoesntExist)) {
-    lapply(toDirs[dirDoesntExist], dir.create)
-  }
+      lapply(toDirs[dirDoesntExist], dir.create)
+    }
     dups <- duplicated(basename(from))
-  # Try hard link first -- the only type that R deeply recognizes
+
+    # Try hard link first -- the only type that R deeply recognizes
     warns <- capture_warnings(result <- file.link(from[!dups], to))
-  if (isTRUE(result)) {
-    message("Hardlinked version of file created at: ", to, ", which points to "
-            ,from,"; no copy was made")
-  }
+    if (isTRUE(result)) {
+      message("Hardlinked version of file created at: ", to, ", which points to "
+              , from, "; no copy was made.")
+    }
+
     if (any(grepl("file already exists", warns))) {
       message("File named ", paste(to, collapse = ", "), " already exists; will try to use it/them")
       result <- TRUE
     }
 
-  # On *nix types -- try symlink
-  if (isFALSE(result) && isTRUE(symlink)) {
-    if (!identical(.Platform$OS.type, "windows")) {
-      result <- suppressWarnings(file.symlink(from, to))
-      if (isTRUE(result)) {
-        message("Symlinked version of file created at: ", to, ", which points to "
-                ,from,"; no copy was made")
+    # On *nix types -- try symlink
+    if (isFALSE(result) && isTRUE(symlink)) {
+      if (!identical(.Platform$OS.type, "windows")) {
+        result <- suppressWarnings(file.symlink(from, to))
+        if (isTRUE(result)) {
+          message("Symlinked version of file created at: ", to, ", which points to "
+                  , from, "; no copy was made.")
+        }
       }
     }
-  }
 
-  if (isFALSE(result)) {
+    if (isFALSE(result)) {
       result <- file.copy(from, to)
       message("Copy of file: ", from, ", was created at: ", to)
     }
   } else {
-    message("File ", from, " does not exist. Not copying")
+    message("File ", from, " does not exist. Not copying.")
     result <- FALSE
   }
   return(result)
