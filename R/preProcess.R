@@ -209,6 +209,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                     destinationPath, needChecksums = needChecksums)
   checkSums <- localChecks$checkSums
   needChecksums <- localChecks$needChecksums
+  successfulCheckSumFilePath <- localChecks$successfulCheckSumFilePath
+  successfulDir <- localChecks$successfulDir
+
 
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
@@ -355,18 +358,27 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun <- .extractFunction(fun)
 
   if (needChecksums > 0) {
-    ## needChecksums 1 --> write a new checksums.txt file
-    ## needChecksums 2 --> append  a new checksums.txt file
+    ## needChecksums 1 --> write a new CHECKSUMS.txt file
+    ## needChecksums 2 --> append  to CHECKSUMS.txt file
+    ## needChecksums 3 --> append  to checkSumFilePath file OR successfulCheckSumFilePath, not both
+    if (needChecksums == 3) {
+      # successfulCheckSumFilePath we do not need to update. Determine which one this is, and do
+      #   other
+      if (identical(checkSumFilePath, successfulCheckSumFilePath)) { # if it was in checkSumFilePath
+        checkSumFilePath <- file.path(successfulDir, "CHECKSUMS.txt")   #   run Checksums in IP
+      }
+      destinationPath <- destinationPathUser
+    }
     checkSums <- appendChecksumsTable(
       checkSumFilePath = checkSumFilePath,
-      filesToChecksum = basename(filesToChecksum),
+      filesToChecksum = unique(basename(filesToChecksum)),
       destinationPath = destinationPath,
-      append = needChecksums == 2
+      append = needChecksums >= 2
     )
-    if (!is.null(getOption("reproducible.inputPaths"))) {
+    if (!is.null(getOption("reproducible.inputPaths")) && needChecksums != 3) {
       suppressMessages(checkSums <- appendChecksumsTable(
-        checkSumFilePath = file.path(getOption("reproducible.inputPaths"), "CHECKSUMS.txt"),
-        filesToChecksum = basename(filesToChecksum),
+        checkSumFilePath = checkSumFilePathInputPaths,
+        filesToChecksum = unique(basename(filesToChecksum)),
         destinationPath = destinationPathUser,
         append = needChecksums == 2
       ))
@@ -524,6 +536,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                destinationPath) {
   #foundRecursively <- character()
   foundInInputPaths <- character()
+  successfulCheckSumFilePath <- character()
+  successfulDir <- character()
   if (!is.null(neededFiles)) {
 
     filesInHand <- checkSums[compareNA(checkSums$result, "OK"),]$expectedFile
@@ -555,7 +569,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             isOK <- checkSumsInputPath[checkSumsInputPath$expectedFile %in% neededFiles, ]$result
             if (length(isOK))
               if (all(compareNA(isOK, "OK"))) {
-                needChecksums <- 0
+                needChecksums <- 3 # Basically this means that we *may* have to update
+                                   #   checksums file in either destinationPath or
+                                   #   options("reproducible.inputPaths")
+                successfulCheckSumFilePath <- checkSumFilePathTry
+                successfulDir <- dirNameOPFiles
                 break
               }
 
@@ -582,6 +600,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   list(checkSums = checkSums, needChecksums = needChecksums,
        #foundRecursively = foundRecursively,
+       successfulCheckSumFilePath = successfulCheckSumFilePath,
+       successfulDir = successfulDir,
        foundInInputPaths = foundInInputPaths)
 }
 

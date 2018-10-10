@@ -1323,7 +1323,8 @@ test_that("options inputPaths", {
   })
   expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1))==1)
 
-  # Now two folders
+  # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
+  #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
   options("reproducible.inputPaths" = c(tmpdir, tmpCache))
   file.remove(file.path(tmpdir, theFile))
   tmpdir3 <- file.path(tmpCache, "test")
