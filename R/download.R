@@ -38,11 +38,11 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
           filesInLocalArchives <- unique(basename(unlist(lapply(archive, .listFilesInArchive))))
           if (all(neededFiles %in% filesInLocalArchives)) { # local archive has all files needed
             extractedFromArchive <- extractFromArchive(archive = archive[localArchivesExist],
-                                     destinationPath = destinationPath,
-                                     neededFiles = neededFiles, checkSums = checkSums,
-                                     needChecksums = needChecksums,
-                                     checkSumFilePath = checksumFile,
-                                     quick = quick)
+                                                       destinationPath = destinationPath,
+                                                       neededFiles = neededFiles, checkSums = checkSums,
+                                                       needChecksums = needChecksums,
+                                                       checkSumFilePath = checksumFile,
+                                                       quick = quick)
             checkSums <- if (!file.exists(checksumFile) || is.null(neededFiles)) {
               needChecksums <- 1
               .emptyChecksumsResult
@@ -87,16 +87,16 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
 
       # The download step
       downloadResults <- downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
-                     targetFile = targetFile, fileToDownload = fileToDownload,
-                     skipDownloadMsg = skipDownloadMsg,
-                     checkSums = checkSums,
-                     dlFun = dlFun,
-                     destinationPath = destinationPath,
-                     overwrite = overwrite,
-                     needChecksums = needChecksums, ...)
+                                        targetFile = targetFile, fileToDownload = fileToDownload,
+                                        skipDownloadMsg = skipDownloadMsg,
+                                        checkSums = checkSums,
+                                        dlFun = dlFun,
+                                        destinationPath = destinationPath,
+                                        overwrite = overwrite,
+                                        needChecksums = needChecksums, ...)
       if (file.exists(checksumFile)) {
         if (is.null(fileToDownload) || tryCatch(is.na(fileToDownload), warning = function(x) FALSE))  { # This is case where we didn't know what file to download, and only now
-                                        # do we know
+          # do we know
           fileToDownload <- downloadResults$destFile
         }
         if (!is.null(fileToDownload)) {
@@ -182,7 +182,7 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
         archivePossibly <- setdiff(expectedFile, neededFiles)
         archivePossibly <- .isArchive(archivePossibly)
         if (!is.null(archivePossibly)) {
-           archivePossibly
+          archivePossibly
         } else {
           neededFiles
         }

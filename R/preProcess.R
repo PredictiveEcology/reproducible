@@ -327,7 +327,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       linkOrCopy(file.path(destinationPath, filesExtr[!logicalFilesExistDP]),
                  file.path(destinationPathUser, filesExtr[!logicalFilesExistDP]))
     }
-    destinationPath <- destinationPathUser
   }
 
 
@@ -358,12 +357,23 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (needChecksums > 0) {
     ## needChecksums 1 --> write a new checksums.txt file
     ## needChecksums 2 --> append  a new checksums.txt file
-    checkSums <-appendChecksumsTable(
+    checkSums <- appendChecksumsTable(
       checkSumFilePath = checkSumFilePath,
       filesToChecksum = basename(filesToChecksum),
       destinationPath = destinationPath,
       append = needChecksums == 2
     )
+    if (!is.null(getOption("reproducible.inputPaths"))) {
+      suppressMessages(checkSums <- appendChecksumsTable(
+        checkSumFilePath = file.path(getOption("reproducible.inputPaths"), "CHECKSUMS.txt"),
+        filesToChecksum = basename(filesToChecksum),
+        destinationPath = destinationPathUser,
+        append = needChecksums == 2
+      ))
+    }
+
+    destinationPath <- destinationPathUser # reset to original argument AFTER checksums
+
     on.exit() # remove on.exit because it is done here
   }
   if (!isTRUE(file.exists(targetFilePath))) {
@@ -436,12 +446,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fileToCheckIfArchive
 }
 
-.checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums) {
-  if (!file.exists(file.path(destinationPath, "CHECKSUMS.txt"))) {
+.checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums,
+                             checkSumFilePath = NULL) {
+  if (is.null(checkSumFilePath))
+    checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
+  if (!file.exists(checkSumFilePath)) {
     checkSums
   } else {
-    checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
-                                files = newFilesToCheck), silent = TRUE)
+    suppressMessages(checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
+                                files = newFilesToCheck, checksumFile = checkSumFilePath), silent = TRUE))
     if (!is(checkSums2, "try-error")) {
       checkSums <- rbindlist(list(checkSums, checkSums2))
       data.table::setkey(checkSums, result)
@@ -530,37 +543,39 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           #foundRecursively <- dirNameOPFiles != dirname(opFiles[isNeeded])
           #foundRecursively <- basename(opFiles[isNeeded][foundRecursively])
 
-          uniqueDirsOPFiles <- unique(dirNameOPFiles)
-          for (dirOPFiles in uniqueDirsOPFiles) {
+          uniqueDirsOPFiles <- rev(unique(dirNameOPFiles))
 
-            checkSumFilePathTry <- checkSumFilePath
-            # check CHECKSUMS.txt files, first the one in destinationPath, then ones in inputPaths
-            for (i in seq(1 + length(uniqueDirsOPFiles))) {
-              checkSumsInputPath <- Checksums(path = dirOPFiles, write = FALSE,
-                                              files = file.path(dirNameOPFiles, neededFiles),
-                                              checksumFile = checkSumFilePathTry)
-              isOK <- checkSumsInputPath[checkSumsInputPath$expectedFile %in% neededFiles, ]$result
-              if (length(isOK))
-                if (all(compareNA(isOK, "OK")))
-                  break
-              checkSumFilePathTry <- file.path(dirOPFiles, "CHECKSUMS.txt")
-            }
-            checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"),]
-            filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
-            filesInHandIPLogical <- neededFiles %in% filesInHandIP
-            if (any(filesInHandIPLogical)) {
-              #message("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",dirNameOPFiles," to ", destinationPath)
-              linkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
-                         file.path(destinationPath, filesInHandIP))
-              checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
-              checkSums <- unique(checkSums, by = "expectedFile")
-              needChecksums <- 2
-            }
-            foundInInputPaths <- c(foundInInputPaths, filesInHandIP)
+          checkSumFilePathTry <- checkSumFilePath
+          # check CHECKSUMS.txt files, first the one in destinationPath, then ones in inputPaths
+          for (dirOPFiles in c(uniqueDirsOPFiles[1], uniqueDirsOPFiles)) {
+            #for (i in seq(1 + length(uniqueDirsOPFiles))) {
+            suppressMessages(checkSumsInputPath <- Checksums(path = dirOPFiles, write = FALSE,
+                                            files = file.path(dirNameOPFiles, neededFiles),
+                                            checksumFile = checkSumFilePathTry))
+            isOK <- checkSumsInputPath[checkSumsInputPath$expectedFile %in% neededFiles, ]$result
+            if (length(isOK))
+              if (all(compareNA(isOK, "OK"))) {
+                needChecksums <- 0
+                break
+              }
+
+            checkSumFilePathTry <- file.path(dirOPFiles, "CHECKSUMS.txt")
           }
-          if (isTRUE(all(filesInHandIPLogical))) {
-            break
+          checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"),]
+          filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
+          filesInHandIPLogical <- neededFiles %in% filesInHandIP
+          if (any(filesInHandIPLogical)) {
+            #message("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",dirNameOPFiles," to ", destinationPath)
+            linkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
+                       file.path(destinationPath, filesInHandIP))
+            checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
+            checkSums <- unique(checkSums, by = "expectedFile")
+            # needChecksums <- 2
           }
+          foundInInputPaths <- c(foundInInputPaths, filesInHandIP)
+        }
+        if (isTRUE(all(filesInHandIPLogical))) {
+          break
         }
       }
     }
