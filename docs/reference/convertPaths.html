@@ -74,7 +74,7 @@ raster (e.g., after copying the file to a new location)." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3.9005</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.4</span>
       </span>
     </div>
 
@@ -168,7 +168,7 @@ containing replacement text (see <code>?gsub</code>).</p></td>
     <pre class="examples"><div class='input'><span class='no'>filenames</span> <span class='kw'>&lt;-</span> <span class='fu'>c</span>(<span class='st'>"/home/user1/Documents/file.txt"</span>, <span class='st'>"/Users/user1/Documents/file.txt"</span>)
 <span class='no'>oldPaths</span> <span class='kw'>&lt;-</span> <span class='fu'>dirname</span>(<span class='no'>filenames</span>)
 <span class='no'>newPaths</span> <span class='kw'>&lt;-</span> <span class='fu'>c</span>(<span class='st'>"/home/user2/Desktop"</span>, <span class='st'>"/Users/user2/Desktop"</span>)
-<span class='fu'>convertPaths</span>(<span class='no'>filenames</span>, <span class='no'>oldPaths</span>, <span class='no'>newPaths</span>)</div><div class='output co'>#&gt; [1] "C:/home/user2/Desktop/file.txt"  "C:/Users/user2/Desktop/file.txt"</div><div class='input'>
+<span class='fu'>convertPaths</span>(<span class='no'>filenames</span>, <span class='no'>oldPaths</span>, <span class='no'>newPaths</span>)</div><div class='output co'>#&gt; [1] "/home/user2/Desktop/file.txt"  "/Users/user2/Desktop/file.txt"</div><div class='input'>
 <span class='no'>r1</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>raster</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='fu'>system.file</span>(<span class='st'>"external/test.grd"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"raster"</span>))
 <span class='no'>r2</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>raster</span><span class='kw ns'>::</span><span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='fu'>system.file</span>(<span class='st'>"external/rlogo.grd"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"raster"</span>))
 <span class='no'>rasters</span> <span class='kw'>&lt;-</span> <span class='fu'>list</span>(<span class='no'>r1</span>, <span class='no'>r2</span>)
@@ -176,10 +176,10 @@ containing replacement text (see <code>?gsub</code>).</p></td>
 <span class='no'>newPaths</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='st'>"~/rasters"</span>)
 <span class='no'>rasters</span> <span class='kw'>&lt;-</span> <span class='fu'>convertRasterPaths</span>(<span class='no'>rasters</span>, <span class='no'>oldPaths</span>, <span class='no'>newPaths</span>)
 <span class='fu'>lapply</span>(<span class='no'>rasters</span>, <span class='kw pkg'>raster</span><span class='kw ns'>::</span><span class='no'><a href='http://www.rdocumentation.org/packages/raster/topics/filename'>filename</a></span>)</div><div class='output co'>#&gt; [[1]]
-#&gt; [1] "C:/Eliot/rasters/test.grd"
+#&gt; [1] "/home/achubaty/rasters/test.grd"
 #&gt; 
 #&gt; [[2]]
-#&gt; [1] "C:/Eliot/rasters/rlogo.grd"
+#&gt; [1] "/home/achubaty/rasters/rlogo.grd"
 #&gt; </div><div class='input'>
 </div></pre>
   </div>
