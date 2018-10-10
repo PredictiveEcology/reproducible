@@ -12,7 +12,7 @@ URL:
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
 Date: 2018-10-09
-Version: 0.2.3.9012
+Version: 0.2.4
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment=c(ORCID = "https://orcid.org/0000-0002-6914-8316")),
@@ -60,8 +60,6 @@ Suggests:
     knitr,
     rmarkdown,
     TimeWarp
-Remotes:
-    PredictiveEcology/quickPlot@development
 Encoding: UTF-8
 Language: en-CA
 LinkingTo: Rcpp
