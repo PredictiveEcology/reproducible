@@ -99,7 +99,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
 
   if (is.null(targetFile)) {
-    targetFilePath <- NULL
+    fileGuess <- .guessAtFile(url = url, archive = archive,
+                              targetFile = targetFile,
+                              destinationPath = destinationPath)
+    if (is.null(archive))
+      archive <- .isArchive(fileGuess)
+    if (is.null(archive)) {
+      message("targetFile was not supplied; guessed and will try ", fileGuess,
+              ". If this is incorrect, please supply targetFile")
+      targetFile <- basename(fileGuess)
+      targetFilePath <- fileGuess
+    } else {
+      targetFilePath <- NULL
+    }
   } else {
     targetFile <- basename(targetFile)
     targetFilePath <- file.path(destinationPath, targetFile)
