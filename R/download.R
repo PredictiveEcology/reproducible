@@ -376,7 +376,17 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         # if destinationPath is tempdir, then don't copy and remove
         if (!(identical(dirname(normPath(downloadResults$destFile)),
                         normPath(destinationPath)))) {
-          suppressWarnings(file.copy(downloadResults$destFile, destinationPath))
+          desiredPath <- file.path(destinationPath, basename(downloadResults$destFile))
+
+          desiredPathExists <- file.exists(desiredPath)
+          if (desiredPathExists && !isTRUE(overwrite)) {
+            stop(targetFile, " already exists at ", desiredPath,
+                 ". Use overwrite = TRUE?")
+          }
+          if (desiredPathExists) {
+            file.remove(desiredPath)
+          }
+          file.link(downloadResults$destFile, desiredPath)
           suppressWarnings(file.remove(downloadResults$destFile))
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }

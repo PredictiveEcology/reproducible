@@ -99,7 +99,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
 
   if (is.null(targetFile)) {
-    targetFilePath <- NULL
+    fileGuess <- .guessAtFile(url = url, archive = archive,
+                              targetFile = targetFile,
+                              destinationPath = destinationPath)
+    if (is.null(archive))
+      archive <- .isArchive(fileGuess)
+    if (is.null(archive)) {
+      message("targetFile was not supplied; guessed and will try ", fileGuess,
+              ". If this is incorrect, please supply targetFile")
+      targetFile <- basename(fileGuess)
+      targetFilePath <- fileGuess
+    } else {
+      targetFilePath <- NULL
+    }
   } else {
     targetFile <- basename(targetFile)
     targetFilePath <- file.path(destinationPath, targetFile)
@@ -158,10 +170,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       if (!allOK) { # skip identification of archive if we have all files with same basename as targetFile
         # BUT if we don't have all files with identical root name (basename sans ext), then assess for
         #   an archive, either remotely, in the case of google or from the basename of url
-        archiveGuess <- .guessAtArchive(url = url, archive = archive,
+        fileGuess <- .guessAtFile(url = url, archive = archive,
                                         targetFile = targetFile, destinationPath = destinationPath)
-        archive <- .isArchive(archiveGuess)
-        checkSums <- .checkSumsUpdate(destinationPath = destinationPath, newFilesToCheck = archive,
+        archive <- .isArchive(fileGuess)
+        checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
+                                      newFilesToCheck = archive,
                                       checkSums = checkSums)
 
       }
@@ -443,19 +456,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun
 }
 
-.guessAtArchive <- function(url, archive, targetFile, destinationPath) {
-  fileToCheckIfArchive <- if (grepl("drive.google.com", url)) {
+.guessAtFile <- function(url, archive, targetFile, destinationPath) {
+  guessedFile <- if (grepl("drive.google.com", url)) {
     if (url.exists(url)) { # likely offline
-    assessGoogle(url = url, archive = archive,
-                 targetFile = targetFile,
-                 destinationPath = destinationPath)
+      assessGoogle(url = url, archive = archive,
+                  targetFile = targetFile,
+                  destinationPath = destinationPath)
     } else {
       file.path(destinationPath, basename(url))
     }
   } else {
     file.path(destinationPath, basename(url))
   }
-  fileToCheckIfArchive
+  guessedFile
 }
 
 .checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums,
@@ -471,7 +484,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       checkSums <- rbindlist(list(checkSums, checkSums2))
       data.table::setkey(checkSums, result)
       checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
-      checkSums <- rbindlist(list(checkSums[compareNA("OK", result)], checkSums[is.na(result)]))
+      checkSums <- rbindlist(list(checkSums[compareNA("OK", result)],
+                                  checkSums[compareNA("FAIL", result)],
+                                  checkSums[is.na(result)]))
     }
   }
   checkSums
