@@ -313,7 +313,14 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
+        if (canProcessInMemory(x, 4)) {
         x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
+        } else {
+          x <- do.call(raster::crop, args = append(list(x = x,
+                                                        y = cropExtent,
+                                                        filename = paste0(tempfile(), ".tif")),
+                                                   dots))
+        }
         if (is.null(x)) {
           message("    polygons do not intersect.")
         }
@@ -437,6 +444,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         !identical(res(x), res(rasterToMatch)) |
         !identical(extent(x), extent(rasterToMatch))) {
       message("    reprojecting ...")
+
       if (canProcessInMemory(x, 4)) {
         tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
         warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
@@ -448,6 +456,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         ## the different projections (e.g. degree based and meter based). This should be fine
         if (identical(crs(x), crs(rasterToMatch)) &
             any(res(x) != res(rasterToMatch))) {
+
           if (all(res(x) %==% res(rasterToMatch))) {
             res(x) <- res(rasterToMatch)
           } else {
@@ -456,6 +465,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
         }
       } else {
+
         message("   large raster: reprojecting after writing to temp drive...")
         #rasters need to go to same file so it can be unlinked at end without losing other temp files
 
@@ -473,7 +483,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           tempSrcRaster <- x@file@name #Keep original raster
         }
         #Will use Nearest Neighbour - fastest, safest, but worst interpolation for continuous
-        res(rasterToMatch) <- c(30,30)
         tr <- res(rasterToMatch)
 
         gdalUtils::gdal_setInstallation()
@@ -854,7 +863,11 @@ assessDataType <- function(ras) {
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras) {
   ## using ras@data@... is faster, but won't work for @values in large rasters
-  rasVals <- getValues(ras)
+  if (ncell(ras) > 100000) {
+    rasVals <- raster::sampleRandom(x = ras, size = 100000)
+  } else {
+    rasVals <- raster::getValues(ras)
+  }
   minVal <- ras@data@min
   maxVal <- ras@data@max
   signVal <- minVal < 0
@@ -912,7 +925,7 @@ assessDataType.default <- function(ras) {
 #' @author Tati Micheletti
 #' @export
 #' @rdname assessDataTypeGDAL
-#' @importFrom raster getValues ncell
+#' @importFrom raster getValues ncell sampleRandom
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @return The appropriate data type for the range of values in \code{ras} for using gdal. See \code{\link[raster]{dataType}} for details.
 assessDataTypeGDAL <- function(ras) {
@@ -939,7 +952,7 @@ assessDataTypeGDAL <- function(ras) {
 
   } else {
     if (ncell(ras) > 100000) {
-      rasVals <- raster::sampleRandom(x = ras, size = 100000) #assumes 100,000 pixels in raster
+      rasVals <- raster::sampleRandom(x = ras, size = 100000)
     } else {
       rasVals <- raster::getValues(ras)
     }
