@@ -484,7 +484,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       checkSums <- rbindlist(list(checkSums, checkSums2))
       data.table::setkey(checkSums, result)
       checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
-      checkSums <- rbindlist(list(checkSums[compareNA("OK", result)], checkSums[is.na(result)]))
+      checkSums <- rbindlist(list(checkSums[compareNA("OK", result)],
+                                  checkSums[compareNA("FAIL", result)],
+                                  checkSums[is.na(result)]))
     }
   }
   checkSums
