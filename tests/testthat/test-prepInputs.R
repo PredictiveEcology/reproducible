@@ -1397,3 +1397,23 @@ test_that("options inputPaths", {
   expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
 
 })
+
+
+test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
+  skip_on_cran()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  a <- raster(extent(0,2,0,2), res = 1, vals = c(1,1,2,2))
+  levels(a) <- data.frame(ID = 1:2, Factor = c("This", "That"))
+  tifTmp <- tempfile(fileext=".tif")
+  b1 <- writeRaster(a, filename = tifTmp)
+  expect_warning(b1a <- writeOutputs(a, filename2 = tifTmp))
+  expect_false(identical(b1, b1a))
+  expect_true(identical(as.integer(b1[]), b1a[]))
+  expect_true(identical(filename(b1), tifTmp))
+  expect_true(identical(filename(b1a), gsub(tifTmp, pattern = "tif", replacement = "grd")))
+
+})
