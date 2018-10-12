@@ -248,7 +248,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        quick = getOption("reproducible.quick"),
                        overwrite = FALSE, purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
-
+  browser()
   # Download, Checksum, Extract from Archive
   message("Running preProcess")
   out <- preProcess(

@@ -56,7 +56,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        overwrite = FALSE, purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
   dots <- list(...)
-
+  browser()
   if (!is.null(dots$cacheTags))  {
     message("cacheTags is being deprecated;",
             " use userTags which will pass directly to Cache.")
