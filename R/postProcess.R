@@ -514,7 +514,11 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
     if (!is.null(targetCRS)) {
       if (!identical(crs(x), targetCRS)) {
         message("    reprojecting ...")
-        x <- projectRaster(from = x, crs = targetCRS, ...)
+        if (assessDataType(x) == "FLT4S") {
+          x <- projectRaster(from = x, crs = targetCRS, ...)
+        } else {
+          x <- projectRaster(from = x, crs = targetCRS, method = "ngb", ...)
+          }
       } else {
         message("    no reprojecting because target CRS is same as input CRS.")
       }
