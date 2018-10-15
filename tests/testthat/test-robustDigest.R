@@ -13,9 +13,5 @@ test_that("test file-backed raster caching", {
   c1b <- .robustDigest(c1)
   expect_true(identical(c1a, c1b)) # failed pre reproducible 0.2.4.9000
 
-  skip("Just benchmarking")
-  microbenchmark::microbenchmark(c1c <- .robustDigest(seq(1e7)))
-
-
 
 })
