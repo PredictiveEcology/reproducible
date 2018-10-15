@@ -797,12 +797,13 @@ writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
 
     if (raster::is.factor(x)) {
       filename3 <- gsub(filename2, pattern = "\\.tif", replacement = ".grd")
-      xTmp <- do.call(writeRaster, args = c(x = x, filename = filename3, overwrite = overwrite, dots))
-      warning(".tif format does not preserve factor levels using rgdal. Using ",
-              filename3, " to preserve levels, instead of ", filename2)
-    } else {
-      xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
+      if (!identical(filename2, filename3)) {
+        warning(".tif format does not preserve factor levels using rgdal. Using ",
+                filename3, " to preserve levels, instead of ", filename2)
+        filename2 <- filename3
+      }
     }
+    xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
     #Before changing to do.call, dots were not being added.
     # This is a bug in writeRaster was spotted with crs of xTmp became
     # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
