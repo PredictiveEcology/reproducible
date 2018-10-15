@@ -119,6 +119,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
     fastdigest(object)
 })
 
@@ -132,6 +133,7 @@ setMethod(
   signature = "cluster",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
     fastdigest(NULL)
 })
 
@@ -142,6 +144,7 @@ setMethod(
   signature = "function",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
     fastdigest(format(object))
 })
 
@@ -152,6 +155,7 @@ setMethod(
   signature = "expression",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
     fastdigest(format(object))
 })
 
@@ -162,6 +166,8 @@ setMethod(
   signature = "character",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
+
   if (!quick) {
       # if (any(unlist(lapply(object, dir.exists)))) {
       #   bbb <<- bbb + 1
@@ -200,6 +206,7 @@ setMethod(
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
     nParentDirs <- attr(object, "nParentDirs")
+    object <- .removeCacheAtts(object)
 
     if (!quick) {
       lapply(object, function(x) {
@@ -228,7 +235,8 @@ setMethod(
   signature = "environment",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
-  .robustDigest(as.list(object, all.names = TRUE), objects = objects,
+    object <- .removeCacheAtts(object)
+    .robustDigest(as.list(object, all.names = TRUE), objects = objects,
                  length = length,
                  algo = algo, quick = quick)
 })
@@ -240,22 +248,15 @@ setMethod(
   signature = "list",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
-  lapply(.sortDotsUnderscoreFirst(object), function(x) {
+    object <- .removeCacheAtts(object)
+    lapply(.sortDotsUnderscoreFirst(object), function(x) {
       .robustDigest(object = x, objects = objects,
                    length = length,
                    algo = algo, quick = quick)
     })
 })
 
-#' @rdname robustDigest
-#' @exportMethod .robustDigest
-setMethod(
-  ".robustDigest",
-  signature = "data.frame",
-  definition = function(object, objects, length, algo, quick,
-                        classOptions) {
-    fastdigest(object)
-  })
+
 
 #' @rdname robustDigest
 #' @exportMethod .robustDigest
@@ -264,6 +265,8 @@ setMethod(
   signature = "Raster",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
+
     if (is(object, "RasterStack")) {
       # have to do one file at a time with Stack
       dig <- suppressWarnings(
@@ -286,6 +289,8 @@ setMethod(
   signature = "Spatial",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
+
   if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
     } else {
@@ -322,4 +327,13 @@ setMethod(
   }
   object
 
+}
+
+
+#' @importFrom data.table setattr
+.removeCacheAtts <- function(x) {
+  setattr(x, "tags", NULL)
+  setattr(x, ".Cache", NULL)
+  setattr(x, "call", NULL)
+  x
 }
