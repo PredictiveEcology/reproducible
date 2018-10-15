@@ -389,6 +389,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       append = needChecksums >= 2
     )
     if (!is.null(getOption("reproducible.inputPaths")) && needChecksums != 3) {
+      checkSumFilePathInputPaths <- file.path(getOption("reproducible.inputPaths")[[1]],
+                                              "CHECKSUMS.txt")
       suppressMessages(checkSums <- appendChecksumsTable(
         checkSumFilePath = checkSumFilePathInputPaths,
         filesToChecksum = unique(basename(filesToChecksum)),
