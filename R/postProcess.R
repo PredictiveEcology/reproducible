@@ -170,7 +170,9 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
     skipCacheMess <- "useCache is FALSE, skipping Cache"
     skipCacheMess2 <- "No cacheRepo supplied"
 
-    # cropInputs -- pass the extent and crs so Caching is faster than whole Raster
+    ##################################
+    # cropInputs
+    ##################################
     if (!is.null(rasterToMatch)) {
       extRTM <- extent(rasterToMatch)
       crsRTM <- crs(rasterToMatch)
@@ -187,35 +189,34 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
-      #mess <- capture.output(type = "message", # no Cache at the method level because may be just passed through if raster
-                             x <- fixErrors(x = x, objectName = objectName,
-                                            useCache = useCache, ...)
-                             #)
-      #.groupedMessage(mess, omitPattern = skipCacheMess)
+      x <- fixErrors(x = x, objectName = objectName,
+                     useCache = useCache, ...)
 
+      ##################################
       # projectInputs
+      ##################################
       targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch)
 
-      #mess <- capture.output(type = "message",
-                             x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
-                                        rasterToMatch = rasterToMatch, useCache = useCache, ...)
-                             #)
+      x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
+                 rasterToMatch = rasterToMatch, useCache = useCache, ...)
+      # may need to fix again
+      x <- fixErrors(x = x, objectName = objectName,
+                     useCache = useCache, ...)
 
-      #.groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
-
+      ##################################
       # maskInputs
-      #mess <- capture.output(type = "message",
-                             x <- Cache(maskInputs, x = x, studyArea = studyArea,
-                                        rasterToMatch = rasterToMatch, useCache = useCache, ...)
-                             #)
+      ##################################
+      x <- Cache(maskInputs, x = x, studyArea = studyArea,
+                 rasterToMatch = rasterToMatch, useCache = useCache, ...)
 
-      #.groupedMessage(mess, omitPattern = paste(skipCacheMess, skipCacheMess2, sep = "|"))
-
+      ##################################
       # filename
+      ##################################
       newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, ...)
 
+      ##################################
       # writeOutputs
-
+      ##################################
       x <- do.call(writeOutputs, append(list(x = x, filename2 = newFilename,
                                               overwrite = overwrite), dots))
 
@@ -370,6 +371,7 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #' @export
 #' @param x A \code{SpatialPolygons} object
 #' @inheritParams fixErrors
+#' @importFrom testthat capture_warnings
 fixErrors.SpatialPolygons <- function(x, objectName = NULL,
                                       attemptErrorFixes = TRUE,
                                       useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -379,7 +381,17 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
-        x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
+        warn <- capture_warnings(
+          x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
+        )
+
+        # prevent the warning about not projected, because we are buffering 0, which doesn't matter
+        warnAboutNotProjected <- startsWith(warn, "Spatial object is not projected; GEOS expects planar coordinates")
+        if (any(warnAboutNotProjected))
+          warn <- warn[!warnAboutNotProjected]
+        if (length(warn))
+          warning(warn)
+
         if (is(x1, "try-error")) {
           message("There are errors with ", objectName,
                   ". Couldn't fix them with raster::buffer(..., width = 0)")
@@ -625,18 +637,32 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 
 #' @export
 #' @rdname maskInputs
+#' @importFrom sf st_join st_as_sf st_intersects
 maskInputs.Spatial <- function(x, studyArea, ...) {
   if (!is.null(studyArea)) {
     message("    intersecting ...")
     studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
     studyArea <- spTransform(studyArea, CRSobj = crs(x))
     suppressWarnings(studyArea <- fixErrors(studyArea, "studyArea"))
-    x <- tryCatch(raster::intersect(x, studyArea), error = function(e) {
-      warning("  Could not mask with studyArea, for unknown reasons.",
-              " Returning object without masking.")
-      return(x)
-    })
-    return(x)
+    # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
+    #  specifically ecodistricts.shp . It created an invalid object with
+    #  non-unique row names
+    y <- try(raster::intersect(x, studyArea))
+
+    trySF <- if (is(y, "try-error")) {
+      TRUE
+    } else if (!identical(length(unique(row.names(y))), length(row.names(y)))) {
+      TRUE
+    } else {
+      FALSE
+    }
+    if (trySF) {
+      "raster intersect did not work correctly, trying sf"
+      xTmp <- sf::st_join(st_as_sf(x), st_as_sf(studyArea), join = st_intersects)
+      y <- as(xTmp, "Spatial")
+    }
+
+    return(y)
   } else {
     return(x)
   }
@@ -987,3 +1013,71 @@ assessDataTypeGDAL <- function(ras) {
 
 #' @export
 #' @rdname assessDataTypeGDAL
+
+
+#' Copied from https://stackoverflow.com/a/48838123
+find_UTM_zone <- function(longitude, latitude) {
+
+  # Special zones for Svalbard and Norway
+  if (latitude >= 72.0 && latitude < 84.0 )
+    if (longitude >= 0.0  && longitude <  9.0)
+      return(31);
+  if (longitude >= 9.0  && longitude < 21.0)
+    return(33)
+  if (longitude >= 21.0 && longitude < 33.0)
+    return(35)
+  if (longitude >= 33.0 && longitude < 42.0)
+    return(37)
+
+  (floor((longitude + 180) / 6) %% 60) + 1
+}
+
+
+#' Copied from https://stackoverflow.com/a/48838123
+find_UTM_hemisphere <- function(latitude) {
+
+  ifelse(latitude > 0, "north", "south")
+}
+
+# returns a DF containing the UTM values, the zone and the hemisphere
+#' Copied from https://stackoverflow.com/a/48838123
+longlat_to_UTM <- function(long, lat, units = 'm') {
+
+  df <- data.frame(
+    id = seq_along(long),
+    x = long,
+    y = lat
+  )
+  sp::coordinates(df) <- c("x", "y")
+
+  hemisphere <- find_UTM_hemisphere(lat)
+  zone <- find_UTM_zone(long, lat)
+
+  sp::proj4string(df) <- sp::CRS("+init=epsg:4326")
+  CRSstring <- paste0(
+    "+proj=utm +zone=", zone,
+    " +ellps=WGS84",
+    " +", hemisphere,
+    " +units=", units)
+  if (dplyr::n_distinct(CRSstring) > 1L)
+    stop("multiple zone/hemisphere detected")
+
+  res <- sp::spTransform(df, sp::CRS(CRSstring[1L])) %>%
+    tibble::as_data_frame() %>%
+    dplyr::mutate(
+      zone = zone,
+      hemisphere = hemisphere
+    )
+
+  res
+}
+
+
+#' Copied from https://stackoverflow.com/a/48838123
+UTM_to_longlat <- function(utm_df, zone, hemisphere) {
+
+  CRSstring <- paste0("+proj=utm +zone=", zone, " +", hemisphere)
+  utmcoor <- sp::SpatialPoints(utm_df, proj4string = sp::CRS(CRSstring))
+  longlatcoor <- sp::spTransform(utmcoor, sp::CRS("+init=epsg:4326"))
+  tibble::as_data_frame(longlatcoor)
+}
