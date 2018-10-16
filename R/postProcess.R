@@ -138,7 +138,8 @@ postProcess.list <- function(x, ...) {
 #' @rdname postProcess
 postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        studyArea = NULL, rasterToMatch = NULL,
-                                       overwrite = TRUE, useSAcrs = FALSE,
+                                       overwrite = getOption("reproducible.overwrite", TRUE),
+                                       useSAcrs = FALSE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
@@ -697,7 +698,8 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 #' @rdname determineFilename
 #' @example inst/examples/example_postProcess.R
 determineFilename <- function(filename2 = TRUE, filename1 = NULL,
-                              destinationPath = NULL, prefix = "Small", ...) {
+                              destinationPath = getOption("reproducible.destinationPath"),
+                              prefix = "Small", ...) {
 
   dots <- list(...)
 
@@ -775,12 +777,16 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 #' @rdname writeOutputs
 #' @example inst/examples/example_postProcess.R
 #'
-writeOutputs <- function(x, filename2, overwrite, ...) {
+writeOutputs <- function(x, filename2,
+                         overwrite = getOption("reproducible.overwrite", NULL),
+                         ...) {
   UseMethod("writeOutputs")
 }
 
 #' @rdname writeOutputs
-writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
+writeOutputs.Raster <- function(x, filename2 = NULL,
+                                overwrite = getOption("reproducible.overwrite", FALSE),
+                                ...) {
   dots <- list(...)
   datatype2 <- assessDataType(x)
 
@@ -818,7 +824,9 @@ writeOutputs.Raster <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
 }
 
 #' @rdname writeOutputs
-writeOutputs.Spatial <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
+writeOutputs.Spatial <- function(x, filename2 = NULL,
+                                 overwrite = getOption("reproducible.overwrite", FALSE),
+                                 ...) {
   if (!is.null(filename2)) {
     dots <- list(...)
     notWanted1 <- .formalsNotInCurrentDots(shapefile, ...)
@@ -832,7 +840,9 @@ writeOutputs.Spatial <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
 }
 
 #' @rdname writeOutputs
-writeOutputs.sf <- function(x, filename2 = NULL, overwrite = FALSE, ...) {
+writeOutputs.sf <- function(x, filename2 = NULL,
+                            overwrite = getOption("reproducible.overwrite", FALSE),
+                            ...) {
   if (!is.null(filename2)) {
     if (requireNamespace("sf")) {
       x <- sf::st_write(obj = x, delete_dsn = TRUE, dsn = filename2, delete_dsn = overwrite,

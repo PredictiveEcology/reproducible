@@ -51,9 +51,11 @@
 #' @importFrom data.table fread setDT
 #' @importFrom tools file_path_sans_ext
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
-                       destinationPath = ".", fun = NULL, dlFun = NULL,
+                       destinationPath = getOption("reproducible.destinationPath", "."),
+                       fun = NULL, dlFun = NULL,
                        quick = getOption("reproducible.quick"),
-                       overwrite = FALSE, purge = FALSE,
+                       overwrite = getOption("reproducible.destinationPath", FALSE),
+                       purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
   dots <- list(...)
 
