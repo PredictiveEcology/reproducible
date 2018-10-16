@@ -54,7 +54,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        destinationPath = getOption("reproducible.destinationPath", "."),
                        fun = NULL, dlFun = NULL,
                        quick = getOption("reproducible.quick"),
-                       overwrite = getOption("reproducible.destinationPath", FALSE),
+                       overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
   dots <- list(...)
