@@ -247,7 +247,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        destinationPath = getOption("reproducible.destinationPath", "."),
                        fun = NULL,
                        quick = getOption("reproducible.quick"),
-                       destinationPath = getOption("reproducible.overwrite", FALSE),
+                       overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
 
