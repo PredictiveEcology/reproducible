@@ -1413,6 +1413,8 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   expect_warning(b1a <- writeOutputs(a, filename2 = tifTmp))
   expect_false(identical(b1, b1a))
   expect_true(identical(as.integer(b1[]), b1a[]))
+
+  skip_on_os("mac") # TODO Alex -- test on Mac
   expect_true(identical(filename(b1), tifTmp))
   expect_true(identical(filename(b1a), gsub(tifTmp, pattern = "tif", replacement = "grd")))
 
