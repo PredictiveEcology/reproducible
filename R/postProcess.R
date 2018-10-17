@@ -8,17 +8,18 @@
 #' @seealso \code{prepInputs}
 #' @inheritParams prepInputs
 #' @rdname postProcess
-#'
 postProcess <- function(x, ...) {
   UseMethod("postProcess")
 }
 
 #' @export
+#' @rdname postProcess
 postProcess.default <- function(x, ...) {
   x
 }
 
 #' @export
+#' @rdname postProcess
 postProcess.list <- function(x, ...) {
   lapply(x, function(y) postProcess(y, ...))
 }
@@ -221,10 +222,10 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       x <- do.call(writeOutputs, append(list(x = x, filename2 = newFilename,
                                               overwrite = overwrite), dots))
 
-      if(dir.exists(file.path(raster::tmpDir(), "bigRasters"))){
-        unlink(file.path(raster::tmpDir(), "bigRasters"), recursive = TRUE) #Delete gdalwarp results in temp
+      if (dir.exists(file.path(raster::tmpDir(), "bigRasters"))) {
+        ## Delete gdalwarp results in temp
+        unlink(file.path(raster::tmpDir(), "bigRasters"), recursive = TRUE)
       }
-
     }
   }
   return(x)
@@ -248,15 +249,14 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
 #'                      See details in \code{\link{postProcess}}.
 #'
 #' @param ... Passed to raster::crop
-#' @author Eliot McIntire
-#' @author Jean Marchal
+#' @author Eliot McIntire & Jean Marchal
+#' @example inst/examples/example_postProcess.R
 #' @export
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
 #' @importFrom rgeos gIsValid
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS
 #' @rdname cropInputs
-#' @example inst/examples/example_postProcess.R
 cropInputs <- function(x, studyArea, rasterToMatch, ...) {
   UseMethod("cropInputs")
 }
@@ -264,37 +264,33 @@ cropInputs <- function(x, studyArea, rasterToMatch, ...) {
 #' @export
 #' @rdname cropInputs
 cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
-
   x
 }
 
-#' @export
-#' @rdname cropInputs
-#' @importFrom raster projectExtent
 #' @param extentToMatch Optional. Can pass an extent here and a \code{crs} to
 #'                      \code{extentCRS} instead of \code{rasterToMatch}. These
 #'                      will override \code{rasterToMatch}, with a warning if both
 #'                      passed.
 #' @param extentCRS     Optional. Can pass a \code{crs} here with an extent to
 #'                      \code{extentTomatch} instead of \code{rasterToMatch}
-cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL, extentToMatch = NULL,
-                                      extentCRS = NULL, ...) {
-
-  if (!is.null(studyArea) ||
-      !is.null(rasterToMatch) || !is.null(extentToMatch)) {
+#'
+#' @export
+#' @rdname cropInputs
+#' @importFrom raster projectExtent
+cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
+                                      extentToMatch = NULL, extentCRS = NULL, ...) {
+  if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
     if (!is.null(extentToMatch)) {
       rasterToMatch <- raster(extentToMatch, crs = extentCRS)
     }
-    cropTo <-
-      if (!is.null(rasterToMatch)) {
-        rasterToMatch
-      } else {
-        studyArea
-      }
+    cropTo <- if (!is.null(rasterToMatch)) {
+      rasterToMatch
+    } else {
+      studyArea
+    }
 
     # have to project the extent to the x projection so crop will work -- this is temporary
     #   once cropped, then cropExtent should be rm
-
     cropExtent <- if (identical(crs(x), crs(cropTo))) {
       extent(cropTo)
     } else {
@@ -433,7 +429,6 @@ projectInputs <- function(x, targetCRS, ...) {
   UseMethod("projectInputs")
 }
 
-
 #' @export
 #' @rdname projectInputs
 projectInputs.default <- function(x, targetCRS, ...) {
@@ -443,10 +438,9 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @export
 #' @rdname projectInputs
 #' @importFrom fpCompare %==%
-#' @importFrom raster crs res res<- dataType
 #' @importFrom gdalUtils gdalwarp
+#' @importFrom raster crs dataType res res<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
-
   dots <- list(...)
   if (!is.null(rasterToMatch)) {
     if (is.null(targetCRS)) {
@@ -922,29 +916,30 @@ assessDataType.Raster <- function(ras) {
   ## writeRaster deals with infinite values as FLT8S
   # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
 
-  if(!doubVal & !signVal) {
+  if (!doubVal & !signVal) {
     ## only check for binary if there are no decimals and no signs
     logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
 
-    if(logi) {
+    if (logi) {
       datatype <- "LOG1S"
     } else {
       ## if() else is faster than if
-      datatype <- if(maxVal <= 255) "INT1U" else
-        if(maxVal <= 65534) "INT2U" else
-          if(maxVal <= 4294967296) "INT4U" else    ## note that: dataType doc. advises against INT4U
-            if(maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      datatype <- if (maxVal <= 255) "INT1U" else
+        if (maxVal <= 65534) "INT2U" else
+          if (maxVal <= 4294967296) "INT4U" else    ## note that: dataType doc. advises against INT4U
+            if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
     }
   } else {
-    if(signVal & !doubVal) {
+    if (signVal & !doubVal) {
       ## if() else is faster than if
-      datatype <- if(minVal >= -127 & maxVal <= 127) "INT1S" else
-        if(minVal >= -32767 & maxVal <= 32767) "INT2S" else
-          if(minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else    ## note that: dataType doc. advises against INT4U
-            if(minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
-    } else
-      if(doubVal)
-        datatype <- if(minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
+        if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
+          if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else    ## note that: dataType doc. advises against INT4U
+            if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+    } else {
+      if (doubVal)
+        datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+    }
   }
   datatype
 }
@@ -960,23 +955,25 @@ assessDataType.RasterStack <- function(ras) {
 assessDataType.default <- function(ras) {
   stop("No method for assessDataType for class ", class(ras))
 }
-#' Assess the appropriate raster layer data type for gdal
+
+#' Assess the appropriate raster layer data type for GDAL
 #'
 #' Can be used to write prepared inputs on disk.
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
+#'
+#' @return The appropriate data type for the range of values in \code{ras} for using GDAL.
+#'         See \code{\link[raster]{dataType}} for details.
+#'
 #' @author Eliot McIntire
 #' @author Ceres Barros
 #' @author Ian Eddy
 #' @author Tati Micheletti
-#' @export
-#' @rdname assessDataTypeGDAL
-#' @importFrom raster getValues ncell sampleRandom
 #' @example inst/examples/example_assessDataTypeGDAL.R
-#' @return The appropriate data type for the range of values in \code{ras} for using gdal. See \code{\link[raster]{dataType}} for details.
+#' @export
+#' @importFrom raster getValues ncell sampleRandom
+#' @rdname assessDataTypeGDAL
 assessDataTypeGDAL <- function(ras) {
-
-
   ## using ras@data@... is faster, but won't work for @values in large rasters
   minVal <- ras@data@min
   maxVal <- ras@data@max
@@ -986,14 +983,14 @@ assessDataTypeGDAL <- function(ras) {
     ## gdal deals with infinite values as Float32
     # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
 
-    if(!signVal) {
+    if (!signVal) {
       ## only check for binary if there are no decimals and no signs
-      datatype <- if(maxVal <= 255) "Byte" else
-       if(maxVal <= 65534) "UInt16" else
-        if(maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
+      datatype <- if (maxVal <= 255) "Byte" else
+       if (maxVal <= 65534) "UInt16" else
+        if (maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
     } else {
-      if(minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
-        if(minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
+      if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
+        if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
     }
 
   } else {
@@ -1006,28 +1003,31 @@ assessDataTypeGDAL <- function(ras) {
     #This method is slower but safer than getValues. Alternatives?
     doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)
 
-    if(signVal & !doubVal) {
-      datatype <- if(minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
-        if(minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
+    if (signVal & !doubVal) {
+      datatype <- if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
+        if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
     } else
-      if(doubVal) {
+      if (doubVal) {
         datatype <- "Float32"
       } else {
         #data was FLT4S but doesn't need sign or decimal
-        datatype <- if(maxVal <= 255) "Byte" else
-          if(maxVal <= 65534) "UInt16" else
-            if(maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
+        datatype <- if (maxVal <= 255) "Byte" else
+          if (maxVal <= 65534) "UInt16" else
+            if (maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
       }
   }
 
   datatype
 }
 
-#' @export
-#' @rdname assessDataTypeGDAL
-
-
+#' Helper functions for \code{assessDataType}
+#'
 #' Copied from https://stackoverflow.com/a/48838123
+#'
+#' @param longitude longitude
+#' @param latitude  latitude
+#' @export
+#' @rdname assessDataTypeGDALhelpers
 find_UTM_zone <- function(longitude, latitude) {
 
   # Special zones for Svalbard and Norway
@@ -1044,17 +1044,25 @@ find_UTM_zone <- function(longitude, latitude) {
   (floor((longitude + 180) / 6) %% 60) + 1
 }
 
-
-#' Copied from https://stackoverflow.com/a/48838123
+#' @export
+#' @rdname assessDataTypeGDALhelpers
 find_UTM_hemisphere <- function(latitude) {
-
   ifelse(latitude > 0, "north", "south")
 }
 
-# returns a DF containing the UTM values, the zone and the hemisphere
-#' Copied from https://stackoverflow.com/a/48838123
+#' @param long  TODO: need description
+#' @param lat   TODO: need description
+#' @param units TODO: need description
+#'
+#' \code{longlat_to_UTM} returns a \code{data.frame} containing the UTM values,
+#' the zone and the hemisphere.
+#'
+#' @export
+#' @importFrom dplyr mutate n_distinct
+#' @importFrom sp coordinates CRS proj4string spTransform
+#' @importFrom tibble as_data_frame
+#' @rdname assessDataTypeGDALhelpers
 longlat_to_UTM <- function(long, lat, units = 'm') {
-
   df <- data.frame(
     id = seq_along(long),
     x = long,
@@ -1080,14 +1088,18 @@ longlat_to_UTM <- function(long, lat, units = 'm') {
       zone = zone,
       hemisphere = hemisphere
     )
-
   res
 }
 
-
-#' Copied from https://stackoverflow.com/a/48838123
+#' @param utm_df     TODO: need description
+#' @param zone       TODO: need description
+#' @param hemisphere TODO: need description
+#'
+#' @export
+#' @importFrom sp CRS SpatialPoints spTransform
+#' @importFrom tibble as_data_frame
+#' @rdname assessDataTypeGDAL
 UTM_to_longlat <- function(utm_df, zone, hemisphere) {
-
   CRSstring <- paste0("+proj=utm +zone=", zone, " +", hemisphere)
   utmcoor <- sp::SpatialPoints(utm_df, proj4string = sp::CRS(CRSstring))
   longlatcoor <- sp::spTransform(utmcoor, sp::CRS("+init=epsg:4326"))

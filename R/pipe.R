@@ -147,14 +147,15 @@
 #' that uses pipes (\code{Cache() \%C\% ... remaining pipes}.
 #' \code{This is still experimental; use with care}.
 #'
-#' @rdname pipe
-#' @name pipe
-#' @importFrom utils getFromNamespace
-#' @inheritParams magrittr::`%>%`
-#' @importFrom magrittr freduce
-#' @seealso pipe2
 #' @aliases %C%
 #' @export
+#' @importFrom utils getFromNamespace
+#' @importFrom magrittr freduce
+#' @inheritParams magrittr::`%>%`
+#' @name pipe
+#' @seealso pipe2
+#' @rdname pipe
+#'
 #' @examples
 #'
 #' # dontrun{ # these can't be automatically run due to package conflicts with magrittr
@@ -197,8 +198,7 @@
   whPipeCall <- unlist(lapply(mcs, function(elem) as.character(elem[[1]]) %in% c("%C%", "%>%")))
   # Take the first one, which will be one with the whole pipe sequence
   mc <- mcs[whPipeCall][[1]]
-  mc <- parse(text = gsub(deparse(mc), pattern = "%C%",
-                                    replacement = "%>%"))[[1]]
+  mc <- parse(text = gsub(deparse(mc), pattern = "%C%", replacement = "%>%"))[[1]]
   chain_parts <- getFromNamespace("split_chain", ns = "magrittr")(mc, env = env) # nolint
   pipes <- chain_parts[["pipes"]][-1]
   rhss <- chain_parts[["rhss"]][-1]
@@ -221,7 +221,6 @@
   if (getFromNamespace("is_placeholder", ns = "magrittr")(lhs)) {
     env[["_fseq"]]
   } else {
-
     # reproducible package code here until end of if statement
     cacheCall <- match.call(Cache, chain_parts[["lhs"]])
     cacheArgs <- lapply(cacheCall, function(x) x)
@@ -238,12 +237,12 @@
     result <- withVisible(do.call("Cache", args))
 
     if (getFromNamespace("is_compound_pipe", ns = "magrittr")(pipes[[1L]])) {
-      eval(call("<-", lhs, result[["value"]]), parent,
-           parent)
+      eval(call("<-", lhs, result[["value"]]), parent, parent)
     } else {
       if (result[["visible"]])
         result[["value"]]
-      else invisible(result[["value"]])
+      else
+        invisible(result[["value"]])
     }
   }
 }

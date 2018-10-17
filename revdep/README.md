@@ -39,7 +39,7 @@ checking tests ... ERROR
   Running ‘test-all.R’ [68s/63s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-  [39m══ testthat results  ══════════════════════════════════════════════════════════════
+  [39m══ testthat results  ══════════════════════════════════════════════════════════════
   OK: 217 SKIPPED: 35 FAILED: 13
   1. Error: test cache (@test-cache.R#29) 
   2. Error: test event-level cache (@test-cache.R#80) 

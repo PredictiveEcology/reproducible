@@ -440,8 +440,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums
 }
 
-.emptyChecksumsResult <- data.table(expectedFile = character(), actualFile = character(), result = character())
-.emptyChecksumsFileContent <- data.frame(file = character(), checksum = character(), filesize = character(),
+.emptyChecksumsResult <- data.table::data.table(expectedFile = character(),
+                                                actualFile = character(),
+                                                result = character())
+.emptyChecksumsFileContent <- data.frame(file = character(),
+                                         checksum = character(),
+                                         filesize = character(),
                                          algorithm = character())
 
 .extractFunction <- function(fun) {

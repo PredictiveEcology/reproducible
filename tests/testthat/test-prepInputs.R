@@ -94,6 +94,7 @@ test_that("prepInputs doesn't work", {
   expect_true(is(shpEcozoneSm, "SpatialPolygons"))
   expect_identical(extent(shpEcozoneSm), extent(StudyArea))
 
+  unlink(dirname(ecozoneFilename), recursive = TRUE)
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
   mess <- capture_messages(shpEcozoneSm <- Cache(
     prepInputs,
@@ -161,7 +162,7 @@ test_that("prepInputs doesn't work", {
   reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
-  #  not there. Now should be no error
+  #  not there. Now should be no error.
   mess <- capture_messages(LCC2005_2 <- Cache(
     prepInputs,
     url = url,
