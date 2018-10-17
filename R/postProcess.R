@@ -727,59 +727,61 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
                               destinationPath = getOption("reproducible.destinationPath"),
                               prefix = "Small", ...) {
 
-  dots <- list(...)
+  if (!is.null(filename2)) {
+    dots <- list(...)
 
-  if (!is.null(dots$inputFilePath))  {
-    message("inputFilePath is being deprecated; use filename1")
-    filename1 <- dots$inputFilePath
-    dots$inputFilePath <- NULL
-  }
-
-  if (!is.null(dots$postProcessedFilename))  {
-    message("postProcessedFilename is being deprecated; use filename2")
-    filename2 <- dots$postProcessedFilename
-    dots$postProcessedFilename <- NULL
-  }
-
-  if (!is.null(dots$targetFilePath))  {
-    message("targetFilePath is being deprecated from determineFilename:\n",
-            "  use filename2 and filename1.")
-    if (is.null(filename1)) {
-      filename1 <- dots$targetFilePath
-      dots$targetFilePath <- NULL
+    if (!is.null(dots$inputFilePath))  {
+      message("inputFilePath is being deprecated; use filename1")
+      filename1 <- dots$inputFilePath
+      dots$inputFilePath <- NULL
     }
-  }
 
-  if (!(is.logical(filename2) || is.character(filename2) || is.null(filename2))) {
-    stop("filename2 must be logical or character string or NULL")
-  }
+    if (!is.null(dots$postProcessedFilename))  {
+      message("postProcessedFilename is being deprecated; use filename2")
+      filename2 <- dots$postProcessedFilename
+      dots$postProcessedFilename <- NULL
+    }
 
-  newFilename <- if (!identical(filename2, FALSE)) { # allow TRUE or path
-    if (isTRUE(filename2) ) {
+    if (!is.null(dots$targetFilePath))  {
+      message("targetFilePath is being deprecated from determineFilename:\n",
+              "  use filename2 and filename1.")
       if (is.null(filename1)) {
-        tmpfile <- basename(tempfile())
-        filename1 <- tmpfile
+        filename1 <- dots$targetFilePath
+        dots$targetFilePath <- NULL
       }
-      .prefix(filename1, prefix)
-    } else {
-      if (isAbsolutePath(filename2)) {
-        filename2
+    }
+
+    if (!(is.logical(filename2) || is.character(filename2) || is.null(filename2))) {
+      stop("filename2 must be logical or character string or NULL")
+    }
+
+    filename2 <- if (!identical(filename2, FALSE)) { # allow TRUE or path
+      if (isTRUE(filename2) ) {
+        if (is.null(filename1)) {
+          tmpfile <- basename(tempfile())
+          filename1 <- tmpfile
+        }
+        .prefix(filename1, prefix)
       } else {
-        if (!is.null(destinationPath)) {
-          file.path(destinationPath, basename(filename2))
+        if (isAbsolutePath(filename2)) {
+          filename2
         } else {
-          filename2 # accept relative
+          if (!is.null(destinationPath)) {
+            file.path(destinationPath, basename(filename2))
+          } else {
+            filename2 # accept relative
+          }
         }
       }
+    } else {
+      NULL
     }
-  } else {
-    NULL
-  }
-  if (exists("tmpfile", inherits = FALSE)) {
-    message("Saving output to ", newFilename, ". Specify filename1 or filename2 for more control")
-  }
+    if (exists("tmpfile", inherits = FALSE)) {
+      message("Saving output to ", filename2, ". Specify filename1 or filename2 for more control")
+    }
 
-  newFilename
+  }
+  filename2
 }
 
 #' Write module inputs on disk
