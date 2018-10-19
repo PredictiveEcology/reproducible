@@ -15,7 +15,7 @@ writeOutputs(x, filename2,
   overwrite = getOption("reproducible.overwrite", FALSE), ...)
 
 \method{writeOutputs}{Spatial}(x, filename2 = NULL,
-  overwrite = getOption("reproducible.overwrite", FALSE), ...)
+  overwrite = getOption("reproducible.overwrite", TRUE), ...)
 
 \method{writeOutputs}{sf}(x, filename2 = NULL,
   overwrite = getOption("reproducible.overwrite", FALSE), ...)
