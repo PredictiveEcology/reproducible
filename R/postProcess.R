@@ -847,7 +847,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 
 #' @rdname writeOutputs
 writeOutputs.Spatial <- function(x, filename2 = NULL,
-                                 overwrite = getOption("reproducible.overwrite", FALSE),
+                                 overwrite = getOption("reproducible.overwrite", TRUE),
                                  ...) {
   if (!is.null(filename2)) {
     dots <- list(...)
