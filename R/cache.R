@@ -615,6 +615,11 @@ setMethod(
         }
       }
 
+      if (length(debugCache)) {
+        if (!is.na(pmatch(debugCache, "iterative")))
+          browser()
+      }
+
       isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
       if (identical("overwrite", useCache) && NROW(isInRepo)>0) {
         clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE)
