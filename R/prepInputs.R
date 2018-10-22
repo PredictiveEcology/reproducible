@@ -327,7 +327,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' Extract zip or tar archive files, possibly nested in other zip or tar archives.
 #'
 #' @param archive Character string giving the path of the archive
-#' containing the \code{file} to be extracted.
+#' containing the \code{file} to be extracted. This path must exist or be \code{NULL}
 #'
 #' @param destinationPath Character string giving the path where \code{neededFiles} will be
 #' extracted. Defaults to the archive directory.

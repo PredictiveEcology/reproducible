@@ -757,40 +757,44 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   neededFiles <- unique(c(neededFiles, if (!is.null(alsoExtract)) basename(alsoExtract)))
   neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
 
-  filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
-                                       neededFiles = neededFiles,
-                                       checkSums = checkSums, needChecksums = needChecksums,
-                                       checkSumFilePath = checkSumFilePath, quick = quick)
+  if (file.exists(archive)) {
+    filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
+                                         neededFiles = neededFiles,
+                                         checkSums = checkSums, needChecksums = needChecksums,
+                                         checkSumFilePath = checkSumFilePath, quick = quick)
 
-  checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
-                                newFilesToCheck = basename(filesExtracted),
-                                checkSums = filesExtracted$checkSums)
+    checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
+                                  newFilesToCheck = basename(filesExtracted),
+                                  checkSums = filesExtracted$checkSums)
 
-  filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
-                              basename(filesExtracted$filesExtracted)))
-  needChecksums <- filesExtracted$needChecksums
-  data.table::setDT(filesExtracted$checkSums)
-  dontNeedChecksums <- filesExtracted$checkSums[filesExtracted$checkSums$expectedFile %in%
-                             filesToChecksum & compareNA(result, "OK"), expectedFile]
-  filesToChecksum <- setdiff(filesToChecksum, dontNeedChecksums)
+    filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
+                                basename(filesExtracted$filesExtracted)))
+    needChecksums <- filesExtracted$needChecksums
+    data.table::setDT(filesExtracted$checkSums)
+    dontNeedChecksums <- filesExtracted$checkSums[filesExtracted$checkSums$expectedFile %in%
+                                                    filesToChecksum & compareNA(result, "OK"), expectedFile]
+    filesToChecksum <- setdiff(filesToChecksum, dontNeedChecksums)
 
-  if (needChecksums > 0) {
-    checkSums <- appendChecksumsTable(
-      checkSumFilePath = checkSumFilePath,
-      filesToChecksum = unique(basename(filesToChecksum)),
-      destinationPath = destinationPath,
-      append = needChecksums >= 2
-    )
-    needChecksums <- 0
+    if (needChecksums > 0) {
+      checkSums <- appendChecksumsTable(
+        checkSumFilePath = checkSumFilePath,
+        filesToChecksum = unique(basename(filesToChecksum)),
+        destinationPath = destinationPath,
+        append = needChecksums >= 2
+      )
+      needChecksums <- 0
+    }
+
+    ## targetFilePath might still be NULL, need destinationPath too
+    filesExtr <- c(filesToChecksum,
+                   if (is.null(filesExtracted$filesExtracted) ||
+                       length(filesExtracted$filesExtracted) == 0)
+                     character() #downloadFileResult$downloaded
+                   else
+                     filesExtracted$filesExtracted)
+  } else {
+    filesExtr <- NULL
   }
-
-  ## targetFilePath might still be NULL, need destinationPath too
-  filesExtr <- c(filesToChecksum,
-                 if (is.null(filesExtracted$filesExtracted) ||
-                     length(filesExtracted$filesExtracted) == 0)
-                   character() #downloadFileResult$downloaded
-                 else
-                   filesExtracted$filesExtracted)
   if (!is.null(filesExtr)) {
     #filesExtrTemp <- filesExtr # keep this non-uniqued version... contains full paths
     filesExtr <- unique(basename(filesExtr))
