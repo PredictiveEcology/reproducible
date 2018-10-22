@@ -215,10 +215,33 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums <- outFromSimilar$checkSums
   }
 
+
+  filesToChecksum <- if (is.null(archive))  NULL else basename(archive)
+  isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
+  if (isTRUE(!all(isOK))) {
+    results <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
+                                       alsoExtract = alsoExtract, destinationPath = destinationPath,
+                          checkSums = checkSums, needChecksums = needChecksums,
+                          checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+                          targetFile = targetFile, quick = quick)
+    checkSums <- results$checkSums
+    needChecksums <- results$needChecksums
+    neededFiles <- results$neededFiles
+    filesExtr <- results$filesExtr
+
+    if (results$needChecksums > 0) {
+      checkSums <- appendChecksumsTable(
+        checkSumFilePath = checkSumFilePath,
+        filesToChecksum = unique(basename(results$filesToChecksum)),
+        destinationPath = destinationPath,
+        append = results$needChecksums >= 2
+      )
+    }
+  }
   # Check for local copies in all values of getOption("reproducible.inputPaths")
   # At the end of this function, the files will be present in destinationPath, if they existed
   #  in options("reproducible.inputPaths")
-  localChecks <- .checkLocalSources(neededFiles, checkSums,
+  localChecks <- .checkLocalSources(neededFiles, checkSums = checkSums,
                                     checkSumFilePath = checkSumFilePath,
                                     otherPaths = getOption("reproducible.inputPaths"),
                                     destinationPath, needChecksums = needChecksums)
@@ -285,7 +308,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   on.exit({
     if (needChecksums > 0) {
       # needChecksums 1 --> write a new checksums.txt file
-      # needChecksums 2 --> append to checksums.txt file
+      # needChecksums 2 --> append to checksums.txt
       appendChecksumsTable(checkSumFilePath = checkSumFilePath,
                            filesToChecksum = basename(filesToChecksum),
                            destinationPath = destinationPath,
@@ -294,34 +317,22 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   })
 
   # Stage 1 - Extract from archive
-  neededFiles <- unique(c(neededFiles, if (!is.null(alsoExtract)) basename(alsoExtract)))
-  # if (!is.null(neededFiles) && !is.null(archive)) {
-  #   # remove archive from "neededFiles" now that we are headed
-  #   neededFiles <- setdiff(basename(neededFiles), basename(archive))
-  # }
-  neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
+  isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
+  if (isTRUE(!all(isOK))) {
+    filesExtracted <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
+                                             alsoExtract = alsoExtract, destinationPath = destinationPath,
+                                             checkSums = checkSums, needChecksums = needChecksums,
+                                             checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+                                             targetFile = targetFile, quick = quick)
 
-  filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
-                                       neededFiles = neededFiles,
-                                       checkSums = checkSums, needChecksums = needChecksums,
-                                       checkSumFilePath = checkSumFilePath, quick = quick)
-
-  filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
-                              basename(filesExtracted$filesExtracted)))
-  needChecksums <- filesExtracted$needChecksums
-
-  ## targetFilePath might still be NULL, need destinationPath too
-  filesExtr <- c(filesToChecksum,
-                 if (is.null(filesExtracted$filesExtracted) ||
-                     length(filesExtracted$filesExtracted) == 0)
-                   downloadFileResult$downloaded
-                 else
-                   filesExtracted$filesExtracted)
-  if (!is.null(filesExtr)) {
-    filesExtrTemp <- filesExtr # keep this non-uniqued version... contains full paths
-    filesExtr <- unique(basename(filesExtr))
+    filesExtr <- filesExtracted$filesExtr
+    filesToChecksum <- filesExtracted$filesToChecksum
+    needChecksums <- filesExtracted$needChecksums
+    checkSums <- filesExtracted$checkSums
+  } else {
+    filesExtr <- c(filesToChecksum, neededFiles)
+    filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
   }
-
 
   # link back to destinationPath if options("reproducible.inputPaths") was used.
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
@@ -346,7 +357,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                  file.path(destinationPathUser, filesExtr[!logicalFilesExistDP]))
     }
   }
-
 
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
                                        filesExtracted = filesExtr,
@@ -731,4 +741,61 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
     result <- FALSE
   }
   return(result)
+}
+
+
+.tryExtractFromArchive <- function(archive,
+                                  neededFiles,
+                                  filesToChecksum,
+                                  alsoExtract,
+                                  destinationPath,
+                                  checkSums,
+                                  needChecksums,
+                                  checkSumFilePath,
+                                  targetFile,
+                                  quick) {
+  neededFiles <- unique(c(neededFiles, if (!is.null(alsoExtract)) basename(alsoExtract)))
+  neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
+
+  filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
+                                       neededFiles = neededFiles,
+                                       checkSums = checkSums, needChecksums = needChecksums,
+                                       checkSumFilePath = checkSumFilePath, quick = quick)
+
+  checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
+                                newFilesToCheck = basename(filesExtracted),
+                                checkSums = filesExtracted$checkSums)
+
+  filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
+                              basename(filesExtracted$filesExtracted)))
+  needChecksums <- filesExtracted$needChecksums
+  data.table::setDT(filesExtracted$checkSums)
+  dontNeedChecksums <- filesExtracted$checkSums[filesExtracted$checkSums$expectedFile %in%
+                             filesToChecksum & compareNA(result, "OK"), expectedFile]
+  filesToChecksum <- setdiff(filesToChecksum, dontNeedChecksums)
+
+  if (needChecksums > 0) {
+    checkSums <- appendChecksumsTable(
+      checkSumFilePath = checkSumFilePath,
+      filesToChecksum = unique(basename(filesToChecksum)),
+      destinationPath = destinationPath,
+      append = needChecksums >= 2
+    )
+    needChecksums <- 0
+  }
+
+  ## targetFilePath might still be NULL, need destinationPath too
+  filesExtr <- c(filesToChecksum,
+                 if (is.null(filesExtracted$filesExtracted) ||
+                     length(filesExtracted$filesExtracted) == 0)
+                   character() #downloadFileResult$downloaded
+                 else
+                   filesExtracted$filesExtracted)
+  if (!is.null(filesExtr)) {
+    #filesExtrTemp <- filesExtr # keep this non-uniqued version... contains full paths
+    filesExtr <- unique(basename(filesExtr))
+  }
+  list(filesToChecksum = filesToChecksum, filesExtr = filesExtr,
+       needChecksums = needChecksums,
+       neededFiles = neededFiles, checkSums = checkSums)
 }

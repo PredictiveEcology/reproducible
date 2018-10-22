@@ -110,10 +110,11 @@ downloadFile <- function(archive, targetFile, neededFiles,
                 quickCheck = quick,
                 write = FALSE
               )
-            isOK <-
-              checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
-                          checkSums$actualFile %in% basename(fileToDownload),]$result
-            isOK <- isOK[!is.na(isOK)] == "OK"
+            isOK <- .compareChecksumsAndFiles(checkSums, c(basename(fileToDownload), neededFiles))
+            # isOK <-
+            #   checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
+            #               checkSums$actualFile %in% basename(fileToDownload),]$result
+            # isOK <- isOK[!is.na(isOK)] == "OK"
             if (length(isOK) > 0) {
               if (!isTRUE(all(isOK))) {
                 if (purge > 0)  {

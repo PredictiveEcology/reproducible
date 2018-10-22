@@ -393,30 +393,35 @@ extractFromArchive <- function(archive,
       }
 
       # need to re-Checksums because
-      checkSums <- if (isTRUE(file.exists(checkSumFilePath))) {
-        try(Checksums(
-          files = file.path(destinationPath, basename(neededFiles)),
-          checksumFile = checkSumFilePath,
-          path = destinationPath,
-          quickCheck = quick,
-          write = FALSE
-        ), silent = TRUE)
-      } else {
-        needChecksums <- 1
-        checkSums <- .emptyChecksumsResult
-      }
+      checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
+                                    newFilesToCheck = file.path(destinationPath, basename(neededFiles)),
+                                    checkSums = checkSums)
+
+      # checkSums <- if (isTRUE(file.exists(checkSumFilePath))) {
+      #   try(Checksums(
+      #     files = file.path(destinationPath, basename(neededFiles)),
+      #     checksumFile = checkSumFilePath,
+      #     path = destinationPath,
+      #     quickCheck = quick,
+      #     write = FALSE
+      #   ), silent = TRUE)
+      # } else {
+      #   needChecksums <- 1
+      #   checkSums <- .emptyChecksumsResult
+      # }
 
       if (is(checkSums, "try-error")) stop("checkSumFilePath is not a CHECKSUMS.txt file")
 
       # join the neededFiles with the checkSums -- find out which are missing
-      checkSumsDT <- data.table(checkSums)
-      neededFilesDT <- data.table(neededFiles = basename(neededFiles))
-      isOKDT <- checkSumsDT[neededFilesDT, on = c(expectedFile = "neededFiles")]
-      isOKDT2 <- checkSumsDT[neededFilesDT, on = c(actualFile = "neededFiles")]
-      # fill in any OKs from "actualFile" intot he isOKDT
-      isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
-      isOK <- compareNA(isOKDT$result, "OK")
+      # checkSumsDT <- data.table(checkSums)
+      # neededFilesDT <- data.table(neededFiles = basename(neededFiles))
+      # isOKDT <- checkSumsDT[neededFilesDT, on = c(expectedFile = "neededFiles")]
+      # isOKDT2 <- checkSumsDT[neededFilesDT, on = c(actualFile = "neededFiles")]
+      # # fill in any OKs from "actualFile" intot he isOKDT
+      # isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+      # isOK <- compareNA(isOKDT$result, "OK")
 
+      isOK <- .compareChecksumsAndFiles(checkSums, neededFiles)
       #basename(neededFiles) %in% checkSums$expectedFile
       #isOK <-
       #  checkSums[checkSums$expectedFile %in% basename(neededFiles) |
@@ -504,7 +509,8 @@ extractFromArchive <- function(archive,
   }
   list(extractedArchives = c(extractedArchives, archive),
        filesExtracted = unique(c(filesExtracted, extractedObjs$filesExtracted)),
-       needChecksums = needChecksums)
+       needChecksums = needChecksums,
+       checkSums = checkSums)
 }
 
 #' Try to pick a file to load
@@ -605,7 +611,12 @@ extractFromArchive <- function(archive,
     c(argList)
   }
   extractedFiles <- do.call(fun, c(args, argList))
-  if (!all(file.path(args$exdir, basename(argList[[1]])) %in% extractedFiles)) {
+  worked <- if (isUnzip) {
+    all(file.path(args$exdir, basename(argList[[1]])) %in% extractedFiles)
+  } else {
+    isTRUE(extractedFiles == 0)
+  }
+  if (!isTRUE(worked)) {
     message(
       paste0(
         "File unzipping do not appear to have worked properly.",
@@ -617,7 +628,7 @@ extractFromArchive <- function(archive,
     dir.create(tempDir, showWarnings = FALSE)
     setwd(tempDir)
     system2("unzip",
-            args = args[1],
+            args = file.path(wd, args[[1]]),
             wait = TRUE,
             stdout = NULL)
     extractedFiles <-
@@ -791,8 +802,21 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         # for zips, rm directories (length = 0)
         filesInArchive <-
           filesInArchive[filesInArchive$Length != 0,]$Name
+      } else { # untar
+        filesInArchive
       }
     }
   }
   return(filesInArchive)
+}
+
+.compareChecksumsAndFiles <- function(checkSums, files) {
+  checkSumsDT <- data.table(checkSums)
+  filesDT <- data.table(files = basename(files))
+  isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
+  isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
+  # fill in any OKs from "actualFile" intot he isOKDT
+  isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+  isOK <- compareNA(isOKDT$result, "OK")
+  isOK
 }
