@@ -757,7 +757,7 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   neededFiles <- unique(c(neededFiles, if (!is.null(alsoExtract)) basename(alsoExtract)))
   neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
 
-  if (file.exists(archive)) {
+  if (any(file.exists(archive))) {
     filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                          neededFiles = neededFiles,
                                          checkSums = checkSums, needChecksums = needChecksums,
