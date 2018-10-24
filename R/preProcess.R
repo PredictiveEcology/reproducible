@@ -333,7 +333,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     filesExtr <- c(filesToChecksum, neededFiles)
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
   }
-  filesExtr <- unique(basename(filesExtr))
+
+  if (!is.null(filesExtr))
+    filesExtr <- unique(basename(filesExtr))
 
   # link back to destinationPath if options("reproducible.inputPaths") was used.
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
