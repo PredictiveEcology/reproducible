@@ -119,10 +119,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     targetFilePath <- file.path(destinationPath, targetFile)
     if (is.null(alsoExtract)) {
       if (file.exists(checkSumFilePath)) {
-      # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with same base name, without extension
+        # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with same base name, without extension
         checksumsTmp <- as.data.table(read.table(checkSumFilePath))
         alsoExtract <- grep(paste0(file_path_sans_ext(targetFile),"\\."), checksumsTmp$file,
-                                    value = TRUE)
+                            value = TRUE)
         rm(checksumsTmp) # clean up
       }
     }
@@ -173,7 +173,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         # BUT if we don't have all files with identical root name (basename sans ext), then assess for
         #   an archive, either remotely, in the case of google or from the basename of url
         fileGuess <- .guessAtFile(url = url, archive = archive,
-                                        targetFile = targetFile, destinationPath = destinationPath)
+                                  targetFile = targetFile, destinationPath = destinationPath)
         archive <- .isArchive(fileGuess)
         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                       newFilesToCheck = archive,
@@ -220,10 +220,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
   if (isTRUE(!all(isOK))) {
     results <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
-                                       alsoExtract = alsoExtract, destinationPath = destinationPath,
-                          checkSums = checkSums, needChecksums = needChecksums,
-                          checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-                          targetFile = targetFile, quick = quick)
+                                      alsoExtract = alsoExtract, destinationPath = destinationPath,
+                                      checkSums = checkSums, needChecksums = needChecksums,
+                                      checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+                                      targetFile = targetFile, quick = quick)
     checkSums <- results$checkSums
     needChecksums <- results$needChecksums
     neededFiles <- results$neededFiles
@@ -333,6 +333,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     filesExtr <- c(filesToChecksum, neededFiles)
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
   }
+  filesExtr <- unique(basename(filesExtr))
 
   # link back to destinationPath if options("reproducible.inputPaths") was used.
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
@@ -478,8 +479,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   guessedFile <- if (grepl("drive.google.com", url)) {
     if (url.exists(url)) { # likely offline
       assessGoogle(url = url, archive = archive,
-                  targetFile = targetFile,
-                  destinationPath = destinationPath)
+                   targetFile = targetFile,
+                   destinationPath = destinationPath)
     } else {
       file.path(destinationPath, basename(url))
     }
@@ -497,7 +498,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums
   } else {
     suppressMessages(checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
-                                files = newFilesToCheck, checksumFile = checkSumFilePath), silent = TRUE))
+                                                 files = newFilesToCheck, checksumFile = checkSumFilePath), silent = TRUE))
     if (!is(checkSums2, "try-error")) {
       checkSums <- rbindlist(list(checkSums, checkSums2))
       data.table::setkey(checkSums, result)
@@ -597,14 +598,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           for (dirOPFiles in c(uniqueDirsOPFiles[1], uniqueDirsOPFiles)) {
             #for (i in seq(1 + length(uniqueDirsOPFiles))) {
             suppressMessages(checkSumsInputPath <- Checksums(path = dirOPFiles, write = FALSE,
-                                            files = file.path(dirNameOPFiles, neededFiles),
-                                            checksumFile = checkSumFilePathTry))
+                                                             files = file.path(dirNameOPFiles, neededFiles),
+                                                             checksumFile = checkSumFilePathTry))
             isOK <- checkSumsInputPath[checkSumsInputPath$expectedFile %in% neededFiles, ]$result
             if (length(isOK))
               if (all(compareNA(isOK, "OK"))) {
                 needChecksums <- 3 # Basically this means that we *may* have to update
-                                   #   checksums file in either destinationPath or
-                                   #   options("reproducible.inputPaths")
+                #   checksums file in either destinationPath or
+                #   options("reproducible.inputPaths")
                 successfulCheckSumFilePath <- checkSumFilePathTry
                 successfulDir <- dirNameOPFiles
                 break
@@ -745,15 +746,15 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 
 
 .tryExtractFromArchive <- function(archive,
-                                  neededFiles,
-                                  filesToChecksum,
-                                  alsoExtract,
-                                  destinationPath,
-                                  checkSums,
-                                  needChecksums,
-                                  checkSumFilePath,
-                                  targetFile,
-                                  quick) {
+                                   neededFiles,
+                                   filesToChecksum,
+                                   alsoExtract,
+                                   destinationPath,
+                                   checkSums,
+                                   needChecksums,
+                                   checkSumFilePath,
+                                   targetFile,
+                                   quick) {
   neededFiles <- unique(c(neededFiles, if (!is.null(alsoExtract)) basename(alsoExtract)))
   neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
 
