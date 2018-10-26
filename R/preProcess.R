@@ -465,8 +465,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 }
 
 .guessAtFile <- function(url, archive, targetFile, destinationPath) {
-  guessedFile <- if (grepl("drive.google.com", url)) {
-    if (url.exists(url)) { # likely offline
+  guessedFile <- if (url.exists(url)) { # likely offline
+    if (grepl("drive.google.com", url)) {
       assessGoogle(url = url, archive = archive,
                   targetFile = targetFile,
                   destinationPath = destinationPath)
@@ -474,7 +474,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       file.path(destinationPath, basename(url))
     }
   } else {
-    file.path(destinationPath, basename(url))
+    NULL
   }
   guessedFile
 }
