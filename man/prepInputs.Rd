@@ -5,8 +5,10 @@
 \title{Download and optionally post process files}
 \usage{
 prepInputs(targetFile = NULL, url = NULL, archive = NULL,
-  alsoExtract = NULL, destinationPath = ".", fun = NULL,
-  quick = getOption("reproducible.quick"), overwrite = FALSE,
+  alsoExtract = NULL,
+  destinationPath = getOption("reproducible.destinationPath", "."),
+  fun = NULL, quick = getOption("reproducible.quick"),
+  overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE, useCache = getOption("reproducible.useCache", FALSE),
   ...)
 }

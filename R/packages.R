@@ -497,9 +497,9 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 #'
 #' @examples
 #' pkgDep("crayon")
-pkgDep <- memoise(pkgDepRaw)
+pkgDep <- memoise::memoise(pkgDepRaw)
 
-pkgDep2 <- memoise(pkgDepRaw)
+pkgDep2 <- memoise::memoise(pkgDepRaw)
 
 #' Memoised version of package_dependencies
 #'
@@ -509,7 +509,7 @@ pkgDep2 <- memoise(pkgDepRaw)
 #' @importFrom tools package_dependencies
 #' @inheritParams tools::package_dependencies
 #' @rdname package_dependenciesMem
-package_dependenciesMem <- memoise(tools::package_dependencies, ~timeout(360)) # nolint
+package_dependenciesMem <- memoise::memoise(tools::package_dependencies, ~timeout(360)) # nolint
 
 #' Memoised version of available.packages
 #'
@@ -520,7 +520,6 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
   stop("This function is for internal use only")
   return(invisible(NULL))
 }
-
 
 #' Install exact package versions from a package version text file & GitHub
 #'

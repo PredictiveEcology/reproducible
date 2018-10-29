@@ -4,9 +4,11 @@
 \alias{downloadFile}
 \title{A wrapper around a set of downloading functions}
 \usage{
-downloadFile(archive, targetFile, neededFiles, destinationPath, quick,
+downloadFile(archive, targetFile, neededFiles,
+  destinationPath = getOption("reproducible.destinationPath"), quick,
   checksumFile, dlFun = NULL, checkSums, url, needChecksums,
-  overwrite = TRUE, purge = FALSE, ...)
+  overwrite = getOption("reproducible.overwrite", TRUE), purge = FALSE,
+  ...)
 }
 \arguments{
 \item{archive}{Optional character string giving the path of an archive

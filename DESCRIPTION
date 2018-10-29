@@ -11,8 +11,8 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-10-09
-Version: 0.2.4
+Date: 2018-10-17
+Version: 0.2.4.9000
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment=c(ORCID = "0000-0002-6914-8316")),
@@ -51,6 +51,7 @@ Imports:
     sf,
     sp,
     testthat,
+    tibble,
     tools,
     utils,
     versions

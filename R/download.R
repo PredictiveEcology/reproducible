@@ -13,9 +13,10 @@
 #' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
 #'                     file.
 #' @author Eliot McIntire
-downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quick,
+downloadFile <- function(archive, targetFile, neededFiles,
+                         destinationPath = getOption("reproducible.destinationPath"), quick,
                          checksumFile, dlFun = NULL,
-                         checkSums, url, needChecksums, overwrite = TRUE,
+                         checkSums, url, needChecksums, overwrite = getOption("reproducible.overwrite", TRUE),
                          purge = FALSE, ...) {
 
   if (!is.null(url) || !is.null(dlFun)) {
@@ -416,7 +417,8 @@ missingFiles <- function(files, checkSums, targetFile) {
 }
 
 #' @importFrom quickPlot isRstudioServer
-assessGoogle <- function(url, archive = NULL, targetFile = NULL, destinationPath) {
+assessGoogle <- function(url, archive = NULL, targetFile = NULL,
+                         destinationPath = getOption("reproducible.destinationPath")) {
   if (isRstudioServer()) {
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))

@@ -244,9 +244,11 @@ if (getRversion() >= "3.1.0") {
 #'
 #'
 prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
-                       destinationPath = ".", fun = NULL,
+                       destinationPath = getOption("reproducible.destinationPath", "."),
+                       fun = NULL,
                        quick = getOption("reproducible.quick"),
-                       overwrite = FALSE, purge = FALSE,
+                       overwrite = getOption("reproducible.overwrite", FALSE),
+                       purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
 
   # Download, Checksum, Extract from Archive
@@ -346,7 +348,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @author Jean Marchal & Eliot McIntire
 #' @importFrom tools file_ext
 #'
-extractFromArchive <- function(archive, destinationPath = dirname(archive),
+extractFromArchive <- function(archive,
+                               destinationPath = getOption("reproducible.destinationPath", dirname(archive)),
                                neededFiles = NULL, extractedArchives = NULL, checkSums = NULL,
                                needChecksums = 0, filesExtracted = character(),
                                checkSumFilePath = character(), quick = FALSE) {
@@ -514,7 +517,9 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 #'                       from an archive)
 #' @param destinationPath Full path of the directory where the target file should be
 #' @keywords internal
-.guessAtTargetAndFun <- function(targetFilePath, destinationPath, filesExtracted, fun) {
+.guessAtTargetAndFun <- function(targetFilePath,
+                                 destinationPath = getOption("reproducible.destinationPath", "."),
+                                 filesExtracted, fun) {
   possibleFiles <- unique(basename(c(targetFilePath, filesExtracted)))
   fileExt <- file_ext(possibleFiles)
   isShapefile <- grepl("shp", fileExt)
@@ -684,7 +689,8 @@ extractFromArchive <- function(archive, destinationPath = dirname(archive),
 #' @keywords internal
 #' @importFrom utils capture.output
 #' @importFrom data.table rbindlist as.data.table
-appendChecksumsTable <- function(checkSumFilePath, filesToChecksum, destinationPath,
+appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
+                                 destinationPath = getOption("reproducible.destinationPath"),
                                  append = TRUE) {
   if (append) {
     # a checksums file already existed, need to keep some of it
