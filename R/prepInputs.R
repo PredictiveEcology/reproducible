@@ -376,10 +376,11 @@ extractFromArchive <- function(archive,
   } else {
     FALSE
   }
+
   if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
     if (!is.null(archive)) {
       if (!file.exists(archive[1]))
-        stop("No archive exists with filename: ", archive,
+        stop("No archive exists with filename: ", archive[1],
              ". Please pass an archive name to a path that exists")
       args <- list(archive[1], exdir = destinationPath[1])
 
