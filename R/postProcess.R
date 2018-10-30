@@ -454,7 +454,15 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 
       if (canProcessInMemory(x, 4)) {
         tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
-        warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
+
+        out <- assessDataType(x) #not foolproof method of determining reclass method
+        if (out == "FLT4S") {
+          sampMethod <- "bilinear"
+        } else {
+          sampMethod <- "ngb"
+        }
+
+        warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, method = sampMethod, ...))
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
         warnings(warn)
         ## projectRaster doesn't always ensure equal res (floating point number issue)
