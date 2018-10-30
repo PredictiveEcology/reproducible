@@ -526,22 +526,24 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' This uses CRAN, CRAN archives, or MRAN (accessed via \code{versions::install.versions})
 #' for remote repositories.
 #' This will attempt to install all packages in the \code{packageVersionFile},
-#' with their exact version described in that file. For GitHub packages, it will
-#' use \code{\link[devtools]{install_github}}. This will be called internally by
-#' \code{Require}, and so often doesn't need to be used by a user.
+#' with their exact version described in that file.
+#' For GitHub packages, it will use \code{\link[devtools]{install_github}}.
+#' This will be called internally by \code{Require}, and so often doesn't need
+#' to be used by a user.
 #'
 #' Because of potential conflicts with loaded packages, this function will run
 #' \code{install.packages} in a separate R process.
 #'
-#' @export
-#' @param gitHubPackages Character vectors indicating repository/packageName@branch
 #' @inheritParams Require
+#' @param gitHubPackages Character vectors indicating \code{"repository/packageName@branch"}
 #' @param packageVersionFile Path to the package version file, defaults to
 #'        the \code{.packageVersions.txt}.
-#' @importFrom versions install.versions
-#' @importFrom RCurl url.exists
+#'
+#' @export
 #' @importFrom data.table setDT data.table setnames rbindlist
+#' @importFrom RCurl url.exists
 #' @importFrom utils read.table available.packages installed.packages install.packages
+#' @importFrom versions install.versions
 #' @examples
 #' \dontrun{
 #' # requires the packageVersionFile -- this doesn't work -- safer to use Require
@@ -551,7 +553,7 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' tempPkgFolder <- file.path(tempdir(), "Packages")
 #' dir.create(tempPkgFolder)
 #' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
-#' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+#' pkgSnapshot(libPath = tempPkgFolder, packageVersionFile)
 #'
 #' Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
 #'

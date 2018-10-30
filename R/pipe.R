@@ -29,12 +29,13 @@
 #' normal, caching the return value at the point of the \code{Cache} call
 #' into the cache repository for later use.
 #'
-#' @name pipe2
+#' @inheritParams magrittr::`%>%`
+#'
 #' @aliases %>%
 #' @importFrom utils getFromNamespace
-#' @inheritParams magrittr::`%>%`
 #' @importFrom magrittr freduce
 #' @export
+#' @name pipe2
 #' @seealso pipe
 #' @rdname pipe2
 #' @examples
@@ -147,11 +148,12 @@
 #' that uses pipes (\code{Cache() \%C\% ... remaining pipes}.
 #' \code{This is still experimental; use with care}.
 #'
+#' @inheritParams magrittr::`%>%`
+#'
 #' @aliases %C%
 #' @export
 #' @importFrom utils getFromNamespace
 #' @importFrom magrittr freduce
-#' @inheritParams magrittr::`%>%`
 #' @name pipe
 #' @seealso pipe2
 #' @rdname pipe
