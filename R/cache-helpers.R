@@ -60,7 +60,7 @@ setMethod(
     if (isTRUE(fromMemoise)) {
       message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
                            sep = ""))
-    } else if (!is.na(fromMemoise)){
+    } else if (!is.na(fromMemoise)) {
       message(crayon::blue("  loading cached result from previous ", functionName, " call, ",
                            "adding to memoised copy", sep = ""))
     } else {
@@ -1056,7 +1056,6 @@ setMethod("Copy",
 }
 
 # loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
-
 
 .getOtherFnNamesAndTags <- function(scalls) {
   if (is.null(scalls)) {

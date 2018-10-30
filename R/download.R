@@ -3,16 +3,17 @@
 #' Currently, this only deals with \code{\link[googledrive]{drive_download}},
 #' and \code{\link[utils]{download.file}}.
 #'
-#' @export
 #' @inheritParams prepInputs
-#' @include checksums.R
 #' @inheritParams extractFromArchive
 #' @param dlFun Optional "download function" name, such as \code{"raster::getData"}, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
 #' @param ... Passed to \code{dlFun}. Still experimental.
 #' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
 #'                     file.
+#'
 #' @author Eliot McIntire
+#' @export
+#' @include checksums.R
 downloadFile <- function(archive, targetFile, neededFiles,
                          destinationPath = getOption("reproducible.destinationPath"), quick,
                          checksumFile, dlFun = NULL,

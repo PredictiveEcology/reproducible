@@ -44,10 +44,11 @@
 #'  to get the remove file information (e.g., file name). With that, the connection
 #'  between the \code{url} and the filename used in the CHECKSUMS.txt file can be made.
 #'
-#' @author Eliot McIntire
-#' @export
 #' @inheritParams prepInputs
 #' @inheritParams downloadFile
+#'
+#' @author Eliot McIntire
+#' @export
 #' @importFrom data.table fread setDT
 #' @importFrom tools file_path_sans_ext
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,

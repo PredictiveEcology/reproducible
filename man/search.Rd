@@ -43,7 +43,6 @@ seeScope <- function() {
 }
 seeScope()
 searchFull()
-
 searchFullEx()
 }
 \seealso{

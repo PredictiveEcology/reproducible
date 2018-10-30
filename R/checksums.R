@@ -50,11 +50,10 @@ if (getRversion() >= "3.1.0") {
 #'         indicating the result of comparison between local file (\code{x}) and
 #'         expectation based on the \code{CHECKSUMS.txt} file.
 #'
-#' @importFrom dplyr arrange desc filter group_by left_join mutate rename row_number select
-#' @export
-#' @rdname Checksums
-#'
 #' @author Alex Chubaty
+#' @export
+#' @importFrom dplyr arrange desc filter group_by left_join mutate rename row_number select
+#' @rdname Checksums
 #'
 #' @examples
 #' \dontrun{
@@ -79,10 +78,10 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
   standardGeneric("Checksums")
 })
 
-#' @rdname Checksums
 #' @importFrom crayon magenta
 #' @importFrom methods formalArgs
 #' @importFrom utils read.table write.table
+#' @rdname Checksums
 setMethod(
   "Checksums",
   signature = c(path = "character", quickCheck = "ANY",
@@ -277,12 +276,10 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 #'
 #' @return A character vector of hashes.
 #'
+#' @author Alex Chubaty
 #' @importFrom digest digest
 #' @keywords internal
 #' @rdname digest
-#'
-#' @author Alex Chubaty
-#'
 setGeneric(".digest", function(file, quickCheck, ...) {
   standardGeneric(".digest")
 })

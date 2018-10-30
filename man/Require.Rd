@@ -19,9 +19,9 @@ calls with \code{versions::install.versions}}
 \item{libPath}{The library path where all packages should be installed, and looked for to load
 (i.e., call \code{library})}
 
-\item{install_githubArgs}{List of optional named arguments, passed to install_github}
+\item{install_githubArgs}{List of optional named arguments, passed to \code{install_github}.}
 
-\item{install.packagesArgs}{List of optional named arguments, passed to install.packages}
+\item{install.packagesArgs}{List of optional named arguments, passed to \code{install.packages}.}
 
 \item{standAlone}{Logical. If \code{TRUE}, all packages will be installed and loaded strictly
 from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
@@ -43,48 +43,51 @@ refresh that dependency calculation.}
 \description{
 This is an "all in one" function that will run \code{install.packages} for
 CRAN packages, \code{devtools::install_github} for GitHub.com packages and
-will install specific versions of each package if
-there is a \code{packageVersionFile} supplied.
-Plus, when \code{packages} is provided as a character vector, or a
-\code{packageVersionFile} is supplied, all package dependencies
-will be first assessed for \code{unique(dependencies)} so the same package is
-not installed multiple times. Finally \code{library} is called on the
-\code{packages}. If packages are already installed (\code{packages} supplied),
-and their version numbers are exact (when \code{packageVersionFile} is supplied),
-then the "install" component will be skipped very quickly with a message.
+will install specific versions of each package if there is a
+\code{packageVersionFile} supplied. Plus, when \code{packages} is provided as
+a character vector, or a \code{packageVersionFile} is supplied, all package
+dependencies will be first assessed for \code{unique(dependencies)} so the
+same package is not installed multiple times. Finally \code{library} is
+called on the \code{packages}. If packages are already installed
+(\code{packages} supplied), and their version numbers are exact (when
+\code{packageVersionFile} is supplied), then the "install" component will be
+skipped very quickly with a message.
 }
 \details{
-\code{standAlone} will either put the \code{Require}d packages and their dependencies
-\emph{all} within the libPath (if \code{TRUE}) or if \code{FALSE} will only install
-packages and their dependencies that are otherwise
-not installed in \code{.libPaths()}, i.e., the personal or base library paths. Any
-packages or dependencies that are not yet installed will be installed in \code{libPath}.
-Importantly, a small hidden file (named \code{._packageVersionsAuto.txt})
-will be saved in \code{libPath} that will store the \emph{information} about
-the packages and their dependencies, even if the version used is located in
-\code{.libPaths()}, i.e., not the \code{libPath} provided.
-This hidden file will be used if a user runs \code{pkgSnapshot},
-enabling a new user to rebuild the entire dependency chain, without having to
-install all packages in an isolated directory (as does \pkg{packrat}).
-This will save potentially a lot of time and disk space, and yet maintain reproducibility.
-\emph{NOTE}: since there is only one hidden file in a \code{libPath}, any call to
-\code{pkgSnapshot} will make a snapshot of the most recent call to \code{Require}.
+\code{standAlone} will either put the \code{Require}d packages and their
+dependencies \emph{all} within the libPath (if \code{TRUE}) or if
+\code{FALSE} will only install packages and their dependencies that are
+otherwise not installed in \code{.libPaths()}, i.e., the personal or base
+library paths. Any packages or dependencies that are not yet installed will
+be installed in \code{libPath}. Importantly, a small hidden file (named
+\code{._packageVersionsAuto.txt}) will be saved in \code{libPath} that will
+store the \emph{information} about the packages and their dependencies, even
+if the version used is located in \code{.libPaths()}, i.e., not the
+\code{libPath} provided. This hidden file will be used if a user runs
+\code{pkgSnapshot}, enabling a new user to rebuild the entire dependency
+chain, without having to install all packages in an isolated directory (as
+does \pkg{packrat}). This will save potentially a lot of time and disk space,
+and yet maintain reproducibility. \emph{NOTE}: since there is only one hidden
+file in a \code{libPath}, any call to \code{pkgSnapshot} will make a snapshot
+of the most recent call to \code{Require}.
 
-To build a snapshot of the desired packages and their versions, first run \code{Require}
-with all packages, then \code{pkgSnapshot}. If a \code{libPath} is used, it must be used
-in both functions.
+To build a snapshot of the desired packages and their versions, first run
+\code{Require} with all packages, then \code{pkgSnapshot}. If a
+\code{libPath} is used, it must be used in both functions.
 
-This function works best if all required packages are called within one \code{Require}
-call, as all dependencies can be identified together, and all package versions will be saved
-automatically (with \code{standAlone = TRUE} or \code{standAlone = FALSE}),
-allowing a call to \code{pkgSnapshot} when a more permanent record of versions can be made.
+This function works best if all required packages are called within one
+\code{Require} call, as all dependencies can be identified together, and all
+package versions will be saved automatically (with \code{standAlone = TRUE}
+or \code{standAlone = FALSE}), allowing a call to \code{pkgSnapshot} when a
+more permanent record of versions can be made.
 }
 \note{
-This function will use \code{memoise} internally to determine the dependencies
-of all \code{packages}. This will speed up subsequent calls to \code{Require}
-dramatically. However, it will not take into account version numbers for this
-memoised step. If package versions are updated manually by the user, then this cached
-element should be wiped, using \code{forget = TRUE}.
+This function will use \code{memoise} internally to determine the
+  dependencies of all \code{packages}. This will speed up subsequent calls to
+  \code{Require} dramatically. However, it will not take into account version
+  numbers for this memoised step. If package versions are updated manually by
+  the user, then this cached element should be wiped, using \code{forget =
+  TRUE}.
 }
 \examples{
 \dontrun{
@@ -119,7 +122,6 @@ Require("crayon", packageVersionFile = packageVersionFile)
 
 # Mutual dependencies, only installs once -- e.g., httr
 Require(c("cranlogs", "covr"), libPath = tempPkgFolder)
-
 }
 
 }
