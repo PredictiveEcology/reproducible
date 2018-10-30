@@ -262,7 +262,6 @@ cropInputs <- function(x, studyArea, rasterToMatch, ...) {
 #' @export
 #' @rdname cropInputs
 cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
-
   x
 }
 
@@ -518,7 +517,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           x <- projectRaster(from = x, crs = targetCRS, ...)
         } else {
           x <- projectRaster(from = x, crs = targetCRS, method = "ngb", ...)
-          }
+        }
       } else {
         message("    no reprojecting because target CRS is same as input CRS.")
       }
