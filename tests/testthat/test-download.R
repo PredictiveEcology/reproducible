@@ -10,5 +10,5 @@ test_that("dlGeneric works", {
 
   res <- dlGeneric(url, FALSE)
   expect_true(file.exists(res$destFile))
-  unlink(destFile)
+  unlink(res$destFile)
 })

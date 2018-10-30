@@ -84,8 +84,8 @@ setGeneric("clearCache", function(x, userTags = character(), after, before,
 })
 
 #' @export
-#' @rdname viewCache
 #' @importFrom archivist createLocalRepo
+#' @rdname viewCache
 setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, ...) {
