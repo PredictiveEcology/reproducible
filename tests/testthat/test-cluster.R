@@ -5,7 +5,6 @@ test_that("test parallel collisions", {
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
   if (require(parallel)) {
-
     # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
     #   which works on Linux, Mac, Windows
     N <- min(2, detectCores())
@@ -24,6 +23,7 @@ test_that("test parallel collisions", {
     # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
     cl <- makeCluster(N)
     on.exit(stopCluster(cl), add = TRUE)
+
     clusterSetRNGStream(cl)
     # clusterEvalQ(cl = cl, {
     #   devtools::load_all()
@@ -33,8 +33,5 @@ test_that("test parallel collisions", {
     expect_false(is(a, "try-error"))
     expect_true(is.list(a))
     expect_true(length(a) == numToRun)
-
   }
-
-
 })

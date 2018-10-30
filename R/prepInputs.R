@@ -278,7 +278,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   args <- args[(names(args) %in% fun$formalArgs)]
   if (length(args) == 0) args <- NULL
 
-
   # Stage 1 - load into R
   x <- if (is.null(out$object)) {
     message("Loading object into R")
@@ -287,7 +286,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       ## -- normal reading of raster on disk is fast b/c only reads metadata
       do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
     } else {
-      if (identical(out$fun, base::load)){
+      if (identical(out$fun, base::load)) {
         if (is.null(args$envir)) {
           message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
                   "if you would like it loaded to a specific environment")
@@ -303,7 +302,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           as.list(tmpEnv, all.names = TRUE)
       } else {
         Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                   useCache = useCache)
+              useCache = useCache)
       }
     }
   } else {
