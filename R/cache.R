@@ -851,7 +851,7 @@ setMethod(
       if (fnDetails$isPipe) {
         output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
       } else {
-        output <- do.call(FUN, fnDetails$originalDots)
+        output <- do.call(FUN, fnDetails$modifiedDots)
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],

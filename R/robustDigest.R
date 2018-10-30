@@ -113,12 +113,13 @@ setGeneric(".robustDigest", function(object, objects,
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "ANY",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
     fastdigest(object)
 })
 
@@ -126,42 +127,47 @@ setMethod(
 setOldClass("cluster")
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "cluster",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
     fastdigest(NULL)
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "function",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
     fastdigest(format(object))
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "expression",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
     fastdigest(format(object))
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "character",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
+
   if (!quick) {
       # if (any(unlist(lapply(object, dir.exists)))) {
       #   bbb <<- bbb + 1
@@ -193,13 +199,14 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "Path",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
     nParentDirs <- attr(object, "nParentDirs")
+    object <- .removeCacheAtts(object)
 
     if (!quick) {
       lapply(object, function(x) {
@@ -222,48 +229,44 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "environment",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
-  .robustDigest(as.list(object, all.names = TRUE), objects = objects,
+    object <- .removeCacheAtts(object)
+    .robustDigest(as.list(object, all.names = TRUE), objects = objects,
                  length = length,
                  algo = algo, quick = quick)
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "list",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
-  lapply(.sortDotsUnderscoreFirst(object), function(x) {
+    object <- .removeCacheAtts(object)
+    lapply(.sortDotsUnderscoreFirst(object), function(x) {
       .robustDigest(object = x, objects = objects,
                    length = length,
                    algo = algo, quick = quick)
     })
 })
 
-#' @rdname robustDigest
-#' @exportMethod .robustDigest
-setMethod(
-  ".robustDigest",
-  signature = "data.frame",
-  definition = function(object, objects, length, algo, quick,
-                        classOptions) {
-    fastdigest(object)
-  })
+
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "Raster",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
+
     if (is(object, "RasterStack")) {
       # have to do one file at a time with Stack
       dig <- suppressWarnings(
@@ -280,12 +283,14 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "Spatial",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
+    object <- .removeCacheAtts(object)
+
   if (is(object, "SpatialPoints")) {
       aaa <- as.data.frame(object)
     } else {
@@ -303,7 +308,7 @@ setMethod(
     }
 
     return(fastdigest(aaa))
-  })
+})
 
 .basenames <- function(object, nParentDirs) {
   if (missing(nParentDirs)) {
@@ -321,5 +326,12 @@ setMethod(
     basename(object)
   }
   object
+}
 
+#' @importFrom data.table setattr
+.removeCacheAtts <- function(x) {
+  setattr(x, "tags", NULL)
+  setattr(x, ".Cache", NULL)
+  setattr(x, "call", NULL)
+  x
 }

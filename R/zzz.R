@@ -9,9 +9,11 @@
   opts.reproducible <- list( # nolint
     reproducible.ask = TRUE,
     reproducible.cachePath = file.path(.reproducibleTempCacheDir),
+    reproducible.destinationPath = NULL,
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
+    reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useMemoise = TRUE, #memoise
@@ -51,8 +53,8 @@
 .argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
                                           names(formals(cropInputs)),
                                           names(formals(fixErrors)),
-                                          names(formals(writeRaster)),
-                                          names(formals(projectRaster)),
+                                          names(formals(raster::writeRaster)),
+                                          names(formals(raster::projectRaster)),
                                           names(formals(determineFilename)),
                                           names(formals(writeOutputs)),
                                           unlist(lapply(methods("postProcess"), function(x) names(formals(x))))))

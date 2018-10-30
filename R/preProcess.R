@@ -44,16 +44,19 @@
 #'  to get the remove file information (e.g., file name). With that, the connection
 #'  between the \code{url} and the filename used in the CHECKSUMS.txt file can be made.
 #'
-#' @author Eliot McIntire
-#' @export
 #' @inheritParams prepInputs
 #' @inheritParams downloadFile
+#'
+#' @author Eliot McIntire
+#' @export
 #' @importFrom data.table fread setDT
 #' @importFrom tools file_path_sans_ext
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
-                       destinationPath = ".", fun = NULL, dlFun = NULL,
+                       destinationPath = getOption("reproducible.destinationPath", "."),
+                       fun = NULL, dlFun = NULL,
                        quick = getOption("reproducible.quick"),
-                       overwrite = FALSE, purge = FALSE,
+                       overwrite = getOption("reproducible.overwrite", FALSE),
+                       purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
   dots <- list(...)
 
@@ -389,6 +392,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       append = needChecksums >= 2
     )
     if (!is.null(getOption("reproducible.inputPaths")) && needChecksums != 3) {
+      checkSumFilePathInputPaths <- file.path(getOption("reproducible.inputPaths")[[1]],
+                                              "CHECKSUMS.txt")
       suppressMessages(checkSums <- appendChecksumsTable(
         checkSumFilePath = checkSumFilePathInputPaths,
         filesToChecksum = unique(basename(filesToChecksum)),
@@ -436,8 +441,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums
 }
 
-.emptyChecksumsResult <- data.table(expectedFile = character(), actualFile = character(), result = character())
-.emptyChecksumsFileContent <- data.frame(file = character(), checksum = character(), filesize = character(),
+.emptyChecksumsResult <- data.table::data.table(expectedFile = character(),
+                                                actualFile = character(),
+                                                result = character())
+.emptyChecksumsFileContent <- data.frame(file = character(),
+                                         checksum = character(),
+                                         filesize = character(),
                                          algorithm = character())
 
 .extractFunction <- function(fun) {

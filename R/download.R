@@ -3,19 +3,21 @@
 #' Currently, this only deals with \code{\link[googledrive]{drive_download}},
 #' and \code{\link[utils]{download.file}}.
 #'
-#' @export
 #' @inheritParams prepInputs
-#' @include checksums.R
 #' @inheritParams extractFromArchive
 #' @param dlFun Optional "download function" name, such as \code{"raster::getData"}, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
 #' @param ... Passed to \code{dlFun}. Still experimental.
 #' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
 #'                     file.
+#'
 #' @author Eliot McIntire
-downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quick,
+#' @export
+#' @include checksums.R
+downloadFile <- function(archive, targetFile, neededFiles,
+                         destinationPath = getOption("reproducible.destinationPath"), quick,
                          checksumFile, dlFun = NULL,
-                         checkSums, url, needChecksums, overwrite = TRUE,
+                         checkSums, url, needChecksums, overwrite = getOption("reproducible.overwrite", TRUE),
                          purge = FALSE, ...) {
 
   if (!is.null(url) || !is.null(dlFun)) {
@@ -109,33 +111,29 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
                 quickCheck = quick,
                 write = FALSE
               )
-            isOK <-
-              checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
-                          checkSums$actualFile %in% basename(fileToDownload),]$result
+            isOK <- checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
+                                checkSums$actualFile %in% basename(fileToDownload),]$result
             isOK <- isOK[!is.na(isOK)] == "OK"
             if (length(isOK) > 0) {
               if (!isTRUE(all(isOK))) {
                 if (purge > 0)  {
                   # This is case where we didn't know what file to download, and only now
                   # do we know
-                  checkSums <-
-                    .purge(checkSums = checkSums,
-                           purge = purge,
-                           url = fileToDownload)
+                  checkSums <- .purge(checkSums = checkSums,
+                                      purge = purge,
+                                      url = fileToDownload)
                   downloadResults$needChecksums <- 2
                 } else {
-                  tf <-
-                    tryCatch(
-                      basename(targetFile) %in% fileToDownload,
-                      error = function(x)
-                        FALSE
-                    )
-                  af <-
-                    tryCatch(
-                      basename(archive) %in% fileToDownload,
-                      error = function(x)
-                        FALSE
-                    )
+                  tf <- tryCatch(
+                    basename(targetFile) %in% fileToDownload,
+                    error = function(x)
+                      FALSE
+                  )
+                  af <- tryCatch(
+                    basename(archive) %in% fileToDownload,
+                    error = function(x)
+                      FALSE
+                  )
 
                   sc <- sys.calls()
                   piCall <- grep("^prepInputs", sc, value = TRUE)
@@ -175,7 +173,8 @@ downloadFile <- function(archive, targetFile, neededFiles, destinationPath, quic
           }
         }
       } # checksum file doesn't exist
-    } else { # not missing any files to download
+    } else {
+      # not missing any files to download
       fileAlreadyDownloaded <- if (is.null(archive[1])) {
         expectedFile <- checkSums[compareNA(checkSums$result, "OK"),]$expectedFile
 
@@ -280,7 +279,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' Download file from generic source url
 #'
 #' @param url  The url (link) to the file.
-#' @param needChecksums TODO
+#' @param needChecksums Logical indicating whether to generate checksums.
 #'
 #' ## TODO: add overwrite arg to the function?
 #'
@@ -299,9 +298,9 @@ dlGeneric <- function(url, needChecksums) {
 
   ua <- httr::user_agent(getOption("reproducible.useragent"))
   request <- suppressWarnings(
-    ## TODO: GET is throving warnings
+    ## TODO: GET is throwing warnings
     httr::GET(url, ua, httr::progress(),
-              httr::write_disk(destFile, overwrite = TRUE)) ## TODO overwrite?
+              httr::write_disk(destFile, overwrite = TRUE)) ## TODO: overwrite?
   )
   httr::stop_for_status(request)
 
@@ -314,7 +313,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
-      if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  { # NA means archive already in hand
+      if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  {# NA means archive already in hand
         if (!is.null(dlFun)) {
           dlFunName <- dlFun
           dlFun <- .extractFunction(dlFun)
@@ -380,13 +379,20 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
           desiredPathExists <- file.exists(desiredPath)
           if (desiredPathExists && !isTRUE(overwrite)) {
-            stop(targetFile, " already exists at ", desiredPath,
-                 ". Use overwrite = TRUE?")
+            stop(targetFile, " already exists at ", desiredPath, ". Use overwrite = TRUE?")
           }
           if (desiredPathExists) {
             file.remove(desiredPath)
           }
-          file.link(downloadResults$destFile, desiredPath)
+
+          # Try hard link first -- the only type that R deeply recognizes
+          # if that fails, fall back to copying the file.
+          # NOTE: never use symlink because the original will be deleted.
+          warns <- capture_warnings(result <- file.link(downloadResults$destFile, desiredPath))
+          if (isFALSE(result)) {
+            result <- file.copy(downloadResults$destFile, desiredPath)
+          }
+
           suppressWarnings(file.remove(downloadResults$destFile))
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }
@@ -412,11 +418,11 @@ missingFiles <- function(files, checkSums, targetFile) {
   (!(all(compareNA(result, "OK")) && all(files %in% checkSums$expectedFile)) ||
       #                     is.null(targetFile) ||
       is.null(files))
-
 }
 
 #' @importFrom quickPlot isRstudioServer
-assessGoogle <- function(url, archive = NULL, targetFile = NULL, destinationPath) {
+assessGoogle <- function(url, archive = NULL, targetFile = NULL,
+                         destinationPath = getOption("reproducible.destinationPath")) {
   if (isRstudioServer()) {
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
@@ -441,5 +447,4 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL, destinationPath
   } else {
     downloadFilename <- archive
   }
-
 }

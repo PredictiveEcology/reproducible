@@ -2,15 +2,22 @@
 % Please edit documentation in R/postProcess.R
 \name{postProcess}
 \alias{postProcess}
+\alias{postProcess.default}
+\alias{postProcess.list}
 \alias{postProcess.spatialObjects}
 \title{Generic function to post process objects}
 \usage{
 postProcess(x, ...)
 
+\method{postProcess}{default}(x, ...)
+
+\method{postProcess}{list}(x, ...)
+
 \method{postProcess}{spatialObjects}(x, filename1 = NULL,
   filename2 = TRUE, studyArea = NULL, rasterToMatch = NULL,
-  overwrite = TRUE, useSAcrs = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE), ...)
+  overwrite = getOption("reproducible.overwrite", TRUE),
+  useSAcrs = FALSE, useCache = getOption("reproducible.useCache",
+  FALSE), ...)
 }
 \arguments{
 \item{x}{An object of postProcessing, e.g., \code{spatialObjects}.

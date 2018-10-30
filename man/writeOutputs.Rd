@@ -8,15 +8,17 @@
 \alias{writeOutputs.default}
 \title{Write module inputs on disk}
 \usage{
-writeOutputs(x, filename2, overwrite, ...)
+writeOutputs(x, filename2,
+  overwrite = getOption("reproducible.overwrite", NULL), ...)
 
-\method{writeOutputs}{Raster}(x, filename2 = NULL, overwrite = FALSE,
-  ...)
+\method{writeOutputs}{Raster}(x, filename2 = NULL,
+  overwrite = getOption("reproducible.overwrite", FALSE), ...)
 
-\method{writeOutputs}{Spatial}(x, filename2 = NULL, overwrite = FALSE,
-  ...)
+\method{writeOutputs}{Spatial}(x, filename2 = NULL,
+  overwrite = getOption("reproducible.overwrite", FALSE), ...)
 
-\method{writeOutputs}{sf}(x, filename2 = NULL, overwrite = FALSE, ...)
+\method{writeOutputs}{sf}(x, filename2 = NULL,
+  overwrite = getOption("reproducible.overwrite", FALSE), ...)
 
 \method{writeOutputs}{default}(x, filename2, ...)
 }

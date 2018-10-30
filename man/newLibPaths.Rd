@@ -2,7 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{newLibPaths}
 \alias{newLibPaths}
-\title{A shortcut to create a .libPaths() with only 2 folders}
+\title{A shortcut to create a \code{.libPaths()} with only two directories}
 \usage{
 newLibPaths(libPath)
 }
@@ -10,11 +10,11 @@ newLibPaths(libPath)
 \item{libPath}{A path that will be the new .libPaths()[1]}
 }
 \value{
-Invisibly the new \code{.libPaths()}
+Invisibly, the new \code{.libPaths()}.
 }
 \description{
-This will remove all but the top level of .libPaths(), which should be the base packages
-installed with R, and adds a second directory, the \code{libPath}.
+This will remove all but the top level of \code{.libPaths()}, which should be
+the core packages installed with R, and adds a second directory, the \code{libPath}.
 }
 \examples{
 \dontrun{
