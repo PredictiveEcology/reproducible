@@ -19,7 +19,7 @@ This uses CRAN, CRAN archives, or MRAN (accessed via \code{versions::install.ver
 for remote repositories.
 This will attempt to install all packages in the \code{packageVersionFile},
 with their exact version described in that file. For GitHub packages, it will
-use \code{\link[devtools]{install_github}}. This will be called internally by
+use \code{\link[remotes]{install_github}}. This will be called internally by
 \code{Require}, and so often doesn't need to be used by a user.
 
 Because of potential conflicts with loaded packages, this function will run
