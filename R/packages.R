@@ -5,7 +5,7 @@ if (getRversion() >= "3.1.0") {
 #' Repeatability-safe install and load packages, optionally with specific versions
 #'
 #' This is an "all in one" function that will run \code{install.packages} for
-#' CRAN packages, \code{devtools::install_github} for GitHub.com packages and
+#' CRAN packages, \code{remotes::install_github} for \url{GitHub.com} packages and
 #' will install specific versions of each package if there is a
 #' \code{packageVersionFile} supplied. Plus, when \code{packages} is provided as
 #' a character vector, or a \code{packageVersionFile} is supplied, all package
@@ -75,7 +75,7 @@ if (getRversion() >= "3.1.0") {
 #'               refresh that dependency calculation.
 #'
 #' @export
-#' @importFrom devtools install_github
+#' @importFrom remotes install_github
 #' @importFrom utils install.packages capture.output
 #' @importFrom testthat capture_warnings
 #' @examples
@@ -538,7 +538,7 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' for remote repositories.
 #' This will attempt to install all packages in the \code{packageVersionFile},
 #' with their exact version described in that file. For GitHub packages, it will
-#' use \code{\link[devtools]{install_github}}. This will be called internally by
+#' use \code{\link[remotes]{install_github}}. This will be called internally by
 #' \code{Require}, and so often doesn't need to be used by a user.
 #'
 #' Because of potential conflicts with loaded packages, this function will run
@@ -547,6 +547,7 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' @export
 #' @importFrom data.table setDT data.table setnames rbindlist
 #' @importFrom RCurl url.exists
+#' @importFrom remotes install_github
 #' @importFrom utils available.packages install.packages installed.packages read.table
 #' @importFrom versions install.versions
 #' @examples
@@ -779,7 +780,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         lapply(whPkgsNeededGH, function(pkg) {
           oldLibPaths <- .libPaths()
           .libPaths(c(libPath, oldLibPaths))
-          devtools::install_github(pkg, upgrade_dependencies = FALSE, local = FALSE, force = TRUE)
+          remotes::install_github(pkg, upgrade_dependencies = FALSE, local = FALSE, force = TRUE)
           .libPaths(oldLibPaths)
         })
       }
