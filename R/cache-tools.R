@@ -132,7 +132,7 @@ setMethod(
     objsDT <- do.call(showCache, args = args)
 
     if (isInteractive()) {
-      cacheSize <- sum(as.numeric(objsDT[tagKey=="object.size"]$tagValue))/4
+      cacheSize <- sum(as.numeric(objsDT[tagKey == "object.size"]$tagValue)) / 4
       #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
       #cacheSize <- sum(file.size(rdaFiles))
     }
@@ -161,7 +161,6 @@ setMethod(
         formattedCacheSize <- format(cacheSize, "auto")
         if (isTRUE(ask)) {
           if (isInteractive()) {
-
             message("Your size of your selected objects is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")
             rl <- readline()
@@ -254,7 +253,6 @@ setMethod(
           setkeyv(objsDT2, "artifact")
           shortDT <- unique(objsDT2, by = "artifact")[, artifact]
           objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
-
         }
       }
     }
