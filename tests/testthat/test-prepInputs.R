@@ -1100,7 +1100,25 @@ test_that("assessDataType doesn't work", {
 
 })
 
+test_that("assessDataTypeGDAL doesn't work", {
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
+  ## Float32
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- runif(100, 0, 1)
+  expect_true(assessDataTypeGDAL(ras) == "Float32")
+
+  ## UInt16
+  ras[] <- c(201:300)
+  expect_true(assessDataTypeGDAL(ras) == "UInt16")
+
+  ##Byte
+  ras[] <- 1:100
+  expect_true(assessDataTypeGDAL(ras) == "Byte")
+})
 
 test_that("lightweight tests for code coverage", {
   testthat::skip_on_cran()
