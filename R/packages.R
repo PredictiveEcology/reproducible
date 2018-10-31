@@ -5,52 +5,51 @@ if (getRversion() >= "3.1.0") {
 #' Repeatability-safe install and load packages, optionally with specific versions
 #'
 #' This is an "all in one" function that will run \code{install.packages} for
-#' CRAN packages, \code{devtools::install_github} for GitHub.com packages and
-#' will install specific versions of each package if
-#' there is a \code{packageVersionFile} supplied.
-#' Plus, when \code{packages} is provided as a character vector, or a
-#' \code{packageVersionFile} is supplied, all package dependencies
-#' will be first assessed for \code{unique(dependencies)} so the same package is
-#' not installed multiple times. Finally \code{library} is called on the
-#' \code{packages}. If packages are already installed (\code{packages} supplied),
-#' and their version numbers are exact (when \code{packageVersionFile} is supplied),
-#' then the "install" component will be skipped very quickly with a message.
+#' CRAN packages, \code{remotes::install_github} for \url{GitHub.com} packages and
+#' will install specific versions of each package if there is a
+#' \code{packageVersionFile} supplied. Plus, when \code{packages} is provided as
+#' a character vector, or a \code{packageVersionFile} is supplied, all package
+#' dependencies will be first assessed for \code{unique(dependencies)} so the
+#' same package is not installed multiple times. Finally \code{library} is
+#' called on the \code{packages}. If packages are already installed
+#' (\code{packages} supplied), and their version numbers are exact (when
+#' \code{packageVersionFile} is supplied), then the "install" component will be
+#' skipped very quickly with a message.
 #'
-#' \code{standAlone} will either put the \code{Require}d packages and their dependencies
-#' \emph{all} within the libPath (if \code{TRUE}) or if \code{FALSE} will only install
-#' packages and their dependencies that are otherwise
-#' not installed in \code{.libPaths()}, i.e., the personal or base library paths. Any
-#' packages or dependencies that are not yet installed will be installed in \code{libPath}.
-#' Importantly, a small hidden file (named \code{._packageVersionsAuto.txt})
-#' will be saved in \code{libPath} that will store the \emph{information} about
-#' the packages and their dependencies, even if the version used is located in
-#' \code{.libPaths()}, i.e., not the \code{libPath} provided.
-#' This hidden file will be used if a user runs \code{pkgSnapshot},
-#' enabling a new user to rebuild the entire dependency chain, without having to
-#' install all packages in an isolated directory (as does \pkg{packrat}).
-#' This will save potentially a lot of time and disk space, and yet maintain reproducibility.
-#' \emph{NOTE}: since there is only one hidden file in a \code{libPath}, any call to
-#' \code{pkgSnapshot} will make a snapshot of the most recent call to \code{Require}.
+#' \code{standAlone} will either put the \code{Require}d packages and their
+#' dependencies \emph{all} within the libPath (if \code{TRUE}) or if
+#' \code{FALSE} will only install packages and their dependencies that are
+#' otherwise not installed in \code{.libPaths()}, i.e., the personal or base
+#' library paths. Any packages or dependencies that are not yet installed will
+#' be installed in \code{libPath}. Importantly, a small hidden file (named
+#' \code{._packageVersionsAuto.txt}) will be saved in \code{libPath} that will
+#' store the \emph{information} about the packages and their dependencies, even
+#' if the version used is located in \code{.libPaths()}, i.e., not the
+#' \code{libPath} provided. This hidden file will be used if a user runs
+#' \code{pkgSnapshot}, enabling a new user to rebuild the entire dependency
+#' chain, without having to install all packages in an isolated directory (as
+#' does \pkg{packrat}). This will save potentially a lot of time and disk space,
+#' and yet maintain reproducibility. \emph{NOTE}: since there is only one hidden
+#' file in a \code{libPath}, any call to \code{pkgSnapshot} will make a snapshot
+#' of the most recent call to \code{Require}.
 #'
-#' To build a snapshot of the desired packages and their versions, first run \code{Require}
-#' with all packages, then \code{pkgSnapshot}. If a \code{libPath} is used, it must be used
-#' in both functions.
+#' To build a snapshot of the desired packages and their versions, first run
+#' \code{Require} with all packages, then \code{pkgSnapshot}. If a
+#' \code{libPath} is used, it must be used in both functions.
 #'
-#' This function works best if all required packages are called within one \code{Require}
-#' call, as all dependencies can be identified together, and all package versions will be saved
-#' automatically (with \code{standAlone = TRUE} or \code{standAlone = FALSE}),
-#' allowing a call to \code{pkgSnapshot} when a more permanent record of versions can be made.
+#' This function works best if all required packages are called within one
+#' \code{Require} call, as all dependencies can be identified together, and all
+#' package versions will be saved automatically (with \code{standAlone = TRUE}
+#' or \code{standAlone = FALSE}), allowing a call to \code{pkgSnapshot} when a
+#' more permanent record of versions can be made.
 #'
-#' @note This function will use \code{memoise} internally to determine the dependencies
-#' of all \code{packages}. This will speed up subsequent calls to \code{Require}
-#' dramatically. However, it will not take into account version numbers for this
-#' memoised step. If package versions are updated manually by the user, then this cached
-#' element should be wiped, using \code{forget = TRUE}.
+#' @note This function will use \code{memoise} internally to determine the
+#'   dependencies of all \code{packages}. This will speed up subsequent calls to
+#'   \code{Require} dramatically. However, it will not take into account version
+#'   numbers for this memoised step. If package versions are updated manually by
+#'   the user, then this cached element should be wiped, using \code{forget =
+#'   TRUE}.
 #'
-#' @export
-#' @importFrom devtools install_github
-#' @importFrom utils install.packages capture.output
-#' @importFrom testthat capture_warnings
 #' @param packages Character vector of packages to install via
 #'        \code{install.packages}, then load (i.e., with \code{library}). If it is
 #'        one package, it can be unquoted (as in \code{require})
@@ -60,8 +59,8 @@ if (getRversion() >= "3.1.0") {
 #'        (i.e., call \code{library})
 #' @param repos The remote repository (e.g., a CRAN mirror), passed to either
 #'              \code{install.packages}, \code{install_github} or \code{installVersions}.
-#' @param install_githubArgs List of optional named arguments, passed to install_github
-#' @param install.packagesArgs List of optional named arguments, passed to install.packages
+#' @param install_githubArgs List of optional named arguments, passed to \code{install_github}.
+#' @param install.packagesArgs List of optional named arguments, passed to \code{install.packages}.
 #' @param standAlone Logical. If \code{TRUE}, all packages will be installed and loaded strictly
 #'                   from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
 #'                   be used to find the correct versions. This can be create dramatically faster
@@ -75,7 +74,10 @@ if (getRversion() >= "3.1.0") {
 #'               if packages were installed manually by a user. Set this to \code{TRUE} to
 #'               refresh that dependency calculation.
 #'
-#'
+#' @export
+#' @importFrom remotes install_github
+#' @importFrom utils install.packages capture.output
+#' @importFrom testthat capture_warnings
 #' @examples
 #' \dontrun{
 #' # simple usage, like conditional install.packages then library
@@ -109,7 +111,6 @@ if (getRversion() >= "3.1.0") {
 #'
 #' # Mutual dependencies, only installs once -- e.g., httr
 #' Require(c("cranlogs", "covr"), libPath = tempPkgFolder)
-#'
 #' }
 #'
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # nolint
@@ -157,7 +158,8 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       Sys.setlocale(locale = "")
       allPkgsNeeded <- aa$instPkgs
     } else {
-      aa <- .installPackages(packages, githubPkgs = githubPkgs, githubPkgNames = githubPkgNames,
+      aa <- .installPackages(packages, githubPkgs = githubPkgs,
+                             githubPkgNames = githubPkgNames,
                              install_githubArgs = install_githubArgs,
                              nonLibPathPkgs = nonLibPathPkgs, libPath = libPath,
                              standAlone = standAlone, forget = forget)
@@ -194,7 +196,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     # Actual package loading
     warns <- capture_warnings(
       mess <- capture.output(type = "message",
-                                       packagesLoaded <- unlist(lapply(packages, function(p) {
+                             packagesLoaded <- unlist(lapply(packages, function(p) {
       try(require(p, character.only = TRUE))
     }))))
     .libPaths(oldLibPath)
@@ -244,14 +246,15 @@ compareNA <- function(v1, v2) {
   return(same)
 }
 
-#' A shortcut to create a .libPaths() with only 2 folders
+#' A shortcut to create a \code{.libPaths()} with only two directories
 #'
-#' This will remove all but the top level of .libPaths(), which should be the base packages
-#' installed with R, and adds a second directory, the \code{libPath}.
+#' This will remove all but the top level of \code{.libPaths()}, which should be
+#' the core packages installed with R, and adds a second directory, the \code{libPath}.
 #'
-#' @return
-#' Invisibly the new \code{.libPaths()}
 #' @param libPath A path that will be the new .libPaths()[1]
+#'
+#' @return Invisibly, the new \code{.libPaths()}.
+#'
 #' @export
 #' @examples
 #' \dontrun{
@@ -313,7 +316,6 @@ installedVersions <- function(packages, libPath) {
     vers <- gsub("Version: ", "", vers_line)
     return(vers)
   }
-
 }
 
 pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
@@ -485,12 +487,12 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 #'
 #' @inheritParams tools::package_dependencies
 #' @inheritParams Require
-#' @param depends Logical. Include packages listed in "Depends". Default TRUE.
-#' @param imports Logical. Include packages listed in "Imports". Default TRUE.
-#' @param suggests Logical. Include packages listed in "Suggests". Default FALSE.
-#' @param linkingTo Logical. Include packages listed in "LinkingTo". Default TRUE.
+#' @param depends Logical. Include packages listed in "Depends". Default \code{TRUE}.
+#' @param imports Logical. Include packages listed in "Imports". Default \code{TRUE}.
+#' @param suggests Logical. Include packages listed in "Suggests". Default \code{FALSE}.
+#' @param linkingTo Logical. Include packages listed in "LinkingTo". Default \code{TRUE}.
 #' @param recursive Logical. Should dependencies of dependencies be searched, recursively.
-#'                  NOTE Dependencies of suggests will not be recursive. Default TRUE.
+#'                  NOTE: Dependencies of suggests will not be recursive. Default \code{TRUE}.
 #' @export
 #' @importFrom memoise memoise
 #' @rdname pkgDep
@@ -499,6 +501,7 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 #' pkgDep("crayon")
 pkgDep <- memoise::memoise(pkgDepRaw)
 
+#' @rdname pkgDep
 pkgDep2 <- memoise::memoise(pkgDepRaw)
 
 #' Memoised version of package_dependencies
@@ -511,37 +514,42 @@ pkgDep2 <- memoise::memoise(pkgDepRaw)
 #' @rdname package_dependenciesMem
 package_dependenciesMem <- memoise::memoise(tools::package_dependencies, ~timeout(360)) # nolint
 
-#' Memoised version of available.packages
+#' Memoised version of \code{available.packages}
 #'
-#' This have a 6 minute memory time window.
+#' This has a 6 minute memory time window.
+#' This will be replaced upon first calls to.
+#'
 #' @inheritParams utils::available.packages
+#'
 #' @keywords internal
-available.packagesMem <- function(contriburl, method, fields, type, filters, repos) {# This will be replaced upon first calls to
-  stop("This function is for internal use only")
+available.packagesMem <- function(contriburl, method, fields, type, filters, repos) {
+  stop("This function is for internal use only.")
   return(invisible(NULL))
 }
 
 #' Install exact package versions from a package version text file & GitHub
 #'
+#' @inheritParams Require
+#' @param gitHubPackages Character vectors indicating repository/packageName@branch
+#' @param packageVersionFile Path to the package version file, defaults to
+#'        the \file{.packageVersions.txt}.
+#'
 #' This uses CRAN, CRAN archives, or MRAN (accessed via \code{versions::install.versions})
 #' for remote repositories.
 #' This will attempt to install all packages in the \code{packageVersionFile},
 #' with their exact version described in that file. For GitHub packages, it will
-#' use \code{\link[devtools]{install_github}}. This will be called internally by
+#' use \code{\link[remotes]{install_github}}. This will be called internally by
 #' \code{Require}, and so often doesn't need to be used by a user.
 #'
 #' Because of potential conflicts with loaded packages, this function will run
 #' \code{install.packages} in a separate R process.
 #'
 #' @export
-#' @param gitHubPackages Character vectors indicating repository/packageName@branch
-#' @inheritParams Require
-#' @param packageVersionFile Path to the package version file, defaults to
-#'        the \code{.packageVersions.txt}.
-#' @importFrom versions install.versions
-#' @importFrom RCurl url.exists
 #' @importFrom data.table setDT data.table setnames rbindlist
-#' @importFrom utils read.table available.packages installed.packages install.packages
+#' @importFrom RCurl url.exists
+#' @importFrom remotes install_github
+#' @importFrom utils available.packages install.packages installed.packages read.table
+#' @importFrom versions install.versions
 #' @examples
 #' \dontrun{
 #' # requires the packageVersionFile -- this doesn't work -- safer to use Require
@@ -772,7 +780,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         lapply(whPkgsNeededGH, function(pkg) {
           oldLibPaths <- .libPaths()
           .libPaths(c(libPath, oldLibPaths))
-          devtools::install_github(pkg, upgrade_dependencies = FALSE, local = FALSE, force = TRUE)
+          remotes::install_github(pkg, upgrade_dependencies = FALSE, local = FALSE, force = TRUE)
           .libPaths(oldLibPaths)
         })
       }

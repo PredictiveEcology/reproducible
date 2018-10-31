@@ -41,13 +41,14 @@ Imports:
     magrittr,
     memoise,
     methods,
+    quickPlot,
+    R.utils,
     raster,
     Rcpp (>= 0.12.13),
     RCurl (>= 1.95-4.8),
-    R.utils,
+    remotes,
     rgdal,
     rgeos,
-    quickPlot,
     sf,
     sp,
     testthat,
@@ -68,7 +69,7 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.0.9000
 Collate: 
     'RcppExports.R'
     'cache-helpers.R'

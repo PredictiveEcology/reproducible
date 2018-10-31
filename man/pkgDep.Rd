@@ -2,9 +2,14 @@
 % Please edit documentation in R/packages.R
 \name{pkgDep}
 \alias{pkgDep}
+\alias{pkgDep2}
 \title{Determine package dependencies, first looking at local filesystem}
 \usage{
 pkgDep(packages, libPath, recursive = TRUE, depends = TRUE,
+  imports = TRUE, suggests = FALSE, linkingTo = TRUE,
+  repos = getOption("repos"))
+
+pkgDep2(packages, libPath, recursive = TRUE, depends = TRUE,
   imports = TRUE, suggests = FALSE, linkingTo = TRUE,
   repos = getOption("repos"))
 }
@@ -15,15 +20,15 @@ pkgDep(packages, libPath, recursive = TRUE, depends = TRUE,
 (i.e., call \code{library})}
 
 \item{recursive}{Logical. Should dependencies of dependencies be searched, recursively.
-NOTE Dependencies of suggests will not be recursive. Default TRUE.}
+NOTE: Dependencies of suggests will not be recursive. Default \code{TRUE}.}
 
-\item{depends}{Logical. Include packages listed in "Depends". Default TRUE.}
+\item{depends}{Logical. Include packages listed in "Depends". Default \code{TRUE}.}
 
-\item{imports}{Logical. Include packages listed in "Imports". Default TRUE.}
+\item{imports}{Logical. Include packages listed in "Imports". Default \code{TRUE}.}
 
-\item{suggests}{Logical. Include packages listed in "Suggests". Default FALSE.}
+\item{suggests}{Logical. Include packages listed in "Suggests". Default \code{FALSE}.}
 
-\item{linkingTo}{Logical. Include packages listed in "LinkingTo". Default TRUE.}
+\item{linkingTo}{Logical. Include packages listed in "LinkingTo". Default \code{TRUE}.}
 
 \item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
 \code{install.packages}, \code{install_github} or \code{installVersions}.}

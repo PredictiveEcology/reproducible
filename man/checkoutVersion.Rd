@@ -10,7 +10,7 @@ checkoutVersion(repo, localRepoPath = ".", cred = "", ...)
 \item{repo}{Repository address in the format
 \code{username/repo[/subdir][@ref|#pull]}. Alternatively, you can
 specify \code{subdir} and/or \code{ref} using the respective parameters
-(see below); if both are specified, the values in \code{repo} take
+(see below); if both is specified, the values in \code{repo} take
 precedence.}
 
 \item{localRepoPath}{Character string. The path into which the git repo should be

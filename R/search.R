@@ -23,15 +23,15 @@
 #' packages.
 #'
 #' @export
+#' @rdname search
+#' @seealso \code{\link[base]{search}}
+#'
 #' @examples
 #' seeScope <- function() {
 #'   searchFull()
 #' }
 #' seeScope()
 #' searchFull()
-#'
-#' @rdname search
-#' @seealso \code{\link[base]{search}}
 searchFull <- function(env = parent.frame(), simplify = TRUE) {
   envs <- list()
   counter <- 0

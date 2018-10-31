@@ -101,5 +101,4 @@ rndstr <- function(n = 1, len = 8) {
   }))
 }
 
-
 isInteractive <- function() interactive()
