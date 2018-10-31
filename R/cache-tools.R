@@ -146,6 +146,7 @@ setMethod(
           r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
           tryCatch(filename(r), error = function(e) NULL)
         })
+
         if (!is.null(filesToRemove)) {
           filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
           if (isInteractive()) {
