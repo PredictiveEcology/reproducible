@@ -141,11 +141,10 @@ setMethod(
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
-        suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
-          loadFromLocalRepo(ras, repoDir = x, value = TRUE)
-        }))
-        filesToRemove <- tryCatch(unlist(lapply(rasters, function(x) filename(x))),
-                                  error = function(x) NULL)
+        filesToRemove <- lapply(rastersInRepo$artifact, function(ras) {
+          r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
+          tryCatch(filename(r), error = function(e) NULL)
+        })
         if (!is.null(filesToRemove)) {
           filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
           if (isInteractive()) {
