@@ -43,6 +43,7 @@ Imports:
     memoise,
     methods,
     parallel,
+    pbapply,
     quickPlot,
     R.utils,
     raster,
