@@ -14,6 +14,9 @@ version 0.2.4
 * `Checksums` can now have a `CHECKSUMS.txt` file located in a different place than the `destinationPath`
 * added checks for float point number issues in raster resolutions produced by `raster::projectRaster`
 * `.robustDigest` now does not include `Cache`-added attributes
+* improved memory performance of `clearCache` (#67)
+* added `remotes` to Imports and removed `devtools`
+* added `pbapply` to Imports and added progress bar to `clearCache`
 * minor bugfixes
 * many new unit tests written, which caught several minor bugs
 
