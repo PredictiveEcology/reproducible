@@ -528,11 +528,11 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
     if (!is.null(targetCRS)) {
       if (!identical(crs(x), targetCRS)) {
         message("    reprojecting ...")
-        if (assessDataType(x) == "FLT4S") {
+        if (assessDataType(x) %in% c("FLT4S", "FLT8S")) {
           x <- projectRaster(from = x, crs = targetCRS, ...)
         } else {
           x <- projectRaster(from = x, crs = targetCRS, method = "ngb", ...)
-          }
+        }
       } else {
         message("    no reprojecting because target CRS is same as input CRS.")
       }
@@ -892,7 +892,6 @@ writeOutputs.default <- function(x, filename2, ...) {
   stop("Don't know how to write object of class ", class(x), " on disk.")
 }
 
-
 #' Assess the appropriate raster layer data type
 #'
 #' Can be used to write prepared inputs on disk.
@@ -1003,7 +1002,6 @@ assessDataTypeGDAL <- function(ras) {
       if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
         if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
     }
-
   } else {
     if (ncell(ras) > 100000) {
       rasVals <- raster::sampleRandom(x = ras, size = 100000)
