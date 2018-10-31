@@ -41,8 +41,8 @@
 #'
 #' @export
 #' @importFrom archivist rmFromLocalRepo searchInLocalRepo
-#' @importFrom methods setGeneric setMethod
 #' @importFrom data.table setindex
+#' @importFrom methods setGeneric setMethod
 #' @rdname viewCache
 #'
 #' @examples
@@ -404,7 +404,7 @@ checkFutures <- function() {
   # This takes a long time -- can't use it if
   resol <- future::resolved(.reproEnv)
 
-  while(any(!resol)) {
+  while (any(!resol)) {
     #numSleeps <<- numSleeps+1
     Sys.sleep(0.001)
     resol <- future::resolved(.reproEnv)
