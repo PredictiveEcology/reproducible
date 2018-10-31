@@ -1399,8 +1399,8 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
-  expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version
-  expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
+  expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
+  expect_true(sum(grepl(basename(tmpdir2), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 
   # Have file in destinationPath, not in inputPath
   unlink(file.path(tmpdir, theFile))
@@ -1417,7 +1417,6 @@ test_that("options inputPaths", {
 
 })
 
-
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
   skip_on_cran()
 
@@ -1425,16 +1424,17 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  a <- raster(extent(0,2,0,2), res = 1, vals = c(1,1,2,2))
+  a <- raster(extent(0, 2, 0, 2), res = 1, vals = c(1, 1, 2, 2))
   levels(a) <- data.frame(ID = 1:2, Factor = c("This", "That"))
-  tifTmp <- tempfile(fileext=".tif")
-  b1 <- writeRaster(a, filename = tifTmp)
+  tifTmp <- tempfile(fileext = ".tif")
+  file.create(tifTmp)
+  tifTmp <- normPath(tifTmp)
+
+  b1 <- writeRaster(a, filename = tifTmp, overwrite = TRUE)
   expect_warning(b1a <- writeOutputs(a, filename2 = tifTmp))
   expect_false(identical(b1, b1a))
   expect_true(identical(as.integer(b1[]), b1a[]))
 
-  skip_on_os("mac") # TODO Alex -- test on Mac
   expect_true(identical(filename(b1), tifTmp))
   expect_true(identical(filename(b1a), gsub(tifTmp, pattern = "tif", replacement = "grd")))
-
 })

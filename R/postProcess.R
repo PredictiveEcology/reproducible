@@ -480,7 +480,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
         }
       } else {
-
         message("   large raster: reprojecting after writing to temp drive...")
         #rasters need to go to same file so it can be unlinked at end without losing other temp files
 
@@ -489,7 +488,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_reproj.tif")) #fails if x = stack
 
        # the raster is in memory, but large enough to trigger this function: write it to disk
-        if (inMemory(x)){
+        if (inMemory(x)) {
           dType <- assessDataType(x)
           writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
           rm(x)

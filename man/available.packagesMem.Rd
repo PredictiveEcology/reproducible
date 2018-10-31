@@ -2,7 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{available.packagesMem}
 \alias{available.packagesMem}
-\title{Memoised version of available.packages}
+\title{Memoised version of \code{available.packages}}
 \usage{
 available.packagesMem(contriburl, method, fields, type, filters, repos)
 }
@@ -40,6 +40,7 @@ available.packagesMem(contriburl, method, fields, type, filters, repos)
   }
 }
 \description{
-This have a 6 minute memory time window.
+This has a 6 minute memory time window.
+This will be replaced upon first calls to.
 }
 \keyword{internal}

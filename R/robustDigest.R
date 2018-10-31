@@ -113,7 +113,7 @@ setGeneric(".robustDigest", function(object, objects,
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "ANY",
@@ -127,7 +127,7 @@ setMethod(
 setOldClass("cluster")
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "cluster",
@@ -138,7 +138,7 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "function",
@@ -149,7 +149,7 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "expression",
@@ -160,7 +160,7 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "character",
@@ -199,7 +199,7 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "Path",
@@ -229,7 +229,7 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "environment",
@@ -242,7 +242,7 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "list",
@@ -259,7 +259,7 @@ setMethod(
 
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "Raster",
@@ -283,7 +283,7 @@ setMethod(
 })
 
 #' @rdname robustDigest
-#' @exportMethod .robustDigest
+#' @export
 setMethod(
   ".robustDigest",
   signature = "Spatial",
@@ -308,7 +308,7 @@ setMethod(
     }
 
     return(fastdigest(aaa))
-  })
+})
 
 .basenames <- function(object, nParentDirs) {
   if (missing(nParentDirs)) {
@@ -326,9 +326,7 @@ setMethod(
     basename(object)
   }
   object
-
 }
-
 
 #' @importFrom data.table setattr
 .removeCacheAtts <- function(x) {
