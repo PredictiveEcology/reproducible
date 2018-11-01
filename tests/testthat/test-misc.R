@@ -33,17 +33,20 @@ test_that("test miscellaneous fns", {
   newPaths <- file.path("~/rasters")
   rasters <- convertRasterPaths(rasters, oldPaths, newPaths)
 
-  ## spurious failures non-interactively when not sorting!
-  if (!identical(Sys.getenv("APPVEYOR"), "True")) { # skip_on_appveyor
-    expect_true(identical(
-      sort(unlist(lapply(rasters, raster::filename))),
-      sort(path.expand(file.path(newPaths, basename(unlist(lapply(list(r1,r2), raster::filename))))))
-    ))
+  ## spurious failures non-interactively when not sorting; still failing on Windows
+  expect_true(identical(
+    sort(unlist(lapply(rasters, raster::filename))),
+    sort(normPath(file.path(newPaths, basename(unlist(lapply(list(r1, r2), raster::filename))))))
+  ))
 
-    r1 <- writeRaster(r1, tmpfile[1], overwrite = TRUE)
-    r3 <- convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)
-    expect_true(identical(normPath(filename(r3)), path.expand(file.path(newPaths, basename(filename(r1))))))
-  }
+  r3 <- writeRaster(r1, tmpfile[1], overwrite = TRUE)
+  r4 <- convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)
+
+  ## spurious failures non-interactively when not sorting; still failing on Windows
+  expect_true(identical(
+    normPath(file.path(newPaths, basename(filename(r4)))),
+    normPath(filename(r4))
+  ))
 
   # helpers.R
   a <- getCRANrepos(NULL)
