@@ -27,7 +27,7 @@ This is an enhancement release. Several new functions and new options.
 
 ### Development R version
 * Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-10-31 r75531)
-* Ubuntu 18.04         (local), R 3.6.0 (2018-07-30 r75011)
+* Ubuntu 18.04         (local), R 3.6.0 (2018-11-01 r75533)
 * Windows           (appveyor), R 3.6.0 (2018-10-31 r75525)
 * Windows        (win-builder), R 3.6.0 (2018-10-30 r75516)
 
