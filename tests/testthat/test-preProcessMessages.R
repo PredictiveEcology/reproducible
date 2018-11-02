@@ -1,4 +1,7 @@
 test_that("preProcess fails if user provides a non .zip/.tar as archive", {
+  testthat::skip_on_cran()
+  testthat::skip_on_travis()
+  testthat::skip_on_appveyor()
   testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
