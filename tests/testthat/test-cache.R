@@ -1039,3 +1039,19 @@ test_that("test useCache = 'overwrite'", {
   expect_true(any(grepl(pattern = "Overwriting", mess)))
 
   })
+
+test_that("test rm large non-file-backed rasters", {
+  skip_on_appveyor()
+  skip_on_cran()
+  skip_on_travis()
+  # This is a large object test
+
+  testInitOut <- testInit(ask = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  st0 <- system.time(r <- Cache(raster, extent(0,10000,0,10000), res = 1, vals = 1, userTags = "first"))
+  st1 <- system.time(clearCache(userTags = "first"))
+  expect_true(st1["elapsed"] < 0.75) # This was > 2 seconds in old way
+
+})
