@@ -1,4 +1,4 @@
-if (packageVersion("devtools") < "1.13.6.9000") {
+if (packageVersion("devtools") < "2.0.1") {
   library("devtools")
 
   revdep_check(env_vars = c(DISPLAY = ":0"))

@@ -14,9 +14,9 @@
 
 # Dependencies
 
-|package      |old   |new        |Δ  |
-|:------------|:-----|:----------|:--|
-|reproducible |0.2.3 |0.2.4.9000 |*  |
+|package      |old   |new   |Δ  |
+|:------------|:-----|:-----|:--|
+|reproducible |0.2.3 |0.2.5 |*  |
 
 # Revdeps
 

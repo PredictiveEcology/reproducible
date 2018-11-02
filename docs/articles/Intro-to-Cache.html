@@ -118,7 +118,7 @@
 
 tmpDir &lt;-<span class="st"> </span><span class="kw">file.path</span>(<span class="kw">tempdir</span>(), <span class="st">"reproducible_examples"</span>, <span class="st">"Cache"</span>)
 <span class="kw"><a href="../reference/checkPath.html">checkPath</a></span>(tmpDir, <span class="dt">create =</span> <span class="ot">TRUE</span>)</code></pre></div>
-<pre><code>## [1] "/tmp/RtmpwLQo2m/reproducible_examples/Cache"</code></pre>
+<pre><code>## [1] "/tmp/RtmpRPnUHL/reproducible_examples/Cache"</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ras &lt;-<span class="st"> </span><span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/raster">raster</a></span>(<span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/extent">extent</a></span>(<span class="dv">0</span>,<span class="dv">1000</span>,<span class="dv">0</span>,<span class="dv">1000</span>), <span class="dt">vals =</span> <span class="dv">1</span><span class="op">:</span><span class="fl">1e6</span>, <span class="dt">res =</span> <span class="dv">1</span>)
 <span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/projection">crs</a></span>(ras) &lt;-<span class="st"> "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"</span>
 
@@ -126,22 +126,22 @@ newCRS &lt;-<span class="st"> "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_de
 <span class="co"># No Cache</span>
 <span class="kw">system.time</span>(map1 &lt;-<span class="st"> </span><span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/projectRaster">projectRaster</a></span>(ras, <span class="dt">crs =</span> newCRS))</code></pre></div>
 <pre><code>##    user  system elapsed 
-##   2.713   0.181   2.901</code></pre>
+##   3.329   0.264   3.599</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># With Cache -- a little slower the first time because saving to disk</span>
 <span class="kw">system.time</span>(map1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cache.html">Cache</a></span>(projectRaster, ras, <span class="dt">crs =</span> newCRS, <span class="dt">cacheRepo =</span> tmpDir,
                          <span class="dt">notOlderThan =</span> <span class="kw">Sys.time</span>()))</code></pre></div>
 <pre><code>##    user  system elapsed 
-##   2.849   0.280   3.329</code></pre>
+##   2.784   0.432   3.359</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># vastly faster the second time</span>
 <span class="kw">system.time</span>(map2 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cache.html">Cache</a></span>(projectRaster, ras, <span class="dt">crs =</span> newCRS, <span class="dt">cacheRepo =</span> tmpDir))</code></pre></div>
 <pre><code>##   loading cached result from previous projectRaster call, adding to memoised copy</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.089   0.000   0.090</code></pre>
+##   0.092   0.000   0.093</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># even faster the third time</span>
 <span class="kw">system.time</span>(map3 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cache.html">Cache</a></span>(projectRaster, ras, <span class="dt">crs =</span> newCRS, <span class="dt">cacheRepo =</span> tmpDir))</code></pre></div>
 <pre><code>##   loading memoised result from previous projectRaster call.</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.025   0.000   0.026</code></pre>
+##   0.023   0.003   0.026</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">all.equal</span>(map1, map2) <span class="co"># TRUE</span></code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">all.equal</span>(map1, map3) <span class="co"># TRUE</span></code></pre></div>
@@ -183,208 +183,208 @@ ranNumsB &lt;-<span class="st"> </span><span class="kw"><a href="../reference/ca
 <pre><code>##   Total (including Rasters): 1 Kb</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 512 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 28de8a0339b48770a2cb6062f77ac756         format
-##  2: 28de8a0339b48770a2cb6062f77ac756           name
-##  3: 28de8a0339b48770a2cb6062f77ac756          class
-##  4: 28de8a0339b48770a2cb6062f77ac756           date
-##  5: 28de8a0339b48770a2cb6062f77ac756        cacheId
-##  6: 28de8a0339b48770a2cb6062f77ac756     objectName
-##  7: 28de8a0339b48770a2cb6062f77ac756       function
-##  8: 28de8a0339b48770a2cb6062f77ac756    object.size
-##  9: 28de8a0339b48770a2cb6062f77ac756       accessed
-## 10: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 11: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 12: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 13: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 14: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 15: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 16: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 17: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 18: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 19: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 20: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 21: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 22: 28de8a0339b48770a2cb6062f77ac756      preDigest
-## 23: 28de8a0339b48770a2cb6062f77ac756      preDigest
-## 24: 7ee096004339eb3dfd8062a249267782         format
-## 25: 7ee096004339eb3dfd8062a249267782           name
-## 26: 7ee096004339eb3dfd8062a249267782          class
-## 27: 7ee096004339eb3dfd8062a249267782           date
-## 28: 7ee096004339eb3dfd8062a249267782        cacheId
-## 29: 7ee096004339eb3dfd8062a249267782     objectName
-## 30: 7ee096004339eb3dfd8062a249267782       function
-## 31: 7ee096004339eb3dfd8062a249267782    object.size
-## 32: 7ee096004339eb3dfd8062a249267782       accessed
-## 33: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 34: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 35: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 36: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 37: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 38: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 39: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 40: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 41: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 42: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 43: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 44: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 45: 7ee096004339eb3dfd8062a249267782      preDigest
-## 46: 7ee096004339eb3dfd8062a249267782      preDigest
+##  1: 058d68c16fc9b10c241791d3571ff52c         format
+##  2: 058d68c16fc9b10c241791d3571ff52c           name
+##  3: 058d68c16fc9b10c241791d3571ff52c          class
+##  4: 058d68c16fc9b10c241791d3571ff52c           date
+##  5: 058d68c16fc9b10c241791d3571ff52c        cacheId
+##  6: 058d68c16fc9b10c241791d3571ff52c     objectName
+##  7: 058d68c16fc9b10c241791d3571ff52c       function
+##  8: 058d68c16fc9b10c241791d3571ff52c    object.size
+##  9: 058d68c16fc9b10c241791d3571ff52c       accessed
+## 10: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 11: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 12: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 13: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 14: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 15: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 16: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 17: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 18: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 19: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 20: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 21: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 22: 058d68c16fc9b10c241791d3571ff52c      preDigest
+## 23: 058d68c16fc9b10c241791d3571ff52c      preDigest
+## 24: f7a3c1a3d252416ae4893d5f4be5a1d8         format
+## 25: f7a3c1a3d252416ae4893d5f4be5a1d8           name
+## 26: f7a3c1a3d252416ae4893d5f4be5a1d8          class
+## 27: f7a3c1a3d252416ae4893d5f4be5a1d8           date
+## 28: f7a3c1a3d252416ae4893d5f4be5a1d8        cacheId
+## 29: f7a3c1a3d252416ae4893d5f4be5a1d8     objectName
+## 30: f7a3c1a3d252416ae4893d5f4be5a1d8       function
+## 31: f7a3c1a3d252416ae4893d5f4be5a1d8    object.size
+## 32: f7a3c1a3d252416ae4893d5f4be5a1d8       accessed
+## 33: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 34: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 35: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 36: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 37: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 38: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 39: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 40: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 41: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 42: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 43: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 44: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 45: f7a3c1a3d252416ae4893d5f4be5a1d8      preDigest
+## 46: f7a3c1a3d252416ae4893d5f4be5a1d8      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:39
-##  2:      28de8a0339b48770a2cb6062f77ac756 2018-11-02 11:01:39
-##  3:                               numeric 2018-11-02 11:01:39
-##  4:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-##  5:      7cb09aa387ba235db013863648303b34 2018-11-02 11:01:39
-##  6:                                     b 2018-11-02 11:01:39
-##  7:                                 runif 2018-11-02 11:01:39
-##  8:                                  1024 2018-11-02 11:01:39
-##  9:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 10:                   withCallingHandlers 2018-11-02 11:01:39
-## 11:                               saveRDS 2018-11-02 11:01:39
-## 12:                               do.call 2018-11-02 11:01:39
-## 13:                          process_file 2018-11-02 11:01:39
-## 14:                         process_group 2018-11-02 11:01:39
-## 15:                   process_group.block 2018-11-02 11:01:39
-## 16:                            call_block 2018-11-02 11:01:39
-## 17:                            block_exec 2018-11-02 11:01:39
-## 18:                                in_dir 2018-11-02 11:01:39
-## 19:                             timing_fn 2018-11-02 11:01:39
-## 20:                                handle 2018-11-02 11:01:39
-## 21:                           withVisible 2018-11-02 11:01:39
-## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:39
-## 23: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:01:39
-## 24:                                   rda 2018-11-02 11:01:39
-## 25:      7ee096004339eb3dfd8062a249267782 2018-11-02 11:01:39
-## 26:                               numeric 2018-11-02 11:01:39
-## 27:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 28:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:01:39
-## 29:                                     a 2018-11-02 11:01:39
-## 30:                                 rnorm 2018-11-02 11:01:39
-## 31:                                  1024 2018-11-02 11:01:39
-## 32:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 33:                   withCallingHandlers 2018-11-02 11:01:39
-## 34:                               saveRDS 2018-11-02 11:01:39
-## 35:                               do.call 2018-11-02 11:01:39
-## 36:                          process_file 2018-11-02 11:01:39
-## 37:                         process_group 2018-11-02 11:01:39
-## 38:                   process_group.block 2018-11-02 11:01:39
-## 39:                            call_block 2018-11-02 11:01:39
-## 40:                            block_exec 2018-11-02 11:01:39
-## 41:                                in_dir 2018-11-02 11:01:39
-## 42:                             timing_fn 2018-11-02 11:01:39
-## 43:                                handle 2018-11-02 11:01:39
-## 44:                           withVisible 2018-11-02 11:01:39
-## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:39
-## 46: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:39
+##  1:                                   rda 2018-11-02 11:22:51
+##  2:      058d68c16fc9b10c241791d3571ff52c 2018-11-02 11:22:51
+##  3:                               numeric 2018-11-02 11:22:51
+##  4:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+##  5:      7cb09aa387ba235db013863648303b34 2018-11-02 11:22:51
+##  6:                                     b 2018-11-02 11:22:51
+##  7:                                 runif 2018-11-02 11:22:51
+##  8:                                  1024 2018-11-02 11:22:51
+##  9:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 10:                   withCallingHandlers 2018-11-02 11:22:51
+## 11:                               saveRDS 2018-11-02 11:22:51
+## 12:                               do.call 2018-11-02 11:22:51
+## 13:                          process_file 2018-11-02 11:22:51
+## 14:                         process_group 2018-11-02 11:22:51
+## 15:                   process_group.block 2018-11-02 11:22:51
+## 16:                            call_block 2018-11-02 11:22:51
+## 17:                            block_exec 2018-11-02 11:22:51
+## 18:                                in_dir 2018-11-02 11:22:51
+## 19:                             timing_fn 2018-11-02 11:22:51
+## 20:                                handle 2018-11-02 11:22:51
+## 21:                           withVisible 2018-11-02 11:22:51
+## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:51
+## 23: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:22:51
+## 24:                                   rda 2018-11-02 11:22:50
+## 25:      f7a3c1a3d252416ae4893d5f4be5a1d8 2018-11-02 11:22:50
+## 26:                               numeric 2018-11-02 11:22:50
+## 27:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 28:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:22:50
+## 29:                                     a 2018-11-02 11:22:50
+## 30:                                 rnorm 2018-11-02 11:22:50
+## 31:                                  1024 2018-11-02 11:22:50
+## 32:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 33:                   withCallingHandlers 2018-11-02 11:22:50
+## 34:                               saveRDS 2018-11-02 11:22:50
+## 35:                               do.call 2018-11-02 11:22:50
+## 36:                          process_file 2018-11-02 11:22:50
+## 37:                         process_group 2018-11-02 11:22:50
+## 38:                   process_group.block 2018-11-02 11:22:50
+## 39:                            call_block 2018-11-02 11:22:50
+## 40:                            block_exec 2018-11-02 11:22:50
+## 41:                                in_dir 2018-11-02 11:22:50
+## 42:                             timing_fn 2018-11-02 11:22:50
+## 43:                                handle 2018-11-02 11:22:50
+## 44:                           withVisible 2018-11-02 11:22:50
+## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:50
+## 46: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:50
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/viewCache.html">showCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="kw">c</span>(<span class="st">"^a$"</span>)) <span class="co"># regular expression ... "a" exactly</span></code></pre></div>
 <pre><code>## Cache size:</code></pre>
 <pre><code>##   Total (including Rasters): 1 Kb</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 256 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 7ee096004339eb3dfd8062a249267782         format
-##  2: 7ee096004339eb3dfd8062a249267782           name
-##  3: 7ee096004339eb3dfd8062a249267782          class
-##  4: 7ee096004339eb3dfd8062a249267782           date
-##  5: 7ee096004339eb3dfd8062a249267782        cacheId
-##  6: 7ee096004339eb3dfd8062a249267782     objectName
-##  7: 7ee096004339eb3dfd8062a249267782       function
-##  8: 7ee096004339eb3dfd8062a249267782    object.size
-##  9: 7ee096004339eb3dfd8062a249267782       accessed
-## 10: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 11: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 12: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 13: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 14: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 15: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 16: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 17: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 18: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 19: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 20: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 21: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 22: 7ee096004339eb3dfd8062a249267782      preDigest
-## 23: 7ee096004339eb3dfd8062a249267782      preDigest
+##  1: f7a3c1a3d252416ae4893d5f4be5a1d8         format
+##  2: f7a3c1a3d252416ae4893d5f4be5a1d8           name
+##  3: f7a3c1a3d252416ae4893d5f4be5a1d8          class
+##  4: f7a3c1a3d252416ae4893d5f4be5a1d8           date
+##  5: f7a3c1a3d252416ae4893d5f4be5a1d8        cacheId
+##  6: f7a3c1a3d252416ae4893d5f4be5a1d8     objectName
+##  7: f7a3c1a3d252416ae4893d5f4be5a1d8       function
+##  8: f7a3c1a3d252416ae4893d5f4be5a1d8    object.size
+##  9: f7a3c1a3d252416ae4893d5f4be5a1d8       accessed
+## 10: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 11: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 12: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 13: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 14: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 15: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 16: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 17: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 18: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 19: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 20: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 21: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 22: f7a3c1a3d252416ae4893d5f4be5a1d8      preDigest
+## 23: f7a3c1a3d252416ae4893d5f4be5a1d8      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:39
-##  2:      7ee096004339eb3dfd8062a249267782 2018-11-02 11:01:39
-##  3:                               numeric 2018-11-02 11:01:39
-##  4:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-##  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:01:39
-##  6:                                     a 2018-11-02 11:01:39
-##  7:                                 rnorm 2018-11-02 11:01:39
-##  8:                                  1024 2018-11-02 11:01:39
-##  9:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 10:                   withCallingHandlers 2018-11-02 11:01:39
-## 11:                               saveRDS 2018-11-02 11:01:39
-## 12:                               do.call 2018-11-02 11:01:39
-## 13:                          process_file 2018-11-02 11:01:39
-## 14:                         process_group 2018-11-02 11:01:39
-## 15:                   process_group.block 2018-11-02 11:01:39
-## 16:                            call_block 2018-11-02 11:01:39
-## 17:                            block_exec 2018-11-02 11:01:39
-## 18:                                in_dir 2018-11-02 11:01:39
-## 19:                             timing_fn 2018-11-02 11:01:39
-## 20:                                handle 2018-11-02 11:01:39
-## 21:                           withVisible 2018-11-02 11:01:39
-## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:39
-## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:39
+##  1:                                   rda 2018-11-02 11:22:50
+##  2:      f7a3c1a3d252416ae4893d5f4be5a1d8 2018-11-02 11:22:50
+##  3:                               numeric 2018-11-02 11:22:50
+##  4:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+##  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:22:50
+##  6:                                     a 2018-11-02 11:22:50
+##  7:                                 rnorm 2018-11-02 11:22:50
+##  8:                                  1024 2018-11-02 11:22:50
+##  9:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 10:                   withCallingHandlers 2018-11-02 11:22:50
+## 11:                               saveRDS 2018-11-02 11:22:50
+## 12:                               do.call 2018-11-02 11:22:50
+## 13:                          process_file 2018-11-02 11:22:50
+## 14:                         process_group 2018-11-02 11:22:50
+## 15:                   process_group.block 2018-11-02 11:22:50
+## 16:                            call_block 2018-11-02 11:22:50
+## 17:                            block_exec 2018-11-02 11:22:50
+## 18:                                in_dir 2018-11-02 11:22:50
+## 19:                             timing_fn 2018-11-02 11:22:50
+## 20:                                handle 2018-11-02 11:22:50
+## 21:                           withVisible 2018-11-02 11:22:50
+## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:50
+## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:50
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/viewCache.html">showCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="kw">c</span>(<span class="st">"runif"</span>)) <span class="co"># show only cached objects made during runif call</span></code></pre></div>
 <pre><code>## Cache size:</code></pre>
 <pre><code>##   Total (including Rasters): 1 Kb</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 256 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 28de8a0339b48770a2cb6062f77ac756         format
-##  2: 28de8a0339b48770a2cb6062f77ac756           name
-##  3: 28de8a0339b48770a2cb6062f77ac756          class
-##  4: 28de8a0339b48770a2cb6062f77ac756           date
-##  5: 28de8a0339b48770a2cb6062f77ac756        cacheId
-##  6: 28de8a0339b48770a2cb6062f77ac756     objectName
-##  7: 28de8a0339b48770a2cb6062f77ac756       function
-##  8: 28de8a0339b48770a2cb6062f77ac756    object.size
-##  9: 28de8a0339b48770a2cb6062f77ac756       accessed
-## 10: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 11: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 12: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 13: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 14: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 15: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 16: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 17: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 18: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 19: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 20: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 21: 28de8a0339b48770a2cb6062f77ac756 otherFunctions
-## 22: 28de8a0339b48770a2cb6062f77ac756      preDigest
-## 23: 28de8a0339b48770a2cb6062f77ac756      preDigest
+##  1: 058d68c16fc9b10c241791d3571ff52c         format
+##  2: 058d68c16fc9b10c241791d3571ff52c           name
+##  3: 058d68c16fc9b10c241791d3571ff52c          class
+##  4: 058d68c16fc9b10c241791d3571ff52c           date
+##  5: 058d68c16fc9b10c241791d3571ff52c        cacheId
+##  6: 058d68c16fc9b10c241791d3571ff52c     objectName
+##  7: 058d68c16fc9b10c241791d3571ff52c       function
+##  8: 058d68c16fc9b10c241791d3571ff52c    object.size
+##  9: 058d68c16fc9b10c241791d3571ff52c       accessed
+## 10: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 11: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 12: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 13: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 14: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 15: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 16: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 17: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 18: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 19: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 20: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 21: 058d68c16fc9b10c241791d3571ff52c otherFunctions
+## 22: 058d68c16fc9b10c241791d3571ff52c      preDigest
+## 23: 058d68c16fc9b10c241791d3571ff52c      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:39
-##  2:      28de8a0339b48770a2cb6062f77ac756 2018-11-02 11:01:39
-##  3:                               numeric 2018-11-02 11:01:39
-##  4:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-##  5:      7cb09aa387ba235db013863648303b34 2018-11-02 11:01:39
-##  6:                                     b 2018-11-02 11:01:39
-##  7:                                 runif 2018-11-02 11:01:39
-##  8:                                  1024 2018-11-02 11:01:39
-##  9:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 10:                   withCallingHandlers 2018-11-02 11:01:39
-## 11:                               saveRDS 2018-11-02 11:01:39
-## 12:                               do.call 2018-11-02 11:01:39
-## 13:                          process_file 2018-11-02 11:01:39
-## 14:                         process_group 2018-11-02 11:01:39
-## 15:                   process_group.block 2018-11-02 11:01:39
-## 16:                            call_block 2018-11-02 11:01:39
-## 17:                            block_exec 2018-11-02 11:01:39
-## 18:                                in_dir 2018-11-02 11:01:39
-## 19:                             timing_fn 2018-11-02 11:01:39
-## 20:                                handle 2018-11-02 11:01:39
-## 21:                           withVisible 2018-11-02 11:01:39
-## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:39
-## 23: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:01:39
+##  1:                                   rda 2018-11-02 11:22:51
+##  2:      058d68c16fc9b10c241791d3571ff52c 2018-11-02 11:22:51
+##  3:                               numeric 2018-11-02 11:22:51
+##  4:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+##  5:      7cb09aa387ba235db013863648303b34 2018-11-02 11:22:51
+##  6:                                     b 2018-11-02 11:22:51
+##  7:                                 runif 2018-11-02 11:22:51
+##  8:                                  1024 2018-11-02 11:22:51
+##  9:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 10:                   withCallingHandlers 2018-11-02 11:22:51
+## 11:                               saveRDS 2018-11-02 11:22:51
+## 12:                               do.call 2018-11-02 11:22:51
+## 13:                          process_file 2018-11-02 11:22:51
+## 14:                         process_group 2018-11-02 11:22:51
+## 15:                   process_group.block 2018-11-02 11:22:51
+## 16:                            call_block 2018-11-02 11:22:51
+## 17:                            block_exec 2018-11-02 11:22:51
+## 18:                                in_dir 2018-11-02 11:22:51
+## 19:                             timing_fn 2018-11-02 11:22:51
+## 20:                                handle 2018-11-02 11:22:51
+## 21:                           withVisible 2018-11-02 11:22:51
+## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:51
+## 23: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:22:51
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="kw">c</span>(<span class="st">"runif"</span>)) <span class="co"># remove only cached objects made during runif call</span></code></pre></div>
 <pre><code>## Cache size:</code></pre>
@@ -395,154 +395,154 @@ ranNumsB &lt;-<span class="st"> </span><span class="kw"><a href="../reference/ca
 <pre><code>##   Total (including Rasters): 816 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 816 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 4dba8181516d8d3db46766b79ebe754a         format
-##  2: 4dba8181516d8d3db46766b79ebe754a           name
-##  3: 4dba8181516d8d3db46766b79ebe754a          class
-##  4: 4dba8181516d8d3db46766b79ebe754a           date
-##  5: 4dba8181516d8d3db46766b79ebe754a        cacheId
-##  6: 4dba8181516d8d3db46766b79ebe754a       function
-##  7: 4dba8181516d8d3db46766b79ebe754a    object.size
-##  8: 4dba8181516d8d3db46766b79ebe754a       accessed
-##  9: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 10: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 11: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 12: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 13: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 14: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 15: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 16: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 17: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 18: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 19: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 20: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 21: 4dba8181516d8d3db46766b79ebe754a otherFunctions
-## 22: 4dba8181516d8d3db46766b79ebe754a      preDigest
-## 23: 4dba8181516d8d3db46766b79ebe754a      preDigest
-## 24: 4dba8181516d8d3db46766b79ebe754a      preDigest
-## 25: 7ee096004339eb3dfd8062a249267782         format
-## 26: 7ee096004339eb3dfd8062a249267782           name
-## 27: 7ee096004339eb3dfd8062a249267782          class
-## 28: 7ee096004339eb3dfd8062a249267782           date
-## 29: 7ee096004339eb3dfd8062a249267782        cacheId
-## 30: 7ee096004339eb3dfd8062a249267782     objectName
-## 31: 7ee096004339eb3dfd8062a249267782       function
-## 32: 7ee096004339eb3dfd8062a249267782    object.size
-## 33: 7ee096004339eb3dfd8062a249267782       accessed
-## 34: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 35: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 36: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 37: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 38: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 39: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 40: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 41: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 42: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 43: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 44: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 45: 7ee096004339eb3dfd8062a249267782 otherFunctions
-## 46: 7ee096004339eb3dfd8062a249267782      preDigest
-## 47: 7ee096004339eb3dfd8062a249267782      preDigest
-## 48: c19f94eca0d9af012221446a933c98f6         format
-## 49: c19f94eca0d9af012221446a933c98f6           name
-## 50: c19f94eca0d9af012221446a933c98f6          class
-## 51: c19f94eca0d9af012221446a933c98f6           date
-## 52: c19f94eca0d9af012221446a933c98f6        cacheId
-## 53: c19f94eca0d9af012221446a933c98f6       function
-## 54: c19f94eca0d9af012221446a933c98f6    object.size
-## 55: c19f94eca0d9af012221446a933c98f6       accessed
-## 56: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 57: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 58: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 59: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 60: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 61: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 62: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 63: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 64: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 65: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 66: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 67: c19f94eca0d9af012221446a933c98f6 otherFunctions
-## 68: c19f94eca0d9af012221446a933c98f6      preDigest
-## 69: c19f94eca0d9af012221446a933c98f6      preDigest
-## 70: c19f94eca0d9af012221446a933c98f6      preDigest
-## 71: c19f94eca0d9af012221446a933c98f6       accessed
-## 72: c19f94eca0d9af012221446a933c98f6       accessed
-## 73: c19f94eca0d9af012221446a933c98f6       accessed
+##  1: 2e71fc4e5d7c0f456d72d00c083c95e2         format
+##  2: 2e71fc4e5d7c0f456d72d00c083c95e2           name
+##  3: 2e71fc4e5d7c0f456d72d00c083c95e2          class
+##  4: 2e71fc4e5d7c0f456d72d00c083c95e2           date
+##  5: 2e71fc4e5d7c0f456d72d00c083c95e2        cacheId
+##  6: 2e71fc4e5d7c0f456d72d00c083c95e2       function
+##  7: 2e71fc4e5d7c0f456d72d00c083c95e2    object.size
+##  8: 2e71fc4e5d7c0f456d72d00c083c95e2       accessed
+##  9: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 10: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 11: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 12: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 13: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 14: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 15: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 16: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 17: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 18: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 19: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 20: 2e71fc4e5d7c0f456d72d00c083c95e2 otherFunctions
+## 21: 2e71fc4e5d7c0f456d72d00c083c95e2      preDigest
+## 22: 2e71fc4e5d7c0f456d72d00c083c95e2      preDigest
+## 23: 2e71fc4e5d7c0f456d72d00c083c95e2      preDigest
+## 24: 2e71fc4e5d7c0f456d72d00c083c95e2       accessed
+## 25: 2e71fc4e5d7c0f456d72d00c083c95e2       accessed
+## 26: 2e71fc4e5d7c0f456d72d00c083c95e2       accessed
+## 27: b5f5542076158b1721cbce2f23cbbde0         format
+## 28: b5f5542076158b1721cbce2f23cbbde0           name
+## 29: b5f5542076158b1721cbce2f23cbbde0          class
+## 30: b5f5542076158b1721cbce2f23cbbde0           date
+## 31: b5f5542076158b1721cbce2f23cbbde0        cacheId
+## 32: b5f5542076158b1721cbce2f23cbbde0       function
+## 33: b5f5542076158b1721cbce2f23cbbde0    object.size
+## 34: b5f5542076158b1721cbce2f23cbbde0       accessed
+## 35: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 36: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 37: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 38: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 39: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 40: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 41: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 42: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 43: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 44: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 45: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 46: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 47: b5f5542076158b1721cbce2f23cbbde0 otherFunctions
+## 48: b5f5542076158b1721cbce2f23cbbde0      preDigest
+## 49: b5f5542076158b1721cbce2f23cbbde0      preDigest
+## 50: b5f5542076158b1721cbce2f23cbbde0      preDigest
+## 51: f7a3c1a3d252416ae4893d5f4be5a1d8         format
+## 52: f7a3c1a3d252416ae4893d5f4be5a1d8           name
+## 53: f7a3c1a3d252416ae4893d5f4be5a1d8          class
+## 54: f7a3c1a3d252416ae4893d5f4be5a1d8           date
+## 55: f7a3c1a3d252416ae4893d5f4be5a1d8        cacheId
+## 56: f7a3c1a3d252416ae4893d5f4be5a1d8     objectName
+## 57: f7a3c1a3d252416ae4893d5f4be5a1d8       function
+## 58: f7a3c1a3d252416ae4893d5f4be5a1d8    object.size
+## 59: f7a3c1a3d252416ae4893d5f4be5a1d8       accessed
+## 60: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 61: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 62: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 63: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 64: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 65: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 66: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 67: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 68: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 69: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 70: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 71: f7a3c1a3d252416ae4893d5f4be5a1d8 otherFunctions
+## 72: f7a3c1a3d252416ae4893d5f4be5a1d8      preDigest
+## 73: f7a3c1a3d252416ae4893d5f4be5a1d8      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:38
-##  2:      4dba8181516d8d3db46766b79ebe754a 2018-11-02 11:01:38
-##  3:                               numeric 2018-11-02 11:01:38
-##  4:                   2018-11-02 11:01:38 2018-11-02 11:01:38
-##  5:      93a7b68b228b551669eb36211e857b39 2018-11-02 11:01:38
-##  6:                   rnorm pipe sequence 2018-11-02 11:01:38
-##  7:                                  1120 2018-11-02 11:01:38
-##  8:                   2018-11-02 11:01:38 2018-11-02 11:01:39
-##  9:                   withCallingHandlers 2018-11-02 11:01:39
-## 10:                               saveRDS 2018-11-02 11:01:39
-## 11:                               do.call 2018-11-02 11:01:39
-## 12:                          process_file 2018-11-02 11:01:39
-## 13:                         process_group 2018-11-02 11:01:39
-## 14:                   process_group.block 2018-11-02 11:01:39
-## 15:                            call_block 2018-11-02 11:01:39
-## 16:                            block_exec 2018-11-02 11:01:39
-## 17:                                in_dir 2018-11-02 11:01:39
-## 18:                             timing_fn 2018-11-02 11:01:39
-## 19:                                handle 2018-11-02 11:01:39
-## 20:                           withVisible 2018-11-02 11:01:39
-## 21:                                   %&gt;% 2018-11-02 11:01:39
-## 22:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:01:39
-## 23: mean:55835193261a0d71e70d137dfa31cd5b 2018-11-02 11:01:39
-## 24: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:39
-## 25:                                   rda 2018-11-02 11:01:39
-## 26:      7ee096004339eb3dfd8062a249267782 2018-11-02 11:01:39
-## 27:                               numeric 2018-11-02 11:01:39
-## 28:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 29:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:01:39
-## 30:                                     a 2018-11-02 11:01:39
-## 31:                                 rnorm 2018-11-02 11:01:39
-## 32:                                  1024 2018-11-02 11:01:39
-## 33:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 34:                   withCallingHandlers 2018-11-02 11:01:39
-## 35:                               saveRDS 2018-11-02 11:01:39
-## 36:                               do.call 2018-11-02 11:01:39
-## 37:                          process_file 2018-11-02 11:01:39
-## 38:                         process_group 2018-11-02 11:01:39
-## 39:                   process_group.block 2018-11-02 11:01:39
-## 40:                            call_block 2018-11-02 11:01:39
-## 41:                            block_exec 2018-11-02 11:01:39
-## 42:                                in_dir 2018-11-02 11:01:39
-## 43:                             timing_fn 2018-11-02 11:01:39
-## 44:                                handle 2018-11-02 11:01:39
-## 45:                           withVisible 2018-11-02 11:01:39
-## 46:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:39
-## 47: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:39
-## 48:                                   rda 2018-11-02 11:01:38
-## 49:      c19f94eca0d9af012221446a933c98f6 2018-11-02 11:01:38
-## 50:                               numeric 2018-11-02 11:01:38
-## 51:                   2018-11-02 11:01:38 2018-11-02 11:01:38
-## 52:      c878d1fb026c0854fc0480553fa4cf24 2018-11-02 11:01:38
-## 53:                                 rnorm 2018-11-02 11:01:38
-## 54:                                  1120 2018-11-02 11:01:38
-## 55:                   2018-11-02 11:01:38 2018-11-02 11:01:38
-## 56:                   withCallingHandlers 2018-11-02 11:01:38
-## 57:                               saveRDS 2018-11-02 11:01:38
-## 58:                               do.call 2018-11-02 11:01:38
-## 59:                          process_file 2018-11-02 11:01:38
-## 60:                         process_group 2018-11-02 11:01:38
-## 61:                   process_group.block 2018-11-02 11:01:38
-## 62:                            call_block 2018-11-02 11:01:38
-## 63:                            block_exec 2018-11-02 11:01:38
-## 64:                                in_dir 2018-11-02 11:01:38
-## 65:                             timing_fn 2018-11-02 11:01:38
-## 66:                                handle 2018-11-02 11:01:38
-## 67:                           withVisible 2018-11-02 11:01:38
-## 68:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:01:38
-## 69: mean:eab1c55b26658701ccc6e12b858d29e4 2018-11-02 11:01:38
-## 70: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:38
-## 71:                   2018-11-02 11:01:38 2018-11-02 11:01:38
-## 72:                   2018-11-02 11:01:38 2018-11-02 11:01:38
-## 73:                   2018-11-02 11:01:38 2018-11-02 11:01:38
+##  1:                                   rda 2018-11-02 11:22:50
+##  2:      2e71fc4e5d7c0f456d72d00c083c95e2 2018-11-02 11:22:50
+##  3:                               numeric 2018-11-02 11:22:50
+##  4:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+##  5:      c878d1fb026c0854fc0480553fa4cf24 2018-11-02 11:22:50
+##  6:                                 rnorm 2018-11-02 11:22:50
+##  7:                                  1120 2018-11-02 11:22:50
+##  8:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+##  9:                   withCallingHandlers 2018-11-02 11:22:50
+## 10:                               saveRDS 2018-11-02 11:22:50
+## 11:                               do.call 2018-11-02 11:22:50
+## 12:                          process_file 2018-11-02 11:22:50
+## 13:                         process_group 2018-11-02 11:22:50
+## 14:                   process_group.block 2018-11-02 11:22:50
+## 15:                            call_block 2018-11-02 11:22:50
+## 16:                            block_exec 2018-11-02 11:22:50
+## 17:                                in_dir 2018-11-02 11:22:50
+## 18:                             timing_fn 2018-11-02 11:22:50
+## 19:                                handle 2018-11-02 11:22:50
+## 20:                           withVisible 2018-11-02 11:22:50
+## 21:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:22:50
+## 22: mean:eab1c55b26658701ccc6e12b858d29e4 2018-11-02 11:22:50
+## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:50
+## 24:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 25:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 26:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 27:                                   rda 2018-11-02 11:22:50
+## 28:      b5f5542076158b1721cbce2f23cbbde0 2018-11-02 11:22:50
+## 29:                               numeric 2018-11-02 11:22:50
+## 30:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 31:      93a7b68b228b551669eb36211e857b39 2018-11-02 11:22:50
+## 32:                   rnorm pipe sequence 2018-11-02 11:22:50
+## 33:                                  1120 2018-11-02 11:22:50
+## 34:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 35:                   withCallingHandlers 2018-11-02 11:22:50
+## 36:                               saveRDS 2018-11-02 11:22:50
+## 37:                               do.call 2018-11-02 11:22:50
+## 38:                          process_file 2018-11-02 11:22:50
+## 39:                         process_group 2018-11-02 11:22:50
+## 40:                   process_group.block 2018-11-02 11:22:50
+## 41:                            call_block 2018-11-02 11:22:50
+## 42:                            block_exec 2018-11-02 11:22:50
+## 43:                                in_dir 2018-11-02 11:22:50
+## 44:                             timing_fn 2018-11-02 11:22:50
+## 45:                                handle 2018-11-02 11:22:50
+## 46:                           withVisible 2018-11-02 11:22:50
+## 47:                                   %&gt;% 2018-11-02 11:22:50
+## 48:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:22:50
+## 49: mean:55835193261a0d71e70d137dfa31cd5b 2018-11-02 11:22:50
+## 50: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:50
+## 51:                                   rda 2018-11-02 11:22:50
+## 52:      f7a3c1a3d252416ae4893d5f4be5a1d8 2018-11-02 11:22:50
+## 53:                               numeric 2018-11-02 11:22:50
+## 54:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 55:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:22:50
+## 56:                                     a 2018-11-02 11:22:50
+## 57:                                 rnorm 2018-11-02 11:22:50
+## 58:                                  1024 2018-11-02 11:22:50
+## 59:                   2018-11-02 11:22:50 2018-11-02 11:22:50
+## 60:                   withCallingHandlers 2018-11-02 11:22:50
+## 61:                               saveRDS 2018-11-02 11:22:50
+## 62:                               do.call 2018-11-02 11:22:50
+## 63:                          process_file 2018-11-02 11:22:50
+## 64:                         process_group 2018-11-02 11:22:50
+## 65:                   process_group.block 2018-11-02 11:22:50
+## 66:                            call_block 2018-11-02 11:22:50
+## 67:                            block_exec 2018-11-02 11:22:50
+## 68:                                in_dir 2018-11-02 11:22:50
+## 69:                             timing_fn 2018-11-02 11:22:50
+## 70:                                handle 2018-11-02 11:22:50
+## 71:                           withVisible 2018-11-02 11:22:50
+## 72:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:50
+## 73: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:50
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir)</code></pre></div>
 </div>
@@ -591,100 +591,100 @@ oneDay &lt;-<span class="st"> </span><span class="dv">60</span> <span class="op"
 <pre><code>##   Total (including Rasters): 512 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 512 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 470548ee57d624d2ffbd35e755b3e22c         format
-##  2: 470548ee57d624d2ffbd35e755b3e22c           name
-##  3: 470548ee57d624d2ffbd35e755b3e22c          class
-##  4: 470548ee57d624d2ffbd35e755b3e22c           date
-##  5: 470548ee57d624d2ffbd35e755b3e22c        cacheId
-##  6: 470548ee57d624d2ffbd35e755b3e22c     objectName
-##  7: 470548ee57d624d2ffbd35e755b3e22c       function
-##  8: 470548ee57d624d2ffbd35e755b3e22c    object.size
-##  9: 470548ee57d624d2ffbd35e755b3e22c       accessed
-## 10: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 11: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 12: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 13: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 14: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 15: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 16: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 17: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 18: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 19: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 20: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 21: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 22: 470548ee57d624d2ffbd35e755b3e22c      preDigest
-## 23: 470548ee57d624d2ffbd35e755b3e22c      preDigest
-## 24: 54f4272649654e9fb6c5edd1f2ea816e         format
-## 25: 54f4272649654e9fb6c5edd1f2ea816e           name
-## 26: 54f4272649654e9fb6c5edd1f2ea816e          class
-## 27: 54f4272649654e9fb6c5edd1f2ea816e           date
-## 28: 54f4272649654e9fb6c5edd1f2ea816e        cacheId
-## 29: 54f4272649654e9fb6c5edd1f2ea816e     objectName
-## 30: 54f4272649654e9fb6c5edd1f2ea816e       function
-## 31: 54f4272649654e9fb6c5edd1f2ea816e    object.size
-## 32: 54f4272649654e9fb6c5edd1f2ea816e       accessed
-## 33: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 34: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 35: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 36: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 37: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 38: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 39: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 40: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 41: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 42: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 43: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 44: 54f4272649654e9fb6c5edd1f2ea816e otherFunctions
-## 45: 54f4272649654e9fb6c5edd1f2ea816e      preDigest
-## 46: 54f4272649654e9fb6c5edd1f2ea816e      preDigest
+##  1: 2604861789eafcf21e546bf061ce21a5         format
+##  2: 2604861789eafcf21e546bf061ce21a5           name
+##  3: 2604861789eafcf21e546bf061ce21a5          class
+##  4: 2604861789eafcf21e546bf061ce21a5           date
+##  5: 2604861789eafcf21e546bf061ce21a5        cacheId
+##  6: 2604861789eafcf21e546bf061ce21a5     objectName
+##  7: 2604861789eafcf21e546bf061ce21a5       function
+##  8: 2604861789eafcf21e546bf061ce21a5    object.size
+##  9: 2604861789eafcf21e546bf061ce21a5       accessed
+## 10: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 11: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 12: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 13: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 14: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 15: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 16: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 17: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 18: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 19: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 20: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 21: 2604861789eafcf21e546bf061ce21a5 otherFunctions
+## 22: 2604861789eafcf21e546bf061ce21a5      preDigest
+## 23: 2604861789eafcf21e546bf061ce21a5      preDigest
+## 24: 5a22391217db011315a6a68aa807d58b         format
+## 25: 5a22391217db011315a6a68aa807d58b           name
+## 26: 5a22391217db011315a6a68aa807d58b          class
+## 27: 5a22391217db011315a6a68aa807d58b           date
+## 28: 5a22391217db011315a6a68aa807d58b        cacheId
+## 29: 5a22391217db011315a6a68aa807d58b     objectName
+## 30: 5a22391217db011315a6a68aa807d58b       function
+## 31: 5a22391217db011315a6a68aa807d58b    object.size
+## 32: 5a22391217db011315a6a68aa807d58b       accessed
+## 33: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 34: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 35: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 36: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 37: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 38: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 39: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 40: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 41: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 42: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 43: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 44: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 45: 5a22391217db011315a6a68aa807d58b      preDigest
+## 46: 5a22391217db011315a6a68aa807d58b      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:39
-##  2:      470548ee57d624d2ffbd35e755b3e22c 2018-11-02 11:01:39
-##  3:                               numeric 2018-11-02 11:01:39
-##  4:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-##  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:01:39
-##  6:                                     a 2018-11-02 11:01:39
-##  7:                                 rnorm 2018-11-02 11:01:39
-##  8:                                  1024 2018-11-02 11:01:39
-##  9:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 10:                   withCallingHandlers 2018-11-02 11:01:39
-## 11:                               saveRDS 2018-11-02 11:01:39
-## 12:                               do.call 2018-11-02 11:01:39
-## 13:                          process_file 2018-11-02 11:01:39
-## 14:                         process_group 2018-11-02 11:01:39
-## 15:                   process_group.block 2018-11-02 11:01:39
-## 16:                            call_block 2018-11-02 11:01:40
-## 17:                            block_exec 2018-11-02 11:01:40
-## 18:                                in_dir 2018-11-02 11:01:40
-## 19:                             timing_fn 2018-11-02 11:01:40
-## 20:                                handle 2018-11-02 11:01:40
-## 21:                           withVisible 2018-11-02 11:01:40
-## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:40
-## 24:                                   rda 2018-11-02 11:01:40
-## 25:      54f4272649654e9fb6c5edd1f2ea816e 2018-11-02 11:01:40
-## 26:                               numeric 2018-11-02 11:01:40
-## 27:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 28:      7cb09aa387ba235db013863648303b34 2018-11-02 11:01:40
-## 29:                                     b 2018-11-02 11:01:40
-## 30:                                 runif 2018-11-02 11:01:40
-## 31:                                  1024 2018-11-02 11:01:40
-## 32:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 33:                   withCallingHandlers 2018-11-02 11:01:40
-## 34:                               saveRDS 2018-11-02 11:01:40
-## 35:                               do.call 2018-11-02 11:01:40
-## 36:                          process_file 2018-11-02 11:01:40
-## 37:                         process_group 2018-11-02 11:01:40
-## 38:                   process_group.block 2018-11-02 11:01:40
-## 39:                            call_block 2018-11-02 11:01:40
-## 40:                            block_exec 2018-11-02 11:01:40
-## 41:                                in_dir 2018-11-02 11:01:40
-## 42:                             timing_fn 2018-11-02 11:01:40
-## 43:                                handle 2018-11-02 11:01:40
-## 44:                           withVisible 2018-11-02 11:01:40
-## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 46: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:01:40
+##  1:                                   rda 2018-11-02 11:22:51
+##  2:      2604861789eafcf21e546bf061ce21a5 2018-11-02 11:22:51
+##  3:                               numeric 2018-11-02 11:22:51
+##  4:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+##  5:      7cb09aa387ba235db013863648303b34 2018-11-02 11:22:51
+##  6:                                     b 2018-11-02 11:22:51
+##  7:                                 runif 2018-11-02 11:22:51
+##  8:                                  1024 2018-11-02 11:22:51
+##  9:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 10:                   withCallingHandlers 2018-11-02 11:22:51
+## 11:                               saveRDS 2018-11-02 11:22:51
+## 12:                               do.call 2018-11-02 11:22:51
+## 13:                          process_file 2018-11-02 11:22:51
+## 14:                         process_group 2018-11-02 11:22:51
+## 15:                   process_group.block 2018-11-02 11:22:51
+## 16:                            call_block 2018-11-02 11:22:51
+## 17:                            block_exec 2018-11-02 11:22:51
+## 18:                                in_dir 2018-11-02 11:22:51
+## 19:                             timing_fn 2018-11-02 11:22:51
+## 20:                                handle 2018-11-02 11:22:51
+## 21:                           withVisible 2018-11-02 11:22:51
+## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:51
+## 23: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:22:51
+## 24:                                   rda 2018-11-02 11:22:51
+## 25:      5a22391217db011315a6a68aa807d58b 2018-11-02 11:22:51
+## 26:                               numeric 2018-11-02 11:22:51
+## 27:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 28:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:22:51
+## 29:                                     a 2018-11-02 11:22:51
+## 30:                                 rnorm 2018-11-02 11:22:51
+## 31:                                  1024 2018-11-02 11:22:51
+## 32:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 33:                   withCallingHandlers 2018-11-02 11:22:51
+## 34:                               saveRDS 2018-11-02 11:22:51
+## 35:                               do.call 2018-11-02 11:22:51
+## 36:                          process_file 2018-11-02 11:22:51
+## 37:                         process_group 2018-11-02 11:22:51
+## 38:                   process_group.block 2018-11-02 11:22:51
+## 39:                            call_block 2018-11-02 11:22:51
+## 40:                            block_exec 2018-11-02 11:22:51
+## 41:                                in_dir 2018-11-02 11:22:51
+## 42:                             timing_fn 2018-11-02 11:22:51
+## 43:                                handle 2018-11-02 11:22:51
+## 44:                           withVisible 2018-11-02 11:22:51
+## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:51
+## 46: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:51
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Keep all Cache items created with an rnorm() call</span>
 <span class="kw"><a href="../reference/viewCache.html">keepCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="st">"rnorm"</span>)</code></pre></div>
@@ -692,54 +692,54 @@ oneDay &lt;-<span class="st"> </span><span class="dv">60</span> <span class="op"
 <pre><code>##   Total (including Rasters): 512 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 256 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 470548ee57d624d2ffbd35e755b3e22c         format
-##  2: 470548ee57d624d2ffbd35e755b3e22c           name
-##  3: 470548ee57d624d2ffbd35e755b3e22c          class
-##  4: 470548ee57d624d2ffbd35e755b3e22c           date
-##  5: 470548ee57d624d2ffbd35e755b3e22c        cacheId
-##  6: 470548ee57d624d2ffbd35e755b3e22c     objectName
-##  7: 470548ee57d624d2ffbd35e755b3e22c       function
-##  8: 470548ee57d624d2ffbd35e755b3e22c    object.size
-##  9: 470548ee57d624d2ffbd35e755b3e22c       accessed
-## 10: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 11: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 12: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 13: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 14: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 15: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 16: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 17: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 18: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 19: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 20: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 21: 470548ee57d624d2ffbd35e755b3e22c otherFunctions
-## 22: 470548ee57d624d2ffbd35e755b3e22c      preDigest
-## 23: 470548ee57d624d2ffbd35e755b3e22c      preDigest
+##  1: 5a22391217db011315a6a68aa807d58b         format
+##  2: 5a22391217db011315a6a68aa807d58b           name
+##  3: 5a22391217db011315a6a68aa807d58b          class
+##  4: 5a22391217db011315a6a68aa807d58b           date
+##  5: 5a22391217db011315a6a68aa807d58b        cacheId
+##  6: 5a22391217db011315a6a68aa807d58b     objectName
+##  7: 5a22391217db011315a6a68aa807d58b       function
+##  8: 5a22391217db011315a6a68aa807d58b    object.size
+##  9: 5a22391217db011315a6a68aa807d58b       accessed
+## 10: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 11: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 12: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 13: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 14: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 15: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 16: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 17: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 18: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 19: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 20: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 21: 5a22391217db011315a6a68aa807d58b otherFunctions
+## 22: 5a22391217db011315a6a68aa807d58b      preDigest
+## 23: 5a22391217db011315a6a68aa807d58b      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:39
-##  2:      470548ee57d624d2ffbd35e755b3e22c 2018-11-02 11:01:39
-##  3:                               numeric 2018-11-02 11:01:39
-##  4:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-##  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:01:39
-##  6:                                     a 2018-11-02 11:01:39
-##  7:                                 rnorm 2018-11-02 11:01:39
-##  8:                                  1024 2018-11-02 11:01:39
-##  9:                   2018-11-02 11:01:39 2018-11-02 11:01:39
-## 10:                   withCallingHandlers 2018-11-02 11:01:39
-## 11:                               saveRDS 2018-11-02 11:01:39
-## 12:                               do.call 2018-11-02 11:01:39
-## 13:                          process_file 2018-11-02 11:01:39
-## 14:                         process_group 2018-11-02 11:01:39
-## 15:                   process_group.block 2018-11-02 11:01:39
-## 16:                            call_block 2018-11-02 11:01:40
-## 17:                            block_exec 2018-11-02 11:01:40
-## 18:                                in_dir 2018-11-02 11:01:40
-## 19:                             timing_fn 2018-11-02 11:01:40
-## 20:                                handle 2018-11-02 11:01:40
-## 21:                           withVisible 2018-11-02 11:01:40
-## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:40
+##  1:                                   rda 2018-11-02 11:22:51
+##  2:      5a22391217db011315a6a68aa807d58b 2018-11-02 11:22:51
+##  3:                               numeric 2018-11-02 11:22:51
+##  4:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+##  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:22:51
+##  6:                                     a 2018-11-02 11:22:51
+##  7:                                 rnorm 2018-11-02 11:22:51
+##  8:                                  1024 2018-11-02 11:22:51
+##  9:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 10:                   withCallingHandlers 2018-11-02 11:22:51
+## 11:                               saveRDS 2018-11-02 11:22:51
+## 12:                               do.call 2018-11-02 11:22:51
+## 13:                          process_file 2018-11-02 11:22:51
+## 14:                         process_group 2018-11-02 11:22:51
+## 15:                   process_group.block 2018-11-02 11:22:51
+## 16:                            call_block 2018-11-02 11:22:51
+## 17:                            block_exec 2018-11-02 11:22:51
+## 18:                                in_dir 2018-11-02 11:22:51
+## 19:                             timing_fn 2018-11-02 11:22:51
+## 20:                                handle 2018-11-02 11:22:51
+## 21:                           withVisible 2018-11-02 11:22:51
+## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:51
+## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:51
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Remove all Cache items that happened within a rnorm() call</span>
 <span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="st">"rnorm"</span>)</code></pre></div>
@@ -765,100 +765,100 @@ ranNumsB &lt;-<span class="st"> </span><span class="kw"><a href="../reference/ca
 <pre><code>##   Total (including Rasters): 512 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 512 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 520d25c80680809b4664ff2a522f7c8a         format
-##  2: 520d25c80680809b4664ff2a522f7c8a           name
-##  3: 520d25c80680809b4664ff2a522f7c8a          class
-##  4: 520d25c80680809b4664ff2a522f7c8a           date
-##  5: 520d25c80680809b4664ff2a522f7c8a        cacheId
-##  6: 520d25c80680809b4664ff2a522f7c8a     objectName
-##  7: 520d25c80680809b4664ff2a522f7c8a       function
-##  8: 520d25c80680809b4664ff2a522f7c8a    object.size
-##  9: 520d25c80680809b4664ff2a522f7c8a       accessed
-## 10: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 11: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 12: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 13: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 14: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 15: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 16: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 17: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 18: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 19: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 20: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 21: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 22: 520d25c80680809b4664ff2a522f7c8a      preDigest
-## 23: 520d25c80680809b4664ff2a522f7c8a      preDigest
-## 24: 7f3e5e49a0abbb60717edc66a1b1fea8         format
-## 25: 7f3e5e49a0abbb60717edc66a1b1fea8           name
-## 26: 7f3e5e49a0abbb60717edc66a1b1fea8          class
-## 27: 7f3e5e49a0abbb60717edc66a1b1fea8           date
-## 28: 7f3e5e49a0abbb60717edc66a1b1fea8        cacheId
-## 29: 7f3e5e49a0abbb60717edc66a1b1fea8     objectName
-## 30: 7f3e5e49a0abbb60717edc66a1b1fea8       function
-## 31: 7f3e5e49a0abbb60717edc66a1b1fea8    object.size
-## 32: 7f3e5e49a0abbb60717edc66a1b1fea8       accessed
-## 33: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 34: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 35: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 36: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 37: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 38: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 39: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 40: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 41: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 42: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 43: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 44: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 45: 7f3e5e49a0abbb60717edc66a1b1fea8      preDigest
-## 46: 7f3e5e49a0abbb60717edc66a1b1fea8      preDigest
+##  1: 2493e70a7754ca08806cf4ebb01e9189         format
+##  2: 2493e70a7754ca08806cf4ebb01e9189           name
+##  3: 2493e70a7754ca08806cf4ebb01e9189          class
+##  4: 2493e70a7754ca08806cf4ebb01e9189           date
+##  5: 2493e70a7754ca08806cf4ebb01e9189        cacheId
+##  6: 2493e70a7754ca08806cf4ebb01e9189     objectName
+##  7: 2493e70a7754ca08806cf4ebb01e9189       function
+##  8: 2493e70a7754ca08806cf4ebb01e9189    object.size
+##  9: 2493e70a7754ca08806cf4ebb01e9189       accessed
+## 10: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 11: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 12: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 13: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 14: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 15: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 16: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 17: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 18: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 19: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 20: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 21: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 22: 2493e70a7754ca08806cf4ebb01e9189      preDigest
+## 23: 2493e70a7754ca08806cf4ebb01e9189      preDigest
+## 24: 9f19d98eb1bc076b13e8d3f379851d34         format
+## 25: 9f19d98eb1bc076b13e8d3f379851d34           name
+## 26: 9f19d98eb1bc076b13e8d3f379851d34          class
+## 27: 9f19d98eb1bc076b13e8d3f379851d34           date
+## 28: 9f19d98eb1bc076b13e8d3f379851d34        cacheId
+## 29: 9f19d98eb1bc076b13e8d3f379851d34     objectName
+## 30: 9f19d98eb1bc076b13e8d3f379851d34       function
+## 31: 9f19d98eb1bc076b13e8d3f379851d34    object.size
+## 32: 9f19d98eb1bc076b13e8d3f379851d34       accessed
+## 33: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 34: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 35: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 36: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 37: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 38: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 39: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 40: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 41: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 42: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 43: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 44: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 45: 9f19d98eb1bc076b13e8d3f379851d34      preDigest
+## 46: 9f19d98eb1bc076b13e8d3f379851d34      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:40
-##  2:      520d25c80680809b4664ff2a522f7c8a 2018-11-02 11:01:40
-##  3:                               numeric 2018-11-02 11:01:40
-##  4:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-##  5:      7cb09aa387ba235db013863648303b34 2018-11-02 11:01:40
-##  6:                                     a 2018-11-02 11:01:40
-##  7:                                 runif 2018-11-02 11:01:40
-##  8:                                  1024 2018-11-02 11:01:40
-##  9:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 10:                   withCallingHandlers 2018-11-02 11:01:40
-## 11:                               saveRDS 2018-11-02 11:01:40
-## 12:                               do.call 2018-11-02 11:01:40
-## 13:                          process_file 2018-11-02 11:01:40
-## 14:                         process_group 2018-11-02 11:01:40
-## 15:                   process_group.block 2018-11-02 11:01:40
-## 16:                            call_block 2018-11-02 11:01:40
-## 17:                            block_exec 2018-11-02 11:01:40
-## 18:                                in_dir 2018-11-02 11:01:40
-## 19:                             timing_fn 2018-11-02 11:01:40
-## 20:                                handle 2018-11-02 11:01:40
-## 21:                           withVisible 2018-11-02 11:01:40
-## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 23: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:01:40
-## 24:                                   rda 2018-11-02 11:01:40
-## 25:      7f3e5e49a0abbb60717edc66a1b1fea8 2018-11-02 11:01:40
-## 26:                               numeric 2018-11-02 11:01:40
-## 27:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 28:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:01:40
-## 29:                                     b 2018-11-02 11:01:40
-## 30:                                 rnorm 2018-11-02 11:01:40
-## 31:                                  1024 2018-11-02 11:01:40
-## 32:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 33:                   withCallingHandlers 2018-11-02 11:01:40
-## 34:                               saveRDS 2018-11-02 11:01:40
-## 35:                               do.call 2018-11-02 11:01:40
-## 36:                          process_file 2018-11-02 11:01:40
-## 37:                         process_group 2018-11-02 11:01:40
-## 38:                   process_group.block 2018-11-02 11:01:40
-## 39:                            call_block 2018-11-02 11:01:40
-## 40:                            block_exec 2018-11-02 11:01:40
-## 41:                                in_dir 2018-11-02 11:01:40
-## 42:                             timing_fn 2018-11-02 11:01:40
-## 43:                                handle 2018-11-02 11:01:40
-## 44:                           withVisible 2018-11-02 11:01:40
-## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 46: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:40
+##  1:                                   rda 2018-11-02 11:22:52
+##  2:      2493e70a7754ca08806cf4ebb01e9189 2018-11-02 11:22:52
+##  3:                               numeric 2018-11-02 11:22:52
+##  4:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+##  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:22:52
+##  6:                                     b 2018-11-02 11:22:52
+##  7:                                 rnorm 2018-11-02 11:22:52
+##  8:                                  1024 2018-11-02 11:22:52
+##  9:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 10:                   withCallingHandlers 2018-11-02 11:22:52
+## 11:                               saveRDS 2018-11-02 11:22:52
+## 12:                               do.call 2018-11-02 11:22:52
+## 13:                          process_file 2018-11-02 11:22:52
+## 14:                         process_group 2018-11-02 11:22:52
+## 15:                   process_group.block 2018-11-02 11:22:52
+## 16:                            call_block 2018-11-02 11:22:52
+## 17:                            block_exec 2018-11-02 11:22:52
+## 18:                                in_dir 2018-11-02 11:22:52
+## 19:                             timing_fn 2018-11-02 11:22:52
+## 20:                                handle 2018-11-02 11:22:52
+## 21:                           withVisible 2018-11-02 11:22:52
+## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:52
+## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:52
+## 24:                                   rda 2018-11-02 11:22:51
+## 25:      9f19d98eb1bc076b13e8d3f379851d34 2018-11-02 11:22:51
+## 26:                               numeric 2018-11-02 11:22:51
+## 27:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 28:      7cb09aa387ba235db013863648303b34 2018-11-02 11:22:51
+## 29:                                     a 2018-11-02 11:22:51
+## 30:                                 runif 2018-11-02 11:22:51
+## 31:                                  1024 2018-11-02 11:22:51
+## 32:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 33:                   withCallingHandlers 2018-11-02 11:22:52
+## 34:                               saveRDS 2018-11-02 11:22:52
+## 35:                               do.call 2018-11-02 11:22:52
+## 36:                          process_file 2018-11-02 11:22:52
+## 37:                         process_group 2018-11-02 11:22:52
+## 38:                   process_group.block 2018-11-02 11:22:52
+## 39:                            call_block 2018-11-02 11:22:52
+## 40:                            block_exec 2018-11-02 11:22:52
+## 41:                                in_dir 2018-11-02 11:22:52
+## 42:                             timing_fn 2018-11-02 11:22:52
+## 43:                                handle 2018-11-02 11:22:52
+## 44:                           withVisible 2018-11-02 11:22:52
+## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:52
+## 46: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:22:52
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># show objects that are both runif and rnorm</span>
 <span class="co"># (i.e., none in this case, because objecs are either or, not both)</span>
@@ -873,100 +873,100 @@ ranNumsB &lt;-<span class="st"> </span><span class="kw"><a href="../reference/ca
 <pre><code>##   Total (including Rasters): 512 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 512 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 520d25c80680809b4664ff2a522f7c8a         format
-##  2: 520d25c80680809b4664ff2a522f7c8a           name
-##  3: 520d25c80680809b4664ff2a522f7c8a          class
-##  4: 520d25c80680809b4664ff2a522f7c8a           date
-##  5: 520d25c80680809b4664ff2a522f7c8a        cacheId
-##  6: 520d25c80680809b4664ff2a522f7c8a     objectName
-##  7: 520d25c80680809b4664ff2a522f7c8a       function
-##  8: 520d25c80680809b4664ff2a522f7c8a    object.size
-##  9: 520d25c80680809b4664ff2a522f7c8a       accessed
-## 10: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 11: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 12: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 13: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 14: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 15: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 16: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 17: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 18: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 19: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 20: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 21: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 22: 520d25c80680809b4664ff2a522f7c8a      preDigest
-## 23: 520d25c80680809b4664ff2a522f7c8a      preDigest
-## 24: 7f3e5e49a0abbb60717edc66a1b1fea8         format
-## 25: 7f3e5e49a0abbb60717edc66a1b1fea8           name
-## 26: 7f3e5e49a0abbb60717edc66a1b1fea8          class
-## 27: 7f3e5e49a0abbb60717edc66a1b1fea8           date
-## 28: 7f3e5e49a0abbb60717edc66a1b1fea8        cacheId
-## 29: 7f3e5e49a0abbb60717edc66a1b1fea8     objectName
-## 30: 7f3e5e49a0abbb60717edc66a1b1fea8       function
-## 31: 7f3e5e49a0abbb60717edc66a1b1fea8    object.size
-## 32: 7f3e5e49a0abbb60717edc66a1b1fea8       accessed
-## 33: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 34: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 35: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 36: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 37: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 38: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 39: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 40: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 41: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 42: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 43: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 44: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 45: 7f3e5e49a0abbb60717edc66a1b1fea8      preDigest
-## 46: 7f3e5e49a0abbb60717edc66a1b1fea8      preDigest
+##  1: 2493e70a7754ca08806cf4ebb01e9189         format
+##  2: 2493e70a7754ca08806cf4ebb01e9189           name
+##  3: 2493e70a7754ca08806cf4ebb01e9189          class
+##  4: 2493e70a7754ca08806cf4ebb01e9189           date
+##  5: 2493e70a7754ca08806cf4ebb01e9189        cacheId
+##  6: 2493e70a7754ca08806cf4ebb01e9189     objectName
+##  7: 2493e70a7754ca08806cf4ebb01e9189       function
+##  8: 2493e70a7754ca08806cf4ebb01e9189    object.size
+##  9: 2493e70a7754ca08806cf4ebb01e9189       accessed
+## 10: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 11: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 12: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 13: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 14: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 15: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 16: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 17: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 18: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 19: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 20: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 21: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 22: 2493e70a7754ca08806cf4ebb01e9189      preDigest
+## 23: 2493e70a7754ca08806cf4ebb01e9189      preDigest
+## 24: 9f19d98eb1bc076b13e8d3f379851d34         format
+## 25: 9f19d98eb1bc076b13e8d3f379851d34           name
+## 26: 9f19d98eb1bc076b13e8d3f379851d34          class
+## 27: 9f19d98eb1bc076b13e8d3f379851d34           date
+## 28: 9f19d98eb1bc076b13e8d3f379851d34        cacheId
+## 29: 9f19d98eb1bc076b13e8d3f379851d34     objectName
+## 30: 9f19d98eb1bc076b13e8d3f379851d34       function
+## 31: 9f19d98eb1bc076b13e8d3f379851d34    object.size
+## 32: 9f19d98eb1bc076b13e8d3f379851d34       accessed
+## 33: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 34: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 35: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 36: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 37: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 38: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 39: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 40: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 41: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 42: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 43: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 44: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 45: 9f19d98eb1bc076b13e8d3f379851d34      preDigest
+## 46: 9f19d98eb1bc076b13e8d3f379851d34      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:40
-##  2:      520d25c80680809b4664ff2a522f7c8a 2018-11-02 11:01:40
-##  3:                               numeric 2018-11-02 11:01:40
-##  4:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-##  5:      7cb09aa387ba235db013863648303b34 2018-11-02 11:01:40
-##  6:                                     a 2018-11-02 11:01:40
-##  7:                                 runif 2018-11-02 11:01:40
-##  8:                                  1024 2018-11-02 11:01:40
-##  9:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 10:                   withCallingHandlers 2018-11-02 11:01:40
-## 11:                               saveRDS 2018-11-02 11:01:40
-## 12:                               do.call 2018-11-02 11:01:40
-## 13:                          process_file 2018-11-02 11:01:40
-## 14:                         process_group 2018-11-02 11:01:40
-## 15:                   process_group.block 2018-11-02 11:01:40
-## 16:                            call_block 2018-11-02 11:01:40
-## 17:                            block_exec 2018-11-02 11:01:40
-## 18:                                in_dir 2018-11-02 11:01:40
-## 19:                             timing_fn 2018-11-02 11:01:40
-## 20:                                handle 2018-11-02 11:01:40
-## 21:                           withVisible 2018-11-02 11:01:40
-## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 23: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:01:40
-## 24:                                   rda 2018-11-02 11:01:40
-## 25:      7f3e5e49a0abbb60717edc66a1b1fea8 2018-11-02 11:01:40
-## 26:                               numeric 2018-11-02 11:01:40
-## 27:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 28:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:01:40
-## 29:                                     b 2018-11-02 11:01:40
-## 30:                                 rnorm 2018-11-02 11:01:40
-## 31:                                  1024 2018-11-02 11:01:40
-## 32:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 33:                   withCallingHandlers 2018-11-02 11:01:40
-## 34:                               saveRDS 2018-11-02 11:01:40
-## 35:                               do.call 2018-11-02 11:01:40
-## 36:                          process_file 2018-11-02 11:01:40
-## 37:                         process_group 2018-11-02 11:01:40
-## 38:                   process_group.block 2018-11-02 11:01:40
-## 39:                            call_block 2018-11-02 11:01:40
-## 40:                            block_exec 2018-11-02 11:01:40
-## 41:                                in_dir 2018-11-02 11:01:40
-## 42:                             timing_fn 2018-11-02 11:01:40
-## 43:                                handle 2018-11-02 11:01:40
-## 44:                           withVisible 2018-11-02 11:01:40
-## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 46: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:40
+##  1:                                   rda 2018-11-02 11:22:52
+##  2:      2493e70a7754ca08806cf4ebb01e9189 2018-11-02 11:22:52
+##  3:                               numeric 2018-11-02 11:22:52
+##  4:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+##  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:22:52
+##  6:                                     b 2018-11-02 11:22:52
+##  7:                                 rnorm 2018-11-02 11:22:52
+##  8:                                  1024 2018-11-02 11:22:52
+##  9:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 10:                   withCallingHandlers 2018-11-02 11:22:52
+## 11:                               saveRDS 2018-11-02 11:22:52
+## 12:                               do.call 2018-11-02 11:22:52
+## 13:                          process_file 2018-11-02 11:22:52
+## 14:                         process_group 2018-11-02 11:22:52
+## 15:                   process_group.block 2018-11-02 11:22:52
+## 16:                            call_block 2018-11-02 11:22:52
+## 17:                            block_exec 2018-11-02 11:22:52
+## 18:                                in_dir 2018-11-02 11:22:52
+## 19:                             timing_fn 2018-11-02 11:22:52
+## 20:                                handle 2018-11-02 11:22:52
+## 21:                           withVisible 2018-11-02 11:22:52
+## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:52
+## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:52
+## 24:                                   rda 2018-11-02 11:22:51
+## 25:      9f19d98eb1bc076b13e8d3f379851d34 2018-11-02 11:22:51
+## 26:                               numeric 2018-11-02 11:22:51
+## 27:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 28:      7cb09aa387ba235db013863648303b34 2018-11-02 11:22:51
+## 29:                                     a 2018-11-02 11:22:51
+## 30:                                 runif 2018-11-02 11:22:51
+## 31:                                  1024 2018-11-02 11:22:51
+## 32:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 33:                   withCallingHandlers 2018-11-02 11:22:52
+## 34:                               saveRDS 2018-11-02 11:22:52
+## 35:                               do.call 2018-11-02 11:22:52
+## 36:                          process_file 2018-11-02 11:22:52
+## 37:                         process_group 2018-11-02 11:22:52
+## 38:                   process_group.block 2018-11-02 11:22:52
+## 39:                            call_block 2018-11-02 11:22:52
+## 40:                            block_exec 2018-11-02 11:22:52
+## 41:                                in_dir 2018-11-02 11:22:52
+## 42:                             timing_fn 2018-11-02 11:22:52
+## 43:                                handle 2018-11-02 11:22:52
+## 44:                           withVisible 2018-11-02 11:22:52
+## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:52
+## 46: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:22:52
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># keep only objects that are either runif or rnorm ("or" search)</span>
 <span class="kw"><a href="../reference/viewCache.html">keepCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="st">"runif|rnorm"</span>)</code></pre></div>
@@ -974,100 +974,100 @@ ranNumsB &lt;-<span class="st"> </span><span class="kw"><a href="../reference/ca
 <pre><code>##   Total (including Rasters): 512 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 512 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 520d25c80680809b4664ff2a522f7c8a         format
-##  2: 520d25c80680809b4664ff2a522f7c8a           name
-##  3: 520d25c80680809b4664ff2a522f7c8a          class
-##  4: 520d25c80680809b4664ff2a522f7c8a           date
-##  5: 520d25c80680809b4664ff2a522f7c8a        cacheId
-##  6: 520d25c80680809b4664ff2a522f7c8a     objectName
-##  7: 520d25c80680809b4664ff2a522f7c8a       function
-##  8: 520d25c80680809b4664ff2a522f7c8a    object.size
-##  9: 520d25c80680809b4664ff2a522f7c8a       accessed
-## 10: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 11: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 12: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 13: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 14: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 15: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 16: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 17: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 18: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 19: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 20: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 21: 520d25c80680809b4664ff2a522f7c8a otherFunctions
-## 22: 520d25c80680809b4664ff2a522f7c8a      preDigest
-## 23: 520d25c80680809b4664ff2a522f7c8a      preDigest
-## 24: 7f3e5e49a0abbb60717edc66a1b1fea8         format
-## 25: 7f3e5e49a0abbb60717edc66a1b1fea8           name
-## 26: 7f3e5e49a0abbb60717edc66a1b1fea8          class
-## 27: 7f3e5e49a0abbb60717edc66a1b1fea8           date
-## 28: 7f3e5e49a0abbb60717edc66a1b1fea8        cacheId
-## 29: 7f3e5e49a0abbb60717edc66a1b1fea8     objectName
-## 30: 7f3e5e49a0abbb60717edc66a1b1fea8       function
-## 31: 7f3e5e49a0abbb60717edc66a1b1fea8    object.size
-## 32: 7f3e5e49a0abbb60717edc66a1b1fea8       accessed
-## 33: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 34: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 35: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 36: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 37: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 38: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 39: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 40: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 41: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 42: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 43: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 44: 7f3e5e49a0abbb60717edc66a1b1fea8 otherFunctions
-## 45: 7f3e5e49a0abbb60717edc66a1b1fea8      preDigest
-## 46: 7f3e5e49a0abbb60717edc66a1b1fea8      preDigest
+##  1: 2493e70a7754ca08806cf4ebb01e9189         format
+##  2: 2493e70a7754ca08806cf4ebb01e9189           name
+##  3: 2493e70a7754ca08806cf4ebb01e9189          class
+##  4: 2493e70a7754ca08806cf4ebb01e9189           date
+##  5: 2493e70a7754ca08806cf4ebb01e9189        cacheId
+##  6: 2493e70a7754ca08806cf4ebb01e9189     objectName
+##  7: 2493e70a7754ca08806cf4ebb01e9189       function
+##  8: 2493e70a7754ca08806cf4ebb01e9189    object.size
+##  9: 2493e70a7754ca08806cf4ebb01e9189       accessed
+## 10: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 11: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 12: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 13: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 14: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 15: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 16: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 17: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 18: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 19: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 20: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 21: 2493e70a7754ca08806cf4ebb01e9189 otherFunctions
+## 22: 2493e70a7754ca08806cf4ebb01e9189      preDigest
+## 23: 2493e70a7754ca08806cf4ebb01e9189      preDigest
+## 24: 9f19d98eb1bc076b13e8d3f379851d34         format
+## 25: 9f19d98eb1bc076b13e8d3f379851d34           name
+## 26: 9f19d98eb1bc076b13e8d3f379851d34          class
+## 27: 9f19d98eb1bc076b13e8d3f379851d34           date
+## 28: 9f19d98eb1bc076b13e8d3f379851d34        cacheId
+## 29: 9f19d98eb1bc076b13e8d3f379851d34     objectName
+## 30: 9f19d98eb1bc076b13e8d3f379851d34       function
+## 31: 9f19d98eb1bc076b13e8d3f379851d34    object.size
+## 32: 9f19d98eb1bc076b13e8d3f379851d34       accessed
+## 33: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 34: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 35: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 36: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 37: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 38: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 39: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 40: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 41: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 42: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 43: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 44: 9f19d98eb1bc076b13e8d3f379851d34 otherFunctions
+## 45: 9f19d98eb1bc076b13e8d3f379851d34      preDigest
+## 46: 9f19d98eb1bc076b13e8d3f379851d34      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:40
-##  2:      520d25c80680809b4664ff2a522f7c8a 2018-11-02 11:01:40
-##  3:                               numeric 2018-11-02 11:01:40
-##  4:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-##  5:      7cb09aa387ba235db013863648303b34 2018-11-02 11:01:40
-##  6:                                     a 2018-11-02 11:01:40
-##  7:                                 runif 2018-11-02 11:01:40
-##  8:                                  1024 2018-11-02 11:01:40
-##  9:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 10:                   withCallingHandlers 2018-11-02 11:01:40
-## 11:                               saveRDS 2018-11-02 11:01:40
-## 12:                               do.call 2018-11-02 11:01:40
-## 13:                          process_file 2018-11-02 11:01:40
-## 14:                         process_group 2018-11-02 11:01:40
-## 15:                   process_group.block 2018-11-02 11:01:40
-## 16:                            call_block 2018-11-02 11:01:40
-## 17:                            block_exec 2018-11-02 11:01:40
-## 18:                                in_dir 2018-11-02 11:01:40
-## 19:                             timing_fn 2018-11-02 11:01:40
-## 20:                                handle 2018-11-02 11:01:40
-## 21:                           withVisible 2018-11-02 11:01:40
-## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 23: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:01:40
-## 24:                                   rda 2018-11-02 11:01:40
-## 25:      7f3e5e49a0abbb60717edc66a1b1fea8 2018-11-02 11:01:40
-## 26:                               numeric 2018-11-02 11:01:40
-## 27:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 28:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:01:40
-## 29:                                     b 2018-11-02 11:01:40
-## 30:                                 rnorm 2018-11-02 11:01:40
-## 31:                                  1024 2018-11-02 11:01:40
-## 32:                   2018-11-02 11:01:40 2018-11-02 11:01:40
-## 33:                   withCallingHandlers 2018-11-02 11:01:40
-## 34:                               saveRDS 2018-11-02 11:01:40
-## 35:                               do.call 2018-11-02 11:01:40
-## 36:                          process_file 2018-11-02 11:01:40
-## 37:                         process_group 2018-11-02 11:01:40
-## 38:                   process_group.block 2018-11-02 11:01:40
-## 39:                            call_block 2018-11-02 11:01:40
-## 40:                            block_exec 2018-11-02 11:01:40
-## 41:                                in_dir 2018-11-02 11:01:40
-## 42:                             timing_fn 2018-11-02 11:01:40
-## 43:                                handle 2018-11-02 11:01:40
-## 44:                           withVisible 2018-11-02 11:01:40
-## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:01:40
-## 46: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:40
+##  1:                                   rda 2018-11-02 11:22:52
+##  2:      2493e70a7754ca08806cf4ebb01e9189 2018-11-02 11:22:52
+##  3:                               numeric 2018-11-02 11:22:52
+##  4:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+##  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-02 11:22:52
+##  6:                                     b 2018-11-02 11:22:52
+##  7:                                 rnorm 2018-11-02 11:22:52
+##  8:                                  1024 2018-11-02 11:22:52
+##  9:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 10:                   withCallingHandlers 2018-11-02 11:22:52
+## 11:                               saveRDS 2018-11-02 11:22:52
+## 12:                               do.call 2018-11-02 11:22:52
+## 13:                          process_file 2018-11-02 11:22:52
+## 14:                         process_group 2018-11-02 11:22:52
+## 15:                   process_group.block 2018-11-02 11:22:52
+## 16:                            call_block 2018-11-02 11:22:52
+## 17:                            block_exec 2018-11-02 11:22:52
+## 18:                                in_dir 2018-11-02 11:22:52
+## 19:                             timing_fn 2018-11-02 11:22:52
+## 20:                                handle 2018-11-02 11:22:52
+## 21:                           withVisible 2018-11-02 11:22:52
+## 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:52
+## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:52
+## 24:                                   rda 2018-11-02 11:22:51
+## 25:      9f19d98eb1bc076b13e8d3f379851d34 2018-11-02 11:22:51
+## 26:                               numeric 2018-11-02 11:22:51
+## 27:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 28:      7cb09aa387ba235db013863648303b34 2018-11-02 11:22:51
+## 29:                                     a 2018-11-02 11:22:51
+## 30:                                 runif 2018-11-02 11:22:51
+## 31:                                  1024 2018-11-02 11:22:51
+## 32:                   2018-11-02 11:22:51 2018-11-02 11:22:51
+## 33:                   withCallingHandlers 2018-11-02 11:22:52
+## 34:                               saveRDS 2018-11-02 11:22:52
+## 35:                               do.call 2018-11-02 11:22:52
+## 36:                          process_file 2018-11-02 11:22:52
+## 37:                         process_group 2018-11-02 11:22:52
+## 38:                   process_group.block 2018-11-02 11:22:52
+## 39:                            call_block 2018-11-02 11:22:52
+## 40:                            block_exec 2018-11-02 11:22:52
+## 41:                                in_dir 2018-11-02 11:22:52
+## 42:                             timing_fn 2018-11-02 11:22:52
+## 43:                                handle 2018-11-02 11:22:52
+## 44:                           withVisible 2018-11-02 11:22:52
+## 45:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-02 11:22:52
+## 46: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:22:52
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir)</code></pre></div>
 </div>
@@ -1124,7 +1124,7 @@ tmpdir2 &lt;-<span class="st"> </span><span class="kw">file.path</span>(<span cl
 <span class="co">#   Cache calls, unless individually overridden ... here inner</span>
 <span class="co">#   uses tmpdir2 repository</span>
 <span class="kw"><a href="../reference/cache.html">Cache</a></span>(outer, <span class="dt">n =</span> <span class="dv">2</span>, <span class="dt">cacheRepo =</span> tmpdir1, <span class="dt">notOlderThan =</span> <span class="kw">Sys.time</span>())</code></pre></div>
-<pre><code>## [1] -1.5088872  0.6090406  0.2144210
+<pre><code>## [1]  1.9216366  0.3880367 -1.3489817
 ## attr(,"tags")
 ## [1] "cacheId:7360b42d0a2ddade58d480f1f9e9eef4"
 ## attr(,".Cache")
@@ -1138,150 +1138,150 @@ tmpdir2 &lt;-<span class="st"> </span><span class="kw">file.path</span>(<span cl
 <pre><code>##   Total (including Rasters): 512 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 512 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 52fb283557f1543e936bc30e19b30bd7         format
-##  2: 52fb283557f1543e936bc30e19b30bd7           name
-##  3: 52fb283557f1543e936bc30e19b30bd7          class
-##  4: 52fb283557f1543e936bc30e19b30bd7           date
-##  5: 52fb283557f1543e936bc30e19b30bd7        cacheId
-##  6: 52fb283557f1543e936bc30e19b30bd7       function
-##  7: 52fb283557f1543e936bc30e19b30bd7    object.size
-##  8: 52fb283557f1543e936bc30e19b30bd7       accessed
-##  9: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 10: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 11: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 12: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 13: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 14: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 15: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 16: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 17: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 18: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 19: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 20: 52fb283557f1543e936bc30e19b30bd7 otherFunctions
-## 21: 52fb283557f1543e936bc30e19b30bd7      preDigest
-## 22: 52fb283557f1543e936bc30e19b30bd7      preDigest
-## 23: 52fb283557f1543e936bc30e19b30bd7      preDigest
-## 24: 81e8502cd45e49aeb88d587ab27dda72         format
-## 25: 81e8502cd45e49aeb88d587ab27dda72           name
-## 26: 81e8502cd45e49aeb88d587ab27dda72          class
-## 27: 81e8502cd45e49aeb88d587ab27dda72           date
-## 28: 81e8502cd45e49aeb88d587ab27dda72        cacheId
-## 29: 81e8502cd45e49aeb88d587ab27dda72       function
-## 30: 81e8502cd45e49aeb88d587ab27dda72    object.size
-## 31: 81e8502cd45e49aeb88d587ab27dda72       accessed
-## 32: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 33: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 34: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 35: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 36: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 37: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 38: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 39: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 40: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 41: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 42: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 43: 81e8502cd45e49aeb88d587ab27dda72 otherFunctions
-## 44: 81e8502cd45e49aeb88d587ab27dda72      preDigest
-## 45: 81e8502cd45e49aeb88d587ab27dda72      preDigest
+##  1: 51a40b5823cf854e5e5cbff007dbf995         format
+##  2: 51a40b5823cf854e5e5cbff007dbf995           name
+##  3: 51a40b5823cf854e5e5cbff007dbf995          class
+##  4: 51a40b5823cf854e5e5cbff007dbf995           date
+##  5: 51a40b5823cf854e5e5cbff007dbf995        cacheId
+##  6: 51a40b5823cf854e5e5cbff007dbf995       function
+##  7: 51a40b5823cf854e5e5cbff007dbf995    object.size
+##  8: 51a40b5823cf854e5e5cbff007dbf995       accessed
+##  9: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 10: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 11: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 12: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 13: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 14: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 15: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 16: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 17: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 18: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 19: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 20: 51a40b5823cf854e5e5cbff007dbf995 otherFunctions
+## 21: 51a40b5823cf854e5e5cbff007dbf995      preDigest
+## 22: 51a40b5823cf854e5e5cbff007dbf995      preDigest
+## 23: 746f1b105221d2cfcd5059564169fc46         format
+## 24: 746f1b105221d2cfcd5059564169fc46           name
+## 25: 746f1b105221d2cfcd5059564169fc46          class
+## 26: 746f1b105221d2cfcd5059564169fc46           date
+## 27: 746f1b105221d2cfcd5059564169fc46        cacheId
+## 28: 746f1b105221d2cfcd5059564169fc46       function
+## 29: 746f1b105221d2cfcd5059564169fc46    object.size
+## 30: 746f1b105221d2cfcd5059564169fc46       accessed
+## 31: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 32: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 33: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 34: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 35: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 36: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 37: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 38: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 39: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 40: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 41: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 42: 746f1b105221d2cfcd5059564169fc46 otherFunctions
+## 43: 746f1b105221d2cfcd5059564169fc46      preDigest
+## 44: 746f1b105221d2cfcd5059564169fc46      preDigest
+## 45: 746f1b105221d2cfcd5059564169fc46      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:41
-##  2:      52fb283557f1543e936bc30e19b30bd7 2018-11-02 11:01:41
-##  3:                               numeric 2018-11-02 11:01:41
-##  4:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-##  5:      696a8c27b0af4d8124a69d16123c2a9b 2018-11-02 11:01:41
-##  6:                                 rnorm 2018-11-02 11:01:41
-##  7:                                  1024 2018-11-02 11:01:41
-##  8:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-##  9:                   withCallingHandlers 2018-11-02 11:01:41
-## 10:                               saveRDS 2018-11-02 11:01:41
-## 11:                               do.call 2018-11-02 11:01:41
-## 12:                          process_file 2018-11-02 11:01:41
-## 13:                         process_group 2018-11-02 11:01:41
-## 14:                   process_group.block 2018-11-02 11:01:41
-## 15:                            call_block 2018-11-02 11:01:41
-## 16:                            block_exec 2018-11-02 11:01:41
-## 17:                                in_dir 2018-11-02 11:01:41
-## 18:                             timing_fn 2018-11-02 11:01:41
-## 19:                                handle 2018-11-02 11:01:41
-## 20:                           withVisible 2018-11-02 11:01:41
-## 21:    n:70822253d659facdcbfdb8a038cce013 2018-11-02 11:01:41
-## 22: mean:e48ada84553a52f78ea2567bd2bc806a 2018-11-02 11:01:41
-## 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:41
-## 24:                                   rda 2018-11-02 11:01:41
-## 25:      81e8502cd45e49aeb88d587ab27dda72 2018-11-02 11:01:41
-## 26:                               numeric 2018-11-02 11:01:41
-## 27:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-## 28:      7360b42d0a2ddade58d480f1f9e9eef4 2018-11-02 11:01:41
-## 29:                                 outer 2018-11-02 11:01:41
-## 30:                                  1024 2018-11-02 11:01:41
-## 31:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-## 32:                   withCallingHandlers 2018-11-02 11:01:41
-## 33:                               saveRDS 2018-11-02 11:01:41
-## 34:                               do.call 2018-11-02 11:01:41
-## 35:                          process_file 2018-11-02 11:01:41
-## 36:                         process_group 2018-11-02 11:01:41
-## 37:                   process_group.block 2018-11-02 11:01:41
-## 38:                            call_block 2018-11-02 11:01:41
-## 39:                            block_exec 2018-11-02 11:01:41
-## 40:                                in_dir 2018-11-02 11:01:41
-## 41:                             timing_fn 2018-11-02 11:01:41
-## 42:                                handle 2018-11-02 11:01:41
-## 43:                           withVisible 2018-11-02 11:01:41
-## 44:    n:bfc3454880d65ea9fc34069951dbbc35 2018-11-02 11:01:41
-## 45: .FUN:dfb4fe3bd3b241021e1799f8234bd28f 2018-11-02 11:01:41
+##  1:                                   rda 2018-11-02 11:22:52
+##  2:      51a40b5823cf854e5e5cbff007dbf995 2018-11-02 11:22:52
+##  3:                               numeric 2018-11-02 11:22:52
+##  4:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+##  5:      7360b42d0a2ddade58d480f1f9e9eef4 2018-11-02 11:22:52
+##  6:                                 outer 2018-11-02 11:22:52
+##  7:                                  1024 2018-11-02 11:22:52
+##  8:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+##  9:                   withCallingHandlers 2018-11-02 11:22:52
+## 10:                               saveRDS 2018-11-02 11:22:52
+## 11:                               do.call 2018-11-02 11:22:52
+## 12:                          process_file 2018-11-02 11:22:52
+## 13:                         process_group 2018-11-02 11:22:52
+## 14:                   process_group.block 2018-11-02 11:22:52
+## 15:                            call_block 2018-11-02 11:22:52
+## 16:                            block_exec 2018-11-02 11:22:52
+## 17:                                in_dir 2018-11-02 11:22:52
+## 18:                             timing_fn 2018-11-02 11:22:52
+## 19:                                handle 2018-11-02 11:22:52
+## 20:                           withVisible 2018-11-02 11:22:52
+## 21:    n:bfc3454880d65ea9fc34069951dbbc35 2018-11-02 11:22:52
+## 22: .FUN:dfb4fe3bd3b241021e1799f8234bd28f 2018-11-02 11:22:52
+## 23:                                   rda 2018-11-02 11:22:52
+## 24:      746f1b105221d2cfcd5059564169fc46 2018-11-02 11:22:52
+## 25:                               numeric 2018-11-02 11:22:52
+## 26:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 27:      696a8c27b0af4d8124a69d16123c2a9b 2018-11-02 11:22:52
+## 28:                                 rnorm 2018-11-02 11:22:52
+## 29:                                  1024 2018-11-02 11:22:52
+## 30:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 31:                   withCallingHandlers 2018-11-02 11:22:52
+## 32:                               saveRDS 2018-11-02 11:22:52
+## 33:                               do.call 2018-11-02 11:22:52
+## 34:                          process_file 2018-11-02 11:22:52
+## 35:                         process_group 2018-11-02 11:22:52
+## 36:                   process_group.block 2018-11-02 11:22:52
+## 37:                            call_block 2018-11-02 11:22:52
+## 38:                            block_exec 2018-11-02 11:22:52
+## 39:                                in_dir 2018-11-02 11:22:52
+## 40:                             timing_fn 2018-11-02 11:22:52
+## 41:                                handle 2018-11-02 11:22:52
+## 42:                           withVisible 2018-11-02 11:22:52
+## 43:    n:70822253d659facdcbfdb8a038cce013 2018-11-02 11:22:52
+## 44: mean:e48ada84553a52f78ea2567bd2bc806a 2018-11-02 11:22:52
+## 45: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:52
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/viewCache.html">showCache</a></span>(tmpdir2) <span class="co"># 1 function call</span></code></pre></div>
 <pre><code>## Cache size:</code></pre>
 <pre><code>##   Total (including Rasters): 256 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 256 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 3966c92fa4fa237eec3c1a005ae58243         format
-##  2: 3966c92fa4fa237eec3c1a005ae58243           name
-##  3: 3966c92fa4fa237eec3c1a005ae58243          class
-##  4: 3966c92fa4fa237eec3c1a005ae58243           date
-##  5: 3966c92fa4fa237eec3c1a005ae58243        cacheId
-##  6: 3966c92fa4fa237eec3c1a005ae58243       function
-##  7: 3966c92fa4fa237eec3c1a005ae58243    object.size
-##  8: 3966c92fa4fa237eec3c1a005ae58243       accessed
-##  9: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 10: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 11: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 12: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 13: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 14: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 15: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 16: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 17: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 18: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 19: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 20: 3966c92fa4fa237eec3c1a005ae58243 otherFunctions
-## 21: 3966c92fa4fa237eec3c1a005ae58243      preDigest
-## 22: 3966c92fa4fa237eec3c1a005ae58243      preDigest
+##  1: 7556aec80e4ac0fad7467c806836118c         format
+##  2: 7556aec80e4ac0fad7467c806836118c           name
+##  3: 7556aec80e4ac0fad7467c806836118c          class
+##  4: 7556aec80e4ac0fad7467c806836118c           date
+##  5: 7556aec80e4ac0fad7467c806836118c        cacheId
+##  6: 7556aec80e4ac0fad7467c806836118c       function
+##  7: 7556aec80e4ac0fad7467c806836118c    object.size
+##  8: 7556aec80e4ac0fad7467c806836118c       accessed
+##  9: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 10: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 11: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 12: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 13: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 14: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 15: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 16: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 17: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 18: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 19: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 20: 7556aec80e4ac0fad7467c806836118c otherFunctions
+## 21: 7556aec80e4ac0fad7467c806836118c      preDigest
+## 22: 7556aec80e4ac0fad7467c806836118c      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:41
-##  2:      3966c92fa4fa237eec3c1a005ae58243 2018-11-02 11:01:41
-##  3:                               numeric 2018-11-02 11:01:41
-##  4:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-##  5:      3d9566c2b0275c7478ee84c56177b51c 2018-11-02 11:01:41
-##  6:                                 inner 2018-11-02 11:01:41
-##  7:                                  1024 2018-11-02 11:01:41
-##  8:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-##  9:                   withCallingHandlers 2018-11-02 11:01:41
-## 10:                               saveRDS 2018-11-02 11:01:41
-## 11:                               do.call 2018-11-02 11:01:41
-## 12:                          process_file 2018-11-02 11:01:41
-## 13:                         process_group 2018-11-02 11:01:41
-## 14:                   process_group.block 2018-11-02 11:01:41
-## 15:                            call_block 2018-11-02 11:01:41
-## 16:                            block_exec 2018-11-02 11:01:41
-## 17:                                in_dir 2018-11-02 11:01:41
-## 18:                             timing_fn 2018-11-02 11:01:41
-## 19:                                handle 2018-11-02 11:01:41
-## 20:                           withVisible 2018-11-02 11:01:41
-## 21: mean:e48ada84553a52f78ea2567bd2bc806a 2018-11-02 11:01:41
-## 22: .FUN:cf56d34c48d5d8c8a0ac5bd78262cdd9 2018-11-02 11:01:41
+##  1:                                   rda 2018-11-02 11:22:52
+##  2:      7556aec80e4ac0fad7467c806836118c 2018-11-02 11:22:52
+##  3:                               numeric 2018-11-02 11:22:52
+##  4:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+##  5:      3d9566c2b0275c7478ee84c56177b51c 2018-11-02 11:22:52
+##  6:                                 inner 2018-11-02 11:22:52
+##  7:                                  1024 2018-11-02 11:22:52
+##  8:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+##  9:                   withCallingHandlers 2018-11-02 11:22:52
+## 10:                               saveRDS 2018-11-02 11:22:52
+## 11:                               do.call 2018-11-02 11:22:52
+## 12:                          process_file 2018-11-02 11:22:52
+## 13:                         process_group 2018-11-02 11:22:52
+## 14:                   process_group.block 2018-11-02 11:22:52
+## 15:                            call_block 2018-11-02 11:22:52
+## 16:                            block_exec 2018-11-02 11:22:52
+## 17:                                in_dir 2018-11-02 11:22:52
+## 18:                             timing_fn 2018-11-02 11:22:52
+## 19:                                handle 2018-11-02 11:22:52
+## 20:                           withVisible 2018-11-02 11:22:52
+## 21: mean:e48ada84553a52f78ea2567bd2bc806a 2018-11-02 11:22:52
+## 22: .FUN:cf56d34c48d5d8c8a0ac5bd78262cdd9 2018-11-02 11:22:52
 ##                                  tagValue         createdDate</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># userTags get appended</span>
 <span class="co"># all items have the outer tag propagate, plus inner ones only have inner ones</span>
@@ -1301,150 +1301,150 @@ aa &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cache.ht
 <pre><code>##   Total (including Rasters): 768 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 768 bytes</code></pre>
 <pre><code>##                             artifact         tagKey
-##  1: 11c7552b0349a5daebb2417ae1cde2c0         format
-##  2: 11c7552b0349a5daebb2417ae1cde2c0           name
-##  3: 11c7552b0349a5daebb2417ae1cde2c0          class
-##  4: 11c7552b0349a5daebb2417ae1cde2c0           date
-##  5: 11c7552b0349a5daebb2417ae1cde2c0        cacheId
-##  6: 11c7552b0349a5daebb2417ae1cde2c0       outerTag
-##  7: 11c7552b0349a5daebb2417ae1cde2c0       function
-##  8: 11c7552b0349a5daebb2417ae1cde2c0    object.size
-##  9: 11c7552b0349a5daebb2417ae1cde2c0       accessed
-## 10: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 11: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 12: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 13: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 14: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 15: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 16: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 17: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 18: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 19: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 20: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 21: 11c7552b0349a5daebb2417ae1cde2c0 otherFunctions
-## 22: 11c7552b0349a5daebb2417ae1cde2c0      preDigest
-## 23: 11c7552b0349a5daebb2417ae1cde2c0      preDigest
-## 24: bbf0cc5ecd598dfde56f82f92e29388c         format
-## 25: bbf0cc5ecd598dfde56f82f92e29388c           name
-## 26: bbf0cc5ecd598dfde56f82f92e29388c          class
-## 27: bbf0cc5ecd598dfde56f82f92e29388c           date
-## 28: bbf0cc5ecd598dfde56f82f92e29388c        cacheId
-## 29: bbf0cc5ecd598dfde56f82f92e29388c       innerTag
-## 30: bbf0cc5ecd598dfde56f82f92e29388c       outerTag
-## 31: bbf0cc5ecd598dfde56f82f92e29388c       function
-## 32: bbf0cc5ecd598dfde56f82f92e29388c    object.size
-## 33: bbf0cc5ecd598dfde56f82f92e29388c       accessed
-## 34: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 35: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 36: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 37: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 38: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 39: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 40: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 41: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 42: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 43: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 44: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 45: bbf0cc5ecd598dfde56f82f92e29388c otherFunctions
-## 46: bbf0cc5ecd598dfde56f82f92e29388c      preDigest
-## 47: bbf0cc5ecd598dfde56f82f92e29388c      preDigest
-## 48: bbf0cc5ecd598dfde56f82f92e29388c      preDigest
-## 49: e6a9ec21734d5ebfc588cfc8fc90b817         format
-## 50: e6a9ec21734d5ebfc588cfc8fc90b817           name
-## 51: e6a9ec21734d5ebfc588cfc8fc90b817          class
-## 52: e6a9ec21734d5ebfc588cfc8fc90b817           date
-## 53: e6a9ec21734d5ebfc588cfc8fc90b817        cacheId
-## 54: e6a9ec21734d5ebfc588cfc8fc90b817       outerTag
-## 55: e6a9ec21734d5ebfc588cfc8fc90b817       function
-## 56: e6a9ec21734d5ebfc588cfc8fc90b817    object.size
-## 57: e6a9ec21734d5ebfc588cfc8fc90b817       accessed
-## 58: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 59: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 60: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 61: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 62: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 63: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 64: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 65: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 66: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 67: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 68: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 69: e6a9ec21734d5ebfc588cfc8fc90b817 otherFunctions
-## 70: e6a9ec21734d5ebfc588cfc8fc90b817      preDigest
-## 71: e6a9ec21734d5ebfc588cfc8fc90b817      preDigest
+##  1: 6dbb7c5cbd92b5992fc2ed176609670f         format
+##  2: 6dbb7c5cbd92b5992fc2ed176609670f           name
+##  3: 6dbb7c5cbd92b5992fc2ed176609670f          class
+##  4: 6dbb7c5cbd92b5992fc2ed176609670f           date
+##  5: 6dbb7c5cbd92b5992fc2ed176609670f        cacheId
+##  6: 6dbb7c5cbd92b5992fc2ed176609670f       outerTag
+##  7: 6dbb7c5cbd92b5992fc2ed176609670f       function
+##  8: 6dbb7c5cbd92b5992fc2ed176609670f    object.size
+##  9: 6dbb7c5cbd92b5992fc2ed176609670f       accessed
+## 10: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 11: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 12: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 13: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 14: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 15: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 16: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 17: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 18: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 19: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 20: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 21: 6dbb7c5cbd92b5992fc2ed176609670f otherFunctions
+## 22: 6dbb7c5cbd92b5992fc2ed176609670f      preDigest
+## 23: 6dbb7c5cbd92b5992fc2ed176609670f      preDigest
+## 24: cf39fa73ee87cd6d740c08c7a950e74c         format
+## 25: cf39fa73ee87cd6d740c08c7a950e74c           name
+## 26: cf39fa73ee87cd6d740c08c7a950e74c          class
+## 27: cf39fa73ee87cd6d740c08c7a950e74c           date
+## 28: cf39fa73ee87cd6d740c08c7a950e74c        cacheId
+## 29: cf39fa73ee87cd6d740c08c7a950e74c       innerTag
+## 30: cf39fa73ee87cd6d740c08c7a950e74c       outerTag
+## 31: cf39fa73ee87cd6d740c08c7a950e74c       function
+## 32: cf39fa73ee87cd6d740c08c7a950e74c    object.size
+## 33: cf39fa73ee87cd6d740c08c7a950e74c       accessed
+## 34: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 35: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 36: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 37: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 38: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 39: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 40: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 41: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 42: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 43: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 44: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 45: cf39fa73ee87cd6d740c08c7a950e74c otherFunctions
+## 46: cf39fa73ee87cd6d740c08c7a950e74c      preDigest
+## 47: cf39fa73ee87cd6d740c08c7a950e74c      preDigest
+## 48: cf39fa73ee87cd6d740c08c7a950e74c      preDigest
+## 49: d1ff54d6dcde0525dc7428be35caa979         format
+## 50: d1ff54d6dcde0525dc7428be35caa979           name
+## 51: d1ff54d6dcde0525dc7428be35caa979          class
+## 52: d1ff54d6dcde0525dc7428be35caa979           date
+## 53: d1ff54d6dcde0525dc7428be35caa979        cacheId
+## 54: d1ff54d6dcde0525dc7428be35caa979       outerTag
+## 55: d1ff54d6dcde0525dc7428be35caa979       function
+## 56: d1ff54d6dcde0525dc7428be35caa979    object.size
+## 57: d1ff54d6dcde0525dc7428be35caa979       accessed
+## 58: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 59: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 60: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 61: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 62: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 63: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 64: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 65: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 66: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 67: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 68: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 69: d1ff54d6dcde0525dc7428be35caa979 otherFunctions
+## 70: d1ff54d6dcde0525dc7428be35caa979      preDigest
+## 71: d1ff54d6dcde0525dc7428be35caa979      preDigest
 ##                             artifact         tagKey
 ##                                  tagValue         createdDate
-##  1:                                   rda 2018-11-02 11:01:41
-##  2:      11c7552b0349a5daebb2417ae1cde2c0 2018-11-02 11:01:41
-##  3:                               numeric 2018-11-02 11:01:41
-##  4:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-##  5:      21818a9ce14c5526152af5f6bd649f1c 2018-11-02 11:01:41
-##  6:                              outerTag 2018-11-02 11:01:41
-##  7:                                 inner 2018-11-02 11:01:41
-##  8:                                  1024 2018-11-02 11:01:41
-##  9:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-## 10:                   withCallingHandlers 2018-11-02 11:01:41
-## 11:                               saveRDS 2018-11-02 11:01:41
-## 12:                               do.call 2018-11-02 11:01:41
-## 13:                          process_file 2018-11-02 11:01:41
-## 14:                         process_group 2018-11-02 11:01:41
-## 15:                   process_group.block 2018-11-02 11:01:41
-## 16:                            call_block 2018-11-02 11:01:41
-## 17:                            block_exec 2018-11-02 11:01:41
-## 18:                                in_dir 2018-11-02 11:01:41
-## 19:                             timing_fn 2018-11-02 11:01:41
-## 20:                                handle 2018-11-02 11:01:41
-## 21:                           withVisible 2018-11-02 11:01:41
-## 22: mean:e48ada84553a52f78ea2567bd2bc806a 2018-11-02 11:01:41
-## 23: .FUN:7371e13cb8e6f554d8e048c938825ead 2018-11-02 11:01:41
-## 24:                                   rda 2018-11-02 11:01:41
-## 25:      bbf0cc5ecd598dfde56f82f92e29388c 2018-11-02 11:01:41
-## 26:                               numeric 2018-11-02 11:01:41
-## 27:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-## 28:      696a8c27b0af4d8124a69d16123c2a9b 2018-11-02 11:01:41
-## 29:                              innerTag 2018-11-02 11:01:41
-## 30:                              outerTag 2018-11-02 11:01:41
-## 31:                                 rnorm 2018-11-02 11:01:41
-## 32:                                  1024 2018-11-02 11:01:41
-## 33:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-## 34:                   withCallingHandlers 2018-11-02 11:01:41
-## 35:                               saveRDS 2018-11-02 11:01:41
-## 36:                               do.call 2018-11-02 11:01:41
-## 37:                          process_file 2018-11-02 11:01:41
-## 38:                         process_group 2018-11-02 11:01:41
-## 39:                   process_group.block 2018-11-02 11:01:41
-## 40:                            call_block 2018-11-02 11:01:41
-## 41:                            block_exec 2018-11-02 11:01:41
-## 42:                                in_dir 2018-11-02 11:01:41
-## 43:                             timing_fn 2018-11-02 11:01:41
-## 44:                                handle 2018-11-02 11:01:41
-## 45:                           withVisible 2018-11-02 11:01:41
-## 46:    n:70822253d659facdcbfdb8a038cce013 2018-11-02 11:01:41
-## 47: mean:e48ada84553a52f78ea2567bd2bc806a 2018-11-02 11:01:41
-## 48: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:01:41
-## 49:                                   rda 2018-11-02 11:01:41
-## 50:      e6a9ec21734d5ebfc588cfc8fc90b817 2018-11-02 11:01:41
-## 51:                               numeric 2018-11-02 11:01:41
-## 52:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-## 53:      527dd0f4adb50e543f78626baca662a7 2018-11-02 11:01:41
-## 54:                              outerTag 2018-11-02 11:01:41
-## 55:                                 outer 2018-11-02 11:01:41
-## 56:                                  1024 2018-11-02 11:01:41
-## 57:                   2018-11-02 11:01:41 2018-11-02 11:01:41
-## 58:                   withCallingHandlers 2018-11-02 11:01:41
-## 59:                               saveRDS 2018-11-02 11:01:41
-## 60:                               do.call 2018-11-02 11:01:41
-## 61:                          process_file 2018-11-02 11:01:41
-## 62:                         process_group 2018-11-02 11:01:41
-## 63:                   process_group.block 2018-11-02 11:01:41
-## 64:                            call_block 2018-11-02 11:01:41
-## 65:                            block_exec 2018-11-02 11:01:41
-## 66:                                in_dir 2018-11-02 11:01:41
-## 67:                             timing_fn 2018-11-02 11:01:41
-## 68:                                handle 2018-11-02 11:01:41
-## 69:                           withVisible 2018-11-02 11:01:41
-## 70:    n:bfc3454880d65ea9fc34069951dbbc35 2018-11-02 11:01:41
-## 71: .FUN:ccd653e1f8453c8e3dcd49c99f824ed9 2018-11-02 11:01:41
+##  1:                                   rda 2018-11-02 11:22:53
+##  2:      6dbb7c5cbd92b5992fc2ed176609670f 2018-11-02 11:22:53
+##  3:                               numeric 2018-11-02 11:22:53
+##  4:                   2018-11-02 11:22:53 2018-11-02 11:22:53
+##  5:      527dd0f4adb50e543f78626baca662a7 2018-11-02 11:22:53
+##  6:                              outerTag 2018-11-02 11:22:53
+##  7:                                 outer 2018-11-02 11:22:53
+##  8:                                  1024 2018-11-02 11:22:53
+##  9:                   2018-11-02 11:22:53 2018-11-02 11:22:53
+## 10:                   withCallingHandlers 2018-11-02 11:22:53
+## 11:                               saveRDS 2018-11-02 11:22:53
+## 12:                               do.call 2018-11-02 11:22:53
+## 13:                          process_file 2018-11-02 11:22:53
+## 14:                         process_group 2018-11-02 11:22:53
+## 15:                   process_group.block 2018-11-02 11:22:53
+## 16:                            call_block 2018-11-02 11:22:53
+## 17:                            block_exec 2018-11-02 11:22:53
+## 18:                                in_dir 2018-11-02 11:22:53
+## 19:                             timing_fn 2018-11-02 11:22:53
+## 20:                                handle 2018-11-02 11:22:53
+## 21:                           withVisible 2018-11-02 11:22:53
+## 22:    n:bfc3454880d65ea9fc34069951dbbc35 2018-11-02 11:22:53
+## 23: .FUN:ccd653e1f8453c8e3dcd49c99f824ed9 2018-11-02 11:22:53
+## 24:                                   rda 2018-11-02 11:22:52
+## 25:      cf39fa73ee87cd6d740c08c7a950e74c 2018-11-02 11:22:52
+## 26:                               numeric 2018-11-02 11:22:52
+## 27:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 28:      696a8c27b0af4d8124a69d16123c2a9b 2018-11-02 11:22:52
+## 29:                              innerTag 2018-11-02 11:22:52
+## 30:                              outerTag 2018-11-02 11:22:52
+## 31:                                 rnorm 2018-11-02 11:22:52
+## 32:                                  1024 2018-11-02 11:22:52
+## 33:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 34:                   withCallingHandlers 2018-11-02 11:22:52
+## 35:                               saveRDS 2018-11-02 11:22:52
+## 36:                               do.call 2018-11-02 11:22:52
+## 37:                          process_file 2018-11-02 11:22:52
+## 38:                         process_group 2018-11-02 11:22:52
+## 39:                   process_group.block 2018-11-02 11:22:52
+## 40:                            call_block 2018-11-02 11:22:52
+## 41:                            block_exec 2018-11-02 11:22:52
+## 42:                                in_dir 2018-11-02 11:22:52
+## 43:                             timing_fn 2018-11-02 11:22:52
+## 44:                                handle 2018-11-02 11:22:52
+## 45:                           withVisible 2018-11-02 11:22:52
+## 46:    n:70822253d659facdcbfdb8a038cce013 2018-11-02 11:22:52
+## 47: mean:e48ada84553a52f78ea2567bd2bc806a 2018-11-02 11:22:52
+## 48: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:52
+## 49:                                   rda 2018-11-02 11:22:52
+## 50:      d1ff54d6dcde0525dc7428be35caa979 2018-11-02 11:22:52
+## 51:                               numeric 2018-11-02 11:22:52
+## 52:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 53:      21818a9ce14c5526152af5f6bd649f1c 2018-11-02 11:22:52
+## 54:                              outerTag 2018-11-02 11:22:52
+## 55:                                 inner 2018-11-02 11:22:52
+## 56:                                  1024 2018-11-02 11:22:52
+## 57:                   2018-11-02 11:22:52 2018-11-02 11:22:52
+## 58:                   withCallingHandlers 2018-11-02 11:22:52
+## 59:                               saveRDS 2018-11-02 11:22:52
+## 60:                               do.call 2018-11-02 11:22:52
+## 61:                          process_file 2018-11-02 11:22:52
+## 62:                         process_group 2018-11-02 11:22:52
+## 63:                   process_group.block 2018-11-02 11:22:52
+## 64:                            call_block 2018-11-02 11:22:52
+## 65:                            block_exec 2018-11-02 11:22:52
+## 66:                                in_dir 2018-11-02 11:22:52
+## 67:                             timing_fn 2018-11-02 11:22:52
+## 68:                                handle 2018-11-02 11:22:52
+## 69:                           withVisible 2018-11-02 11:22:52
+## 70: mean:e48ada84553a52f78ea2567bd2bc806a 2018-11-02 11:22:53
+## 71: .FUN:7371e13cb8e6f554d8e048c938825ead 2018-11-02 11:22:53
 ##                                  tagValue         createdDate</code></pre>
 </div>
 <div id="cacheid" class="section level2">
