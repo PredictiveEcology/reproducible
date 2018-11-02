@@ -75,7 +75,7 @@ have no actual file with data." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.4</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -168,8 +168,8 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 <span class='fu'>lapply</span>(<span class='fu'>c</span>(<span class='no'>runif</span>, <span class='no'>rnorm</span>), <span class='kw'>function</span>(<span class='no'>f</span>) {
   <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/cache.html'>Cache</a></span>(<span class='no'>f</span>, <span class='fl'>10</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 })</div><div class='output co'>#&gt; [[1]]
-#&gt;  [1] 0.926860752 0.081588733 0.049136837 0.345142181 0.002873588 0.678100822
-#&gt;  [7] 0.604252266 0.119109327 0.847217313 0.917870620
+#&gt;  [1] 0.859625102 0.757621128 0.926860752 0.081588733 0.049136837 0.345142181
+#&gt;  [7] 0.002873588 0.678100822 0.604252266 0.119109327
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:c544d867e89c93fb20f0fccb922cc028"
 #&gt; attr(,".Cache")
@@ -180,8 +180,8 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; [1] ""
 #&gt; 
 #&gt; [[2]]
-#&gt;  [1] -0.65918555 -0.38630438 -0.24249895  0.22059324 -1.48109003  0.72469120
-#&gt;  [7] -2.37751470 -0.06540921 -0.46970481 -0.28051629
+#&gt;  [1]  1.02457159 -0.65918555 -0.38630438 -0.24249895  0.22059324 -1.48109003
+#&gt;  [7]  0.72469120 -2.37751470 -0.06540921 -0.46970481
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:03dcbe8e18b571c397bbc2e72230d216"
 #&gt; attr(,".Cache")
@@ -193,259 +193,259 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; </div><div class='input'>
 <span class='co'># clear out any stub artifacts</span>
 <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 560 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 560 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 0775377bdf0e2f316b7c3587fe05f4bc         format
-#&gt;  2: 0775377bdf0e2f316b7c3587fe05f4bc           name
-#&gt;  3: 0775377bdf0e2f316b7c3587fe05f4bc          class
-#&gt;  4: 0775377bdf0e2f316b7c3587fe05f4bc           date
-#&gt;  5: 0775377bdf0e2f316b7c3587fe05f4bc        cacheId
-#&gt;  6: 0775377bdf0e2f316b7c3587fe05f4bc       function
-#&gt;  7: 0775377bdf0e2f316b7c3587fe05f4bc    object.size
-#&gt;  8: 0775377bdf0e2f316b7c3587fe05f4bc       accessed
-#&gt;  9: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 10: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 11: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 12: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 13: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 14: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 15: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 16: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 17: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 18: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 19: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 20: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 21: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 22: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 23: 0775377bdf0e2f316b7c3587fe05f4bc      preDigest
-#&gt; 24: 0775377bdf0e2f316b7c3587fe05f4bc      preDigest
-#&gt; 25: 5bfc07af9f3dbb0b111e043425c3bfaf         format
-#&gt; 26: 5bfc07af9f3dbb0b111e043425c3bfaf           name
-#&gt; 27: 5bfc07af9f3dbb0b111e043425c3bfaf          class
-#&gt; 28: 5bfc07af9f3dbb0b111e043425c3bfaf           date
-#&gt; 29: 5bfc07af9f3dbb0b111e043425c3bfaf        cacheId
-#&gt; 30: 5bfc07af9f3dbb0b111e043425c3bfaf       function
-#&gt; 31: 5bfc07af9f3dbb0b111e043425c3bfaf    object.size
-#&gt; 32: 5bfc07af9f3dbb0b111e043425c3bfaf       accessed
-#&gt; 33: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 34: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 35: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 36: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 37: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 38: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 39: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 40: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 41: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 42: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 43: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 44: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 45: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 46: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 47: 5bfc07af9f3dbb0b111e043425c3bfaf      preDigest
-#&gt; 48: 5bfc07af9f3dbb0b111e043425c3bfaf      preDigest
+#&gt;  1: 3553a073a928c7c1737d6e5475d8b0f1         format
+#&gt;  2: 3553a073a928c7c1737d6e5475d8b0f1           name
+#&gt;  3: 3553a073a928c7c1737d6e5475d8b0f1          class
+#&gt;  4: 3553a073a928c7c1737d6e5475d8b0f1           date
+#&gt;  5: 3553a073a928c7c1737d6e5475d8b0f1        cacheId
+#&gt;  6: 3553a073a928c7c1737d6e5475d8b0f1       function
+#&gt;  7: 3553a073a928c7c1737d6e5475d8b0f1    object.size
+#&gt;  8: 3553a073a928c7c1737d6e5475d8b0f1       accessed
+#&gt;  9: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 10: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 11: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 12: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 13: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 14: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 15: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 16: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 17: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 18: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 19: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 20: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 21: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 22: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 23: 3553a073a928c7c1737d6e5475d8b0f1      preDigest
+#&gt; 24: 3553a073a928c7c1737d6e5475d8b0f1      preDigest
+#&gt; 25: 95a41085c0a8dbfc008cc40afec6c50f         format
+#&gt; 26: 95a41085c0a8dbfc008cc40afec6c50f           name
+#&gt; 27: 95a41085c0a8dbfc008cc40afec6c50f          class
+#&gt; 28: 95a41085c0a8dbfc008cc40afec6c50f           date
+#&gt; 29: 95a41085c0a8dbfc008cc40afec6c50f        cacheId
+#&gt; 30: 95a41085c0a8dbfc008cc40afec6c50f       function
+#&gt; 31: 95a41085c0a8dbfc008cc40afec6c50f    object.size
+#&gt; 32: 95a41085c0a8dbfc008cc40afec6c50f       accessed
+#&gt; 33: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 34: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 35: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 36: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 37: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 38: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 39: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 40: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 41: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 42: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 43: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 44: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 45: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 46: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 47: 95a41085c0a8dbfc008cc40afec6c50f      preDigest
+#&gt; 48: 95a41085c0a8dbfc008cc40afec6c50f      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-10-10 15:27:22
-#&gt;  2:      0775377bdf0e2f316b7c3587fe05f4bc 2018-10-10 15:27:22
-#&gt;  3:                               numeric 2018-10-10 15:27:22
-#&gt;  4:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt;  5:      c544d867e89c93fb20f0fccb922cc028 2018-10-10 15:27:22
-#&gt;  6:                                     f 2018-10-10 15:27:22
-#&gt;  7:                                  1120 2018-10-10 15:27:22
-#&gt;  8:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt;  9:                   withCallingHandlers 2018-10-10 15:27:22
-#&gt; 10:                               saveRDS 2018-10-10 15:27:22
-#&gt; 11:                               do.call 2018-10-10 15:27:22
-#&gt; 12:                      build_site_local 2018-10-10 15:27:22
-#&gt; 13:                       build_reference 2018-10-10 15:27:22
-#&gt; 14:                  data_reference_topic 2018-10-10 15:27:22
-#&gt; 15:                               as_data 2018-10-10 15:27:22
-#&gt; 16:                  as_data.tag_examples 2018-10-10 15:27:22
-#&gt; 17:                             timing_fn 2018-10-10 15:27:22
-#&gt; 18:                                handle 2018-10-10 15:27:22
-#&gt; 19:                                   try 2018-10-10 15:27:22
-#&gt; 20:                           withVisible 2018-10-10 15:27:22
-#&gt; 21:                                lapply 2018-10-10 15:27:22
-#&gt; 22:                                   FUN 2018-10-10 15:27:22
-#&gt; 23:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-10-10 15:27:22
-#&gt; 24: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-10-10 15:27:22
-#&gt; 25:                                   rda 2018-10-10 15:27:22
-#&gt; 26:      5bfc07af9f3dbb0b111e043425c3bfaf 2018-10-10 15:27:22
-#&gt; 27:                               numeric 2018-10-10 15:27:22
-#&gt; 28:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt; 29:      03dcbe8e18b571c397bbc2e72230d216 2018-10-10 15:27:22
-#&gt; 30:                                     f 2018-10-10 15:27:22
-#&gt; 31:                                  1120 2018-10-10 15:27:22
-#&gt; 32:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt; 33:                   withCallingHandlers 2018-10-10 15:27:22
-#&gt; 34:                               saveRDS 2018-10-10 15:27:22
-#&gt; 35:                               do.call 2018-10-10 15:27:22
-#&gt; 36:                      build_site_local 2018-10-10 15:27:22
-#&gt; 37:                       build_reference 2018-10-10 15:27:22
-#&gt; 38:                  data_reference_topic 2018-10-10 15:27:22
-#&gt; 39:                               as_data 2018-10-10 15:27:22
-#&gt; 40:                  as_data.tag_examples 2018-10-10 15:27:22
-#&gt; 41:                             timing_fn 2018-10-10 15:27:22
-#&gt; 42:                                handle 2018-10-10 15:27:22
-#&gt; 43:                                   try 2018-10-10 15:27:22
-#&gt; 44:                           withVisible 2018-10-10 15:27:22
-#&gt; 45:                                lapply 2018-10-10 15:27:22
-#&gt; 46:                                   FUN 2018-10-10 15:27:22
-#&gt; 47:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-10-10 15:27:22
-#&gt; 48: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-10-10 15:27:22
+#&gt;  1:                                   rda 2018-11-02 11:22:14
+#&gt;  2:      3553a073a928c7c1737d6e5475d8b0f1 2018-11-02 11:22:14
+#&gt;  3:                               numeric 2018-11-02 11:22:14
+#&gt;  4:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt;  5:      c544d867e89c93fb20f0fccb922cc028 2018-11-02 11:22:14
+#&gt;  6:                                     f 2018-11-02 11:22:14
+#&gt;  7:                                  1120 2018-11-02 11:22:14
+#&gt;  8:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt;  9:                   withCallingHandlers 2018-11-02 11:22:14
+#&gt; 10:                               saveRDS 2018-11-02 11:22:14
+#&gt; 11:                               do.call 2018-11-02 11:22:14
+#&gt; 12:                      build_site_local 2018-11-02 11:22:14
+#&gt; 13:                       build_reference 2018-11-02 11:22:14
+#&gt; 14:                  data_reference_topic 2018-11-02 11:22:14
+#&gt; 15:                               as_data 2018-11-02 11:22:14
+#&gt; 16:                  as_data.tag_examples 2018-11-02 11:22:14
+#&gt; 17:                             timing_fn 2018-11-02 11:22:14
+#&gt; 18:                                handle 2018-11-02 11:22:14
+#&gt; 19:                                   try 2018-11-02 11:22:14
+#&gt; 20:                           withVisible 2018-11-02 11:22:14
+#&gt; 21:                                lapply 2018-11-02 11:22:14
+#&gt; 22:                                   FUN 2018-11-02 11:22:14
+#&gt; 23:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:22:14
+#&gt; 24: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:22:14
+#&gt; 25:                                   rda 2018-11-02 11:22:14
+#&gt; 26:      95a41085c0a8dbfc008cc40afec6c50f 2018-11-02 11:22:14
+#&gt; 27:                               numeric 2018-11-02 11:22:14
+#&gt; 28:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt; 29:      03dcbe8e18b571c397bbc2e72230d216 2018-11-02 11:22:14
+#&gt; 30:                                     f 2018-11-02 11:22:14
+#&gt; 31:                                  1120 2018-11-02 11:22:14
+#&gt; 32:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt; 33:                   withCallingHandlers 2018-11-02 11:22:14
+#&gt; 34:                               saveRDS 2018-11-02 11:22:14
+#&gt; 35:                               do.call 2018-11-02 11:22:14
+#&gt; 36:                      build_site_local 2018-11-02 11:22:14
+#&gt; 37:                       build_reference 2018-11-02 11:22:14
+#&gt; 38:                  data_reference_topic 2018-11-02 11:22:14
+#&gt; 39:                               as_data 2018-11-02 11:22:14
+#&gt; 40:                  as_data.tag_examples 2018-11-02 11:22:14
+#&gt; 41:                             timing_fn 2018-11-02 11:22:14
+#&gt; 42:                                handle 2018-11-02 11:22:14
+#&gt; 43:                                   try 2018-11-02 11:22:14
+#&gt; 44:                           withVisible 2018-11-02 11:22:14
+#&gt; 45:                                lapply 2018-11-02 11:22:14
+#&gt; 46:                                   FUN 2018-11-02 11:22:14
+#&gt; 47:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:22:14
+#&gt; 48: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:14
 #&gt;                                  tagValue         createdDate</div><div class='input'>
 <span class='no'>file2Remove</span> <span class='kw'>&lt;-</span> <span class='fu'>dir</span>(<span class='fu'>file.path</span>(<span class='no'>tmpDir</span>, <span class='st'>"gallery"</span>), <span class='kw'>full.name</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>]
 <span class='fu'>file.remove</span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 560 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 560 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 0775377bdf0e2f316b7c3587fe05f4bc         format
-#&gt;  2: 0775377bdf0e2f316b7c3587fe05f4bc           name
-#&gt;  3: 0775377bdf0e2f316b7c3587fe05f4bc          class
-#&gt;  4: 0775377bdf0e2f316b7c3587fe05f4bc           date
-#&gt;  5: 0775377bdf0e2f316b7c3587fe05f4bc        cacheId
-#&gt;  6: 0775377bdf0e2f316b7c3587fe05f4bc       function
-#&gt;  7: 0775377bdf0e2f316b7c3587fe05f4bc    object.size
-#&gt;  8: 0775377bdf0e2f316b7c3587fe05f4bc       accessed
-#&gt;  9: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 10: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 11: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 12: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 13: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 14: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 15: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 16: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 17: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 18: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 19: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 20: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 21: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 22: 0775377bdf0e2f316b7c3587fe05f4bc otherFunctions
-#&gt; 23: 0775377bdf0e2f316b7c3587fe05f4bc      preDigest
-#&gt; 24: 0775377bdf0e2f316b7c3587fe05f4bc      preDigest
-#&gt; 25: 5bfc07af9f3dbb0b111e043425c3bfaf         format
-#&gt; 26: 5bfc07af9f3dbb0b111e043425c3bfaf           name
-#&gt; 27: 5bfc07af9f3dbb0b111e043425c3bfaf          class
-#&gt; 28: 5bfc07af9f3dbb0b111e043425c3bfaf           date
-#&gt; 29: 5bfc07af9f3dbb0b111e043425c3bfaf        cacheId
-#&gt; 30: 5bfc07af9f3dbb0b111e043425c3bfaf       function
-#&gt; 31: 5bfc07af9f3dbb0b111e043425c3bfaf    object.size
-#&gt; 32: 5bfc07af9f3dbb0b111e043425c3bfaf       accessed
-#&gt; 33: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 34: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 35: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 36: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 37: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 38: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 39: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 40: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 41: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 42: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 43: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 44: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 45: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 46: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 47: 5bfc07af9f3dbb0b111e043425c3bfaf      preDigest
-#&gt; 48: 5bfc07af9f3dbb0b111e043425c3bfaf      preDigest
+#&gt;  1: 3553a073a928c7c1737d6e5475d8b0f1         format
+#&gt;  2: 3553a073a928c7c1737d6e5475d8b0f1           name
+#&gt;  3: 3553a073a928c7c1737d6e5475d8b0f1          class
+#&gt;  4: 3553a073a928c7c1737d6e5475d8b0f1           date
+#&gt;  5: 3553a073a928c7c1737d6e5475d8b0f1        cacheId
+#&gt;  6: 3553a073a928c7c1737d6e5475d8b0f1       function
+#&gt;  7: 3553a073a928c7c1737d6e5475d8b0f1    object.size
+#&gt;  8: 3553a073a928c7c1737d6e5475d8b0f1       accessed
+#&gt;  9: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 10: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 11: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 12: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 13: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 14: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 15: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 16: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 17: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 18: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 19: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 20: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 21: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 22: 3553a073a928c7c1737d6e5475d8b0f1 otherFunctions
+#&gt; 23: 3553a073a928c7c1737d6e5475d8b0f1      preDigest
+#&gt; 24: 3553a073a928c7c1737d6e5475d8b0f1      preDigest
+#&gt; 25: 95a41085c0a8dbfc008cc40afec6c50f         format
+#&gt; 26: 95a41085c0a8dbfc008cc40afec6c50f           name
+#&gt; 27: 95a41085c0a8dbfc008cc40afec6c50f          class
+#&gt; 28: 95a41085c0a8dbfc008cc40afec6c50f           date
+#&gt; 29: 95a41085c0a8dbfc008cc40afec6c50f        cacheId
+#&gt; 30: 95a41085c0a8dbfc008cc40afec6c50f       function
+#&gt; 31: 95a41085c0a8dbfc008cc40afec6c50f    object.size
+#&gt; 32: 95a41085c0a8dbfc008cc40afec6c50f       accessed
+#&gt; 33: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 34: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 35: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 36: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 37: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 38: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 39: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 40: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 41: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 42: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 43: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 44: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 45: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 46: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 47: 95a41085c0a8dbfc008cc40afec6c50f      preDigest
+#&gt; 48: 95a41085c0a8dbfc008cc40afec6c50f      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-10-10 15:27:22
-#&gt;  2:      0775377bdf0e2f316b7c3587fe05f4bc 2018-10-10 15:27:22
-#&gt;  3:                               numeric 2018-10-10 15:27:22
-#&gt;  4:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt;  5:      c544d867e89c93fb20f0fccb922cc028 2018-10-10 15:27:22
-#&gt;  6:                                     f 2018-10-10 15:27:22
-#&gt;  7:                                  1120 2018-10-10 15:27:22
-#&gt;  8:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt;  9:                   withCallingHandlers 2018-10-10 15:27:22
-#&gt; 10:                               saveRDS 2018-10-10 15:27:22
-#&gt; 11:                               do.call 2018-10-10 15:27:22
-#&gt; 12:                      build_site_local 2018-10-10 15:27:22
-#&gt; 13:                       build_reference 2018-10-10 15:27:22
-#&gt; 14:                  data_reference_topic 2018-10-10 15:27:22
-#&gt; 15:                               as_data 2018-10-10 15:27:22
-#&gt; 16:                  as_data.tag_examples 2018-10-10 15:27:22
-#&gt; 17:                             timing_fn 2018-10-10 15:27:22
-#&gt; 18:                                handle 2018-10-10 15:27:22
-#&gt; 19:                                   try 2018-10-10 15:27:22
-#&gt; 20:                           withVisible 2018-10-10 15:27:22
-#&gt; 21:                                lapply 2018-10-10 15:27:22
-#&gt; 22:                                   FUN 2018-10-10 15:27:22
-#&gt; 23:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-10-10 15:27:22
-#&gt; 24: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-10-10 15:27:22
-#&gt; 25:                                   rda 2018-10-10 15:27:22
-#&gt; 26:      5bfc07af9f3dbb0b111e043425c3bfaf 2018-10-10 15:27:22
-#&gt; 27:                               numeric 2018-10-10 15:27:22
-#&gt; 28:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt; 29:      03dcbe8e18b571c397bbc2e72230d216 2018-10-10 15:27:22
-#&gt; 30:                                     f 2018-10-10 15:27:22
-#&gt; 31:                                  1120 2018-10-10 15:27:22
-#&gt; 32:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt; 33:                   withCallingHandlers 2018-10-10 15:27:22
-#&gt; 34:                               saveRDS 2018-10-10 15:27:22
-#&gt; 35:                               do.call 2018-10-10 15:27:22
-#&gt; 36:                      build_site_local 2018-10-10 15:27:22
-#&gt; 37:                       build_reference 2018-10-10 15:27:22
-#&gt; 38:                  data_reference_topic 2018-10-10 15:27:22
-#&gt; 39:                               as_data 2018-10-10 15:27:22
-#&gt; 40:                  as_data.tag_examples 2018-10-10 15:27:22
-#&gt; 41:                             timing_fn 2018-10-10 15:27:22
-#&gt; 42:                                handle 2018-10-10 15:27:22
-#&gt; 43:                                   try 2018-10-10 15:27:22
-#&gt; 44:                           withVisible 2018-10-10 15:27:22
-#&gt; 45:                                lapply 2018-10-10 15:27:22
-#&gt; 46:                                   FUN 2018-10-10 15:27:22
-#&gt; 47:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-10-10 15:27:22
-#&gt; 48: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-10-10 15:27:22
+#&gt;  1:                                   rda 2018-11-02 11:22:14
+#&gt;  2:      3553a073a928c7c1737d6e5475d8b0f1 2018-11-02 11:22:14
+#&gt;  3:                               numeric 2018-11-02 11:22:14
+#&gt;  4:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt;  5:      c544d867e89c93fb20f0fccb922cc028 2018-11-02 11:22:14
+#&gt;  6:                                     f 2018-11-02 11:22:14
+#&gt;  7:                                  1120 2018-11-02 11:22:14
+#&gt;  8:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt;  9:                   withCallingHandlers 2018-11-02 11:22:14
+#&gt; 10:                               saveRDS 2018-11-02 11:22:14
+#&gt; 11:                               do.call 2018-11-02 11:22:14
+#&gt; 12:                      build_site_local 2018-11-02 11:22:14
+#&gt; 13:                       build_reference 2018-11-02 11:22:14
+#&gt; 14:                  data_reference_topic 2018-11-02 11:22:14
+#&gt; 15:                               as_data 2018-11-02 11:22:14
+#&gt; 16:                  as_data.tag_examples 2018-11-02 11:22:14
+#&gt; 17:                             timing_fn 2018-11-02 11:22:14
+#&gt; 18:                                handle 2018-11-02 11:22:14
+#&gt; 19:                                   try 2018-11-02 11:22:14
+#&gt; 20:                           withVisible 2018-11-02 11:22:14
+#&gt; 21:                                lapply 2018-11-02 11:22:14
+#&gt; 22:                                   FUN 2018-11-02 11:22:14
+#&gt; 23:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:22:14
+#&gt; 24: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-02 11:22:14
+#&gt; 25:                                   rda 2018-11-02 11:22:14
+#&gt; 26:      95a41085c0a8dbfc008cc40afec6c50f 2018-11-02 11:22:14
+#&gt; 27:                               numeric 2018-11-02 11:22:14
+#&gt; 28:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt; 29:      03dcbe8e18b571c397bbc2e72230d216 2018-11-02 11:22:14
+#&gt; 30:                                     f 2018-11-02 11:22:14
+#&gt; 31:                                  1120 2018-11-02 11:22:14
+#&gt; 32:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt; 33:                   withCallingHandlers 2018-11-02 11:22:14
+#&gt; 34:                               saveRDS 2018-11-02 11:22:14
+#&gt; 35:                               do.call 2018-11-02 11:22:14
+#&gt; 36:                      build_site_local 2018-11-02 11:22:14
+#&gt; 37:                       build_reference 2018-11-02 11:22:14
+#&gt; 38:                  data_reference_topic 2018-11-02 11:22:14
+#&gt; 39:                               as_data 2018-11-02 11:22:14
+#&gt; 40:                  as_data.tag_examples 2018-11-02 11:22:14
+#&gt; 41:                             timing_fn 2018-11-02 11:22:14
+#&gt; 42:                                handle 2018-11-02 11:22:14
+#&gt; 43:                                   try 2018-11-02 11:22:14
+#&gt; 44:                           withVisible 2018-11-02 11:22:14
+#&gt; 45:                                lapply 2018-11-02 11:22:14
+#&gt; 46:                                   FUN 2018-11-02 11:22:14
+#&gt; 47:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:22:14
+#&gt; 48: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:14
 #&gt;                                  tagValue         createdDate</div><div class='input'>
 <span class='co'># run clearStubArtifacts</span>
 <span class='fu'>suppressWarnings</span>(<span class='fu'>clearStubArtifacts</span>(<span class='no'>tmpDir</span>))
 <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># stubs are removed</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 280 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 280 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 5bfc07af9f3dbb0b111e043425c3bfaf         format
-#&gt;  2: 5bfc07af9f3dbb0b111e043425c3bfaf           name
-#&gt;  3: 5bfc07af9f3dbb0b111e043425c3bfaf          class
-#&gt;  4: 5bfc07af9f3dbb0b111e043425c3bfaf           date
-#&gt;  5: 5bfc07af9f3dbb0b111e043425c3bfaf        cacheId
-#&gt;  6: 5bfc07af9f3dbb0b111e043425c3bfaf       function
-#&gt;  7: 5bfc07af9f3dbb0b111e043425c3bfaf    object.size
-#&gt;  8: 5bfc07af9f3dbb0b111e043425c3bfaf       accessed
-#&gt;  9: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 10: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 11: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 12: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 13: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 14: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 15: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 16: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 17: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 18: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 19: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 20: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 21: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 22: 5bfc07af9f3dbb0b111e043425c3bfaf otherFunctions
-#&gt; 23: 5bfc07af9f3dbb0b111e043425c3bfaf      preDigest
-#&gt; 24: 5bfc07af9f3dbb0b111e043425c3bfaf      preDigest
+#&gt;  1: 95a41085c0a8dbfc008cc40afec6c50f         format
+#&gt;  2: 95a41085c0a8dbfc008cc40afec6c50f           name
+#&gt;  3: 95a41085c0a8dbfc008cc40afec6c50f          class
+#&gt;  4: 95a41085c0a8dbfc008cc40afec6c50f           date
+#&gt;  5: 95a41085c0a8dbfc008cc40afec6c50f        cacheId
+#&gt;  6: 95a41085c0a8dbfc008cc40afec6c50f       function
+#&gt;  7: 95a41085c0a8dbfc008cc40afec6c50f    object.size
+#&gt;  8: 95a41085c0a8dbfc008cc40afec6c50f       accessed
+#&gt;  9: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 10: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 11: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 12: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 13: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 14: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 15: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 16: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 17: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 18: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 19: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 20: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 21: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 22: 95a41085c0a8dbfc008cc40afec6c50f otherFunctions
+#&gt; 23: 95a41085c0a8dbfc008cc40afec6c50f      preDigest
+#&gt; 24: 95a41085c0a8dbfc008cc40afec6c50f      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-10-10 15:27:22
-#&gt;  2:      5bfc07af9f3dbb0b111e043425c3bfaf 2018-10-10 15:27:22
-#&gt;  3:                               numeric 2018-10-10 15:27:22
-#&gt;  4:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt;  5:      03dcbe8e18b571c397bbc2e72230d216 2018-10-10 15:27:22
-#&gt;  6:                                     f 2018-10-10 15:27:22
-#&gt;  7:                                  1120 2018-10-10 15:27:22
-#&gt;  8:                   2018-10-10 15:27:22 2018-10-10 15:27:22
-#&gt;  9:                   withCallingHandlers 2018-10-10 15:27:22
-#&gt; 10:                               saveRDS 2018-10-10 15:27:22
-#&gt; 11:                               do.call 2018-10-10 15:27:22
-#&gt; 12:                      build_site_local 2018-10-10 15:27:22
-#&gt; 13:                       build_reference 2018-10-10 15:27:22
-#&gt; 14:                  data_reference_topic 2018-10-10 15:27:22
-#&gt; 15:                               as_data 2018-10-10 15:27:22
-#&gt; 16:                  as_data.tag_examples 2018-10-10 15:27:22
-#&gt; 17:                             timing_fn 2018-10-10 15:27:22
-#&gt; 18:                                handle 2018-10-10 15:27:22
-#&gt; 19:                                   try 2018-10-10 15:27:22
-#&gt; 20:                           withVisible 2018-10-10 15:27:22
-#&gt; 21:                                lapply 2018-10-10 15:27:22
-#&gt; 22:                                   FUN 2018-10-10 15:27:22
-#&gt; 23:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-10-10 15:27:22
-#&gt; 24: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-10-10 15:27:22
+#&gt;  1:                                   rda 2018-11-02 11:22:14
+#&gt;  2:      95a41085c0a8dbfc008cc40afec6c50f 2018-11-02 11:22:14
+#&gt;  3:                               numeric 2018-11-02 11:22:14
+#&gt;  4:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt;  5:      03dcbe8e18b571c397bbc2e72230d216 2018-11-02 11:22:14
+#&gt;  6:                                     f 2018-11-02 11:22:14
+#&gt;  7:                                  1120 2018-11-02 11:22:14
+#&gt;  8:                   2018-11-02 11:22:14 2018-11-02 11:22:14
+#&gt;  9:                   withCallingHandlers 2018-11-02 11:22:14
+#&gt; 10:                               saveRDS 2018-11-02 11:22:14
+#&gt; 11:                               do.call 2018-11-02 11:22:14
+#&gt; 12:                      build_site_local 2018-11-02 11:22:14
+#&gt; 13:                       build_reference 2018-11-02 11:22:14
+#&gt; 14:                  data_reference_topic 2018-11-02 11:22:14
+#&gt; 15:                               as_data 2018-11-02 11:22:14
+#&gt; 16:                  as_data.tag_examples 2018-11-02 11:22:14
+#&gt; 17:                             timing_fn 2018-11-02 11:22:14
+#&gt; 18:                                handle 2018-11-02 11:22:14
+#&gt; 19:                                   try 2018-11-02 11:22:14
+#&gt; 20:                           withVisible 2018-11-02 11:22:14
+#&gt; 21:                                lapply 2018-11-02 11:22:14
+#&gt; 22:                                   FUN 2018-11-02 11:22:14
+#&gt; 23:    n:c192d58bc0a9ddf2b5f916d929bccc08 2018-11-02 11:22:14
+#&gt; 24: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-02 11:22:14
 #&gt;                                  tagValue         createdDate</div><div class='input'>
 <span class='co'># cleanup</span>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>)
