@@ -455,11 +455,15 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       if (canProcessInMemory(x, 4)) {
         tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
 
-        out <- assessDataType(x) #not foolproof method of determining reclass method
-        if (out == "FLT4S") {
-          sampMethod <- "bilinear"
+        if (is.null(dots$method)) {
+          rType <- assessDataType(x) #not foolproof method of determining reclass method
+          if (rType %in% c("FLT4S", "FLT8S")) {
+            sampMethod <- "bilinear"
+          } else {
+            sampMethod <- "ngb"
+          }
         } else {
-          sampMethod <- "ngb"
+          sampMethod <- dots$method
         }
 
         warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, method = sampMethod, ...))
@@ -528,11 +532,20 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
     if (!is.null(targetCRS)) {
       if (!identical(crs(x), targetCRS)) {
         message("    reprojecting ...")
-        if (assessDataType(x) %in% c("FLT4S", "FLT8S")) {
-          x <- projectRaster(from = x, crs = targetCRS, ...)
-        } else {
-          x <- projectRaster(from = x, crs = targetCRS, method = "ngb", ...)
+
+        if (is.null(dots$method)){
+          rType <- assessDataType(x) #not foolproof method of determining reclass method
+            if (rType %in% c("FLT4S", "FLT8S")) {
+              sampMethod <- "bilinear"
+            } else {
+              sampMethod <- "ngb"
+            }
+        }else{
+          sampMethod <- dots$method
         }
+
+        x <- projectRaster(from = x, crs = targetCRS, method = sampMethod, ...)
+
       } else {
         message("    no reprojecting because target CRS is same as input CRS.")
       }
