@@ -35,13 +35,9 @@ This is an enhancement release. Several new functions and new options.
 
 There were no ERRORs nor WARNINGs.
 
-There were 2 NOTEs:
+There were 1 NOTEs:
 
-1. As requested by CRAN, we have fixed problems enconutered during the Windows build process last week.
-
-    Days since last update: 6
-
-2. spell-check reports false positives: 
+1. spell-check reports false positives: 
 
     Possibly mis-spelled words in DESCRIPTION:
       Reproducibility (3:36)

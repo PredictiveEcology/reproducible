@@ -68,7 +68,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.4</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -123,13 +123,12 @@
       <small>Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="version-0-2-4" class="section level1">
+    <div id="version-0-2-5" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-4" class="anchor"></a>version 0.2.4<small> Unreleased </small>
+<a href="#version-0-2-5" class="anchor"></a>version 0.2.5<small> Unreleased </small>
 </h1>
 <ul>
-<li>Work around internally inside <code>extractFromArchive</code> for large (&gt;2GB) zip files. In the <code>R</code> help manual, <code>unzip</code> fails for zip files &gt;2GB. This uses a system call if the Zip file is too large and fails using <code>base::unzip</code>
-</li>
+<li>Work around internally inside <code>extractFromArchive</code> for large (&gt;2GB) zip files. In the <code>R</code> help manual, <code>unzip</code> fails for zip files &gt;2GB. This uses a system call if the Zip file is too large and fails using <code>base::unzip</code>.</li>
 <li>Work around for <code><a href="http://www.rdocumentation.org/packages/raster/topics/getData">raster::getData</a></code>
 </li>
 <li>New value possible for <code>options(reproducible.useCache = 'overwrite')</code>, which allows use of <code>Cache</code> in cases where the function call has an entry in the <code>cacheRepo</code>, will purge it and add the output of the current call instead.</li>
@@ -137,12 +136,19 @@
 <li>deal with new <code>raster</code> package changes in development version of <code>raster</code> package</li>
 <li>
 <code>glDownload</code> now sets <code>options(httr_oob_default = TRUE)</code> if using Rstudio Server</li>
-<li>speed up of Cache when deeply nested, due to <code>grep(sys.calls(), ...)</code> that would take long and hang</li>
+<li>speed up of <code><a href="../reference/cache.html">Cache()</a></code> when deeply nested, due to <code>grep(sys.calls(), ...)</code> that would take long and hang.</li>
 <li>files in <code>CHECKSUMS</code> now sorted alphabetically</li>
 <li>
 <code>Checksums</code> can now have a <code>CHECKSUMS.txt</code> file located in a different place than the <code>destinationPath</code>
 </li>
 <li>added checks for float point number issues in raster resolutions produced by <code><a href="http://www.rdocumentation.org/packages/raster/topics/projectRaster">raster::projectRaster</a></code>
+</li>
+<li>
+<code>.robustDigest</code> now does not include <code>Cache</code>-added attributes</li>
+<li>improved memory performance of <code>clearCache</code> (<a href='https://github.com/PredictiveEcology/reproducible/issues/67'>#67</a>)</li>
+<li>added <code>remotes</code> to Imports and removed <code>devtools</code>
+</li>
+<li>added <code>pbapply</code> to Imports and added progress bar to <code>clearCache</code>
 </li>
 <li>minor bugfixes</li>
 <li>many new unit tests written, which caught several minor bugs</li>
@@ -390,7 +396,7 @@
     <div id="tocnav">
       <h2>Contents</h2>
       <ul class="nav nav-pills nav-stacked">
-        <li><a href="#version-0-2-4">0.2.4</a></li>
+        <li><a href="#version-0-2-5">0.2.5</a></li>
         <li><a href="#version-0-2-3">0.2.3</a></li>
         <li><a href="#version-0-2-2">0.2.2</a></li>
         <li><a href="#version-0-2-1">0.2.1</a></li>

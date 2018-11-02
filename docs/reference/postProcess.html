@@ -76,7 +76,7 @@ between these calls so that the crs match." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.4</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -145,11 +145,18 @@ between these calls so that the crs match.</p>
 
     <pre class="usage"><span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
+<span class='co'># S3 method for default</span>
+<span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
+<span class='co'># S3 method for list</span>
+<span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+
 <span class='co'># S3 method for spatialObjects</span>
 <span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='kw'>filename1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>useSAcrs</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>TRUE</span>),
+  <span class='kw'>useSAcrs</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>,
+  <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -314,7 +321,7 @@ in details below.</p></td>
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous cropInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous projectInputs call.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous maskInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile20c947658c1a. Specify filename1 or filename2 for more control</span></div><div class='input'><span class='co'>#'</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous cropInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous projectInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'>  loading memoised result from previous maskInputs call.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfileb0e2e9dd986. Specify filename1 or filename2 for more control</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
 <span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='fixErrors.html'>fixErrors</a></span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'>
