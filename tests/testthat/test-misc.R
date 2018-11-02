@@ -33,7 +33,7 @@ test_that("test miscellaneous fns", {
   newPaths <- file.path("~/rasters")
   rasters <- convertRasterPaths(rasters, oldPaths, newPaths)
 
-  ## spurious failures non-interactively when not sorting; still failing on Windows
+  ## spurious failures non-interactively when not sorting
   expect_true(identical(
     sort(unlist(lapply(rasters, raster::filename))),
     sort(normPath(file.path(newPaths, basename(unlist(lapply(list(r1, r2), raster::filename))))))
@@ -42,7 +42,6 @@ test_that("test miscellaneous fns", {
   r3 <- writeRaster(r1, tmpfile[1], overwrite = TRUE)
   r4 <- convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)
 
-  ## spurious failures non-interactively when not sorting; still failing on Windows
   expect_true(identical(
     normPath(file.path(newPaths, basename(filename(r4)))),
     normPath(filename(r4))
