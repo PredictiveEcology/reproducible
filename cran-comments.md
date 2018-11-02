@@ -48,7 +48,5 @@ There were 1 NOTEs:
 We have run R CMD check on downstream dependencies, and all have passed except those noted below.
 Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
 
-* `SpaDES` shows a warning due to `DISPLAY` not being set in the headless session.
-
 * `SpaDES.core` throws some ERRORs, which are fixed in the next version (will be submitted shortly).
   Also shows a warning due to `DISPLAY` not being set in the headless session.
