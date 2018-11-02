@@ -467,13 +467,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 .guessAtFile <- function(url, archive, targetFile, destinationPath) {
   guessedFile <- if (!is.null(url)) {
-    if (grepl("drive.google.com", url)) { # likely offline
+    if (grepl("drive.google.com", url)) {
       if (url.exists(url)) {
         assessGoogle(url = url, archive = archive,
                      targetFile = targetFile,
                      destinationPath = destinationPath)
       } else {
-      file.path(destinationPath, basename(url))
+        # likely offline
+        file.path(destinationPath, basename(url))
       }
     } else {
       file.path(destinationPath, basename(url))
