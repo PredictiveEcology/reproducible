@@ -1438,3 +1438,39 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   expect_true(identical(filename(b1), tifTmp))
   expect_true(identical(filename(b1a), gsub(tifTmp, pattern = "tif", replacement = "grd")))
 })
+
+test_that("rasters aren't properly resampled", {
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  a <- raster(extent(0, 20, 0, 20), res = 1, vals = 1:400)
+  b <- raster(extent(0, 20, 0, 20), res = c(2,2), vals = 1:100)
+  crs(a) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(b) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  tiftemp1 <- tempfile(fileext = ".tif")
+  writeRaster(a, filename = tiftemp1)
+
+  tiftemp2 <- tempfile(fileext = ".tif")
+  writeRaster(b, filename = tiftemp2)
+
+  out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
+                    destinationPath = tempdir(), useCache = FALSE)
+  expect_true(dataType(out) == "INT2U")
+
+  out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
+                    destinationPath = tempdir(), method = "bilinear", filename2 = tempfile(fileext = ".tif"))
+  expect_true(dataType(out2) == "FLT4S")
+
+  c <- raster(extent(0, 20, 0, 20), res = 1, vals =runif(400, 0, 1))
+  crs(c) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  tiftemp3 <- tempfile(fileext = ".tif")
+  writeRaster(c, filename = tiftemp3)
+
+  out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
+                     destinationPath = tempdir(), filename2 = tempfile(fileext = ".tif"))
+  expect_true(dataType(out3) == "FLT4S")
+
+})

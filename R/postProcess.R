@@ -458,15 +458,16 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         if (is.null(dots$method)) {
           rType <- assessDataType(x) #not foolproof method of determining reclass method
           if (rType %in% c("FLT4S", "FLT8S")) {
-            sampMethod <- "bilinear"
+            Method <- "bilinear"
           } else {
-            sampMethod <- "ngb"
+            Method <- "ngb"
           }
+          warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, method = Method, ...))
         } else {
-          sampMethod <- dots$method
+            warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
         }
 
-        warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, method = sampMethod, ...))
+
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
         warnings(warn)
         ## projectRaster doesn't always ensure equal res (floating point number issue)
@@ -533,19 +534,17 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       if (!identical(crs(x), targetCRS)) {
         message("    reprojecting ...")
 
-        if (is.null(dots$method)){
+        if (is.null(dots$method)) {
           rType <- assessDataType(x) #not foolproof method of determining reclass method
-            if (rType %in% c("FLT4S", "FLT8S")) {
-              sampMethod <- "bilinear"
-            } else {
-              sampMethod <- "ngb"
-            }
-        }else{
-          sampMethod <- dots$method
+          if (rType %in% c("FLT4S", "FLT8S")) {
+            Method <- "bilinear"
+          } else {
+            Method <- "ngb"
+          }
+          x <- projectRaster(from = x, crs = targetCRS, method = Method, ...)
+        } else {
+          x <- projectRaster(from = x, crs = targetCRS, ...)
         }
-
-        x <- projectRaster(from = x, crs = targetCRS, method = sampMethod, ...)
-
       } else {
         message("    no reprojecting because target CRS is same as input CRS.")
       }
