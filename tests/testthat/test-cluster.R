@@ -4,8 +4,7 @@ test_that("test parallel collisions", {
   checkPath(tmpdir, create = TRUE)
   on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
 
-  if (require(parallel)) {
-
+  if (require(parallel, quietly = TRUE)) {
     # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
     #   which works on Linux, Mac, Windows
     N <- min(2, detectCores())
@@ -33,8 +32,5 @@ test_that("test parallel collisions", {
     expect_false(is(a, "try-error"))
     expect_true(is.list(a))
     expect_true(length(a) == numToRun)
-
   }
-
-
 })

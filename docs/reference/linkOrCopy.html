@@ -73,7 +73,7 @@ If that fails, copy the file." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.4</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -168,9 +168,11 @@ Default <code>FALSE</code>.</p></td>
 <span class='fu'>library</span>(<span class='no'>magrittr</span>)</div><div class='output co'>#&gt; <span class='message'></span>
 #&gt; <span class='message'>Attaching package: ‘magrittr’</span></div><div class='output co'>#&gt; <span class='message'>The following object is masked from ‘package:raster’:</span>
 #&gt; <span class='message'></span>
-#&gt; <span class='message'>    extract</span></div><div class='output co'>#&gt; <span class='message'>The following object is masked from ‘package:reproducible’:</span>
+#&gt; <span class='message'>    extract</span></div><div class='output co'>#&gt; <span class='message'>The following objects are masked from ‘package:reproducible’:</span>
 #&gt; <span class='message'></span>
-#&gt; <span class='message'>    %&gt;%</span></div><div class='input'><span class='fu'>library</span>(<span class='no'>raster</span>)
+#&gt; <span class='message'>    %&gt;%, extract</span></div><div class='output co'>#&gt; <span class='message'>The following objects are masked from ‘package:testthat’:</span>
+#&gt; <span class='message'></span>
+#&gt; <span class='message'>    equals, is_less_than, not</span></div><div class='input'><span class='fu'>library</span>(<span class='no'>raster</span>)
 
 <span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>(), <span class='st'>"symlink-test"</span>) <span class='kw'>%&gt;%</span>
   <span class='fu'>normalizePath</span>(<span class='kw'>winslash</span> <span class='kw'>=</span> <span class='st'>'/'</span>, <span class='kw'>mustWork</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
@@ -188,7 +190,7 @@ Default <code>FALSE</code>.</p></td>
 <span class='no'>f2</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='no'>tmpDir</span>, <span class='st'>"file2.csv"</span>)
 
 <span class='co'>## create link to a file</span>
-<span class='fu'>linkOrCopy</span>(<span class='no'>f0</span>, <span class='no'>f2</span>)</div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/Rtmpyl6sss/symlink-test/file2.csv, which points to /tmp/Rtmpyl6sss/symlink-test/file0.csv; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>file.exists</span>(<span class='no'>f2</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>identical</span>(<span class='fu'>read.table</span>(<span class='no'>f0</span>), <span class='fu'>read.table</span>(<span class='no'>f2</span>)) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
+<span class='fu'>linkOrCopy</span>(<span class='no'>f0</span>, <span class='no'>f2</span>)</div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/RtmpBgDiob/symlink-test/file2.csv, which points to /tmp/RtmpBgDiob/symlink-test/file0.csv; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>file.exists</span>(<span class='no'>f2</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>identical</span>(<span class='fu'>read.table</span>(<span class='no'>f0</span>), <span class='fu'>read.table</span>(<span class='no'>f2</span>)) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='co'>## deleting the link shouldn't delete the original file</span>
 <span class='fu'>unlink</span>(<span class='no'>f0</span>)
 <span class='fu'>file.exists</span>(<span class='no'>f0</span>) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'><span class='fu'>file.exists</span>(<span class='no'>f2</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
@@ -198,7 +200,7 @@ Default <code>FALSE</code>.</p></td>
 <span class='no'>r3a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='no'>f3a</span>)
 <span class='no'>f4a</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='no'>tmpDir</span>, <span class='st'>"raster4.grd"</span>)
 <span class='no'>f4b</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='no'>tmpDir</span>, <span class='st'>"raster4.gri"</span>)
-<span class='fu'>linkOrCopy</span>(<span class='no'>f3a</span>, <span class='no'>f4a</span>) <span class='co'>## hardlink</span></div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/Rtmpyl6sss/symlink-test/raster4.grd, which points to /usr/local/lib/R/site-library/raster/external/test.grd; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>linkOrCopy</span>(<span class='no'>f3b</span>, <span class='no'>f4b</span>) <span class='co'>## hardlink</span></div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/Rtmpyl6sss/symlink-test/raster4.gri, which points to /usr/local/lib/R/site-library/raster/external/test.gri; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='no'>r4a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='no'>f4a</span>)
+<span class='fu'>linkOrCopy</span>(<span class='no'>f3a</span>, <span class='no'>f4a</span>) <span class='co'>## hardlink</span></div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/RtmpBgDiob/symlink-test/raster4.grd, which points to /usr/local/lib/R/site-library/raster/external/test.grd; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>linkOrCopy</span>(<span class='no'>f3b</span>, <span class='no'>f4b</span>) <span class='co'>## hardlink</span></div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/RtmpBgDiob/symlink-test/raster4.gri, which points to /usr/local/lib/R/site-library/raster/external/test.gri; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='no'>r4a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/raster'>raster</a></span>(<span class='no'>f4a</span>)
 
 <span class='fu'>isTRUE</span>(<span class='fu'>all.equal</span>(<span class='no'>r3a</span>, <span class='no'>r4a</span>)) <span class='co'># TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='co'>## cleanup</span>

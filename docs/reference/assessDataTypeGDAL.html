@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Assess the appropriate raster layer data type for gdal — assessDataTypeGDAL • reproducible</title>
+<title>Assess the appropriate raster layer data type for GDAL — assessDataTypeGDAL • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,7 +30,7 @@
 
 
 
-<meta property="og:title" content="Assess the appropriate raster layer data type for gdal — assessDataTypeGDAL" />
+<meta property="og:title" content="Assess the appropriate raster layer data type for GDAL — assessDataTypeGDAL" />
 
 <meta property="og:description" content="Can be used to write prepared inputs on disk." />
 <meta name="twitter:card" content="summary" />
@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.4</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -122,7 +122,7 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Assess the appropriate raster layer data type for gdal</h1>
+    <h1>Assess the appropriate raster layer data type for GDAL</h1>
     <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/postProcess.R'><code>R/postProcess.R</code></a></small>
     <div class="hidden name"><code>assessDataTypeGDAL.Rd</code></div>
     </div>
@@ -133,7 +133,9 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>assessDataTypeGDAL</span>(<span class='no'>ras</span>)</pre>
+    <pre class="usage"><span class='fu'>assessDataTypeGDAL</span>(<span class='no'>ras</span>)
+
+<span class='fu'>UTM_to_longlat</span>(<span class='no'>utm_df</span>, <span class='no'>zone</span>, <span class='no'>hemisphere</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -142,11 +144,24 @@
       <th>ras</th>
       <td><p>The RasterLayer or RasterStack for which data type will be assessed.</p></td>
     </tr>
+    <tr>
+      <th>utm_df</th>
+      <td><p>TODO: need description</p></td>
+    </tr>
+    <tr>
+      <th>zone</th>
+      <td><p>TODO: need description</p></td>
+    </tr>
+    <tr>
+      <th>hemisphere</th>
+      <td><p>TODO: need description</p></td>
+    </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>The appropriate data type for the range of values in <code>ras</code> for using gdal. See <code><a href='http://www.rdocumentation.org/packages/raster/topics/dataType'>dataType</a></code> for details.</p>
+    <p>The appropriate data type for the range of values in <code>ras</code> for using GDAL.
+        See <code><a href='http://www.rdocumentation.org/packages/raster/topics/dataType'>dataType</a></code> for details.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>

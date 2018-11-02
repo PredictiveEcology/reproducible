@@ -26,22 +26,18 @@ This is an enhancement release. Several new functions and new options.
 * Windows 7            (local), R 3.5.1
 
 ### Development R version
-* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-08-02 r75051)
-* Ubuntu 18.04         (local), R 3.6.0 (2018-07-30 r75011)
-* Windows           (appveyor), R 3.6.0 (2018-08-02 r75051)
-* Windows        (win-builder), R 3.6.0 (2018-08-05 r75062)
+* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-10-31 r75531)
+* Ubuntu 18.04         (local), R 3.6.0 (2018-11-01 r75533)
+* Windows           (appveyor), R 3.6.0 (2018-10-31 r75525)
+* Windows        (win-builder), R 3.6.0 (2018-10-30 r75516)
 
 ## R CMD check results
 
 There were no ERRORs nor WARNINGs.
 
-There were 2 NOTEs:
+There were 1 NOTEs:
 
-1. As requested by CRAN, we have fixed problems enconutered during the Windows build process last week.
-
-    Days since last update: 6
-
-2. spell-check reports false positives: 
+1. spell-check reports false positives: 
 
     Possibly mis-spelled words in DESCRIPTION:
       Reproducibility (3:36)
