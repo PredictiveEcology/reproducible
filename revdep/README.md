@@ -5,18 +5,27 @@
 |setting  |value                        |
 |:--------|:----------------------------|
 |version  |R version 3.5.1 (2018-07-02) |
-|system   |x86_64, linux-gnu            |
-|ui       |RStudio (1.1.456)            |
+|system   |x86_64, darwin15.6.0         |
+|ui       |RStudio (1.1.419)            |
 |language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-10-10                   |
+|date     |2018-11-02                   |
 
 ## Packages
 
-|package      |*  |version |date       |source                                          |
-|:------------|:--|:-------|:----------|:-----------------------------------------------|
-|reproducible |*  |0.2.4   |2018-10-10 |Github (PredictiveEcology/reproducible@5248022) |
+|package      |*  |version    |date       |source                                          |
+|:------------|:--|:----------|:----------|:-----------------------------------------------|
+|covr         |   |3.2.1      |2018-10-18 |cran (@3.2.1)                                   |
+|digest       |   |0.6.18     |2018-10-10 |cran (@0.6.18)                                  |
+|dplyr        |   |0.7.7      |2018-10-16 |cran (@0.7.7)                                   |
+|future       |   |1.10.0     |2018-10-17 |cran (@1.10.0)                                  |
+|googledrive  |   |0.1.2      |2018-10-06 |cran (@0.1.2)                                   |
+|quickPlot    |   |0.1.5.9001 |2018-11-02 |Github (PredictiveEcology/quickPlot@1c701e1)    |
+|raster       |*  |2.7-15     |2018-10-16 |cran (@2.7-15)                                  |
+|remotes      |   |2.0.2.9000 |2018-11-02 |Github (r-lib/remotes@95130c6)                  |
+|reproducible |*  |0.2.5      |2018-11-02 |Github (PredictiveEcology/reproducible@0a1b362) |
+|testthat     |*  |2.0.1      |2018-10-13 |cran (@2.0.1)                                   |
 
 # Check results
 
@@ -24,35 +33,35 @@
 
 |package      |version | errors| warnings| notes|
 |:------------|:-------|------:|--------:|-----:|
-|SpaDES.core  |0.2.2   |      1|        2|     0|
-|SpaDES       |2.0.2   |      0|        1|     0|
-|SpaDES.tools |0.3.0   |      0|        1|     0|
+|SpaDES.core  |0.2.2   |      1|        1|     0|
+|SpaDES       |2.0.2   |      0|        0|     0|
+|SpaDES.tools |0.3.0   |      0|        0|     0|
 
 ## SpaDES.core (0.2.2)
 Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
-1 error  | 2 warnings | 0 notes
+1 error  | 1 warning  | 0 notes
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [68s/63s]
+  Running ‘test-all.R’ [111s/116s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-  [39m══ testthat results  ══════════════════════════════════════════════════════════════
-  OK: 217 SKIPPED: 35 FAILED: 13
-  1. Error: test cache (@test-cache.R#29) 
-  2. Error: test event-level cache (@test-cache.R#80) 
-  3. Error: test module-level cache (@test-cache.R#128) 
-  4. Failure: test objSize (@test-cache.R#333) 
-  5. Error: test checkpointing (@test-checkpoint.R#24) 
-  6. Error: test checkpointing with disk-backed raster (@test-checkpoint.R#87) 
-  7. Error: experiment does not work correctly (@test-experiment.R#33) 
-  8. Error: test-load.R: loading inputs does not work correctly (@test-load.R#36) 
-  9. Error: test-load.R: passing arguments to filelist in simInit does not work correctly (@test-load.R#164) 
-  1. ...
+  [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
+  [39m[34m  Using memoised copy of .inputObjects event in test module
+  [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
+  [39m[31m──[39m [31m1. Failure: test objSize (@test-cache.R#333) [39m [31m───────[39m
+  length(os) == 4 isn't true.
+  
+  [34m  Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
+  [39m══ testthat results  ═══════════════════════════════════
+  OK: 310 SKIPPED: 35 FAILED: 1
+  1. Failure: test objSize (@test-cache.R#333) 
   
   Error: testthat unit tests failed
+  In addition: Warning message:
+  In fun(libname, pkgname) : couldn't connect to display ""
   Execution halted
 
 checking Rd cross-references ... WARNING
@@ -61,71 +70,17 @@ Missing link or links in documentation object 'moduleCoverage.Rd':
 
 See section 'Cross-references' in the 'Writing R Extensions' manual.
 
-
-checking re-building of vignette outputs ... WARNING
-Error in re-building vignettes:
-  ...
-    union
-
-Loading required package: quickPlot
-Loading required package: reproducible
-
-Attaching package: 'reproducible'
-
-... 8 lines ...
-The following objects are masked from 'package:stats':
-
-    end, start
-
-Loading required package: SpaDES.tools
-Loading required namespace: RandomFields
-Failed with error:  'there is no package called 'RandomFields''
-Quitting from lines 334-363 (ii-modules.Rmd) 
-Error: processing vignette 'ii-modules.Rmd' failed with diagnostics:
-The 'RandomFields' package is required but not installed.
-Execution halted
 ```
 
 ## SpaDES (2.0.2)
 Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES/issues
 
-0 errors | 1 warning  | 0 notes
-
-```
-checking re-building of vignette outputs ... WARNING
-Error in re-building vignettes:
-  ...
-loading reproducible     0.2.4
-loading quickPlot        0.1.5.9000
-loading SpaDES.core      0.2.3
-loading SpaDES.tools     0.3.0.9001
-loading SpaDES.addins    0.1.1
-
-Default paths for SpaDES directories set to:
-... 8 lines ...
-randomLandscapes: defineParameter: '.useCache' is not of specified type 'logical'.
-randomLandscapes: inputObjects: stackName is used from sim inside doEvent.randomLandscapes, but is not declared in inputObjects
-/tmp/Rtmp0luEQj/R-lib/SpaDES.core/sampleModules/fireSpread/fireSpread.R
-fireSpread: module code: landscape, testStats are declared in inputObjects, but no default(s) are provided in .inputObjects
-fireSpread: inputObjects: stackName, DEM, Fires are used from sim inside doEvent.fireSpread, but are not declared in inputObjects
-###### Module Code Checking ########
-Failed with error:  'there is no package called 'RandomFields''
-Quitting from lines 66-68 (iii-cache.Rmd) 
-Error: processing vignette 'iii-cache.Rmd' failed with diagnostics:
-The 'RandomFields' package is required but not installed.
-Execution halted
-```
+0 errors | 0 warnings | 0 notes
 
 ## SpaDES.tools (0.3.0)
 Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES.tools/issues
 
-0 errors | 1 warning  | 0 notes
-
-```
-checking compilation flags used ... WARNING
-Compilation used the following non-portable flag(s):
-  ‘-Wdate-time’ ‘-Werror=format-security’ ‘-Wformat’
-```
+0 errors | 0 warnings | 0 notes
 

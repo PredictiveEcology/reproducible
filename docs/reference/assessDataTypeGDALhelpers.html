@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Download file from generic source url — dlGeneric • reproducible</title>
+<title>Helper functions for <code>assessDataType</code> — find_UTM_zone • reproducible</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Download file from generic source url — dlGeneric" />
+<meta property="og:title" content="Helper functions for <code>assessDataType</code> — find_UTM_zone" />
 
-<meta property="og:description" content="Download file from generic source url" />
+<meta property="og:description" content="Copied from https://stackoverflow.com/a/48838123" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -122,30 +122,47 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Download file from generic source url</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/download.R'><code>R/download.R</code></a></small>
-    <div class="hidden name"><code>dlGeneric.Rd</code></div>
+    <h1>Helper functions for <code>assessDataType</code></h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/postProcess.R'><code>R/postProcess.R</code></a></small>
+    <div class="hidden name"><code>assessDataTypeGDALhelpers.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Download file from generic source url</p>
+    <p>Copied from https://stackoverflow.com/a/48838123</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>dlGeneric</span>(<span class='no'>url</span>, <span class='no'>needChecksums</span>)</pre>
+    <pre class="usage"><span class='fu'>find_UTM_zone</span>(<span class='no'>longitude</span>, <span class='no'>latitude</span>)
+
+<span class='fu'>find_UTM_hemisphere</span>(<span class='no'>latitude</span>)
+
+<span class='fu'>longlat_to_UTM</span>(<span class='no'>long</span>, <span class='no'>lat</span>, <span class='kw'>units</span> <span class='kw'>=</span> <span class='st'>"m"</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>url</th>
-      <td><p>The url (link) to the file.</p></td>
+      <th>longitude</th>
+      <td><p>longitude</p></td>
     </tr>
     <tr>
-      <th>needChecksums</th>
-      <td><p>Logical indicating whether to generate checksums.</p>
-<p>## TODO: add overwrite arg to the function?</p></td>
+      <th>latitude</th>
+      <td><p>latitude</p></td>
+    </tr>
+    <tr>
+      <th>long</th>
+      <td><p>TODO: need description</p></td>
+    </tr>
+    <tr>
+      <th>lat</th>
+      <td><p>TODO: need description</p></td>
+    </tr>
+    <tr>
+      <th>units</th>
+      <td><p>TODO: need description</p>
+<p><code>longlat_to_UTM</code> returns a <code>data.frame</code> containing the UTM values,
+the zone and the hemisphere.</p></td>
     </tr>
     </table>
     
@@ -156,10 +173,6 @@
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
                 </ul>
-
-    <h2>Author</h2>
-    
-Eliot McIntire and Alex Chubaty
 
   </div>
 </div>

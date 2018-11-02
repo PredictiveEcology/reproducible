@@ -33,16 +33,16 @@
 <meta property="og:title" content="Repeatability-safe install and load packages, optionally with specific versions — Require" />
 
 <meta property="og:description" content="This is an &quot;all in one&quot; function that will run install.packages for
-CRAN packages, devtools::install_github for GitHub.com packages and
-will install specific versions of each package if
-there is a packageVersionFile supplied.
-Plus, when packages is provided as a character vector, or a
-packageVersionFile is supplied, all package dependencies
-will be first assessed for unique(dependencies) so the same package is
-not installed multiple times. Finally library is called on the
-packages. If packages are already installed (packages supplied),
-and their version numbers are exact (when packageVersionFile is supplied),
-then the &quot;install&quot; component will be skipped very quickly with a message." />
+CRAN packages, remotes::install_github for GitHub.com packages and
+will install specific versions of each package if there is a
+packageVersionFile supplied. Plus, when packages is provided as
+a character vector, or a packageVersionFile is supplied, all package
+dependencies will be first assessed for unique(dependencies) so the
+same package is not installed multiple times. Finally library is
+called on the packages. If packages are already installed
+(packages supplied), and their version numbers are exact (when
+packageVersionFile is supplied), then the &quot;install&quot; component will be
+skipped very quickly with a message." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -81,7 +81,7 @@ then the &quot;install&quot; component will be skipped very quickly with a messa
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.4</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -140,16 +140,16 @@ then the &quot;install&quot; component will be skipped very quickly with a messa
     <div class="ref-description">
     
     <p>This is an "all in one" function that will run <code>install.packages</code> for
-CRAN packages, <code><a href='http://www.rdocumentation.org/packages/devtools/topics/install_github'>devtools::install_github</a></code> for GitHub.com packages and
-will install specific versions of each package if
-there is a <code>packageVersionFile</code> supplied.
-Plus, when <code>packages</code> is provided as a character vector, or a
-<code>packageVersionFile</code> is supplied, all package dependencies
-will be first assessed for <code>unique(dependencies)</code> so the same package is
-not installed multiple times. Finally <code>library</code> is called on the
-<code>packages</code>. If packages are already installed (<code>packages</code> supplied),
-and their version numbers are exact (when <code>packageVersionFile</code> is supplied),
-then the "install" component will be skipped very quickly with a message.</p>
+CRAN packages, <code><a href='http://www.rdocumentation.org/packages/remotes/topics/install_github'>remotes::install_github</a></code> for <a href='GitHub.com'>GitHub.com</a> packages and
+will install specific versions of each package if there is a
+<code>packageVersionFile</code> supplied. Plus, when <code>packages</code> is provided as
+a character vector, or a <code>packageVersionFile</code> is supplied, all package
+dependencies will be first assessed for <code>unique(dependencies)</code> so the
+same package is not installed multiple times. Finally <code>library</code> is
+called on the <code>packages</code>. If packages are already installed
+(<code>packages</code> supplied), and their version numbers are exact (when
+<code>packageVersionFile</code> is supplied), then the "install" component will be
+skipped very quickly with a message.</p>
     
     </div>
 
@@ -178,11 +178,11 @@ calls with <code><a href='http://www.rdocumentation.org/packages/versions/topics
     </tr>
     <tr>
       <th>install_githubArgs</th>
-      <td><p>List of optional named arguments, passed to install_github</p></td>
+      <td><p>List of optional named arguments, passed to <code>install_github</code>.</p></td>
     </tr>
     <tr>
       <th>install.packagesArgs</th>
-      <td><p>List of optional named arguments, passed to install.packages</p></td>
+      <td><p>List of optional named arguments, passed to <code>install.packages</code>.</p></td>
     </tr>
     <tr>
       <th>standAlone</th>
@@ -211,36 +211,39 @@ refresh that dependency calculation.</p></td>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p><code>standAlone</code> will either put the <code>Require</code>d packages and their dependencies
-<em>all</em> within the libPath (if <code>TRUE</code>) or if <code>FALSE</code> will only install
-packages and their dependencies that are otherwise
-not installed in <code>.libPaths()</code>, i.e., the personal or base library paths. Any
-packages or dependencies that are not yet installed will be installed in <code>libPath</code>.
-Importantly, a small hidden file (named <code>._packageVersionsAuto.txt</code>)
-will be saved in <code>libPath</code> that will store the <em>information</em> about
-the packages and their dependencies, even if the version used is located in
-<code>.libPaths()</code>, i.e., not the <code>libPath</code> provided.
-This hidden file will be used if a user runs <code>pkgSnapshot</code>,
-enabling a new user to rebuild the entire dependency chain, without having to
-install all packages in an isolated directory (as does <span class="pkg">packrat</span>).
-This will save potentially a lot of time and disk space, and yet maintain reproducibility.
-<em>NOTE</em>: since there is only one hidden file in a <code>libPath</code>, any call to
-<code>pkgSnapshot</code> will make a snapshot of the most recent call to <code>Require</code>.</p>
-<p>To build a snapshot of the desired packages and their versions, first run <code>Require</code>
-with all packages, then <code>pkgSnapshot</code>. If a <code>libPath</code> is used, it must be used
-in both functions.</p>
-<p>This function works best if all required packages are called within one <code>Require</code>
-call, as all dependencies can be identified together, and all package versions will be saved
-automatically (with <code>standAlone = TRUE</code> or <code>standAlone = FALSE</code>),
-allowing a call to <code>pkgSnapshot</code> when a more permanent record of versions can be made.</p>
+    <p><code>standAlone</code> will either put the <code>Require</code>d packages and their
+dependencies <em>all</em> within the libPath (if <code>TRUE</code>) or if
+<code>FALSE</code> will only install packages and their dependencies that are
+otherwise not installed in <code>.libPaths()</code>, i.e., the personal or base
+library paths. Any packages or dependencies that are not yet installed will
+be installed in <code>libPath</code>. Importantly, a small hidden file (named
+<code>._packageVersionsAuto.txt</code>) will be saved in <code>libPath</code> that will
+store the <em>information</em> about the packages and their dependencies, even
+if the version used is located in <code>.libPaths()</code>, i.e., not the
+<code>libPath</code> provided. This hidden file will be used if a user runs
+<code>pkgSnapshot</code>, enabling a new user to rebuild the entire dependency
+chain, without having to install all packages in an isolated directory (as
+does <span class="pkg">packrat</span>). This will save potentially a lot of time and disk space,
+and yet maintain reproducibility. <em>NOTE</em>: since there is only one hidden
+file in a <code>libPath</code>, any call to <code>pkgSnapshot</code> will make a snapshot
+of the most recent call to <code>Require</code>.</p>
+<p>To build a snapshot of the desired packages and their versions, first run
+<code>Require</code> with all packages, then <code>pkgSnapshot</code>. If a
+<code>libPath</code> is used, it must be used in both functions.</p>
+<p>This function works best if all required packages are called within one
+<code>Require</code> call, as all dependencies can be identified together, and all
+package versions will be saved automatically (with <code>standAlone = TRUE</code>
+or <code>standAlone = FALSE</code>), allowing a call to <code>pkgSnapshot</code> when a
+more permanent record of versions can be made.</p>
     
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
-    <p>This function will use <code>memoise</code> internally to determine the dependencies
-of all <code>packages</code>. This will speed up subsequent calls to <code>Require</code>
-dramatically. However, it will not take into account version numbers for this
-memoised step. If package versions are updated manually by the user, then this cached
-element should be wiped, using <code>forget = TRUE</code>.</p>
+    <p>This function will use <code>memoise</code> internally to determine the
+  dependencies of all <code>packages</code>. This will speed up subsequent calls to
+  <code>Require</code> dramatically. However, it will not take into account version
+  numbers for this memoised step. If package versions are updated manually by
+  the user, then this cached element should be wiped, using <code>forget =
+  TRUE</code>.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -276,7 +279,6 @@ element should be wiped, using <code>forget = TRUE</code>.</p>
 
 <span class='co'># Mutual dependencies, only installs once -- e.g., httr</span>
 <span class='fu'>Require</span>(<span class='fu'>c</span>(<span class='st'>"cranlogs"</span>, <span class='st'>"covr"</span>), <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='no'>tempPkgFolder</span>)
-
 <span class='co'># }</span><div class='input'>
 </div></pre>
   </div>

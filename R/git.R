@@ -28,7 +28,9 @@
 #' repository. It can use ssh keys (including GitHub deploy keys) or GitHub
 #' Personal Access Tokens.
 #'
-#' @inheritParams remotes::install_github
+#' @param repo Repository address in the format \code{username/repo[/subdir][@ref|#pull]}.
+#'   Alternatively, you can specify subdir and/or ref using the respective parameters (see below);
+#'   if both is specified, the values in repo take precedence.
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'                      cloned, fetched, and checked out from.

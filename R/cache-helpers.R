@@ -306,7 +306,6 @@ setGeneric(".addChangedAttr", function(object, preDigest, origArguments, ...) {
   standardGeneric(".addChangedAttr")
 })
 
-
 #' @export
 #' @rdname addChangedAttr
 setMethod(
@@ -314,9 +313,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, preDigest, origArguments, ...) {
     object
-  })
-
-
+})
 
 #' A set of helpers for Cache
 #'
