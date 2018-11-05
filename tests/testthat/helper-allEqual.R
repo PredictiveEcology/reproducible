@@ -4,6 +4,8 @@ all.equalWONewCache <- function(a, b) {
   all.equal(a,b)
 }
 
+options(reproducible.verbose = FALSE) ## TODO: why is this being set here instead of properly for package and tests?
+
 # puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,
