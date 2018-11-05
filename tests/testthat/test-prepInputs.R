@@ -1327,7 +1327,7 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
-  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1))==1)
+  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1)) == 1)
 
   # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
   #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
@@ -1340,7 +1340,7 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpdir3)
   })
-  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1))==1)
+  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1)) == 1)
 
   #  should copy from 2nd directory (tmpCache) because it is removed in the lower
   #  tmpdir directory & has a CHECKSUMS.txt
@@ -1379,7 +1379,7 @@ test_that("options inputPaths", {
   unlink(file.path(tmpdir2, theFile))
   expect_false(file.exists(file.path(tmpdir2, theFile))) # FALSE -- confirm previous line
   expect_true(file.exists(file.path(tmpdir, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
-  tmpdir2 <- file.path(tmpdir, rndstr(1,5))
+  tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir2,

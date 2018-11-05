@@ -57,8 +57,6 @@ test_that("test file-backed raster caching", {
 
   expect_false(identical(filename(a), filename(b)))
 
-
-
   # Caching a raster as an input works
   rasterTobinary <- function(raster) {
     ceiling(raster[] / (mean(raster[]) + 1))
@@ -461,7 +459,6 @@ test_that("test pipe for Cache", {
     Cache(cacheRepo = tmpdir, notOlderThan = Sys.time())
   expect_false(isTRUE(all.equalWONewCache(d1, d2)))
 
-
   # New Pipe
   clearCache(tmpdir, ask = FALSE)
   a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
@@ -630,7 +627,7 @@ test_that("test Cache argument inheritance to inner functions", {
 
   # does cacheRepo propagate to outer ones -- no message about cacheRepo being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out)==1)
+  expect_true(length(out) == 1)
   expect_true(all(grepl("loading cached result from previous outer call", out)))
 
   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
@@ -639,7 +636,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n)
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out)==1)
+  expect_true(length(out) == 1)
   expect_true(all(grepl("loading cached result from previous rnorm call", out)))
 
   # Override with explicit argument
@@ -648,7 +645,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time())
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out)==0)
+  expect_true(length(out) == 0)
 
   # change the outer function, so no cache on that, & have notOlderThan on rnorm,
   #    so no Cache on that
@@ -657,10 +654,10 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time())
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out)==0)
+  expect_true(length(out) == 0)
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out)==1)
+  expect_true(length(out) == 1)
   expect_true(all(grepl("loading cached result from previous outer call", out)))
 
   # doubly nested
@@ -717,8 +714,8 @@ test_that("test Cache argument inheritance to inner functions", {
   bb <- showCache(tmpdir, userTags = "notHowdie")
   cc <- showCache(tmpdir)
   expect_false(identical(bb, cc))
-  expect_true(length(unique(bb$artifact))==1)
-  expect_true(length(unique(cc$artifact))==3)
+  expect_true(length(unique(bb$artifact)) == 1)
+  expect_true(length(unique(cc$artifact)) == 3)
 })
 
 ##########################
@@ -730,8 +727,8 @@ test_that("test reproducible.verbose", {
 
   Cache(rnorm, 1, cacheRepo = tmpdir)
   expect_is(.reproEnv$cacheTimings, "data.frame")
-  expect_true(NROW(.reproEnv$cacheTimings)==4)
-  expect_true(NCOL(.reproEnv$cacheTimings)==4)
+  expect_true(NROW(.reproEnv$cacheTimings) == 4)
+  expect_true(NCOL(.reproEnv$cacheTimings) == 4)
 
   # Test Path class objects
   a <- sample(1e4)
@@ -744,7 +741,6 @@ test_that("test reproducible.verbose", {
 
   # should be vastly larger when actual file, rather than just filename
   expect_true( (20*out1Details$objSize[1]) < out2Details$objSize[1])
-
 })
 
 ##########################
@@ -759,16 +755,15 @@ test_that("test future", {
       }, add = TRUE)
 
       options("reproducible.futurePlan" = "multiprocess")
-      (aa <- system.time({for(i in c(1:3)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
+      (aa <- system.time({for (i in c(1:3)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
       a <- showCache(tmpCache)
 
       options("reproducible.futurePlan" = FALSE)
       try(unlink(tmpCache, recursive = TRUE))
-      (bb <- system.time({for(i in 1:3) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
+      (bb <- system.time({for (i in 1:3) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
 
       # Test the speed of rerunning same line
-      (aa <- system.time({for(i in c(1,1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
-
+      (aa <- system.time({for (i in c(1,1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
     }
   }
 })
@@ -819,7 +814,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }
   expect_true(fn(2)$functionName == "2")
   expect_true(is.null(fn(2)$.FUN))
-
 
   fn <- function(FUN) {
     getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
