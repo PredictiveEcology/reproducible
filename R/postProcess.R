@@ -464,9 +464,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
           warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, method = Method, ...))
         } else {
-            warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
+          warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
         }
-
 
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
         warnings(warn)
@@ -474,9 +473,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         ## if resolutions are close enough, re-write res(x)
         ## note that when useSAcrs = TRUE, the different resolutions may be due to
         ## the different projections (e.g. degree based and meter based). This should be fine
-        if (identical(crs(x), crs(rasterToMatch)) &
-            any(res(x) != res(rasterToMatch))) {
-
+        if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
           if (all(res(x) %==% res(rasterToMatch))) {
             res(x) <- res(rasterToMatch)
           } else {
@@ -487,7 +484,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       } else {
         message("   large raster: reprojecting after writing to temp drive...")
         #rasters need to go to same file so it can be unlinked at end without losing other temp files
-
         tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
         tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
         tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_reproj.tif")) #fails if x = stack
