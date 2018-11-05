@@ -148,9 +148,12 @@ if (getRversion() >= "3.1.0") {
 #'                  This is optional if \code{Cache} is used inside a SpaDES module.
 #'
 #' @param length Numeric. If the element passed to Cache is a \code{Path} class
-#'        object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing, then this will be
+#'        object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
+#'        file-backing, then this will be
 #'        passed to \code{digest::digest}, essentially limiting the number of bytes
 #'        to digest (for speed). This will only be used if \code{quick = FALSE}.
+#'        Default is \code{getOption("reproducible.length")},
+#'        which is set to \code{Inf}.
 #'
 #' @param compareRasterFileLength Being deprecated; use \code{length}.
 #'
@@ -275,7 +278,8 @@ if (getRversion() >= "3.1.0") {
 setGeneric(
   "Cache", signature = "...",
   function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
-           algo = "xxhash64", cacheRepo = NULL, length = 1e6,
+           algo = "xxhash64", cacheRepo = NULL,
+           length = getOption("reproducible.length", Inf),
            compareRasterFileLength, userTags = c(),
            digestPathContent, omitArgs = NULL,
            classOptions = list(), debugCache = character(),

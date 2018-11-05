@@ -13,6 +13,7 @@
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,
+    reproducible.length = Inf,
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
     reproducible.useCache = TRUE, # override Cache function
