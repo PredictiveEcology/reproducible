@@ -52,7 +52,7 @@ installVersions("PredictiveEcology/reproducible@development")
 tempPkgFolder <- file.path(tempdir(), "Packages")
 dir.create(tempPkgFolder)
 packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
-pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+pkgSnapshot(libPath = tempPkgFolder, packageVersionFile)
 
 Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
 
