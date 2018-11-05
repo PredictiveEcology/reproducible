@@ -4,7 +4,6 @@ all.equalWONewCache <- function(a, b) {
   all.equal(a,b)
 }
 
-options(reproducible.verbose = FALSE)
 # puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,

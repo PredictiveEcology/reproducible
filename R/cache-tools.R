@@ -143,7 +143,7 @@ setMethod(
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
-        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact & tagKey=="object.size"]$tagValue)
+        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact & tagKey == "object.size"]$tagValue)
         fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
         filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
           r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))

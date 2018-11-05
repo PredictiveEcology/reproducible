@@ -65,7 +65,6 @@ test_that("prepInputs doesn't work", {
   expect_true(is(shpEcozone2, "SpatialPolygons"))
   expect_equivalent(shpEcozone1, shpEcozone2) # different attribute newCache
 
-
   #######################################
   ### url, targetFile, alsoExtract -- with Cache ######
   #######################################
@@ -159,7 +158,8 @@ test_that("prepInputs doesn't work", {
 
   # Test the no allow overwrite if two functions (here postProcess and prepInputs)
   #  return same file-backed raster
-  reproducible::clearCache(userTags = "prepInputs", ask = FALSE) ## TODO: fails local tests
+  reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
+
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
   #  not there. Now should be no error.
@@ -259,7 +259,6 @@ test_that("prepInputs doesn't work", {
   # crop and mask worked:
   expect_identical(extent(LCC2005)[1:4],
                    round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
-
 })
 
 test_that("interactive prepInputs", {
