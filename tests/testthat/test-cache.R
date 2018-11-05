@@ -912,8 +912,8 @@ test_that("test mergeCache", {
   setkey(dCache, artifact)
   setkey(abCache, artifact)
 
-  expect_true(identical(abCache[,list(artifact, tagKey, tagValue)],
-                        dCache[,list(artifact, tagKey, tagValue)]))
+  expect_true(identical(abCache[, list(artifact, tagKey, tagValue)],
+                        dCache[, list(artifact, tagKey, tagValue)]))
 
   mess <- capture_messages(d1 <- mergeCache(tmpCache, tmpdir))
   expect_true(any(grepl("Skipping", mess)))
@@ -930,7 +930,7 @@ test_that("test cache-helpers", {
   tmpfile <- tempfile(fileext = ".grd")
   tmpfile2 <- tempfile(fileext = ".grd")
   tmpfile3 <- tempfile(fileext = ".grd")
-  r <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+  r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   levels(r) <- data.frame(ID = 1:2, Val = 3:4)
   b <- .prepareFileBackedRaster(r, tmpCache)
   is(b, "RasterLayer")
@@ -1011,16 +1011,16 @@ test_that("test useCache = 'overwrite'", {
 })
 
 test_that("test rm large non-file-backed rasters", {
+  ## This is a large object test!
   skip_on_appveyor()
   skip_on_cran()
   skip_on_travis()
-  # This is a large object test
 
-  testInitOut <- testInit(ask = FALSE)
+  testInitOut <- testInit(ask = FALSE, opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  st0 <- system.time(r <- Cache(raster, extent(0,10000,0,10000), res = 1, vals = 1, userTags = "first"))
+  st0 <- system.time(r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1, userTags = "first"))
   st1 <- system.time(clearCache(userTags = "first"))
   expect_true(st1["elapsed"] < 0.75) # This was > 2 seconds in old way
 })
