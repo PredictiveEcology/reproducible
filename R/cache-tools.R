@@ -151,9 +151,9 @@ setMethod(
         })
 
         if (length(filesToRemove)) {
-          filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
+          filesToRemove <- gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
           if (isInteractive()) {
-            dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
+            dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
             cacheSize <- sum(cacheSize, file.size(dirLs))
           }
