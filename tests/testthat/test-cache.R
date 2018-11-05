@@ -1011,10 +1011,10 @@ test_that("test useCache = 'overwrite'", {
 })
 
 test_that("test rm large non-file-backed rasters", {
+  ## This is a large object test!
   skip_on_appveyor()
   skip_on_cran()
   skip_on_travis()
-  # This is a large object test
 
   testInitOut <- testInit(ask = FALSE)
   on.exit({

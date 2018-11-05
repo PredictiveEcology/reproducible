@@ -3,7 +3,7 @@ test_that("prepInputs doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
