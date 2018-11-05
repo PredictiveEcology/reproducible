@@ -1016,7 +1016,7 @@ test_that("test rm large non-file-backed rasters", {
   skip_on_cran()
   skip_on_travis()
 
-  testInitOut <- testInit(ask = FALSE)
+  testInitOut <- testInit(ask = FALSE, opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
