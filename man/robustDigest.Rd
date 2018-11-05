@@ -15,48 +15,58 @@
 \alias{.robustDigest,Spatial-method}
 \title{Create reproducible digests of objects in R}
 \usage{
-.robustDigest(object, objects, length = 1e+06, algo = "xxhash64",
+.robustDigest(object, objects, length = getOption("reproducible.length",
+  Inf), algo = "xxhash64", quick = getOption("reproducible.quick",
+  FALSE), classOptions = list())
+
+\S4method{.robustDigest}{ANY}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{ANY}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{cluster}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{cluster}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{`function`}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{`function`}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{expression}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{expression}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{character}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{character}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{Path}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{Path}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{environment}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{environment}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{list}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{list}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{Raster}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{Raster}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
-
-\S4method{.robustDigest}{Spatial}(object, objects, length = 1e+06,
-  algo = "xxhash64", quick = getOption("reproducible.quick", FALSE),
+\S4method{.robustDigest}{Spatial}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 }
 \arguments{
@@ -69,9 +79,12 @@ in the default cases; the only known method that uses this
 argument is the \code{simList} class from \code{SpaDES.core}.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
-object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing, then this will be
+object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
+file-backing, then this will be
 passed to \code{digest::digest}, essentially limiting the number of bytes
-to digest (for speed). This will only be used if \code{quick = FALSE}.}
+to digest (for speed). This will only be used if \code{quick = FALSE}.
+Default is \code{getOption("reproducible.length")},
+which is set to \code{Inf}.}
 
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},

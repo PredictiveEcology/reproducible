@@ -9,9 +9,10 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
-  length = 1e+06, compareRasterFileLength, userTags = c(),
-  digestPathContent, omitArgs = NULL, classOptions = list(),
-  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
+  length = getOption("reproducible.length", Inf),
+  compareRasterFileLength, userTags = c(), digestPathContent,
+  omitArgs = NULL, classOptions = list(), debugCache = character(),
+  sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
@@ -19,9 +20,10 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
-  length = 1e+06, compareRasterFileLength, userTags = c(),
-  digestPathContent, omitArgs = NULL, classOptions = list(),
-  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
+  length = getOption("reproducible.length", Inf),
+  compareRasterFileLength, userTags = c(), digestPathContent,
+  omitArgs = NULL, classOptions = list(), debugCache = character(),
+  sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
@@ -55,9 +57,12 @@ return. This is only relevant for list, environment (or similar) objects}
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
-object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing, then this will be
+object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
+file-backing, then this will be
 passed to \code{digest::digest}, essentially limiting the number of bytes
-to digest (for speed). This will only be used if \code{quick = FALSE}.}
+to digest (for speed). This will only be used if \code{quick = FALSE}.
+Default is \code{getOption("reproducible.length")},
+which is set to \code{Inf}.}
 
 \item{compareRasterFileLength}{Being deprecated; use \code{length}.}
 
