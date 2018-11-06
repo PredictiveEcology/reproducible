@@ -28,7 +28,9 @@
 #' repository. It can use ssh keys (including GitHub deploy keys) or GitHub
 #' Personal Access Tokens.
 #'
-#' @inheritParams devtools::install_github
+#' @param repo Repository address in the format \code{username/repo[/subdir][@ref|#pull]}.
+#'   Alternatively, you can specify subdir and/or ref using the respective parameters (see below);
+#'   if both is specified, the values in repo take precedence.
 #'
 #' @param localRepoPath Character string. The path into which the git repo should be
 #'                      cloned, fetched, and checked out from.
@@ -42,7 +44,6 @@
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
-#' @import devtools
 #' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init lookup
 #'                   remote_add remote_set_url remote_url repository status
 #' @importFrom utils getFromNamespace
@@ -79,7 +80,7 @@ checkoutVersion <- function(repo, localRepoPath = ".", cred = "", ...) {
 
   localRepoPath <- normalizePath(path.expand(localRepoPath), mustWork = FALSE)
 
-  .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "devtools") # nolint
+  .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "remotes") # nolint
   params <- .parse_git_repo(repo)
   gitHash <- if (is.null(params$ref)) "master" else params$ref
 

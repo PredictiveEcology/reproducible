@@ -12,7 +12,7 @@ extractFromArchive(archive,
 }
 \arguments{
 \item{archive}{Character string giving the path of the archive
-containing the \code{file} to be extracted.}
+containing the \code{file} to be extracted. This path must exist or be \code{NULL}}
 
 \item{destinationPath}{Character string giving the path where \code{neededFiles} will be
 extracted. Defaults to the archive directory.}

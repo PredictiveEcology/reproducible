@@ -11,8 +11,8 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-10-17
-Version: 0.2.4.9000
+Date: 2018-11-02
+Version: 0.2.5
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment=c(ORCID = "0000-0002-6914-8316")),
@@ -41,13 +41,15 @@ Imports:
     magrittr,
     memoise,
     methods,
+    parallel,
+    quickPlot,
+    R.utils,
     raster,
     Rcpp (>= 0.12.13),
     RCurl (>= 1.95-4.8),
-    R.utils,
+    remotes,
     rgdal,
     rgeos,
-    quickPlot,
     sf,
     sp,
     testthat,
@@ -68,7 +70,7 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.0.9000
 Collate: 
     'RcppExports.R'
     'cache-helpers.R'

@@ -460,34 +460,50 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       if (canProcessInMemory(x, 4)) {
         tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
         origDataType <- dataType(x)
-        isInteger <- if (is.integer(x[])) TRUE else FALSE
+
+        # Capture problems that projectRaster has with objects of class integers,
+        #   which is different than if they are integers (i.e., a numeric class object)
+        #   can be integers, without being classified and stored in R as integer
+        isInteger <- if (is.integer(x[])) TRUE else FALSE # should be faster than assessDataType, as it
+                                                          # is a class determination, not a numeric assessment
         if (isInteger) {
           needWarning <- FALSE
-          if (is.null(list(...)$method)) {
+          if (is.null(dots$method)) {
             needWarning <- TRUE
           } else {
-            if (list(...)$method != "ngb")
+            if (dots$method != "ngb")
               needWarning <- TRUE
           }
           if (needWarning)
             warning("This raster layer has integer values; it will be reprojected to float. ",
                     "Did you want to pass 'method = \"ngb\"'?")
         }
-        # projectRaster does silly things with integers, i.e., it converts to numeric
-        warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
+        if (is.null(dots$method)) {
+          rType <- assessDataType(x) #not foolproof method of determining reclass method
+          if (rType %in% c("FLT4S", "FLT8S")) {
+            Method <- "bilinear"
+          } else {
+            Method <- "ngb"
+          }
+          warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, method = Method, ...))
+        } else {
+          # projectRaster does silly things with integers, i.e., it converts to numeric
+          warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
+        }
+
+        # return the integer class to the data in the raster object
         if (isTRUE(isInteger)) {
           dataType(x) <- origDataType
           x[] <- as.integer(x[])
         }
+
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
         warnings(warn)
         ## projectRaster doesn't always ensure equal res (floating point number issue)
         ## if resolutions are close enough, re-write res(x)
         ## note that when useSAcrs = TRUE, the different resolutions may be due to
         ## the different projections (e.g. degree based and meter based). This should be fine
-        if (identical(crs(x), crs(rasterToMatch)) &
-            any(res(x) != res(rasterToMatch))) {
-
+        if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
           if (all(res(x) %==% res(rasterToMatch))) {
             res(x) <- res(rasterToMatch)
           } else {
@@ -496,16 +512,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
         }
       } else {
-
         message("   large raster: reprojecting after writing to temp drive...")
         #rasters need to go to same file so it can be unlinked at end without losing other temp files
-
         tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
         tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
         tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_reproj.tif")) #fails if x = stack
 
        # the raster is in memory, but large enough to trigger this function: write it to disk
-        if (inMemory(x)){
+        if (inMemory(x)) {
           dType <- assessDataType(x)
           writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
           rm(x)
@@ -545,7 +559,18 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
     if (!is.null(targetCRS)) {
       if (!identical(crs(x), targetCRS)) {
         message("    reprojecting ...")
-        x <- projectRaster(from = x, crs = targetCRS, ...)
+
+        if (is.null(dots$method)) {
+          rType <- assessDataType(x) #not foolproof method of determining reclass method
+          if (rType %in% c("FLT4S", "FLT8S")) {
+            Method <- "bilinear"
+          } else {
+            Method <- "ngb"
+          }
+          x <- projectRaster(from = x, crs = targetCRS, method = Method, ...)
+        } else {
+          x <- projectRaster(from = x, crs = targetCRS, ...)
+        }
       } else {
         message("    no reprojecting because target CRS is same as input CRS.")
       }
@@ -909,7 +934,6 @@ writeOutputs.default <- function(x, filename2, ...) {
   stop("Don't know how to write object of class ", class(x), " on disk.")
 }
 
-
 #' Assess the appropriate raster layer data type
 #'
 #' Can be used to write prepared inputs on disk.
@@ -1020,7 +1044,6 @@ assessDataTypeGDAL <- function(ras) {
       if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
         if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
     }
-
   } else {
     if (ncell(ras) > 100000) {
       rasVals <- raster::sampleRandom(x = ras, size = 100000)

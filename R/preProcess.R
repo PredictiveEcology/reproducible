@@ -44,10 +44,11 @@
 #'  to get the remove file information (e.g., file name). With that, the connection
 #'  between the \code{url} and the filename used in the CHECKSUMS.txt file can be made.
 #'
-#' @author Eliot McIntire
-#' @export
 #' @inheritParams prepInputs
 #' @inheritParams downloadFile
+#'
+#' @author Eliot McIntire
+#' @export
 #' @importFrom data.table fread setDT
 #' @importFrom tools file_path_sans_ext
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
@@ -478,16 +479,21 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 }
 
 .guessAtFile <- function(url, archive, targetFile, destinationPath) {
-  guessedFile <- if (grepl("drive.google.com", url)) {
-    if (url.exists(url)) { # likely offline
-      assessGoogle(url = url, archive = archive,
-                   targetFile = targetFile,
-                   destinationPath = destinationPath)
+  guessedFile <- if (!is.null(url)) {
+    if (grepl("drive.google.com", url)) {
+      if (url.exists(url)) {
+        assessGoogle(url = url, archive = archive,
+                     targetFile = targetFile,
+                     destinationPath = destinationPath)
+      } else {
+        # likely offline
+        file.path(destinationPath, basename(url))
+      }
     } else {
       file.path(destinationPath, basename(url))
     }
   } else {
-    file.path(destinationPath, basename(url))
+    NULL
   }
   guessedFile
 }

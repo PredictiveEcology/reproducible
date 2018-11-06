@@ -41,8 +41,9 @@
 #'
 #' @export
 #' @importFrom archivist rmFromLocalRepo searchInLocalRepo
-#' @importFrom methods setGeneric setMethod
 #' @importFrom data.table setindex
+#' @importFrom methods setGeneric setMethod
+#' @importFrom utils object.size
 #' @rdname viewCache
 #'
 #' @examples
@@ -84,8 +85,8 @@ setGeneric("clearCache", function(x, userTags = character(), after, before,
 })
 
 #' @export
-#' @rdname viewCache
 #' @importFrom archivist createLocalRepo
+#' @rdname viewCache
 setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, ...) {
@@ -132,7 +133,8 @@ setMethod(
     objsDT <- do.call(showCache, args = args)
 
     if (isInteractive()) {
-      cacheSize <- sum(as.numeric(objsDT[tagKey=="object.size"]$tagValue))/4
+      objSizes <- as.numeric(objsDT[tagKey == "object.size"]$tagValue)
+      cacheSize <- sum(objSizes) / 4
       #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
       #cacheSize <- sum(file.size(rdaFiles))
     }
@@ -141,12 +143,14 @@ setMethod(
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
-        suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
-          loadFromLocalRepo(ras, repoDir = x, value = TRUE)
-        }))
-        filesToRemove <- tryCatch(unlist(lapply(rasters, function(x) filename(x))),
-                                  error = function(x) NULL)
-        if (!is.null(filesToRemove)) {
+        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact & tagKey=="object.size"]$tagValue)
+        fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
+        filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
+          r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
+          tryCatch(filename(r), error = function(e) NULL)
+        })
+
+        if (length(filesToRemove)) {
           filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
           if (isInteractive()) {
             dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
@@ -161,7 +165,6 @@ setMethod(
         formattedCacheSize <- format(cacheSize, "auto")
         if (isTRUE(ask)) {
           if (isInteractive()) {
-
             message("Your size of your selected objects is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")
             rl <- readline()
@@ -254,7 +257,6 @@ setMethod(
           setkeyv(objsDT2, "artifact")
           shortDT <- unique(objsDT2, by = "artifact")[, artifact]
           objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
-
         }
       }
     }
@@ -407,7 +409,7 @@ checkFutures <- function() {
   # This takes a long time -- can't use it if
   resol <- future::resolved(.reproEnv)
 
-  while(any(!resol)) {
+  while (any(!resol)) {
     #numSleeps <<- numSleeps+1
     Sys.sleep(0.001)
     resol <- future::resolved(.reproEnv)

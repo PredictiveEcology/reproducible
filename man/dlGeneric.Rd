@@ -9,7 +9,7 @@ dlGeneric(url, needChecksums)
 \arguments{
 \item{url}{The url (link) to the file.}
 
-\item{needChecksums}{TODO
+\item{needChecksums}{Logical indicating whether to generate checksums.
 
 ## TODO: add overwrite arg to the function?}
 }

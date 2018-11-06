@@ -27,9 +27,9 @@ but not in \code{libPath}. This would normally include a listing of
 base packages, but may also include other library paths if
 \code{standAlone} if \code{FALSE}}
 
-\item{install_githubArgs}{List of optional named arguments, passed to install_github}
+\item{install_githubArgs}{List of optional named arguments, passed to \code{install_github}.}
 
-\item{install.packagesArgs}{List of optional named arguments, passed to install.packages}
+\item{install.packagesArgs}{List of optional named arguments, passed to \code{install.packages}.}
 
 \item{libPath}{The library path where all packages should be installed, and looked for to load
 (i.e., call \code{library})}

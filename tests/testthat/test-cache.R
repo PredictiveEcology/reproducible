@@ -572,7 +572,6 @@ test_that("test multiple pipe Cache calls", {
   expect_length(mess, 1)
 })
 
-
 test_that("test masking of %>% error message", {
   testInitOut <- testInit()
   on.exit({
@@ -594,7 +593,6 @@ test_that("test masking of %>% error message", {
   }
   expect_true(masker)
   if (isInteractive()) {
-
     # somehow, in a non-interactive session, R is finding reproducible::`%>%`
     # even though it is after magrittr on the search path -- somehow reproducible is
     # being kept on top... i.e,. overriding search()
@@ -602,17 +600,14 @@ test_that("test masking of %>% error message", {
     detach("package:magrittr")
     mess <- capture_messages(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
     expect_true(all(grepl("loading cached result from previous", mess)))
-
   }
 })
-
 
 test_that("test Cache argument inheritance to inner functions", {
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-
 
   outer <- function(n) {
     Cache(rnorm, n)
@@ -724,11 +719,7 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_false(identical(bb, cc))
   expect_true(length(unique(bb$artifact))==1)
   expect_true(length(unique(cc$artifact))==3)
-
-
-
 })
-
 
 ##########################
 test_that("test reproducible.verbose", {
@@ -756,9 +747,6 @@ test_that("test reproducible.verbose", {
 
 })
 
-
-
-
 ##########################
 test_that("test future", {
   skip_on_cran()
@@ -782,10 +770,8 @@ test_that("test future", {
       (aa <- system.time({for(i in c(1,1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
 
     }
-
   }
 })
-
 
 ##########################
 test_that("test miscellaneous unit tests cache-helpers", {
@@ -906,8 +892,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl("The hashing details", aMess)))
 })
 
-
-
 ##########################
 test_that("test mergeCache", {
   testInitOut <- testInit("data.table")
@@ -940,10 +924,7 @@ test_that("test mergeCache", {
   mess <- capture_messages(d1 <- mergeCache(tmpCache, tmpdir))
   expect_true(any(grepl("Skipping", mess)))
   expect_true(identical(d, d1))
-
 })
-
-
 
 ##########################
 test_that("test cache-helpers", {
@@ -1011,10 +992,7 @@ test_that("test cache-helpers", {
   b <- raster::stack(r, r1)
   b1 <- .prepareFileBackedRaster(b, tmpCache)
   expect_true(identical(b1$layer.1@file@name, b1$layer.2@file@name))
-
-
 })
-
 
 test_that("test useCache = 'overwrite'", {
   testInitOut <- testInit(ask = FALSE)
@@ -1030,12 +1008,25 @@ test_that("test useCache = 'overwrite'", {
   clearCache(x = tmpCache, ask = FALSE)
 
   testOnExit(testInitOut)
-  testInitOut <- testInit(ask = FALSE,
-                          opts = list("reproducible.useCache" = "overwrite"))
+  testInitOut <- testInit(ask = FALSE, opts = list("reproducible.useCache" = "overwrite"))
 
   a <- Cache(rnorm, 1, cacheRepo = tmpCache)
   mess <- capture_messages(b <- Cache(rnorm, 1, cacheRepo = tmpCache))
   expect_true(!identical(a, b))
   expect_true(any(grepl(pattern = "Overwriting", mess)))
+})
 
-  })
+test_that("test rm large non-file-backed rasters", {
+  skip_on_appveyor()
+  skip_on_cran()
+  skip_on_travis()
+  # This is a large object test
+
+  testInitOut <- testInit(ask = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  st0 <- system.time(r <- Cache(raster, extent(0,10000,0,10000), res = 1, vals = 1, userTags = "first"))
+  st1 <- system.time(clearCache(userTags = "first"))
+  expect_true(st1["elapsed"] < 0.75) # This was > 2 seconds in old way
+})

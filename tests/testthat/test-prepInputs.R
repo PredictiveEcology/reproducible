@@ -159,7 +159,7 @@ test_that("prepInputs doesn't work", {
 
   # Test the no allow overwrite if two functions (here postProcess and prepInputs)
   #  return same file-backed raster
-  reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
+  reproducible::clearCache(userTags = "prepInputs", ask = FALSE) ## TODO: fails local tests
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
   #  not there. Now should be no error.
@@ -1100,7 +1100,25 @@ test_that("assessDataType doesn't work", {
 
 })
 
+test_that("assessDataTypeGDAL doesn't work", {
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
+  ## Float32
+  ras <- raster(ncol = 10, nrow = 10)
+  ras[] <- runif(100, 0, 1)
+  expect_true(assessDataTypeGDAL(ras) == "Float32")
+
+  ## UInt16
+  ras[] <- c(201:300)
+  expect_true(assessDataTypeGDAL(ras) == "UInt16")
+
+  ##Byte
+  ras[] <- 1:100
+  expect_true(assessDataTypeGDAL(ras) == "Byte")
+})
 
 test_that("lightweight tests for code coverage", {
   testthat::skip_on_cran()
@@ -1381,8 +1399,8 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
-  expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version
-  expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
+  expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
+  expect_true(sum(grepl(basename(tmpdir2), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 
   # Have file in destinationPath, not in inputPath
   unlink(file.path(tmpdir, theFile))
@@ -1399,7 +1417,6 @@ test_that("options inputPaths", {
 
 })
 
-
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
   skip_on_cran()
 
@@ -1407,16 +1424,53 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  a <- raster(extent(0,2,0,2), res = 1, vals = c(1,1,2,2))
+  a <- raster(extent(0, 2, 0, 2), res = 1, vals = c(1, 1, 2, 2))
   levels(a) <- data.frame(ID = 1:2, Factor = c("This", "That"))
-  tifTmp <- tempfile(fileext=".tif")
-  b1 <- writeRaster(a, filename = tifTmp)
+  tifTmp <- tempfile(fileext = ".tif")
+  file.create(tifTmp)
+  tifTmp <- normPath(tifTmp)
+
+  b1 <- writeRaster(a, filename = tifTmp, overwrite = TRUE)
   expect_warning(b1a <- writeOutputs(a, filename2 = tifTmp))
   expect_false(identical(b1, b1a))
   expect_true(identical(as.integer(b1[]), b1a[]))
 
-  skip_on_os("mac") # TODO Alex -- test on Mac
   expect_true(identical(filename(b1), tifTmp))
   expect_true(identical(filename(b1a), gsub(tifTmp, pattern = "tif", replacement = "grd")))
+})
+
+test_that("rasters aren't properly resampled", {
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  a <- raster(extent(0, 20, 0, 20), res = 1, vals = 1:400)
+  b <- raster(extent(0, 20, 0, 20), res = c(2,2), vals = 1:100)
+  crs(a) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(b) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  tiftemp1 <- tempfile(fileext = ".tif")
+  writeRaster(a, filename = tiftemp1)
+
+  tiftemp2 <- tempfile(fileext = ".tif")
+  writeRaster(b, filename = tiftemp2)
+
+  out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
+                    destinationPath = tempdir(), useCache = FALSE)
+  expect_true(dataType(out) == "INT2U")
+
+  out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
+                    destinationPath = tempdir(), method = "bilinear", filename2 = tempfile(fileext = ".tif"))
+  expect_true(dataType(out2) == "FLT4S")
+
+  c <- raster(extent(0, 20, 0, 20), res = 1, vals =runif(400, 0, 1))
+  crs(c) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  tiftemp3 <- tempfile(fileext = ".tif")
+  writeRaster(c, filename = tiftemp3)
+
+  out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
+                     destinationPath = tempdir(), filename2 = tempfile(fileext = ".tif"))
+  expect_true(dataType(out3) == "FLT4S")
 
 })
