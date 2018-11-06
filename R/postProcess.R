@@ -442,6 +442,11 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @importFrom raster crs dataType res res<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
   dots <- list(...)
+  isFactorRaster <- FALSE
+  if (isTRUE(raster::is.factor(x))) {
+    isFactorRaster <- TRUE
+    rasterFactorLevels <- raster::levels(x)
+  }
   if (!is.null(rasterToMatch)) {
     if (is.null(targetCRS)) {
       targetCRS <- crs(rasterToMatch)
@@ -454,7 +459,26 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 
       if (canProcessInMemory(x, 4)) {
         tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
+        origDataType <- dataType(x)
+        isInteger <- if (is.integer(x[])) TRUE else FALSE
+        if (isInteger) {
+          needWarning <- FALSE
+          if (is.null(list(...)$method)) {
+            needWarning <- TRUE
+          } else {
+            if (list(...)$method != "ngb")
+              needWarning <- TRUE
+          }
+          if (needWarning)
+            warning("This raster layer has integer values; it will be reprojected to float. ",
+                    "Did you want to pass 'method = \"ngb\"'?")
+        }
+        # projectRaster does silly things with integers, i.e., it converts to numeric
         warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
+        if (isTRUE(isInteger)) {
+          dataType(x) <- origDataType
+          x[] <- as.integer(x[])
+        }
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
         warnings(warn)
         ## projectRaster doesn't always ensure equal res (floating point number issue)
@@ -529,6 +553,10 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       message("     no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
     }
   }
+  if (isFactorRaster) {
+    levels(x) <- rasterFactorLevels
+  }
+
   x
 }
 
