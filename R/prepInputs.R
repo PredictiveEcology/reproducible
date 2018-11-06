@@ -354,7 +354,6 @@ extractFromArchive <- function(archive,
                                needChecksums = 0, filesExtracted = character(),
                                checkSumFilePath = character(), quick = FALSE) {
 
-  browser(expr = identical(checkSumFilePath, "C:\\Temp\\Rtmp0wcchf\\filebd033e28a8.rds"))
   if (!is.null(archive)) {
     if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
@@ -533,7 +532,7 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun) {
-  possibleFiles <- unique(basename(c(targetFilePath, filesExtracted)))
+  possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- file_ext(possibleFiles)
   isShapefile <- grepl("shp", fileExt)
   isRaster <- fileExt %in% c("tif", "grd")
@@ -564,7 +563,9 @@ extractFromArchive <- function(archive,
         paste(possibleFiles, collapse = "\n"))
     })
 
-    targetFilePath <- if (endsWith(suffix = "shapefile", fun )) {
+    targetFilePath <- if (is.null(fun)) {
+      NULL
+    } else if (endsWith(suffix = "shapefile", fun )) {
       possibleFiles[isShapefile]
     } else {
       if (any(isRaster)) {
@@ -584,7 +585,7 @@ extractFromArchive <- function(archive,
       message("  Trying ", targetFilePath, " with ", fun, ".")
     }
     targetFile <- targetFilePath
-    targetFilePath <- file.path(destinationPath, targetFile)
+    if (!is.null(targetFile)) targetFilePath <- file.path(destinationPath, targetFile)
   }
 
   list(targetFilePath = targetFilePath, fun = fun)
