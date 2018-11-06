@@ -1238,6 +1238,9 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #'                 the \code{CacheRepo}
 writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   counter <- 0
+  if (!file.exists(file.path(cacheRepo, "backpack.db"))) {
+    stop("That cacheRepo does not exist")
+  }
   while (written >= 0) {
     #future::plan(multiprocess)
     saved <- #suppressWarnings(
