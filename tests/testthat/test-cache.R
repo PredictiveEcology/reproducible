@@ -966,7 +966,9 @@ test_that("test cache-helpers", {
   r1 <- writeRaster(r1, filename = file.path(tmpCache, "rasters", basename(tmpfile2)), overwrite = TRUE)
   b <- .prepareFileBackedRaster(r1, tmpCache)
   expect_true(identical(normalizePath(filename(b), winslash = "/", mustWork = FALSE),
-                        normalizePath(nextNumericName(filename(r1)), winslash = "/", mustWork = FALSE)))
+                        normalizePath(file.path(dirname(filename(r1)),
+                                                nextNumericName(basename(filename(r1)))),
+                                                winslash = "/", mustWork = FALSE)))
 
   #
   r <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))

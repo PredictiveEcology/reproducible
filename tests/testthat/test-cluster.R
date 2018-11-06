@@ -23,6 +23,7 @@ test_that("test parallel collisions", {
     # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
     cl <- makeCluster(N)
     on.exit(stopCluster(cl), add = TRUE)
+
     clusterSetRNGStream(cl)
     # clusterEvalQ(cl = cl, {
     #   devtools::load_all()

@@ -439,9 +439,14 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @rdname projectInputs
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdalwarp
-#' @importFrom raster crs dataType res res<-
+#' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
   dots <- list(...)
+  isFactorRaster <- FALSE
+  if (isTRUE(raster::is.factor(x))) {
+    isFactorRaster <- TRUE
+    rasterFactorLevels <- raster::levels(x)
+  }
   if (!is.null(rasterToMatch)) {
     if (is.null(targetCRS)) {
       targetCRS <- crs(rasterToMatch)
@@ -454,7 +459,25 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 
       if (canProcessInMemory(x, 4)) {
         tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
+        origDataType <- dataType(x)
 
+        # Capture problems that projectRaster has with objects of class integers,
+        #   which is different than if they are integers (i.e., a numeric class object)
+        #   can be integers, without being classified and stored in R as integer
+        isInteger <- if (is.integer(x[])) TRUE else FALSE # should be faster than assessDataType, as it
+                                                          # is a class determination, not a numeric assessment
+        if (isInteger) {
+          needWarning <- FALSE
+          if (is.null(dots$method)) {
+            needWarning <- TRUE
+          } else {
+            if (dots$method != "ngb")
+              needWarning <- TRUE
+          }
+          if (needWarning)
+            warning("This raster layer has integer values; it will be reprojected to float. ",
+                    "Did you want to pass 'method = \"ngb\"'?")
+        }
         if (is.null(dots$method)) {
           rType <- assessDataType(x) #not foolproof method of determining reclass method
           if (rType %in% c("FLT4S", "FLT8S")) {
@@ -464,7 +487,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
           warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, method = Method, ...))
         } else {
+          # projectRaster does silly things with integers, i.e., it converts to numeric
           warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
+        }
+
+        # return the integer class to the data in the raster object
+        if (isTRUE(isInteger)) {
+          dataType(x) <- origDataType
+          x[] <- as.integer(x[])
         }
 
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
@@ -548,6 +578,10 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       message("     no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
     }
   }
+  if (isFactorRaster) {
+    levels(x) <- rasterFactorLevels
+  }
+
   x
 }
 
@@ -866,7 +900,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 
 #' @rdname writeOutputs
 writeOutputs.Spatial <- function(x, filename2 = NULL,
-                                 overwrite = getOption("reproducible.overwrite", FALSE),
+                                 overwrite = getOption("reproducible.overwrite", TRUE),
                                  ...) {
   if (!is.null(filename2)) {
     dots <- list(...)
