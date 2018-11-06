@@ -1418,6 +1418,8 @@ test_that("options inputPaths", {
   unlink(file.path(tmpdir, theFile))
   expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
   expect_true(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
+  aaa <<- 1
+  on.exit(rm("aaa", envir = .GlobalEnv))
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir2,
@@ -1448,8 +1450,8 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   expect_false(identical(b1, b1a))
   expect_true(identical(as.integer(b1[]), b1a[]))
 
-  expect_true(identical(filename(b1), tifTmp))
-  expect_true(identical(filename(b1a), gsub(tifTmp, pattern = "tif", replacement = "grd")))
+  expect_true(identical(normPath(filename(b1)), normPath(tifTmp)))
+  expect_true(identical(normPath(filename(b1a)), normPath(gsub(tifTmp, pattern = "tif", replacement = "grd"))))
 })
 
 test_that("rasters aren't properly resampled", {

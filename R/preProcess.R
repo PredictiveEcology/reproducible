@@ -335,12 +335,20 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
   }
 
-  if (!is.null(filesExtr))
-    filesExtr <- unique(basename(filesExtr))
+  filesExtr <- if (!is.null(filesExtr)) {
+    unique(c(basename(filesExtr), basename(filesToChecksum)))
+  } else {
+    if (!is.null(filesToChecksum)) {
+      unique(c(basename(filesToChecksum)))
+    } else {
+      NULL
+    }
+  }
 
   # link back to destinationPath if options("reproducible.inputPaths") was used.
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
   if (!is.null(getOption("reproducible.inputPaths"))) {
+    browser(expr = exists("aaa", envir = .GlobalEnv))
     #foundRecursively <- localChecks$foundRecursively
     foundInInputPaths <- localChecks$foundInInputPaths
     copyToIP <- (!filesExtr %in% foundInInputPaths)
@@ -500,7 +508,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 .checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums,
                              checkSumFilePath = NULL) {
-  if (is.null(checkSumFilePath))
+  if (is.null(checkSumFilePath) || length(checkSumFilePath) == 0)
     checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
   if (!file.exists(checkSumFilePath)) {
     checkSums
@@ -514,6 +522,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       checkSums <- rbindlist(list(checkSums[compareNA("OK", result)],
                                   checkSums[compareNA("FAIL", result)],
                                   checkSums[is.na(result)]))
+    } else {
+      browser()
+      stop("checkSumFilePath is not a CHECKSUMS.txt file")
     }
   }
   checkSums
@@ -577,6 +588,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 .checkLocalSources <- function(neededFiles, checkSumFilePath, checkSums, otherPaths, needChecksums,
                                destinationPath) {
   #foundRecursively <- character()
+  browser(expr= exists("aaa", envir = .GlobalEnv))
   foundInInputPaths <- character()
   successfulCheckSumFilePath <- character()
   successfulDir <- character()
@@ -775,7 +787,7 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
                                            checkSumFilePath = checkSumFilePath, quick = quick)
 
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
-                                    newFilesToCheck = basename(filesExtracted),
+                                    newFilesToCheck = basename(filesExtracted$filesExtracted),
                                     checkSums = filesExtracted$checkSums)
 
       filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,

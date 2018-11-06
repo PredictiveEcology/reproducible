@@ -354,6 +354,7 @@ extractFromArchive <- function(archive,
                                needChecksums = 0, filesExtracted = character(),
                                checkSumFilePath = character(), quick = FALSE) {
 
+  browser(expr = identical(checkSumFilePath, "C:\\Temp\\Rtmp0wcchf\\filebd033e28a8.rds"))
   if (!is.null(archive)) {
     if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
@@ -395,7 +396,8 @@ extractFromArchive <- function(archive,
       # need to re-Checksums because
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                     newFilesToCheck = file.path(destinationPath, basename(neededFiles)),
-                                    checkSums = checkSums)
+                                    checkSums = checkSums,
+                                    checkSumFilePath = checkSumFilePath)
 
       # checkSums <- if (isTRUE(file.exists(checkSumFilePath))) {
       #   try(Checksums(
@@ -410,7 +412,7 @@ extractFromArchive <- function(archive,
       #   checkSums <- .emptyChecksumsResult
       # }
 
-      if (is(checkSums, "try-error")) stop("checkSumFilePath is not a CHECKSUMS.txt file")
+      #if (is(checkSums, "try-error")) stop("checkSumFilePath is not a CHECKSUMS.txt file")
 
       # join the neededFiles with the checkSums -- find out which are missing
       # checkSumsDT <- data.table(checkSums)
@@ -421,7 +423,11 @@ extractFromArchive <- function(archive,
       # isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
       # isOK <- compareNA(isOKDT$result, "OK")
 
-      isOK <- .compareChecksumsAndFiles(checkSums, neededFiles)
+      isOK <- if (!is.null(checkSums)) {
+        .compareChecksumsAndFiles(checkSums, neededFiles)
+      } else {
+        FALSE
+      }
       #basename(neededFiles) %in% checkSums$expectedFile
       #isOK <-
       #  checkSums[checkSums$expectedFile %in% basename(neededFiles) |
