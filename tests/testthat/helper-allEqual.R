@@ -26,13 +26,15 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   require("testthat")
   tmpdir <- normPath(file.path(tempdir(), rndstr(1, 6)))
 
-  if (interactive() && isTRUE(needGoogle)) {
+  if (isTRUE(needGoogle)) {
     googledrive::drive_auth_config(active = TRUE)
-    if (file.exists("~/.httr-oauth")) {
-      linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
-    } else {
-      googledrive::drive_auth()
-      file.copy(".httr-oauth", "~/.httr-oauth")
+    if (interactive()) {
+      if (file.exists("~/.httr-oauth")) {
+        linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
+      } else {
+        googledrive::drive_auth()
+        file.copy(".httr-oauth", "~/.httr-oauth")
+      }
     }
   }
   checkPath(tmpdir, create = TRUE)
@@ -76,7 +78,6 @@ testOnExit <- function(testInitOut) {
   lapply(testInitOut$libs, function(lib) {
     detach(paste0("package:", lib), character.only = TRUE)}
   )
-
 }
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir,
