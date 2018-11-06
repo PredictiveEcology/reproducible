@@ -1,7 +1,7 @@
 test_that("all exported functions have examples", {
   fns <- ls("package:reproducible")
   omit <- which(fns == "cache") ## cache is deprecated, so omit it
-  tmpExFile <- "C:/Eliot/tmp/examples.txt"
+  tmpExFile <- "~/tmp/examples.txt"
   if (grepl("VIC-", Sys.info()["nodename"]))  { # for debugging only
      cat("#START##############\n", file = tmpExFile, append = FALSE)
   #   cat(fns[-omit], sep = "\n", file = tmpExFile, append = TRUE)
