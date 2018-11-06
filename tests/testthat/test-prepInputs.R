@@ -816,7 +816,6 @@ test_that("preProcess doesn't work", {
   ################################################################
   ###### alsoExtract                                         #####
   ###############################################################
-  browser()
   file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
                    pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages(warns <- capture_warnings(
@@ -926,7 +925,7 @@ test_that("prepInputs doesn't work", {
     })
     runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
             filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-    runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+    runTest("1_2_5_6_8_9", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
             filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
 
     # Add a study area to Crop and Mask to
@@ -942,7 +941,7 @@ test_that("prepInputs doesn't work", {
     mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = targetFileLuxRDS,
                                                                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                                                                            path = tmpdir, studyArea = StudyArea)))
-    runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+    runTest("1_2_5_6_8_9", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
             filePattern = targetFileLuxRDS, tmpdir = tmpdir,
             test = test3)
 
