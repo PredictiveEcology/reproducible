@@ -1089,14 +1089,19 @@ nextNumericName <- function(string) {
   saveFilenameSansExt <- file_path_sans_ext(string)
   finalNumericPattern <- "_[[:digit:]]*$"
   allSimilarFilesInDir <- dir(dirname(saveFilenameSansExt), pattern = basename(saveFilenameSansExt))
-  allSimilarFilesInDirSansExt <- file_path_sans_ext(allSimilarFilesInDir)
+  allSimilarFilesInDirSansExt <- if (length(allSimilarFilesInDir) == 0) {
+    unique(saveFilenameSansExt)
+  } else {
+    unique(file_path_sans_ext(allSimilarFilesInDir))
+  }
   alreadyHasNumeric <- grepl(allSimilarFilesInDirSansExt, pattern = finalNumericPattern)
   if (isTRUE(any(alreadyHasNumeric))) {
     splits <- strsplit(allSimilarFilesInDirSansExt[alreadyHasNumeric], split = "_")
     highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split,1)))),
                          na.rm = TRUE)
+    preNumeric <- sapply(splits, function(spl) spl[-length(spl)])
 
-    out <- paste0(saveFilenameSansExt, "_", highestNumber + 1) # keep rndstr in here, so that both streams keep same rnd number state
+    out <- paste0(preNumeric, "_", highestNumber + 1) # keep rndstr in here, so that both streams keep same rnd number state
   } else {
     out <- paste0(saveFilenameSansExt, "_1")
   }
