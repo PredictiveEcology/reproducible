@@ -3,34 +3,45 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 0.2.5
 =============
 
-* Work around internally inside `extractFromArchive` for large (>2GB) zip files.
-  In the `R` help manual, `unzip` fails for zip files >2GB.
-  This uses a system call if the Zip file is too large and fails using `base::unzip`.
-* Work around for `raster::getData` 
+## Dependency changes
+
+* Added `remotes` to Imports and removed `devtools`
+
+## New features
+
 * New value possible for `options(reproducible.useCache = 'overwrite')`, which
   allows use of `Cache` in cases where the function call has an entry in the `cacheRepo`,
   will purge it and add the output of the current call instead.
-* New option `reproducible.inputPaths` (default NULL) and `reproducible.inputPathsRecursive`
-  (default FALSE), which will be used in `prepInputs` as possible directory sources
+* New option `reproducible.inputPaths` (default `NULL`) and `reproducible.inputPathsRecursive`
+  (default `FALSE`), which will be used in `prepInputs` as possible directory sources
   (searched recursively or not) for files being downloaded/extracted/prepared.
   This allows the using of local copies of files in (an)other location(s) instead
   of downloading them. If local location does not have the required files,
   it will proceed to download so there is little cost in setting this option.
   If files do exist on local system, the function will attempt to use a hardlink before making a copy.
-* deal with new `raster` package changes in development version of `raster` package
-* `glDownload` now sets `options(httr_oob_default = TRUE)` if using Rstudio Server
-* speed up of `Cache()` when deeply nested, due to `grep(sys.calls(), ...)` that would take long and hang.
-* files in `CHECKSUMS` now sorted alphabetically
+* `dlGoogle()` now sets `options(httr_oob_default = TRUE)` if using Rstudio Server.
+* Files in `CHECKSUMS` now sorted alphabetically.
 * `Checksums` can now have a `CHECKSUMS.txt` file located in a different place than the `destinationPath`
-* added checks for float point number issues in raster resolutions produced by `raster::projectRaster`
+* Attempt to select raster resampling method based on raster type (#63, @ianmseddy)
+
+## Bug fixes
+
+* Work around internally inside `extractFromArchive` for large (>2GB) zip files.
+  In the `R` help manual, `unzip` fails for zip files >2GB.
+  This uses a system call if the zip file is too large and fails using `base::unzip`.
+* Work around for `raster::getData` issues.
+* Speed up of `Cache()` when deeply nested, due to `grep(sys.calls(), ...)` that would take long and hang.
+* Bugfix for `preProcess(url = NULL)` (#65, @tati-micheletti)
+* Improved memory performance of `clearCache` (#67)
+* Other minor bugfixes
+
+## Other changes
+
+* Deal with new `raster` package changes in development version of `raster` package
+* Added checks for float point number issues in raster resolutions produced by `raster::projectRaster`
 * `.robustDigest` now does not include `Cache`-added attributes
-* bugfix for `preProcess(url = NULL)` (#65, @tati-micheletti)
-* improved memory performance of `clearCache` (#67)
-* attempt to select raster resampling method based on raster type (#63, @ianmseddy)
-* added `remotes` to Imports and removed `devtools`
-* added `pbapply` to Imports and added progress bar to `clearCache`
-* minor bugfixes
-* many new unit tests written, which caught several minor bugs
+* Additonal tests for `preProcess()` (#68, @tati-micheletti)
+* Many new unit tests written, which caught several minor bugs
 
 version 0.2.3
 =============
@@ -71,7 +82,7 @@ version 0.2.2
 * `preProcess` -- writing to checksums may have produced a warning if `CHECKSUMS.txt` was not present. Now it does not.
 * numerous other minor bugfixes
 
-## Minor changes
+## Other changes
 
 - most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistent test building
 
