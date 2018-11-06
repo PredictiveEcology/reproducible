@@ -545,7 +545,7 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' \code{install.packages} in a separate R process.
 #'
 #' @export
-#' @importFrom data.table setDT data.table setnames rbindlist
+#' @importFrom data.table data.table rbindlist setDT setnames
 #' @importFrom RCurl url.exists
 #' @importFrom remotes install_github
 #' @importFrom utils available.packages install.packages installed.packages read.table
@@ -559,7 +559,7 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' tempPkgFolder <- file.path(tempdir(), "Packages")
 #' dir.create(tempPkgFolder)
 #' packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
-#' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile)
+#' pkgSnapshot(libPath = tempPkgFolder, packageVersionFile)
 #'
 #' Require("crayon", libPath = tempPkgFolder) # install.packages first, then library
 #'

@@ -698,16 +698,16 @@ setMethod(
           copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
         } else {
           #suppressWarnings(
-            saveFilename <- unlist(lapply(seq_along(curFilename),
-                   function(x) {
-                     # change filename if it already exists
-                    if (file.exists(saveFilename[x])) {
-                       saveFilename[x] <- nextNumericName(saveFilename[x])
-                     }
-                     copyFile(to = saveFilename[x],
-                                        overwrite = TRUE,
-                                        from = curFilename[x], silent = TRUE)
-                   }))
+          saveFilename <- unlist(lapply(seq_along(curFilename),
+                                        function(x) {
+                                          # change filename if it already exists
+                                          if (file.exists(saveFilename[x])) {
+                                            saveFilename[x] <- nextNumericName(saveFilename[x])
+                                          }
+                                          copyFile(to = saveFilename[x],
+                                                   overwrite = TRUE,
+                                                   from = curFilename[x], silent = TRUE)
+                                        }))
         }
       }
       # for a stack with independent Raster Layers (each with own file)
@@ -1088,12 +1088,20 @@ nextNumericName <- function(string) {
   theExt <- file_ext(string)
   saveFilenameSansExt <- file_path_sans_ext(string)
   finalNumericPattern <- "_[[:digit:]]*$"
-  alreadyHasNumeric <- grepl(saveFilenameSansExt, pattern = finalNumericPattern)
+  allSimilarFilesInDir <- dir(dirname(saveFilenameSansExt), pattern = basename(saveFilenameSansExt))
+  allSimilarFilesInDirSansExt <- if (length(allSimilarFilesInDir) == 0) {
+    unique(saveFilenameSansExt)
+  } else {
+    unique(file_path_sans_ext(allSimilarFilesInDir))
+  }
+  alreadyHasNumeric <- grepl(allSimilarFilesInDirSansExt, pattern = finalNumericPattern)
   if (isTRUE(any(alreadyHasNumeric))) {
-    splits <- strsplit(saveFilenameSansExt, split = "_")
-    numericEnd <- as.numeric(tail(splits[[1]],1))
-    suff <- paste0("_", numericEnd + 1) # keep rndstr in here, so that both streams keep same rnd number state
-    out <- gsub(saveFilenameSansExt, pattern = finalNumericPattern, replacement = suff)
+    splits <- strsplit(allSimilarFilesInDirSansExt[alreadyHasNumeric], split = "_")
+    highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split,1)))),
+                         na.rm = TRUE)
+    preNumeric <- lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_"))
+
+    out <- paste0(preNumeric, "_", highestNumber + 1) # keep rndstr in here, so that both streams keep same rnd number state
   } else {
     out <- paste0(saveFilenameSansExt, "_1")
   }

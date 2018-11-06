@@ -114,7 +114,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
             isOK <- checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
                                 checkSums$actualFile %in% basename(fileToDownload),]$result
             isOK <- isOK[!is.na(isOK)] == "OK"
-            if (length(isOK) > 0) {
+            if (length(isOK) > 0) { # This is length 0 if there are no entries in the Checksums
               if (!isTRUE(all(isOK))) {
                 if (purge > 0)  {
                   # This is case where we didn't know what file to download, and only now

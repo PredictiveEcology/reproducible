@@ -23,6 +23,10 @@ version 0.2.5
 * Files in `CHECKSUMS` now sorted alphabetically.
 * `Checksums` can now have a `CHECKSUMS.txt` file located in a different place than the `destinationPath`
 * Attempt to select raster resampling method based on raster type (#63, @ianmseddy)
+* `projectInputs` 
+
+    - now uses `gdalwarp` for large rasters, improving speed
+    - better handling of various data types in `Raster` objects, including factor rasters
 
 ## Bug fixes
 
@@ -32,7 +36,7 @@ version 0.2.5
 * Work around for `raster::getData` issues.
 * Speed up of `Cache()` when deeply nested, due to `grep(sys.calls(), ...)` that would take long and hang.
 * Bugfix for `preProcess(url = NULL)` (#65, @tati-micheletti)
-* Improved memory performance of `clearCache` (#67)
+* Improved memory performance of `clearCache` (#67), especially for large `Raster` objects that are stored as binary `R` files (i.e., `.rda`)
 * Other minor bugfixes
 
 ## Other changes

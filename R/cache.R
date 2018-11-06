@@ -511,6 +511,9 @@ setMethod(
       if (verbose) {
         startHashTime <- Sys.time()
       }
+      # if (!is.null(list(...)$sim))
+      #   browser(expr = current(list(...)$sim)$moduleName == "LBMR")
+
       preDigest <- lapply(modifiedDots[!dotPipe], function(x) {
         # remove the "newCache" attribute, which is irrelevant for digest
         if (!is.null(attr(x, ".Cache")$newCache)) attr(x, ".Cache")$newCache <- NULL
@@ -616,6 +619,11 @@ setMethod(
         }
       }
 
+      if (length(debugCache)) {
+        if (!is.na(pmatch(debugCache, "iterative")))
+          browser()
+      }
+
       isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
       if (identical("overwrite", useCache) && NROW(isInRepo)>0) {
         clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE)
@@ -655,6 +663,7 @@ setMethod(
             output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
                                         repoDir = cacheRepo, value = TRUE)
           }
+
 
           if (verbose) {
             endLoadTime <- Sys.time()
@@ -855,7 +864,7 @@ setMethod(
       if (fnDetails$isPipe) {
         output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
       } else {
-        output <- do.call(FUN, fnDetails$modifiedDots)
+        output <- do.call(FUN, fnDetails$originalDots)
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
@@ -1229,6 +1238,9 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #'                 the \code{CacheRepo}
 writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   counter <- 0
+  if (!file.exists(file.path(cacheRepo, "backpack.db"))) {
+    stop("That cacheRepo does not exist")
+  }
   while (written >= 0) {
     #future::plan(multiprocess)
     saved <- #suppressWarnings(

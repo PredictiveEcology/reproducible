@@ -10,7 +10,6 @@ all.equalWONewCache <- function(a, b) {
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
                      opts = NULL, needGoogle = FALSE) {
-  options(httr_oob_default = FALSE, reproducible.verbose = FALSE)
 
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
@@ -28,6 +27,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   if (isTRUE(needGoogle)) {
     googledrive::drive_auth_config(active = TRUE)
+
     if (interactive()) {
       if (file.exists("~/.httr-oauth")) {
         linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
@@ -36,15 +36,24 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
         file.copy(".httr-oauth", "~/.httr-oauth")
       }
     }
+    if (!file.exists("~/.httr-oauth")) message("Please put an .httr-oauth file in your ~ directory")
+
   }
   checkPath(tmpdir, create = TRUE)
   origDir <- setwd(tmpdir)
   tmpCache <- normPath(file.path(tmpdir, "testCache"))
   checkPath(tmpCache, create = TRUE)
 
+  opts <- append(list(reproducible.overwrite = TRUE), opts)
+
   if (!is.null(opts)) {
+    if (needGoogle) {
+      optsGoogle <- list(httr_oob_default = FALSE, httr_oauth_cache = "~/.httr-oauth")
+      opts <- append(opts, optsGoogle)
+    }
     opts <- options(opts)
   }
+
   if (!is.null(tmpFileExt)) {
     ranfiles <- unlist(lapply(tmpFileExt, function(x) paste0(rndstr(1, 7), ".", x)))
     tmpfile <- file.path(tmpdir, ranfiles)
@@ -108,7 +117,7 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
                         "From:Shapefile", "Checking local", "Finished checking",
                         "Downloading", "Skipping download", "Skipping extractFrom",
-                        "targetFile was not.*guessed and will try",
+                        "targetFile was not.*ry",
                         "Writing checksums.*you can specify targetFile",
                         "No targetFile supplied. Extracting", "Appending checksums")
 expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
