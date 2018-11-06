@@ -420,6 +420,7 @@ missingFiles <- function(files, checkSums, targetFile) {
       is.null(files))
 }
 
+#' @importFrom googledrive as_id drive_get drive_token
 #' @importFrom quickPlot isRstudioServer
 assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath")) {
