@@ -250,6 +250,8 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
 #'
 #' @param ... Passed to raster::crop
 #' @author Eliot McIntire & Jean Marchal
+#' @author Ian Eddy
+#' @author Tati Micheletti
 #' @example inst/examples/example_postProcess.R
 #' @export
 #' @importFrom methods is
