@@ -3,7 +3,8 @@ test_that("prepInputs doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
-  testInitOut <- testInit("raster", opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
+  testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                "reproducible.overwrite" = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -64,6 +65,7 @@ test_that("prepInputs doesn't work", {
   )
   expect_true(is(shpEcozone2, "SpatialPolygons"))
   expect_equivalent(shpEcozone1, shpEcozone2) # different attribute newCache
+
 
   #######################################
   ### url, targetFile, alsoExtract -- with Cache ######
@@ -158,8 +160,7 @@ test_that("prepInputs doesn't work", {
 
   # Test the no allow overwrite if two functions (here postProcess and prepInputs)
   #  return same file-backed raster
-  reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
-
+  reproducible::clearCache(userTags = "prepInputs", ask = FALSE) ## TODO: fails local tests
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
   #  not there. Now should be no error.
@@ -259,10 +260,13 @@ test_that("prepInputs doesn't work", {
   # crop and mask worked:
   expect_identical(extent(LCC2005)[1:4],
                    round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
+
 })
 
 test_that("interactive prepInputs", {
-  testInitOut <- testInit("raster", needGoogle = TRUE)
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -298,7 +302,9 @@ test_that("interactive prepInputs", {
 
     # From Bird/Tati project
     testOnExit(testInitOut)
-    testInitOut <- testInit("raster")
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     birdSpecies <- c("BBWA", "YRWA")
     urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
               "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
@@ -384,7 +390,9 @@ test_that("interactive prepInputs", {
 })
 
 test_that("preProcess doesn't work", {
-  testInitOut <- testInit("raster", needGoogle = TRUE)
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -404,7 +412,7 @@ test_that("preProcess doesn't work", {
     url = urlTif1,
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_7_10_12_13", "Raster", 1, mess, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_7_10_13", "Raster", 1, mess, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir, test = test)
 
   # 2nd time # no targetFile, so can't checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -895,7 +903,9 @@ test_that("prepInputs doesn't work", {
 
   if (getRversion() > "3.3.0") {
 
-    testInitOut <- testInit("raster")
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -935,7 +945,9 @@ test_that("prepInputs doesn't work", {
             test = test3)
 
     testOnExit(testInitOut)
-    testInitOut <- testInit()
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = targetFileLuxRDS,
                                                                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                                                                            path = tmpdir, studyArea = StudyArea)))
@@ -948,7 +960,9 @@ test_that("prepInputs doesn't work", {
             test = test3)
 
     testOnExit(testInitOut)
-    testInitOut <- testInit()
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     googledrive::drive_auth_config(active = FALSE)
     mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
                                                                            studyArea = StudyArea,
@@ -960,7 +974,9 @@ test_that("prepInputs doesn't work", {
             test = test3)
 
     testOnExit(testInitOut)
-    testInitOut <- testInit()
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     mess1 <- capture_messages(test <- prepInputs(
       targetFile = "DEM.tif",
       url = urlTif1,
@@ -973,7 +989,9 @@ test_that("prepInputs doesn't work", {
 })
 
 test_that("load rdata in prepInputs", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -990,7 +1008,9 @@ test_that("load rdata in prepInputs", {
 })
 
 test_that("assessDataType doesn't work", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1095,7 +1115,9 @@ test_that("assessDataType doesn't work", {
 })
 
 test_that("assessDataTypeGDAL doesn't work", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1117,7 +1139,9 @@ test_that("assessDataTypeGDAL doesn't work", {
 test_that("lightweight tests for code coverage", {
   testthat::skip_on_cran()
 
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1237,7 +1261,9 @@ test_that("lightweight tests for code coverage", {
 test_that("lightweight tests 2 for code coverage", {
   testthat::skip_on_cran()
 
-  testInitOut <- testInit("data.table")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1262,7 +1288,7 @@ test_that("lightweight tests 2 for code coverage", {
   extractFromArchive(theZipFile, neededFiles = character())
 
   csfp <- file.path(tmpdir, "CHECKSUMS.txt")
-  fwrite(.emptyChecksumsFileContent, file = csfp, sep = "\t")
+  data.table::fwrite(.emptyChecksumsFileContent, file = csfp, sep = "\t")
 
   # check Checksums fn
   a <- extractFromArchive(theZipFile, neededFiles = character(), checkSumFilePath = csfp,
@@ -1405,7 +1431,9 @@ test_that("options inputPaths", {
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
   skip_on_cran()
 
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1425,7 +1453,9 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
 })
 
 test_that("rasters aren't properly resampled", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
