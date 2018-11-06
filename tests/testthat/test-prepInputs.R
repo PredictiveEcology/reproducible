@@ -943,21 +943,21 @@ test_that("prepInputs doesn't work", {
             filePattern = targetFileLuxRDS, tmpdir = tmpdir,
             test = test3)
 
-    runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessagePostProcess,
-            filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-            test = test3)
+    runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+            expectedMess = expectedMessagePostProcess,
+            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
     testOnExit(testInitOut)
     testInitOut <- testInit()
-    googledrive::drive_auth_config(active = FALSE)
-    mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
-                                                                           studyArea = StudyArea,
-                                                                           fun = "base::readRDS")))
+    googledrive::drive_auth_config(active = TRUE)
+    mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(
+      url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
+      studyArea = StudyArea,
+      fun = "base::readRDS")))
     googledrive::drive_auth_config(active = TRUE)
     runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
             expectedMess = expectedMessagePostProcess,
-            filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir,
-            test = test3)
+            filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
 
     testOnExit(testInitOut)
     testInitOut <- testInit()
