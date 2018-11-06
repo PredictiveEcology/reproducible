@@ -519,7 +519,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                   checkSums[compareNA("FAIL", result)],
                                   checkSums[is.na(result)]))
     } else {
-      browser()
       stop("checkSumFilePath is not a CHECKSUMS.txt file")
     }
   }

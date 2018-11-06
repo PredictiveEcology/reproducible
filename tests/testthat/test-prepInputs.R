@@ -963,19 +963,6 @@ test_that("prepInputs doesn't work", {
             filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
     testOnExit(testInitOut)
-    testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                  "reproducible.overwrite" = TRUE),
-                            needGoogle = TRUE)
-    googledrive::drive_auth_config(active = TRUE)
-    mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(
-      url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
-      studyArea = StudyArea,
-      fun = "base::readRDS")))
-    runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
-            expectedMess = expectedMessagePostProcess,
-            filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
-
-    testOnExit(testInitOut)
     testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                   "reproducible.inputPaths" = NULL),
                             needGoogle = TRUE)
@@ -987,6 +974,22 @@ test_that("prepInputs doesn't work", {
     ))
     runTest("1_2_5_6_7_13", "Raster", 1, mess1, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir,
             test = test)
+
+    if (!interactive()){
+      testOnExit(testInitOut)
+      testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                    "reproducible.overwrite" = TRUE),
+                              needGoogle = TRUE)
+      googledrive::drive_auth_config(active = TRUE)
+      mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(
+        url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
+        studyArea = StudyArea,
+        fun = "base::readRDS")))
+      runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+              expectedMess = expectedMessagePostProcess,
+              filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
+    }
+
   }
 })
 
