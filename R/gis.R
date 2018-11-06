@@ -62,7 +62,7 @@ checkGDALVersion <- function(version) {
 #' @export
 #' @importFrom fasterize fasterize
 #' @importFrom raster crop extract mask nlayers raster stack crs
-#' @importFrom sf st_as_sf
+#' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
 #' @examples
@@ -114,17 +114,17 @@ fastMask <- function(x, y) {
     #numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
     #  is.numeric(y[[x]])
     #})))[1]]
-    if (!raster::canProcessInMemory(x, n = 4)){
+    if (!raster::canProcessInMemory(x, n = 4)) {
      #call gdal
       message("fastMask is using gdalwarp")
 
-      #rasters need to go to same directory that can be unlinked at end without losing other temp files
+      # rasters need to go to same directory that can be unlinked at end without losing other temp files
       tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
       tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
       tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
 
       # the raster could be in memory if it wasn't reprojected
-      if (inMemory(x)){
+      if (inMemory(x)) {
         dType <- assessDataType(raster(x))
         writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
         rm(x)
@@ -156,11 +156,9 @@ fastMask <- function(x, y) {
                "\"", tempSrcRaster, "\"", " ",
                "\"", tempDstRaster, "\""),
         wait = TRUE)
-      ##
       x <- raster(tempDstRaster)
-
     } else {
-      a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)#numericfield)
+      a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
       m <- is.na(a[])
       x[m] <- NA
 
