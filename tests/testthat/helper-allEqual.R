@@ -4,14 +4,14 @@ all.equalWONewCache <- function(a, b) {
   all.equal(a,b)
 }
 
-options(reproducible.verbose = FALSE) ## TODO: why is this being set here instead of properly for package and tests?
-
 # puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
                      opts = NULL, needGoogle = FALSE) {
+  options(httr_oob_default = FALSE, reproducible.verbose = FALSE)
+
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else
@@ -24,7 +24,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (missing(libraries)) libraries <- list()
   unlist(lapply(libraries, require, character.only = TRUE))
   require("testthat")
-  tmpdir <- normPath(file.path(tempdir(), rndstr(1,6)))
+  tmpdir <- normPath(file.path(tempdir(), rndstr(1, 6)))
 
   if (interactive() && isTRUE(needGoogle)) {
     if (file.exists("~/.httr-oauth")) {
