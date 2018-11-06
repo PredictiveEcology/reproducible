@@ -3,8 +3,7 @@ test_that("preProcess fails if user provides a non .zip/.tar as archive", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
-  testInitOut <- testInit("raster", needGoogle = TRUE,
-                          opts = list('reproducible.overwrite' = TRUE))
+  testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -19,8 +18,7 @@ test_that("preProcess fails if user provides non-existing file", {
   testthat::skip_on_cran()
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
-  testInitOut <- testInit("raster", needGoogle = TRUE,
-                          opts = list('reproducible.overwrite' = TRUE))
+  testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -35,8 +33,7 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
   testthat::skip_on_cran()
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
-  testInitOut <- testInit("raster", needGoogle = TRUE,
-                          opts = list('reproducible.overwrite' = TRUE))
+  testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

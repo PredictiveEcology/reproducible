@@ -2,8 +2,7 @@ test_that("preProcess works in different situations", {
   testthat::skip_on_cran()
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
-  testInitOut <- testInit("raster", needGoogle = TRUE,
-                          opts = list("reproducible.overwrite" = TRUE))
+  testInitOut <- testInit("raster", needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
