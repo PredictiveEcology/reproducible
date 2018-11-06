@@ -107,7 +107,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                               destinationPath = destinationPath)
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
-    if (is.null(archive)) {
+    if (is.null(archive) && !is.null(fileGuess)) {
       message("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile")
       targetFile <- basename(fileGuess)
