@@ -439,7 +439,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @rdname projectInputs
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdalwarp
-#' @importFrom raster crs dataType res res<-
+#' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
   dots <- list(...)
   isFactorRaster <- FALSE
