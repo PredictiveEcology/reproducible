@@ -33,7 +33,8 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
   testthat::skip_on_cran()
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
-  testInitOut <- testInit("raster", needGoogle = TRUE)
+  testInitOut <- testInit("raster", needGoogle = TRUE,
+                          opts = list('reproducible.overwrite' = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
