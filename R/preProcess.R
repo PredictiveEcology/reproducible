@@ -331,7 +331,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     needChecksums <- filesExtracted$needChecksums
     checkSums <- filesExtracted$checkSums
   } else {
-    message("  Skipping extractFromArchive: checksums passed")
+    if (!is.null(.isArchive(archive)))
+      message("  Skipping extractFromArchive attempt: no files missing")
+
     filesExtr <- c(filesToChecksum, neededFiles)
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
   }
@@ -375,11 +377,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   ## targetFilePath might still be NULL, need destinationPath too
   if (is.null(targetFilePath)) {
-    if (is.null(filesExtracted$filesExtracted)) {
+    if (is.null(filesExtracted$filesExtr)) {
       if (!is.null(downloadFileResult$downloaded))
         targetFilePath <- downloadFileResult$downloaded
     } else {
-      targetFilePath <- filesExtracted$filesExtracted
+      targetFilePath <- filesExtracted$filesExtr
     }
   }
 
@@ -423,11 +425,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
     on.exit() # remove on.exit because it is done here
   }
-  if (!isTRUE(file.exists(targetFilePath))) {
+  failStop <- if (is.null(targetFilePath)) {
+    TRUE
+  } else if (!isTRUE(file.exists(targetFilePath))) {
+    TRUE
+  } else { FALSE }
+  if (isTRUE(failStop))
     stop("targetFile appears to be misspecified. ",
          "Possibly, it does not exist in the specified archive, ",
          "or the file doesn't exist in destinationPath")
-  }
 
   out <- list(checkSums = checkSums,
               dots = dots,
@@ -781,11 +787,11 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
                                            checkSumFilePath = checkSumFilePath, quick = quick)
 
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
-                                    newFilesToCheck = .basename(filesExtracted$filesExtracted),
+                                    newFilesToCheck = .basename(filesExtracted$filesExtr),
                                     checkSums = filesExtracted$checkSums)
 
       filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
-                                  .basename(filesExtracted$filesExtracted)))
+                                  .basename(filesExtracted$filesExtr)))
       needChecksums <- filesExtracted$needChecksums
       data.table::setDT(filesExtracted$checkSums)
       dontNeedChecksums <- filesExtracted$checkSums[filesExtracted$checkSums$expectedFile %in%
@@ -804,11 +810,11 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 
       ## targetFilePath might still be NULL, need destinationPath too
       filesExtr <- c(filesToChecksum,
-                     if (is.null(filesExtracted$filesExtracted) ||
-                         length(filesExtracted$filesExtracted) == 0)
+                     if (is.null(filesExtracted$filesExtr) ||
+                         length(filesExtracted$filesExtr) == 0)
                        character() #downloadFileResult$downloaded
                      else
-                       filesExtracted$filesExtracted)
+                       filesExtracted$filesExtr)
     }
   }
   if (!is.null(filesExtr)) {
