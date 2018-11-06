@@ -46,7 +46,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     opts <- options(opts)
   }
   if (!is.null(tmpFileExt)) {
-    ranfiles <- unlist(lapply(tmpFileExt, function(x) paste0(rndstr(1,7), ".", x)))
+    ranfiles <- unlist(lapply(tmpFileExt, function(x) paste0(rndstr(1, 7), ".", x)))
     tmpfile <- file.path(tmpdir, ranfiles)
     tmpfile <- gsub(pattern = "\\.\\.", tmpfile, replacement = "\\.")
     file.create(tmpfile)
@@ -121,13 +121,10 @@ urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master
 urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmdNZytLqb/view?usp=sharing"
 urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 
-
 ### Raster package function getData is failing for GADM objects because that site seems to have changed its url
-
 targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
 
-.GADMtmp <- function (country, level, download, path, version)
-{
+.GADMtmp <- function(country, level, download, path, version) {
   country <- raster:::.getCountry(country)
   if (missing(level)) {
     stop("provide a \"level=\" argument; levels can be 0, 1, or 2 for most countries, and higher for some")
@@ -174,9 +171,7 @@ targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
   }
 }
 
-
-getDatatmp <- function (name = "GADM", download = TRUE, path = "", ...)
-{
+getDatatmp <- function(name = "GADM", download = TRUE, path = "", ...) {
   path <- raster:::.getDataPath(path)
   if (name == "GADM") {
     .GADMtmp(..., download = download, path = path, version = 3.6)
