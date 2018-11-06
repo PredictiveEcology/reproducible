@@ -552,6 +552,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 }
 
 #' @export
+#' @importFrom sf st_transform
 #' @rdname projectInputs
 projectInputs.sf <- function(x, targetCRS, ...) {
   warning("sf class objects not fully implemented. Use with projectInputs.sf caution.")
@@ -561,7 +562,6 @@ projectInputs.sf <- function(x, targetCRS, ...) {
     }
 
     x <- sf::st_transform(x = x, crs = sf::st_crs(targetCRS@projargs), ...)
-
   } else {
     stop("Please install sf package: https://github.com/r-spatial/sf")
   }
@@ -651,7 +651,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 
 #' @export
 #' @rdname maskInputs
-#' @importFrom sf st_join st_as_sf st_intersects
+#' @importFrom sf st_as_sf st_intersects st_join
 maskInputs.Spatial <- function(x, studyArea, ...) {
   if (!is.null(studyArea)) {
     message("    intersecting ...")
@@ -836,11 +836,11 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       message(paste("no 'datatype' chosen.",
                     "\n saving", names(x), "as", datatype2))
       dots$datatype <- datatype2
-    } else if (datatype2 != dots$datatype)
+    } else if (datatype2 != dots$datatype) {
       message("chosen 'datatype', ",dots$datatype,", may be inadequate for the ",
               "range/type of values in ", names(x),
               "\n consider changing to ", datatype2)
-
+    }
 
     if (raster::is.factor(x)) {
       filename3 <- gsub(filename2, pattern = "\\.tif", replacement = ".grd")
@@ -875,11 +875,11 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
     keepForDots <- c(setdiff(notWanted1, notWanted2), setdiff(names(dots), notWanted1))
     dots <- dots[keepForDots]
     do.call(shapefile, append(dots, list(x = x, filename = filename2, overwrite = overwrite)))
-
   }
   x
 }
 
+#' @importFrom sf st_write
 #' @rdname writeOutputs
 writeOutputs.sf <- function(x, filename2 = NULL,
                             overwrite = getOption("reproducible.overwrite", FALSE),

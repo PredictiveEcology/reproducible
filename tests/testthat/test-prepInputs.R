@@ -3,8 +3,11 @@ test_that("prepInputs doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
-  testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                "reproducible.overwrite" = TRUE))
+  testInitOut <- testInit("raster", opts = list(
+    "reproducible.cachePath" = .reproducibleTempCacheDir,
+    "reproducible.inputPaths" = NULL,
+    "reproducible.overwrite" = TRUE)
+  )
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -160,7 +163,7 @@ test_that("prepInputs doesn't work", {
 
   # Test the no allow overwrite if two functions (here postProcess and prepInputs)
   #  return same file-backed raster
-  reproducible::clearCache(userTags = "prepInputs", ask = FALSE) ## TODO: fails local tests
+  reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
   # previously, this would cause an error because prepInputs file is gone b/c of previous
   #  line, but postProcess is still in a Cache recovery situation, to same file, which is
   #  not there. Now should be no error.
@@ -902,7 +905,6 @@ test_that("prepInputs doesn't work", {
   skip_on_cran()
 
   if (getRversion() > "3.3.0") {
-
     testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                   "reproducible.inputPaths" = NULL),
                             needGoogle = TRUE)
@@ -929,8 +931,7 @@ test_that("prepInputs doesn't work", {
 
     # Add a study area to Crop and Mask to
     # Create a "study area"
-    coords <- structure(c(6, 6.1, 6.2, 6.15, 6,
-                          49.5, 49.7, 49.8, 49.6, 49.5),
+    coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5),
                         .Dim = c(5L, 2L))
     Sr1 <- Polygon(coords)
     Srs1 <- Polygons(list(Sr1), "s1")
@@ -969,7 +970,6 @@ test_that("prepInputs doesn't work", {
       url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
       studyArea = StudyArea,
       fun = "base::readRDS")))
-    googledrive::drive_auth_config(active = TRUE)
     runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
             expectedMess = expectedMessagePostProcess,
             filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
