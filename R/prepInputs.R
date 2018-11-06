@@ -149,6 +149,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @author Eliot McIntire
 #' @author Jean Marchal
+#' @author Tati Micheletti
 #' @export
 #' @importFrom data.table data.table
 #' @importFrom digest digest
