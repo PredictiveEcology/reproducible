@@ -3,7 +3,8 @@ test_that("prepInputs doesn't work", {
   testthat::skip_on_travis()
   testthat::skip_on_appveyor()
 
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                "reproducible.overwrite" = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -263,7 +264,9 @@ test_that("prepInputs doesn't work", {
 })
 
 test_that("interactive prepInputs", {
-  testInitOut <- testInit("raster", needGoogle = TRUE)
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -299,7 +302,9 @@ test_that("interactive prepInputs", {
 
     # From Bird/Tati project
     testOnExit(testInitOut)
-    testInitOut <- testInit("raster")
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     birdSpecies <- c("BBWA", "YRWA")
     urls <- c("https://drive.google.com/open?id=1CmzYNpxwWr82PoRSbHWG8yg2cC3hncfb",
               "https://drive.google.com/open?id=11Hxk0CcwJsoAnUgfrwbJhXBJNM5Xbd9e")
@@ -385,7 +390,9 @@ test_that("interactive prepInputs", {
 })
 
 test_that("preProcess doesn't work", {
-  testInitOut <- testInit("raster", needGoogle = TRUE)
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -405,7 +412,7 @@ test_that("preProcess doesn't work", {
     url = urlTif1,
     destinationPath = tmpdir
   )))
-  runTest("1_2_5_6_7_10_12_13", "Raster", 1, mess, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir, test = test)
+  runTest("1_2_5_6_7_10_13", "Raster", 1, mess, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir, test = test)
 
   # 2nd time # no targetFile, so can't checksums
   mess <- capture_messages(warns <- capture_warnings(test <- prepInputs(
@@ -896,7 +903,9 @@ test_that("prepInputs doesn't work", {
 
   if (getRversion() > "3.3.0") {
 
-    testInitOut <- testInit("raster")
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
@@ -936,7 +945,9 @@ test_that("prepInputs doesn't work", {
             test = test3)
 
     testOnExit(testInitOut)
-    testInitOut <- testInit()
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(targetFile = targetFileLuxRDS,
                                                                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                                                                            path = tmpdir, studyArea = StudyArea)))
@@ -949,7 +960,9 @@ test_that("prepInputs doesn't work", {
             test = test3)
 
     testOnExit(testInitOut)
-    testInitOut <- testInit()
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     googledrive::drive_auth_config(active = FALSE)
     mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
                                                                            studyArea = StudyArea,
@@ -961,7 +974,9 @@ test_that("prepInputs doesn't work", {
             test = test3)
 
     testOnExit(testInitOut)
-    testInitOut <- testInit()
+    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                  "reproducible.inputPaths" = NULL),
+                            needGoogle = TRUE)
     mess1 <- capture_messages(test <- prepInputs(
       targetFile = "DEM.tif",
       url = urlTif1,
@@ -971,11 +986,12 @@ test_that("prepInputs doesn't work", {
     runTest("1_2_5_6_7_13", "Raster", 1, mess1, expectedMess = expectedMessage, filePattern = "DEM", tmpdir = tmpdir,
             test = test)
   }
-
 })
 
 test_that("load rdata in prepInputs", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -989,13 +1005,12 @@ test_that("load rdata in prepInputs", {
   aa <- prepInputs(tmpfile, fun = "base::load", envir = d)
   expect_false(identical(aa, list(a = a, b = b))) # not in aa, because loaded to d
   expect_true(identical(as.list(d), list(a = a, b = b)))
-
-
 })
 
-
 test_that("assessDataType doesn't work", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1097,11 +1112,12 @@ test_that("assessDataType doesn't work", {
   ras <- raster(ncol = 10, nrow = 10)
   ras[] <- c(Inf, 1, rep(c(0,1),49))
   expect_true(assessDataType(ras) == "FLT8S")
-
 })
 
 test_that("assessDataTypeGDAL doesn't work", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1123,7 +1139,9 @@ test_that("assessDataTypeGDAL doesn't work", {
 test_that("lightweight tests for code coverage", {
   testthat::skip_on_cran()
 
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1154,7 +1172,6 @@ test_that("lightweight tests for code coverage", {
 
   expect_true(any(grepl("Skipping download", aMess)))
 
-
   # Test when wrong archive exists, wrong checkSums
   #checkSums <- Checksums(path = tmpdir)
   file.remove(file.path(tmpdir, "ecozone_shp.zip"))
@@ -1164,7 +1181,6 @@ test_that("lightweight tests for code coverage", {
   file.remove(file.path(tmpdir, "ecozone_shp.zip"))
   checkSums <- Checksums(path = tmpdir)
 
-
   expect_error(downloadFile(url = url,
                             neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
                                             "ecozones.shp", "ecozones.shx"),
@@ -1172,7 +1188,6 @@ test_that("lightweight tests for code coverage", {
                             targetFile = "ecozones.shp",
                             archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
                             destinationPath = tmpdir, checksumFile = checkSumFilePath))
-
 
   ## postProcess.default
   b <- 1
@@ -1226,8 +1241,6 @@ test_that("lightweight tests for code coverage", {
   expect_is(a, "RasterLayer")
   expect_true(identical(crs(a), crs(ras2)))
 
-
-
   ## fixErrors.default
   b <- 1
   a <- fixErrors(b)
@@ -1243,14 +1256,14 @@ test_that("lightweight tests for code coverage", {
   expect_true(identical(crs(a), crs(ras3)))
 
   # sp::CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"))
-
-
 })
 
 test_that("lightweight tests 2 for code coverage", {
   testthat::skip_on_cran()
 
-  testInitOut <- testInit("data.table")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1275,7 +1288,7 @@ test_that("lightweight tests 2 for code coverage", {
   extractFromArchive(theZipFile, neededFiles = character())
 
   csfp <- file.path(tmpdir, "CHECKSUMS.txt")
-  fwrite(.emptyChecksumsFileContent, file = csfp, sep = "\t")
+  data.table::fwrite(.emptyChecksumsFileContent, file = csfp, sep = "\t")
 
   # check Checksums fn
   a <- extractFromArchive(theZipFile, neededFiles = character(), checkSumFilePath = csfp,
@@ -1283,8 +1296,11 @@ test_that("lightweight tests 2 for code coverage", {
   expect_true(file.exists(a$filesExtracted))
   # check Checksums fn
 
-  expect_error(suppressWarnings(extractFromArchive(theZipFile, neededFiles = character(), checkSumFilePath = theRDSFile,
-                                                   destinationPath = tmpdir)), "checkSumFilePath is not a CHECKSUMS.txt")
+  expect_error(suppressWarnings(extractFromArchive(theZipFile,
+                                                   neededFiles = character(),
+                                                   checkSumFilePath = theRDSFile,
+                                                   destinationPath = tmpdir)),
+               "checkSumFilePath is not a CHECKSUMS.txt")
 
   # Doubley nested zips -- extract inner, inner
   a <- extractFromArchive(c(theZipFile2, theZipFile), neededFiles = character(), checkSumFilePath = csfp,
@@ -1294,8 +1310,8 @@ test_that("lightweight tests 2 for code coverage", {
   # triply
   a <- extractFromArchive(theZipFile3, neededFiles = theRDSFile, checkSumFilePath = csfp,
                           destinationPath = tmpdir)
-  expect_true(length(a$extractedArchives)==3)
-  expect_true(length(a$filesExtracted)==3)
+  expect_true(length(a$extractedArchives) == 3)
+  expect_true(length(a$filesExtracted) == 3)
   expect_true(all(basename(a$filesExtracted) %in% basename(c(theZipFile, theZipFile2, theRDSFile))))
   expect_true(all(basename(a$extractedArchives) %in% basename(c(theZipFile, theZipFile2, theZipFile3))))
 
@@ -1303,11 +1319,7 @@ test_that("lightweight tests 2 for code coverage", {
   Checksums(tmpdir, write = TRUE, files = allZipsAndRDS, overwrite = TRUE)
   a <- extractFromArchive(theZipFile3, neededFiles = theRDSFile, checkSumFilePath = csfp,
                           destinationPath = tmpdir, checkSums = Checksums(tmpdir, files = allZipsAndRDS))
-
-
 })
-
-
 
 test_that("options inputPaths", {
   skip_on_cran()
@@ -1340,7 +1352,7 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
-  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1))==1)
+  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1)) == 1)
 
   # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
   #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
@@ -1353,7 +1365,7 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpdir3)
   })
-  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1))==1)
+  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1)) == 1)
 
   #  should copy from 2nd directory (tmpCache) because it is removed in the lower
   #  tmpdir directory & has a CHECKSUMS.txt
@@ -1367,9 +1379,9 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpdir1)
   })
-  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", file.path(tmpdir1, theFile)), mess1))==1)
-  expect_true(sum(grepl(paste0("which points to ", file.path(tmpdir3, theFile)), mess1))==1)
-  expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile)==2)
+  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", file.path(tmpdir1, theFile)), mess1)) == 1)
+  expect_true(sum(grepl(paste0("which points to ", file.path(tmpdir3, theFile)), mess1)) == 1)
+  expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
 
 
   ####
@@ -1386,13 +1398,13 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
-  expect_true(sum(grepl("Hardlinked version of file created", mess1))==1)
+  expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1)
 
   # Have file in inputPath, not in destinationPath
   unlink(file.path(tmpdir2, theFile))
   expect_false(file.exists(file.path(tmpdir2, theFile))) # FALSE -- confirm previous line
   expect_true(file.exists(file.path(tmpdir, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
-  tmpdir2 <- file.path(tmpdir, rndstr(1,5))
+  tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
   mess1 <- capture_messages({
     test1 <- prepInputs(targetFile = theFile,
                         destinationPath = tmpdir2,
@@ -1412,15 +1424,16 @@ test_that("options inputPaths", {
                         dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                         path = tmpCache)
   })
-  expect_true(sum(grepl("Hardlinked version of file created", mess1))==1) # used a linked version
-  expect_true(sum(grepl(basename(tmpdir2), mess1))==1) # it is now in tmpdir2, i.e., the destinationPath
-
+  expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
+  expect_true(sum(grepl(basename(tmpdir2), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 })
 
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
   skip_on_cran()
 
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1440,7 +1453,9 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
 })
 
 test_that("rasters aren't properly resampled", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                "reproducible.inputPaths" = NULL),
+                          needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1464,7 +1479,7 @@ test_that("rasters aren't properly resampled", {
                     destinationPath = tempdir(), method = "bilinear", filename2 = tempfile(fileext = ".tif"))
   expect_true(dataType(out2) == "FLT4S")
 
-  c <- raster(extent(0, 20, 0, 20), res = 1, vals =runif(400, 0, 1))
+  c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
   crs(c) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   tiftemp3 <- tempfile(fileext = ".tif")
   writeRaster(c, filename = tiftemp3)
@@ -1472,5 +1487,4 @@ test_that("rasters aren't properly resampled", {
   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
                      destinationPath = tempdir(), filename2 = tempfile(fileext = ".tif"))
   expect_true(dataType(out3) == "FLT4S")
-
 })

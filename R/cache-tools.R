@@ -143,7 +143,7 @@ setMethod(
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
-        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact & tagKey=="object.size"]$tagValue)
+        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact & tagKey == "object.size"]$tagValue)
         fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
         filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
           r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
@@ -151,9 +151,9 @@ setMethod(
         })
 
         if (length(filesToRemove)) {
-          filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
+          filesToRemove <- gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
           if (isInteractive()) {
-            dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
+            dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
             cacheSize <- sum(cacheSize, file.size(dirLs))
           }

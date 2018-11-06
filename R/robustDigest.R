@@ -105,7 +105,7 @@
 #' .robustDigest(r1) # different
 #'
 setGeneric(".robustDigest", function(object, objects,
-                                    length = 1e6,
+                                    length = getOption("reproducible.length", Inf),
                                     algo = "xxhash64",
                                     quick = getOption("reproducible.quick", FALSE),
                                     classOptions = list()) {

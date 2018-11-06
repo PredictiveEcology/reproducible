@@ -4,7 +4,8 @@ all.equalWONewCache <- function(a, b) {
   all.equal(a,b)
 }
 
-options(reproducible.verbose = FALSE)
+options(reproducible.verbose = FALSE) ## TODO: why is this being set here instead of properly for package and tests?
+
 # puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,
@@ -26,6 +27,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpdir <- normPath(file.path(tempdir(), rndstr(1,6)))
 
   if (interactive() && isTRUE(needGoogle)) {
+    googledrive::drive_auth_config(active = TRUE)
     if (file.exists("~/.httr-oauth")) {
       linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
     } else {
@@ -55,7 +57,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   outList <- list(tmpdir = tmpdir, origDir = origDir, libs = libraries,
                   tmpCache = tmpCache, optsAsk = optsAsk,
                   optsVerbose = optsVerbose, tmpfile = tmpfile,
-                  opts = opts)
+                  opts = opts, needGoogle = needGoogle)
   list2env(outList, envir = parent.frame())
   return(outList)
 }
@@ -69,6 +71,8 @@ testOnExit <- function(testInitOut) {
     options(testInitOut$opts)
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
+  if (isTRUE(testInitOut$needGoogle))
+    googledrive::drive_auth_config(active = FALSE)
   lapply(testInitOut$libs, function(lib) {
     detach(paste0("package:", lib), character.only = TRUE)}
   )
@@ -103,7 +107,7 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
 expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
                         "From:Shapefile", "Checking local", "Finished checking",
                         "Downloading", "Skipping download", "Skipping extractFrom",
-                        "targetFile was not.*Trying raster",
+                        "targetFile was not.*guessed and will try",
                         "Writing checksums.*you can specify targetFile",
                         "No targetFile supplied. Extracting", "Appending checksums")
 expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
