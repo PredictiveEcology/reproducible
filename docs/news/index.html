@@ -147,11 +147,12 @@
 <li>
 <code>Checksums</code> can now have a <code>CHECKSUMS.txt</code> file located in a different place than the <code>destinationPath</code>
 </li>
-<li>Attempt to select raster resampling method based on raster type (<a href='https://github.com/PredictiveEcology/reproducible/issues/63'>#63</a>, <a href='http://github.com/ianmseddy'>@ianmseddy</a>)</li>
+<li>Attempt to select raster resampling method based on raster type if no method supplied (<a href='https://github.com/PredictiveEcology/reproducible/issues/63'>#63</a>, <a href='http://github.com/ianmseddy'>@ianmseddy</a>)</li>
+<li><code>projectInputs</code></li>
 <li>
-<p><code>projectInputs</code></p>
+<p>new function <code>assessDataTypeGDAL</code>, used in <code>postProcess</code>, to identify smallest <code>datatype</code> for large Raster* objects passed to GDAL system call</p>
 <ul>
-<li>now uses <code>gdalwarp</code> for large rasters, improving speed</li>
+<li>when masking and reprojecting large <code>Raster</code> objects, enact <code>gdalwarp</code> system call if <code>raster::canProcessInMemory(x,4) = FALSE</code> for faster and memory-safe processing</li>
 <li>better handling of various data types in <code>Raster</code> objects, including factor rasters</li>
 </ul>
 </li>

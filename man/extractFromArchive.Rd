@@ -42,5 +42,5 @@ A character vector listing the paths of the extracted archives.
 Extract zip or tar archive files, possibly nested in other zip or tar archives.
 }
 \author{
-Jean Marchal & Eliot McIntire
+Jean Marchal and Eliot McIntire
 }

@@ -249,9 +249,7 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
 #'                      See details in \code{\link{postProcess}}.
 #'
 #' @param ... Passed to raster::crop
-#' @author Eliot McIntire & Jean Marchal
-#' @author Ian Eddy
-#' @author Tati Micheletti
+#' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_postProcess.R
 #' @export
 #' @importFrom methods is
@@ -651,8 +649,7 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
 #'          See methods.
 #' @param ... Passed to methods. None currently implemented.
 #'
-#' @author Eliot McIntire
-#' @author Jean Marchal
+#' @author Eliot McIntire and Jean Marchal
 #' @export
 #' @inheritParams cropInputs
 #' @importFrom utils capture.output
@@ -846,8 +843,8 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 #'                  (\code{dsn} argument).
 #' @param ... Passed into \code{\link[raster]{shapefile}} or
 #'             \code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}
-#' @author Eliot McIntire
-#' @author Jean Marchal
+#'
+#' @author Eliot McIntire and Jean Marchal
 #' @export
 #' @importFrom methods is
 #' @importFrom raster shapefile writeRaster
@@ -941,13 +938,15 @@ writeOutputs.default <- function(x, filename2, ...) {
 #' Can be used to write prepared inputs on disk.
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#' @author Eliot McIntire
-#' @author Ceres Barros
-#' @export
-#' @rdname assessDataType
-#' @importFrom raster getValues
-#' @example inst/examples/example_assessDataType.R
+#'
 #' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
+#'
+#' @author Eliot McIntire and Ceres Barros
+#' @export
+#' @importFrom raster getValues
+#' @rdname assessDataType
+#'
+#' @example inst/examples/example_assessDataType.R
 assessDataType <- function(ras) {
   UseMethod("assessDataType")
 }
@@ -1019,10 +1018,7 @@ assessDataType.default <- function(ras) {
 #' @return The appropriate data type for the range of values in \code{ras} for using GDAL.
 #'         See \code{\link[raster]{dataType}} for details.
 #'
-#' @author Eliot McIntire
-#' @author Ceres Barros
-#' @author Ian Eddy
-#' @author Tati Micheletti
+#' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @export
 #' @importFrom raster getValues ncell sampleRandom
