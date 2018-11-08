@@ -1063,6 +1063,45 @@ assessDataTypeGDAL <- function(ras) {
   maxVal <- ras@data@max
   signVal <- minVal < 0
 
+  if (ras@file@datanotation != "FLT4S") {
+    ## gdal deals with infinite values as Float32
+    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
+
+    if (!signVal) {
+      ## only check for binary if there are no decimals and no signs
+      datatype <- if (maxVal <= 255) "Byte" else
+        if (maxVal <= 65534) "UInt16" else
+          if (maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
+    } else {
+      if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
+        if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
+    }
+  } else {
+    if (ncell(ras) > 100000) {
+      rasVals <- raster::sampleRandom(x = ras, size = 100000)
+    } else {
+      rasVals <- raster::getValues(ras)
+    }
+
+    #This method is slower but safer than getValues. Alternatives?
+    doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)
+
+    if (signVal & !doubVal) {
+      datatype <- if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
+        if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
+    } else
+      if (doubVal) {
+        datatype <- "Float32"
+      } else {
+        #data was FLT4S but doesn't need sign or decimal
+        datatype <- if (maxVal <= 255) "Byte" else
+          if (maxVal <= 65534) "UInt16" else
+            if (maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
+      }
+  }
+
+  datatype
+}
 #' Helper functions for \code{assessDataType}
 #'
 #' Copied from https://stackoverflow.com/a/48838123
