@@ -1105,7 +1105,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "FLT8S")
 })
 
-test_that("assessDataTypeGDAL doesn't work", {
+test_that("assessDataType doesn't work for GDAL", {
   testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
