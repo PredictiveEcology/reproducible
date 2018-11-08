@@ -442,6 +442,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
   dots <- list(...)
+
   isFactorRaster <- FALSE
   if (isTRUE(raster::is.factor(x))) {
     isFactorRaster <- TRUE
@@ -479,17 +480,12 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                     "Did you want to pass 'method = \"ngb\"'?")
         }
         if (is.null(dots$method)) {
-          rType <- assessDataType(x) #not foolproof method of determining reclass method
-          if (rType %in% c("FLT4S", "FLT8S")) {
-            Method <- "bilinear"
-          } else {
-            Method <- "ngb"
-          }
-          warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, method = Method, ...))
-        } else {
-          # projectRaster does silly things with integers, i.e., it converts to numeric
-          warn <- capture_warnings(x <- projectRaster(from = x, to = tempRas, ...))
+          dots$method <- assessDataType(x, type = "projectRaster") #not foolproof method of determining reclass method
         }
+
+        Args <- append(dots, list(from = x, to = tempRas))
+        # projectRaster does silly things with integers, i.e., it converts to numeric
+        warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
         # return the integer class to the data in the raster object
         if (isTRUE(isInteger)) {
@@ -520,7 +516,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 
        # the raster is in memory, but large enough to trigger this function: write it to disk
         if (inMemory(x)) {
-          dType <- assessDataType(x)
+          dType <- assessDataType(x, type = "writeRaster")
           writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
           rm(x)
           gc()
@@ -535,7 +531,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           exe <- ".exe"
         } else exe <- ""
 
-        dType <- assessDataTypeGDAL(raster(tempSrcRaster))
+        dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
         system(
           paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                  "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
@@ -561,16 +557,12 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         message("    reprojecting ...")
 
         if (is.null(dots$method)) {
-          rType <- assessDataType(x) #not foolproof method of determining reclass method
-          if (rType %in% c("FLT4S", "FLT8S")) {
-            Method <- "bilinear"
-          } else {
-            Method <- "ngb"
-          }
-          x <- projectRaster(from = x, crs = targetCRS, method = Method, ...)
-        } else {
-          x <- projectRaster(from = x, crs = targetCRS, ...)
+          dots$method <- assessDataType(x, type = "projectRaster") #not foolproof method of determining reclass method
         }
+
+        Args <- append(dots, list(from = x, crs = targetCRS))
+        x <- do.call(projectRaster, args = Args)
+
       } else {
         message("    no reprojecting because target CRS is same as input CRS.")
       }
@@ -862,7 +854,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
                                 overwrite = getOption("reproducible.overwrite", FALSE),
                                 ...) {
   dots <- list(...)
-  datatype2 <- assessDataType(x)
+  datatype2 <- assessDataType(x, type = "writeRaster")
 
   if (!is.null(filename2)) {
     if (is.null(dots$datatype)) {
@@ -941,20 +933,22 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
 #'
-#' @author Eliot McIntire and Ceres Barros
+#' @author Eliot McIntire
+#' @author Ceres Barros
+#' @author Ian Eddy
 #' @export
 #' @importFrom raster getValues
 #' @rdname assessDataType
 #'
 #' @example inst/examples/example_assessDataType.R
-assessDataType <- function(ras) {
+assessDataType <- function(ras, type = 'writeRaster') {
   UseMethod("assessDataType")
 }
 
 #' @export
 #' @importFrom raster getValues ncell
 #' @rdname assessDataType
-assessDataType.Raster <- function(ras) {
+assessDataType.Raster <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
   if (ncell(ras) > 100000) {
     rasVals <- raster::sampleRandom(x = ras, size = 100000)
@@ -994,18 +988,42 @@ assessDataType.Raster <- function(ras) {
         datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
     }
   }
+  #convert datatype if needed
+  switch(type,
+         GDAL = {
+           switch(datatype,
+                  LOG1S = {datatype <- "Byte"},
+                  INT2S = {datatype <- "Int16"},
+                  INT4S = {datatype <- "Int32"},
+                  INT1U = {datatype <- "Byte"},
+                  INT2U = {datatype <- "UInt16"},
+                  INT4U = {datatype <- "UInt32"},
+                  datatype <- "Float32" #there is no GDAL FLT8S
+           )
+         },
+         projectRaster = {
+           switch(datatype,
+                  Float32 = {datatype <- "bilinear"},
+                  Float64 = {datatype <- "bilinear"},
+                  datatype <- "ngb"
+           )
+         },
+         writeRaster = {},
+         stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
+  )
+
   datatype
 }
 
 #' @export
 #' @rdname assessDataType
-assessDataType.RasterStack <- function(ras) {
-  unlist(lapply(names(ras), function(x) assessDataType(ras[[x]])))
+assessDataType.RasterStack <- function(ras, type = "writeRaster") {
+  unlist(lapply(names(ras), function(x) assessDataType(ras[[x]]), type = type))
 }
 
 #' @export
 #' @rdname assessDataType
-assessDataType.default <- function(ras) {
+assessDataType.default <- function(ras, type = "writeRaster") {
   stop("No method for assessDataType for class ", class(ras))
 }
 
