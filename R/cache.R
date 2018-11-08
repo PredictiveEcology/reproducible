@@ -503,7 +503,6 @@ setMethod(
       # don't digest the dotPipe elements as they are already
       # extracted individually into modifiedDots list elements
       dotPipe <- startsWith(names(modifiedDots), "._")
-
       preDigestByClass <- lapply(seq_along(modifiedDots[!dotPipe]), function(x) {
         .preDigestByClass(modifiedDots[!dotPipe][[x]])
       })
@@ -511,10 +510,13 @@ setMethod(
       if (verbose) {
         startHashTime <- Sys.time()
       }
-      # if (!is.null(list(...)$sim))
-      #   browser(expr = current(list(...)$sim)$moduleName == "LBMR")
 
-      preDigest <- lapply(modifiedDots[!dotPipe], function(x) {
+      # remove some of the arguments passed to Cache, which are irrelevant for digest
+      argsToOmitForDigest <- dotPipe |
+        (names(modifiedDots) %in%
+           c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar"))
+
+      preDigest <- lapply(modifiedDots[!argsToOmitForDigest], function(x) {
         # remove the "newCache" attribute, which is irrelevant for digest
         if (!is.null(attr(x, ".Cache")$newCache)) attr(x, ".Cache")$newCache <- NULL
         .robustDigest(x, objects = objects,
