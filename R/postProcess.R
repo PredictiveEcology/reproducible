@@ -1094,7 +1094,7 @@ assessDataTypeGDAL <- function(ras) {
 #' @param longitude longitude
 #' @param latitude  latitude
 #' @export
-#' @rdname assessDataTypeGDALhelpers
+#' @rdname assessDataTypehelpers
 find_UTM_zone <- function(longitude, latitude) {
 
   # Special zones for Svalbard and Norway
@@ -1112,7 +1112,7 @@ find_UTM_zone <- function(longitude, latitude) {
 }
 
 #' @export
-#' @rdname assessDataTypeGDALhelpers
+#' @rdname assessDataTypehelpers
 find_UTM_hemisphere <- function(latitude) {
   ifelse(latitude > 0, "north", "south")
 }
@@ -1128,7 +1128,7 @@ find_UTM_hemisphere <- function(latitude) {
 #' @importFrom dplyr mutate n_distinct
 #' @importFrom sp coordinates CRS proj4string spTransform
 #' @importFrom tibble as_data_frame
-#' @rdname assessDataTypeGDALhelpers
+#' @rdname assessDataTypehelpers
 longlat_to_UTM <- function(long, lat, units = 'm') {
   df <- data.frame(
     id = seq_along(long),
@@ -1165,10 +1165,10 @@ longlat_to_UTM <- function(long, lat, units = 'm') {
 #' @export
 #' @importFrom sp CRS SpatialPoints spTransform
 #' @importFrom tibble as_data_frame
-#' @rdname assessDataTypeGDAL
+#' @rdname assessDataType
 UTM_to_longlat <- function(utm_df, zone, hemisphere) {
   CRSstring <- paste0("+proj=utm +zone=", zone, " +", hemisphere)
-  utmcoor <- sp::SpatialPoints(utm_df, proj4string = sp::CRS(CRSstring))
+  utmcoor <- sp::SpatialPoints(utm_df, proj4string = sp::CRS(CRSstring))@
   longlatcoor <- sp::spTransform(utmcoor, sp::CRS("+init=epsg:4326"))
   tibble::as_data_frame(longlatcoor)
 }
