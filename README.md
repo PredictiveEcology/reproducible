@@ -37,4 +37,3 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE) # stable
 library("devtools")
 install_github("PredictiveEcology/reproducible", ref = "development", dependencies = TRUE) # unstable
 ```
-

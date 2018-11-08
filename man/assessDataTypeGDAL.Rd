@@ -89,11 +89,5 @@ ras[] <- round(runif(100, min = -3.4e+26, max = -1))
 assessDataTypeGDAL(ras)
 }
 \author{
-Eliot McIntire
-
-Ceres Barros
-
-Ian Eddy
-
-Tati Micheletti
+Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 }

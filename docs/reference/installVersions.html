@@ -191,7 +191,7 @@ minimize package installing.</p></td>
 <span class='no'>tempPkgFolder</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>(), <span class='st'>"Packages"</span>)
 <span class='fu'>dir.create</span>(<span class='no'>tempPkgFolder</span>)
 <span class='no'>packageVersionFile</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='no'>tempPkgFolder</span>, <span class='st'>".packageVersion.txt"</span>)
-<span class='fu'><a href='pkgSnapshot.html'>pkgSnapshot</a></span>(<span class='kw'>libPath</span><span class='kw'>=</span><span class='no'>tempPkgFolder</span>, <span class='no'>packageVersionFile</span>)
+<span class='fu'><a href='pkgSnapshot.html'>pkgSnapshot</a></span>(<span class='kw'>libPath</span> <span class='kw'>=</span> <span class='no'>tempPkgFolder</span>, <span class='no'>packageVersionFile</span>)
 
 <span class='fu'><a href='Require.html'>Require</a></span>(<span class='st'>"crayon"</span>, <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='no'>tempPkgFolder</span>) <span class='co'># install.packages first, then library</span>
 

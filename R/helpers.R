@@ -62,7 +62,7 @@ getCRANrepos <- function(repos = NULL) {
 #' @param prefix  A character string to prepend to the filename.
 #' @param suffix  A character string to postpend to the filename.
 #'
-#' @author Jean Marchal & Alex Chubaty
+#' @author Jean Marchal and Alex Chubaty
 #' @export
 #' @importFrom tools file_ext file_path_sans_ext
 #' @rdname prefix

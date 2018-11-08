@@ -254,7 +254,5 @@ test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify current
          \code{\link{downloadFile}}, \code{\link{postProcess}}.
 }
 \author{
-Eliot McIntire
-
-Jean Marchal
+Eliot McIntire, Jean Marchal, and Tati Micheletti
 }

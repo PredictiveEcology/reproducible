@@ -68,6 +68,9 @@ Authors:
 
 Other contributors:
 \itemize{
+  \item Tati Micheletti \email{tati.micheletti@gmail.com} (0000-0003-4838-8342) [contributor]
+  \item Ceres Barros \email{cbarros@mail.ubc.ca} (0000-0003-4036-977X) [contributor]
+  \item Ian Eddy \email{ian.eddy@canada.com} (0000-0001-7397-2116) [contributor]
   \item Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada [copyright holder]
 }
 

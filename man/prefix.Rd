@@ -34,5 +34,5 @@ myFile <- file.path("~/data", "file.tif")
 
 }
 \author{
-Jean Marchal & Alex Chubaty
+Jean Marchal and Alex Chubaty
 }

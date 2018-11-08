@@ -133,7 +133,5 @@ sta <- stack(ras, ras1)
 assessDataType(sta)
 }
 \author{
-Eliot McIntire
-
-Ceres Barros
+Eliot McIntire and Ceres Barros
 }

@@ -22,10 +22,11 @@ version 0.2.5
 * `dlGoogle()` now sets `options(httr_oob_default = TRUE)` if using Rstudio Server.
 * Files in `CHECKSUMS` now sorted alphabetically.
 * `Checksums` can now have a `CHECKSUMS.txt` file located in a different place than the `destinationPath`
-* Attempt to select raster resampling method based on raster type (#63, @ianmseddy)
+* Attempt to select raster resampling method based on raster type if no method supplied (#63, @ianmseddy)
 * `projectInputs` 
+* new function `assessDataTypeGDAL`, used in `postProcess`, to identify smallest `datatype` for large Raster* objects passed to GDAL system call
 
-    - now uses `gdalwarp` for large rasters, improving speed
+    - when masking and reprojecting large `Raster` objects, enact `gdalwarp` system call if `raster::canProcessInMemory(x,4) = FALSE` for faster and memory-safe processing 
     - better handling of various data types in `Raster` objects, including factor rasters
 
 ## Bug fixes

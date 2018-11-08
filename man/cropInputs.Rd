@@ -76,5 +76,5 @@ shpEcozoneMasked <- maskInputs(shpEcozone, StudyArea)
 setwd(ow)
 }
 \author{
-Eliot McIntire & Jean Marchal
+Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 }

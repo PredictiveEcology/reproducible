@@ -147,8 +147,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param useCache Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}
 #'
-#' @author Eliot McIntire
-#' @author Jean Marchal
+#' @author Eliot McIntire, Jean Marchal, and Tati Micheletti
 #' @export
 #' @importFrom data.table data.table
 #' @importFrom digest digest
@@ -345,7 +344,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @return A character vector listing the paths of the extracted archives.
 #'
-#' @author Jean Marchal & Eliot McIntire
+#' @author Jean Marchal and Eliot McIntire
 #' @importFrom tools file_ext
 #'
 extractFromArchive <- function(archive,

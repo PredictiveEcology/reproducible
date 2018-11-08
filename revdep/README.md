@@ -10,7 +10,7 @@
 |language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-11-02                   |
+|date     |2018-11-06                   |
 
 ## Packages
 
@@ -21,11 +21,11 @@
 |dplyr        |   |0.7.7      |2018-10-16 |cran (@0.7.7)                                   |
 |future       |   |1.10.0     |2018-10-17 |cran (@1.10.0)                                  |
 |googledrive  |   |0.1.2      |2018-10-06 |cran (@0.1.2)                                   |
-|quickPlot    |   |0.1.5.9001 |2018-11-02 |Github (PredictiveEcology/quickPlot@1c701e1)    |
-|raster       |*  |2.7-15     |2018-10-16 |cran (@2.7-15)                                  |
-|remotes      |   |2.0.2.9000 |2018-11-02 |Github (r-lib/remotes@95130c6)                  |
-|reproducible |*  |0.2.5      |2018-11-02 |Github (PredictiveEcology/reproducible@0a1b362) |
-|testthat     |*  |2.0.1      |2018-10-13 |cran (@2.0.1)                                   |
+|quickPlot    |   |0.1.5.9001 |2018-11-06 |Github (PredictiveEcology/quickPlot@1c701e1)    |
+|raster       |   |2.8-4      |2018-11-03 |cran (@2.8-4)                                   |
+|remotes      |   |2.0.2.9000 |2018-11-06 |Github (r-lib/remotes@05091df)                  |
+|reproducible |   |0.2.5      |2018-11-06 |Github (PredictiveEcology/reproducible@b1adf13) |
+|testthat     |   |2.0.1      |2018-10-13 |cran (@2.0.1)                                   |
 
 # Check results
 
@@ -45,9 +45,11 @@ Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [111s/116s]
+  Running ‘test-all.R’ [99s/101s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
+  
+  [34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
   [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
   [39m[34m  Using memoised copy of .inputObjects event in test module
   [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
@@ -60,8 +62,6 @@ Last 13 lines of output:
   1. Failure: test objSize (@test-cache.R#333) 
   
   Error: testthat unit tests failed
-  In addition: Warning message:
-  In fun(libname, pkgname) : couldn't connect to display ""
   Execution halted
 
 checking Rd cross-references ... WARNING
