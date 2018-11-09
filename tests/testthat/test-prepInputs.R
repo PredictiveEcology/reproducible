@@ -389,7 +389,6 @@ test_that("interactive prepInputs", {
     expect_true(is.na(crs(outsideModule[[1]])))
     expect_false(identical(outsideModule[[1]], outsideModule[[2]]))
   }
-
 })
 
 test_that("preProcess doesn't work", {
