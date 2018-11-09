@@ -74,7 +74,7 @@ This is the first stage of three used in prepInputs." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -140,10 +140,12 @@ This is the first stage of three used in <code>prepInputs</code>.</p>
     </div>
 
     <pre class="usage"><span class='fu'>preProcess</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='st'>"."</span>, <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>),
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
+  <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span>),
+  <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.quick"</span>),
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
+  <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -190,7 +192,11 @@ only those to be extracted. See table in <code>preProcess</code>.</p></td>
       <th>destinationPath</th>
       <td><p>Character string of a directory in which to download
 and save the file that comes from <code>url</code> and is also where the function
-will look for <code>archive</code> or <code>targetFile</code>.</p></td>
+will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
+To prevent repeated downloads in different locations, the user can also set
+<code>options("reproducible.inputPaths")</code> to one or more local file paths to
+search for the file before attempting to download. Default for that option is
+<code>NULL</code> meaning do not search locally.</p></td>
     </tr>
     <tr>
       <th>fun</th>

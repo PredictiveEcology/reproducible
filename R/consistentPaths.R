@@ -64,12 +64,17 @@ setMethod("normPath",
 })
 
 ################################################################################
-#' Check filepath
+#' Check directory path
 #'
-#' Checks the specified filepath for formatting consistencies,
+#' Checks the specified path to a directory for formatting consistencies,
 #' such as trailing slashes, etc.
 #'
-#' @param path A character string corresponding to a filepath.
+#' @note This will not work for paths to files.
+#' To check for existence of files, use \code{\link{file.exists}}, or use
+#' \code{\link[utils]{file_test}} with \code{op = "-f"}.
+#' To normalize a path to a file, use \code{\link{normPath}} or \code{\link{normalizePath}}.
+#'
+#' @param path A character string corresponding to a directory path.
 #'
 #' @param create A logical indicating whether the path should
 #' be created if it doesn't exist. Default is \code{FALSE}.

@@ -41,6 +41,7 @@
 #'
 #' }
 #'
+#' @import methods
 #' @importFrom Rcpp evalCpp
 #' @useDynLib reproducible
 "_PACKAGE"

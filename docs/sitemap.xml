@@ -4,6 +4,18 @@
     <loc>http://reproducible.predictiveecology.org/index.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/Checksums.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/Copy.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/Path-class.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/Require.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/addChangedAttr.html</loc>
   </url>
   <url>
@@ -11,6 +23,12 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/assessDataType.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/assessDataTypeGDAL.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/assessDataTypeGDALhelpers.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/available.packagesMem.html</loc>
@@ -37,13 +55,10 @@
     <loc>http://reproducible.predictiveecology.org/reference/checkGitConfig.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/checkoutVersion.html</loc>
-  </url>
-  <url>
     <loc>http://reproducible.predictiveecology.org/reference/checkPath.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/Checksums.html</loc>
+    <loc>http://reproducible.predictiveecology.org/reference/checkoutVersion.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/clearStubArtifacts.html</loc>
@@ -53,9 +68,6 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/convertPaths.html</loc>
-  </url>
-  <url>
-    <loc>http://reproducible.predictiveecology.org/reference/Copy.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/copyFile.html</loc>
@@ -79,6 +91,9 @@
     <loc>http://reproducible.predictiveecology.org/reference/dlGoogle.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/dot-formalsNotInCurrentDots.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/downloadFile.html</loc>
   </url>
   <url>
@@ -97,16 +112,22 @@
     <loc>http://reproducible.predictiveecology.org/reference/getGDALVersion.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/guessAtTarget.html</loc>
+    <loc>http://reproducible.predictiveecology.org/reference/grepSysCalls.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/installedVersions.html</loc>
+    <loc>http://reproducible.predictiveecology.org/reference/guessAtTarget.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/installPackages.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/installVersions.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/installedVersions.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/linkOrCopy.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/listFilesInArchive.html</loc>
@@ -136,9 +157,6 @@
     <loc>http://reproducible.predictiveecology.org/reference/package_dependenciesMem.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/Path-class.html</loc>
-  </url>
-  <url>
     <loc>http://reproducible.predictiveecology.org/reference/pipe.html</loc>
   </url>
   <url>
@@ -160,19 +178,19 @@
     <loc>http://reproducible.predictiveecology.org/reference/preDigestByClass.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/preProcess.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/prefix.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/prepInputs.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/prepareFileBackedRaster.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/prepareOutput.html</loc>
-  </url>
-  <url>
-    <loc>http://reproducible.predictiveecology.org/reference/prepInputs.html</loc>
-  </url>
-  <url>
-    <loc>http://reproducible.predictiveecology.org/reference/preProcess.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/projectInputs.html</loc>
@@ -191,9 +209,6 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/reproducible-package.html</loc>
-  </url>
-  <url>
-    <loc>http://reproducible.predictiveecology.org/reference/Require.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/robustDigest.html</loc>

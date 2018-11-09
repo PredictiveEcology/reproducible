@@ -9,9 +9,10 @@
 \usage{
 Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
-  length = 1e+06, compareRasterFileLength, userTags = c(),
-  digestPathContent, omitArgs = NULL, classOptions = list(),
-  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
+  length = getOption("reproducible.length", Inf),
+  compareRasterFileLength, userTags = c(), digestPathContent,
+  omitArgs = NULL, classOptions = list(), debugCache = character(),
+  sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
@@ -19,9 +20,10 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
-  length = 1e+06, compareRasterFileLength, userTags = c(),
-  digestPathContent, omitArgs = NULL, classOptions = list(),
-  debugCache = character(), sideEffect = FALSE, makeCopy = FALSE,
+  length = getOption("reproducible.length", Inf),
+  compareRasterFileLength, userTags = c(), digestPathContent,
+  omitArgs = NULL, classOptions = list(), debugCache = character(),
+  sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
@@ -55,9 +57,12 @@ return. This is only relevant for list, environment (or similar) objects}
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
-object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with file-backing, then this will be
+object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
+file-backing, then this will be
 passed to \code{digest::digest}, essentially limiting the number of bytes
-to digest (for speed). This will only be used if \code{quick = FALSE}.}
+to digest (for speed). This will only be used if \code{quick = FALSE}.
+Default is \code{getOption("reproducible.length")},
+which is set to \code{Inf}.}
 
 \item{compareRasterFileLength}{Being deprecated; use \code{length}.}
 
@@ -123,12 +128,17 @@ This may help in some particularly finicky situations
 where Cache is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
-\item{useCache}{Logical. If \code{FALSE}, then the entire Caching mechanism is bypassed
+\item{useCache}{Logical or \code{"overwrite"}. If \code{FALSE},
+then the entire Caching mechanism is bypassed
 and the function is evaluated as if it was not being Cached.
 Default is \code{getOption("reproducible.useCache")}),
 which is \code{FALSE} by default, meaning use the Cache mechanism. This
 may be useful to turn all Caching on or off in very complex scripts and
-nested functions.}
+nested functions. If \code{"overwrite"} (which can be set with
+\code{options("reproducible.useCache" = "overwrite")}),
+then the function invoke the caching mechanism but will purge
+any entry that is matched, and it will be replaced with the
+results of the current call.}
 
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache

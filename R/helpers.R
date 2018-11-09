@@ -40,8 +40,8 @@ getCRANrepos <- function(repos = NULL) {
     repos <- if (nzchar(cranRepo)) {
       cranRepo
     } else {
-      if (interactive()) {
-        utils::chooseCRANmirror() ## sets repo option
+      if (isInteractive()) {
+        chooseCRANmirror() ## sets repo option
         getOption("repos")["CRAN"]
       } else {
         "https://cloud.R-project.org"
@@ -62,7 +62,7 @@ getCRANrepos <- function(repos = NULL) {
 #' @param prefix  A character string to prepend to the filename.
 #' @param suffix  A character string to postpend to the filename.
 #'
-#' @author Jean Marchal & Alex Chubaty
+#' @author Jean Marchal and Alex Chubaty
 #' @export
 #' @importFrom tools file_ext file_path_sans_ext
 #' @rdname prefix
@@ -89,9 +89,23 @@ getCRANrepos <- function(repos = NULL) {
                                ".", tools::file_ext(f)))
 }
 
+#' Identify which formals to a function are not in the current ...
+#'
+#' This is for advanced use.
 #' @keywords internal
-.formalsNotInCurrentDots <- function(fun, ...) {
-  names(list(...))[!(names(list(...)) %in% names(formals(fun)))]
+#' @export
+#' @param fun A function
+#' @param ... The ... from inside a function. Will be ignored if \code{dots} is
+#'        provided explicitly.
+#' @param dots Optional. If this is provided via say dots = list(...),
+#'             then this will cause the \code{...} to be ignored.
+.formalsNotInCurrentDots <- function(fun, ..., dots) {
+  if (!missing(dots)) {
+    out <- names(dots)[!(names(dots) %in% names(formals(fun)))]
+  } else {
+    out <- names(list(...))[!(names(list(...)) %in% names(formals(fun)))]
+  }
+  out
 }
 
 rndstr <- function(n = 1, len = 8) {
@@ -101,3 +115,4 @@ rndstr <- function(n = 1, len = 8) {
   }))
 }
 
+isInteractive <- function() interactive()

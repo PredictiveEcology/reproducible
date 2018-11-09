@@ -62,7 +62,7 @@ checkGDALVersion <- function(version) {
 #' @export
 #' @importFrom fasterize fasterize
 #' @importFrom raster crop extract mask nlayers raster stack crs
-#' @importFrom sf st_as_sf
+#' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
 #' @examples
@@ -114,14 +114,59 @@ fastMask <- function(x, y) {
     #numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
     #  is.numeric(y[[x]])
     #})))[1]]
-    a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)#numericfield)
-    m <- is.na(a[])
-    x[m] <- NA
+    if (!raster::canProcessInMemory(x, n = 4)) {
+     #call gdal
+      message("fastMask is using gdalwarp")
 
-    if (nlayers(x) > 1) {
-      raster::stack(x)
+      # rasters need to go to same directory that can be unlinked at end without losing other temp files
+      tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
+      tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
+      tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
+
+      # the raster could be in memory if it wasn't reprojected
+      if (inMemory(x)) {
+        dType <- assessDataType(raster(x))
+        writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
+        rm(x)
+        gc()
+      } else {
+        tempSrcRaster <- x@file@name #Keep original raster.
+      }
+
+      #GDAL requires file path to cutline - write to disk
+      tempSrcShape <- file.path(tempfile(), ".shp", fsep = "")
+      ysf <- sf::st_as_sf(y)
+      sf::st_write(ysf, tempSrcShape)
+      tr <- res(x)
+
+      gdalUtils::gdal_setInstallation()
+      if (.Platform$OS.type == "windows") {
+        exe <- ".exe"
+      } else exe <- ""
+      dType <- assessDataTypeGDAL(raster(tempSrcRaster))
+      system(
+        paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+               "-multi ",
+               "-ot ",
+               dType, " ",
+               "-crop_to_cutline ",
+               "-cutline ",  "\"", tempSrcShape,"\"", " ",
+               " -overwrite ",
+               "-tr ", paste(tr, collapse = " "), " ",
+               "\"", tempSrcRaster, "\"", " ",
+               "\"", tempDstRaster, "\""),
+        wait = TRUE)
+      x <- raster(tempDstRaster)
     } else {
-      x
+      a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+      m <- is.na(a[])
+      x[m] <- NA
+
+      if (nlayers(x) > 1) {
+        raster::stack(x)
+      } else {
+        x
+      }
     }
   } else {
     message("This function is using the much slower raster::mask. ",

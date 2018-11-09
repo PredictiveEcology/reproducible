@@ -5,10 +5,12 @@
 \title{Download, Checksum, Extract files}
 \usage{
 preProcess(targetFile = NULL, url = NULL, archive = NULL,
-  alsoExtract = NULL, destinationPath = ".", fun = NULL,
-  dlFun = NULL, quick = getOption("reproducible.quick"),
-  overwrite = FALSE, purge = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE), ...)
+  alsoExtract = NULL,
+  destinationPath = getOption("reproducible.destinationPath", "."),
+  fun = NULL, dlFun = NULL, quick = getOption("reproducible.quick"),
+  overwrite = getOption("reproducible.overwrite", FALSE),
+  purge = FALSE, useCache = getOption("reproducible.useCache", FALSE),
+  ...)
 }
 \arguments{
 \item{targetFile}{Character string giving the path to the eventual file
@@ -43,7 +45,11 @@ only those to be extracted. See table in \code{\link{preProcess}}.}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
-will look for \code{archive} or \code{targetFile}.}
+will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
+To prevent repeated downloads in different locations, the user can also set
+\code{options("reproducible.inputPaths")} to one or more local file paths to
+search for the file before attempting to download. Default for that option is
+\code{NULL} meaning do not search locally.}
 
 \item{fun}{Function or character string indicating the function to use to load
 \code{targetFile} into an \code{R} object, e.g., in form wtih package name:

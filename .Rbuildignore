@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 .*\.toc$
 ^\.lintr$
+^\.httr-oauth$
 ^\.travis\.yml$
 ^_pkgdown\.yml$
 ^appveyor\.yml$
@@ -11,6 +12,6 @@ cran-comments\.md
 ^LICENSE$
 ^revdep$
 ^travis_wait_.*\.log$
+tests/testthat/\.httr-oauth$
 vignettes/.*_cache$
 vignettes/.*\.log$
-^\.httr-oauth$

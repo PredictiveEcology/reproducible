@@ -72,7 +72,7 @@ and download.file." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -135,9 +135,11 @@ and <code><a href='http://www.rdocumentation.org/packages/utils/topics/download.
     
     </div>
 
-    <pre class="usage"><span class='fu'>downloadFile</span>(<span class='no'>archive</span>, <span class='no'>targetFile</span>, <span class='no'>neededFiles</span>, <span class='no'>destinationPath</span>, <span class='no'>quick</span>,
+    <pre class="usage"><span class='fu'>downloadFile</span>(<span class='no'>archive</span>, <span class='no'>targetFile</span>, <span class='no'>neededFiles</span>,
+  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.destinationPath"</span>), <span class='no'>quick</span>,
   <span class='no'>checksumFile</span>, <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>checkSums</span>, <span class='no'>url</span>, <span class='no'>needChecksums</span>,
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>TRUE</span>), <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -168,7 +170,11 @@ See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
       <th>destinationPath</th>
       <td><p>Character string of a directory in which to download
 and save the file that comes from <code>url</code> and is also where the function
-will look for <code>archive</code> or <code>targetFile</code>.</p></td>
+will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
+To prevent repeated downloads in different locations, the user can also set
+<code>options("reproducible.inputPaths")</code> to one or more local file paths to
+search for the file before attempting to download. Default for that option is
+<code>NULL</code> meaning do not search locally.</p></td>
     </tr>
     <tr>
       <th>quick</th>

@@ -72,7 +72,7 @@ They allow the user a bit of control over what is being cached." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -135,10 +135,11 @@ They allow the user a bit of control over what is being cached.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>clearCache</span>(<span class='no'>x</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>after</span>, <span class='no'>before</span>, <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>clearCache</span>(<span class='no'>x</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>after</span>, <span class='no'>before</span>,
+  <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.ask"</span>), <span class='no'>...</span>)
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>clearCache</span>(<span class='no'>x</span>, <span class='no'>userTags</span>, <span class='no'>after</span>, <span class='no'>before</span>,
+<span class='fu'>clearCache</span>(<span class='no'>x</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>after</span>, <span class='no'>before</span>,
   <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.ask"</span>), <span class='no'>...</span>)
 
 <span class='fu'>showCache</span>(<span class='no'>x</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>after</span>, <span class='no'>before</span>, <span class='no'>...</span>)
@@ -146,7 +147,8 @@ They allow the user a bit of control over what is being cached.</p>
 <span class='co'># S4 method for ANY</span>
 <span class='fu'>showCache</span>(<span class='no'>x</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>after</span>, <span class='no'>before</span>, <span class='no'>...</span>)
 
-<span class='fu'>keepCache</span>(<span class='no'>x</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>after</span>, <span class='no'>before</span>, <span class='no'>ask</span>, <span class='no'>...</span>)
+<span class='fu'>keepCache</span>(<span class='no'>x</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>after</span>, <span class='no'>before</span>,
+  <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.ask"</span>), <span class='no'>...</span>)
 
 <span class='co'># S4 method for ANY</span>
 <span class='fu'>keepCache</span>(<span class='no'>x</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>after</span>, <span class='no'>before</span>,
@@ -190,17 +192,17 @@ Objects cached after this time will be shown or deleted.</p></td>
 Objects cached before this time will be shown or deleted.</p></td>
     </tr>
     <tr>
+      <th>ask</th>
+      <td><p>Logical. If <code>FALSE</code>, then it will not ask to confirm deletions using
+<code>clearCache</code> or <code>keepCache</code>. Default is <code>TRUE</code></p></td>
+    </tr>
+    <tr>
       <th>...</th>
       <td><p>Other arguments. Currently, <code>regexp</code>, a logical, can be provided.
 This must be <code>TRUE</code> if the use is passing a regular expression.
 Otherwise, <code>userTags</code> will need to be exact matches. Default is
 missing, which is the same as <code>TRUE</code>. If there are errors due
 to regular expression problem, try <code>FALSE</code>.</p></td>
-    </tr>
-    <tr>
-      <th>ask</th>
-      <td><p>Logical. If <code>FALSE</code>, then it will not ask to confirm deletions using
-<code>clearCache</code> or <code>keepCache</code>. Default is <code>TRUE</code></p></td>
     </tr>
     </table>
     
@@ -236,8 +238,8 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'>library</span>(<span class='no'>raster</span>)
-<span class='fu'>try</span>(<span class='fu'>detach</span>(<span class='st'>"package:magrittr"</span>, <span class='kw'>unload</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>), <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># magrittr,</span>
-                                    <span class='co'>#if loaded, gives an error below</span>
+<span class='fu'>try</span>(<span class='fu'>detach</span>(<span class='st'>"package:magrittr"</span>, <span class='kw'>unload</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>), <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># magrittr,</span></div><div class='output co'>#&gt; <span class='warning'>Warning: ‘magrittr’ namespace cannot be unloaded:</span>
+#&gt; <span class='warning'>  namespace ‘magrittr’ is imported by ‘purrr’, ‘archivist’, ‘testthat’, ‘igraph’, ‘reproducible’, ‘dplyr’, ‘stringr’, ‘pkgdown’, ‘prettyunits’, ‘sf’ so cannot be unloaded</span></div><div class='input'>                                    <span class='co'>#if loaded, gives an error below</span>
 
 <span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'>file.path</span>(<span class='fu'>tempdir</span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"Cache"</span>)
 <span class='fu'>try</span>(<span class='fu'>clearCache</span>(<span class='no'>tmpDir</span>), <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># just to make sure it is clear</span>
@@ -256,154 +258,196 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 <span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>runif</span>, <span class='fl'>40</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
 
 <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"objectName"</span>))</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 1.4 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 840 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 14b8897319b0308acbd84c07ef72f6c1         format
-#&gt;  2: 14b8897319b0308acbd84c07ef72f6c1           name
-#&gt;  3: 14b8897319b0308acbd84c07ef72f6c1          class
-#&gt;  4: 14b8897319b0308acbd84c07ef72f6c1           date
-#&gt;  5: 14b8897319b0308acbd84c07ef72f6c1        cacheId
-#&gt;  6: 14b8897319b0308acbd84c07ef72f6c1     objectName
-#&gt;  7: 14b8897319b0308acbd84c07ef72f6c1       function
-#&gt;  8: 14b8897319b0308acbd84c07ef72f6c1    object.size
-#&gt;  9: 14b8897319b0308acbd84c07ef72f6c1       accessed
-#&gt; 10: 14b8897319b0308acbd84c07ef72f6c1 otherFunctions
-#&gt; 11: 14b8897319b0308acbd84c07ef72f6c1 otherFunctions
-#&gt; 12: 14b8897319b0308acbd84c07ef72f6c1 otherFunctions
-#&gt; 13: 14b8897319b0308acbd84c07ef72f6c1 otherFunctions
-#&gt; 14: 14b8897319b0308acbd84c07ef72f6c1 otherFunctions
-#&gt; 15: 14b8897319b0308acbd84c07ef72f6c1 otherFunctions
-#&gt; 16: 14b8897319b0308acbd84c07ef72f6c1 otherFunctions
-#&gt; 17: 14b8897319b0308acbd84c07ef72f6c1      preDigest
-#&gt; 18: 14b8897319b0308acbd84c07ef72f6c1      preDigest
-#&gt; 19: 1c116f14cde81750bdef785a117715dc         format
-#&gt; 20: 1c116f14cde81750bdef785a117715dc           name
-#&gt; 21: 1c116f14cde81750bdef785a117715dc          class
-#&gt; 22: 1c116f14cde81750bdef785a117715dc           date
-#&gt; 23: 1c116f14cde81750bdef785a117715dc        cacheId
-#&gt; 24: 1c116f14cde81750bdef785a117715dc     objectName
-#&gt; 25: 1c116f14cde81750bdef785a117715dc       function
-#&gt; 26: 1c116f14cde81750bdef785a117715dc    object.size
-#&gt; 27: 1c116f14cde81750bdef785a117715dc       accessed
-#&gt; 28: 1c116f14cde81750bdef785a117715dc otherFunctions
-#&gt; 29: 1c116f14cde81750bdef785a117715dc otherFunctions
-#&gt; 30: 1c116f14cde81750bdef785a117715dc otherFunctions
-#&gt; 31: 1c116f14cde81750bdef785a117715dc otherFunctions
-#&gt; 32: 1c116f14cde81750bdef785a117715dc otherFunctions
-#&gt; 33: 1c116f14cde81750bdef785a117715dc otherFunctions
-#&gt; 34: 1c116f14cde81750bdef785a117715dc otherFunctions
-#&gt; 35: 1c116f14cde81750bdef785a117715dc      preDigest
-#&gt; 36: 1c116f14cde81750bdef785a117715dc      preDigest
-#&gt; 37: 50157d578376153c28c9b75577b25cb6         format
-#&gt; 38: 50157d578376153c28c9b75577b25cb6           name
-#&gt; 39: 50157d578376153c28c9b75577b25cb6          class
-#&gt; 40: 50157d578376153c28c9b75577b25cb6           date
-#&gt; 41: 50157d578376153c28c9b75577b25cb6        cacheId
-#&gt; 42: 50157d578376153c28c9b75577b25cb6     objectName
-#&gt; 43: 50157d578376153c28c9b75577b25cb6       function
-#&gt; 44: 50157d578376153c28c9b75577b25cb6    object.size
-#&gt; 45: 50157d578376153c28c9b75577b25cb6       accessed
-#&gt; 46: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 47: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 48: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 49: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 50: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 51: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 52: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 53: 50157d578376153c28c9b75577b25cb6      preDigest
-#&gt; 54: 50157d578376153c28c9b75577b25cb6      preDigest
+#&gt;  1: 467bc9aebab14d829be36994358a9c99         format
+#&gt;  2: 467bc9aebab14d829be36994358a9c99           name
+#&gt;  3: 467bc9aebab14d829be36994358a9c99          class
+#&gt;  4: 467bc9aebab14d829be36994358a9c99           date
+#&gt;  5: 467bc9aebab14d829be36994358a9c99        cacheId
+#&gt;  6: 467bc9aebab14d829be36994358a9c99     objectName
+#&gt;  7: 467bc9aebab14d829be36994358a9c99       function
+#&gt;  8: 467bc9aebab14d829be36994358a9c99    object.size
+#&gt;  9: 467bc9aebab14d829be36994358a9c99       accessed
+#&gt; 10: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 11: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 12: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 13: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 14: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 15: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 16: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 17: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 18: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 19: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 20: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 21: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 22: 467bc9aebab14d829be36994358a9c99      preDigest
+#&gt; 23: 467bc9aebab14d829be36994358a9c99      preDigest
+#&gt; 24: 6b18df2bf25842f2867592fec5c9edca         format
+#&gt; 25: 6b18df2bf25842f2867592fec5c9edca           name
+#&gt; 26: 6b18df2bf25842f2867592fec5c9edca          class
+#&gt; 27: 6b18df2bf25842f2867592fec5c9edca           date
+#&gt; 28: 6b18df2bf25842f2867592fec5c9edca        cacheId
+#&gt; 29: 6b18df2bf25842f2867592fec5c9edca     objectName
+#&gt; 30: 6b18df2bf25842f2867592fec5c9edca       function
+#&gt; 31: 6b18df2bf25842f2867592fec5c9edca    object.size
+#&gt; 32: 6b18df2bf25842f2867592fec5c9edca       accessed
+#&gt; 33: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 34: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 35: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 36: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 37: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 38: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 39: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 40: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 41: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 42: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 43: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 44: 6b18df2bf25842f2867592fec5c9edca otherFunctions
+#&gt; 45: 6b18df2bf25842f2867592fec5c9edca      preDigest
+#&gt; 46: 6b18df2bf25842f2867592fec5c9edca      preDigest
+#&gt; 47: fa9b7793f61f44000b38496527eccf9a         format
+#&gt; 48: fa9b7793f61f44000b38496527eccf9a           name
+#&gt; 49: fa9b7793f61f44000b38496527eccf9a          class
+#&gt; 50: fa9b7793f61f44000b38496527eccf9a           date
+#&gt; 51: fa9b7793f61f44000b38496527eccf9a        cacheId
+#&gt; 52: fa9b7793f61f44000b38496527eccf9a     objectName
+#&gt; 53: fa9b7793f61f44000b38496527eccf9a       function
+#&gt; 54: fa9b7793f61f44000b38496527eccf9a    object.size
+#&gt; 55: fa9b7793f61f44000b38496527eccf9a       accessed
+#&gt; 56: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 57: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 58: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 59: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 60: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 61: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 62: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 63: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 64: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 65: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 66: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 67: fa9b7793f61f44000b38496527eccf9a otherFunctions
+#&gt; 68: fa9b7793f61f44000b38496527eccf9a      preDigest
+#&gt; 69: fa9b7793f61f44000b38496527eccf9a      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-09-11 17:26:41
-#&gt;  2:      14b8897319b0308acbd84c07ef72f6c1 2018-09-11 17:26:41
-#&gt;  3:                               numeric 2018-09-11 17:26:41
-#&gt;  4:                   2018-09-11 17:26:41 2018-09-11 17:26:41
-#&gt;  5:      7cb09aa387ba235db013863648303b34 2018-09-11 17:26:41
-#&gt;  6:                                     b 2018-09-11 17:26:41
-#&gt;  7:                                 runif 2018-09-11 17:26:41
-#&gt;  8:                                  1024 2018-09-11 17:26:41
-#&gt;  9:                   2018-09-11 17:26:41 2018-09-11 17:26:41
-#&gt; 10:                   withCallingHandlers 2018-09-11 17:26:41
-#&gt; 11:                               saveRDS 2018-09-11 17:26:41
-#&gt; 12:                               do.call 2018-09-11 17:26:41
-#&gt; 13:                      build_site_local 2018-09-11 17:26:41
-#&gt; 14:                       build_reference 2018-09-11 17:26:41
-#&gt; 15:                  data_reference_topic 2018-09-11 17:26:41
-#&gt; 16:                                   try 2018-09-11 17:26:41
-#&gt; 17:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-09-11 17:26:41
-#&gt; 18: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-09-11 17:26:41
-#&gt; 19:                                   rda 2018-09-11 17:26:41
-#&gt; 20:      1c116f14cde81750bdef785a117715dc 2018-09-11 17:26:41
-#&gt; 21:                               numeric 2018-09-11 17:26:41
-#&gt; 22:                   2018-09-11 17:26:41 2018-09-11 17:26:41
-#&gt; 23:      c540fe4e542ac025a1cb8dff2755fc7f 2018-09-11 17:26:41
-#&gt; 24:                                     b 2018-09-11 17:26:41
-#&gt; 25:                                 runif 2018-09-11 17:26:41
-#&gt; 26:                                  1312 2018-09-11 17:26:41
-#&gt; 27:                   2018-09-11 17:26:41 2018-09-11 17:26:41
-#&gt; 28:                   withCallingHandlers 2018-09-11 17:26:41
-#&gt; 29:                               saveRDS 2018-09-11 17:26:41
-#&gt; 30:                               do.call 2018-09-11 17:26:41
-#&gt; 31:                      build_site_local 2018-09-11 17:26:41
-#&gt; 32:                       build_reference 2018-09-11 17:26:41
-#&gt; 33:                  data_reference_topic 2018-09-11 17:26:41
-#&gt; 34:                                   try 2018-09-11 17:26:41
-#&gt; 35:    n:c42c56d63e6a88c428b18dee0f4489d7 2018-09-11 17:26:41
-#&gt; 36: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-09-11 17:26:41
-#&gt; 37:                                   rda 2018-09-11 17:26:40
-#&gt; 38:      50157d578376153c28c9b75577b25cb6 2018-09-11 17:26:40
-#&gt; 39:                               numeric 2018-09-11 17:26:40
-#&gt; 40:                   2018-09-11 17:26:40 2018-09-11 17:26:40
-#&gt; 41:      f55d44974d91fbf61b6cb524983b1ebc 2018-09-11 17:26:41
-#&gt; 42:                                     a 2018-09-11 17:26:41
-#&gt; 43:                                 rnorm 2018-09-11 17:26:41
-#&gt; 44:                                  1024 2018-09-11 17:26:41
-#&gt; 45:                   2018-09-11 17:26:40 2018-09-11 17:26:41
-#&gt; 46:                   withCallingHandlers 2018-09-11 17:26:41
-#&gt; 47:                               saveRDS 2018-09-11 17:26:41
-#&gt; 48:                               do.call 2018-09-11 17:26:41
-#&gt; 49:                      build_site_local 2018-09-11 17:26:41
-#&gt; 50:                       build_reference 2018-09-11 17:26:41
-#&gt; 51:                  data_reference_topic 2018-09-11 17:26:41
-#&gt; 52:                                   try 2018-09-11 17:26:41
-#&gt; 53:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-09-11 17:26:41
-#&gt; 54: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-09-11 17:26:41
+#&gt;  1:                                   rda 2018-11-09 08:47:22
+#&gt;  2:      467bc9aebab14d829be36994358a9c99 2018-11-09 08:47:22
+#&gt;  3:                               numeric 2018-11-09 08:47:22
+#&gt;  4:                   2018-11-09 08:47:22 2018-11-09 08:47:22
+#&gt;  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-09 08:47:22
+#&gt;  6:                                     a 2018-11-09 08:47:22
+#&gt;  7:                                 rnorm 2018-11-09 08:47:22
+#&gt;  8:                                  1024 2018-11-09 08:47:22
+#&gt;  9:                   2018-11-09 08:47:22 2018-11-09 08:47:22
+#&gt; 10:                   withCallingHandlers 2018-11-09 08:47:22
+#&gt; 11:                               saveRDS 2018-11-09 08:47:22
+#&gt; 12:                               do.call 2018-11-09 08:47:22
+#&gt; 13:                      build_site_local 2018-11-09 08:47:22
+#&gt; 14:                       build_reference 2018-11-09 08:47:22
+#&gt; 15:                  data_reference_topic 2018-11-09 08:47:22
+#&gt; 16:                               as_data 2018-11-09 08:47:22
+#&gt; 17:                  as_data.tag_examples 2018-11-09 08:47:22
+#&gt; 18:                             timing_fn 2018-11-09 08:47:22
+#&gt; 19:                                handle 2018-11-09 08:47:22
+#&gt; 20:                                   try 2018-11-09 08:47:22
+#&gt; 21:                           withVisible 2018-11-09 08:47:22
+#&gt; 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-09 08:47:22
+#&gt; 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-09 08:47:22
+#&gt; 24:                                   rda 2018-11-09 08:47:22
+#&gt; 25:      6b18df2bf25842f2867592fec5c9edca 2018-11-09 08:47:22
+#&gt; 26:                               numeric 2018-11-09 08:47:22
+#&gt; 27:                   2018-11-09 08:47:22 2018-11-09 08:47:22
+#&gt; 28:      c540fe4e542ac025a1cb8dff2755fc7f 2018-11-09 08:47:22
+#&gt; 29:                                     b 2018-11-09 08:47:22
+#&gt; 30:                                 runif 2018-11-09 08:47:22
+#&gt; 31:                                  1312 2018-11-09 08:47:22
+#&gt; 32:                   2018-11-09 08:47:22 2018-11-09 08:47:22
+#&gt; 33:                   withCallingHandlers 2018-11-09 08:47:22
+#&gt; 34:                               saveRDS 2018-11-09 08:47:22
+#&gt; 35:                               do.call 2018-11-09 08:47:22
+#&gt; 36:                      build_site_local 2018-11-09 08:47:22
+#&gt; 37:                       build_reference 2018-11-09 08:47:22
+#&gt; 38:                  data_reference_topic 2018-11-09 08:47:22
+#&gt; 39:                               as_data 2018-11-09 08:47:22
+#&gt; 40:                  as_data.tag_examples 2018-11-09 08:47:22
+#&gt; 41:                             timing_fn 2018-11-09 08:47:22
+#&gt; 42:                                handle 2018-11-09 08:47:22
+#&gt; 43:                                   try 2018-11-09 08:47:22
+#&gt; 44:                           withVisible 2018-11-09 08:47:22
+#&gt; 45:    n:c42c56d63e6a88c428b18dee0f4489d7 2018-11-09 08:47:22
+#&gt; 46: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-09 08:47:22
+#&gt; 47:                                   rda 2018-11-09 08:47:22
+#&gt; 48:      fa9b7793f61f44000b38496527eccf9a 2018-11-09 08:47:22
+#&gt; 49:                               numeric 2018-11-09 08:47:22
+#&gt; 50:                   2018-11-09 08:47:22 2018-11-09 08:47:22
+#&gt; 51:      7cb09aa387ba235db013863648303b34 2018-11-09 08:47:22
+#&gt; 52:                                     b 2018-11-09 08:47:22
+#&gt; 53:                                 runif 2018-11-09 08:47:22
+#&gt; 54:                                  1024 2018-11-09 08:47:22
+#&gt; 55:                   2018-11-09 08:47:22 2018-11-09 08:47:22
+#&gt; 56:                   withCallingHandlers 2018-11-09 08:47:22
+#&gt; 57:                               saveRDS 2018-11-09 08:47:22
+#&gt; 58:                               do.call 2018-11-09 08:47:22
+#&gt; 59:                      build_site_local 2018-11-09 08:47:22
+#&gt; 60:                       build_reference 2018-11-09 08:47:22
+#&gt; 61:                  data_reference_topic 2018-11-09 08:47:22
+#&gt; 62:                               as_data 2018-11-09 08:47:22
+#&gt; 63:                  as_data.tag_examples 2018-11-09 08:47:22
+#&gt; 64:                             timing_fn 2018-11-09 08:47:22
+#&gt; 65:                                handle 2018-11-09 08:47:22
+#&gt; 66:                                   try 2018-11-09 08:47:22
+#&gt; 67:                           withVisible 2018-11-09 08:47:22
+#&gt; 68:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-09 08:47:22
+#&gt; 69: .FUN:179092fbad3ec261e58bc89bc8a703c3 2018-11-09 08:47:22
 #&gt;                                  tagValue         createdDate</div><div class='input'><span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"^a$"</span>)) <span class='co'># regular expression ... "a" exactly</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 1.4 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 256 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 50157d578376153c28c9b75577b25cb6         format
-#&gt;  2: 50157d578376153c28c9b75577b25cb6           name
-#&gt;  3: 50157d578376153c28c9b75577b25cb6          class
-#&gt;  4: 50157d578376153c28c9b75577b25cb6           date
-#&gt;  5: 50157d578376153c28c9b75577b25cb6        cacheId
-#&gt;  6: 50157d578376153c28c9b75577b25cb6     objectName
-#&gt;  7: 50157d578376153c28c9b75577b25cb6       function
-#&gt;  8: 50157d578376153c28c9b75577b25cb6    object.size
-#&gt;  9: 50157d578376153c28c9b75577b25cb6       accessed
-#&gt; 10: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 11: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 12: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 13: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 14: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 15: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 16: 50157d578376153c28c9b75577b25cb6 otherFunctions
-#&gt; 17: 50157d578376153c28c9b75577b25cb6      preDigest
-#&gt; 18: 50157d578376153c28c9b75577b25cb6      preDigest
+#&gt;  1: 467bc9aebab14d829be36994358a9c99         format
+#&gt;  2: 467bc9aebab14d829be36994358a9c99           name
+#&gt;  3: 467bc9aebab14d829be36994358a9c99          class
+#&gt;  4: 467bc9aebab14d829be36994358a9c99           date
+#&gt;  5: 467bc9aebab14d829be36994358a9c99        cacheId
+#&gt;  6: 467bc9aebab14d829be36994358a9c99     objectName
+#&gt;  7: 467bc9aebab14d829be36994358a9c99       function
+#&gt;  8: 467bc9aebab14d829be36994358a9c99    object.size
+#&gt;  9: 467bc9aebab14d829be36994358a9c99       accessed
+#&gt; 10: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 11: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 12: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 13: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 14: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 15: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 16: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 17: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 18: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 19: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 20: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 21: 467bc9aebab14d829be36994358a9c99 otherFunctions
+#&gt; 22: 467bc9aebab14d829be36994358a9c99      preDigest
+#&gt; 23: 467bc9aebab14d829be36994358a9c99      preDigest
+#&gt;                             artifact         tagKey
 #&gt;                                  tagValue         createdDate
-#&gt;  1:                                   rda 2018-09-11 17:26:40
-#&gt;  2:      50157d578376153c28c9b75577b25cb6 2018-09-11 17:26:40
-#&gt;  3:                               numeric 2018-09-11 17:26:40
-#&gt;  4:                   2018-09-11 17:26:40 2018-09-11 17:26:40
-#&gt;  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-09-11 17:26:41
-#&gt;  6:                                     a 2018-09-11 17:26:41
-#&gt;  7:                                 rnorm 2018-09-11 17:26:41
-#&gt;  8:                                  1024 2018-09-11 17:26:41
-#&gt;  9:                   2018-09-11 17:26:40 2018-09-11 17:26:41
-#&gt; 10:                   withCallingHandlers 2018-09-11 17:26:41
-#&gt; 11:                               saveRDS 2018-09-11 17:26:41
-#&gt; 12:                               do.call 2018-09-11 17:26:41
-#&gt; 13:                      build_site_local 2018-09-11 17:26:41
-#&gt; 14:                       build_reference 2018-09-11 17:26:41
-#&gt; 15:                  data_reference_topic 2018-09-11 17:26:41
-#&gt; 16:                                   try 2018-09-11 17:26:41
-#&gt; 17:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-09-11 17:26:41
-#&gt; 18: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-09-11 17:26:41</div><div class='input'>
+#&gt;  1:                                   rda 2018-11-09 08:47:22
+#&gt;  2:      467bc9aebab14d829be36994358a9c99 2018-11-09 08:47:22
+#&gt;  3:                               numeric 2018-11-09 08:47:22
+#&gt;  4:                   2018-11-09 08:47:22 2018-11-09 08:47:22
+#&gt;  5:      f55d44974d91fbf61b6cb524983b1ebc 2018-11-09 08:47:22
+#&gt;  6:                                     a 2018-11-09 08:47:22
+#&gt;  7:                                 rnorm 2018-11-09 08:47:22
+#&gt;  8:                                  1024 2018-11-09 08:47:22
+#&gt;  9:                   2018-11-09 08:47:22 2018-11-09 08:47:22
+#&gt; 10:                   withCallingHandlers 2018-11-09 08:47:22
+#&gt; 11:                               saveRDS 2018-11-09 08:47:22
+#&gt; 12:                               do.call 2018-11-09 08:47:22
+#&gt; 13:                      build_site_local 2018-11-09 08:47:22
+#&gt; 14:                       build_reference 2018-11-09 08:47:22
+#&gt; 15:                  data_reference_topic 2018-11-09 08:47:22
+#&gt; 16:                               as_data 2018-11-09 08:47:22
+#&gt; 17:                  as_data.tag_examples 2018-11-09 08:47:22
+#&gt; 18:                             timing_fn 2018-11-09 08:47:22
+#&gt; 19:                                handle 2018-11-09 08:47:22
+#&gt; 20:                                   try 2018-11-09 08:47:22
+#&gt; 21:                           withVisible 2018-11-09 08:47:22
+#&gt; 22:    n:c1de94a5a8d2a5813e07152fb7ea2038 2018-11-09 08:47:22
+#&gt; 23: .FUN:a979d0700a6ef8c7c18736096ff1d522 2018-11-09 08:47:22
+#&gt;                                  tagValue         createdDate</div><div class='input'>
 <span class='co'># Fine control of cache elements -- pick out only the large runif object, and remove it</span>
 <span class='no'>cache1</span> <span class='kw'>&lt;-</span> <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># show only cached objects made during runif</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 1.4 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 584 bytes</span></div><div class='input'><span class='no'>toRemove</span> <span class='kw'>&lt;-</span> <span class='no'>cache1</span>[<span class='no'>tagKey</span><span class='kw'>==</span><span class='st'>"object.size"</span>][<span class='fu'>as.numeric</span>(<span class='no'>tagValue</span>) <span class='kw'>&gt;</span> <span class='fl'>700</span>]$<span class='no'>artifact</span>
 <span class='fu'>clearCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>toRemove</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 1.4 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 0 bytes</span></div><div class='input'><span class='no'>cacheAfter</span> <span class='kw'>&lt;-</span> <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"runif"</span>)) <span class='co'># Only the small one is left</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 1.4 Kb</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 584 bytes</span></div><div class='input'>

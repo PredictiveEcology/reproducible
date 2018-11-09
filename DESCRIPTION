@@ -11,13 +11,19 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-08-07
-Version: 0.2.3
+Date: 2018-11-09
+Version: 0.2.5
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
-    role = c("aut", "cre")),
+    role = c("aut", "cre"), comment=c(ORCID = "0000-0002-6914-8316")),
     person("Alex M", "Chubaty", email = "alex.chubaty@gmail.com",
-    role = c("aut")),
+    role = c("aut"), comment = c(ORCID = "0000-0001-7146-8135")),
+    person("Tati", "Micheletti", email = "tati.micheletti@gmail.com",
+    role = c("ctb"), comment=c(ORCID = "0000-0003-4838-8342")),
+    person("Ceres", "Barros", email = "cbarros@mail.ubc.ca",
+    role = c("ctb"), comment=c(ORCID = "0000-0003-4036-977X")),
+    person("Ian", "Eddy", email = "ian.eddy@canada.com",
+    role = c("ctb"), comment=c(ORCID = "0000-0001-7397-2116")),
     person("Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada",
     role = "cph")
     )
@@ -33,6 +39,7 @@ Imports:
     dplyr,
     fastdigest,
     fasterize,
+    fpCompare,
     gdalUtils,
     git2r (>= 0.18),
     googledrive,
@@ -40,15 +47,19 @@ Imports:
     magrittr,
     memoise,
     methods,
+    parallel,
+    quickPlot,
+    R.utils,
     raster,
     Rcpp (>= 0.12.13),
     RCurl (>= 1.95-4.8),
-    R.utils,
+    remotes,
     rgdal,
     rgeos,
-    quickPlot,
     sf,
     sp,
+    testthat,
+    tibble,
     tools,
     utils,
     versions
@@ -57,7 +68,6 @@ Suggests:
     future,
     knitr,
     rmarkdown,
-    testthat,
     TimeWarp
 Encoding: UTF-8
 Language: en-CA

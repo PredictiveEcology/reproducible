@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -133,9 +133,11 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>extractFromArchive</span>(<span class='no'>archive</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>dirname</span>(<span class='no'>archive</span>),
-  <span class='no'>neededFiles</span>, <span class='kw'>extractedArchives</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>checkSums</span>, <span class='no'>needChecksums</span>,
-  <span class='kw'>filesExtracted</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='no'>checkSumFilePath</span>, <span class='no'>quick</span>)</pre>
+    <pre class="usage"><span class='fu'>extractFromArchive</span>(<span class='no'>archive</span>,
+  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"reproducible.destinationPath"</span>,
+  <span class='fu'>dirname</span>(<span class='no'>archive</span>)), <span class='kw'>neededFiles</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>extractedArchives</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>checkSums</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>needChecksums</span> <span class='kw'>=</span> <span class='fl'>0</span>, <span class='kw'>filesExtracted</span> <span class='kw'>=</span> <span class='fu'>character</span>(),
+  <span class='kw'>checkSumFilePath</span> <span class='kw'>=</span> <span class='fu'>character</span>(), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -143,7 +145,7 @@
     <tr>
       <th>archive</th>
       <td><p>Character string giving the path of the archive
-containing the <code>file</code> to be extracted.</p></td>
+containing the <code>file</code> to be extracted. This path must exist or be <code>NULL</code></p></td>
     </tr>
     <tr>
       <th>destinationPath</th>
@@ -202,7 +204,7 @@ extracted. Defaults to the archive directory.</p></td>
 
     <h2>Author</h2>
     
-Jean Marchal &amp; Eliot McIntire
+Jean Marchal and Eliot McIntire
 
   </div>
 </div>

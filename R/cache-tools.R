@@ -41,8 +41,9 @@
 #'
 #' @export
 #' @importFrom archivist rmFromLocalRepo searchInLocalRepo
-#' @importFrom methods setGeneric setMethod
 #' @importFrom data.table setindex
+#' @importFrom methods setGeneric setMethod
+#' @importFrom utils object.size
 #' @rdname viewCache
 #'
 #' @examples
@@ -78,16 +79,17 @@
 #' clearCache(tmpDir, userTags = toRemove)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
-setGeneric("clearCache", function(x, userTags = character(), after, before, ...) {
+setGeneric("clearCache", function(x, userTags = character(), after, before,
+                                  ask = getOption("reproducible.ask"), ...) {
   standardGeneric("clearCache")
 })
 
 #' @export
-#' @rdname viewCache
 #' @importFrom archivist createLocalRepo
+#' @rdname viewCache
 setMethod(
   "clearCache",
-  definition = function(x, userTags, after, before, ask = getOption("reproducible.ask"), ...) {
+  definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
@@ -96,13 +98,13 @@ setMethod(
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
     if (all(missing(userTags), missing(after), missing(before))) {
-      if (interactive()) {
+      if (isInteractive()) {
         cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
 
         if (isTRUE(ask)) {
-          if (interactive()) {
+          if (isInteractive()) {
             message("Your current cache size is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")
             rl <- readline()
@@ -130,8 +132,9 @@ setMethod(
 
     objsDT <- do.call(showCache, args = args)
 
-    if (interactive()) {
-      cacheSize <- sum(as.numeric(objsDT[tagKey=="object.size"]$tagValue))/4
+    if (isInteractive()) {
+      objSizes <- as.numeric(objsDT[tagKey == "object.size"]$tagValue)
+      cacheSize <- sum(objSizes) / 4
       #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
       #cacheSize <- sum(file.size(rdaFiles))
     }
@@ -140,27 +143,28 @@ setMethod(
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
-        suppressWarnings(rasters <- lapply(rastersInRepo$artifact, function(ras) {
-          loadFromLocalRepo(ras, repoDir = x, value = TRUE)
-        }))
-        filesToRemove <- tryCatch(unlist(lapply(rasters, function(x) filename(x))),
-                                  error = function(x) NULL)
-        if (!is.null(filesToRemove)) {
-          filesToRemove <- gsub(filesToRemove, pattern = ".{1}$", replacement = "*")
-          if (interactive()) {
-            dirLs <- dir(dirname(filesToRemove), full.names = TRUE)
+        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact & tagKey == "object.size"]$tagValue)
+        fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
+        filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
+          r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
+          tryCatch(filename(r), error = function(e) NULL)
+        })
+
+        if (length(filesToRemove)) {
+          filesToRemove <- gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
+          if (isInteractive()) {
+            dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
             cacheSize <- sum(cacheSize, file.size(dirLs))
           }
         }
       }
 
-      if (interactive()) {
+      if (isInteractive()) {
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
         if (isTRUE(ask)) {
-          if (interactive()) {
-
+          if (isInteractive()) {
             message("Your size of your selected objects is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")
             rl <- readline()
@@ -253,7 +257,6 @@ setMethod(
           setkeyv(objsDT2, "artifact")
           shortDT <- unique(objsDT2, by = "artifact")[, artifact]
           objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
-
         }
       }
     }
@@ -269,7 +272,8 @@ setMethod(
 })
 
 #' @rdname viewCache
-setGeneric("keepCache", function(x, userTags = character(), after, before, ask, ...) {
+setGeneric("keepCache", function(x, userTags = character(), after, before,
+                                 ask  = getOption("reproducible.ask"), ...) {
   standardGeneric("keepCache")
 })
 
@@ -277,7 +281,7 @@ setGeneric("keepCache", function(x, userTags = character(), after, before, ask, 
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask = getOption("reproducible.ask"), ...) {
+  definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath"))
       x <- getOption("reproducible.cachePath")
@@ -354,7 +358,7 @@ setMethod(
         while (!written) {
           saved <- suppressWarnings(try(
             saveToLocalRepo(outputToSave, repoDir = cacheTo,
-                            artifactName = "Cache",
+                            artifactName = NULL,
                             archiveData = FALSE, archiveSessionInfo = FALSE,
                             archiveMiniature = FALSE, rememberName = FALSE,
                             silent = TRUE, userTags = userTags),
@@ -405,7 +409,7 @@ checkFutures <- function() {
   # This takes a long time -- can't use it if
   resol <- future::resolved(.reproEnv)
 
-  while(any(!resol)) {
+  while (any(!resol)) {
     #numSleeps <<- numSleeps+1
     Sys.sleep(0.001)
     resol <- future::resolved(.reproEnv)

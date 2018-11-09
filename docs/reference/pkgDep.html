@@ -75,7 +75,7 @@ package_dependencies." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.3</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.5</span>
       </span>
     </div>
 
@@ -143,6 +143,10 @@ the function cannot find the packages there, then it will use
 
     <pre class="usage"><span class='fu'>pkgDep</span>(<span class='no'>packages</span>, <span class='no'>libPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>depends</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>imports</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>suggests</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>linkingTo</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"repos"</span>))
+
+<span class='fu'>pkgDep2</span>(<span class='no'>packages</span>, <span class='no'>libPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>depends</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>imports</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>suggests</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>linkingTo</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'>getOption</span>(<span class='st'>"repos"</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -160,23 +164,23 @@ the function cannot find the packages there, then it will use
     <tr>
       <th>recursive</th>
       <td><p>Logical. Should dependencies of dependencies be searched, recursively.
-NOTE Dependencies of suggests will not be recursive. Default TRUE.</p></td>
+NOTE: Dependencies of suggests will not be recursive. Default <code>TRUE</code>.</p></td>
     </tr>
     <tr>
       <th>depends</th>
-      <td><p>Logical. Include packages listed in "Depends". Default TRUE.</p></td>
+      <td><p>Logical. Include packages listed in "Depends". Default <code>TRUE</code>.</p></td>
     </tr>
     <tr>
       <th>imports</th>
-      <td><p>Logical. Include packages listed in "Imports". Default TRUE.</p></td>
+      <td><p>Logical. Include packages listed in "Imports". Default <code>TRUE</code>.</p></td>
     </tr>
     <tr>
       <th>suggests</th>
-      <td><p>Logical. Include packages listed in "Suggests". Default FALSE.</p></td>
+      <td><p>Logical. Include packages listed in "Suggests". Default <code>FALSE</code>.</p></td>
     </tr>
     <tr>
       <th>linkingTo</th>
-      <td><p>Logical. Include packages listed in "LinkingTo". Default TRUE.</p></td>
+      <td><p>Logical. Include packages listed in "LinkingTo". Default <code>TRUE</code>.</p></td>
     </tr>
     <tr>
       <th>repos</th>

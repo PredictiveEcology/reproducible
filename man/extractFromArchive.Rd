@@ -4,13 +4,15 @@
 \alias{extractFromArchive}
 \title{Extract files from archive}
 \usage{
-extractFromArchive(archive, destinationPath = dirname(archive),
-  neededFiles, extractedArchives = NULL, checkSums, needChecksums,
-  filesExtracted = character(), checkSumFilePath, quick)
+extractFromArchive(archive,
+  destinationPath = getOption("reproducible.destinationPath",
+  dirname(archive)), neededFiles = NULL, extractedArchives = NULL,
+  checkSums = NULL, needChecksums = 0, filesExtracted = character(),
+  checkSumFilePath = character(), quick = FALSE)
 }
 \arguments{
 \item{archive}{Character string giving the path of the archive
-containing the \code{file} to be extracted.}
+containing the \code{file} to be extracted. This path must exist or be \code{NULL}}
 
 \item{destinationPath}{Character string giving the path where \code{neededFiles} will be
 extracted. Defaults to the archive directory.}
@@ -40,5 +42,5 @@ A character vector listing the paths of the extracted archives.
 Extract zip or tar archive files, possibly nested in other zip or tar archives.
 }
 \author{
-Jean Marchal & Eliot McIntire
+Jean Marchal and Eliot McIntire
 }

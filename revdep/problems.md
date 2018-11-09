@@ -4,79 +4,61 @@
 
 |setting  |value                        |
 |:--------|:----------------------------|
-|version  |R version 3.4.4 (2018-03-15) |
-|system   |x86_64, linux-gnu            |
-|ui       |X11                          |
+|version  |R version 3.5.1 (2018-07-02) |
+|system   |x86_64, darwin15.6.0         |
+|ui       |RStudio (1.1.419)            |
 |language |(EN)                         |
 |collate  |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2018-08-07                   |
+|date     |2018-11-08                   |
 
 ## Packages
 
 |package      |*  |version |date       |source                                          |
 |:------------|:--|:-------|:----------|:-----------------------------------------------|
-|reproducible |   |0.2.2   |2018-08-06 |Github (PredictiveEcology/reproducible@99f329f) |
-|rgdal        |   |1.3-4   |2018-08-03 |cran (@1.3-4)                                   |
+|Rcpp         |   |1.0.0   |2018-11-07 |cran (@1.0.0)                                   |
+|reproducible |   |0.2.5   |2018-11-09 |Github (PredictiveEcology/reproducible@5ed6a72) |
 
 # Check results
 
-2 packages with problems
+1 packages with problems
 
 |package     |version | errors| warnings| notes|
 |:-----------|:-------|------:|--------:|-----:|
-|SpaDES.core |0.2.0   |      1|        1|     1|
-|SpaDES      |2.0.2   |      0|        1|     0|
+|SpaDES.core |0.2.2   |      1|        1|     0|
 
-## SpaDES.core (0.2.0)
+## SpaDES.core (0.2.2)
 Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
 Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
 
-1 error  | 1 warning  | 1 note 
+1 error  | 1 warning  | 0 notes
 
 ```
 checking tests ... ERROR
-  Running ‘test-all.R’ [111s/106s]
+  Running ‘test-all.R’ [99s/102s]
 Running the tests in ‘tests/test-all.R’ failed.
 Last 13 lines of output:
-    Using cached copy of .inputObjects event in test module. Adding to memoised copy.
-  ── 3. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#10
-  all.equal(simA, simB) isn't true.
   
-    Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
-  ══ testthat results  ═══════════════════════════════════════════════════════════
-  OK: 361 SKIPPED: 35 FAILED: 3
-  1. Failure: test cache (@test-cache.R#42) 
-  2. Failure: test .prepareOutput (@test-cache.R#233) 
-  3. Failure: test checkpointing with disk-backed raster (@test-checkpoint.R#106) 
+  [34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
+  [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
+  [39m[34m  Using memoised copy of .inputObjects event in test module
+  [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
+  [39m[31m──[39m [31m1. Failure: test objSize (@test-cache.R#333) [39m [31m──────────[39m
+  length(os) == 4 isn't true.
+  
+  [34m  Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
+  [39m══ testthat results  ══════════════════════════════════════
+  OK: 310 SKIPPED: 35 FAILED: 1
+  1. Failure: test objSize (@test-cache.R#333) 
   
   Error: testthat unit tests failed
-  In addition: Warning message:
-  no DISPLAY variable so Tk is not available 
   Execution halted
 
-checking whether package ‘SpaDES.core’ can be installed ... WARNING
-Found the following significant warnings:
-  Warning: no DISPLAY variable so Tk is not available
-See ‘/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/revdep/checks/SpaDES.core.Rcheck/00install.out’ for details.
+checking Rd cross-references ... WARNING
+Missing link or links in documentation object 'moduleCoverage.Rd':
+  ‘[covr]{shine}’
 
-checking installed package size ... NOTE
-  installed size is 12.4Mb
-  sub-directories of 1Mb or more:
-    R    10.1Mb
-    doc   1.4Mb
-```
+See section 'Cross-references' in the 'Writing R Extensions' manual.
 
-## SpaDES (2.0.2)
-Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
-Bug reports: https://github.com/PredictiveEcology/SpaDES/issues
-
-0 errors | 1 warning  | 0 notes
-
-```
-checking whether package ‘SpaDES’ can be installed ... WARNING
-Found the following significant warnings:
-  Warning: no DISPLAY variable so Tk is not available
-See ‘/home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/revdep/checks/SpaDES.Rcheck/00install.out’ for details.
 ```
 

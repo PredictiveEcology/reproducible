@@ -17,7 +17,8 @@ if (getRversion() >= "3.1.0") {
 #' To update your \file{CHECKSUMS.txt} files using the new algorithm, see
 #' \url{https://github.com/PredictiveEcology/SpaDES/issues/295#issuecomment-246513405}.
 #'
-#' @param path    Character string giving the path to the module directory.
+#' @param path    Character string giving the directory path containing \code{CHECKSUMS.txt}
+#'                file, or where it will be written if \code{checksumFile = TRUE}.
 #'
 #' @param write   Logical indicating whether to overwrite \code{CHECKSUMS.txt}.
 #'                Default is \code{FALSE}, as users should not change this file.
@@ -49,11 +50,10 @@ if (getRversion() >= "3.1.0") {
 #'         indicating the result of comparison between local file (\code{x}) and
 #'         expectation based on the \code{CHECKSUMS.txt} file.
 #'
-#' @importFrom dplyr arrange desc filter group_by left_join mutate rename row_number select
-#' @export
-#' @rdname Checksums
-#'
 #' @author Alex Chubaty
+#' @export
+#' @importFrom dplyr arrange desc filter group_by left_join mutate rename row_number select
+#' @rdname Checksums
 #'
 #' @examples
 #' \dontrun{
@@ -78,10 +78,10 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
   standardGeneric("Checksums")
 })
 
-#' @rdname Checksums
-#' @importFrom utils read.table write.table
-#' @importFrom methods formalArgs
 #' @importFrom crayon magenta
+#' @importFrom methods formalArgs
+#' @importFrom utils read.table write.table
+#' @rdname Checksums
 setMethod(
   "Checksums",
   signature = c(path = "character", quickCheck = "ANY",
@@ -95,12 +95,12 @@ setMethod(
     checkPath(path, create = write)
 
     # If it is a SpaDES module, then CHECKSUM.txt must be in the data folder
-    checksumFile <- file.path(path, basename(checksumFile))
+    # Eliot -- removed this Oct 5
+    # checksumFile <- file.path(path, basename(checksumFile))
 
-    if (!write) {
-      stopifnot(file.exists(checksumFile))
-    } else if (!file.exists(checksumFile)) {
-      file.create(checksumFile)
+    if (!file.exists(checksumFile)) {
+      #file.create(checksumFile)
+      writeChecksumsTable(.emptyChecksumsFileContent, checksumFile, dotsWriteTable)
     }
 
     if (is.null(files)) {
@@ -108,7 +108,7 @@ setMethod(
         grep(basename(checksumFile), ., value = TRUE, invert = TRUE)
     }
 
-    txt <- if (file.size(checksumFile) == 0 || !file.exists(checksumFile)) {
+    txt <- if (file.size(checksumFile) == 0) {
       .emptyChecksumsFileContent
     } else {
       read.table(checksumFile,
@@ -165,7 +165,6 @@ setMethod(
       }
     }
 
-
     if (is.null(txt$filesize)) {
       quickCheck <- FALSE
       message(crayon::magenta("  Not possible to use quickCheck;\n ",
@@ -204,7 +203,6 @@ setMethod(
       #   txt[wh,"filesize"] <- checksums[[2]]
       # }
       # txt <- txt[wh,]
-
     }
     results.df <- out %>%
       dplyr::mutate(actualFile = file) %>%
@@ -258,17 +256,16 @@ setMethod(
   definition = function(path, quickCheck, checksumFile, files, ...) {
     Checksums(path, write = FALSE, quickCheck = quickCheck, checksumFile = checksumFile,
               files = files, ...)
-  })
-
+})
 
 writeChecksumsTable <- function(out, checksumFile, dots) {
+  out <- out[order(out$file), ] ## sort by filename alphabetically
   do.call(write.table,
           args = append(list(x = out, file = checksumFile, eol = "\n",
                              col.names = !isTRUE(dots$append),
                              row.names = FALSE),
                         dots))
 }
-
 
 #' Calculate the hashes of multiple files
 #'
@@ -279,12 +276,10 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
 #'
 #' @return A character vector of hashes.
 #'
+#' @author Alex Chubaty
 #' @importFrom digest digest
 #' @keywords internal
 #' @rdname digest
-#'
-#' @author Alex Chubaty
-#'
 setGeneric(".digest", function(file, quickCheck, ...) {
   standardGeneric(".digest")
 })
