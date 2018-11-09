@@ -1099,9 +1099,9 @@ nextNumericName <- function(string) {
     splits <- strsplit(allSimilarFilesInDirSansExt[alreadyHasNumeric], split = "_")
     highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split,1)))),
                          na.rm = TRUE)
-    preNumeric <- lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_"))
+    preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_"))))
 
-    out <- paste0(preNumeric, "_", highestNumber + 1) # keep rndstr in here, so that both streams keep same rnd number state
+    out <- paste0(dirname(saveFilenameSansExt), preNumeric, "_", highestNumber + 1) # keep rndstr in here, so that both streams keep same rnd number state
   } else {
     out <- paste0(saveFilenameSansExt, "_1")
   }
