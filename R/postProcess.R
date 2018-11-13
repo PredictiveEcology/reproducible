@@ -946,7 +946,7 @@ writeOutputs.default <- function(x, filename2, ...) {
 #' Can be used to write prepared inputs on disk.
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#'
+#' @param type Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'.
 #' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
 #'
 #' @author Eliot McIntire
@@ -1027,14 +1027,18 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
          writeRaster = {},
          stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
   )
-
   datatype
 }
 
 #' @export
 #' @rdname assessDataType
 assessDataType.RasterStack <- function(ras, type = "writeRaster") {
-  unlist(lapply(names(ras), function(x) assessDataType(ras[[x]]), type = type))
+
+  xs <- lapply(names(ras), FUN = function(x){
+    y <- assessDataType(ras = ras[[x]], type)
+    return(y)})
+
+  return(unlist(xs))
 }
 
 #' @export
@@ -1048,7 +1052,7 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 #' Can be used to write prepared inputs on disk.
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#'
+#' @param type Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'
 #' @return The appropriate data type for the range of values in \code{ras} for using GDAL.
 #'         See \code{\link[raster]{dataType}} for details.
 #'
@@ -1102,6 +1106,7 @@ assessDataTypeGDAL <- function(ras) {
 
   datatype
 }
+
 #' Helper functions for \code{assessDataType}
 #'
 #' Copied from https://stackoverflow.com/a/48838123
@@ -1109,7 +1114,7 @@ assessDataTypeGDAL <- function(ras) {
 #' @param longitude longitude
 #' @param latitude  latitude
 #' @export
-#' @rdname assessDataTypehelpers
+#' @rdname assessDataTypeGDALhelpers
 find_UTM_zone <- function(longitude, latitude) {
 
   # Special zones for Svalbard and Norway
@@ -1127,7 +1132,7 @@ find_UTM_zone <- function(longitude, latitude) {
 }
 
 #' @export
-#' @rdname assessDataTypehelpers
+#' @rdname assessDataTypeGDALhelpers
 find_UTM_hemisphere <- function(latitude) {
   ifelse(latitude > 0, "north", "south")
 }
@@ -1143,7 +1148,7 @@ find_UTM_hemisphere <- function(latitude) {
 #' @importFrom dplyr mutate n_distinct
 #' @importFrom sp coordinates CRS proj4string spTransform
 #' @importFrom tibble as_data_frame
-#' @rdname assessDataTypehelpers
+#' @rdname assessDataTypeGDALhelpers
 longlat_to_UTM <- function(long, lat, units = 'm') {
   df <- data.frame(
     id = seq_along(long),
@@ -1180,7 +1185,7 @@ longlat_to_UTM <- function(long, lat, units = 'm') {
 #' @export
 #' @importFrom sp CRS SpatialPoints spTransform
 #' @importFrom tibble as_data_frame
-#' @rdname assessDataType
+#' @rdname assessDataTypeGDALhelpers
 UTM_to_longlat <- function(utm_df, zone, hemisphere) {
   CRSstring <- paste0("+proj=utm +zone=", zone, " +", hemisphere)
   utmcoor <- sp::SpatialPoints(utm_df, proj4string = sp::CRS(CRSstring))@

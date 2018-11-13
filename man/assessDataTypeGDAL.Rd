@@ -2,21 +2,14 @@
 % Please edit documentation in R/postProcess.R
 \name{assessDataTypeGDAL}
 \alias{assessDataTypeGDAL}
-\alias{UTM_to_longlat}
 \title{Assess the appropriate raster layer data type for GDAL}
 \usage{
 assessDataTypeGDAL(ras)
-
-UTM_to_longlat(utm_df, zone, hemisphere)
 }
 \arguments{
 \item{ras}{The RasterLayer or RasterStack for which data type will be assessed.}
 
-\item{utm_df}{TODO: need description}
-
-\item{zone}{TODO: need description}
-
-\item{hemisphere}{TODO: need description}
+\item{type}{Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'}
 }
 \value{
 The appropriate data type for the range of values in \code{ras} for using GDAL.
