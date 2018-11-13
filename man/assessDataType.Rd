@@ -11,7 +11,7 @@ assessDataType(ras, type = "writeRaster")
 
 \method{assessDataType}{Raster}(ras, type = "writeRaster")
 
-\method{assessDataType}{RasterStack}(ras, ...)
+\method{assessDataType}{RasterStack}(ras, type = "writeRaster")
 
 \method{assessDataType}{default}(ras, type = "writeRaster")
 }
