@@ -1,8 +1,12 @@
 test_that("all exported functions have examples", {
   fns <- ls("package:reproducible")
   omit <- which(fns == "cache") ## cache is deprecated, so omit it
-  tmpExFile <- "~/tmp/examples.txt"
-  if (grepl("VIC-", Sys.info()["nodename"]))  { # for debugging only
+
+  ## for debugging only:
+  tmpDir <- "~/tmp"
+  tmpExFile <- file.path(tmpDir, "test-examples-out.txt")
+  if (!dir.exists(tmpDir)) dir.create(tmpDir, recursive = TRUE)
+  if (grepl("VIC-", Sys.info()["nodename"]))  {
      cat("#START##############\n", file = tmpExFile, append = FALSE)
   #   cat(fns[-omit], sep = "\n", file = tmpExFile, append = TRUE)
   #   cat("#END##############\n", file = tmpExFile, append = TRUE)
