@@ -1182,7 +1182,7 @@ longlat_to_UTM <- function(long, lat, units = 'm') {
 #' @export
 #' @importFrom sp CRS SpatialPoints spTransform
 #' @importFrom tibble as_data_frame
-#' @rdname assessDataTypeGDALhelpers
+#' @rdname assessDataTypeGDAL
 UTM_to_longlat <- function(utm_df, zone, hemisphere) {
   CRSstring <- paste0("+proj=utm +zone=", zone, " +", hemisphere)
   utmcoor <- sp::SpatialPoints(utm_df, proj4string = sp::CRS(CRSstring))@
