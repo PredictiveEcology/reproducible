@@ -1052,10 +1052,8 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 #' Can be used to write prepared inputs on disk.
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#' @param type Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'
 #' @return The appropriate data type for the range of values in \code{ras} for using GDAL.
 #'         See \code{\link[raster]{dataType}} for details.
-#'
 #' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @export
@@ -1181,7 +1179,6 @@ longlat_to_UTM <- function(long, lat, units = 'm') {
 #' @param utm_df     TODO: need description
 #' @param zone       TODO: need description
 #' @param hemisphere TODO: need description
-#'
 #' @export
 #' @importFrom sp CRS SpatialPoints spTransform
 #' @importFrom tibble as_data_frame
