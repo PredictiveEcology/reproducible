@@ -4,7 +4,6 @@
 \alias{find_UTM_zone}
 \alias{find_UTM_hemisphere}
 \alias{longlat_to_UTM}
-\alias{UTM_to_longlat}
 \title{Helper functions for \code{assessDataType}}
 \usage{
 find_UTM_zone(longitude, latitude)
@@ -12,8 +11,6 @@ find_UTM_zone(longitude, latitude)
 find_UTM_hemisphere(latitude)
 
 longlat_to_UTM(long, lat, units = "m")
-
-UTM_to_longlat(utm_df, zone, hemisphere)
 }
 \arguments{
 \item{longitude}{longitude}
@@ -28,12 +25,6 @@ UTM_to_longlat(utm_df, zone, hemisphere)
 
 \code{longlat_to_UTM} returns a \code{data.frame} containing the UTM values,
 the zone and the hemisphere.}
-
-\item{utm_df}{TODO: need description}
-
-\item{zone}{TODO: need description}
-
-\item{hemisphere}{TODO: need description}
 }
 \description{
 Copied from https://stackoverflow.com/a/48838123
