@@ -961,7 +961,7 @@ test_that("test cache-helpers", {
   b <- .prepareFileBackedRaster(r, tmpCache)
   expect_true(file.exists(filename(b)))
 
-  # Check that it makes  anew name if already in Cache
+  # Check that it makes a new name if already in Cache
   checkPath(file.path(tmpCache, "rasters"), create = TRUE)
   r1 <- writeRaster(r1, filename = file.path(tmpCache, "rasters", basename(tmpfile2)), overwrite = TRUE)
   b <- .prepareFileBackedRaster(r1, tmpCache)
@@ -970,9 +970,8 @@ test_that("test cache-helpers", {
                                                 nextNumericName(basename(filename(r1)))),
                                                 winslash = "/", mustWork = FALSE)))
 
-  #
-  r <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
-  r1 <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+  r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
+  r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   tmpfile <- tempfile(fileext = ".grd")
   r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
   r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
