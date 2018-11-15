@@ -9,7 +9,7 @@ version 0.2.5.9000
 
 ## New features
 
-* updated `assessDataType` to consolidate `assessDataTypeGDAL` and `assessDataTypeGDAL` into single function (#71, @ianmseddy)
+* updated `assessDataType` to consolidate `assessDataTypeGDAL` and `assessDataType` into single function (#71, @ianmseddy)
 
 ## Bug fixes
 
