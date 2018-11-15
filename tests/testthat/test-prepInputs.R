@@ -1509,7 +1509,6 @@ test_that("System call gdal works", {
   expect_true(dataType(test2) == "FLT4S")
 
   on.exit(raster::rasterOptions(todisk = FALSE))
-
 })
 
 test_that("System call gdal will make the rasters match for rasterStack", {
@@ -1539,5 +1538,4 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   expect_identical(raster::crs(ras2), raster::crs(test1))
 
   on.exit(raster::rasterOptions(todisk = FALSE))
-
 })
