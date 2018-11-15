@@ -1104,7 +1104,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "FLT8S")
 })
 
-test_that("assessDataTypeGDAL doesn't work", {
+test_that("assessDataType doesn't work for GDAL", {
   testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
@@ -1115,15 +1115,15 @@ test_that("assessDataTypeGDAL doesn't work", {
   ## Float32
   ras <- raster(ncol = 10, nrow = 10)
   ras[] <- runif(100, 0, 1)
-  expect_true(assessDataTypeGDAL(ras) == "Float32")
+  expect_true(assessDataType(ras, type = "GDAL") == "Float32")
 
   ## UInt16
   ras[] <- c(201:300)
-  expect_true(assessDataTypeGDAL(ras) == "UInt16")
+  expect_true(assessDataType(ras, type = "GDAL") == "UInt16")
 
   ##Byte
   ras[] <- 1:100
-  expect_true(assessDataTypeGDAL(ras) == "Byte")
+  expect_true(assessDataType(ras, type = "GDAL") == "Byte")
 })
 
 test_that("lightweight tests for code coverage", {
@@ -1477,4 +1477,37 @@ test_that("rasters aren't properly resampled", {
   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
                      destinationPath = tempdir(), filename2 = tempfile(fileext = ".tif"))
   expect_true(dataType(out3) == "FLT4S")
+})
+
+test_that("System call gdal works", {
+  skip_on_cran()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
+  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+
+  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+
+  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE)
+  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+  expect_true(dataType(test1) == "INT1U") #properly resampled
+
+  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
+  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+  test2 <- prepInputs(targetFile = ras@file@name,
+                      destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
+  expect_true(dataType(test2) == "FLT4S")
+
+  on.exit(raster::rasterOptions(todisk = FALSE))
+
 })

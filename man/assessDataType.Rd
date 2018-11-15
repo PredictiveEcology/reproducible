@@ -7,16 +7,18 @@
 \alias{assessDataType.default}
 \title{Assess the appropriate raster layer data type}
 \usage{
-assessDataType(ras)
+assessDataType(ras, type = "writeRaster")
 
-\method{assessDataType}{Raster}(ras)
+\method{assessDataType}{Raster}(ras, type = "writeRaster")
 
-\method{assessDataType}{RasterStack}(ras)
+\method{assessDataType}{RasterStack}(ras, type = "writeRaster")
 
-\method{assessDataType}{default}(ras)
+\method{assessDataType}{default}(ras, type = "writeRaster")
 }
 \arguments{
 \item{ras}{The RasterLayer or RasterStack for which data type will be assessed.}
+
+\item{type}{Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'.}
 }
 \value{
 The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
@@ -133,5 +135,9 @@ sta <- stack(ras, ras1)
 assessDataType(sta)
 }
 \author{
-Eliot McIntire and Ceres Barros
+Eliot McIntire
+
+Ceres Barros
+
+Ian Eddy
 }
