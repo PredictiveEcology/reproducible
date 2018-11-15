@@ -765,7 +765,6 @@ setMethod(
 #' @inheritParams base::file.copy
 #'
 #' @author Eliot McIntire and Alex Chubaty
-#' @importFrom assertthat assert_that
 #' @rdname copyFile
 #'
 #' @examples
