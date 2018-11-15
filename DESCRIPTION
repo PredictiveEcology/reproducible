@@ -30,6 +30,7 @@ Authors@R: c(
 Depends:
     R (>= 3.3.0)
 Imports:
+    assertthat,
     archivist (>= 2.1.2),
     backports,
     crayon,

@@ -768,6 +768,7 @@ setMethod(
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
+#' @importFrom assertthat assert_that
 #' @rdname copyFile
 #'
 #' @examples
