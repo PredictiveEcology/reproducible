@@ -697,7 +697,6 @@ setMethod(
           curGriFilename <- sub(curFilename, pattern = "[.]grd$", replacement = ".gri")
           copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
         } else {
-          #suppressWarnings(
           saveFilename <- unlist(lapply(seq_along(curFilename),
                                         function(x) {
                                           # change filename if it already exists
@@ -789,7 +788,7 @@ setMethod(
 #'
 copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                      overwrite = TRUE, delDestination = FALSE,
-                     #copyRasterFile=TRUE, clearRepo=TRUE,
+                     #copyRasterFile = TRUE, clearRepo = TRUE,
                      create = TRUE, silent = FALSE) {
   origDir <- getwd()
   useFileCopy <- identical(dirname(from), dirname(to))
@@ -833,7 +832,6 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         # rsync can't handle file renaming on copy
         useFileCopy <- TRUE
       } else {
-
         if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
         rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
         opts <- if (silent) " -a " else " -avP "
@@ -843,7 +841,6 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
         useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
       }
-
     } else {
       useFileCopy <- TRUE
     }
