@@ -509,6 +509,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                    " -t_srs \"", as.character(targetCRS), "\"",
                    " -multi ",
                    "-ot ",
+                   "-te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
+                                   extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "),
                    dType,
                    " -r ",
                    dots$method,
