@@ -6,14 +6,10 @@ This is an enhancement release. Several new functions and new options.
 ## Test environments
 
 ### Previous R versions
-* Ubuntu 14.04        (travis-ci), R 3.1.0
-* Ubuntu 14.04        (travis-ci), R 3.2.0
-* Ubuntu 14.04        (travis-ci), R 3.3.0
-* Ubuntu 14.04        (travis-ci), R 3.4.0
-* Windows              (appveyor), R 3.1.0
-* Windows              (appveyor), R 3.2.0
-* Windows              (appveyor), R 3.3.0
-* Windows              (appveyor), R 3.4.0
+* Ubuntu 14.04        (travis-ci), R 3.3.3
+* Ubuntu 14.04        (travis-ci), R 3.4.4
+* Windows              (appveyor), R 3.3.3
+* Windows              (appveyor), R 3.4.4
 
 ### Current R versions
 * macOS El Capitan        (r-hub), R 3.5.0

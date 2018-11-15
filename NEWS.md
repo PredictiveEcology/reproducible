@@ -1,5 +1,20 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.5.9000
+=============
+
+## Dependency changes
+
+* Lorem ipsum ...
+
+## New features
+
+* updated `assessDataType` to consolidate `assessDataTypeGDAL` and `assessDataType` into single function (#71, @ianmseddy)
+
+## Bug fixes
+
+* calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
+
 version 0.2.5
 =============
 
