@@ -690,7 +690,6 @@ setMethod(
             unique() %>%
             sapply(., dir.create, recursive = TRUE)
         }
-
         if (any(saveFilename %>% grepl(., pattern = "[.]grd$"))) {
           copyFile(from = curFilename, to = saveFilename, overwrite = TRUE, silent = TRUE)
           griFilename <- sub(saveFilename, pattern = "[.]grd$", replacement = ".gri")
@@ -766,29 +765,36 @@ setMethod(
 #' @inheritParams base::file.copy
 #'
 #' @author Eliot McIntire and Alex Chubaty
-#' @export
 #' @rdname copyFile
 #'
 #' @examples
 #' tmpDirFrom <- file.path(tempdir(), "example_fileCopy_from")
 #' tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
-#' tmpFile <- tempfile("file", tmpDirFrom, ".csv")
+#' tmpFile1 <- tempfile("file1", tmpDirFrom, ".csv")
+#' tmpFile2 <- tempfile("file2", tmpDirFrom, ".csv")
 #' dir.create(tmpDirFrom)
-#' f1 <- normalizePath(tmpFile, mustWork = FALSE)
-#' f2 <- normalizePath(file.path(tmpDirTo, basename(tmpFile)), mustWork = FALSE)
+#' f1 <- normalizePath(tmpFile1, mustWork = FALSE)
+#' f2 <- normalizePath(tmpFile2, mustWork = FALSE)
+#' t1 <- normalizePath(file.path(tmpDirTo, basename(tmpFile1)), mustWork = FALSE)
+#' t2 <- normalizePath(file.path(tmpDirTo, basename(tmpFile2)), mustWork = FALSE)
 #'
 #' write.csv(data.frame(a = 1:10, b = runif(10), c = letters[1:10]), f1)
-#' copyFile(f1, f2)
-#' file.exists(f2) ## TRUE
-#' identical(read.csv(f1), read.csv(f2)) ## TRUE
+#' write.csv(data.frame(c = 11:20, d = runif(10), e = letters[11:20]), f2)
+#' copyFile(c(f1, f2), c(t1, t2))
+#' file.exists(t1) ## TRUE
+#' file.exists(t2) ## TRUE
+#' identical(read.csv(f1), read.csv(f2)) ## FALSE
+#' identical(read.csv(f1), read.csv(t1)) ## TRUE
+#' identical(read.csv(f2), read.csv(t2)) ## TRUE
 #'
 #' unlink(tmpDirFrom, recursive = TRUE)
 #' unlink(tmpDirTo, recursive = TRUE)
 #'
-copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
-                     overwrite = TRUE, delDestination = FALSE,
-                     #copyRasterFile = TRUE, clearRepo = TRUE,
-                     create = TRUE, silent = FALSE) {
+copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
+                           overwrite = TRUE, delDestination = FALSE,
+                           #copyRasterFile = TRUE, clearRepo = TRUE,
+                           create = TRUE, silent = FALSE) {
+  if (any(length(from) != 1, length(to) != 1)) stop("from and to must each be length 1")
   origDir <- getwd()
   useFileCopy <- identical(dirname(from), dirname(to))
 
@@ -852,6 +858,10 @@ copyFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   setwd(origDir)
   return(invisible(to))
 }
+
+#' @export
+#' @rdname copyFile
+copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
 #' @rdname cacheHelper
 #' @importFrom fastdigest fastdigest
