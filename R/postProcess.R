@@ -442,7 +442,6 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
   dots <- list(...)
-
   isFactorRaster <- FALSE
   if (isTRUE(raster::is.factor(x))) {
     isFactorRaster <- TRUE
@@ -502,16 +501,15 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
 
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-
           system(
             paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                    "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
                    " -t_srs \"", as.character(targetCRS), "\"",
                    " -multi ",
                    "-ot ", dType,
-                   "-te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
+                   " -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
                                    extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "),
-                   " -r ", dots$method,
+                   "-r ", dots$method,
                    " -overwrite ",
                    "-tr ", paste(tr, collapse = " "), " ",
                    "\"", tempSrcRaster, "\"", " ",
