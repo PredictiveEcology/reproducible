@@ -794,6 +794,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
                            overwrite = TRUE, delDestination = FALSE,
                            #copyRasterFile = TRUE, clearRepo = TRUE,
                            create = TRUE, silent = FALSE) {
+  if (any(length(from) != 1, length(to) != 1)) stop("from and to must each be length 1")
   origDir <- getwd()
   useFileCopy <- identical(dirname(from), dirname(to))
 
