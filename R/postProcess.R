@@ -1102,4 +1102,3 @@ assessDataTypeGDAL <- function(ras) {
 
   datatype
 }
-
