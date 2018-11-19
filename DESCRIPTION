@@ -34,7 +34,6 @@ Imports:
     backports,
     crayon,
     data.table (>= 1.10.4),
-    devtools,
     digest,
     dplyr,
     fastdigest,
@@ -59,7 +58,6 @@ Imports:
     sf,
     sp,
     testthat,
-    tibble,
     tools,
     utils,
     versions
