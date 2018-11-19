@@ -58,7 +58,6 @@ Imports:
     sf,
     sp,
     testthat,
-    tibble,
     tools,
     utils,
     versions

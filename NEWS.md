@@ -5,7 +5,7 @@ version 0.2.5.9000
 
 ## Dependency changes
 
-* Lorem ipsum ...
+* remove `tibble` from Imports as it's no loger being used
 
 ## New features
 
