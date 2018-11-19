@@ -552,7 +552,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
             dots$method <- assessDataType(x, type = "projectRaster") #not foolproof method of determining reclass method
           }
 
-          if (is.null(rasterToMatch)){
+          if (is.null(rasterToMatch)) {
+            tempRas <- projectExtent(object = x, crs = targetCRS) ## make a template RTM, with targetCRS
             Args <- append(dots, list(from = x, to = tempRas))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
