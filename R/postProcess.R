@@ -506,6 +506,12 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
             tempSrcRaster <- x@file@name #Keep original raster
           }
 
+          teRas <- " " #This sets extents in GDAL
+          if (!is.null(rasterToMatch)){
+            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
+                                         extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "))
+          }
+
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
           system(
             paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
@@ -513,8 +519,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                    " -t_srs \"", as.character(targetCRS), "\"",
                    " -multi ",
                    "-ot ", dType,
-                   " -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
-                                   extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "),
+                   teRas,
                    "-r ", dots$method,
                    " -overwrite ",
                    "-tr ", paste(tr, collapse = " "), " ",
