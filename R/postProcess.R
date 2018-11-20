@@ -458,10 +458,16 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         targetCRS <- crs(rasterToMatch)
       }
 
-      if (!identical(crs(x), targetCRS) |
-          !identical(res(x), res(rasterToMatch)) |
-          !identical(extent(x), extent(rasterToMatch))) {
-        message("    reprojecting ...")
+      doProjection <- FALSE
+      doProjection <- if (is.null(rasterToMatch)) {
+      if (!identical(crs(x), targetCRS))
+          TRUE
+      } else if (!identical(crs(x), targetCRS) |
+                 !identical(res(x), res(rasterToMatch)) |
+                 !identical(extent(x), extent(rasterToMatch)))
+        TRUE
+
+      if (doProjection) {
 
         if (!canProcessInMemory(x, 4)) {
 
@@ -545,7 +551,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
 
           if (is.null(rasterToMatch)){
-            Args <- append(dots, list(from = x, to = tempRas))
+            Args <- append(dots, list(from = x, crs = targetCRS))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
           } else {
