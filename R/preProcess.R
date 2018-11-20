@@ -732,7 +732,7 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 
     # Try hard link first -- the only type that R deeply recognizes
     warns <- capture_warnings(result <- file.link(from[!dups], to))
-    if (isTRUE(result)) {
+    if (isTRUE(all(result))) {
       message("Hardlinked version of file created at: ", to, ", which points to "
               , from, "; no copy was made.")
     }
@@ -743,17 +743,17 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
     }
 
     # On *nix types -- try symlink
-    if (isFALSE(result) && isTRUE(symlink)) {
+    if (isFALSE(all(result)) && isTRUE(symlink)) {
       if (!identical(.Platform$OS.type, "windows")) {
         result <- suppressWarnings(file.symlink(from, to))
-        if (isTRUE(result)) {
+        if (isTRUE(all(result))) {
           message("Symlinked version of file created at: ", to, ", which points to "
                   , from, "; no copy was made.")
         }
       }
     }
 
-    if (isFALSE(result)) {
+    if (isFALSE(all(result))) {
       result <- file.copy(from, to)
       message("Copy of file: ", from, ", was created at: ", to)
     }
