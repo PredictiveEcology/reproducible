@@ -458,10 +458,16 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         targetCRS <- crs(rasterToMatch)
       }
 
-      if (!identical(crs(x), targetCRS) |
-          !identical(res(x), res(rasterToMatch)) |
-          !identical(extent(x), extent(rasterToMatch))) {
-        message("    reprojecting ...")
+      doProjection <- FALSE
+      doProjection <- if (is.null(rasterToMatch)) {
+      if (!identical(crs(x), targetCRS))
+          TRUE
+      } else if (!identical(crs(x), targetCRS) |
+                 !identical(res(x), res(rasterToMatch)) |
+                 !identical(extent(x), extent(rasterToMatch)))
+        TRUE
+
+      if (doProjection) {
 
         if (!canProcessInMemory(x, 4)) {
 
@@ -500,6 +506,12 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
             tempSrcRaster <- x@file@name #Keep original raster
           }
 
+          teRas <- " " #This sets extents in GDAL
+          if (!is.null(rasterToMatch)){
+            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
+                                         extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "))
+          }
+
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
           system(
             paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
@@ -507,8 +519,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                    " -t_srs \"", as.character(targetCRS), "\"",
                    " -multi ",
                    "-ot ", dType,
-                   " -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
-                                   extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "),
+                   teRas,
                    "-r ", dots$method,
                    " -overwrite ",
                    "-tr ", paste(tr, collapse = " "), " ",
@@ -545,7 +556,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
 
           if (is.null(rasterToMatch)){
-            Args <- append(dots, list(from = x, to = tempRas))
+            Args <- append(dots, list(from = x, crs = targetCRS))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
           } else {
