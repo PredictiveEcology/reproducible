@@ -464,7 +464,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         message("    reprojecting ...")
 
         if (!canProcessInMemory(x, 4)) {
-
           message("   large raster: reprojecting after writing to temp drive...")
           #rasters need to go to same file so it can be unlinked at end without losing other temp files
           tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
