@@ -530,16 +530,17 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           ##
           x <- raster(tempDstRaster)
           #file exists in temp drive. Can copy to filename2
-
         } else {
-
           origDataType <- dataType(x)
 
           # Capture problems that projectRaster has with objects of class integers,
           #   which is different than if they are integers (i.e., a numeric class object)
           #   can be integers, without being classified and stored in R as integer
-          isInteger <- if (is.integer(x[])) TRUE else FALSE # should be faster than assessDataType, as it
-          # is a class determination, not a numeric assessment
+
+          # should be faster than assessDataType, as it is a class determination,
+          # not a numeric assessment:
+          isInteger <- if (is.integer(x[])) TRUE else FALSE
+
           if (isInteger) {
             needWarning <- FALSE
             if (is.null(dots$method)) {
@@ -553,16 +554,17 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                       "Did you want to pass 'method = \"ngb\"'?")
           }
           if (is.null(dots$method)) {
-            dots$method <- assessDataType(x, type = "projectRaster") #not foolproof method of determining reclass method
+            # not foolproof method of determining reclass method:
+            dots$method <- assessDataType(x, type = "projectRaster")
           }
 
-          if (is.null(rasterToMatch)){
+          if (is.null(rasterToMatch)) {
             Args <- append(dots, list(from = x, crs = targetCRS))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
           } else {
             # projectRaster does silly things with integers, i.e., it converts to numeric
-            tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
+            tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS)
             Args <- append(dots, list(from = x, to = tempRas))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
