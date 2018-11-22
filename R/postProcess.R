@@ -453,7 +453,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
   } else if (is.null(rasterToMatch) & identical(crs(x), targetCRS)) {
     message("    no reprojecting because target CRS is same as input CRS.")
   } else {
-
       if (is.null(targetCRS)) {
         targetCRS <- crs(rasterToMatch)
       }
@@ -461,16 +460,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       doProjection <- FALSE
       doProjection <- if (is.null(rasterToMatch)) {
       if (!identical(crs(x), targetCRS))
-          TRUE
+        TRUE
       } else if (!identical(crs(x), targetCRS) |
                  !identical(res(x), res(rasterToMatch)) |
                  !identical(extent(x), extent(rasterToMatch)))
         TRUE
 
       if (doProjection) {
-
         if (!canProcessInMemory(x, 4)) {
-
           message("   large raster: reprojecting after writing to temp drive...")
           #rasters need to go to same file so it can be unlinked at end without losing other temp files
           tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
