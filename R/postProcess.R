@@ -438,7 +438,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @export
 #' @rdname projectInputs
 #' @importFrom fpCompare %==%
-#' @importFrom gdalUtils gdalwarp
+#' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
   dots <- list(...)
@@ -484,7 +484,9 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           gdalUtils::gdal_setInstallation()
           if (.Platform$OS.type == "windows") {
             exe <- ".exe"
-          } else exe <- ""
+          } else {
+            exe <- ""
+          }
 
           if (is.null(dots$method)) {
             dots$method <- assessDataType(x, type = "projectRaster")
@@ -504,9 +506,11 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
 
           teRas <- " " #This sets extents in GDAL
-          if (!is.null(rasterToMatch)){
-            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
-                                         extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "))
+          if (!is.null(rasterToMatch)) {
+            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ",
+                                            extent(rasterToMatch)@ymin, " ",
+                                            extent(rasterToMatch)@xmax, " ",
+                                            extent(rasterToMatch)@ymax, " "))
           }
 
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
