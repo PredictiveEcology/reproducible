@@ -438,7 +438,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @export
 #' @rdname projectInputs
 #' @importFrom fpCompare %==%
-#' @importFrom gdalUtils gdalwarp
+#' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
   dots <- list(...)
@@ -453,26 +453,21 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
   } else if (is.null(rasterToMatch) & identical(crs(x), targetCRS)) {
     message("    no reprojecting because target CRS is same as input CRS.")
   } else {
-
       if (is.null(targetCRS)) {
         targetCRS <- crs(rasterToMatch)
       }
 
-    doProjection <- FALSE
-
-    doProjection <- if (is.null(rasterToMatch)) {
-      if (!identical(crs(x), targetCRS))
+      doProjection <- FALSE
+      doProjection <- if (is.null(rasterToMatch)) {
+        if (!identical(crs(x), targetCRS)) TRUE
+      } else if (!identical(crs(x), targetCRS) |
+                 !identical(res(x), res(rasterToMatch)) |
+                 !identical(extent(x), extent(rasterToMatch))) {
         TRUE
-    } else if (!identical(crs(x), targetCRS) |
-               !identical(res(x), res(rasterToMatch)) |
-               !identical(extent(x), extent(rasterToMatch)))
-      TRUE
+      }
 
       if (doProjection) {
-        message("    reprojecting ...")
-
         if (!canProcessInMemory(x, 4)) {
-
           message("   large raster: reprojecting after writing to temp drive...")
           #rasters need to go to same file so it can be unlinked at end without losing other temp files
           tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
@@ -489,7 +484,9 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           gdalUtils::gdal_setInstallation()
           if (.Platform$OS.type == "windows") {
             exe <- ".exe"
-          } else exe <- ""
+          } else {
+            exe <- ""
+          }
 
           if (is.null(dots$method)) {
             dots$method <- assessDataType(x, type = "projectRaster")
@@ -508,6 +505,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
             tempSrcRaster <- x@file@name #Keep original raster
           }
 
+          teRas <- " " #This sets extents in GDAL
+          if (!is.null(rasterToMatch)) {
+            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ",
+                                            extent(rasterToMatch)@ymin, " ",
+                                            extent(rasterToMatch)@xmax, " ",
+                                            extent(rasterToMatch)@ymax, " "))
+          }
+
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
           system(
             paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
@@ -515,8 +520,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                    " -t_srs \"", as.character(targetCRS), "\"",
                    " -multi ",
                    "-ot ", dType,
-                   " -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
-                                   extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "),
+                   teRas,
                    "-r ", dots$method,
                    " -overwrite ",
                    "-tr ", paste(tr, collapse = " "), " ",
@@ -552,9 +556,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
             dots$method <- assessDataType(x, type = "projectRaster") #not foolproof method of determining reclass method
           }
 
-          if (is.null(rasterToMatch)) {
-            tempRas <- projectExtent(object = x, crs = targetCRS) ## make a template RTM, with targetCRS
-            Args <- append(dots, list(from = x, to = tempRas))
+          if (is.null(rasterToMatch)){
+            Args <- append(dots, list(from = x, crs = targetCRS))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
           } else {

@@ -1245,6 +1245,10 @@ test_that("lightweight tests for code coverage", {
   expect_is(a, "RasterLayer")
   expect_true(identical(crs(a), crs(ras3)))
 
+  #Works with no rasterToMatch
+  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
+  expect_true(identical(crs(a), crs(ras3)))
+
   # sp::CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"))
 })
 
@@ -1529,7 +1533,7 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
-                      rasterToMatch = ras2, useCache = FALSE)
+                      rasterToMatch = ras2, useCache = FALSE, method = 'ngb')
 
   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
   expect_true(dataType(test1) == "FLT4S")
