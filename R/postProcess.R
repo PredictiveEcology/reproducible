@@ -475,7 +475,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           #rasters need to go to same file so it can be unlinked at end without losing other temp files
           tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
           tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
-          tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_reproj.tif")) #fails if x = stack
+          tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"a_reproj.tif")) #fails if x = stack
 
           if (!is.null(rasterToMatch)) {
             tr <- res(rasterToMatch)
@@ -528,6 +528,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
             wait = TRUE)
           ##
           x <- raster(tempDstRaster)
+          crs(x) <- targetCRS #sometimes the crs is correct but the character string is not identical
           #file exists in temp drive. Can copy to filename2
 
         } else {
