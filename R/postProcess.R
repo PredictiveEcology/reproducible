@@ -458,10 +458,16 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         targetCRS <- crs(rasterToMatch)
       }
 
-      if (!identical(crs(x), targetCRS) |
-          !identical(res(x), res(rasterToMatch)) |
-          !identical(extent(x), extent(rasterToMatch))) {
-        message("    reprojecting ...")
+      doProjection <- FALSE
+      doProjection <- if (is.null(rasterToMatch)) {
+      if (!identical(crs(x), targetCRS))
+          TRUE
+      } else if (!identical(crs(x), targetCRS) |
+                 !identical(res(x), res(rasterToMatch)) |
+                 !identical(extent(x), extent(rasterToMatch)))
+        TRUE
+
+      if (doProjection) {
 
         if (!canProcessInMemory(x, 4)) {
 
@@ -500,6 +506,12 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
             tempSrcRaster <- x@file@name #Keep original raster
           }
 
+          teRas <- " " #This sets extents in GDAL
+          if (!is.null(rasterToMatch)){
+            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
+                                         extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "))
+          }
+
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
           system(
             paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
@@ -507,8 +519,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                    " -t_srs \"", as.character(targetCRS), "\"",
                    " -multi ",
                    "-ot ", dType,
-                   " -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
-                                   extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "),
+                   teRas,
                    "-r ", dots$method,
                    " -overwrite ",
                    "-tr ", paste(tr, collapse = " "), " ",
@@ -545,7 +556,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
 
           if (is.null(rasterToMatch)){
-            Args <- append(dots, list(from = x, to = tempRas))
+            Args <- append(dots, list(from = x, crs = targetCRS))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
           } else {
@@ -1101,89 +1112,4 @@ assessDataTypeGDAL <- function(ras) {
   }
 
   datatype
-}
-
-#' Helper functions for \code{assessDataType}
-#'
-#' Copied from https://stackoverflow.com/a/48838123
-#'
-#' @param longitude longitude
-#' @param latitude  latitude
-#' @export
-#' @rdname assessDataTypeGDALhelpers
-find_UTM_zone <- function(longitude, latitude) {
-
-  # Special zones for Svalbard and Norway
-  if (latitude >= 72.0 && latitude < 84.0 )
-    if (longitude >= 0.0  && longitude <  9.0)
-      return(31);
-  if (longitude >= 9.0  && longitude < 21.0)
-    return(33)
-  if (longitude >= 21.0 && longitude < 33.0)
-    return(35)
-  if (longitude >= 33.0 && longitude < 42.0)
-    return(37)
-
-  (floor((longitude + 180) / 6) %% 60) + 1
-}
-
-#' @export
-#' @rdname assessDataTypeGDALhelpers
-find_UTM_hemisphere <- function(latitude) {
-  ifelse(latitude > 0, "north", "south")
-}
-
-#' @param long  TODO: need description
-#' @param lat   TODO: need description
-#' @param units TODO: need description
-#'
-#' \code{longlat_to_UTM} returns a \code{data.frame} containing the UTM values,
-#' the zone and the hemisphere.
-#'
-#' @export
-#' @importFrom dplyr mutate n_distinct
-#' @importFrom sp coordinates CRS proj4string spTransform
-#' @importFrom tibble as_data_frame
-#' @rdname assessDataTypeGDALhelpers
-longlat_to_UTM <- function(long, lat, units = 'm') {
-  df <- data.frame(
-    id = seq_along(long),
-    x = long,
-    y = lat
-  )
-  sp::coordinates(df) <- c("x", "y")
-
-  hemisphere <- find_UTM_hemisphere(lat)
-  zone <- find_UTM_zone(long, lat)
-
-  sp::proj4string(df) <- sp::CRS("+init=epsg:4326")
-  CRSstring <- paste0(
-    "+proj=utm +zone=", zone,
-    " +ellps=WGS84",
-    " +", hemisphere,
-    " +units=", units)
-  if (dplyr::n_distinct(CRSstring) > 1L)
-    stop("multiple zone/hemisphere detected")
-
-  res <- sp::spTransform(df, sp::CRS(CRSstring[1L])) %>%
-    tibble::as_data_frame() %>%
-    dplyr::mutate(
-      zone = zone,
-      hemisphere = hemisphere
-    )
-  res
-}
-
-#' @param utm_df     TODO: need description
-#' @param zone       TODO: need description
-#' @param hemisphere TODO: need description
-#' @export
-#' @importFrom sp CRS SpatialPoints spTransform
-#' @importFrom tibble as_data_frame
-#' @rdname assessDataTypeGDAL
-UTM_to_longlat <- function(utm_df, zone, hemisphere) {
-  CRSstring <- paste0("+proj=utm +zone=", zone, " +", hemisphere)
-  utmcoor <- sp::SpatialPoints(utm_df, proj4string = sp::CRS(CRSstring))@
-  longlatcoor <- sp::spTransform(utmcoor, sp::CRS("+init=epsg:4326"))
-  tibble::as_data_frame(longlatcoor)
 }
