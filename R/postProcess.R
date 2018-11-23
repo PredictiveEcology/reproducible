@@ -167,7 +167,6 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
   }
 
   if (!is.null(studyArea) || !is.null(rasterToMatch)) {
-
     # fix errors if methods available
     skipCacheMess <- "useCache is FALSE, skipping Cache"
     skipCacheMess2 <- "No cacheRepo supplied"
@@ -328,7 +327,6 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
   return(x)
 }
 
-
 #' Do some minor error fixing
 #'
 #' These must be very common for this function to be useful. Currently, the only
@@ -438,7 +436,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @export
 #' @rdname projectInputs
 #' @importFrom fpCompare %==%
-#' @importFrom gdalUtils gdalwarp
+#' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
   dots <- list(...)
@@ -459,12 +457,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
 
       doProjection <- FALSE
       doProjection <- if (is.null(rasterToMatch)) {
-      if (!identical(crs(x), targetCRS))
-        TRUE
+        if (!identical(crs(x), targetCRS)) TRUE
       } else if (!identical(crs(x), targetCRS) |
                  !identical(res(x), res(rasterToMatch)) |
-                 !identical(extent(x), extent(rasterToMatch)))
+                 !identical(extent(x), extent(rasterToMatch))) {
         TRUE
+      } else {
+        FALSE
+      }
 
       if (doProjection) {
         if (!canProcessInMemory(x, 4)) {
@@ -484,7 +484,9 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           gdalUtils::gdal_setInstallation()
           if (.Platform$OS.type == "windows") {
             exe <- ".exe"
-          } else exe <- ""
+          } else {
+            exe <- ""
+          }
 
           if (is.null(dots$method)) {
             dots$method <- assessDataType(x, type = "projectRaster")
@@ -504,9 +506,11 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           }
 
           teRas <- " " #This sets extents in GDAL
-          if (!is.null(rasterToMatch)){
-            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ", extent(rasterToMatch)@ymin, " ",
-                                         extent(rasterToMatch)@xmax, " ", extent(rasterToMatch)@ymax, " "))
+          if (!is.null(rasterToMatch)) {
+            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ",
+                                            extent(rasterToMatch)@ymin, " ",
+                                            extent(rasterToMatch)@xmax, " ",
+                                            extent(rasterToMatch)@ymax, " "))
           }
 
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
@@ -527,16 +531,17 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           x <- raster(tempDstRaster)
           crs(x) <- targetCRS #sometimes the crs is correct but the character string is not identical
           #file exists in temp drive. Can copy to filename2
-
         } else {
-
           origDataType <- dataType(x)
 
           # Capture problems that projectRaster has with objects of class integers,
           #   which is different than if they are integers (i.e., a numeric class object)
           #   can be integers, without being classified and stored in R as integer
-          isInteger <- if (is.integer(x[])) TRUE else FALSE # should be faster than assessDataType, as it
-          # is a class determination, not a numeric assessment
+
+          # should be faster than assessDataType, as it is a class determination,
+          # not a numeric assessment:
+          isInteger <- if (is.integer(x[])) TRUE else FALSE
+
           if (isInteger) {
             needWarning <- FALSE
             if (is.null(dots$method)) {
@@ -550,16 +555,17 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                       "Did you want to pass 'method = \"ngb\"'?")
           }
           if (is.null(dots$method)) {
-            dots$method <- assessDataType(x, type = "projectRaster") #not foolproof method of determining reclass method
+            # not foolproof method of determining reclass method:
+            dots$method <- assessDataType(x, type = "projectRaster")
           }
 
-          if (is.null(rasterToMatch)){
+          if (is.null(rasterToMatch)) {
             Args <- append(dots, list(from = x, crs = targetCRS))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
           } else {
             # projectRaster does silly things with integers, i.e., it converts to numeric
-            tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS) ## make a template RTM, with targetCRS
+            tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS)
             Args <- append(dots, list(from = x, to = tempRas))
             warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
 
