@@ -167,7 +167,6 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
   }
 
   if (!is.null(studyArea) || !is.null(rasterToMatch)) {
-
     # fix errors if methods available
     skipCacheMess <- "useCache is FALSE, skipping Cache"
     skipCacheMess2 <- "No cacheRepo supplied"
@@ -327,7 +326,6 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
   }
   return(x)
 }
-
 
 #' Do some minor error fixing
 #'
