@@ -455,9 +455,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         targetCRS <- crs(rasterToMatch)
       }
 
-      doProjection <- FALSE
       doProjection <- if (is.null(rasterToMatch)) {
-        if (!identical(crs(x), targetCRS)) TRUE
+        if (!identical(crs(x), targetCRS)) TRUE else FALSE
       } else if (!identical(crs(x), targetCRS) |
                  !identical(res(x), res(rasterToMatch)) |
                  !identical(extent(x), extent(rasterToMatch))) {
