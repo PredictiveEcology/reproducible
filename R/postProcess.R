@@ -451,20 +451,18 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
   } else if (is.null(rasterToMatch) & identical(crs(x), targetCRS)) {
     message("    no reprojecting because target CRS is same as input CRS.")
   } else {
-      if (is.null(targetCRS)) {
-        targetCRS <- crs(rasterToMatch)
-      }
+    if (is.null(targetCRS)) {
+      targetCRS <- crs(rasterToMatch)
+    }
 
-      doProjection <- FALSE
-      doProjection <- if (is.null(rasterToMatch)) {
-        if (!identical(crs(x), targetCRS)) TRUE
-      } else if (!identical(crs(x), targetCRS) |
-                 !identical(res(x), res(rasterToMatch)) |
-                 !identical(extent(x), extent(rasterToMatch))) {
-        TRUE
-      } else {
-        FALSE
-      }
+    doProjection <- FALSE
+    if (is.null(rasterToMatch)) {
+      if (!identical(crs(x), targetCRS))  doProjection <- TRUE
+    } else if (!identical(crs(x), targetCRS) |
+               !identical(res(x), res(rasterToMatch)) |
+               !identical(extent(x), extent(rasterToMatch))) {
+      doProjection <- TRUE
+    }
 
       if (doProjection) {
         if (!canProcessInMemory(x, 4)) {
@@ -474,44 +472,44 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
           tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
           tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"a_reproj.tif")) #fails if x = stack
 
-          if (!is.null(rasterToMatch)) {
-            tr <- res(rasterToMatch)
-          } else {
-            tr <- res(x)
-          }
-          # the raster is in memory, but large enough to trigger this function: write it to disk
+        if (!is.null(rasterToMatch)) {
+          tr <- res(rasterToMatch)
+        } else {
+          tr <- res(x)
+        }
+        # the raster is in memory, but large enough to trigger this function: write it to disk
 
-          gdalUtils::gdal_setInstallation()
-          if (.Platform$OS.type == "windows") {
-            exe <- ".exe"
-          } else {
-            exe <- ""
-          }
+        gdalUtils::gdal_setInstallation()
+        if (.Platform$OS.type == "windows") {
+          exe <- ".exe"
+        } else {
+          exe <- ""
+        }
 
-          if (is.null(dots$method)) {
-            dots$method <- assessDataType(x, type = "projectRaster")
-          }
+        if (is.null(dots$method)) {
+          dots$method <- assessDataType(x, type = "projectRaster")
+        }
 
-          if (dots$method == "ngb") {
-            dots$method <- "near"
-          }
+        if (dots$method == "ngb") {
+          dots$method <- "near"
+        }
 
-          if (inMemory(x)) { #must be written to disk
-            dType <- assessDataType(x, type = "writeRaster")
-            writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
-            rm(x) #Saves memory if this was a huge raster but be careufl
-            gc()
-          } else {
-            tempSrcRaster <- x@file@name #Keep original raster
-          }
+        if (inMemory(x)) { #must be written to disk
+          dType <- assessDataType(x, type = "writeRaster")
+          writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
+          rm(x) #Saves memory if this was a huge raster but be careufl
+          gc()
+        } else {
+          tempSrcRaster <- x@file@name #Keep original raster
+        }
 
-          teRas <- " " #This sets extents in GDAL
-          if (!is.null(rasterToMatch)) {
-            teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ",
-                                            extent(rasterToMatch)@ymin, " ",
-                                            extent(rasterToMatch)@xmax, " ",
-                                            extent(rasterToMatch)@ymax, " "))
-          }
+        teRas <- " " #This sets extents in GDAL
+        if (!is.null(rasterToMatch)) {
+          teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ",
+                                          extent(rasterToMatch)@ymin, " ",
+                                          extent(rasterToMatch)@xmax, " ",
+                                          extent(rasterToMatch)@ymax, " "))
+        }
 
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
           system(
@@ -534,70 +532,70 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         } else {
           origDataType <- dataType(x)
 
-          # Capture problems that projectRaster has with objects of class integers,
-          #   which is different than if they are integers (i.e., a numeric class object)
-          #   can be integers, without being classified and stored in R as integer
+        # Capture problems that projectRaster has with objects of class integers,
+        #   which is different than if they are integers (i.e., a numeric class object)
+        #   can be integers, without being classified and stored in R as integer
 
-          # should be faster than assessDataType, as it is a class determination,
-          # not a numeric assessment:
-          isInteger <- if (is.integer(x[])) TRUE else FALSE
+        # should be faster than assessDataType, as it is a class determination,
+        # not a numeric assessment:
+        isInteger <- if (is.integer(x[])) TRUE else FALSE
 
-          if (isInteger) {
-            needWarning <- FALSE
-            if (is.null(dots$method)) {
-              needWarning <- TRUE
-            } else {
-              if (dots$method != "ngb")
-                needWarning <- TRUE
-            }
-            if (needWarning)
-              warning("This raster layer has integer values; it will be reprojected to float. ",
-                      "Did you want to pass 'method = \"ngb\"'?")
-          }
+        if (isInteger) {
+          needWarning <- FALSE
           if (is.null(dots$method)) {
-            # not foolproof method of determining reclass method:
-            dots$method <- assessDataType(x, type = "projectRaster")
-          }
-
-          if (is.null(rasterToMatch)) {
-            Args <- append(dots, list(from = x, crs = targetCRS))
-            warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
-
+            needWarning <- TRUE
           } else {
-            # projectRaster does silly things with integers, i.e., it converts to numeric
-            tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS)
-            Args <- append(dots, list(from = x, to = tempRas))
-            warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
+            if (dots$method != "ngb")
+              needWarning <- TRUE
+          }
+          if (needWarning)
+            warning("This raster layer has integer values; it will be reprojected to float. ",
+                    "Did you want to pass 'method = \"ngb\"'?")
+        }
+        if (is.null(dots$method)) {
+          # not foolproof method of determining reclass method:
+          dots$method <- assessDataType(x, type = "projectRaster")
+        }
 
-            if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
-              if (all(res(x) %==% res(rasterToMatch))) {
-                res(x) <- res(rasterToMatch)
-              } else {
-                stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
-                            "You can try increasing error tolerance in options('fpCompare.tolerance')."))
-              }
+        if (is.null(rasterToMatch)) {
+          Args <- append(dots, list(from = x, crs = targetCRS))
+          warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
+
+        } else {
+          # projectRaster does silly things with integers, i.e., it converts to numeric
+          tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS)
+          Args <- append(dots, list(from = x, to = tempRas))
+          warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
+
+          if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
+            if (all(res(x) %==% res(rasterToMatch))) {
+              res(x) <- res(rasterToMatch)
+            } else {
+              stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
+                          "You can try increasing error tolerance in options('fpCompare.tolerance')."))
             }
           }
-
-          # return the integer class to the data in the raster object
-          if (isTRUE(isInteger)) {
-            dataType(x) <- origDataType
-            x[] <- as.integer(x[])
-          }
-
-          warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
-          warnings(warn)
-          ## projectRaster doesn't always ensure equal res (floating point number issue)
-          ## if resolutions are close enough, re-write res(x)
-          ## note that when useSAcrs = TRUE, the different resolutions may be due to
-          ## the different projections (e.g. degree based and meter based). This should be fine
-
         }
-      } else {
-        message("    no reprojecting because target characteristics same as input Raster.")
-      }
 
-   }
+        # return the integer class to the data in the raster object
+        if (isTRUE(isInteger)) {
+          dataType(x) <- origDataType
+          x[] <- as.integer(x[])
+        }
+
+        warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
+        warnings(warn)
+        ## projectRaster doesn't always ensure equal res (floating point number issue)
+        ## if resolutions are close enough, re-write res(x)
+        ## note that when useSAcrs = TRUE, the different resolutions may be due to
+        ## the different projections (e.g. degree based and meter based). This should be fine
+
+      }
+    } else {
+      message("    no reprojecting because target characteristics same as input Raster.")
+    }
+
+  }
 
   if (isFactorRaster) {
     levels(x) <- rasterFactorLevels

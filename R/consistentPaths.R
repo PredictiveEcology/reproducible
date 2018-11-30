@@ -99,17 +99,20 @@ setMethod(
   "checkPath",
   signature(path = "character", create = "logical"),
   definition = function(path, create) {
-    if (length(path) != 1) {
-      stop("path must be a character vector of length 1.")
-    } else {
-      if (is.na(path)) {
+    # if (length(path) != 1) {
+    #   stop("path must be a character vector of length 1.")
+    # } else {
+      if (isTRUE(all(is.na(path)))) {
         stop("Invalid path: cannot be NA.")
       } else {
         path <- normPath(path)
 
-        if (!dir.exists(path)) {
+        dirsThatExist <- dir.exists(path)
+        if (any(!dirsThatExist)) {
           if (create == TRUE) {
-            dir.create(file.path(path), recursive = TRUE, showWarnings = FALSE)
+            lapply(path[!dirsThatExist], function(pth) {
+              dir.create(file.path(pth), recursive = TRUE, showWarnings = FALSE)
+            })
           } else {
             stop(paste("Specified path", path, "doesn't exist.",
                        "Create it and try again."))
@@ -117,7 +120,7 @@ setMethod(
         }
         return(normPath(path)) # ensure path re-normalized after creation (see #267)
       }
-    }
+    #}
 })
 
 #' @export

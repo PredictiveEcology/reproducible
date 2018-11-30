@@ -61,9 +61,6 @@ test_that("checkPath: checkPath consistency", {
   expect_equal(length(unique(checked)), 1)
   unlink(tmpdir, recursive = TRUE)
 
-  # check that length(path)==1
-  expect_error(checkPath(unlist(paths)), "path must be a character vector of length 1.")
-
   # extra checks for missing/NA/NULL
   expect_error(checkPath(), "Invalid path: no path specified.")
   expect_error(checkPath(NULL), "Invalid path: cannot be NULL.")
