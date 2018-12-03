@@ -1245,6 +1245,9 @@ test_that("lightweight tests for code coverage", {
   expect_is(a, "RasterLayer")
   expect_true(identical(crs(a), crs(ras3)))
 
+  #warns if bilinear is passed for reprojecting integer
+  expect_warning(projectInputs(ras2, rasterToMatch = ras3, method = "bilinear"))
+
   #Works with no rasterToMatch
   a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
   expect_true(identical(crs(a), crs(ras3)))
@@ -1516,27 +1519,33 @@ test_that("System call gdal works", {
 })
 
 test_that("System call gdal will make the rasters match for rasterStack", {
+
   skip_on_cran()
 
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
+
   ras <- raster(extent(0, 4, 0, 4), res = 2, vals = 1:4)
   crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  ras <- raster::projectRaster(from = ras, crs = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0")
-  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+
+  #next line generates intermittent error: In .Internal(gc(verbose, reset, full)) :
+  #closing unused connection 3 (C:/Temp/RtmpU5EOTS/raster/r_tmp_2018-12-03_143339_14468_30160.gri)
+  ras1 <- suppressWarnings(raster::projectRaster(from = ras, crs = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0", method = "ngb"))
+
+  ras1 <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
-  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+  test1 <- prepInputs(targetFile = ras1@file@name, destinationPath = tempdir(),
                       rasterToMatch = ras2, useCache = FALSE, method = 'ngb')
 
   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
-  expect_true(dataType(test1) == "FLT4S")
+  expect_true(dataType(test1) == "INT1U")
   expect_identical(raster::res(ras2), raster::res(test1))
   expect_identical(raster::extent(ras2), raster::extent(test1))
   expect_identical(raster::crs(ras2), raster::crs(test1))

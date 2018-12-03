@@ -541,21 +541,20 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         isInteger <- if (is.integer(x[])) TRUE else FALSE
 
         if (isInteger) {
-          needWarning <- FALSE
-          if (is.null(dots$method)) {
-            needWarning <- TRUE
-          } else {
-            if (dots$method != "ngb")
-              needWarning <- TRUE
-          }
-          if (needWarning)
+          if (!is.null(dots$method)) {
+            if (dots$method != "ngb") {
             warning("This raster layer has integer values; it will be reprojected to float. ",
                     "Did you want to pass 'method = \"ngb\"'?")
+            }
+          }
         }
+
         if (is.null(dots$method)) {
           # not foolproof method of determining reclass method:
           dots$method <- assessDataType(x, type = "projectRaster")
         }
+
+        message(paste0("reprojecting using ", dots$method, "..."))
 
         if (is.null(rasterToMatch)) {
           Args <- append(dots, list(from = x, crs = targetCRS))
