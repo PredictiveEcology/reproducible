@@ -863,10 +863,11 @@ setMethod(
         startRunTime <- Sys.time()
       }
 
+      #browser(expr = "speciesEquivalency" %in% names(fnDetails$originalDots))
       if (fnDetails$isPipe) {
         output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
       } else {
-        output <- do.call(FUN, fnDetails$originalDots)
+        output <- FUN(...) #do.call(FUN, fnDetails$originalDots)
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
