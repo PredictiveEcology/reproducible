@@ -464,13 +464,13 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
       doProjection <- TRUE
     }
 
-    if (doProjection) {
-      if (!canProcessInMemory(x, 4)) {
-        message("   large raster: reprojecting after writing to temp drive...")
-        #rasters need to go to same file so it can be unlinked at end without losing other temp files
-        tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
-        tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
-        tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_reproj.tif")) #fails if x = stack
+      if (doProjection) {
+        if (!canProcessInMemory(x, 4)) {
+          message("   large raster: reprojecting after writing to temp drive...")
+          #rasters need to go to same file so it can be unlinked at end without losing other temp files
+          tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
+          tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
+          tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"a_reproj.tif")) #fails if x = stack
 
         if (!is.null(rasterToMatch)) {
           tr <- res(rasterToMatch)
@@ -511,25 +511,26 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                                           extent(rasterToMatch)@ymax, " "))
         }
 
-        dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-        system(
-          paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-                 "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
-                 " -t_srs \"", as.character(targetCRS), "\"",
-                 " -multi ",
-                 "-ot ", dType,
-                 teRas,
-                 "-r ", dots$method,
-                 " -overwrite ",
-                 "-tr ", paste(tr, collapse = " "), " ",
-                 "\"", tempSrcRaster, "\"", " ",
-                 "\"", tempDstRaster, "\""),
-          wait = TRUE)
-        ##
-        x <- raster(tempDstRaster)
-        #file exists in temp drive. Can copy to filename2
-      } else {
-        origDataType <- dataType(x)
+          dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+          system(
+            paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+                   "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
+                   " -t_srs \"", as.character(targetCRS), "\"",
+                   " -multi ",
+                   "-ot ", dType,
+                   teRas,
+                   "-r ", dots$method,
+                   " -overwrite ",
+                   "-tr ", paste(tr, collapse = " "), " ",
+                   "\"", tempSrcRaster, "\"", " ",
+                   "\"", tempDstRaster, "\""),
+            wait = TRUE)
+          ##
+          x <- raster(tempDstRaster)
+          crs(x) <- targetCRS #sometimes the crs is correct but the character string is not identical
+          #file exists in temp drive. Can copy to filename2
+        } else {
+          origDataType <- dataType(x)
 
         # Capture problems that projectRaster has with objects of class integers,
         #   which is different than if they are integers (i.e., a numeric class object)
@@ -540,21 +541,20 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
         isInteger <- if (is.integer(x[])) TRUE else FALSE
 
         if (isInteger) {
-          needWarning <- FALSE
-          if (is.null(dots$method)) {
-            needWarning <- TRUE
-          } else {
-            if (dots$method != "ngb")
-              needWarning <- TRUE
-          }
-          if (needWarning)
+          if (!is.null(dots$method)) {
+            if (dots$method != "ngb") {
             warning("This raster layer has integer values; it will be reprojected to float. ",
                     "Did you want to pass 'method = \"ngb\"'?")
+            }
+          }
         }
+
         if (is.null(dots$method)) {
           # not foolproof method of determining reclass method:
           dots$method <- assessDataType(x, type = "projectRaster")
         }
+
+        message(paste0("reprojecting using ", dots$method, "..."))
 
         if (is.null(rasterToMatch)) {
           Args <- append(dots, list(from = x, crs = targetCRS))
