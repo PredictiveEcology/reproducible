@@ -33,3 +33,11 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
   testthat::expect_is(object = pre, class = "list")
   testthat::expect_error(ras <- reproducible::preProcess(targetFile = tmpdir))
 })
+test_that("preProcess fails if the .rar file is defective", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/blob/master/data/rasterTest.rar",
+                                  destinationPath = tmpdir))
+})
