@@ -145,7 +145,6 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  brows
   testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
                                   destinationPath = tmpdir, cacheTags = "objectName::ras"))
   testthat::expect_is(object = ras, class = "list")
