@@ -416,6 +416,10 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 #'                      \code{\link[raster]{projectRaster}}, thus will changing the
 #'                      resolution and projection of \code{x}.
 #'                      See details in \code{\link{postProcess}}.
+#' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
+#'                      triggered. \code{'AUTO'*} will calculate 90% of the total
+#'                      number of cores in the system, while an integer or rounded
+#'                      float will be passed as the exact number of cores to be used.
 #'
 #' @rdname projectInputs
 #' @importFrom raster canProcessInMemory
@@ -435,10 +439,11 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
+#' @importFrom parallel detectCores
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom raster crs dataType res res<- dataType<-
-projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...) {
+projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL, ...) {
   dots <- list(...)
   isFactorRaster <- FALSE
   if (isTRUE(raster::is.factor(x))) {
@@ -510,13 +515,27 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, ...)
                                           extent(rasterToMatch)@xmax, " ",
                                           extent(rasterToMatch)@ymax, " "))
         }
+        if (is.null(cores) || cores =="AUTO") {
+          cores <- as.integer(parallel::detectCores()*0.9)
+          prll <- paste0("-wo NUM_THREADS=", cores, " ")
+        } else {
+          if (!is.integer(cores)) {
+            if (is.character(cores) | is.logical(cores)) {
+              stop ("'cores' needs to be passed as numeric or 'AUTO'")
+            } else {
+              prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
+            }
+          } else {
+            prll <- paste0("-wo NUM_THREADS=", cores, " ")
+          }
+        }
 
           dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
           system(
             paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                    "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
                    " -t_srs \"", as.character(targetCRS), "\"",
-                   " -multi ",
+                   " -multi ", prll,
                    "-ot ", dType,
                    teRas,
                    "-r ", dots$method,
@@ -688,9 +707,9 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
     x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
-
+      dots <- list(...)
       #msg <- capture.output(type = "message",
-                            x <- fastMask(x = x, y = studyArea)
+                            x <- fastMask(x = x, y = studyArea, cores = dots$cores)
                             #)
       #message(paste0("      ", paste(msg, collapse = "\n      ")))
     } else {
