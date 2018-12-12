@@ -832,7 +832,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           filesInArchive
         }
       } else {
-        browser()
         message(paste0("The archive is a .rar file. preProcess will try a system call of 'unrar'."))
         wd <- getwd()
         tempDir <- file.path(dirname(archive[1]), "extractedFiles")
@@ -852,10 +851,15 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                    show.output.on.console = FALSE)
           }
         } else {
-          browser()
-          system(paste0("unrar x ",
-                        archive[1]),
-                 wait = TRUE)
+          hasUnrar <- system("unrar", ignore.stdout = TRUE)
+          if (hasUnrar != 0) {
+            stop("prepInputs did not find 'unrar' installed.",
+                 " Please install 'unrar' before running prepInputs for a '.rar' archive")
+          } else {
+            system(paste0("unrar x ",
+                          archive[1]),
+                   wait = TRUE)
+          }
         }
         extractedFiles <-
           list.files(path = getwd(),
