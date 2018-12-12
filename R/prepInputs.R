@@ -832,8 +832,8 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           filesInArchive
         }
       } else {
-        message(paste0("The archive is a .rar file. preProcess will try a system call of 'unrar'.",
-                "Please, make sure you have either 7z (In Windows, C:/Program Files/7-Zip) or unrar (Linux/Mac)"))
+        browser()
+        message(paste0("The archive is a .rar file. preProcess will try a system call of 'unrar'."))
         wd <- getwd()
         tempDir <- file.path(dirname(archive[1]), "extractedFiles")
         dir.create(tempDir, showWarnings = FALSE)
@@ -841,12 +841,18 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         OSystem <- Sys.info()["sysname"]
         if (OSystem == "Windows") {
           find7zPath <- list.files("C:/Program Files/7-Zip", pattern = "7z.exe", recursive = TRUE, full.names = TRUE)
-          system(paste0("\"", find7zPath, "\"", " e -o",
-                         tempDir, " ",
-                        archive[1]),
-                 wait = TRUE, invisible = TRUE,
-                 show.output.on.console = FALSE)
+          if (!length(find7zPath) > 0) {
+            stop("prepInputs did not find '7-Zip' installed in 'C:/Program Files/7-Zip'.",
+                 " Please install '7-Zip' in this directory before running prepInputs for a '.rar' archive")
+          } else {
+            system(paste0("\"", find7zPath, "\"", " e -o",
+                          tempDir, " ",
+                          archive[1]),
+                   wait = TRUE, invisible = TRUE,
+                   show.output.on.console = FALSE)
+          }
         } else {
+          browser()
           system(paste0("unrar x ",
                         archive[1]),
                  wait = TRUE)

@@ -110,8 +110,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
 })
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   testthat::skip_on_cran()
-  testthat::skip_on_travis()
-  testthat::skip_on_appveyor()
+  browser()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -123,8 +122,6 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
 })
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
   testthat::skip_on_cran()
-  testthat::skip_on_travis()
-  testthat::skip_on_appveyor()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -137,8 +134,6 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
 })
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
   testthat::skip_on_cran()
-  testthat::skip_on_travis()
-  testthat::skip_on_appveyor()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
