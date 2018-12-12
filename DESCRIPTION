@@ -97,3 +97,7 @@ Collate:
     'reproducible-package.R'
     'search.R'
     'zzz.R'
+AdditionalRequirements: If using the function 'prepInputs()' or 'preProcess()' to download and 
+  extract files from a '*.rar' archive, 'unrar' (Linux/MacOS) or '7-Zip' (Windows) 
+  need to be installed. For Windows, 'prepInputs()' or 'preProcess()' will look for  7z.exe' in 
+  'C:/Program Files/7-Zip'.
