@@ -467,28 +467,14 @@ extractFromArchive <- function(archive,
                                                                 collapse = ", "))
           message("From:", basename(archive[1]), "  \nExtracting\n ",
                   paste(collapse = "\n ", extractingTheseFiles))
-                   if (file_ext(archive[1]) == "rar") {
-            if (all(neededFiles %in% list.files(destinationPath))) {
-              filesExtracted <- neededFiles
-            } else {
-             stop("preProcess could not extract the files from the archive ", archive,".",
-                  "Please try to extract it manually to the destinationFolder (",
-                  destinationPath, ")")
-            }
-          } else {
             filesExtracted <- c(filesExtracted,
                                 .unzipOrUnTar(funWArgs$fun, funWArgs$args,
                                               files = filesInArchive[basename(filesInArchive) %in%
                                                                        neededFiles]))
-          }
         } else {
-          if (file_ext(archive[1]) == "rar" && length(neededFiles)==0) {
-            stop("preProcess could not extract the files from the archive ", archive,
-                 ". /nPlease try to extract it manually to the destinationFolder (",
-                 destinationPath, ")")
-          }
           # don't have a 2nd archive, and don't have our neededFiles file
           isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar)", ignore.case = TRUE)
+
           if (any(isArchive)) {
             arch <- filesInArchive[isArchive]
             filesExtracted <- c(filesExtracted,
@@ -866,17 +852,22 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                      # list of full paths of all extracted files!
                      recursive = TRUE,
                      include.dirs = TRUE)
-        invisible(lapply(
-          X = extractedFiles,
-          FUN = function(fileToMove) {
-            file.rename(from = file.path(tempDir, fileToMove),
-                        to = file.path(wd, fileToMove))
-          }
-        ))
-        filesInArchive <- extractedFiles
-        setwd(wd)
-        rm(wd)
-        unlink(tempDir, recursive = TRUE)
+        if (length(extractedFiles)==0) {
+          stop("preProcess could not extract the files from the archive ", archive,".",
+               "Please try to extract it manually to the destinationPath")
+        } else {
+          invisible(lapply(
+            X = extractedFiles,
+            FUN = function(fileToMove) {
+              file.rename(from = file.path(tempDir, fileToMove),
+                          to = file.path(wd, fileToMove))
+            }
+          ))
+          filesInArchive <- extractedFiles
+          setwd(wd)
+          rm(wd)
+          unlink(tempDir, recursive = TRUE)
+        }
       }
     }
   }
