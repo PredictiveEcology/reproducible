@@ -187,6 +187,17 @@ setMethod(
     return(invisible(objsDT))
 })
 
+#' @rdname viewCache
+#' @export
+#' @param secs The number of seconds to pass to \code{clearCache(after = secs)}
+#'
+#' @details
+#' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
+#' i.e., to remove any cache entries touched in the last \code{secs} seconds.
+cc <- function (secs = 20)
+  reproducible::clearCache(after = Sys.time() - secs)
+
+
 #' Examining and modifying the cache
 #'
 #' These are convenience wrappers around \code{archivist} package functions.
