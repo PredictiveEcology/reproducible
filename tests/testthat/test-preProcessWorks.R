@@ -72,6 +72,7 @@ test_that("preProcess works when provides only targetFile", {
   ras <- reproducible::preProcess(targetFile = pre$targetFilePath)
   testthat::expect_is(object = ras, class = "list")
 })
+
 test_that("preProcess works when provides targetfile and destinationPath", {
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
@@ -90,21 +91,156 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  ras <- reproducible::preProcess("https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+  ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
                                   targetFile = "rasterTest.tif",
                                   archive = "rasterTest.zip",
                                   destinationPath = tmpdir)
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
+
 test_that("preProcess works when provides url, targetfile and destinationPath", {
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  ras <- reproducible::preProcess("https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+  ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
                                   targetFile = "rasterTest.tif",
                                   destinationPath = tmpdir)
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
+test_that("preProcess works when provides url and destinationPath for a .rar file", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  OSystem <- Sys.info()["sysname"]
+  if (OSystem == "Windows") { # If unrar is installed, length > 0
+    hasUnrar <- list.files("C:/Program Files/7-Zip",
+                           pattern = "7z.exe",
+                           recursive = TRUE,
+                           full.names = TRUE)
+  } else {
+    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
+  }
+  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+    expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
+                                                 destinationPath = tmpdir))
+  } else {
+    ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
+                                    destinationPath = tmpdir)
+    testthat::expect_is(object = ras, class = "list")
+    testthat::expect_true(file.exists(ras$targetFilePath))
+  }
+})
+
+test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  OSystem <- Sys.info()["sysname"]
+  if (OSystem == "Windows") { # If unrar is installed, length > 0
+    hasUnrar <- list.files("C:/Program Files/7-Zip",
+                           pattern = "7z.exe",
+                           recursive = TRUE,
+                           full.names = TRUE)
+  } else {
+    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
+  }
+  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+    expect_error( ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
+                                                   targetFile = "rasterTest.tif",
+                                                   destinationPath = tmpdir))
+  } else {
+    ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
+                                    targetFile = "rasterTest.tif",
+                                    destinationPath = tmpdir)
+    testthat::expect_is(object = ras, class = "list")
+    testthat::expect_true(file.exists(ras$targetFilePath))
+  }
+})
+
+test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  OSystem <- Sys.info()["sysname"]
+  if (OSystem == "Windows") { # If unrar is installed, length > 0
+    hasUnrar <- list.files("C:/Program Files/7-Zip",
+                           pattern = "7z.exe",
+                           recursive = TRUE,
+                           full.names = TRUE)
+  } else {
+    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
+  }
+  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+    expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
+                                                   archive = "rasterTest.rar",
+                                                   destinationPath = tmpdir))
+  } else {
+    ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
+                                    archive = "rasterTest.rar",
+                                    destinationPath = tmpdir)
+    testthat::expect_is(object = ras, class = "list")
+    testthat::expect_true(file.exists(ras$targetFilePath))
+  }
+})
+
+test_that("preProcess works, but gives a warning when supplying cacheTags", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                  destinationPath = tmpdir, cacheTags = "objectName::ras"))
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works, but gives a warning when supplying postProcessedFilename", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                                           destinationPath = tmpdir, postProcessedFilename = "ras.tif"))
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works, but gives a warning when supplying rasterInterpMethod", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                                           destinationPath = tmpdir, rasterInterpMethod = "ngb"))
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works, but gives a warning when supplying rasterDatatype", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                                           destinationPath = tmpdir, rasterDatatype = "INT1U"))
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works, but gives a warning when supplying pkg", {
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                                           destinationPath = tmpdir, pkg = "utils", fun = "unzip"))
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
