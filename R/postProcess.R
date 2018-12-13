@@ -995,8 +995,9 @@ assessDataType <- function(ras, type = 'writeRaster') {
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
-  if (ncell(ras) > 100000) {
-    rasVals <- raster::sampleRandom(x = ras, size = 100000)
+  N <- 1e5
+  if (ncell(ras) > N) {
+    rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
   } else {
     rasVals <- raster::getValues(ras)
   }
