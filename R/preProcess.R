@@ -722,6 +722,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' unlink(tmpDir, recursive = TRUE)
 linkOrCopy <- function (from, to, symlink = TRUE) {
   existsLogical <- file.exists(from)
+  toCollapsed <- paste(to, collapse = ", ")
+  fromCollapsed <- paste(from, collapse = ", ")
   if (any(existsLogical)) {
     toDirs <- unique(dirname(to))
     dirDoesntExist <- !dir.exists(toDirs)
@@ -733,12 +735,12 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
     # Try hard link first -- the only type that R deeply recognizes
     warns <- capture_warnings(result <- file.link(from[!dups], to))
     if (isTRUE(all(result))) {
-      message("Hardlinked version of file created at: ", to, ", which points to "
-              , from, "; no copy was made.")
+      message("Hardlinked version of file created at: ", toCollapsed, ", which points to "
+              , fromCollapsed, "; no copy was made.")
     }
 
     if (any(grepl("file already exists", warns))) {
-      message("File named ", paste(to, collapse = ", "), " already exists; will try to use it/them")
+      message("File named ", toCollapsed, " already exists; will try to use it/them")
       result <- TRUE
     }
 
@@ -747,18 +749,18 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
       if (!identical(.Platform$OS.type, "windows")) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
-          message("Symlinked version of file created at: ", to, ", which points to "
-                  , from, "; no copy was made.")
+          message("Symlinked version of file created at: ", toCollapsed, ", which points to "
+                  , fromCollapsed, "; no copy was made.")
         }
       }
     }
 
     if (isFALSE(all(result))) {
       result <- file.copy(from, to)
-      message("Copy of file: ", from, ", was created at: ", to)
+      message("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed)
     }
   } else {
-    message("File ", from, " does not exist. Not copying.")
+    message("File ", fromCollapsed, " does not exist. Not copying.")
     result <- FALSE
   }
   return(result)
