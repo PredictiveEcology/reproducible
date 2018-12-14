@@ -474,7 +474,7 @@ extractFromArchive <- function(archive,
               filesExtracted <- neededFiles
             } else {
               stop("preProcess could not extract the files from the archive ", archive,".",
-                   "Please try to extract it manually to the destinationFolder (",
+                   " Please try to extract it manually to the destinationFolder (",
                    destinationPath, ")")
             }
           } else {
