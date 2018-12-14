@@ -115,16 +115,8 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  OSystem <- Sys.info()["sysname"]
-  if (OSystem == "Windows") { # If unrar is installed, length > 0
-    hasUnrar <- list.files("C:/Program Files/7-Zip",
-                           pattern = "7z.exe",
-                           recursive = TRUE,
-                           full.names = TRUE)
-  } else {
-    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
-  }
-  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+  hasUnrar <- .unrarExists()
+  if (is.null(hasUnrar)) {
     expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
                                                  destinationPath = tmpdir))
   } else {
@@ -140,16 +132,8 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  OSystem <- Sys.info()["sysname"]
-  if (OSystem == "Windows") { # If unrar is installed, length > 0
-    hasUnrar <- list.files("C:/Program Files/7-Zip",
-                           pattern = "7z.exe",
-                           recursive = TRUE,
-                           full.names = TRUE)
-  } else {
-    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
-  }
-  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+  hasUnrar <- .unrarExists()
+  if (is.null(hasUnrar)) {
     expect_error( ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
                                                    targetFile = "rasterTest.tif",
                                                    destinationPath = tmpdir))
@@ -167,16 +151,8 @@ test_that("preProcess works when provides url, archive and destinationPath for a
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  OSystem <- Sys.info()["sysname"]
-  if (OSystem == "Windows") { # If unrar is installed, length > 0
-    hasUnrar <- list.files("C:/Program Files/7-Zip",
-                           pattern = "7z.exe",
-                           recursive = TRUE,
-                           full.names = TRUE)
-  } else {
-    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
-  }
-  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+  hasUnrar <- .unrarExists()
+  if (is.null(hasUnrar)) {
     expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
                                                    archive = "rasterTest.rar",
                                                    destinationPath = tmpdir))
