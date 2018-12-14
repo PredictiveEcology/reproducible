@@ -469,10 +469,20 @@ extractFromArchive <- function(archive,
                                                                 collapse = ", "))
           message("From:", basename(archive[1]), "  \nExtracting\n ",
                   paste(collapse = "\n ", extractingTheseFiles))
+          if (file_ext(archive[1]) == "rar") {
+            if (all(neededFiles %in% list.files(destinationPath))) {
+              filesExtracted <- neededFiles
+            } else {
+              stop("preProcess could not extract the files from the archive ", archive,".",
+                   "Please try to extract it manually to the destinationFolder (",
+                   destinationPath, ")")
+            }
+          } else {
             filesExtracted <- c(filesExtracted,
                                 .unzipOrUnTar(funWArgs$fun, funWArgs$args,
                                               files = filesInArchive[basename(filesInArchive) %in%
                                                                        neededFiles]))
+          }
         } else {
           # don't have a 2nd archive, and don't have our neededFiles file
           isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar)", ignore.case = TRUE)
@@ -627,10 +637,10 @@ extractFromArchive <- function(archive,
       )
     )
     wd <- getwd()
-    on.exit(setwd(wd), add = TRUE)
-    tempDir <- file.path(args$exdir, "extractedFiles")
-    dir.create(tempDir, showWarnings = FALSE)
+    tempDir <- file.path(args$exdir, "extractedFiles") %>%
+      checkPath(create = TRUE)
     setwd(tempDir)
+    on.exit(setwd(wd), add = TRUE)
     if (file.exists(args[[1]])){
      pathToFile <-  args[[1]]
     } else {
@@ -660,7 +670,6 @@ extractFromArchive <- function(archive,
     extractedFiles <- file.path(wd, extractedFiles)
     unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
     setwd(wd)
-    rm(wd)
   }
   if (!isUnzip) {
     extractedFiles <- files
@@ -856,7 +865,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         } else {
           system(paste0("unrar x ",
                         archive[1]),
-                 wait = TRUE)
+                 wait = TRUE, ignore.stdout = TRUE)
         }
         extractedFiles <-
           list.files(path = getwd(),
