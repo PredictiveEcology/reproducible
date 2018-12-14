@@ -4,6 +4,7 @@
 \name{clearCache}
 \alias{clearCache}
 \alias{clearCache,ANY-method}
+\alias{cc}
 \alias{showCache}
 \alias{showCache,ANY-method}
 \alias{keepCache}
@@ -15,6 +16,8 @@ clearCache(x, userTags = character(), after, before,
 
 \S4method{clearCache}{ANY}(x, userTags = character(), after, before,
   ask = getOption("reproducible.ask"), ...)
+
+cc(secs = 20)
 
 showCache(x, userTags = character(), after, before, ...)
 
@@ -62,6 +65,8 @@ This must be \code{TRUE} if the use is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}.}
+
+\item{secs}{The number of seconds to pass to \code{clearCache(after = secs)}}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
@@ -75,6 +80,9 @@ These are convenience wrappers around \code{archivist} package functions.
 They allow the user a bit of control over what is being cached.
 }
 \details{
+\code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
+i.e., to remove any cache entries touched in the last \code{secs} seconds.
+
 \describe{
   \item{\code{clearCache}}{remove items from the cache based on their
                            \code{userTag} or \code{times} values.}

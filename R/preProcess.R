@@ -722,6 +722,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' unlink(tmpDir, recursive = TRUE)
 linkOrCopy <- function (from, to, symlink = TRUE) {
   existsLogical <- file.exists(from)
+  toCollapsed <- paste(to, collapse = ", ")
+  fromCollapsed <- paste(from, collapse = ", ")
   if (any(existsLogical)) {
     toDirs <- unique(dirname(to))
     dirDoesntExist <- !dir.exists(toDirs)
@@ -732,8 +734,6 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 
     # Try hard link first -- the only type that R deeply recognizes
     warns <- capture_warnings(result <- file.link(from[!dups], to))
-    toCollapsed <- paste(to, collapse = ", ")
-    fromCollapsed <- paste(from, collapse = ", ")
     if (isTRUE(all(result))) {
       message("Hardlinked version of file created at: ", toCollapsed, ", which points to "
               , fromCollapsed, "; no copy was made.")
