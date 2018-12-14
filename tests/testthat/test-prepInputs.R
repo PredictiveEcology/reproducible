@@ -1552,3 +1552,73 @@ test_that("System call gdal will make the rasters match for rasterStack", {
 
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
+
+test_that("message when files from archive are already present", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                  targetFile = "rasterTest.tif",
+                                  destinationPath = tmpdir)
+  testthat::expect_message(ras <- reproducible::preProcess(archive = "rasterTest.zip",
+                                                         destinationPath = tmpdir))
+})
+
+test_that("message when file is a shapefile", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip",
+                                  destinationPath = tmpdir))
+})
+
+test_that("message when doesn't know the targetFile extension", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip",
+                                  destinationPath = tmpdir))
+})
+
+test_that("When supplying two files without archive, when archive and files have different names", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/twoKnownFiles.zip",
+                                                         targetFile = c("rasterTest.tif", "shapefileTest.shp"),
+                                                         destinationPath = tmpdir))
+})
+
+test_that("message when archive has two known files (raster and shapefile)", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip",
+                                                           archive = "knownFiles.zip", targetFile = c("knownFiles.tif", "knownFiles.shp"),
+                                                           destinationPath = tmpdir))
+})
+
+test_that("message when extracting a file that is already present", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                  targetFile = "rasterTest.tif",
+                                  destinationPath = tmpdir)
+  shp <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip",
+                                  destinationPath = tmpdir)
+  testthat::expect_message(fl <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip",
+                                                         destinationPath = tmpdir))
+})
