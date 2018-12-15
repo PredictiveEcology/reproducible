@@ -816,21 +816,23 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
-  if ((tools::file_ext(archive[1]) == "rar")) {
-    if (!is.null(.unrarPath)) {
-      hasUnrar  <- .unrarPath
-    } else {
-      # Find the path to unrar and assign to a package-stored object
-      usrTg <- paste(sample(x = LETTERS, size = 15), collapse = "")
-      hasUnrar <- Cache(.unrarExists, userTags = usrTg) # Cache for project-level persistence
-      utils::assignInMyNamespace(".unrarPath", hasUnrar) # assign in namespace for package
-    }
-    if (is.null(hasUnrar)) {
-      clearCache(userTags = usrTg)
-      stop(
-        "prepInputs did not find '7-Zip' nor 'unrar' installed.",
-        " Please install it before running prepInputs for a '.rar' archive"
-      )
+  if (length(archive)>0){
+    if ((tools::file_ext(archive[1]) == "rar")) {
+      if (!is.null(.unrarPath)) {
+        hasUnrar  <- .unrarPath
+      } else {
+        # Find the path to unrar and assign to a package-stored object
+        usrTg <- paste(sample(x = LETTERS, size = 15), collapse = "")
+        hasUnrar <- Cache(.unrarExists, userTags = usrTg) # Cache for project-level persistence
+        utils::assignInMyNamespace(".unrarPath", hasUnrar) # assign in namespace for package
+      }
+      if (is.null(hasUnrar)) {
+        clearCache(userTags = usrTg)
+        stop(
+          "prepInputs did not find '7-Zip' nor 'unrar' installed.",
+          " Please install it before running prepInputs for a '.rar' archive"
+        )
+      }
     }
   }
   funWArgs <- .whichExtractFn(archive[1], NULL)
