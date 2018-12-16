@@ -94,7 +94,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param archive Optional character string giving the path of an archive
 #'   containing \code{targetFile}, or a vector giving a set of nested archives
-#'   (e.g., \code{c("xxx.tar", "inner.zip")}). If there is/are (an) inner
+#'   (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 #'   archive(s), but they are unknown, the function will try all until it finds
 #'   the \code{targetFile}. See table in \code{\link{preProcess}}.
 #'
@@ -352,9 +352,8 @@ extractFromArchive <- function(archive,
                                neededFiles = NULL, extractedArchives = NULL, checkSums = NULL,
                                needChecksums = 0, filesExtracted = character(),
                                checkSumFilePath = character(), quick = FALSE) {
-
   if (!is.null(archive)) {
-    if (!(any(c("zip", "tar", "tar.gz", "gz") %in% file_ext(archive)))) {
+    if (!(any(c("zip", "tar", "tar.gz", "gz", "rar") %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
            "Try extracting manually then placing extracted files in ", destinationPath)
     }
@@ -381,11 +380,8 @@ extractFromArchive <- function(archive,
         stop("No archive exists with filename: ", archive[1],
              ". Please pass an archive name to a path that exists")
       args <- list(archive[1], exdir = destinationPath[1])
-
       funWArgs <- .whichExtractFn(archive[1], args)
-
       filesInArchive <- .listFilesInArchive(archive)
-
       if (is.null(neededFiles)) {
         neededFiles <- basename(filesInArchive)
         result <- checkSums[checkSums$expectedFile %in% neededFiles, ]$result
@@ -448,21 +444,22 @@ extractFromArchive <- function(archive,
 
         # use binary addition -- 1 is new file, 2 is append
         if (needChecksums == 0) needChecksums <- 2
-
         if (length(archive) > 1) {
           filesExtracted <- c(filesExtracted,
                               .unzipOrUnTar(funWArgs$fun, funWArgs$args,
                                             files = basename(archive[2])))
           # recursion, removing one archive
-          extractedObjs <- extractFromArchive(archive[-1],
-                                              destinationPath = destinationPath,
-                                              neededFiles = neededFiles,
-                                              extractedArchives = extractedArchives,
-                                              checkSums = checkSums,
-                                              quick = quick,
-                                              needChecksums = needChecksums,
-                                              checkSumFilePath = checkSumFilePath,
-                                              filesExtracted = filesExtracted)
+          extractedObjs <- extractFromArchive(
+            archive[-1],
+            destinationPath = destinationPath,
+            neededFiles = neededFiles,
+            extractedArchives = extractedArchives,
+            checkSums = checkSums,
+            quick = quick,
+            needChecksums = needChecksums,
+            checkSumFilePath = checkSumFilePath,
+            filesExtracted = filesExtracted
+          )
         } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
           extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in%
                                                                   neededFiles]),
@@ -472,10 +469,20 @@ extractFromArchive <- function(archive,
                                                                 collapse = ", "))
           message("From:", basename(archive[1]), "  \nExtracting\n ",
                   paste(collapse = "\n ", extractingTheseFiles))
-          filesExtracted <- c(filesExtracted,
-                              .unzipOrUnTar(funWArgs$fun, funWArgs$args,
-                                            files = filesInArchive[basename(filesInArchive) %in%
-                                                                     neededFiles]))
+          if (file_ext(archive[1]) == "rar") {
+            if (all(neededFiles %in% list.files(destinationPath))) {
+              filesExtracted <- neededFiles
+            } else {
+              stop("preProcess could not extract the files from the archive ", archive,".",
+                   " Please try to extract it manually to the destinationFolder (",
+                   destinationPath, ")")
+            }
+          } else {
+            filesExtracted <- c(filesExtracted,
+                                .unzipOrUnTar(funWArgs$fun, funWArgs$args,
+                                              files = filesInArchive[basename(filesInArchive) %in%
+                                                                       neededFiles]))
+          }
         } else {
           # don't have a 2nd archive, and don't have our neededFiles file
           isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar)", ignore.case = TRUE)
@@ -594,7 +601,7 @@ extractFromArchive <- function(archive,
 .whichExtractFn <- function(archive, args) {
   if (!(is.null(archive))) {
   ext <- tolower(file_ext(archive))
-  if (ext == "zip") {
+  if (ext == "zip" | ext == "rar") {
     fun <- unzip
     args <- c(args, list(junkpaths = TRUE))
   } else if (ext == "tar") {
@@ -630,9 +637,10 @@ extractFromArchive <- function(archive,
       )
     )
     wd <- getwd()
-    tempDir <- file.path(args$exdir, "extractedFiles")
-    dir.create(tempDir, showWarnings = FALSE)
+    tempDir <- file.path(args$exdir, "extractedFiles") %>%
+      checkPath(create = TRUE)
     setwd(tempDir)
+    on.exit(setwd(wd), add = TRUE)
     if (file.exists(args[[1]])){
      pathToFile <-  args[[1]]
     } else {
@@ -662,7 +670,6 @@ extractFromArchive <- function(archive,
     extractedFiles <- file.path(wd, extractedFiles)
     unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
     setwd(wd)
-    rm(wd)
   }
   if (!isUnzip) {
     extractedFiles <- files
@@ -694,7 +701,7 @@ extractFromArchive <- function(archive,
 .isArchive <- function(filename) {
   if (!is.null(filename)) {
     filename <- if (length(filename)) {
-      isArchive <- file_ext(filename) %in% c("zip", "tar")
+      isArchive <- file_ext(filename) %in% c("zip", "tar", "rar")
       if (any(isArchive)) {
         filename[isArchive]
       } else {
@@ -809,17 +816,79 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
+  if (length(archive)>0){
+    if ((tools::file_ext(archive[1]) == "rar")) {
+      if (!is.null(.unrarPath)) {
+        hasUnrar  <- .unrarPath
+      } else {
+        # Find the path to unrar and assign to a package-stored object
+        usrTg <- paste(sample(x = LETTERS, size = 15), collapse = "")
+        hasUnrar <- Cache(.unrarExists, userTags = usrTg) # Cache for project-level persistence
+        utils::assignInMyNamespace(".unrarPath", hasUnrar) # assign in namespace for package
+      }
+      if (is.null(hasUnrar)) {
+        clearCache(userTags = usrTg)
+        stop(
+          "prepInputs did not find '7-Zip' nor 'unrar' installed.",
+          " Please install it before running prepInputs for a '.rar' archive"
+        )
+      }
+    }
+  }
   funWArgs <- .whichExtractFn(archive[1], NULL)
   filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
-      filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
-      if ("Name" %in% names(filesInArchive)) {
-        # for zips, rm directories (length = 0)
-        filesInArchive <-
-          filesInArchive[filesInArchive$Length != 0,]$Name
-      } else { # untar
-        filesInArchive
+      if (!file_ext(archive[1]) == "rar") {
+        filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
+        if ("Name" %in% names(filesInArchive)) {
+          # for zips, rm directories (length = 0)
+          filesInArchive <-
+            filesInArchive[filesInArchive$Length != 0,]$Name
+        } else { # untar
+          filesInArchive
+        }
+      } else {
+        message(paste0("The archive is a .rar file. preProcess will try a system call of 'unrar'."))
+        wd <- getwd()
+        tempDir <- file.path(dirname(archive[1]), "extractedFiles") %>%
+          checkPath(create = TRUE)
+        setwd(tempDir)
+        on.exit(setwd(wd), add = TRUE)
+        if (grepl(x = hasUnrar, pattern = "7z")) {
+          system(
+            paste0("\"", hasUnrar, "\"", " e -o",
+                   tempDir, " ",
+                   archive[1]),
+            wait = TRUE,
+            invisible = TRUE,
+            show.output.on.console = FALSE
+          )
+        } else {
+          system(paste0("unrar x ",
+                        archive[1]),
+                 wait = TRUE, ignore.stdout = TRUE)
+        }
+        extractedFiles <-
+          list.files(path = getwd(),
+                     # list of full paths of all extracted files!
+                     recursive = TRUE,
+                     include.dirs = TRUE)
+        if (length(extractedFiles)==0) {
+          stop("preProcess could not extract the files from the archive ", archive,".",
+               "Please try to extract it manually to the destinationPath")
+        } else {
+          invisible(lapply(
+            X = extractedFiles,
+            FUN = function(fileToMove) {
+              file.rename(from = file.path(tempDir, fileToMove),
+                          to = file.path(wd, fileToMove))
+            }
+          ))
+          filesInArchive <- extractedFiles
+          setwd(wd)
+          unlink(tempDir, recursive = TRUE)
+        }
       }
     }
   }
@@ -836,3 +905,43 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   isOK <- compareNA(isOKDT$result, "OK")
   isOK
 }
+
+#' Tests if unrar or 7zip exist
+#'
+#' @return
+#' unrar or 7zip path if exist, or NULL
+#'
+#' @author Tati Micheletti
+#'
+#' @keywords internal
+#' @rdname unrarExists
+#' @name unrarExists
+.unrarExists <- function() {
+    hasUnrar <- ""
+    hasUnrar <- Sys.which("unrar")
+    if (hasUnrar == "") {
+      hasUnrar <- Sys.which("7z.exe")
+      if (hasUnrar == "") {
+        message("prepInputs is looking for 'unrar' or '7z' in your system...")
+        hasUnrar <- list.files("C:/Program Files",
+                               pattern = "unrar.exe|7z.exe",
+                               recursive = TRUE,
+                               full.names = TRUE)
+        if (hasUnrar == "" || length(hasUnrar) == 0) {
+          hasUnrar <- list.files(dirname(Sys.getenv("SystemRoot")),
+                                 pattern = "unrar.exe|7z.exe",
+                                 recursive = TRUE,
+                                 full.names = TRUE)
+          if (hasUnrar == "" || length(hasUnrar) == 0)
+          hasUnrar <- NULL
+        }
+        hasUnrar <- hasUnrar[1]
+      }
+    }
+  return(hasUnrar)
+}
+
+#' The known path for unrar or 7z
+#' @rdname unrarPath
+#' @name unrarPath
+.unrarPath <- NULL

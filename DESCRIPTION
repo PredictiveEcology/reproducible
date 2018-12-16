@@ -8,6 +8,7 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
     for caching, downloading and verifying or writing checksums, post-processing 
     of common spatial datasets, and accessing GitHub repositories. 
     Some features are still under active development.
+AdditionalRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows)  to work with '.rar' files.
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
