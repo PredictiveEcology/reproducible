@@ -1658,7 +1658,7 @@ test_that("message when archive has two known files (raster and shapefile)", {
                                                            destinationPath = tmpdir))
 })
 
-test_that("message when extracting a file that is already  present", {
+test_that("message when extracting a file that is already present", {
   skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({

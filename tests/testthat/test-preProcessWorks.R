@@ -1,4 +1,5 @@
 test_that("preProcess works for .tar files", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -10,6 +11,7 @@ test_that("preProcess works for .tar files", {
 })
 
 test_that("preProcess works for .zip when provided only url and destinationPath", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -21,6 +23,7 @@ test_that("preProcess works for .zip when provided only url and destinationPath"
 })
 
 test_that("preProcess works with only url", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -31,6 +34,7 @@ test_that("preProcess works with only url", {
 })
 
 test_that("preProcess works when provides only archive", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -46,6 +50,7 @@ test_that("preProcess works when provides only archive", {
 })
 
 test_that("preProcess works when provides archive and destinationPath", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -62,6 +67,7 @@ test_that("preProcess works when provides archive and destinationPath", {
 })
 
 test_that("preProcess works when provides only targetFile", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -74,6 +80,7 @@ test_that("preProcess works when provides only targetFile", {
 })
 
 test_that("preProcess works when provides targetfile and destinationPath", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -87,6 +94,7 @@ test_that("preProcess works when provides targetfile and destinationPath", {
 })
 
 test_that("preProcess works when provides url, archive, targetfile and destinationPath", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -100,6 +108,7 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
 })
 
 test_that("preProcess works when provides url, targetfile and destinationPath", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -111,20 +120,13 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  OSystem <- Sys.info()["sysname"]
-  if (OSystem == "Windows") { # If unrar is installed, length > 0
-    hasUnrar <- list.files("C:/Program Files/7-Zip",
-                           pattern = "7z.exe",
-                           recursive = TRUE,
-                           full.names = TRUE)
-  } else {
-    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
-  }
-  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+  hasUnrar <- .unrarExists()
+  if (is.null(hasUnrar)) {
     expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
                                                  destinationPath = tmpdir))
   } else {
@@ -136,20 +138,13 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
 })
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  OSystem <- Sys.info()["sysname"]
-  if (OSystem == "Windows") { # If unrar is installed, length > 0
-    hasUnrar <- list.files("C:/Program Files/7-Zip",
-                           pattern = "7z.exe",
-                           recursive = TRUE,
-                           full.names = TRUE)
-  } else {
-    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
-  }
-  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+  hasUnrar <- .unrarExists()
+  if (is.null(hasUnrar)) {
     expect_error( ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
                                                    targetFile = "rasterTest.tif",
                                                    destinationPath = tmpdir))
@@ -163,20 +158,13 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
 })
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  OSystem <- Sys.info()["sysname"]
-  if (OSystem == "Windows") { # If unrar is installed, length > 0
-    hasUnrar <- list.files("C:/Program Files/7-Zip",
-                           pattern = "7z.exe",
-                           recursive = TRUE,
-                           full.names = TRUE)
-  } else {
-    hasUnrar <- system("unrar", ignore.stdout = TRUE) # hasUnrar == 0 if unrar IS installed
-  }
-  if (!length(hasUnrar) > 0 || hasUnrar == 127) {
+  hasUnrar <- .unrarExists()
+  if (is.null(hasUnrar)) {
     expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
                                                    archive = "rasterTest.rar",
                                                    destinationPath = tmpdir))
@@ -190,6 +178,7 @@ test_that("preProcess works when provides url, archive and destinationPath for a
 })
 
 test_that("preProcess works, but gives a warning when supplying cacheTags", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -201,6 +190,7 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
 })
 
 test_that("preProcess works, but gives a warning when supplying postProcessedFilename", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -212,6 +202,7 @@ test_that("preProcess works, but gives a warning when supplying postProcessedFil
 })
 
 test_that("preProcess works, but gives a warning when supplying rasterInterpMethod", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -223,6 +214,7 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
 })
 
 test_that("preProcess works, but gives a warning when supplying rasterDatatype", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -234,6 +226,7 @@ test_that("preProcess works, but gives a warning when supplying rasterDatatype",
 })
 
 test_that("preProcess works, but gives a warning when supplying pkg", {
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
