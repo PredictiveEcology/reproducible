@@ -149,11 +149,13 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
                                                    targetFile = "rasterTest.tif",
                                                    destinationPath = tmpdir))
   } else {
+    wd <- getwd()
     ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar",
                                     targetFile = "rasterTest.tif",
                                     destinationPath = tmpdir)
     testthat::expect_is(object = ras, class = "list")
     testthat::expect_true(file.exists(ras$targetFilePath))
+    expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
   }
 })
 
