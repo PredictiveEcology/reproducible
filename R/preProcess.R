@@ -152,7 +152,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   filesToCheck <- c(targetFilePath, alsoExtract)
   if (!is.null(archive)) {
     archive <- file.path(destinationPath, .basename(archive))
-    filesToCheck <- c(filesToCheck, archive)
+    filesToCheck <- unique(c(filesToCheck, archive))
   }
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
