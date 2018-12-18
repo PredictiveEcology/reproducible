@@ -444,6 +444,11 @@ extractFromArchive <- function(archive,
 
         # use binary addition -- 1 is new file, 2 is append
         if (needChecksums == 0) needChecksums <- 2
+
+
+        browser() # FROM HERE ON, SHOULD FIX FOR THE SECOND TIME
+        #IF ext == "rar": filesInArchive
+
         if (length(archive) > 1) {
           filesExtracted <- c(filesExtracted,
                               .unzipOrUnTar(funWArgs$fun, funWArgs$args,
@@ -616,6 +621,7 @@ extractFromArchive <- function(archive,
 
 #' @keywords internal
 .unzipOrUnTar <- function(fun, args, files, overwrite = TRUE) {
+  browser() # Add unrar
   argList <- list(files = files)
   isUnzip <- ("overwrite" %in% names(formals(fun)))
   argList <- if (isUnzip) {
@@ -849,7 +855,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           filesInArchive
         }
       } else {
-        message(paste0("The archive is a .rar file. preProcess will try a system call of 'unrar'."))
+        # message(paste0("The archive is a .rar file. preProcess will try a system call of 'unrar'."))
         wd <- getwd()
         tempDir <- file.path(dirname(archive[1]), "extractedFiles") %>%
           checkPath(create = TRUE)
@@ -865,27 +871,19 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
             show.output.on.console = FALSE
           )
         } else {
-          system(paste0("unrar x ",
-                        archive[1]),
-                 wait = TRUE, ignore.stdout = TRUE)
+          filesOutput <- system(paste0("unrar l ",
+                        archive[1]), intern = TRUE)
+          filesInBetween <- grep(pattern = "----", filesOutput)
+          filesLines <- filesOutput[(min(filesInBetween)+1):(max(filesInBetween)-1)]
+          filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line){
+            fullString <- unlist(strsplit(filesLines[[line]], split = " "))
+            return(fullString[length(fullString)])
+          })
+          )
         }
-        extractedFiles <-
-          list.files(path = getwd(),
-                     # list of full paths of all extracted files!
-                     recursive = TRUE,
-                     include.dirs = TRUE)
-        if (length(extractedFiles)==0) {
-          stop("preProcess could not extract the files from the archive ", archive,".",
-               "Please try to extract it manually to the destinationPath")
+       if (length(filesInArchive)==0) {
+          stop("preProcess could not find any files in the archive ", archive)
         } else {
-          invisible(lapply(
-            X = extractedFiles,
-            FUN = function(fileToMove) {
-              file.rename(from = file.path(tempDir, fileToMove),
-                          to = file.path(wd, fileToMove))
-            }
-          ))
-          filesInArchive <- extractedFiles
           setwd(wd)
           unlink(tempDir, recursive = TRUE)
         }
