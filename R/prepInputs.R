@@ -625,7 +625,7 @@ extractFromArchive <- function(archive,
   }
   extractedFiles <- do.call(fun, c(args, argList))
   worked <- if (isUnzip) {
-    all(file.path(args$exdir, basename(argList[[1]])) %in% extractedFiles)
+    all(normalizePath(file.path(args$exdir, basename(argList[[1]]))) %in% normalizePath(extractedFiles))
   } else {
     isTRUE(extractedFiles == 0)
   }
