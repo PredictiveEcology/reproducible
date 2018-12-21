@@ -585,7 +585,7 @@ extractFromArchive <- function(archive,
       )
     } else {
       system(paste0("unrar x ",
-                    archive[1], " ",
+                    args[[1]], " ",
                     tempDir),
              wait = TRUE, ignore.stdout = TRUE)
     }
@@ -658,7 +658,7 @@ extractFromArchive <- function(archive,
                       to = file.path(args$exdir, fileToMove))
         }
       ))
-      extractedFiles <- file.path(wd, extractedFiles)
+      extractedFiles <- file.path(args$exdir, extractedFiles)
       unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
     }
     if (!isUnzip) {
