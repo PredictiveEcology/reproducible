@@ -189,13 +189,31 @@ setMethod(
 
 #' @rdname viewCache
 #' @export
-#' @param secs The number of seconds to pass to \code{clearCache(after = secs)}
+#' @param secs The number of seconds to pass to \code{clearCache(after = secs)}. If missing,
+#'             the default, then it will delete the most recent entry in the Cache
+#' @param ... Passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}
 #'
 #' @details
 #' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
 #' i.e., to remove any cache entries touched in the last \code{secs} seconds.
-cc <- function (secs = 20)
-  reproducible::clearCache(after = Sys.time() - secs)
+#' @examples
+#' Cache(rnorm, 1)
+#' Cache(rnorm, 2)
+#' Cache(rnorm, 3)
+#' showCache() # shows all 3 entries
+#' cc(ask = FALSE)
+#' showCache()
+cc <- function (secs, ...) {
+  if (missing(secs)) {
+    message("No time provided; removing the most recent entry to the Cache")
+    suppressMessages(theCache <- reproducible::showCache())
+    accessed <- data.table::setkey(theCache[ tagKey == "accessed"], tagValue)
+    clearCache(userTags = tail(accessed, 1)$tagValue, ...)
+  } else {
+    reproducible::clearCache(after = Sys.time() - secs, ...)
+  }
+
+}
 
 
 #' Examining and modifying the cache
