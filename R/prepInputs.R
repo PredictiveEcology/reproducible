@@ -583,7 +583,7 @@ extractFromArchive <- function(archive,
         invisible = TRUE,
         show.output.on.console = FALSE
       )
-    } else { # NEEDS TESTING IF WORKED
+    } else {
       system(paste0("unrar x ",
                     archive[1], " ",
                     tempDir),
@@ -630,20 +630,19 @@ extractFromArchive <- function(archive,
           " Trying a system call of unzip..."
         )
       )
-      wd <- getwd()
       tempDir <- file.path(args$exdir, "extractedFiles") %>%
         checkPath(create = TRUE)
       if (file.exists(args[[1]])){
         pathToFile <-  args[[1]]
       } else {
-        if (file.exists(file.path(wd, args[[1]]))){
-          pathToFile <-  file.path(wd, args[[1]])
+        if (file.exists(file.path(args$exdir, args[[1]]))){
+          pathToFile <-  file.path(args$exdir, args[[1]])
         } else {
           stop("prepInputs cannot find the file ", basename(args[[1]]),
                ". Maybe the file was moved during unzipping?")
         }
       }
-      system2("unzip", # Can't I remove the setwd() here? Passing the folder to the unzip call?
+      system2("unzip",
               args = paste0(pathToFile," ",tempDir),
               wait = TRUE,
               stdout = NULL)
