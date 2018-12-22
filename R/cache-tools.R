@@ -9,7 +9,8 @@
 #'            This must be \code{TRUE} if the use is passing a regular expression.
 #'            Otherwise, \code{userTags} will need to be exact matches. Default is
 #'            missing, which is the same as \code{TRUE}. If there are errors due
-#'            to regular expression problem, try \code{FALSE}.
+#'            to regular expression problem, try \code{FALSE}. For \code{cc}, it is
+#'            passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}
 #' @param userTags Character vector. If used, this will be used in place of the
 #'                 \code{after} and \code{before}.
 #'                 Specifying one or more \code{userTag} here will clear all
@@ -189,13 +190,30 @@ setMethod(
 
 #' @rdname viewCache
 #' @export
-#' @param secs The number of seconds to pass to \code{clearCache(after = secs)}
+#' @param secs The number of seconds to pass to \code{clearCache(after = secs)}. If missing,
+#'             the default, then it will delete the most recent entry in the Cache
 #'
 #' @details
 #' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
 #' i.e., to remove any cache entries touched in the last \code{secs} seconds.
-cc <- function (secs = 20)
-  reproducible::clearCache(after = Sys.time() - secs)
+#' @examples
+#' Cache(rnorm, 1)
+#' Cache(rnorm, 2)
+#' Cache(rnorm, 3)
+#' showCache() # shows all 3 entries
+#' cc(ask = FALSE)
+#' showCache()
+cc <- function (secs, ...) {
+  if (missing(secs)) {
+    message("No time provided; removing the most recent entry to the Cache")
+    suppressMessages(theCache <- reproducible::showCache())
+    accessed <- data.table::setkey(theCache[ tagKey == "accessed"], tagValue)
+    clearCache(userTags = tail(accessed, 1)$tagValue, ...)
+  } else {
+    reproducible::clearCache(after = Sys.time() - secs, ...)
+  }
+
+}
 
 
 #' Examining and modifying the cache
