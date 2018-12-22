@@ -597,7 +597,7 @@ extractFromArchive <- function(archive,
     internalFolders <- extractedFiles[file_ext(extractedFiles) == ""]
     extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
     if (length(extractedFiles)==0) {
-      stop("preProcess could not extract the files from the archive ", archive,".",
+      stop("preProcess could not extract the files from the archive ", basename(args[[1]]),".",
            "Please try to extract it manually to the destinationPath")
     } else {
       invisible(lapply(
