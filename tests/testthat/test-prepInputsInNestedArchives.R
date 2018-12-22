@@ -58,31 +58,6 @@ test_that("prepInputs in a two files double nested zip file, passing targetFile"
 
 test_that(
   paste0(
-    "prepInputs in a two files double nested zip file, passing targetFile",
-    " and second archive has not yet been implemented"
-  ),
-  {
-    skip_on_cran()
-    testInitOut <- testInit("raster", needGoogle = FALSE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
-
-    # Still not implemented: user should use just the url and the targetFile, or the outter archive.
-    expect_error(
-      testZip5 <-
-        reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/multiFilesOutter.zip",
-          targetFile = "rasterTest.tif",
-          archive = "multiFilesInner.zip",
-          destinationPath = tempdir()
-        ))
-      expect_true(!exists("testZip5"))
-  }
-)
-
-test_that(
-  paste0(
     "prepInputs in a two files double nested zip file, with the wanted file in",
     "the second layer, and a shapefile in the first, not specifying the targetFile"
   ),
@@ -138,7 +113,7 @@ test_that(
       reproducible::prepInputs(url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
                                destinationPath = tempdir())
     expect_true(exists("testRar"))
-    expect_is(testZip7, "RasterLayer")
+    expect_is(testRar, "RasterLayer")
   }
 )
 
@@ -184,31 +159,5 @@ test_that(
       )
     expect_true(exists("testRar3"))
     expect_is(testRar3, "RasterLayer")
-  }
-)
-
-test_that(
-  paste0(
-    "prepInputs in a two files double nested rar file, with the wanted file in",
-    "the second layer, specifying the targetFile but also passing the second archive",
-    " doesn't work yet"),
-  {
-    skip_on_cran()
-    testInitOut <-
-      testInit("raster", needGoogle = FALSE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
-
-    expect_error(
-      testRar4 <- reproducible::prepInputs(
-        url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
-        archive = "nestedRar.rar",
-        targetFile = "rasterTOtestRAR.tif",
-        destinationPath = tempdir()
-      ))
-      expect_true(!exists("testRar4"))
- # This test case has not yet been implemented.
-    # Still not implemented: user should use just the url and the targetFile, or the outter archive.
   }
 )
