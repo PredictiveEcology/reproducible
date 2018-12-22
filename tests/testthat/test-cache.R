@@ -1028,6 +1028,9 @@ test_that("test rm large non-file-backed rasters", {
 
 
 test_that("test cc", {
+  skip_on_cran()
+  skip_on_travis()
+  skip_on_appveyor()
   testInitOut <- testInit(ask = FALSE)
   on.exit({
     testOnExit(testInitOut)
