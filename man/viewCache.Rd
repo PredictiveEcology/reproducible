@@ -67,8 +67,9 @@ missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}. For \code{cc}, it is
 passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}}
 
-\item{secs}{The number of seconds to pass to \code{clearCache(after = secs)}. If missing,
-the default, then it will delete the most recent entry in the Cache}
+\item{secs}{Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
+a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,
+        the default, then it will delete the most recent entry in the Cache.}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those
@@ -132,11 +133,17 @@ clearCache(tmpDir, userTags = toRemove)
 cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 
 Cache(rnorm, 1)
+thisTime <- Sys.time()
 Cache(rnorm, 2)
 Cache(rnorm, 3)
-showCache() # shows all 3 entries
+Cache(rnorm, 4)
+showCache() # shows all 4 entries
 cc(ask = FALSE)
-showCache()
+showCache() # most recent is gone
+cc(thisTime, ask = FALSE)
+showCache() # all those after this time gone, i.e., only 1 left
+cc(ask = FALSE) # Cache is
+cc(ask = FALSE) # Cache is already empty
 }
 \seealso{
 \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
