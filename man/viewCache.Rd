@@ -64,12 +64,11 @@ Objects cached before this time will be shown or deleted.}
 This must be \code{TRUE} if the use is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
-to regular expression problem, try \code{FALSE}.}
+to regular expression problem, try \code{FALSE}. For \code{cc}, it is
+passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}}
 
 \item{secs}{The number of seconds to pass to \code{clearCache(after = secs)}. If missing,
 the default, then it will delete the most recent entry in the Cache}
-
-\item{...}{Passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}}
 }
 \value{
 Will clear all objects (or those that match \code{userTags}, or those

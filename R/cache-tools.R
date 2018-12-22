@@ -9,7 +9,8 @@
 #'            This must be \code{TRUE} if the use is passing a regular expression.
 #'            Otherwise, \code{userTags} will need to be exact matches. Default is
 #'            missing, which is the same as \code{TRUE}. If there are errors due
-#'            to regular expression problem, try \code{FALSE}.
+#'            to regular expression problem, try \code{FALSE}. For \code{cc}, it is
+#'            passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}
 #' @param userTags Character vector. If used, this will be used in place of the
 #'                 \code{after} and \code{before}.
 #'                 Specifying one or more \code{userTag} here will clear all
@@ -191,7 +192,6 @@ setMethod(
 #' @export
 #' @param secs The number of seconds to pass to \code{clearCache(after = secs)}. If missing,
 #'             the default, then it will delete the most recent entry in the Cache
-#' @param ... Passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}
 #'
 #' @details
 #' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
