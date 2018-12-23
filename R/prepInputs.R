@@ -443,7 +443,7 @@ extractFromArchive <- function(archive,
           isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
 
           if (any(isArchive)) {
-            arch <- filesInArchive[isArchive]
+            arch <- .basename(filesInArchive[isArchive])
             filesExtracted <- c(filesExtracted,
                                 .unzipOrUnTar(funWArgs$fun, funWArgs$args, files = arch))
 
