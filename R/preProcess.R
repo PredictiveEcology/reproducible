@@ -371,7 +371,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
   # if it was a nested file
   if (any(file_ext(neededFiles) %in% c("zip", "tar", "rar"))) {
-    nestedArchives <- neededFiles[file_ext(neededFiles) %in% c("zip", "tar", "rar")]
+    nestedArchives <- .basename(neededFiles[file_ext(neededFiles) %in% c("zip", "tar", "rar")])
     nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
     message(paste0("There are still archives in the extracted files. preProcess will try to extract the files from ",
                    .basename(nestedArchives), ". If this is incorrect, please supply archive"))
