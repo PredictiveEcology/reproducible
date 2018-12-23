@@ -184,3 +184,32 @@ test_that(
     }
   }
 )
+
+test_that(
+  paste0(
+    "prepInputs works with nested rar file inside internal rar folder"),
+  {
+    skip_on_cran()
+    testInitOut <-
+      testInit("raster", needGoogle = FALSE)
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+
+    hasUnrar <- .unrarExists()
+    if (is.null(hasUnrar)) {
+      expect_error(testRar4 <-
+                     reproducible::prepInputs(
+                       url = "https://github.com/tati-micheletti/host/raw/master/data/testRasterNested.rar",
+                       targetFile = "rasterTest.tif",
+                       destinationPath = tempdir()))
+    } else {
+      testRar4 <- reproducible::prepInputs(
+        url = "https://github.com/tati-micheletti/host/raw/master/data/testRasterNested.rar",
+        targetFile = "rasterTest.tif",
+        destinationPath = tempdir())
+      expect_true(exists("testRar4"))
+      expect_is(testRar4, "RasterLayer")
+    }
+  }
+)
