@@ -422,6 +422,10 @@ extractFromArchive <- function(archive,
             filesExtracted = filesExtracted
           )
         } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
+          possibleFolders <- filesInArchive[file_ext(filesInArchive) == ""]
+          if (length(possibleFolders)!=0){
+            filesInArchive <- setdiff(filesInArchive, possibleFolders)
+          }
           extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in%
                                                                   neededFiles]),
                                         collapse = ", ")
