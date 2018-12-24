@@ -519,12 +519,9 @@ setMethod(
       preDigest <- lapply(modifiedDots[!argsToOmitForDigest], function(x) {
         # remove the "newCache" attribute, which is irrelevant for digest
         if (!is.null(attr(x, ".Cache")$newCache)) {
-          .CacheAttr <- attr(x, ".Cache")
-          if (is.null(.CacheAttr)) .CacheAttr <- list()
-          .CacheAttr["newCache"] <- NULL
-          setattr(x, ".Cache", .CacheAttr["newCache"])
+          .setSubAttrInList(x, ".Cache", "newCache", NULL)
           # attr(x, ".Cache")$newCache <- NULL
-          if (!identical(attr(x, ".Cache")$newCache, NULL)) browser()
+          if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
         }
         .robustDigest(x, objects = objects,
                       length = length,
@@ -793,12 +790,9 @@ setMethod(
               output <- .debugCache(output, preDigest, ...)
           }
 
-          .CacheAttr <- attr(output, ".Cache")
-          if (is.null(.CacheAttr)) .CacheAttr <- list()
-          .CacheAttr["newCache"] <- FALSE
-          setattr(output, ".Cache", .CacheAttr["newCache"])
+          .setSubAttrInList(output, ".Cache", "newCache", FALSE)
           #attr(output, ".Cache")$newCache <- FALSE
-          if (!identical(attr(output, ".Cache")$newCache, FALSE)) browser()
+          if (!identical(attr(output, ".Cache")$newCache, FALSE)) stop("attributes are not correct 2")
 
           if (verbose) {
             endCacheTime <- Sys.time()
@@ -924,18 +918,16 @@ setMethod(
       isNullOutput <- if (is.null(output)) TRUE else FALSE
       if (isNullOutput) output <- "NULL"
 
+
+      .setSubAttrInList(output, ".Cache", "newCache", TRUE)
       setattr(output, "tags", paste0("cacheId:", outputHash))
-      .CacheAttr <- attr(output, ".Cache")
-      if (is.null(.CacheAttr)) .CacheAttr <- list()
-      .CacheAttr["newCache"] <- TRUE
-      setattr(output, ".Cache", .CacheAttr["newCache"])
       setattr(output, "call", "")
       # attr(output, "tags") <- paste0("cacheId:", outputHash)
       # attr(output, ".Cache")$newCache <- TRUE
       # attr(output, "call") <- ""
-      if (!identical(attr(output, ".Cache")$newCache, TRUE)) browser()
-      if (!identical(attr(output, "call"), "")) browser()
-      if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash))) browser()
+      if (!identical(attr(output, ".Cache")$newCache, TRUE)) stop("attributes are not correct 3")
+      if (!identical(attr(output, "call"), "")) stop("attributes are not correct 4")
+      if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash))) stop("attributes are not correct 5")
 
 
       if (sideEffect != FALSE) {
@@ -1008,18 +1000,18 @@ setMethod(
         }
 
         setattr(outputToSave, "tags", attr(output, "tags"))
-        .CacheAttr <- attr(outputToSave, ".Cache")
-        if (is.null(.CacheAttr)) .CacheAttr <- list()
-        .CacheAttr["newCache"] <- attr(output, ".Cache")$newCache
-        setattr(outputToSave, ".Cache", .CacheAttr["newCache"])
+        .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
         setattr(outputToSave, "call", attr(output, "call"))
 
         # attr(outputToSave, "tags") <- attr(output, "tags")
         # attr(outputToSave, "call") <- attr(output, "call")
         # attr(outputToSave, ".Cache")$newCache <- attr(output, ".Cache")$newCache
-        if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache)) browser()
-        if (!identical(attr(outputToSave, "call"), attr(output, "call"))) browser()
-        if (!identical(attr(outputToSave, "tags"), attr(output, "tags"))) browser()
+        if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache))
+          stop("attributes are not correct 6")
+        if (!identical(attr(outputToSave, "call"), attr(output, "call")))
+          stop("attributes are not correct 7")
+        if (!identical(attr(outputToSave, "tags"), attr(output, "tags")))
+          stop("attributes are not correct 8")
 
         if (isS4(FUN)) {
           setattr(outputToSave, "function", attr(output, "function"))
@@ -1455,4 +1447,21 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
                                 modifiedDots = modifiedDots, isDoCall = isDoCall,
                                 formalArgs = forms)))
 
+}
+
+#' Set subattributes within a list by reference
+#'
+#' This uses \code{data.table::setattr}, but in the case where there is
+#' only a single element within a list attribute.
+#' @param object An arbitrary object
+#' @param attr The attribute name (that is a list object) to change
+#' @param subAttr The list element name to change
+#' @param value The new value
+#' @export
+#' @rdname setSubAttrInList
+.setSubAttrInList <- function(object, attr, subAttr, value) {
+  .CacheAttr <- attr(object, attr)
+  if (is.null(.CacheAttr)) .CacheAttr <- list()
+  .CacheAttr[[subAttr]] <- value
+  setattr(object, attr, .CacheAttr)
 }
