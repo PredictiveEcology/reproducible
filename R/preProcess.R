@@ -152,7 +152,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   filesToCheck <- c(targetFilePath, alsoExtract)
   if (!is.null(archive)) {
     archive <- file.path(destinationPath, .basename(archive))
-    filesToCheck <- c(filesToCheck, archive)
+    filesToCheck <- unique(c(filesToCheck, archive))
   }
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
@@ -296,8 +296,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (is.null(archive)) archive <- downloadFileResult$archive
 
   # redo "similar" after download
-  outFromSimilar <- .checkForSimilar(neededFiles, alsoExtract, archive, targetFile,
-                                     destinationPath, checkSums, url)
+  outFromSimilar <- .checkForSimilar(neededFiles = neededFiles, alsoExtract = alsoExtract,
+                                     archive = archive, targetFile = targetFile,
+                                     destinationPath = destinationPath, checkSums = checkSums,
+                                     url =  url)
   neededFiles <- outFromSimilar$neededFiles
   checkSums <- outFromSimilar$checkSums
 
@@ -367,7 +369,42 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                  file.path(destinationPathUser, filesExtr[!logicalFilesExistDP]))
     }
   }
+  # if it was a nested file
+  if (any(file_ext(neededFiles) %in% c("zip", "tar", "rar"))) {
+    nestedArchives <- .basename(neededFiles[file_ext(neededFiles) %in% c("zip", "tar", "rar")])
+    nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
+    message(paste0("There are still archives in the extracted files. preProcess will try to extract the files from ",
+                   .basename(nestedArchives), ". If this is incorrect, please supply archive"))
+    # Guess which files inside the new nested
+    nestedTargetFile <- .listFilesInArchive(archive = nestedArchives)
+    outFromSimilar <- .checkForSimilar(alsoExtract = alsoExtract, archive = nestedArchives,
+                                       neededFiles = nestedTargetFile, destinationPath = destinationPath,
+                                       checkSums = checkSums, targetFile = targetFile)
+    neededFiles <- outFromSimilar$neededFiles
+    checkSums <- outFromSimilar$checkSums
 
+    # don't include targetFile in neededFiles -- extractFromArchive deals with it separately
+    if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
+
+    # To this point, we only have the archive in hand -- include this in the list of filesToChecksum
+    filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else .basename(archive)
+    on.exit({
+      if (needChecksums > 0) {
+        # needChecksums 1 --> write a new checksums.txt file
+        # needChecksums 2 --> append to checksums.txt
+        appendChecksumsTable(checkSumFilePath = checkSumFilePath,
+                             filesToChecksum = .basename(filesToChecksum),
+                             destinationPath = destinationPath,
+                             append = (needChecksums == 2))
+      }
+    })
+    extractedFiles <- .tryExtractFromArchive(archive = nestedArchives, neededFiles = neededFiles,
+                                             alsoExtract = alsoExtract, destinationPath = destinationPath,
+                                             checkSums = checkSums, needChecksums = needChecksums,
+                                             checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+                                             targetFile = targetFile, quick = quick)
+    filesExtr <- c(filesExtr, extractedFiles$filesExtr)
+  }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
                                        filesExtracted = filesExtr,
                                        fun) # passes through if all known
