@@ -10,9 +10,12 @@ version 0.2.5.9000
 ## New features
 
 * updated `assessDataType` to consolidate `assessDataTypeGDAL` and `assessDataType` into single function (#71, @ianmseddy)
+* `cc`: new function -- a shortcut for some commonly used options for `clearCache()`
+* added experimental capacity for `prepInputs` to handle `.rar` archives, on systems with correct binaries to deal with them. Thanks to PR #86 from Tati Micheletti.
 
 ## Bug fixes
 
+* `data.table` class objects would give an error sometimes due to use of `attr(DT)`. Internally, attributes are now added with `data.table::setattr` to deal with this.
 * calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
 
 version 0.2.5

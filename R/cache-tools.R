@@ -190,27 +190,42 @@ setMethod(
 
 #' @rdname viewCache
 #' @export
-#' @param secs The number of seconds to pass to \code{clearCache(after = secs)}. If missing,
-#'             the default, then it will delete the most recent entry in the Cache
+#' @param secs Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
+#'     a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,
+#'             the default, then it will delete the most recent entry in the Cache.
 #'
 #' @details
 #' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
 #' i.e., to remove any cache entries touched in the last \code{secs} seconds.
 #' @examples
 #' Cache(rnorm, 1)
+#' thisTime <- Sys.time()
 #' Cache(rnorm, 2)
 #' Cache(rnorm, 3)
-#' showCache() # shows all 3 entries
+#' Cache(rnorm, 4)
+#' showCache() # shows all 4 entries
 #' cc(ask = FALSE)
-#' showCache()
+#' showCache() # most recent is gone
+#' cc(thisTime, ask = FALSE)
+#' showCache() # all those after this time gone, i.e., only 1 left
+#' cc(ask = FALSE) # Cache is
+#' cc(ask = FALSE) # Cache is already empty
 cc <- function (secs, ...) {
   if (missing(secs)) {
     message("No time provided; removing the most recent entry to the Cache")
-    suppressMessages(theCache <- reproducible::showCache())
-    accessed <- data.table::setkey(theCache[ tagKey == "accessed"], tagValue)
-    clearCache(userTags = tail(accessed, 1)$tagValue, ...)
+    suppressMessages(theCache <- reproducible::showCache(...))
+    if (NROW(theCache) > 0) {
+      accessed <- data.table::setkey(theCache[ tagKey == "accessed"], tagValue)
+      clearCache(userTags = tail(accessed, 1)$artifact, ...)
+    } else {
+      message("Cache already empty")
+    }
   } else {
-    reproducible::clearCache(after = Sys.time() - secs, ...)
+    if (is(secs, "POSIXct")) {
+      reproducible::clearCache(after = secs, ...)
+    } else {
+      reproducible::clearCache(after = Sys.time() - secs, ...)
+    }
   }
 
 }

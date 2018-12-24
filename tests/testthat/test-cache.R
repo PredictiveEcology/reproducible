@@ -1025,3 +1025,37 @@ test_that("test rm large non-file-backed rasters", {
   st1 <- system.time(clearCache(userTags = "first"))
   expect_true(st1["elapsed"] < 0.75) # This was > 2 seconds in old way
 })
+
+
+test_that("test cc", {
+  skip_on_cran()
+  skip_on_travis()
+  skip_on_appveyor()
+  testInitOut <- testInit(ask = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  Cache(rnorm, 1, cacheRepo = tmpCache)
+  thisTime <- Sys.time()
+  Sys.sleep(0.2)
+  Cache(rnorm, 2, cacheRepo = tmpCache)
+  Cache(rnorm, 3, cacheRepo = tmpCache)
+  Cache(rnorm, 4, cacheRepo = tmpCache)
+  a <- showCache(x = tmpCache) # shows all 4 entries
+  expect_true(length(unique(a$artifact)) == 4)
+  cc(ask = FALSE, x = tmpCache)
+  b <- showCache( x = tmpCache) # most recent is gone
+  expect_true(length(unique(b$artifact)) == 3)
+  cc(thisTime, ask = FALSE, x = tmpCache)
+  d <- showCache(x = tmpCache) # all those after this time gone, i.e., only 1 left
+  expect_true(length(unique(d$artifact)) == 1)
+
+  cc(ask = FALSE, x = tmpCache) # Cache is
+  b1 <- showCache( x = tmpCache) # most recent is gone
+  expect_true(length(unique(b1$artifact)) == 0)
+
+  mess <- capture_messages(cc(ask = FALSE, x = tmpCache)) # Cache is already empty
+  expect_true(any(grepl("Cache already empty", mess)))
+
+})
