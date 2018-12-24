@@ -15,6 +15,7 @@ version 0.2.5.9000
 
 ## Bug fixes
 
+* `data.table` class objects would give an error sometimes due to use of `attr(DT)`. Internally, attributes are now added with `data.table::setattr` to deal with this.
 * calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
 
 version 0.2.5
