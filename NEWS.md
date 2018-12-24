@@ -10,6 +10,7 @@ version 0.2.5.9000
 ## New features
 
 * updated `assessDataType` to consolidate `assessDataTypeGDAL` and `assessDataType` into single function (#71, @ianmseddy)
+* added experimental capacity for `prepInputs` to handle `.rar` archives, on systems with correct binaries to deal with them. Thanks to PR #86 from Tati Micheletti.
 
 ## Bug fixes
 

@@ -265,7 +265,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom archivist createLocalRepo addTagsRepo
 #' @importFrom digest digest
-#' @importFrom data.table setDT := setkeyv .N .SD
+#' @importFrom data.table setDT := setkeyv .N .SD setattr
 #' @importFrom fastdigest fastdigest
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
@@ -518,7 +518,14 @@ setMethod(
 
       preDigest <- lapply(modifiedDots[!argsToOmitForDigest], function(x) {
         # remove the "newCache" attribute, which is irrelevant for digest
-        if (!is.null(attr(x, ".Cache")$newCache)) attr(x, ".Cache")$newCache <- NULL
+        if (!is.null(attr(x, ".Cache")$newCache)) {
+          .CacheAttr <- attr(x, ".Cache")
+          if (is.null(.CacheAttr)) .CacheAttr <- list()
+          .CacheAttr["newCache"] <- NULL
+          setattr(x, ".Cache", .CacheAttr["newCache"])
+          # attr(x, ".Cache")$newCache <- NULL
+          if (!identical(attr(x, ".Cache")$newCache, NULL)) browser()
+        }
         .robustDigest(x, objects = objects,
                       length = length,
                       algo = algo,
@@ -614,6 +621,9 @@ setMethod(
         localTags <- suppressWarnings(try(showLocalRepo2(cacheRepo), silent = TRUE))
         #localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
         written <- if (is(localTags, "try-error")) {
+          if (grepl("Error in checkDirectory", localTags)) {
+            stop(localTags, "\nThis likely means the cacheRepo must be deleted")
+          }
           Sys.sleep(sum(runif(written + 1,0.05, 0.2)))
           written + 1
         } else {
@@ -782,7 +792,13 @@ setMethod(
               #output <- do.call(.debugCache, args = append(list(output, preDigest), modifiedDots$args))
               output <- .debugCache(output, preDigest, ...)
           }
-          attr(output, ".Cache")$newCache <- FALSE
+
+          .CacheAttr <- attr(output, ".Cache")
+          if (is.null(.CacheAttr)) .CacheAttr <- list()
+          .CacheAttr["newCache"] <- FALSE
+          setattr(output, ".Cache", .CacheAttr["newCache"])
+          #attr(output, ".Cache")$newCache <- FALSE
+          if (!identical(attr(output, ".Cache")$newCache, FALSE)) browser()
 
           if (verbose) {
             endCacheTime <- Sys.time()
@@ -863,7 +879,6 @@ setMethod(
         startRunTime <- Sys.time()
       }
 
-      #browser(expr = "speciesEquivalency" %in% names(fnDetails$originalDots))
       if (fnDetails$isPipe) {
         output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
       } else {
@@ -909,9 +924,19 @@ setMethod(
       isNullOutput <- if (is.null(output)) TRUE else FALSE
       if (isNullOutput) output <- "NULL"
 
-      attr(output, "tags") <- paste0("cacheId:", outputHash)
-      attr(output, ".Cache")$newCache <- TRUE
-      attr(output, "call") <- ""
+      setattr(output, "tags", paste0("cacheId:", outputHash))
+      .CacheAttr <- attr(output, ".Cache")
+      if (is.null(.CacheAttr)) .CacheAttr <- list()
+      .CacheAttr["newCache"] <- TRUE
+      setattr(output, ".Cache", .CacheAttr["newCache"])
+      setattr(output, "call", "")
+      # attr(output, "tags") <- paste0("cacheId:", outputHash)
+      # attr(output, ".Cache")$newCache <- TRUE
+      # attr(output, "call") <- ""
+      if (!identical(attr(output, ".Cache")$newCache, TRUE)) browser()
+      if (!identical(attr(output, "call"), "")) browser()
+      if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash))) browser()
+
 
       if (sideEffect != FALSE) {
         if (isTRUE(sideEffect)) {
@@ -935,7 +960,9 @@ setMethod(
           }
 
           cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep = "/")
-          attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
+          setattr(output, "chcksumFiles", paste0(cacheName, ":", cachecurFlst))
+          #attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
+          if (!identical(attr(output, "chcksumFiles"), paste0(cacheName, ":", cachecurFlst))) browser()
 
           if (makeCopy) {
             repoTo <- file.path(cacheRepo, "gallery")
@@ -947,8 +974,11 @@ setMethod(
         }
       }
 
-      if (isS4(FUN)) attr(output, "function") <- FUN@generic
-
+      if (isS4(FUN)) {
+        setattr(output, "function", FUN@generic)
+        #attr(output, "function") <- FUN@generic
+        if (!identical(attr(output, "function"), FUN@generic)) browser()
+      }
       # Can make new methods by class to add tags to outputs
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
                                        preDigestByClass)
@@ -976,11 +1006,27 @@ setMethod(
           outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
                                                    overwrite = FALSE)
         }
-        attr(outputToSave, "tags") <- attr(output, "tags")
-        attr(outputToSave, "call") <- attr(output, "call")
-        attr(outputToSave, ".Cache")$newCache <- attr(output, ".Cache")$newCache
-        if (isS4(FUN))
-          attr(outputToSave, "function") <- attr(output, "function")
+
+        setattr(outputToSave, "tags", attr(output, "tags"))
+        .CacheAttr <- attr(outputToSave, ".Cache")
+        if (is.null(.CacheAttr)) .CacheAttr <- list()
+        .CacheAttr["newCache"] <- attr(output, ".Cache")$newCache
+        setattr(outputToSave, ".Cache", .CacheAttr["newCache"])
+        setattr(outputToSave, "call", attr(output, "call"))
+
+        # attr(outputToSave, "tags") <- attr(output, "tags")
+        # attr(outputToSave, "call") <- attr(output, "call")
+        # attr(outputToSave, ".Cache")$newCache <- attr(output, ".Cache")$newCache
+        if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache)) browser()
+        if (!identical(attr(outputToSave, "call"), attr(output, "call"))) browser()
+        if (!identical(attr(outputToSave, "tags"), attr(output, "tags"))) browser()
+
+        if (isS4(FUN)) {
+          setattr(outputToSave, "function", attr(output, "function"))
+          if (!identical(attr(outputToSave, "function"), attr(output, "function"))) browser()
+        }
+        # attr(outputToSave, "function") <- attr(output, "function")
+
         output <- outputToSave
       }
       if (length(debugCache)) {
