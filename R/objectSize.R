@@ -36,7 +36,8 @@ objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE)) {
 objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE)) {
   xName <- deparse(substitute(x))
   os <- objSize(as.list(x, all.names = TRUE))
-  names(os) <- paste0(xName, "$", names(os))
+  if (length(os) > 0)
+    names(os) <- paste0(xName, "$", names(os))
   osCur <- list(object.size(x))
   names(osCur) <- xName
   os <- append(os, osCur)
