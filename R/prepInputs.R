@@ -637,17 +637,17 @@ extractFromArchive <- function(archive,
       tempDir <- file.path(args$exdir, "extractedFiles") %>%
         checkPath(create = TRUE)
       if (file.exists(args[[1]])){
-        pathToFile <-  args[[1]]
+        pathToFile <-  normPath(args[[1]])
       } else {
         if (file.exists(file.path(args$exdir, args[[1]]))){
-          pathToFile <-  file.path(args$exdir, args[[1]])
+          pathToFile <-  normPath(file.path(args$exdir, args[[1]]))
         } else {
           stop("prepInputs cannot find the file ", basename(args[[1]]),
                ". Maybe the file was moved during unzipping?")
         }
       }
       system2("unzip",
-              args = paste0(pathToFile," ",tempDir),
+              args = paste0(pathToFile," -d ",tempDir),
               wait = TRUE,
               stdout = NULL)
       extractedFiles <-
