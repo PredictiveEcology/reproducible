@@ -4,13 +4,18 @@
 \alias{fastMask}
 \title{Faster operations on rasters}
 \usage{
-fastMask(x, y)
+fastMask(x, y, cores = NULL)
 }
 \arguments{
 \item{x}{A \code{Raster*} object.}
 
 \item{y}{A \code{SpatialPolygons} object. If it is not in the same projection
 as \code{x}, it will be reprojected on the fly to that of \code{x}}
+
+\item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
+triggered. \code{'AUTO'*} will calculate 90% of the total
+number of cores in the system, while an integer or rounded
+float will be passed as the exact number of cores to be used.}
 }
 \value{
 A \code{Raster*} object, masked (i.e., smaller extent and/or
