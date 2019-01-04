@@ -18,6 +18,7 @@
     reproducible.quick = FALSE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useMemoise = TRUE, #memoise
+    reproducible.useNewDigestAlgorithm = FALSE,
     reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = FALSE
   )
