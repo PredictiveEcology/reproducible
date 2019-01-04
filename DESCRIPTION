@@ -12,8 +12,8 @@ AdditionalRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows)  to work with
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-12-24
-Version: 0.2.5.9003
+Date: 2018-01-04
+Version: 0.2.5.9005
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -83,6 +83,7 @@ Collate:
     'robustDigest.R'
     'cache.R'
     'checksums.R'
+    'cloud.R'
     'consistentPaths.R'
     'convertPaths.R'
     'download.R'
