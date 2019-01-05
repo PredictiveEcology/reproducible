@@ -13,6 +13,9 @@ cloudUpdateChecksums(checksums, checksumsFileID)
 \arguments{
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
 provided as a character string}
+
+\item{checksums}{A \code{data.table} that is outputted from \code{cloudCheck} that
+is the the checksums file}
 }
 \description{
 Mostly for internal use, but may be useful to a user

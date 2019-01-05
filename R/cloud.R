@@ -98,7 +98,7 @@ cloudDownloadChecksums <- function(checksumsFileID) {
   checksums <- readRDS(checksumsFilename)
 }
 
-#' @inheritParams cloudCheck
+#' @inheritParams cloudWrite
 #' @name cloudExtras
 #' @rdname cloudExtras
 #' @aliases cloudExtras
@@ -276,6 +276,7 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'
 #' THis is still experimental, see examples.
 #'
+#' @importFrom googledrive drive_rm
 #' @inheritParams Cache
 #' @inheritParams cloudCache
 #'
