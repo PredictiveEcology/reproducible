@@ -86,6 +86,7 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
 #'
 #' @inheritParams cloudCheck
 #' @rdname cloudExtras
+#' @aliases cloudExtras
 #' @export
 #' @seealso \code{\link{cloudSyncCache}}, \code{\link{cloudCache}},
 #'   \code{\link{cloudExtras}}
@@ -98,7 +99,9 @@ cloudDownloadChecksums <- function(checksumsFileID) {
 }
 
 #' @inheritParams cloudCheck
+#' @name cloudExtras
 #' @rdname cloudExtras
+#' @aliases cloudExtras
 #' @export
 #' @details
 #' \code{cloudDownloadChecksums} gets the checksums data.table directly.

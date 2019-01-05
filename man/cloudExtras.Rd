@@ -2,6 +2,7 @@
 % Please edit documentation in R/cloud.R
 \name{cloudDownloadChecksums}
 \alias{cloudDownloadChecksums}
+\alias{cloudExtras}
 \alias{cloudUpdateChecksums}
 \title{Cloud extras}
 \usage{
