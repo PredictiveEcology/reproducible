@@ -280,6 +280,7 @@ getChecksumsFileID <- function(cloudFolderID) {
 #' @inheritParams Cache
 #' @inheritParams cloudCache
 #'
+#' @export
 #' @param cacheRepo See \code{x} in \code{\link{showCache}}
 #' @param delete Logical. If \code{TRUE}, the default, it will delete any objects
 #'   that are in \code{cloudFolderID} that are absent from local \code{cacheRepo}.
