@@ -1,3 +1,6 @@
+if (getRversion() >= "3.1.0") {
+  utils::globalVariables(c("checksumsFilename", "checksumsID", "id"))
+}
 #' Basic tool for using cloud-based caching
 #'
 #' Very experimental
@@ -10,7 +13,7 @@
 #' @export
 #' @importFrom googledrive drive_upload drive_download as_id
 #' @importFrom fastdigest fastdigest
-#' @rdname cloudCache
+#' @seealso \code{\link{cloudSyncCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}},
 cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
   dig <- CacheDigest(toDigest)$outputHash
   if (is.null(checksumsFileID)) {
@@ -53,10 +56,9 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
 #'    be written
 #' @inheritParams cloudCheck
 #' @export
-#' @rdname cloudCache
 #' @importFrom googledrive drive_upload as_id drive_update
-#' @seealso \code{\link{Cache}}
-#' @examples
+#' @seealso \code{\link{cloudSyncCache}},
+#'   \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
 cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID) {
   if (!is.null(cloudFolderID)) {
     objectFile <- tempfile(fileext = ".rda")
@@ -70,31 +72,40 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
            data.table(cacheId = digest, id = uploadRes$id, time = as.character(Sys.time()),
                       filesize = file.size(objectFile))), use.names = TRUE, fill = TRUE)
     saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
-    drive_update(as_id(checksumsFileID), media = getOption("reproducible.cloudChecksumsFilename"))
+    drive_update(as_id(checksumsFileID),
+                 media = getOption("reproducible.cloudChecksumsFilename"),
+                 verbose = FALSE)
   } else {
     stop("cloudFolder must be provided as a google id string to a folder (not a file)")
   }
 }
 
+#' Cloud extras
+#'
+#' Mostly for internal use, but may be useful to a user
+#'
 #' @inheritParams cloudCheck
-#' @rdname cloudCache
+#' @rdname cloudExtras
 #' @export
+#' @seealso \code{\link{cloudSyncCache}}, \code{\link{cloudCache}},
+#'   \code{\link{cloudExtras}}
 #' @details
 #' \code{cloudDownloadChecksums} gets the checksums data.table directly.
 cloudDownloadChecksums <- function(checksumsFileID) {
   checksumsFilename <- tempfile(fileext = ".rds");
-  drive_download(as_id(checksumsFileID), path = checksumsFilename)
+  drive_download(as_id(checksumsFileID), path = checksumsFilename, verbose = FALSE)
   checksums <- readRDS(checksumsFilename)
 }
 
 #' @inheritParams cloudCheck
-#' @rdname cloudCache
+#' @rdname cloudExtras
 #' @export
 #' @details
 #' \code{cloudDownloadChecksums} gets the checksums data.table directly.
 cloudUpdateChecksums <- function(checksums, checksumsFileID) {
   saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
-  drive_update(as_id(checksumsFileID), media = getOption("reproducible.cloudChecksumsFilename"))
+  drive_update(as_id(checksumsFileID), media = getOption("reproducible.cloudChecksumsFilename"),
+               verbose = FALSE)
 }
 
 
@@ -110,7 +121,8 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 #'   \code{Cache} (including possibly \code{useCache}, where all caching can be turned off)
 #' @rdname cloudCache
 #' @export
-#' @seealso \code{\link{Cache}}, \code{\link{cloudWrite}}, \code{\link{cloudCheck}}
+#' @seealso \code{\link{cloudSyncCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}},
+#'   \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
 #'
 #' @details
 #' This has \code{Cache} internally. The main goal of this function is to look at
@@ -130,39 +142,20 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 #' # first time -- looks in cloudFolderID for checksums -- none there, so it makes it
 #' #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
 #' #   2 places
-#' a1 <- cloudCache(rnorm, 1, cloudFolderID = "/folders/1wjLM1vS394xW1wVdQK4ZAQZHaXPiuOzK")
+#' library(googledrive)
+#' newDir <- drive_mkdir("testFolder")
+#' a1 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 #' # second time -- sees that it is in both places, takes local
-#' a2 <- cloudCache(rnorm, 1, cloudFolderID = "/folders/1wjLM1vS394xW1wVdQK4ZAQZHaXPiuOzK")
+#' a2 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 #'
 #' # clear local -- get from cloud copy, make a local copy in cacheRepo
 #' clearCache(ask = FALSE)
-#' a3 <- cloudCache(rnorm, 1, cloudFolderID = "/folders/1wjLM1vS394xW1wVdQK4ZAQZHaXPiuOzK")
+#' a3 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 #'
 #' # now both local and cloud exist
-#' a4 <- cloudCache(rnorm, 1, cloudFolderID = "/folders/1wjLM1vS394xW1wVdQK4ZAQZHaXPiuOzK")
+#' a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 #'
-#' # Clean up -- no functionality like clearCache (yet)
-#' # list all files in cloudFolder -- should be 2 the checksums and the object
-#' lsFiles <- googledrive::drive_ls(as_id("/folders/1wjLM1vS394xW1wVdQK4ZAQZHaXPiuOzK"))
-#' googledrive::drive_rm(as_id(lsFiles$id))
-#'
-#' # Could also try something like this do googledrive has only objects that
-#' #  are also in local cacheRepo and checksums is correct too
-#' # Put one object back in cloud
-#' a4 <- cloudCache(rnorm, 1, cloudFolderID = "/folders/1wjLM1vS394xW1wVdQK4ZAQZHaXPiuOzK")
-#' clearCache(ask = FALSE) # clear local copy only
-#' bb <- Cache(rnorm, 3)   # make a new entry that is supposed to be local only
-#' allCache <- showCache() # only has 1 objects, it is local only
-#' cacheIDs <- allCache[tagKey == "cacheId", tagValue] # extract cacheIds that exist locally
-#' lsFiles <- googledrive::drive_ls(as_id("/folders/1wjLM1vS394xW1wVdQK4ZAQZHaXPiuOzK"))
-#' lsFiles <- lsFiles[!lsFiles$name %in% "checksums",]
-#' toRm <- lsFiles[!lsFiles$name %in% cacheIDs,]
-#' googledrive::drive_rm(as_id(toRm$id))
-#' checksumsFileID <- attr(a4, "reproducible.checksumsFileID")
-#' checksums <- cloudDownloadChecksums(checksumsFileID = checksumsFileID)
-#' checksums <- checksums[hash %in% cacheIDs]
-#' cloudUpdateChecksums(checksums, checksumsFileID)
-#'
+#' # Clean up -- see cloudSyncCache
 #' }
 cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
                        checksumsFileID = NULL, cloudFolderID = NULL) {
@@ -268,7 +261,8 @@ getChecksumsFileID <- function(cloudFolderID) {
     saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
     res <- drive_upload(getOption("reproducible.cloudChecksumsFilename"),
                         path = as_id(cloudFolderID),
-                        name = "checksums")
+                        name = "checksums",
+                        verbose = FALSE)
     res$id
   }
   return(checksumsFileID)
