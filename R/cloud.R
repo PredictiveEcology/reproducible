@@ -22,7 +22,7 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
   }
 
   suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
-  hashExists <- checksums$hash == dig
+  hashExists <- checksums$cacheId == dig
   out <- if (isTRUE(any(hashExists))) {
     objectFilename2 <- tempfile(fileext = ".rda");
     a <- checksums[hashExists]$filesize
@@ -46,7 +46,7 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
 #'
 #' Very experimental
 #' @param object The R object to write to cloud
-#' @param digest The hash of the input arguments, outputted from \code{cloudCheck}
+#' @param digest The cacheId of the input arguments, outputted from \code{cloudCheck}
 #' @param checksums A \code{data.table} that is outputted from \code{cloudCheck} that
 #'   is the the checksums file
 #' @param cloudFolderID The google folder ID where a new object should
@@ -67,7 +67,7 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
                               name = paste0(digest, ".rda"), verbose = FALSE)
     checksums <- rbindlist(
       list(checksums,
-           data.table(hash = digest, id = uploadRes$id, time = as.character(Sys.time()),
+           data.table(cacheId = digest, id = uploadRes$id, time = as.character(Sys.time()),
                       filesize = file.size(objectFile))), use.names = TRUE, fill = TRUE)
     saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
     drive_update(as_id(checksumsFileID), media = getOption("reproducible.cloudChecksumsFilename"))
@@ -185,7 +185,7 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
       if (is.null(checksumsFileID))
         checksumsFileID <- getChecksumsFileID(cloudFolderID)
       suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
-      hasCloudCopy <- any(checksums$hash %in% dig$outputHash)
+      hasCloudCopy <- any(checksums$cacheId %in% dig$outputHash)
       if (hasCloudCopy)
         message("  local and cloud copy exist; using local")
       else
@@ -197,7 +197,7 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
 
       cachedCopy <- cloudCheck(list(...), checksumsFileID, cloudFolderID)
       checksumsFileID <- cachedCopy$checksumsFileID
-      hasCloudCopy <- any(cachedCopy$checksums$hash %in% cachedCopy$digest)
+      hasCloudCopy <- any(cachedCopy$checksums$cacheId %in% cachedCopy$digest)
       # it may not have a cloud copy either, meaning it will have a NULL
       if (!is.null(cachedCopy$object)) {
         message("  writing to local Cache")
@@ -262,7 +262,8 @@ getChecksumsFileID <- function(cloudFolderID) {
   checksumsFileID <- if (length(whChecksums) > 0) {
     lsFiles[whChecksums[1],]$id
   } else {
-    checksums <- data.table(hash = character(), id = character(), time = character(),
+    message(crayon::blue("There is no checkums file yet; creating it and uploading"))
+    checksums <- data.table(cacheId = character(), id = character(), time = character(),
                             filesize = integer())
     saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
     res <- drive_upload(getOption("reproducible.cloudChecksumsFilename"),
