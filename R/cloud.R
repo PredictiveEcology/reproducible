@@ -24,13 +24,15 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
   suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
   hashExists <- checksums$hash == dig
   out <- if (isTRUE(any(hashExists))) {
-    objectFilename2 <- tempfile(fileext = ".rds");
+    objectFilename2 <- tempfile(fileext = ".rda");
     a <- checksums[hashExists]$filesize
     class(a) <- "object_size"
     message("  downloading object from google drive; this could take a while; it is: ",
             format(a, "auto"))
-    drive_download(as_id(checksums[hashExists, id]), path = objectFilename2)
-    readRDS(objectFilename2)
+    drive_download(as_id(checksums[hashExists, id]), path = objectFilename2, verbose = FALSE)
+    env <- new.env()
+    load(objectFilename2, envir = env)
+    as.list(env)[[1]]
   } else {
     NULL
   }
@@ -57,12 +59,12 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
 #' @examples
 cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID) {
   if (!is.null(cloudFolderID)) {
-    objectFile <- tempfile(fileext = ".rds")
-    saveRDS(object, file = objectFile)
+    objectFile <- tempfile(fileext = ".rda")
+    save(object, file = objectFile)
     # checksums <- cloudDownloadChecksums(checksumsFileID)
     message("  uploading object to google drive; this could take a while")
     uploadRes <- drive_upload(objectFile, path = as_id(cloudFolderID),
-                              name = paste0(digest, ".rds"))
+                              name = paste0(digest, ".rda"), verbose = FALSE)
     checksums <- rbindlist(
       list(checksums,
            data.table(hash = digest, id = uploadRes$id, time = as.character(Sys.time()),
