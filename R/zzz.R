@@ -8,6 +8,7 @@
   checkPath(.reproducibleTempInputDir, create = TRUE)
   opts.reproducible <- list( # nolint
     reproducible.ask = TRUE,
+    reproducible.cloudChecksumsFilename = file.path(dirname(.reproducibleTempCacheDir), "checksums.rds"),
     reproducible.cachePath = file.path(.reproducibleTempCacheDir),
     reproducible.destinationPath = NULL,
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
@@ -18,6 +19,7 @@
     reproducible.quick = FALSE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useMemoise = TRUE, #memoise
+    reproducible.useNewDigestAlgorithm = FALSE,
     reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = FALSE
   )

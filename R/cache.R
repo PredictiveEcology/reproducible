@@ -516,19 +516,25 @@ setMethod(
         (names(modifiedDots) %in%
            c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar"))
 
-      preDigest <- lapply(modifiedDots[!argsToOmitForDigest], function(x) {
-        # remove the "newCache" attribute, which is irrelevant for digest
-        if (!is.null(attr(x, ".Cache")$newCache)) {
-          .setSubAttrInList(x, ".Cache", "newCache", NULL)
-          # attr(x, ".Cache")$newCache <- NULL
-          if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
-        }
-        .robustDigest(x, objects = objects,
-                      length = length,
-                      algo = algo,
-                      quick = quick,
-                      classOptions = classOptions)
-      })
+      cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], objects = objects,
+                                 length = length, algo = algo, quick = quick,
+                                 classOptions = classOptions)
+      # preDigest <- lapply(modifiedDots[!argsToOmitForDigest], function(x) {
+      #   # remove the "newCache" attribute, which is irrelevant for digest
+      #   if (!is.null(attr(x, ".Cache")$newCache)) {
+      #     .setSubAttrInList(x, ".Cache", "newCache", NULL)
+      #     # attr(x, ".Cache")$newCache <- NULL
+      #     if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
+      #   }
+      #   .robustDigest(x, objects = objects,
+      #                 length = length,
+      #                 algo = algo,
+      #                 quick = quick,
+      #                 classOptions = classOptions)
+      # })
+      preDigest <- cacheDigest$preDigest
+      outputHash <- cacheDigest$outputHash
+
       preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
 
       if (verbose) {
@@ -600,7 +606,6 @@ setMethod(
           return(list(hash = preDigest, content = list(...)))
       }
 
-      outputHash <- fastdigest(preDigest)
       if (!is.null(cacheId)) {
         outputHashManual <- cacheId
         if (identical(outputHashManual, outputHash)) {
@@ -1464,4 +1469,55 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   if (is.null(.CacheAttr)) .CacheAttr <- list()
   .CacheAttr[[subAttr]] <- value
   setattr(object, attr, .CacheAttr)
+}
+
+
+#' The exact digest function that \code{Cache} uses
+#'
+#' This can be used by a user to pre-test their arguments before running
+#' \code{Cache}, for example to determine whether there is a cached copy.
+#'
+#' @export
+#' @return
+#' A list of length 2 with the \code{outputHash}, which is the digest
+#' that Cache uses for \code{cacheId} and also \code{preDigest}, which is
+#' the digest of each sub-element in \code{objsToDigest}.
+#' @param ... passed to \code{.robustDigest}; this is generally empty except
+#'    for advanced use.
+#' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
+CacheDigest <- function(objsToDigest, ...) {
+  preDigest <- lapply(objsToDigest, function(x) {
+    # remove the "newCache" attribute, which is irrelevant for digest
+    if (!is.null(attr(x, ".Cache")$newCache)) {
+      .setSubAttrInList(x, ".Cache", "newCache", NULL)
+      # attr(x, ".Cache")$newCache <- NULL
+      if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
+    }
+    .robustDigest(x, ...)
+  })
+
+  res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
+    fastdigest::fastdigest(unname(sort(unlist(preDigest))))
+  } else {
+    warnonce("useNewDigestAlgorithm",
+             simpleWarning(paste0("'reproducible' will soon change the default digest algorithm.",
+                                  "\n  This will mean that Cache values will change for the same",
+                                  "\n  call. This change will make Cache less sensitive to minor",
+                                  "\n  but irrelevant changes (like changing the order of arguments).",
+                                  "\n  To start using this new algorithm now, set ",
+                                  "\n  options('reproducible.useNewDigestAlgorithm' = TRUE)")))
+    fastdigest(preDigest)
+  }
+  list(outputHash = res, preDigest = preDigest)
+}
+
+warnonce <- function (id, ...) {
+  if (!isTRUE(get0(flag <- paste0("warned.", as.character(id)[1L]),
+                   .reproEnv, ifnotfound = FALSE))) {
+    assign(flag, TRUE, envir = .reproEnv)
+    cl <- match.call()
+    cl$id <- NULL
+    cl[[1L]] <- as.name("warning")
+    eval.parent(cl)
+  }
 }
