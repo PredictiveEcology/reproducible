@@ -69,7 +69,6 @@ test_that("prepInputs doesn't work", {
   expect_true(is(shpEcozone2, "SpatialPolygons"))
   expect_equivalent(shpEcozone1, shpEcozone2) # different attribute newCache
 
-
   #######################################
   ### url, targetFile, alsoExtract -- with Cache ######
   #######################################
@@ -141,8 +140,8 @@ test_that("prepInputs doesn't work", {
      url = url,
      destinationPath = asPath(dPath),
      studyArea = StudyArea
-   )
-   expect_is(LCC2005, "Raster")
+  )
+  expect_is(LCC2005, "Raster")
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_identical(extent(LCC2005)[1:4],
@@ -263,7 +262,6 @@ test_that("prepInputs doesn't work", {
   # crop and mask worked:
   expect_identical(extent(LCC2005)[1:4],
                    round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
-
 })
 
 test_that("interactive prepInputs", {
