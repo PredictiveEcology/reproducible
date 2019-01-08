@@ -9,6 +9,8 @@ version 0.2.5.9000
 
 ## New features
 
+* slight tweak to how digests are calculated. This will cause some existing caches to not work correctly. To allow for a transition period, the "new" algorigthm is not default, but can be set with `options("reproducible.useNewDigestAlgorithm" = TRUE)`. There is a warning of this upcoming change
+* add experimental `cloud*` functions, especially `cloudCache` which allows sharing of Cache among collaborators
 * updated `assessDataType` to consolidate `assessDataTypeGDAL` and `assessDataType` into single function (#71, @ianmseddy)
 * `cc`: new function -- a shortcut for some commonly used options for `clearCache()`
 * added experimental capacity for `prepInputs` to handle `.rar` archives, on systems with correct binaries to deal with them. Thanks to PR #86 from Tati Micheletti.
