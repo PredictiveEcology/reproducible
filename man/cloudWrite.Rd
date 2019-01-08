@@ -12,19 +12,17 @@ cloudWrite(object, digest, cloudFolderID = NULL, checksums,
 
 \item{digest}{The cacheId of the input arguments, outputted from \code{cloudCheck}}
 
-\item{cloudFolderID}{The google folder ID where a new object should
-be written}
+\item{cloudFolderID}{The google folder ID where a new object should be written}
 
 \item{checksums}{A \code{data.table} that is outputted from \code{cloudCheck} that
 is the the checksums file}
 
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
-provided as a character string}
+provided as a character string.}
 }
 \description{
 Very experimental
 }
 \seealso{
-\code{\link{cloudSyncCache}},
-  \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
+\code{\link{cloudSyncCache}}, \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
 }

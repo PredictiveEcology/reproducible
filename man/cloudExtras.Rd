@@ -12,13 +12,13 @@ cloudUpdateChecksums(checksums, checksumsFileID)
 }
 \arguments{
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
-provided as a character string}
+provided as a character string.}
 
 \item{checksums}{A \code{data.table} that is outputted from \code{cloudCheck} that
 is the the checksums file}
 }
 \description{
-Mostly for internal use, but may be useful to a user
+Mostly for internal use, but may be useful to a user.
 }
 \details{
 \code{cloudDownloadChecksums} gets the checksums data.table directly.
@@ -26,6 +26,5 @@ Mostly for internal use, but may be useful to a user
 \code{cloudDownloadChecksums} gets the checksums data.table directly.
 }
 \seealso{
-\code{\link{cloudSyncCache}}, \code{\link{cloudCache}},
-  \code{\link{cloudExtras}}
+\code{\link{cloudSyncCache}}, \code{\link{cloudCache}}, \code{\link{cloudExtras}}
 }

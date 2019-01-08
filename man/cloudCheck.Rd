@@ -7,18 +7,18 @@
 cloudCheck(toDigest, checksumsFileID = NULL, cloudFolderID = NULL)
 }
 \arguments{
-\item{toDigest}{The R object to consider, e.g., all the arguments to a function}
+\item{toDigest}{The R object to consider, e.g., all the arguments to a function.}
 
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
-provided as a character string}
+provided as a character string.}
 
 \item{cloudFolderID}{The google folder ID where a new checksums file should
  be written. This will only be used if \code{checksumsFileID} is not provided
-provided as a character string}
+provided as a character string.}
 }
 \description{
 Very experimental
 }
 \seealso{
-\code{\link{cloudSyncCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}},
+\code{\link{cloudSyncCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}}
 }

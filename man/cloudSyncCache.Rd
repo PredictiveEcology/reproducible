@@ -11,11 +11,11 @@ cloudSyncCache(cacheRepo = getOption("reproducible.cachePath"),
 \item{cacheRepo}{See \code{x} in \code{\link{showCache}}}
 
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
-provided as a character string}
+provided as a character string.}
 
 \item{cloudFolderID}{The google folder ID where a new checksums file should
  be written. This will only be used if \code{checksumsFileID} is not provided
-provided as a character string}
+provided as a character string.}
 
 \item{delete}{Logical. If \code{TRUE}, the default, it will delete any objects
 that are in \code{cloudFolderID} that are absent from local \code{cacheRepo}.
@@ -24,7 +24,7 @@ If \code{FALSE}, it will not delete objects.}
 \item{...}{Arguments of \code{FUN} function .}
 }
 \description{
-THis is still experimental, see examples.
+This is still experimental, see examples.
 }
 \details{
 \code{cloudSyncCache} will remove any entries in a cloudCache that are not in a
@@ -52,7 +52,6 @@ THis is still experimental, see examples.
 
   # To remove whole folder:
   drive_rm(as_id(newDir$id))
-
 }
 }
 \seealso{

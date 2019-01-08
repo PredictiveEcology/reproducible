@@ -14,15 +14,14 @@ cloudCache(..., useCloud = getOption("reproducible.useCloud", TRUE),
 \code{Cache} (including possibly \code{useCache}, where all caching can be turned off)}
 
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
-provided as a character string}
+provided as a character string.}
 
 \item{cloudFolderID}{The google folder ID where a new checksums file should
  be written. This will only be used if \code{checksumsFileID} is not provided
-provided as a character string}
+provided as a character string.}
 }
 \description{
-This is still very experimental. See examples. NOTE: this is essentially a
-wrapper around \code{Cache}, so it will still use the local Cache.
+This is still very experimental. See examples.
 }
 \details{
 This has \code{Cache} internally. The main goal of this function is to look at
@@ -31,6 +30,10 @@ googledrive. If the object is not there locally, check on googledrive for the
 object. If it is there, download it, then add it to the local Cache. If it is
 not there, then run the function de novo, wrapped in \code{Cache} and upload
 the object to googledrive (i.e., it will be in local Cache and cloud location).
+}
+\note{
+This is essentially a wrapper around \code{Cache}, so it will still use
+the local Cache.
 }
 \examples{
 \dontrun{
