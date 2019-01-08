@@ -1027,14 +1027,19 @@ setMethod("Copy",
     namesObj <- obj
   }
 
-  namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
-  allLower <- tolower(namesObj) == namesObj
-  namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
+  if (is.character(namesObj)) {
+    namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
+    allLower <- tolower(namesObj) == namesObj
+    namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
 
-  onesChanged <- startsWith(namesObj, prefix = "a")
-  namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
+    onesChanged <- startsWith(namesObj, prefix = "a")
+    namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
 
-  order(namesObj)
+    out <- order(namesObj)
+  } else {
+    out <- seq_along(obj)
+  }
+  out
 }
 
 ################################################################################
