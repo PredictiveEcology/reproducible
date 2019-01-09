@@ -11,6 +11,7 @@
     reproducible.cloudChecksumsFilename = file.path(dirname(.reproducibleTempCacheDir), "checksums.rds"),
     reproducible.cachePath = file.path(.reproducibleTempCacheDir),
     reproducible.destinationPath = NULL,
+    reproducible.devMode = FALSE,
     reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
     reproducible.inputPaths = NULL,
     reproducible.inputPathsRecursive = FALSE,

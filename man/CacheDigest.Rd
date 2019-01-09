@@ -21,3 +21,10 @@ the digest of each sub-element in \code{objsToDigest}.
 This can be used by a user to pre-test their arguments before running
 \code{Cache}, for example to determine whether there is a cached copy.
 }
+\examples{
+\dontrun{
+  a <- Cache(rnorm, 1)
+  CacheDigest(list(rnorm, 1))
+
+}
+}
