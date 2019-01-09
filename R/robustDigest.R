@@ -256,6 +256,17 @@ setMethod(
     })
 })
 
+#' @rdname robustDigest
+#' @export
+setMethod(
+  ".robustDigest",
+  signature = "data.frame",
+  definition = function(object, objects, length, algo, quick,
+                        classOptions) {
+    #  Need a specific method for data.frame or else it get "list" method, which is wrong
+    object <- .removeCacheAtts(object)
+    fastdigest(object)
+  })
 
 
 #' @rdname robustDigest
