@@ -320,11 +320,11 @@ centralTendency <- function(x)
 #   never again be defined that way. Here, because of userTags being the same,
 #   it will replace the entry in the Cache, effetively overwriting it, even though
 #   it has a different cacheId
-ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = uniqueUserTags) # sets new value to Cache
+ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = uniqueUserTags)
 showCache(tmpDir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
 
 # If it finds it by cacheID, doesn't matter what the userTags are
-ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "thisIsUnique") # sets new value to Cache
+ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "thisIsUnique")
 
 options(opt)
 
