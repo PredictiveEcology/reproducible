@@ -844,7 +844,6 @@ setMethod(
         }
       } else {
         # find similar -- in progress
-        browser(expr = exists("bbbb"))
         if (!is.null(showSimilar)) { # TODO: Needs testing
           .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags)
         }
