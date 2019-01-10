@@ -207,7 +207,6 @@ if (getRversion() >= "3.1.0") {
 #' @param verbose Logical. This will output much more information about the internals of
 #'        Caching, which may help diagnose Caching challenges.
 #'
-#'
 #' @param cacheId Character string. If passed, this will override the calculated hash
 #'        of the inputs, and return the result from this cacheId in the cacheRepo.
 #'        Setting this is equivalent to manually saving the output of this function, i.e.,
@@ -234,8 +233,6 @@ if (getRversion() >= "3.1.0") {
 #'        the next most similar archive, and indicate which argument(s) is/are different.
 #'        If a number larger than \code{1}, then it will report the N most similar archived
 #'        objects.
-#'
-#'
 #'
 #' @inheritParams digest::digest
 #'
@@ -289,7 +286,7 @@ setGeneric(
            useCache = getOption("reproducible.useCache", TRUE),
            showSimilar = NULL) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
-  })
+})
 
 #' @export
 #' @rdname cache
@@ -320,7 +317,6 @@ setMethod(
         do.call(FUN, args = modifiedDots)
       }
     } else {
-
       if (verbose) {
         startCacheTime <- Sys.time()
       }
@@ -550,7 +546,6 @@ setMethod(
 
         hashObjectSize <- unlist(lapply(modifiedDots[!dotPipe], function(x) {
           objSize <- objSize(x, quick = quick)
-
         }))
 
         lengths <- unlist(lapply(preDigestUnlist, function(x) length(unlist(x))))
@@ -704,7 +699,6 @@ setMethod(
                                         repoDir = cacheRepo, value = TRUE)
           }
 
-
           if (verbose) {
             endLoadTime <- Sys.time()
             verboseDF <- data.frame(
@@ -814,7 +808,6 @@ setMethod(
             do.call(.prepareOutput, args = append(list(output, cacheRepo), modifiedDots))
           }
 
-
           if (length(debugCache)) {
             if (!is.na(pmatch(debugCache, "complete")) | isTRUE(debugCache))
               #output <- do.call(.debugCache, args = append(list(output, preDigest), modifiedDots$args))
@@ -917,7 +910,6 @@ setMethod(
       if (!identical(attr(output, ".Cache")$newCache, TRUE)) stop("attributes are not correct 3")
       if (!identical(attr(output, "call"), "")) stop("attributes are not correct 4")
       if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash))) stop("attributes are not correct 5")
-
 
       if (sideEffect != FALSE) {
         if (isTRUE(sideEffect)) {
@@ -1068,7 +1060,6 @@ setMethod(
           )
         message("  Cache saved in a separate 'future' process. ",
                 "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour")
-
       } else {
         while (written >= 0) {
           saved <- suppressWarnings(try(silent = TRUE,
@@ -1095,7 +1086,6 @@ setMethod(
         }
 
       }
-
 
       if (verbose) {
         endSaveTime <- Sys.time()
@@ -1135,9 +1125,10 @@ setMethod(
 
       if (isNullOutput) return(NULL) else return(output)
     }
-  })
+})
 
 #' Deprecated functions
+#'
 #' @export
 #' @importFrom archivist showLocalRepo rmFromLocalRepo addTagsRepo
 #' @importFrom stats runif
@@ -1147,7 +1138,7 @@ setGeneric("cache", signature = "...",
            function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,  # nolint
                     objects = NULL, outputObjects = NULL, algo = "xxhash64") {
              archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo)
-           })
+})
 
 #' @export
 #' @rdname reproducible-deprecated
@@ -1165,7 +1156,7 @@ setMethod(
     )
     Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
           outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
-  })
+})
 
 # .memoisedCacheFuns <- new.env(parent = asNamespace("reproducible"))
 # CacheMem <- memoise::memoise(Cache)
@@ -1178,8 +1169,8 @@ setMethod(
   out <- loadFromLocalRepo(md5hash, ...)
   out <- makeMemoiseable(out)
   return(out)
-
 }
+
 .loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
 
 .unlistToCharacter <- function(l, max.level = 1) {
