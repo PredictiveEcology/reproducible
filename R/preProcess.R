@@ -105,14 +105,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     fileGuess <- .guessAtFile(url = url, archive = archive,
                               targetFile = targetFile,
                               destinationPath = destinationPath)
-    if (is.null(archive))
+    if (is.null(archive)){
       archive <- .isArchive(fileGuess)
-    if (file_ext(.basename(fileGuess)) == ""){
-      if (is.null(archive)){
-        message("targetFile has no extension; will assume the file is an archive " ,
-                "and add .zip to ", fileGuess,
-                ".\n If this is incorrect, please supply archive or targetFile")
-        archive <- paste0(fileGuess, ".zip")
+      if (file_ext(.basename(fileGuess)) == ""){
+        if (is.null(archive)){
+          message("targetFile has no extension; will assume the file is an archive " ,
+                  "and add .zip to ", fileGuess,
+                  ".\n If this is incorrect, please supply archive or targetFile")
+          archive <- paste0(fileGuess, ".zip")
+        }
       }
     }
     if (is.null(archive) && !is.null(fileGuess)) {
@@ -295,7 +296,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     purge = purge, # may need to try purging again if no target, archive or alsoExtract were known yet
     ...
   )#, moduleName = moduleName, modulePath = modulePath)
-  if (file_ext(.basename(downloadFileResult$downloaded)) == "") {
+  if (!is.null(downloadFileResult$downloaded) &&
+      file_ext(.basename(downloadFileResult$downloaded)) == "") {
     if (!is.null(targetFile)) {
       if (is.null(archive)) {
         message(
