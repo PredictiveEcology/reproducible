@@ -20,6 +20,7 @@ version 0.2.5.9000
 
 * `data.table` class objects would give an error sometimes due to use of `attr(DT)`. Internally, attributes are now added with `data.table::setattr` to deal with this.
 * calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
+* files from url that have unknown extension are now guessed with by `preProcess` (#92 ,@tati-micheletti)
 
 version 0.2.5
 =============
