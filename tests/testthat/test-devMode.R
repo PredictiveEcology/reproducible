@@ -1,12 +1,11 @@
 test_that("test file-backed raster caching", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"),
-                          opts = list("reproducible.devMode" = TRUE,
+                          opts = list("reproducible.useCache" = "devMode",
                                       "reproducible.useNewDigestAlgorithm" = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  opt <- options("reproducible.devMode" = TRUE)
   clearCache(tmpdir, ask = FALSE)
   centralTendency <- function(x)
     mean(x)
@@ -56,5 +55,14 @@ test_that("test file-backed raster caching", {
   a <- showCache(tmpdir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
   expect_true(NROW(unique(a$artifact)) == 4)
 
+  # Test multiple with same userTags, ie, not unambiguous
+  opt <- options("reproducible.useCache" = TRUE)
+  ranNumsG <- Cache(centralTendency, 1:12, cacheRepo = tmpdir, userTags = theTags)
   options(opt)
+  centralTendency <- function(x)
+    median(x)
+  mess <- capture_messages(ranNumsG <- Cache(centralTendency, 1:12, cacheRepo = tmpdir,
+                                     userTags = theTags, verbose = 1))
+  expect_true(any(grepl("not unique; defaulting", mess)))
+
 })
