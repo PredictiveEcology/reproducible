@@ -891,8 +891,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                                  pattern = "unrar.exe|7z.exe",
                                  recursive = TRUE,
                                  full.names = TRUE)
-          if (hasUnrar == "" || length(hasUnrar) == 0)
-          hasUnrar <- NULL
+          if (hasUnrar == "" || length(hasUnrar) == 0) {
+            hasUnrar <- NULL
+          } else {
+            warning("The extracting software was found in an unusual location: ", hasUnrar, ".",
+                    "If you receive an error when extracting the archive, please install '7zip' or 'unrar'",
+                    " in 'Program Files' folder")
+          }
         }
         hasUnrar <- hasUnrar[1]
       }
