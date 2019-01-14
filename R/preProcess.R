@@ -940,11 +940,14 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 
 .guessFileExtension <- function(file){
   if (identical(.Platform$OS.type, "windows")){
+    envir <- environment()
     tryCatch({
       magicNumber <- shell(paste0("file ", file), "bash", intern = TRUE, wait = TRUE,
                            translate = FALSE, mustWork = TRUE)
-      fileExt <- .decodeMagicNumber(magicNumberString = magicNumber)
-    }, error = function(e) fileExt <- NULL)
+      assign(x = "fileExt", value = .decodeMagicNumber(magicNumberString = magicNumber), envir = envir)
+    }, error = function(e){
+      assign(x = "fileExt", value = NULL, envir = envir)
+      })
     return(fileExt)
   } else {
     magicNumber  <- system(paste0("file ", file), wait = TRUE, intern = TRUE)
