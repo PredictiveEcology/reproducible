@@ -325,10 +325,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       } else {
         message(
           "Downloaded file has no extension: neither archive nor targetFile are provided. \n",
-          " will assume the file is an archive and add .zip.
-          If this is incorrect or return error, please supply archive or targetFile")
+          "prepInputs will try accessing the file type.")
+        fileExt <- .guessFileExtension(file = file.path(normPath(downloadFileResult$downloaded)))
+        if (is.null(fileExt)) {
+          message("The file was not recognized by prepInputs.", "Will assume the file is an archive and add '.zip' extension.",
+          "If this is incorrect or return error, please supply archive or targetFile")
+          fileExt <- ".zip"
+        }
         downloadFileResult$archive <- file.path(normPath(destinationPath),
-                                                paste0(downloadFileResult$neededFiles, ".zip"))
+                                                paste0(downloadFileResult$neededFiles, fileExt))
         invisible(file.rename(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = normPath(downloadFileResult$archive)))
@@ -920,5 +925,30 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
     NULL
   } else {
     basename(x)
+  }
+}
+
+.decodeMagicNumber <- function(magicNumberString){
+  fileExt <- if (grepl(pattern = "Zip", x = magicNumber)) ".zip" else
+    if (grepl(pattern = "RAR", x = magicNumber)) ".rar" else
+      if (grepl(pattern = "tar", x = magicNumber)) ".tar" else
+        if (grepl(pattern = "TIFF", x = magicNumber)) ".tif" else
+          if (grepl(pattern = "Shapefile", x = magicNumber)) ".shp" else
+            NULL
+  return(fileExt)
+}
+
+.guessFileExtension <- function(file){
+  if (identical(.Platform$OS.type, "windows")){
+    tryCatch({
+      magicNumber <- shell(paste0("file ", file), "bash", intern = TRUE, wait = TRUE,
+                           translate = FALSE, mustWork = TRUE)
+      fileExt <- .decodeMagicNumber(magicNumberString = magicNumber)
+    }, error = function(e) fileExt <- NULL)
+    return(fileExt)
+  } else {
+    magicNumber  <- system(paste0("file ", file), wait = TRUE, intern = TRUE)
+    fileExt <- .decodeMagicNumber(magicNumberString = magicNumber)
+    return(fileExt)
   }
 }
