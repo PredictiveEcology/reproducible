@@ -701,17 +701,13 @@ maskInputs <- function(x, studyArea, ...) {
 #' @param maskWithRTM Logical. If \code{TRUE}, then the default,
 #' @rdname maskInputs
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
-
   message("    masking...")
   if (isTRUE(maskWithRTM)) {
     x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
       dots <- list(...)
-      #msg <- capture.output(type = "message",
-                            x <- fastMask(x = x, y = studyArea, cores = dots$cores)
-                            #)
-      #message(paste0("      ", paste(msg, collapse = "\n      ")))
+      x <- fastMask(x = x, y = studyArea, cores = dots$cores)
     } else {
       message("studyArea not provided, skipping masking.")
     }
