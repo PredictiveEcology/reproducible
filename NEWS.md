@@ -9,7 +9,7 @@ version 0.2.5.9000
 
 ## New features
 
-* new option: `"reproducible.devMode"`. The point of this mode is to facilitate using the Cache when functions and datasets are continually in flux, and old Cache entries are likely stale very often. In `devMode`, the cache mechanism will work as normal if the Cache call is the first time for a function OR if it successfully finds a copy in the cache based on the normal Cache mechanism. It *differs* from the normal Cache if the Cache call does *not* find a copy in the `cacheRepo`, but it does find an entry that matches based on `userTags`. In this case, it will delete the old entry in the `cacheRepo` (identified based on matching `userTags`), then continue with normal `Cache`. For this to work correctly, `userTags` must be unique for each function call. This should be used with caution as it is still experimental.
+* new value for the option: `options("reproducible.useCache" = "devMode")`. The point of this mode is to facilitate using the Cache when functions and datasets are continually in flux, and old Cache entries are likely stale very often. In `devMode`, the cache mechanism will work as normal if the Cache call is the first time for a function OR if it successfully finds a copy in the cache based on the normal Cache mechanism. It *differs* from the normal Cache if the Cache call does *not* find a copy in the `cacheRepo`, but it does find an entry that matches based on `userTags`. In this case, it will delete the old entry in the `cacheRepo` (identified based on matching `userTags`), then continue with normal `Cache`. For this to work correctly, `userTags` must be unique for each function call. This should be used with caution as it is still experimental.
 * slight tweak to how digests are calculated. This will cause some existing caches to not work correctly. To allow for a transition period, the "new" algorigthm is not default, but can be set with `options("reproducible.useNewDigestAlgorithm" = TRUE)`. There is a warning of this upcoming change.
 * add experimental `cloud*` functions, especially `cloudCache` which allows sharing of Cache among collaborators
 * updated `assessDataType` to consolidate `assessDataTypeGDAL` and `assessDataType` into single function (#71, @ianmseddy)
@@ -20,6 +20,7 @@ version 0.2.5.9000
 
 * `data.table` class objects would give an error sometimes due to use of `attr(DT)`. Internally, attributes are now added with `data.table::setattr` to deal with this.
 * calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
+* files from url that have unknown extension are now guessed with by `preProcess` (#92 ,@tati-micheletti)
 
 version 0.2.5
 =============
