@@ -714,7 +714,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                 #   checksums file in either destinationPath or
                 #   options("reproducible.inputPaths")
                 successfulCheckSumFilePath <- checkSumFilePathTry
-                successfulDir <- dirNameOPFiles
+                successfulDir <- unique(dirNameOPFiles)
                 break
               }
 
