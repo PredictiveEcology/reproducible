@@ -670,12 +670,25 @@ setMethod(
                         newLocalTags$tag)
           localTagsAlt <- newLocalTags[!tags1,]
           if (all(localTagsAlt$tag %in% userTags)) {
-            if (verbose > 0)
-              message("Using devMode; overwriting previous Cache entry with tags: ",
-                      paste(userTags, collapse = ", "))
-            outputHash <- gsub("cacheId:", "",  newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact &
-                                                           startsWith(newLocalTags$tag, "cacheId"), ]$tag)
-            isInRepo <- isInRepoAlt
+            mess <- capture.output(type = "output",
+                                   similars <- .findSimilar(newLocalTags, scalls = scalls, preDigestUnlistTrunc = preDigestUnlistTrunc, userTags = userTags))
+            similarsHaveNA <- sum(is.na(similars$differs))
+            #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)
+            #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
+
+            if (similarsHaveNA == 0) {
+              if (verbose > 0)
+                message("Using devMode; overwriting previous Cache entry with tags: ",
+                        paste(userTags, collapse = ", "))
+              outputHash <- gsub("cacheId:", "",  newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact &
+                                                                 startsWith(newLocalTags$tag, "cacheId"), ]$tag)
+              isInRepo <- isInRepoAlt
+            } else {
+              if (verbose > 0)
+                message("Using devMode; Found entry with identical userTags, ",
+                        "but since it is very different, adding new entry")
+
+            }
           }
         } else {
           if (length(unique(isInRepoAlt$artifact)) > 1) {

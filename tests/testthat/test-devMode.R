@@ -1,4 +1,4 @@
-test_that("test file-backed raster caching", {
+test_that("test devMode", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"),
                           opts = list("reproducible.useCache" = "devMode",
                                       "reproducible.useNewDigestAlgorithm" = TRUE))
@@ -7,8 +7,9 @@ test_that("test file-backed raster caching", {
   }, add = TRUE)
 
   clearCache(tmpdir, ask = FALSE)
+  theTags <- "hiTest"
   centralTendency <- function(x)
-    mean(x)
+     mean(x)
   funnyData <- c(1, 1, 1, 1, 10)
   uniqueUserTags <- c("thisIsUnique", "reallyUnique")
   ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpdir,
@@ -41,7 +42,6 @@ test_that("test file-backed raster caching", {
   a <- showCache(tmpdir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
   expect_true(NROW(unique(a$artifact)) == 3)
 
-  theTags <- "hiTest"
   centralTendency <- function(x)
     median(x)
   ranNumsG <- Cache(centralTendency, 1:11, cacheRepo = tmpdir, userTags = theTags)
@@ -49,7 +49,7 @@ test_that("test file-backed raster caching", {
   expect_true(NROW(unique(a$artifact)) == 4)
 
   centralTendency <- function(x)
-    sort(table(a))[1]
+    sort(table(x))[1]
   ranNumsH <- Cache(centralTendency, 1:11, cacheRepo = tmpdir, userTags = theTags)
 
   a <- showCache(tmpdir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
@@ -64,5 +64,14 @@ test_that("test file-backed raster caching", {
   mess <- capture_messages(ranNumsG <- Cache(centralTendency, 1:12, cacheRepo = tmpdir,
                                      userTags = theTags, verbose = 1))
   expect_true(any(grepl("not unique; defaulting", mess)))
+
+  ### Test that vague userTags don't accidentally delete a non-similar entry
+  clearCache(tmpdir, ask = FALSE)
+  centralTendency <- function(x)
+    sort(table(x))[1]
+  ranNumsH <- Cache(centralTendency, 1:11, cacheRepo = tmpdir, userTags = theTags)
+  ranNumsI <- Cache(rnorm, 15, cacheRepo = tmpdir, userTags = theTags)
+  a <- showCache(tmpdir) # 2 unique artifacts because VERY different
+  expect_true(length(unique(a$artifact)) == 2)
 
 })
