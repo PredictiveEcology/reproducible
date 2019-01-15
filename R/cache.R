@@ -497,7 +497,9 @@ setMethod(
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
-      suppressMessages(archivist::createLocalRepo(cacheRepo))
+      isIntactRepo <- !all(file.exists(file.path(cacheRepo,  c("gallery", "backpack.db"))))
+      if (isIntactRepo)
+        suppressMessages(archivist::createLocalRepo(cacheRepo, force = isIntactRepo))
 
       # List file prior to cache
       if (sideEffect != FALSE) {
