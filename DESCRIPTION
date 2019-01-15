@@ -13,7 +13,7 @@ URL:
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
 Date: 2018-01-12
-Version: 0.2.5.9009
+Version: 0.2.5.9010
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),

@@ -300,8 +300,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         if (returnAsList)
           as.list(tmpEnv, all.names = TRUE)
       } else {
-        Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-              useCache = useCache)
+        mess <- capture.output(type = "message", out <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+              useCache = useCache))
+        mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
+        if (length(mess) > 0)
+          message(mess)
+        return(out)
       }
     }
   } else {

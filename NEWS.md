@@ -18,6 +18,7 @@ version 0.2.5.9000
 
 ## Bug fixes
 
+* under some circumstances, the `prepInputs` would cause virtually all entries in `CHECKSUMS.txt` to be deleted. 2 cases where this happened were identified and corrected. 
 * `data.table` class objects would give an error sometimes due to use of `attr(DT)`. Internally, attributes are now added with `data.table::setattr` to deal with this.
 * calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
 * files from url that have unknown extension are now guessed with by `preProcess` (#92 ,@tati-micheletti)
