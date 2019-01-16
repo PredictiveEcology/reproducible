@@ -7,7 +7,7 @@
 writeFuture(written, outputToSave, cacheRepo, userTags)
 }
 \arguments{
-\item{written}{Integer If zero or positive then it needs to be written still.
+\item{written}{Integer. If zero or positive then it needs to be written still.
 Should be 0 to start.}
 
 \item{outputToSave}{The R object to save to repository}

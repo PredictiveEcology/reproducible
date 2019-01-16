@@ -300,12 +300,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         if (returnAsList)
           as.list(tmpEnv, all.names = TRUE)
       } else {
-        mess <- capture.output(type = "message", out <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+        mess <- capture.output(type = "message", obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
               useCache = useCache))
         mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
         if (length(mess) > 0)
           message(mess)
-        return(out)
+        obj
       }
     }
   } else {
@@ -745,7 +745,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           "  what to look for.")
   capture.output(
     type = "message",
-    currentFiles <- Checksums(path = destinationPath, write = !append,
+    currentFiles <- Checksums(path = destinationPath, write = !append || NROW(nonCurrentFiles) == 0,
                               files = file.path(destinationPath, filesToChecksum))
   )
   if (append) { # a checksums file already existed, need to keep some of it
