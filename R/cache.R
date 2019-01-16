@@ -1451,7 +1451,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   return(append(fnDetails, list(originalDots = originalDots, FUN = FUN, isPipe = isPipe,
                                 modifiedDots = modifiedDots, isDoCall = isDoCall,
                                 formalArgs = forms)))
-
 }
 
 #' Set subattributes within a list by reference
@@ -1462,7 +1461,9 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #' @param attr The attribute name (that is a list object) to change
 #' @param subAttr The list element name to change
 #' @param value The new value
+#'
 #' @export
+#' @importFrom data.table setattr
 #' @rdname setSubAttrInList
 .setSubAttrInList <- function(object, attr, subAttr, value) {
   .CacheAttr <- attr(object, attr)
@@ -1470,7 +1471,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   .CacheAttr[[subAttr]] <- value
   setattr(object, attr, .CacheAttr)
 }
-
 
 #' The exact digest function that \code{Cache} uses
 #'
