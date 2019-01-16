@@ -5,7 +5,7 @@ version 0.2.5.9000
 
 ## Dependency changes
 
-* remove `tibble` from Imports as it's no loger being used
+* remove `tibble` from Imports as it's no longer being used
 
 ## New features
 
