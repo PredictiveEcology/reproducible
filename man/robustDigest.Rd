@@ -11,6 +11,7 @@
 \alias{.robustDigest,Path-method}
 \alias{.robustDigest,environment-method}
 \alias{.robustDigest,list-method}
+\alias{.robustDigest,data.frame-method}
 \alias{.robustDigest,Raster-method}
 \alias{.robustDigest,Spatial-method}
 \title{Create reproducible digests of objects in R}
@@ -55,6 +56,11 @@
   classOptions = list())
 
 \S4method{.robustDigest}{list}(object, objects,
+  length = getOption("reproducible.length", Inf), algo = "xxhash64",
+  quick = getOption("reproducible.quick", FALSE),
+  classOptions = list())
+
+\S4method{.robustDigest}{data.frame}(object, objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
