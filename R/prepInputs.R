@@ -745,7 +745,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           "  what to look for.")
   capture.output(
     type = "message",
-    currentFiles <- Checksums(path = destinationPath, write = !append,
+    currentFiles <- Checksums(path = destinationPath, write = !append || NROW(nonCurrentFiles) == 0,
                               files = file.path(destinationPath, filesToChecksum))
   )
   if (append) { # a checksums file already existed, need to keep some of it
