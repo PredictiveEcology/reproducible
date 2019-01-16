@@ -18,6 +18,7 @@ version 0.2.5.9000
 
 ## Bug fixes
 
+* `prepInputs` on GIS objects that don't use `raster::raster` to load object were skipping `postProcess`. Fixed.
 * under some circumstances, the `prepInputs` would cause virtually all entries in `CHECKSUMS.txt` to be deleted. 2 cases where this happened were identified and corrected. 
 * `data.table` class objects would give an error sometimes due to use of `attr(DT)`. Internally, attributes are now added with `data.table::setattr` to deal with this.
 * calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
