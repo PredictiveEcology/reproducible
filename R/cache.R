@@ -100,6 +100,34 @@ if (getRversion() >= "3.1.0") {
 #' of stochastic outcomes are required. It will also be very useful in a
 #' reproducible workflow.
 #'
+#' @section useCache:
+#' If \code{FALSE}, then the entire Caching mechanism is bypassed and the
+#' function is evaluated as if it was not being Cached. Default is
+#' \code{getOption("reproducible.useCache")}), which is \code{TRUE} by default,
+#' meaning use the Cache mechanism. This may be useful to turn all Caching on or
+#' off in very complex scripts and nested functions.
+#'
+#' If \code{"overwrite"}
+#' (which can be set with \code{options("reproducible.useCache" =
+#' "overwrite")}), then the function invoke the caching mechanism but will purge
+#' any entry that is matched, and it will be replaced with the results of the
+#' current call.
+#'
+#' If \code{"devMode"}: The point of this mode is to facilitate using the Cache when
+#' functions and datasets are continually in flux, and old Cache entries are
+#' likely stale very often. In `devMode`, the cache mechanism will work as
+#' normal if the Cache call is the first time for a function OR if it
+#' successfully finds a copy in the cache based on the normal Cache mechanism.
+#' It *differs* from the normal Cache if the Cache call does *not* find a copy
+#' in the `cacheRepo`, but it does find an entry that matches based on
+#' `userTags`. In this case, it will delete the old entry in the `cacheRepo`
+#' (identified based on matching `userTags`), then continue with normal `Cache`.
+#' For this to work correctly, `userTags` must be unique for each function call.
+#' This should be used with caution as it is still experimental. Currently, if
+#' \code{userTags} are not unique to a single entry in the cacheRepo, it will
+#' default to the behaviour of \code{useCache = TRUE} with a message. This means
+#' that \code{"devMode"} is most useful if used from the start of a project.
+#'
 #' @section \code{sideEffect}:
 #' If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
 #' added to \code{sideEffect} will be added as an attribute to the cached copy.
@@ -204,7 +232,8 @@ if (getRversion() >= "3.1.0") {
 #'        If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
 #'        as paths, if they are file-backed.
 #'
-#' @param verbose Logical. This will output much more information about the internals of
+#' @param verbose Numeric, with 0 being off, 1 being a little, 2 being more verbose etc.
+#'        Above 1 will output much more information about the internals of
 #'        Caching, which may help diagnose Caching challenges.
 #'
 #' @param cacheId Character string. If passed, this will override the calculated hash
@@ -215,17 +244,7 @@ if (getRversion() >= "3.1.0") {
 #'        where Cache is not correctly detecting unchanged inputs. This will guarantee
 #'        the object will be identical each time; this may be useful in operational code.
 #'
-#' @param useCache Logical or \code{"overwrite"}. If \code{FALSE},
-#'                 then the entire Caching mechanism is bypassed
-#'                 and the function is evaluated as if it was not being Cached.
-#'                 Default is \code{getOption("reproducible.useCache")}),
-#'                 which is \code{FALSE} by default, meaning use the Cache mechanism. This
-#'                 may be useful to turn all Caching on or off in very complex scripts and
-#'                 nested functions. If \code{"overwrite"} (which can be set with
-#'                 \code{options("reproducible.useCache" = "overwrite")}),
-#'                 then the function invoke the caching mechanism but will purge
-#'                 any entry that is matched, and it will be replaced with the
-#'                 results of the current call.
+#' @param useCache Logical or \code{"overwrite"} or \code{"devMode"}. See details.
 #'
 #' @param showSimilar A logical or numeric. Useful for debugging.
 #'        If \code{TRUE} or \code{1}, then if the Cache
@@ -282,7 +301,7 @@ setGeneric(
            classOptions = list(), debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE,
            quick = getOption("reproducible.quick", FALSE),
-           verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
+           verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
            showSimilar = NULL) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
@@ -295,7 +314,8 @@ setMethod(
   definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
-                        debugCache, sideEffect, makeCopy, quick, cacheId, useCache,
+                        debugCache, sideEffect, makeCopy, quick, verbose,
+                        cacheId, useCache,
                         showSimilar) {
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
@@ -317,7 +337,7 @@ setMethod(
         do.call(FUN, args = modifiedDots)
       }
     } else {
-      if (verbose) {
+      if (verbose > 1) {
         startCacheTime <- Sys.time()
       }
 
@@ -477,7 +497,9 @@ setMethod(
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
-      suppressMessages(archivist::createLocalRepo(cacheRepo))
+      isIntactRepo <- !all(file.exists(file.path(cacheRepo,  c("gallery", "backpack.db"))))
+      if (isIntactRepo)
+        suppressMessages(archivist::createLocalRepo(cacheRepo, force = isIntactRepo))
 
       # List file prior to cache
       if (sideEffect != FALSE) {
@@ -503,7 +525,7 @@ setMethod(
         .preDigestByClass(modifiedDots[!dotPipe][[x]])
       })
 
-      if (verbose) {
+      if (verbose > 1) {
         startHashTime <- Sys.time()
       }
 
@@ -533,7 +555,7 @@ setMethod(
 
       preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
 
-      if (verbose) {
+      if (verbose > 1) {
         preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
         endHashTime <- Sys.time()
         verboseDF <- data.frame(
@@ -638,27 +660,48 @@ setMethod(
 
       # First, if this is not matched by outputHash, test that it is matched by
       #   userTags and in devMode
-      needFindByTags <- getOption("reproducible.devMode", FALSE) && NROW(isInRepo) == 0
-      if (getOption("reproducible.devMode", FALSE) && NROW(isInRepo) == 0) {
+      needFindByTags <- identical("devMode", getOption("reproducible.useCache")) &&
+        NROW(isInRepo) == 0
+      if (identical("devMode", getOption("reproducible.useCache")) && NROW(isInRepo) == 0) {
         isInRepoAlt <- localTags[localTags$tag %in% userTags, , drop = FALSE]
-        if (NROW(isInRepoAlt) > 0) {
+        if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt$artifact)) == 1) {
           newLocalTags <- localTags[localTags$artifact %in% isInRepoAlt$artifact,]
           tags1 <- grepl("(format|name|class|date|cacheId|function|object.size|accessed|otherFunctions|preDigest)",
                         newLocalTags$tag)
           localTagsAlt <- newLocalTags[!tags1,]
           if (all(localTagsAlt$tag %in% userTags)) {
-            outputHash <- gsub("cacheId:", "",  newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact &
-                                                           startsWith(newLocalTags$tag, "cacheId"), ]$tag)
-            isInRepo <- isInRepoAlt
+            mess <- capture.output(type = "output",
+                                   similars <- .findSimilar(newLocalTags, scalls = scalls, preDigestUnlistTrunc = preDigestUnlistTrunc, userTags = userTags))
+            similarsHaveNA <- sum(is.na(similars$differs))
+            #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)
+            #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
+
+            if (similarsHaveNA == 0) {
+              if (verbose > 0)
+                message("Using devMode; overwriting previous Cache entry with tags: ",
+                        paste(userTags, collapse = ", "))
+              outputHash <- gsub("cacheId:", "",  newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact &
+                                                                 startsWith(newLocalTags$tag, "cacheId"), ]$tag)
+              isInRepo <- isInRepoAlt
+            } else {
+              if (verbose > 0)
+                message("Using devMode; Found entry with identical userTags, ",
+                        "but since it is very different, adding new entry")
+
+            }
           }
         } else {
+          if (length(unique(isInRepoAlt$artifact)) > 1) {
+            if (verbose > 0)
+              message("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE")
+          }
           needFindByTags <- FALSE # it isn't there
         }
       }
 
       if (  identical("overwrite", useCache)  && NROW(isInRepo)>0 || needFindByTags) {
         suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE))
-        if (getOption("reproducible.devMode", FALSE)) {
+        if (identical("devMode", getOption("reproducible.useCache"))) {
           isInRepo <- isInRepo[!isInRepo$tag %in% userTags, , drop = FALSE]
           outputHash <- outputHashNew
           message("Overwriting Cache entry with userTags: '",paste(userTags, collapse = ", ") ,"'")
@@ -675,7 +718,7 @@ setMethod(
 
         # make sure the notOlderThan is valid, if not, exit this loop
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          if (verbose) {
+          if (verbose > 1) {
             startLoadTime <- Sys.time()
           }
 
@@ -699,7 +742,7 @@ setMethod(
                                         repoDir = cacheRepo, value = TRUE)
           }
 
-          if (verbose) {
+          if (verbose > 1) {
             endLoadTime <- Sys.time()
             verboseDF <- data.frame(
               functionName = fnDetails$functionName,
@@ -818,7 +861,7 @@ setMethod(
           #attr(output, ".Cache")$newCache <- FALSE
           if (!identical(attr(output, ".Cache")$newCache, FALSE)) stop("attributes are not correct 2")
 
-          if (verbose) {
+          if (verbose > 1) {
             endCacheTime <- Sys.time()
             verboseDF <- data.frame(
               functionName = fnDetails$functionName,
@@ -850,7 +893,7 @@ setMethod(
       }
 
       # RUN the function call
-      if (verbose) {
+      if (verbose > 1) {
         startRunTime <- Sys.time()
       }
 
@@ -864,7 +907,7 @@ setMethod(
                                 objects = outputObjects, length = length,
                                 algo = algo, quick = quick, classOptions = classOptions, ...)
 
-      if (verbose) {
+      if (verbose > 1) {
         endRunTime <- Sys.time()
         verboseDF <- data.frame(
           functionName = fnDetails$functionName,
@@ -1008,7 +1051,7 @@ setMethod(
         }
       }
 
-      if (verbose) {
+      if (verbose > 1) {
         startSaveTime <- Sys.time()
       }
 
@@ -1086,7 +1129,7 @@ setMethod(
 
       }
 
-      if (verbose) {
+      if (verbose > 1) {
         endSaveTime <- Sys.time()
         verboseDF <-
           data.frame(
@@ -1106,7 +1149,7 @@ setMethod(
 
       }
 
-      if (verbose) {
+      if (verbose > 1) {
         endCacheTime <- Sys.time()
         verboseDF <- data.frame(functionName = fnDetails$functionName,
                                 component = "Whole Cache call",
@@ -1504,7 +1547,7 @@ warnonce <- function (id, ...) {
 
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags) {
   setDT(localTags)
-  if (getOption("reproducible.devMode", FALSE))
+  if (identical("devMode", getOption("reproducible.useCache")))
     showSimilar <- 1
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":"))
@@ -1547,7 +1590,7 @@ warnonce <- function (id, ...) {
     print(similar2[,c("fun", "differs")])
 
   } else {
-    if (!getOption("reproducible.devMode", FALSE))
+    if (!identical("devMode", getOption("reproducible.useCache")))
       message("There is no similar item in the cacheRepo")
   }
 }

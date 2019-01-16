@@ -726,9 +726,9 @@ test_that("test reproducible.verbose", {
   }, add = TRUE)
 
   Cache(rnorm, 1, cacheRepo = tmpdir)
-  expect_is(.reproEnv$cacheTimings, "data.frame")
-  expect_true(NROW(.reproEnv$cacheTimings) == 4)
-  expect_true(NCOL(.reproEnv$cacheTimings) == 4)
+  expect_is(.reproEnv$cacheTimings, "data.frame") ## TODO: fix this; no object in .reproEnv
+  expect_true(NROW(.reproEnv$cacheTimings) == 4)  ## TODO: fix this; no object in .reproEnv
+  expect_true(NCOL(.reproEnv$cacheTimings) == 4)  ## TODO: fix this; no object in .reproEnv
 
   # Test Path class objects
   a <- sample(1e4)
@@ -740,7 +740,7 @@ test_that("test reproducible.verbose", {
   out2Details <- .reproEnv$hashDetailsAll
 
   # should be vastly larger when actual file, rather than just filename
-  expect_true( (20*out1Details$objSize[1]) < out2Details$objSize[1])
+  expect_true( (20*out1Details$objSize[1]) < out2Details$objSize[1]) ## TODO: fix this; no object in .reproEnv
 })
 
 ##########################
@@ -797,9 +797,8 @@ test_that("test miscellaneous unit tests cache-helpers", {
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cacheRepo supplied. Using tempdir()", mess)))
 
-
   # getFunctionName
-  fn <- function(a) {
+  fn <- function(FUN) {
     getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
   }
   expect_true(fn(1)$functionName == "1")
@@ -882,8 +881,8 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   try(silent = TRUE, clearCache(tmpCache))
   bMess <- capture_output(aMess <- capture_messages(aa <- Cache(fn, 1, verbose = TRUE, cacheRepo = tmpCache)))
-  expect_true(any(grepl("fn1", bMess)))
-  expect_true(any(grepl("The hashing details", aMess)))
+  expect_true(any(grepl("fn1", bMess))) # TODO: fix this; bMess returns empty string
+  expect_true(any(grepl("The hashing details", aMess)))  # TODO: fix this; bMess returns character(0)
 })
 
 ##########################
