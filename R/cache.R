@@ -1268,7 +1268,6 @@ unmakeMemoiseable.default <- function(x) {
   x
 }
 
-
 #' @inheritParams archivist showLocalRepo
 #' @inheritParams fastdigest fastdigest
 showLocalRepo2 <- function(repoDir) {
@@ -1286,19 +1285,21 @@ showLocalRepo3 <- function(repoDir, dig) {
 
 showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 
-
 #' Write to archivist repository, using \code{future::future}
 #'
 #' This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.
 #' This is still experimental.
 #'
-#' @export
-#' @param written Integer If zero or positive then it needs to be written still.
+#' @param written Integer. If zero or positive then it needs to be written still.
 #'                Should be 0 to start.
 #' @param outputToSave The R object to save to repository
 #' @param cacheRepo The file path of the repository
 #' @param userTags Character string of tags to attach to this \code{outputToSave} in
 #'                 the \code{CacheRepo}
+#'
+#' @export
+#' @importFrom archivist saveToLocalRepo
+#' @importFrom stats runif
 writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   counter <- 0
   if (!file.exists(file.path(cacheRepo, "backpack.db"))) {
@@ -1335,9 +1336,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
     if (counter > 10) stop("Can't write to cacheRepo")
   }
   return(saved)
-
 }
-
 
 .fnCleanup <- function(FUN, ..., callingFun) {
   modifiedDots <- list(...)
@@ -1393,7 +1392,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 
         forms <- names(formals(doCallFUN))
         if (isS4(doCallFUN)) {
-
           fnName <- doCallFUN@generic
 
           # Not easy to selectMethod -- can't have trailing "ANY" -- see ?selectMethod last
@@ -1494,14 +1492,19 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #' This can be used by a user to pre-test their arguments before running
 #' \code{Cache}, for example to determine whether there is a cached copy.
 #'
-#' @export
+#'
+#' @param ... passed to \code{.robustDigest}; this is generally empty except
+#'    for advanced use.
+#' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
+#'
 #' @return
 #' A list of length 2 with the \code{outputHash}, which is the digest
 #' that Cache uses for \code{cacheId} and also \code{preDigest}, which is
 #' the digest of each sub-element in \code{objsToDigest}.
-#' @param ... passed to \code{.robustDigest}; this is generally empty except
-#'    for advanced use.
-#' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
+#'
+#' @export
+#' @importFrom fastdigest fastdigest
+#'
 #' @examples
 #' \dontrun{
 #'   a <- Cache(rnorm, 1)
@@ -1534,7 +1537,7 @@ CacheDigest <- function(objsToDigest, ...) {
   list(outputHash = res, preDigest = preDigest)
 }
 
-warnonce <- function (id, ...) {
+warnonce <- function(id, ...) {
   if (!isTRUE(get0(flag <- paste0("warned.", as.character(id)[1L]),
                    .reproEnv, ifnotfound = FALSE))) {
     assign(flag, TRUE, envir = .reproEnv)
@@ -1545,6 +1548,8 @@ warnonce <- function (id, ...) {
   }
 }
 
+#' @importFrom data.table setDT setkeyv
+#' @keywords internal
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags) {
   setDT(localTags)
   if (identical("devMode", getOption("reproducible.useCache")))
@@ -1588,7 +1593,6 @@ warnonce <- function (id, ...) {
     }
     print(paste0("artifact with cacheId ", cacheIdOfSimilar))
     print(similar2[,c("fun", "differs")])
-
   } else {
     if (!identical("devMode", getOption("reproducible.useCache")))
       message("There is no similar item in the cacheRepo")
