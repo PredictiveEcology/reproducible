@@ -332,8 +332,7 @@ setMethod(
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
-getFunctionName <- function(FUN, originalDots, ...,
-                            overrideCall, isPipe) { # nolint
+getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # nolint
   callIndex <- numeric()
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
