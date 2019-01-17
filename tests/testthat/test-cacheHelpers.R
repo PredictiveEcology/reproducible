@@ -114,3 +114,4 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl("fn1", bMess))) # TODO: fix this;
   expect_true(any(grepl("The hashing details", aMess)))
 })
+

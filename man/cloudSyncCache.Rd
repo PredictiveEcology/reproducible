@@ -4,7 +4,7 @@
 \alias{cloudSyncCache}
 \title{Sync cloud with local Cache}
 \usage{
-cloudSyncCache(cacheRepo = getOption("reproducible.cachePath"),
+cloudSyncCache(cacheRepo = getOption("reproducible.cachePath")[1],
   checksumsFileID = NULL, cloudFolderID = NULL, delete = TRUE, ...)
 }
 \arguments{
