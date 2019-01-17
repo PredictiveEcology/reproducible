@@ -415,10 +415,14 @@ setMethod(
 
       # get cacheRepo if not supplied
       if (is.null(cacheRepo)) {
-        cacheRepo <- .checkCacheRepo(modifiedDots, create = TRUE)
+        cacheRepos <- .checkCacheRepo(modifiedDots, create = TRUE)
       } else {
-        cacheRepo <- checkPath(cacheRepo, create = TRUE)
+        cacheRepos <- lapply(cacheRepo, function(repo) {
+          repo <- checkPath(repo, create = TRUE)
+        })
       }
+      cacheRepos <- unlist(cacheRepos)
+      cacheRepo <- cacheRepos[1]
 
       if (fnDetails$isPipe) {
         if (!is.call(modifiedDots$._lhs)) {
@@ -633,29 +637,25 @@ setMethod(
         outputHash <- outputHashManual
       }
 
-      # compare outputHash to existing Cache record
-
-      written <- 0
-      while (written >= 0) {
-        localTags <- suppressWarnings(try(showLocalRepo2(cacheRepo), silent = TRUE))
-        #localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
-        written <- if (is(localTags, "try-error")) {
-          if (grepl("Error in checkDirectory", localTags)) {
-            stop(localTags, "\nThis likely means the cacheRepo must be deleted")
-          }
-          Sys.sleep(sum(runif(written + 1,0.05, 0.2)))
-          written + 1
-        } else {
-          -1
-        }
-      }
-
       if (length(debugCache)) {
         if (!is.na(pmatch(debugCache, "iterative")))
           browser()
       }
 
-      isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+      # compare outputHash to existing Cache record
+      tries <- 1
+      while (tries <= length(cacheRepos)) {
+        repo <- cacheRepos[tries]
+        tries <- tries + 1
+        localTags <- getLocalTags(repo)
+        isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+        if (NROW(isInRepo) > 0) {
+          cacheRepo <- repo
+          break
+        }
+      }
+
+
       outputHashNew <- outputHash # Keep a copy of this because it may be replaced next, but we need to know old one
 
       # First, if this is not matched by outputHash, test that it is matched by
@@ -1597,4 +1597,22 @@ warnonce <- function(id, ...) {
     if (!identical("devMode", getOption("reproducible.useCache")))
       message("There is no similar item in the cacheRepo")
   }
+}
+
+getLocalTags <- function(cacheRepo) {
+  written <- 0
+  while (written >= 0) {
+    localTags <- suppressWarnings(try(showLocalRepo2(cacheRepo), silent = TRUE))
+    #localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
+    written <- if (is(localTags, "try-error")) {
+      if (grepl("Error in checkDirectory", localTags)) {
+        stop(localTags, "\nThis likely means the cacheRepo must be deleted")
+      }
+      Sys.sleep(sum(runif(written + 1,0.05, 0.2)))
+      written + 1
+    } else {
+      -1
+    }
+  }
+  localTags
 }

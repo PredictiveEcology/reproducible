@@ -325,7 +325,7 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'   # To remove whole folder:
 #'   drive_rm(as_id(newDir$id))
 #' }
-cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath"),
+cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
                            checksumsFileID = NULL, cloudFolderID = NULL,
                            delete = TRUE, ...) {
   if (is.null(checksumsFileID)) {

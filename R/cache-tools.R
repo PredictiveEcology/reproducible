@@ -92,8 +92,8 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath"))
-      x <- getOption("reproducible.cachePath")
+      message("x not specified; using ", getOption("reproducible.cachePath")[1])
+      x <- getOption("reproducible.cachePath")[1]
     }
     if (is(x, "simList")) x <- x@paths$cachePath
 
@@ -263,8 +263,8 @@ setMethod(
   "showCache",
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath"))
-      x <- getOption("reproducible.cachePath")
+      message("x not specified; using ", getOption("reproducible.cachePath")[1])
+      x <- getOption("reproducible.cachePath")[1]
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
@@ -327,8 +327,8 @@ setMethod(
   "keepCache",
   definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath"))
-      x <- getOption("reproducible.cachePath")
+      message("x not specified; using ", getOption("reproducible.cachePath")[1])
+      x <- getOption("reproducible.cachePath")[1]
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
