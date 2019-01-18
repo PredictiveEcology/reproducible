@@ -107,10 +107,10 @@ showCache(tmpDir, userTags = c("objectName"))
 showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
 showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif call
 
-clearCache(tmpDir, userTags = c("runif")) # remove only cached objects made during runif call
+clearCache(tmpDir, userTags = c("runif"), ask = FALSE) # remove only cached objects made during runif call
 showCache(tmpDir) # only those made during rnorm call
 
-clearCache(tmpDir)
+clearCache(tmpDir, ask = FALSE)
 ```
 
 ## Example 2: using the "accessed" tag
@@ -129,10 +129,10 @@ onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "a
 # inverse join with 2 data.tables ... using: a[!b]
 # i.e., return all of wholeCache that was not recently accessed
 toRemove <- unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$artifact
-clearCache(tmpDir, toRemove) # remove ones not recently accessed
+clearCache(tmpDir, toRemove, ask = FALSE) # remove ones not recently accessed
 showCache(tmpDir) # still has more recently accessed
 
-clearCache(tmpDir)
+clearCache(tmpDir, ask = FALSE)
 
 ```
 
@@ -147,10 +147,10 @@ oneDay <- 60 * 60 * 24
 keepCache(tmpDir, after = Sys.time() - oneDay)
 
 # Keep all Cache items created with an rnorm() call
-keepCache(tmpDir, userTags = "rnorm")
+keepCache(tmpDir, userTags = "rnorm", ask = FALSE)
 
 # Remove all Cache items that happened within a rnorm() call
-clearCache(tmpDir, userTags = "rnorm")
+clearCache(tmpDir, userTags = "rnorm", ask = FALSE)
 
 showCache(tmpDir) ## empty
 ```
@@ -173,9 +173,9 @@ showCache(tmpDir, userTags = c("runif", "rnorm")) ## empty
 showCache(tmpDir, userTags = "runif|rnorm")
 
 # keep only objects that are either runif or rnorm ("or" search)
-keepCache(tmpDir, userTags = "runif|rnorm")
+keepCache(tmpDir, userTags = "runif|rnorm", ask = FALSE)
 
-clearCache(tmpDir)
+clearCache(tmpDir, ask = FALSE)
 ```
 
 ## Example 5: using caching to speed up rerunning expensive computations
