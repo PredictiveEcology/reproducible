@@ -97,7 +97,7 @@
       eval(parse(text = modifiedDots[[paste0("functionName", fns)]]))
     modifiedDots <- append(modifiedDots, as.list(otherCall[-1]))
   }
-  modifiedDots
+  return(list(modifiedDots = modifiedDots, fnDetails = fnDetails))
 }
 
 .CacheInternalFn1 <- function(FUN, scalls) {

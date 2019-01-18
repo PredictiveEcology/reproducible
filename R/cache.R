@@ -424,7 +424,9 @@ setMethod(
       cacheRepo <- cacheRepos[[1]]
 
       if (fnDetails$isPipe) {
-        modifiedDots <- .CachePipeFn1(modifiedDots, fnDetails, FUN)
+        pipeRes <- .CachePipeFn1(modifiedDots, fnDetails, FUN)
+        modifiedDots <- pipeRes$modifiedDots
+        fnDetails <- pipeRes$fnDetails
       }
 
       modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
