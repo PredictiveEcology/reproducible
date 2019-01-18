@@ -207,15 +207,12 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
         message("  writing to local Cache")
         objSize <- sum(unlist(objSize(cachedCopy)))
         preDigestUnlistTrunc <- unlist(.unlistToCharacter(dig$preDigest, 3))
-        userTags <- c(
-          if (!is.null(fnDetails$functionName))
-            if (!is.na(fnDetails$functionName))
-              paste0("function:", fnDetails$functionName),
+        userTags <- c(if (!is.na(fnDetails$functionName))
+          paste0("function:", fnDetails$functionName),
           paste0("object.size:", objSize),
           paste0("accessed:", Sys.time()),
           paste("preDigest", names(preDigestUnlistTrunc),
-                preDigestUnlistTrunc, sep = ":")
-        )
+                preDigestUnlistTrunc, sep = ":"))
         written <- 0
         suppressMessages(cacheRepo <- .checkCacheRepo(fnDetails$modifiedDots, create = TRUE))
         setattr(cachedCopy$object, "tags", paste0("cacheId:", dig$outputHash))
