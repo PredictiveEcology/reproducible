@@ -212,7 +212,8 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
           paste0("object.size:", objSize),
           paste0("accessed:", Sys.time()),
           paste("preDigest", names(preDigestUnlistTrunc),
-                preDigestUnlistTrunc, sep = ":"))
+                preDigestUnlistTrunc, sep = ":")
+        )
         written <- 0
         suppressMessages(cacheRepo <- .checkCacheRepo(fnDetails$modifiedDots, create = TRUE))
         setattr(cachedCopy$object, "tags", paste0("cacheId:", dig$outputHash))
