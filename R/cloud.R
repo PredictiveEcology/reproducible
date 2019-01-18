@@ -60,23 +60,26 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
 #' @export
 #' @importFrom data.table data.table rbindlist
 #' @importFrom googledrive as_id drive_update drive_upload
+#' @importFrom future future plan
 #' @seealso \code{\link{cloudSyncCache}}, \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
 cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID) {
   if (!is.null(cloudFolderID)) {
     objectFile <- tempfile(fileext = ".rda")
     save(object, file = objectFile)
     # checksums <- cloudDownloadChecksums(checksumsFileID)
-    message("  uploading object to google drive; this could take a while")
-    uploadRes <- drive_upload(objectFile, path = as_id(cloudFolderID),
-                              name = paste0(digest, ".rda"), verbose = FALSE)
-    checksums <- rbindlist(
-      list(checksums,
-           data.table(cacheId = digest, id = uploadRes$id, time = as.character(Sys.time()),
-                      filesize = file.size(objectFile))), use.names = TRUE, fill = TRUE)
-    saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
-    drive_update(as_id(checksumsFileID),
-                 media = getOption("reproducible.cloudChecksumsFilename"),
-                 verbose = FALSE)
+    os <- tolower(Sys.info()[["sysname"]])
+    .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
+    if (.onLinux) {
+      plan("multiprocess", workers = 2)
+      message("  uploading object to google drive in a 'future'")
+      out <- future(cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
+                                  checksums, checksumsFileID))
+    } else {
+      message("  uploading object to google drive; this could take a while")
+      cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
+                                              checksums, checksumsFileID)
+
+    }
   } else {
     stop("cloudFolder must be provided as a google id string to a folder (not a file)")
   }
@@ -177,13 +180,18 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
       stop("You must supply a checksumsFileID or, if not supplied, a cloudFolderID where the",
            "\n checksums file will be made")
   hasCopy <- FALSE
+  hasCloudCopy <- FALSE
 
   fnDetails <- .fnCleanup(FUN = list(...)[[1]], callingFun = "Cache", ...)
   cacheRepo <- suppressMessages(.checkCacheRepo(fnDetails$modifiedDots, create = TRUE))
   suppressMessages(archivist::createLocalRepo(cacheRepo))
 
+  dots <- list(...)
   if (isTRUE(useCloud)) {
-    dig <- CacheDigest(list(...))
+    if (!is.null(dots$omitArgs)) {
+      dots <- .CacheDigestWithOmitArgs(sys.call(), envir = sys.frame(-1))
+    }
+    dig <- CacheDigest(dots)
     checkLocalFirst <- try(suppressMessages(showCache(userTags = dig$outputHash, x = cacheRepo)))
     hasLocalCopy <- NROW(checkLocalFirst) > 0 && !is(checkLocalFirst, "try-error")
     if (hasLocalCopy) {
@@ -199,7 +207,7 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
       cachedCopy <- list(digest = dig$outputHash, checksums = checksums,
                          checksumsFileID = checksumsFileID)
     } else {
-      cachedCopy <- cloudCheck(list(...), checksumsFileID, cloudFolderID)
+      cachedCopy <- cloudCheck(dots, checksumsFileID, cloudFolderID)
       checksumsFileID <- cachedCopy$checksumsFileID
       hasCloudCopy <- any(cachedCopy$checksums$cacheId %in% cachedCopy$digest)
       # it may not have a cloud copy either, meaning it will have a NULL
@@ -381,4 +389,28 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
   }
   suppressMessages(cloudUpdateChecksums(checksums, checksumsFileID))
   return(invisible(checksums))
+}
+
+cloudUploadFileAndChecksums <- function(objectFile, cloudFolderID, digest,
+                                        checksums, checksumsFileID) {
+  uploadRes <- drive_upload(objectFile, path = as_id(cloudFolderID),
+                            name = paste0(digest, ".rda"), verbose = FALSE)
+  checksums <- rbindlist(
+    list(checksums,
+         data.table(cacheId = digest, id = uploadRes$id, time = as.character(Sys.time()),
+                    filesize = file.size(objectFile))), use.names = TRUE, fill = TRUE)
+  saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
+  drive_update(as_id(checksumsFileID),
+               media = getOption("reproducible.cloudChecksumsFilename"),
+               verbose = FALSE)
+  return(invisible())
+}
+
+.CacheDigestWithOmitArgs <- function(sysCallWCloudCache, envir) {
+  a <- match.call(Cache, sysCallWCloudCache, expand.dots = TRUE)[-1]
+  forms <- formalArgs(cloudCache)
+  b <- match.call(eval(a$FUN), a, expand.dots = TRUE)
+  b[names(b) %in% eval(b$omitArgs) | names(b) %in% forms | names(b) %in% names(.formalsCache)] <- NULL
+  dots <- lapply(b, eval, envir = envir)
+
 }
