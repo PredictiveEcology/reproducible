@@ -70,7 +70,7 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
     os <- tolower(Sys.info()[["sysname"]])
     .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
     if (.onLinux) {
-      plan(multiprocess)
+      plan("multiprocess", workers = 2)
       message("  uploading object to google drive in a 'future'")
       out <- future(cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
                                   checksums, checksumsFileID))
@@ -180,6 +180,7 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
       stop("You must supply a checksumsFileID or, if not supplied, a cloudFolderID where the",
            "\n checksums file will be made")
   hasCopy <- FALSE
+  hasCloudCopy <- FALSE
 
   fnDetails <- .fnCleanup(FUN = list(...)[[1]], callingFun = "Cache", ...)
   cacheRepo <- suppressMessages(.checkCacheRepo(fnDetails$modifiedDots, create = TRUE))
