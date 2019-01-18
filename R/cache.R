@@ -599,7 +599,8 @@ setMethod(
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
           output <- .getFromRepo(isInRepo, notOlderThan = notOlderThan,
                                  lastOne, cacheRepo, fnDetails,
-                                 modifiedDots, debugCache, verbose, sideEffect, quick,
+                                 modifiedDots, debugCache = debugCache,
+                                 verbose = verbose, sideEffect, quick,
                                  algo, preDigest, ...)
 
           return(output)
