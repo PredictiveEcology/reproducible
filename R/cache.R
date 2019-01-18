@@ -600,7 +600,7 @@ setMethod(
           output <- .getFromRepo(isInRepo, notOlderThan = notOlderThan,
                                  lastOne, cacheRepo, fnDetails,
                                  modifiedDots, debugCache, verbose, sideEffect, quick,
-                                 algo, ...)
+                                 algo, preDigest, ...)
 
           return(output)
         }

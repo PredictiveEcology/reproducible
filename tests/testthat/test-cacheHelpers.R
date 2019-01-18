@@ -71,7 +71,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl("memoise", dMess)))
 
   ## showSimilar
-  try(clearCache(ask = FALSE, cacheRepo = tmpCache), silent = TRUE)
+  try(clearCache(ask = FALSE, x = tmpCache), silent = TRUE)
   aMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
   bMess <- capture_messages(b <- Cache(rnorm, 2, showSimilar = TRUE, cacheRepo = tmpCache))
   expect_true(any(grepl("different n", bMess)))
