@@ -746,8 +746,9 @@ setMethod(
 
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
-                    if (!is.na(fnDetails$functionName))
-                      paste0("function:", fnDetails$functionName),
+                    if (!is.null(fnDetails$functionName))
+                      if (!is.na(fnDetails$functionName))
+                        paste0("function:", fnDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0(otherFns),
