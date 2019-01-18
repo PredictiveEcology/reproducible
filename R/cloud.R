@@ -60,7 +60,6 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
 #' @export
 #' @importFrom data.table data.table rbindlist
 #' @importFrom googledrive as_id drive_update drive_upload
-#' @importFrom future future plan
 #' @seealso \code{\link{cloudSyncCache}}, \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
 cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID) {
   if (!is.null(cloudFolderID)) {
@@ -68,11 +67,12 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
     save(object, file = objectFile)
     # checksums <- cloudDownloadChecksums(checksumsFileID)
     os <- tolower(Sys.info()[["sysname"]])
-    .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
+    .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux" &&
+      requireNamespace("future", quietly = TRUE)
     if (.onLinux) {
-      plan("multiprocess", workers = 2)
+      future::plan("multiprocess", workers = 2)
       message("  uploading object to google drive in a 'future'")
-      out <- future(cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
+      out <- future::future(cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
                                   checksums, checksumsFileID))
     } else {
       message("  uploading object to google drive; this could take a while")
