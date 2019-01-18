@@ -576,6 +576,7 @@ test_that("test masking of %>% error message", {
   }, add = TRUE)
 
   mess <- capture_messages(library(magrittr))
+  on.exit(detach("package:magrittr"), add = TRUE)
 
   expect_length(grep("package:reproducible", mess, value = TRUE), 1)
 

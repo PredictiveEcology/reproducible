@@ -79,6 +79,7 @@ RoxygenNote: 6.1.1
 Collate: 
     'RcppExports.R'
     'cache-helpers.R'
+    'cache-internals.R'
     'cache-tools.R'
     'robustDigest.R'
     'cache.R'
