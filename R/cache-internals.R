@@ -1,5 +1,5 @@
 .CacheVerboseFn1 <- function(preDigest, preDigestUnlist, fnDetails,
-                             startHashTime, modifiedDots, dotPipe) {
+                             startHashTime, modifiedDots, dotPipe, quick) {
   preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
   endHashTime <- Sys.time()
   verboseDF <- data.frame(
@@ -52,13 +52,6 @@
     .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
   } else {
     .reproEnv$verboseTiming <- verboseDF
-    on.exit({
-      assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
-      print(.reproEnv$verboseTiming)
-      message("This object is also available from .reproEnv$cacheTimings")
-      rm("verboseTiming", envir = .reproEnv)
-    },
-    add = TRUE)
   }
 }
 
@@ -260,7 +253,7 @@
 
 .getFromRepo <- function(isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
-                         algo, preDigest, ...) {
+                         algo, preDigest, startCacheTime, ...) {
 
   if (verbose > 1) {
     startLoadTime <- Sys.time()
