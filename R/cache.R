@@ -499,7 +499,14 @@ setMethod(
 
       if (verbose > 1) {
         a <- .CacheVerboseFn1(preDigest, preDigestUnlist, fnDetails,
-                         startHashTime, modifiedDots, dotPipe)
+                         startHashTime, modifiedDots, dotPipe, quick = quick)
+        on.exit({
+          assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
+          print(.reproEnv$verboseTiming)
+          message("This object is also available from .reproEnv$cacheTimings")
+          rm("verboseTiming", envir = .reproEnv)
+        },
+        add = TRUE)
       }
 
       if (length(debugCache)) {
@@ -601,7 +608,7 @@ setMethod(
                                  lastOne, cacheRepo, fnDetails,
                                  modifiedDots, debugCache = debugCache,
                                  verbose = verbose, sideEffect, quick,
-                                 algo, preDigest, ...)
+                                 algo, preDigest, startCacheTime, ...)
 
           return(output)
         }
