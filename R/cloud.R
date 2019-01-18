@@ -33,7 +33,6 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
     objectFilename2 <- tempfile(fileext = ".rda");
     a <- checksums[hashExists]$filesize
     class(a) <- "object_size"
-    browser()
     message("  downloading object from google drive; this could take a while; it is: ",
             format(a, "auto"))
     drive_download(as_id(checksums[hashExists, id]), path = objectFilename2, verbose = FALSE)
@@ -199,7 +198,6 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
         checksumsFileID <- getChecksumsFileID(cloudFolderID)
       suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
       hasCloudCopy <- any(checksums$cacheId %in% dig$outputHash)
-      browser()
       if (hasCloudCopy)
         message("  local and cloud copy exist; using local")
       else
