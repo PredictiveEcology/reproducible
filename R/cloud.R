@@ -17,7 +17,6 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom googledrive as_id drive_download drive_upload
 #' @seealso \code{\link{cloudSyncCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}}
 cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
-  browser
   dig <- CacheDigest(toDigest)$outputHash
   if (is.null(checksumsFileID)) {
     if (!is.null(cloudFolderID)) {
@@ -68,18 +67,23 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
     # checksums <- cloudDownloadChecksums(checksumsFileID)
     os <- tolower(Sys.info()[["sysname"]])
     .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux" &&
-      requireNamespace("future", quietly = TRUE)
+      requireNamespace("future", quietly = TRUE) &&
+      !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
-      future::plan("multiprocess", workers = 2)
+      curPlan <- future::plan()
+      if (is(curPlan, "sequential"))
+        future::plan(getOption("reproducible.futurePlan", "multiprocess"))
       message("  uploading object to google drive in a 'future'")
-      out <- future::future(cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
-                                  checksums, checksumsFileID))
+      future::futureAssign("cloudCheckSums", assign.env = reproducible:::.reproEnv,
+                           cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
+                                                       checksums, checksumsFileID))
     } else {
       message("  uploading object to google drive; this could take a while")
       cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
-                                              checksums, checksumsFileID)
+                                  checksums, checksumsFileID)
 
     }
+
   } else {
     stop("cloudFolder must be provided as a google id string to a folder (not a file)")
   }
@@ -101,6 +105,13 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
 #' @seealso \code{\link{cloudSyncCache}}, \code{\link{cloudCache}}, \code{\link{cloudExtras}}
 cloudDownloadChecksums <- function(checksumsFileID) {
   checksumsFilename <- tempfile(fileext = ".rds");
+  os <- tolower(Sys.info()[["sysname"]])
+  .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux" &&
+    requireNamespace("future", quietly = TRUE) &&
+    !isFALSE(getOption("reproducible.futurePlan"))
+  if (.onLinux)
+    if (exists("cloudChecksums", envir = .reproEnv)) # it should have been deleted in `checkFutures`
+      bb <- future::value(.reproEnv)       # but if not, then force its value here
   drive_download(as_id(checksumsFileID), path = checksumsFilename, verbose = FALSE)
   checksums <- readRDS(checksumsFilename)
 }
@@ -369,7 +380,7 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
         list(checksums,
              data.table(cacheId = cacheIDs, id = rbindlist(out)$id, time = as.character(Sys.time()),
                         filesize = file.size(file.path(cacheRepo, "gallery", paste0(uniqueCacheArtifacts, ".rda"))))),
-                        use.names = TRUE, fill = TRUE)
+        use.names = TRUE, fill = TRUE)
       out <- rbindlist(out)
     }
 
@@ -400,10 +411,10 @@ cloudUploadFileAndChecksums <- function(objectFile, cloudFolderID, digest,
          data.table(cacheId = digest, id = uploadRes$id, time = as.character(Sys.time()),
                     filesize = file.size(objectFile))), use.names = TRUE, fill = TRUE)
   saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
-  drive_update(as_id(checksumsFileID),
+  res <- drive_update(as_id(checksumsFileID),
                media = getOption("reproducible.cloudChecksumsFilename"),
                verbose = FALSE)
-  return(invisible())
+  return(invisible(res))
 }
 
 .CacheDigestWithOmitArgs <- function(sysCallWCloudCache, envir) {
