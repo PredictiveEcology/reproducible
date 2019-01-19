@@ -271,7 +271,8 @@ setMethod(
     if (is(x, "simList")) x <- x@paths$cachePath
 
     # Clear the futures that are resolved
-    .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
+    .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
+      !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
       if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE)))
         checkFutures()
@@ -458,5 +459,6 @@ checkFutures <- function() {
     Sys.sleep(0.001)
     resol <- future::resolved(.reproEnv)
   }
-  rm(list = names(resol)[resol], envir = .reproEnv)
+  if (length(resol) > 0)
+    rm(list = names(resol)[resol], envir = .reproEnv)
 }
