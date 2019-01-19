@@ -34,3 +34,26 @@ test_that("test multiple cacheRepo", {
   on.exit(options(opt), add = TRUE)
 })
 
+
+##########################
+test_that("test multiple cacheRepo with 1 of them a cloudCache", {
+  if (!interactive()) skip(message = "test cloudCache inside Cache")
+  testInitOut <- testInit(libraries = "googledrive")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  options("reproducible.useNewDigestAlgorithm" = TRUE) # need new approach for this to work correctly
+  # first time -- looks in cloudFolderID for checksums -- none there, so it makes it
+  #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
+  #   2 places
+  newDir <- drive_mkdir("testFolder")
+  on.exit(drive_rm(as_id(newDir$id), add = TRUE))
+
+  opt <- options("reproducible.cachePath" = list(tmpdir, as_id(newDir$id)))
+  a1 <- Cache(rnorm, 1)
+
+  on.exit(options(opt), add = TRUE)
+})
+
+
