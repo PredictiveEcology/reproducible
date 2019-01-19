@@ -50,8 +50,17 @@ test_that("test multiple cacheRepo with 1 of them a cloudCache", {
   newDir <- drive_mkdir("testFolder")
   on.exit(drive_rm(as_id(newDir$id), add = TRUE))
 
+  clearCache(ask = FALSE)
+  cloudSyncCache(cloudFolderID = newDir$id)
+  cloudCache(rnorm, 1, cloudFolderID = newDir$id)
+  mess <- capture_messages(cloudCache(rnorm, 1, cloudFolderID = newDir$id))
+  # for (i in 1:4) cloudCache(rnorm, 1e4 + i, cloudFolderID = newDir$id)
+  expect_true(all(grepl("local and cloud|loading cached result", mess)))
+
+  # cloudCache(rnorm, 1, cloudFolderID = "1JZoXm68NdegrkhKN3THXdXf2ZKeYJ34N")
+
   opt <- options("reproducible.cachePath" = list(tmpdir, as_id(newDir$id)))
-  a1 <- Cache(rnorm, 1)
+  #a1 <- Cache(rnorm, 1)
 
   on.exit(options(opt), add = TRUE)
 })
