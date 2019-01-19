@@ -2,14 +2,12 @@
 #' Create reproducible digests of objects in R
 #'
 #' Not all aspects of R objects are captured by current hashing tools in R (e.g.
-#' \code{digest::digest}, \code{fastdigest::fastdigest}, \code{knitr} caching,
+#' \code{digest::digest}, \code{knitr} caching,
 #' \code{archivist::cache}). This is mostly because many objects have "transient"
-#' (e.g., functions have environments), or "disk-backed" features. This function
-#' allows for these accommodations to be made and uses \code{\link[fastdigest]{fastdigest}}
-#' internally.  Since
+#' (e.g., functions have environments), or "disk-backed" features. Since
 #' the goal of using reproducibility is to have tools that are not session specific,
 #' this function
-#' attempts to strip all session specific information so that the fastdigest
+#' attempts to strip all session specific information so that the digest
 #' works between sessions and operating systems. It is tested under many
 #' conditions and object types, there are bound to be others that don't
 #' work correctly.
@@ -31,7 +29,7 @@
 #' converted to a text representation via a call to \code{format(FUN)}.
 #'
 #' Objects contained within a list or environment are recursively hashed
-#' using \code{\link[fastdigest]{fastdigest}}, while removing all references to
+#' using \code{\link[digest]{digest}}, while removing all references to
 #' environments.
 #'
 #' Character strings are first assessed with \code{dir.exists} and \code{file.exists}
@@ -52,12 +50,10 @@
 #' @return A hash i.e., digest of the object passed in.
 #'
 #' @seealso \code{\link[archivist]{cache}}.
-#' @seealso \code{\link[fastdigest]{fastdigest}}.
 #'
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom fastdigest fastdigest
 #' @keywords internal
 #' @rdname robustDigest
 #' @examples
@@ -69,8 +65,8 @@
 #' save(a, file = tmpfile2)
 #'
 #' # treats as character string, so 2 filenames are different
-#' fastdigest::fastdigest(tmpfile1)
-#' fastdigest::fastdigest(tmpfile2)
+#' digest::digest(tmpfile1)
+#' digest::digest(tmpfile2)
 #'
 #' # tests to see whether character string is representing a file
 #' .robustDigest(tmpfile1)
@@ -95,8 +91,8 @@
 #'
 #' digest::digest(r1)
 #' digest::digest(r2) # different
-#' fastdigest::fastdigest(r1)
-#' fastdigest::fastdigest(r2) # different
+#' digest::digest(r1)
+#' digest::digest(r2) # different
 #' .robustDigest(r1)
 #' .robustDigest(r2) # same... data are the same in the file
 #'
@@ -120,7 +116,7 @@ setMethod(
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
-    fastdigest(object)
+    digest(object, algo = algo)
 })
 
 #' @import parallel
@@ -133,8 +129,8 @@ setMethod(
   signature = "cluster",
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
-    object <- .removeCacheAtts(object)
-    fastdigest(NULL)
+    #object <- .removeCacheAtts(object)
+    digest(NULL, algo = algo)
 })
 
 #' @rdname robustDigest
@@ -145,7 +141,7 @@ setMethod(
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
-    fastdigest(format(object))
+    digest(format(object), algo = algo)
 })
 
 #' @rdname robustDigest
@@ -156,7 +152,7 @@ setMethod(
   definition = function(object, objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
-    fastdigest(format(object))
+    digest(format(object), algo = algo)
 })
 
 #' @rdname robustDigest
@@ -169,32 +165,21 @@ setMethod(
     object <- .removeCacheAtts(object)
 
   if (!quick) {
-      # if (any(unlist(lapply(object, dir.exists)))) {
-      #   bbb <<- bbb + 1
-      #   unlist(lapply(object, function(x) {
-      #     if (dir.exists(x)) {
-      #       fastdigest(basename(x))
-      #     } else {
-      #       fastdigest(x)
-      #     }
-      #   }))
-      #} else
-    #aaa <<- aaa + length(object)
       if (any(unlist(lapply(object, file.exists)))) {
         unlist(lapply(object, function(x) {
           if (dir.exists(x)) {
-            fastdigest(basename(x))
+            digest(basename(x), algo = algo)
           } else if (file.exists(x)) {
             digest::digest(file = x, length = length, algo = algo)
           } else {
-            fastdigest(x)
+            digest(x, algo = algo)
           }
         }))
       } else {
-        fastdigest(object)
+        digest(object, algo = algo)
       }
     } else {
-      fastdigest(object)
+      digest(object, algo = algo)
     }
 })
 
@@ -220,11 +205,13 @@ setMethod(
           digest::digest(file = x, length = length, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          fastdigest(.basenames(x, nParentDirs))
+          digest(.basenames(x, nParentDirs), algo = algo)
+          #fastdigest(.basenames(x, nParentDirs))
         }
       })
     } else {
-      fastdigest(.basenames(object, nParentDirs))
+      digest(.basenames(object, nParentDirs), algo = algo)
+      # fastdigest(.basenames(object, nParentDirs))
     }
 })
 
@@ -265,7 +252,8 @@ setMethod(
                         classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    fastdigest(object)
+    digest(object, algo = algo)
+    #fastdigest(object)
   })
 
 
@@ -318,7 +306,8 @@ setMethod(
       }
     }
 
-    return(fastdigest(aaa))
+    # return(fastdigest(aaa))
+    digest(aaa, algo = algo)
 })
 
 .basenames <- function(object, nParentDirs) {

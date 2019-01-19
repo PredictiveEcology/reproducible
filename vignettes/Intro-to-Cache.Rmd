@@ -28,7 +28,7 @@ The `reproducible::Cache` function is built to work with any R function.
 ## Differences with other approaches
 
 `Cache` uses 2 key the `archivist` functions `saveToLocalRepo` and `loadFromLocalRepo`, but does not use `archivist::cache`.
-Similar to `archivist::cache`, there is some reliance on `digest::digest` to determine whether the arguments are identical in subsequent iterations; however, it also uses `fastdigest::fastdigest` to make it substantially faster in many cases.
+Similar to `archivist::cache`, there is some reliance on `digest::digest` to determine whether the arguments are identical in subsequent iterations.
 It also but does *many* things that make standard caching with `digest::digest` don't work reliably between systems.
 For these, the function `.robustDigest` is introduced to make caching transferable between systems.
 This is relevant for file paths, environments, parallel clusters, functions (which are contained within an environment), and many others (e.g., see `?.robustDigest` for methods).

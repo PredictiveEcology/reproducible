@@ -14,10 +14,10 @@ if (getRversion() >= "3.1.0") {
 #'    be written. This will only be used if \code{checksumsFileID} is not provided
 #'   provided as a character string.
 #' @export
-#' @importFrom fastdigest fastdigest
 #' @importFrom googledrive as_id drive_download drive_upload
 #' @seealso \code{\link{cloudSyncCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}}
 cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
+  browser
   dig <- CacheDigest(toDigest)$outputHash
   if (is.null(checksumsFileID)) {
     if (!is.null(cloudFolderID)) {

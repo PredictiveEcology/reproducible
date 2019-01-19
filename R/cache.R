@@ -27,10 +27,9 @@ if (getRversion() >= "3.1.0") {
 #'         Currently, only file-backed \code{Raster*} objects are digested
 #'         (e.g., not \code{ff} objects, or any other R object where the data
 #'         are on disk instead of in RAM);
-#'   \item using \code{\link[fastdigest]{fastdigest}} internally when the object
-#'         is in RAM, which can be up to ten times faster than
-#'         \code{\link[digest]{digest}}. Note that file-backed objects are still
-#'         hashed using \code{\link[digest]{digest}}.
+#'   \item Uses \code{\link[digest]{digest}} (formerly fastdigest, which does
+#'         not translate between operating systems).
+#'         This is used for file-backed objects as well.
 #'   \item Cache will save arguments passed by user in a hidden environment. Any
 #'         nested Cache functions will use arguments in this order 1) actual arguments
 #'         passed at each Cache call, 2) any inherited arguments from an outer Cache
@@ -198,7 +197,7 @@ if (getRversion() >= "3.1.0") {
 #'        function will have two attributes, \code{debugCache1} and \code{debugCache2},
 #'        which are the entire \code{list(...)} and that same object, but after all
 #'        \code{.robustDigest} calls, at the moment that it is digested using
-#'        \code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
+#'        \code{digest}, respectively. This \code{attr(mySimOut, "debugCache2")}
 #'        can then be compared to a subsequent call and individual items within
 #'        the object \code{attr(mySimOut, "debugCache1")} can be compared.
 #'        If \code{"quick"}, then it will return the same two objects directly,
@@ -282,7 +281,6 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom archivist createLocalRepo addTagsRepo
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
-#' @importFrom fastdigest fastdigest
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
@@ -965,12 +963,11 @@ unmakeMemoiseable.default <- function(x) {
 }
 
 #' @inheritParams archivist showLocalRepo
-#' @inheritParams fastdigest fastdigest
 showLocalRepo2 <- function(repoDir) {
   #if (requireNamespace("future"))
   #  checkFutures() # will pause until all futures are done
   aa <- showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
-  dig <- fastdigest(aa$md5hash)
+  dig <- digest(aa$md5hash)
   bb <- showLocalRepo3Mem(repoDir, dig)
   return(bb)
 }
@@ -1199,7 +1196,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #' the digest of each sub-element in \code{objsToDigest}.
 #'
 #' @export
-#' @importFrom fastdigest fastdigest
 #'
 #' @examples
 #' \dontrun{
@@ -1207,7 +1203,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #'   CacheDigest(list(rnorm, 1))
 #'
 #' }
-CacheDigest <- function(objsToDigest, ...) {
+CacheDigest <- function(objsToDigest, algo = "xxhash64", ...) {
   preDigest <- lapply(objsToDigest, function(x) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
@@ -1219,7 +1215,7 @@ CacheDigest <- function(objsToDigest, ...) {
   })
 
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
-    fastdigest::fastdigest(unname(sort(unlist(preDigest))))
+    .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
   } else {
     warnonce("useNewDigestAlgorithm",
              simpleWarning(paste0("'reproducible' will soon change the default digest algorithm.",
@@ -1228,7 +1224,7 @@ CacheDigest <- function(objsToDigest, ...) {
                                   "\n  but irrelevant changes (like changing the order of arguments).",
                                   "\n  To start using this new algorithm now, set ",
                                   "\n  options('reproducible.useNewDigestAlgorithm' = TRUE)")))
-    fastdigest(preDigest)
+    .robustDigest(unlist(preDigest), algo = algo, ...)
   }
   list(outputHash = res, preDigest = preDigest)
 }

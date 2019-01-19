@@ -83,7 +83,7 @@ If \code{"complete"}, then the returned object from the Cache
 function will have two attributes, \code{debugCache1} and \code{debugCache2},
 which are the entire \code{list(...)} and that same object, but after all
 \code{.robustDigest} calls, at the moment that it is digested using
-\code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
+\code{digest}, respectively. This \code{attr(mySimOut, "debugCache2")}
 can then be compared to a subsequent call and individual items within
 the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
@@ -172,10 +172,9 @@ though quite common, cases by:
         Currently, only file-backed \code{Raster*} objects are digested
         (e.g., not \code{ff} objects, or any other R object where the data
         are on disk instead of in RAM);
-  \item using \code{\link[fastdigest]{fastdigest}} internally when the object
-        is in RAM, which can be up to ten times faster than
-        \code{\link[digest]{digest}}. Note that file-backed objects are still
-        hashed using \code{\link[digest]{digest}}.
+  \item Uses \code{\link[digest]{digest}} (formerly fastdigest, which does
+        not translate between operating systems).
+        This is used for file-backed objects as well.
   \item Cache will save arguments passed by user in a hidden environment. Any
         nested Cache functions will use arguments in this order 1) actual arguments
         passed at each Cache call, 2) any inherited arguments from an outer Cache

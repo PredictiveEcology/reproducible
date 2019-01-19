@@ -4,7 +4,7 @@
 \alias{CacheDigest}
 \title{The exact digest function that \code{Cache} uses}
 \usage{
-CacheDigest(objsToDigest, ...)
+CacheDigest(objsToDigest, algo = "xxhash64", ...)
 }
 \arguments{
 \item{objsToDigest}{A list of all the objects (e.g., arguments) to be digested}

@@ -123,14 +123,12 @@ A hash i.e., digest of the object passed in.
 }
 \description{
 Not all aspects of R objects are captured by current hashing tools in R (e.g.
-\code{digest::digest}, \code{fastdigest::fastdigest}, \code{knitr} caching,
+\code{digest::digest}, \code{knitr} caching,
 \code{archivist::cache}). This is mostly because many objects have "transient"
-(e.g., functions have environments), or "disk-backed" features. This function
-allows for these accommodations to be made and uses \code{\link[fastdigest]{fastdigest}}
-internally.  Since
+(e.g., functions have environments), or "disk-backed" features. Since
 the goal of using reproducibility is to have tools that are not session specific,
 this function
-attempts to strip all session specific information so that the fastdigest
+attempts to strip all session specific information so that the digest
 works between sessions and operating systems. It is tested under many
 conditions and object types, there are bound to be others that don't
 work correctly.
@@ -153,7 +151,7 @@ Functions (which are contained within environments) are
 converted to a text representation via a call to \code{format(FUN)}.
 
 Objects contained within a list or environment are recursively hashed
-using \code{\link[fastdigest]{fastdigest}}, while removing all references to
+using \code{\link[digest]{digest}}, while removing all references to
 environments.
 
 Character strings are first assessed with \code{dir.exists} and \code{file.exists}
@@ -171,8 +169,8 @@ save(a, file = tmpfile1)
 save(a, file = tmpfile2)
 
 # treats as character string, so 2 filenames are different
-fastdigest::fastdigest(tmpfile1)
-fastdigest::fastdigest(tmpfile2)
+digest::digest(tmpfile1)
+digest::digest(tmpfile2)
 
 # tests to see whether character string is representing a file
 .robustDigest(tmpfile1)
@@ -197,8 +195,8 @@ r2 <- writeRaster(r, file = tmpfile2)
 
 digest::digest(r1)
 digest::digest(r2) # different
-fastdigest::fastdigest(r1)
-fastdigest::fastdigest(r2) # different
+digest::digest(r1)
+digest::digest(r2) # different
 .robustDigest(r1)
 .robustDigest(r2) # same... data are the same in the file
 
@@ -209,8 +207,6 @@ fastdigest::fastdigest(r2) # different
 }
 \seealso{
 \code{\link[archivist]{cache}}.
-
-\code{\link[fastdigest]{fastdigest}}.
 }
 \author{
 Eliot McIntire
