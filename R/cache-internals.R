@@ -250,7 +250,7 @@
 
 }
 
-.getFromRepo <- function(isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
+.getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
                          algo, preDigest, startCacheTime, ...) {
 

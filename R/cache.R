@@ -610,7 +610,7 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          output <- .getFromRepo(isInRepo, notOlderThan = notOlderThan,
+          output <- .getFromRepo(FUN, isInRepo, notOlderThan = notOlderThan,
                                  lastOne, cacheRepo, fnDetails,
                                  modifiedDots, debugCache = debugCache,
                                  verbose = verbose, sideEffect, quick,
@@ -872,40 +872,6 @@ setMethod(
     }
 })
 
-#' Deprecated functions
-#'
-#' @export
-#' @importFrom archivist showLocalRepo rmFromLocalRepo addTagsRepo
-#' @importFrom stats runif
-#' @inheritParams Cache
-#' @rdname reproducible-deprecated
-setGeneric("cache", signature = "...",
-           function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,  # nolint
-                    objects = NULL, outputObjects = NULL, algo = "xxhash64") {
-             archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo)
-})
-
-#' @export
-#' @rdname reproducible-deprecated
-setMethod(
-  "cache",
-  definition = function(cacheRepo, FUN, ..., notOlderThan, objects,  # nolint
-                        outputObjects, algo) {
-    .Deprecated("Cache", package = "reproducible",
-                msg = paste0(
-                  "cache from SpaDES and reproducible is deprecated.\n",
-                  "Use Cache with capital C if you want the robust Cache function.\n",
-                  "e.g., Cache(", getFunctionName(FUN, ..., overrideCall = "cache")$functionName,
-                  ", ", paste(list(...), collapse = ", "), ")"
-                )
-    )
-    stop("")
-    # Cache(FUN = FUN, ..., notOlderThan = notOlderThan, .objects = objects,
-    #       outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
-})
-
-# .memoisedCacheFuns <- new.env(parent = asNamespace("reproducible"))
-# CacheMem <- memoise::memoise(Cache)
 
 .formalsCache <- formals(Cache)[-(1:2)]
 .formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
