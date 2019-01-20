@@ -7,7 +7,7 @@
 \alias{\%<\%}
 \title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
 \usage{
-Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
+Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength, userTags = c(), digestPathContent,
@@ -18,7 +18,7 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   showSimilar = NULL)
 
-\S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
+\S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, .objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength, userTags = c(), digestPathContent,
@@ -39,7 +39,7 @@ lhs \%<\% rhs
 
 \item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 
-\item{objects}{Character vector of objects to be digested. This is only applicable
+\item{.objects}{Character vector of objects to be digested. This is only applicable
 if there is a list, environment (or similar) named objects
 within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of

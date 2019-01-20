@@ -162,12 +162,11 @@ if (getRversion() >= "3.1.0") {
 #' @param FUN Either a function or an unevaluated function call (e.g., using
 #'            \code{quote}.
 #'
-#' @param objects Character vector of objects to be digested. This is only applicable
+#' @param .objects Character vector of objects to be digested. This is only applicable
 #'                if there is a list, environment (or similar) named objects
 #'                within it. Only this/these objects will be considered for caching,
 #'                i.e., only use a subset of
 #'                the list, environment or similar objects.
-#'
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
@@ -291,7 +290,9 @@ if (getRversion() >= "3.1.0") {
 #'
 setGeneric(
   "Cache", signature = "...",
-  function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
+  function(FUN, ..., notOlderThan = NULL,
+           .objects = NULL, #objects = NULL,
+           outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL,
            length = getOption("reproducible.length", Inf),
            compareRasterFileLength, userTags = c(),
@@ -309,12 +310,18 @@ setGeneric(
 #' @rdname cache
 setMethod(
   "Cache",
-  definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
+  definition = function(FUN, ..., notOlderThan, .objects,
+                        #objects,
+                        outputObjects,  # nolint
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick, verbose,
                         cacheId, useCache,
                         showSimilar) {
+
+    if (!is.null(list(...)$objects)) {
+      message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
+    }
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
@@ -487,7 +494,7 @@ setMethod(
         (names(modifiedDots) %in%
            c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar"))
 
-      cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], objects = objects,
+      cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
       preDigest <- cacheDigest$preDigest
@@ -628,8 +635,9 @@ setMethod(
         output <- FUN(...) #do.call(FUN, fnDetails$originalDots)
       }
 
+      browser(expr = exists("aaaa"))
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
-                                objects = outputObjects, length = length,
+                                .objects = outputObjects, length = length,
                                 algo = algo, quick = quick, classOptions = classOptions, ...)
 
       if (verbose > 1) {
@@ -890,8 +898,9 @@ setMethod(
                   ", ", paste(list(...), collapse = ", "), ")"
                 )
     )
-    Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
-          outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
+    stop("")
+    # Cache(FUN = FUN, ..., notOlderThan = notOlderThan, .objects = objects,
+    #       outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
 })
 
 # .memoisedCacheFuns <- new.env(parent = asNamespace("reproducible"))
@@ -1149,11 +1158,14 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   # If arguments to FUN and Cache are identical, pass them through to FUN
   if (length(formalsInCallingAndFUN)) {
     formalsInCallingAndFUN <- grep("\\.\\.\\.", formalsInCallingAndFUN, value = TRUE, invert = TRUE)
-    commonArguments <- mget(formalsInCallingAndFUN, inherits = FALSE, envir = parent.frame())
-    if (isDoCall) {
-      modifiedDots$args[formalsInCallingAndFUN] <- commonArguments
-    } else {
-      modifiedDots[formalsInCallingAndFUN] <- commonArguments
+    commonArguments <- try(mget(formalsInCallingAndFUN, inherits = FALSE, envir = parent.frame()),
+                           silent = TRUE)
+    if (!is(commonArguments, "try-error")) {
+      if (isDoCall) {
+        modifiedDots$args[formalsInCallingAndFUN] <- commonArguments
+      } else {
+        modifiedDots[formalsInCallingAndFUN] <- commonArguments
+      }
     }
   }
   return(append(fnDetails, list(originalDots = originalDots, FUN = FUN, isPipe = isPipe,

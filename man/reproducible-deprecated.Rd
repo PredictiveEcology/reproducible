@@ -23,12 +23,6 @@ This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 
-\item{objects}{Character vector of objects to be digested. This is only applicable
-if there is a list, environment (or similar) named objects
-within it. Only this/these objects will be considered for caching,
-i.e., only use a subset of
-the list, environment or similar objects.}
-
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
