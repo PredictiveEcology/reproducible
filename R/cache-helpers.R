@@ -388,17 +388,22 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
       callIndices <- .grepSysCalls(scalls, pattern = paste0("^", overrideCall))
       functionCall <- scalls[callIndices]
     } else {
-      callIndices <- .grepSysCalls(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+      callIndices <- .grepSysCalls(scalls,
+        pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache|^cloudCache")
+      callIndicesDoCall <- .grepSysCalls(scalls, pattern = "^do.call")
+      doCall1st2Elements <- lapply(scalls[callIndicesDoCall], function(x) x[1:2])
+      callIndicesDoCall <- callIndicesDoCall[grep("Cache", doCall1st2Elements)]
       # The next line takes too long to grep if scalls has enormous objects
       # callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+      callIndices <- unique(sort(c(callIndices, callIndicesDoCall)))
       functionCall <- scalls[callIndices]
     }
     if (length(functionCall)) {
       # for() loop is a work around for R-devel that produces a different final call in the
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
-      for (callIndex in rev(callIndices)) {
+      for (callIndex in head(rev(callIndices), 2)) {
         if (!missing(overrideCall)) {
-          env <- sys.frames()[[callIndices]]
+          env <- sys.frames()[[callIndex]]
           matchedCall <- match.call(get(overrideCall, envir = env), scalls[[callIndex]])#parse(text = callIndex))
           forms <- tryCatch("FUN" %in% formalArgs(overrideCall), error = function(x) NULL)
           if (!is.null(forms)) {
@@ -407,11 +412,28 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
             functionName <- matchedCall[[2]]
           }
         } else {
-          matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
-          functionName <- matchedCall$FUN
+          foundCall <- FALSE
+          browser(expr = exists("aaaa"))
+          if (exists("callIndicesDoCall", inherits = FALSE))
+            if (length(callIndicesDoCall) > 0) {
+              if (callIndex %in% callIndicesDoCall) {
+                mcDoCall <- match.call(do.call, scalls[[callIndex]])
+                functionName <- eval(mcDoCall$args, envir = sys.frames()[[callIndex - 1]])$FUN
+                foundCall <- TRUE
+              }
+            }
+          if (!foundCall) {
+            matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
+            functionName <- matchedCall$FUN
+          }
         }
-        functionName <- deparse(functionName, width.cutoff = 300)
-        if (all(functionName != c("FUN"))) break
+        functionName <- if (is(functionName, "name")) {
+          deparse(functionName, width.cutoff = 300)
+        } else {
+          "FUN"
+        }
+
+        if (all(functionName != c("FUN")) && all(functionName != c("NULL"))) break
       }
     } else {
       functionName <- ""
