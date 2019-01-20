@@ -162,21 +162,21 @@ test_that("test memory backed raster robustDigest", {
   # Brick
   r <- raster(matrix(1:10, 2, 5))
   b <- brick(r, r)
-  dig <- reproducible:::.robustDigest(b)
+  dig <- .robustDigest(b)
 
   r1 <- raster(matrix(1:10, 2, 5))
   b1 <- brick(r1, r1)
-  dig1 <- reproducible:::.robustDigest(b1)
+  dig1 <- .robustDigest(b1)
 
   expect_identical(dig, dig1)
 
   b <- writeRaster(b, file = tmpfile[1], overwrite = TRUE)
-  dig <- reproducible:::.robustDigest(b)
+  dig <- .robustDigest(b)
 
   r <- raster(matrix(1:10, 2, 5))
   b <- brick(r, r)
   b <- writeRaster(b, file = tmpfile[1], overwrite = TRUE)
-  dig1 <- reproducible:::.robustDigest(b)
+  dig1 <- .robustDigest(b)
 
   expect_identical(dig, dig1)
 
@@ -184,24 +184,24 @@ test_that("test memory backed raster robustDigest", {
   dimA <- 100
   r <- raster(matrix(1:dimA, round(sqrt(dimA)), round(sqrt(dimA))))
   b <- raster::stack(r, r)
-  dig <- reproducible:::.robustDigest(b)
+  dig <- .robustDigest(b)
 
   r1 <- raster(matrix(1:dimA, round(sqrt(dimA)), round(sqrt(dimA))))
   b1 <- raster::stack(r1, r1)
-  dig1 <- reproducible:::.robustDigest(b1)
+  dig1 <- .robustDigest(b1)
 
   expect_identical(dig, dig1)
 
   r4 <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
   r5 <- writeRaster(r, file = tmpfile[2], overwrite = TRUE)
   b <- raster::stack(r4, r5)
-  dig <- reproducible:::.robustDigest(b)
+  dig <- .robustDigest(b)
 
   r2 <- writeRaster(r1, file = tmpfile[1], overwrite = TRUE)
   r3 <- writeRaster(r1, file = tmpfile[2], overwrite = TRUE)
   b1 <- raster::stack(r2, r3)
   #b1 <- writeRaster(b1, file = tmpfile[1], overwrite = TRUE)
-  dig1 <- reproducible:::.robustDigest(b1)
+  dig1 <- .robustDigest(b1)
 
   expect_identical(dig, dig1)
 })

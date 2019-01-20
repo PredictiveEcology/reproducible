@@ -9,6 +9,11 @@ CacheDigest(objsToDigest, algo = "xxhash64", ...)
 \arguments{
 \item{objsToDigest}{A list of all the objects (e.g., arguments) to be digested}
 
+\item{algo}{The algorithms to be used; currently available choices are
+    \code{md5}, which is also the default, \code{sha1}, \code{crc32},
+    \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64} and
+    \code{murmur32}.}
+
 \item{...}{passed to \code{.robustDigest}; this is generally empty except
 for advanced use.}
 }

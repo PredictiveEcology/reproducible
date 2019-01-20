@@ -503,7 +503,8 @@ setMethod(
       preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
 
       if (verbose > 1) {
-        a <- .CacheVerboseFn1(preDigest, preDigestUnlist, fnDetails,
+        preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
+        a <- .CacheVerboseFn1(preDigestUnlist, fnDetails,
                          startHashTime, modifiedDots, dotPipe, quick = quick)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
@@ -1201,6 +1202,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #' @param ... passed to \code{.robustDigest}; this is generally empty except
 #'    for advanced use.
 #' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
+#' @inheritParams Cache
 #'
 #' @return
 #' A list of length 2 with the \code{outputHash}, which is the digest

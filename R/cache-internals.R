@@ -1,6 +1,5 @@
-.CacheVerboseFn1 <- function(preDigest, preDigestUnlist, fnDetails,
+.CacheVerboseFn1 <- function(preDigestUnlist, fnDetails,
                              startHashTime, modifiedDots, dotPipe, quick) {
-  preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
   endHashTime <- Sys.time()
   verboseDF <- data.frame(
     functionName = fnDetails$functionName,
@@ -129,7 +128,7 @@
 }
 
 
-.CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, ...) {
+.CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN, ...) {
   message("sideEffect argument is poorly tested. It may not function as desired")
   needDwd <- logical(0)
   fromCopy <- character(0)
@@ -303,7 +302,7 @@
 
   if (sideEffect != FALSE) {
     #if(isTRUE(sideEffect)) {
-    .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, ...)
+    .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, ...)
   }
 
   # This allows for any class specific things
