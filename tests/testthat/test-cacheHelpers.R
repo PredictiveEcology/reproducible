@@ -87,10 +87,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   aa <- Cache(rnorm, thing, debugCache = "quick", cacheRepo = tmpCache)
   expect_true(identical(.robustDigest(thing), aa$hash$n))
   expect_true(identical(thing, aa$content[[1]]))
-
   ## cache -- deprecated
-  aMess <- capture_warnings(a <- reproducible::cache(cacheRepo = tmpCache, rnorm, 1))
-  expect_true(grepl("deprecated", aMess))
+  # aMess <- capture_warnings(a <- reproducible::cache(cacheRepo = tmpCache, rnorm, 1))
+  # expect_true(grepl("deprecated", aMess))
 
   ## .unlistToCharacter
   expect_true(grepl("not list", unlist(.unlistToCharacter(1, 1))))
