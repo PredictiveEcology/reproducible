@@ -886,6 +886,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @rdname cacheHelper
 #' @importFrom methods slotNames
 #' @importFrom digest digest
+#' @importFrom fastdigest fastdigest
 #' @importFrom raster res crs extent
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
@@ -894,9 +895,14 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   sn <- sn[!(sn %in% c("min", "max", "haveminmax", "names", "isfactor",
                        "dropped", "nlayers", "fromdisk", "inmemory", "offset", "gain"))]
   dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
-  dig <- digest(append(list(dim(object), res(object), crs(object),
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig <- digest(append(list(dim(object), res(object), crs(object),
                          extent(object)), dataSlotsToDigest),
                 algo = algo) # don't include object@data -- these are volatile
+  else
+    dig <- fastdigest(append(list(dim(object), res(object), crs(object),
+                              extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
+
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
     filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
@@ -908,7 +914,12 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
     dig <- c(dig, dig2)
   }
-  dig <- digest(dig, algo = algo)
+
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig <- digest(dig, algo = algo)
+  else
+    dig <- fastdigest(dig)
+  dig
 }
 
 #' Recursive copying of nested environments, and other "hard to copy" objects

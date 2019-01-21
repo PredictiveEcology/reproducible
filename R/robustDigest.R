@@ -54,6 +54,7 @@
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
+#' @importFrom fastdigest fastdigest
 #' @keywords internal
 #' @rdname robustDigest
 #' @examples
@@ -116,7 +117,10 @@ setMethod(
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
-    digest(object, algo = algo)
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digest(object, algo = algo)
+    else
+      fastdigest(object)
 })
 
 #' @import parallel
@@ -130,7 +134,10 @@ setMethod(
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     #object <- .removeCacheAtts(object)
-    digest(NULL, algo = algo)
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digest(NULL, algo = algo)
+    else
+      fastdigest(NULL)
 })
 
 #' @rdname robustDigest
@@ -140,8 +147,7 @@ setMethod(
   signature = "function",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    object <- .removeCacheAtts(object)
-    digest(format(object), algo = algo)
+    .robustDigestFormatOnly(object, algo)
 })
 
 #' @rdname robustDigest
@@ -151,9 +157,8 @@ setMethod(
   signature = "expression",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    object <- .removeCacheAtts(object)
-    digest(format(object), algo = algo)
-})
+    .robustDigestFormatOnly(object, algo)
+  })
 
 #' @rdname robustDigest
 #' @export
@@ -168,18 +173,30 @@ setMethod(
       if (any(unlist(lapply(object, file.exists)))) {
         unlist(lapply(object, function(x) {
           if (dir.exists(x)) {
-            digest(basename(x), algo = algo)
+            if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+              digest(basename(x), algo = algo)
+            else
+              fastdigest(basename(x))
           } else if (file.exists(x)) {
-            digest::digest(file = x, length = length, algo = algo)
+              digest(file = x, length = length, algo = algo)
           } else {
-            digest(x, algo = algo)
+            if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+              digest(x, algo = algo)
+            else
+              fastdigest(x)
           }
         }))
       } else {
-        digest(object, algo = algo)
+        if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+          digest(object, algo = algo)
+        else
+          fastdigest(object)
       }
     } else {
-      digest(object, algo = algo)
+      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+        digest(object, algo = algo)
+      else
+        fastdigest(object)
     }
 })
 
@@ -205,13 +222,17 @@ setMethod(
           digest::digest(file = x, length = length, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          digest(.basenames(x, nParentDirs), algo = algo)
-          #fastdigest(.basenames(x, nParentDirs))
+          if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+            digest(.basenames(x, nParentDirs), algo = algo)
+          else
+            fastdigest(.basenames(x, nParentDirs))
         }
       })
     } else {
-      digest(.basenames(object, nParentDirs), algo = algo)
-      # fastdigest(.basenames(object, nParentDirs))
+      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+        digest(.basenames(object, nParentDirs), algo = algo)
+      else
+        fastdigest(.basenames(object, nParentDirs))
     }
 })
 
@@ -252,8 +273,10 @@ setMethod(
                         classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    digest(object, algo = algo)
-    #fastdigest(object)
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digest(object, algo = algo)
+    else
+      fastdigest(object)
   })
 
 
@@ -306,8 +329,11 @@ setMethod(
       }
     }
 
-    # return(fastdigest(aaa))
-    digest(aaa, algo = algo)
+    #
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digest(aaa, algo = algo)
+    else
+      fastdigest(aaa)
 })
 
 .basenames <- function(object, nParentDirs) {
@@ -334,4 +360,13 @@ setMethod(
   setattr(x, ".Cache", NULL)
   setattr(x, "call", NULL)
   x
+}
+
+.robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
+                               classOptions) {
+  object <- .removeCacheAtts(object)
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    digest(format(object), algo = algo)
+  else
+    fastdigest(format(object))
 }

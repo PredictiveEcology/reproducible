@@ -939,11 +939,12 @@ unmakeMemoiseable.default <- function(x) {
 }
 
 #' @inheritParams archivist showLocalRepo
-showLocalRepo2 <- function(repoDir) {
+#' @importFrom fastdigest fastdigest
+showLocalRepo2 <- function(repoDir, algo = "xxhash64") {
   #if (requireNamespace("future"))
   #  checkFutures() # will pause until all futures are done
   aa <- showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
-  dig <- digest(aa$md5hash)
+  dig <- fastdigest(aa$md5hash) # this is only on local computer, don't use digest::digest; too slow
   bb <- showLocalRepo3Mem(repoDir, dig)
   return(bb)
 }
@@ -1169,6 +1170,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #'    for advanced use.
 #' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
 #' @inheritParams Cache
+#' @importFrom fastdigest fastdigest
 #'
 #' @return
 #' A list of length 2 with the \code{outputHash}, which is the digest
@@ -1204,7 +1206,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", ...) {
                                   "\n  but irrelevant changes (like changing the order of arguments).",
                                   "\n  To start using this new algorithm now, set ",
                                   "\n  options('reproducible.useNewDigestAlgorithm' = TRUE)")))
-    .robustDigest(unlist(preDigest), algo = algo, ...)
+    fastdigest(preDigest)
   }
   list(outputHash = res, preDigest = preDigest)
 }

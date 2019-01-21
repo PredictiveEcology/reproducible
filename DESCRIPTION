@@ -37,6 +37,7 @@ Imports:
     data.table (>= 1.10.4),
     digest,
     dplyr,
+    fastdigest,
     fasterize,
     fpCompare,
     gdalUtils,
