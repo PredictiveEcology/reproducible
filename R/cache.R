@@ -510,7 +510,8 @@ setMethod(
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
           print(.reproEnv$verboseTiming)
           message("This object is also available from .reproEnv$cacheTimings")
-          rm("verboseTiming", envir = .reproEnv)
+          if (exists("verboseTiming", envir = .reproEnv))
+            rm("verboseTiming", envir = .reproEnv)
         },
         add = TRUE)
       }
@@ -636,7 +637,6 @@ setMethod(
         output <- FUN(...) #do.call(FUN, fnDetails$originalDots)
       }
 
-      browser(expr = exists("aaaa"))
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
                                 .objects = outputObjects, length = length,
                                 algo = algo, quick = quick, classOptions = classOptions, ...)

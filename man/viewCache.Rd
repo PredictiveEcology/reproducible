@@ -30,7 +30,9 @@ keepCache(x, userTags = character(), after, before,
   ask = getOption("reproducible.ask"), ...)
 }
 \arguments{
-\item{x}{A simList or a directory containing a valid archivist repository}
+\item{x}{A simList or a directory containing a valid archivist repository. Note:
+For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
+used instead of \code{x}, though \code{x} will take precedence.}
 
 \item{userTags}{Character vector. If used, this will be used in place of the
                 \code{after} and \code{before}.

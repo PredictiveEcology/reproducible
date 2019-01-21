@@ -413,7 +413,6 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
           }
         } else {
           foundCall <- FALSE
-          browser(expr = exists("aaaa"))
           if (exists("callIndicesDoCall", inherits = FALSE))
             if (length(callIndicesDoCall) > 0) {
               if (callIndex %in% callIndicesDoCall) {
