@@ -147,7 +147,7 @@ setMethod(
   signature = "function",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    .robustDigestFormatOnly(object, algo)
+    .robustDigestFormatOnly(object, algo = algo)
 })
 
 #' @rdname robustDigest
@@ -157,7 +157,7 @@ setMethod(
   signature = "expression",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    .robustDigestFormatOnly(object, algo)
+    .robustDigestFormatOnly(object, algo = algo)
   })
 
 #' @rdname robustDigest

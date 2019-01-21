@@ -1193,7 +1193,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", ...) {
       # attr(x, ".Cache")$newCache <- NULL
       if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
     }
-    .robustDigest(x, ...)
+    .robustDigest(x, algo = algo, ...)
   })
 
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
