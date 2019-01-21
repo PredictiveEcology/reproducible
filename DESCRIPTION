@@ -92,6 +92,7 @@ Collate:
     'git.R'
     'helpers.R'
     'objectSize.R'
+    'options.R'
     'packages.R'
     'pipe.R'
     'postProcess.R'

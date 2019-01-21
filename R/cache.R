@@ -1199,13 +1199,6 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", ...) {
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
   } else {
-    warnonce("useNewDigestAlgorithm",
-             simpleWarning(paste0("'reproducible' will soon change the default digest algorithm.",
-                                  "\n  This will mean that Cache values will change for the same",
-                                  "\n  call. This change will make Cache less sensitive to minor",
-                                  "\n  but irrelevant changes (like changing the order of arguments).",
-                                  "\n  To start using this new algorithm now, set ",
-                                  "\n  options('reproducible.useNewDigestAlgorithm' = TRUE)")))
     fastdigest(preDigest)
   }
   list(outputHash = res, preDigest = preDigest)
