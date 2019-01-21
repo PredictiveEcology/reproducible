@@ -238,14 +238,20 @@
 
     result <- withVisible(do.call("Cache", args))
 
-    if (getFromNamespace("is_compound_pipe", ns = "magrittr")(pipes[[1L]])) {
-      eval(call("<-", lhs, result[["value"]]), parent, parent)
-    } else {
-      if (result[["visible"]])
-        result[["value"]]
-      else
-        invisible(result[["value"]])
+    cmpdPipe <- FALSE
+    if (length(pipes) > 0) {
+      if (identical(pipes[[1L]], quote(`%<>%`)))
+        cmpdPipe <- TRUE
     }
+
+     if (cmpdPipe) {
+       ret <- eval(call("<-", lhs, result[["value"]]), parent, parent)
+     } else {
+      if (result[["visible"]])
+        ret <- result[["value"]]
+      else
+        ret <- invisible(result[["value"]])
+     }
   }
 }
 
