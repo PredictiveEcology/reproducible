@@ -577,6 +577,7 @@ setGeneric("clearStubArtifacts", function(repoDir = NULL) {
 
 #' @export
 #' @rdname clearStubArtifacts
+#' @importFrom magrittr %>%
 setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
