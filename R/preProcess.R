@@ -271,7 +271,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
 
-  # Stage 1 -- Download
+  ###############################################################
+  # Download
+  ###############################################################
   downloadFileResult <- downloadFile(
     archive = archive,
     targetFile = targetFile,
@@ -284,73 +286,31 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checksumFile = asPath(checkSumFilePath),
     needChecksums = needChecksums,
     overwrite = overwrite,
-    purge = purge, # may need to try purging again if no target, archive or alsoExtract were known yet
+    purge = purge, # may need to try purging again if no target,
+                   #    archive or alsoExtract were known yet
     ...
-  )#, moduleName = moduleName, modulePath = modulePath)
-  if (!is.null(downloadFileResult$downloaded) &&
-      file_ext(normPath(.basename(downloadFileResult$downloaded))) == "") {
-    if (!is.null(targetFile) && file_ext(normPath(.basename(downloadFileResult$neededFiles))) != "") {
-      if (is.null(archive)) {
-        message(
-          "Downloaded file has no extension: targetFile is provided, but archive is not. \n",
-          " downloaded file will be considered as the targetFile. If the downloaded file is an archive\n",
-          " that contains the targetFile, please specify both archive and targetFile."
-        )
-        invisible(file.rename(
-          from = file.path(normPath(downloadFileResult$downloaded)),
-          to = file.path(normPath(dirname(downloadFileResult$downloaded)),
-                         downloadFileResult$neededFiles)))
-        downloadFileResult$downloaded <- downloadFileResult$archive
-      } else {
-        message(
-          "Downloaded file has no extension: both targetFile and archive are provided. \n",
-          " downloaded file will be considered as the archive."
-        )
-        invisible(file.rename(
-          from = file.path(normPath(downloadFileResult$downloaded)),
-          to = file.path(normPath(downloadFileResult$archive))))
-        downloadFileResult$downloaded <- downloadFileResult$archive
-      }
-    } else {
-      if (!is.null(archive)) {
-        message(
-          "Downloaded file has no extension: archive is provided. \n",
-          " downloaded file will be considered as the archive.")
-        downloadFileResult$neededFiles <- .basename(archive)
-        invisible(file.rename(
-          from = file.path(normPath(downloadFileResult$downloaded)),
-          to = file.path(normPath(dirname(downloadFileResult$downloaded)),
-                         downloadFileResult$neededFiles)))
-        downloadFileResult$downloaded <- downloadFileResult$archive
-      } else {
-        message(
-          "Downloaded file has no extension: neither archive nor targetFile are provided. \n",
-          "prepInputs will try accessing the file type.")
-        fileExt <- .guessFileExtension(file = file.path(normPath(downloadFileResult$downloaded)))
-        if (is.null(fileExt)) {
-          message("The file was not recognized by prepInputs.", "Will assume the file is an archive and add '.zip' extension.",
-          "If this is incorrect or return error, please supply archive or targetFile")
-          fileExt <- ".zip"
-        }
-        downloadFileResult$archive <- file.path(normPath(destinationPath),
-                                                paste0(downloadFileResult$neededFiles, fileExt))
-        invisible(file.rename(
-          from = file.path(normPath(downloadFileResult$downloaded)),
-          to = normPath(downloadFileResult$archive)))
-        downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)
-        downloadFileResult$downloaded <- downloadFileResult$archive
-        targetFilePath <- file.path(normPath(destinationPath), downloadFileResult$neededFiles)
-      }
-    }
-  }
+  )
+
+  downloadFileResult <- .fixNoFileExtension(downloadFileResult = downloadFileResult,
+                      targetFile = targetFile, archive = archive,
+                      destinationPath = destinationPath)
+
+  # Post downloadFile -- put objects into this environment
+  if (!is.null(downloadFileResult$targetFilePath))
+    targetFilePath <- file.path(normPath(destinationPath), downloadFileResult$neededFiles)
   checkSums <- downloadFileResult$checkSums
   needChecksums <- downloadFileResult$needChecksums
   neededFiles <- downloadFileResult$neededFiles
-
+  # If the download was of an archive, then it is possible the archive path is wrong
+  if (identical(.basename(downloadFileResult$downloaded),
+                .basename(downloadFileResult$archive)))
+    archive <- downloadFileResult$downloaded
   # archive specified, alsoExtract is NULL --> now means will extract all
   if (is.null(archive)) archive <- downloadFileResult$archive
 
+  ###############################################################
   # redo "similar" after download
+  ###############################################################
   outFromSimilar <- .checkForSimilar(neededFiles = neededFiles, alsoExtract = alsoExtract,
                                      archive = archive, targetFile = targetFile,
                                      destinationPath = destinationPath, checkSums = checkSums,
@@ -956,4 +916,72 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
     fileExt <- .decodeMagicNumber(magicNumberString = magicNumber)
     return(fileExt)
   }
+}
+
+
+.fixNoFileExtension <- function(downloadFileResult, targetFile, archive,
+                                destinationPath) {
+  if (!is.null(downloadFileResult$downloaded) &&
+      file_ext(normPath(.basename(downloadFileResult$downloaded))) == "") {
+    if (!is.null(targetFile) && file_ext(normPath(.basename(downloadFileResult$neededFiles))) != "") {
+      if (is.null(archive)) {
+        message(
+          "Downloaded file has no extension: targetFile is provided, but archive is not. \n",
+          " downloaded file will be considered as the targetFile. If the downloaded file is an archive\n",
+          " that contains the targetFile, please specify both archive and targetFile."
+        )
+        newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
+                                          downloadFileResult$neededFiles)
+        invisible(file.rename(
+          from = file.path(normPath(downloadFileResult$downloaded)),
+          to = newFileWithExtension))
+        downloadFileResult$downloaded <- newFileWithExtension
+      } else {
+        message(
+          "Downloaded file has no extension: both targetFile and archive are provided. \n",
+          " downloaded file will be considered as the archive."
+        )
+        newFileWithExtension <- normPath(file.path(dirname(downloadFileResult$downloaded),
+                                                   .basename(downloadFileResult$archive)))
+        invisible(file.rename(
+          from = file.path(normPath(downloadFileResult$downloaded)),
+          to = newFileWithExtension))
+        downloadFileResult$downloaded <- newFileWithExtension
+      }
+    } else {
+      if (!is.null(archive)) {
+        message(
+          "Downloaded file has no extension: archive is provided. \n",
+          " downloaded file will be considered as the archive.")
+        downloadFileResult$neededFiles <- .basename(archive)
+        newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
+                                           downloadFileResult$neededFiles)
+        invisible(file.rename(
+          from = file.path(normPath(downloadFileResult$downloaded)),
+          to = newFileWithExtension))
+        downloadFileResult$downloaded <- newFileWithExtension
+      } else {
+        message(
+          "Downloaded file has no extension: neither archive nor targetFile are provided. \n",
+          "prepInputs will try accessing the file type.")
+        fileExt <- .guessFileExtension(file = file.path(normPath(downloadFileResult$downloaded)))
+        if (is.null(fileExt)) {
+          message("The file was not recognized by prepInputs.", "Will assume the file is an archive and add '.zip' extension.",
+                  "If this is incorrect or return error, please supply archive or targetFile")
+          fileExt <- ".zip"
+        }
+        downloadFileResult$archive <- file.path(normPath(destinationPath),
+                                                paste0(downloadFileResult$neededFiles, fileExt))
+        invisible(file.rename(
+          from = file.path(normPath(downloadFileResult$downloaded)),
+          to = normPath(downloadFileResult$archive)))
+        downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)
+        downloadFileResult$downloaded <- downloadFileResult$archive
+        downloadFileResult$targetFilePath <- file.path(normPath(destinationPath), downloadFileResult$neededFiles)
+
+      }
+    }
+  }
+  downloadFileResult
+
 }
