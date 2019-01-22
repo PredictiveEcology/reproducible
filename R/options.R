@@ -14,7 +14,7 @@
 #'
 #' The following options are likely of interest to most users
 #' \tabular{lcl}{
-#'   \code{\emph{OPTION}} \tab \emph{DEFAULT VALUE} \tab \emph{DESCRIPTION} \cr
+#'   \emph{OPTION} \tab \emph{DEFAULT VALUE} \tab \emph{DESCRIPTION} \cr
 #'   \code{ask} \tab \code{TRUE} \tab Used in \code{\link{clearCache}} and
 #'                                    \code{\link{keepCache}}\cr
 #'   \code{cachePath} \tab \code{.reproducibleTempCacheDir}
