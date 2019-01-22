@@ -108,7 +108,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     2
   }
 
-  try(silent = TRUE, clearCache(tmpCache))
+  try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
   bMess <- capture_output(aMess <- capture_messages(aa <- Cache(fn, 1, verbose = 2, cacheRepo = tmpCache)))
   expect_true(any(grepl("fn1", bMess))) # TODO: fix this;
   expect_true(any(grepl("The hashing details", aMess)))

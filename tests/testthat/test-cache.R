@@ -787,7 +787,7 @@ test_that("test rm large non-file-backed rasters", {
     testOnExit(testInitOut)
   }, add = TRUE)
   st0 <- system.time(r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1, userTags = "first"))
-  st1 <- system.time(clearCache(userTags = "first"))
+  st1 <- system.time(clearCache(userTags = "first", ask = FALSE))
   expect_true(st1["elapsed"] < 0.75) # This was > 2 seconds in old way
 })
 

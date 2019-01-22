@@ -143,7 +143,7 @@ ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # keep only those cached items from the last 24 hours
 oneDay <- 60 * 60 * 24
-keepCache(tmpDir, after = Sys.time() - oneDay)
+keepCache(tmpDir, after = Sys.time() - oneDay, ask = FALSE)
 
 # Keep all Cache items created with an rnorm() call
 keepCache(tmpDir, userTags = "rnorm", ask = FALSE)
@@ -241,7 +241,7 @@ showCache(tmpdir2) # 1 function call
 
 # userTags get appended
 # all items have the outer tag propagate, plus inner ones only have inner ones
-clearCache(tmpdir1)
+clearCache(tmpdir1, ask = FALSE)
 outerTag <- "outerTag"
 innerTag <- "innerTag"
 inner <- function(mean) {

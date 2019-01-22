@@ -932,7 +932,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     utils::assignInMyNamespace(".unrarPath", hasUnrar) # assign in namespace for package
   }
   if (is.null(hasUnrar)) {
-    clearCache(userTags = usrTg)
+    clearCache(userTags = usrTg, ask = FALSE)
     stop(
       "prepInputs did not find '7-Zip' nor 'unrar' installed.",
       " Please install it before running prepInputs for a '.rar' archive"

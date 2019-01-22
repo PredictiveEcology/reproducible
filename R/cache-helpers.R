@@ -568,7 +568,7 @@ setAs(from = "character", to = "Path", function(from) {
 #' showCache(tmpDir) # stubs are removed
 #'
 #' # cleanup
-#' clearCache(tmpDir)
+#' clearCache(tmpDir, ask = FALSE)
 #' unlink(tmpDir, recursive = TRUE)
 #'
 setGeneric("clearStubArtifacts", function(repoDir = NULL) {

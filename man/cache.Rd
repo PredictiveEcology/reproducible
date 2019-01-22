@@ -148,7 +148,9 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
-Still experimental and may change.
+Still experimental and may change. This form cannot pass any arguments to
+]code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
+it is a clean alternative for simple cases.
 }
 \details{
 Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
