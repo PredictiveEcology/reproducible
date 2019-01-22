@@ -5,7 +5,7 @@
 \title{Basic tool for using cloud-based caching}
 \usage{
 cloudWrite(object, digest, cloudFolderID = NULL, checksums,
-  checksumsFileID)
+  checksumsFileID, futurePlan = getOption("reproducible.futurePlan"))
 }
 \arguments{
 \item{object}{The R object to write to cloud}
