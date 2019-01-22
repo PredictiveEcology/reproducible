@@ -25,7 +25,6 @@
 #' @importFrom utils getFromNamespace
 #' @importFrom magrittr freduce
 #' @name pipe
-#' @seealso pipe2
 #' @rdname pipe
 #'
 #' @examples
@@ -174,7 +173,9 @@
   }
 }
 
-#' The special assign operator \code{\%<\%} is equivalent to Cache. See examples at the end.
+#' The special assign operator \code{\%<C-\%} is equivalent to Cache. See examples at the end.
+#'
+#' Still experimental and may change.
 #'
 #' @export
 #' @rdname cache

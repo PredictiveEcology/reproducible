@@ -148,9 +148,7 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
-Cache method that accommodates environments, S4 methods, Rasters, & nested caching
-
-The special assign operator \code{\%<\%} is equivalent to Cache. See examples at the end.
+Still experimental and may change.
 }
 \details{
 Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
