@@ -569,38 +569,6 @@ test_that("test multiple pipe Cache calls", {
   expect_length(mess, 1)
 })
 
-test_that("test masking of %>% error message", {
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  mess <- capture_messages(library(magrittr))
-  on.exit(detach("package:magrittr"), add = TRUE)
-
-  expect_length(grep("package:reproducible", mess, value = TRUE), 1)
-
-  srch <- search()
-  whereRepro <- which(endsWith(srch, "reproducible")) - 1
-  if (whereRepro > 1) {
-    srchNum <- seq_len(whereRepro)
-    for (sr in srchNum) {
-      masker <- exists("%>%", srch[sr], inherits = FALSE)
-      if (masker) break
-    }
-  }
-  expect_true(masker)
-  if (isInteractive()) {
-    # somehow, in a non-interactive session, R is finding reproducible::`%>%`
-    # even though it is after magrittr on the search path -- somehow reproducible is
-    # being kept on top... i.e,. overriding search()
-    expect_silent(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
-    detach("package:magrittr")
-    mess <- capture_messages(a <- rnorm(10) %>% Cache(cacheRepo = tmpdir))
-    expect_true(all(grepl("loading cached result from previous", mess)))
-  }
-})
-
 test_that("test Cache argument inheritance to inner functions", {
   testInitOut <- testInit("raster")
   on.exit({
