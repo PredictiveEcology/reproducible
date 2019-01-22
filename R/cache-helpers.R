@@ -417,7 +417,16 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
             if (length(callIndicesDoCall) > 0) {
               if (callIndex %in% callIndicesDoCall) {
                 mcDoCall <- match.call(do.call, scalls[[callIndex]])
-                functionName <- eval(mcDoCall$args, envir = sys.frames()[[callIndex - 1]])$FUN
+                for (i in 1:2) {
+                  fnLookup <- try(eval(mcDoCall$args, envir = sys.frames()[[callIndex - i]]), silent = TRUE)
+                  if (!is(fnLookup, "try-error"))
+                    break
+                }
+                functionName <- if (isTRUE("FUN" %in% names(fnLookup)))
+                  fnLookup$FUN
+                else
+                  fnLookup[[1]]
+
                 foundCall <- TRUE
               }
             }
