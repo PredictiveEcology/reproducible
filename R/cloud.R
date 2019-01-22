@@ -60,7 +60,8 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
 #' @importFrom data.table data.table rbindlist
 #' @importFrom googledrive as_id drive_update drive_upload
 #' @seealso \code{\link{cloudSyncCache}}, \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
-cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID) {
+cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID,
+                       futurePlan = getOption("reproducible.futurePlan")) {
   if (!is.null(cloudFolderID)) {
     objectFile <- tempfile(fileext = ".rda")
     save(object, file = objectFile)
@@ -68,14 +69,14 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
     os <- tolower(Sys.info()[["sysname"]])
     .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux" &&
       requireNamespace("future", quietly = TRUE) &&
-      !isFALSE(getOption("reproducible.futurePlan"))
+      !isFALSE(futurePlan)
     a <- file.size(objectFile)
     class(a) <- "object_size"
     msgUpload <-   paste0("  uploading file (", format(a, "auto"),") to google drive")
     if (.onLinux) {
       curPlan <- future::plan()
       if (is(curPlan, "sequential"))
-        future::plan(getOption("reproducible.futurePlan", "multiprocess"))
+        future::plan(futurePlan)
       message(msgUpload, " in a 'future'")
       future::futureAssign("cloudCheckSums", assign.env = .reproEnv,
                            cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
