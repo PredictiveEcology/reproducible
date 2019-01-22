@@ -17,6 +17,7 @@ STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
 }
 \examples{
 
+library(magrittr) # standard pipe
 # dontrun{ # these can't be automatically run due to package conflicts with magrittr
 tmpdir <- file.path(tempdir(), "testCache")
 checkPath(tmpdir, create = TRUE)

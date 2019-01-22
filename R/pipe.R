@@ -29,6 +29,7 @@
 #'
 #' @examples
 #'
+#' library(magrittr) # standard pipe
 #' # dontrun{ # these can't be automatically run due to package conflicts with magrittr
 #' tmpdir <- file.path(tempdir(), "testCache")
 #' checkPath(tmpdir, create = TRUE)
@@ -111,7 +112,7 @@
   mc <- mcs[whPipeCall][[1]]
   maxNumPipes <- 1e3
   numPipes <- maxNumPipes
-  if (length(mcs) > 1) {
+  if (sum(whPipeCall) > 1) {
     randStr <- "trwertrw"
     mc1 <- gsub(mc, pattern = "%C%", replacement = randStr)
     mc1Coll <- strsplit(paste0(mc1, collapse = " "), randStr)[[1]]
@@ -143,7 +144,7 @@
   } else {
     # reproducible package code here until end of if statement
     cacheCall <- match.call(Cache, chain_parts[["lhs"]])
-    cacheArgs <- lapply(cacheCall, function(x) x)
+    cacheArgs <- lapply(cacheCall, function(x) x)[-1]
     #rhss[[1]] <- rhss[[1]][-2]
 
     args <- list(eval(lhs[[1]]),
@@ -175,7 +176,9 @@
 
 #' The special assign operator \code{\%<C-\%} is equivalent to Cache. See examples at the end.
 #'
-#' Still experimental and may change.
+#' Still experimental and may change. This form cannot pass any arguments to
+#' ]code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
+#' it is a clean alternative for simple cases.
 #'
 #' @export
 #' @rdname cache

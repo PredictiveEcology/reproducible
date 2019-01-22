@@ -435,28 +435,26 @@ test_that("test wrong ways of calling Cache", {
 })
 
 test_that("test pipe for Cache", {
-  skip_on_cran()
-  skip_on_travis()
-  skip("Not possible to test automatically ... testthat now exports pipe")
-  testInitOut <- testInit("raster", tmpFileExt = ".pdf")
+  testInitOut <- testInit(c("raster", "magrittr"), tmpFileExt = ".pdf")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
   a <- rnorm(10, 16) %>% mean() %>% prod(., 6) # nolint
-  b <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
-  d <- rnorm(10, 16) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
+  b <- Cache(cacheRepo = tmpdir) %>% rnorm(10, 16) %>% mean() %C% prod(., 6) # nolint
+  d <- Cache(cacheRepo = tmpdir) %>% rnorm(10, 16) %>% mean() %C% prod(., 6)  # nolint
   expect_true(all.equalWONewCache(b, d))
   expect_false(isTRUE(all.equalWONewCache(a, b)))
-  d1 <- rnorm(10, 6) %>% mean() %>% prod(., 6) %>% Cache(cacheRepo = tmpdir) # nolint
+  d1 <- Cache(cacheRepo = tmpdir) %>% rnorm(10, 6) %>% mean() %C% prod(., 6)  # nolint
   expect_false(isTRUE(all.equalWONewCache(d1, d)))
 
-  d1 <- rnorm(10, 16) %>% mean() %>% prod(., 16) %>% Cache(cacheRepo = tmpdir) # nolint
+  d1 <- Cache(cacheRepo = tmpdir) %>% rnorm(10, 16) %>% mean() %C% prod(., 16)  # nolint
   expect_false(isTRUE(all.equalWONewCache(d1, d)))
 
-  d2 <- rnorm(10, 16) %>%
-    mean() %>%
-    prod(., 16) %>%
-    Cache(cacheRepo = tmpdir, notOlderThan = Sys.time())
+  d2 <- Cache(cacheRepo = tmpdir, notOlderThan = Sys.time()) %>%
+    rnorm(10, 16) %>%
+    mean() %C%
+    prod(., 16)
+
   expect_false(isTRUE(all.equalWONewCache(d1, d2)))
 
   # New Pipe
@@ -489,7 +487,7 @@ test_that("test pipe for Cache", {
 })
 
 test_that("test quoted FUN in Cache", {
-  testInitOut <- testInit()
+  testInitOut <- testInit("magrittr")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -500,7 +498,7 @@ test_that("test quoted FUN in Cache", {
   B <- Cache(rnorm, 10, 16, cacheRepo = tmpdir) # nolint
   C <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpdir) # nolint
 
-  D <- try(rnorm(10, 16) %>% Cache(cacheRepo = tmpdir), silent = TRUE) # nolint
+  D <- try(Cache(cacheRepo = tmpdir) %>% rnorm(10, 16) , silent = TRUE) # nolint
 
   expect_true(all.equalWONewCache(A,B))
   expect_true(all.equalWONewCache(A, C))
@@ -508,66 +506,6 @@ test_that("test quoted FUN in Cache", {
     expect_true(all.equalWONewCache(A, D))
 })
 
-test_that("test multiple pipe Cache calls", {
-  skip("Impossible to test automatically, testthat now exports %>%")
-  testInitOut <- testInit()
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  d <- list()
-  mess <- list()
-  for (i in 1:2) {
-    mess[[i]] <- capture_messages(d[[i]] <- rnorm(10, 16) %>%
-                                    mean() %>%
-                                    Cache(cacheRepo = tmpdir) %>%
-                                    prod(., 6) %>%
-                                    Cache(cacheRepo = tmpdir) %>%
-                                    runif(4, 0, .) %>%
-                                    Cache(cacheRepo = tmpdir))
-  }
-
-  expect_true(all.equalWONewCache(d[[1]], d[[2]]))
-  expect_true(length(mess[[1]]) == 0)
-  expect_true(length(mess[[2]]) == 3)
-
-  # Removed last step and Cache
-  mess <- capture_messages(
-    b <- rnorm(10, 16) %>%
-      mean() %>%
-      Cache(cacheRepo = tmpdir) %>%
-      prod(., 6) %>%
-      Cache(cacheRepo = tmpdir))
-  expect_true(NROW(mess) == 2)
-
-  # Removed last several steps
-  mess <- capture_messages(
-    b <- rnorm(10, 16) %>%
-      mean() %>%
-      Cache(cacheRepo = tmpdir))
-  expect_true(NROW(mess) == 1)
-
-  # Changed intermediate step
-  mess <- capture_messages(rnorm(10, 16) %>%
-                             mean() %>%
-                             Cache(cacheRepo = tmpdir) %>%
-                             prod(., 16) %>%
-                             Cache(cacheRepo = tmpdir) %>%
-                             runif(4, 0, .) %>%
-                             Cache(cacheRepo = tmpdir)
-  )
-  expect_true(NROW(mess) == 1)
-
-  # Removed intermediate Cache
-  mess <- capture_messages(rnorm(10, 16) %>%
-                             mean() %>%
-                             Cache(cacheRepo = tmpdir) %>%
-                             prod(., 6) %>%
-                             runif(4, 0, .) %>%
-                             Cache(cacheRepo = tmpdir)
-  )
-  expect_length(mess, 1)
-})
 
 test_that("test Cache argument inheritance to inner functions", {
   testInitOut <- testInit("raster")

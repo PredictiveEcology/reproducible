@@ -67,6 +67,7 @@
     paste0("'", ., "' pipe sequence")
 
   fnDetails$functionName <- pipeFns
+
   if (is.function(FUN)) {
     firstCall <- match.call(FUN, modifiedDots$._lhs)
     modifiedDots <- append(modifiedDots, lapply(as.list(firstCall[-1]), function(x) {
