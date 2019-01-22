@@ -818,7 +818,6 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   return(result)
 }
 
-
 .tryExtractFromArchive <- function(archive,
                                    neededFiles,
                                    filesToChecksum,
@@ -918,7 +917,6 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   }
 }
 
-
 .fixNoFileExtension <- function(downloadFileResult, targetFile, archive,
                                 destinationPath) {
   if (!is.null(downloadFileResult$downloaded) &&
@@ -926,8 +924,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
     if (!is.null(targetFile) && file_ext(normPath(.basename(downloadFileResult$neededFiles))) != "") {
       if (is.null(archive)) {
         message(
-          "Downloaded file has no extension: targetFile is provided, but archive is not. \n",
-          " downloaded file will be considered as the targetFile. If the downloaded file is an archive\n",
+          "Downloaded file has no extension: targetFile is provided, but archive is not.\n",
+          " Downloaded file will be considered as the targetFile. If the downloaded file is an archive\n",
           " that contains the targetFile, please specify both archive and targetFile."
         )
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
@@ -938,8 +936,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
         downloadFileResult$downloaded <- newFileWithExtension
       } else {
         message(
-          "Downloaded file has no extension: both targetFile and archive are provided. \n",
-          " downloaded file will be considered as the archive."
+          "Downloaded file has no extension: both targetFile and archive are provided.\n",
+          " Downloaded file will be considered as the archive."
         )
         newFileWithExtension <- normPath(file.path(dirname(downloadFileResult$downloaded),
                                                    .basename(downloadFileResult$archive)))
@@ -966,7 +964,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
           "prepInputs will try accessing the file type.")
         fileExt <- .guessFileExtension(file = file.path(normPath(downloadFileResult$downloaded)))
         if (is.null(fileExt)) {
-          message("The file was not recognized by prepInputs.", "Will assume the file is an archive and add '.zip' extension.",
+          message("The file was not recognized by prepInputs.",
+                  "Will assume the file is an archive and add '.zip' extension.",
                   "If this is incorrect or return error, please supply archive or targetFile")
           fileExt <- ".zip"
         }
@@ -978,10 +977,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
         downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)
         downloadFileResult$downloaded <- downloadFileResult$archive
         downloadFileResult$targetFilePath <- file.path(normPath(destinationPath), downloadFileResult$neededFiles)
-
       }
     }
   }
   downloadFileResult
-
 }
