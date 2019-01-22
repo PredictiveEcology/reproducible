@@ -71,7 +71,7 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
       !isFALSE(getOption("reproducible.futurePlan"))
     a <- file.size(objectFile)
     class(a) <- "object_size"
-    msgUpload <-   paste0("  uploading file (", format(a),") to google drive")
+    msgUpload <-   paste0("  uploading file (", format(a, "auto"),") to google drive")
     if (.onLinux) {
       curPlan <- future::plan()
       if (is(curPlan, "sequential"))
