@@ -30,7 +30,9 @@ keepCache(x, userTags = character(), after, before,
   ask = getOption("reproducible.ask"), ...)
 }
 \arguments{
-\item{x}{A simList or a directory containing a valid archivist repository}
+\item{x}{A simList or a directory containing a valid archivist repository. Note:
+For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
+used instead of \code{x}, though \code{x} will take precedence.}
 
 \item{userTags}{Character vector. If used, this will be used in place of the
                 \code{after} and \code{before}.
@@ -112,11 +114,11 @@ ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 
 # All same
 ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsC <- rnorm(10, 16) \%>\% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- Cache(cacheRepo = tmpDir) \%C\% rnorm(10, 16)  # recovers cached copy
 ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 
 # Any minor change makes it different
-ranNumsE <- rnorm(10, 6) \%>\% Cache(cacheRepo = tmpDir) # different
+ranNumsE <- Cache(cacheRepo = tmpDir) \%C\% rnorm(10, 6)# different
 
 ## Example 1: basic cache use with tags
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")

@@ -162,12 +162,11 @@ if (getRversion() >= "3.1.0") {
 #' @param FUN Either a function or an unevaluated function call (e.g., using
 #'            \code{quote}.
 #'
-#' @param objects Character vector of objects to be digested. This is only applicable
+#' @param .objects Character vector of objects to be digested. This is only applicable
 #'                if there is a list, environment (or similar) named objects
 #'                within it. Only this/these objects will be considered for caching,
 #'                i.e., only use a subset of
 #'                the list, environment or similar objects.
-#'
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
@@ -291,7 +290,9 @@ if (getRversion() >= "3.1.0") {
 #'
 setGeneric(
   "Cache", signature = "...",
-  function(FUN, ..., notOlderThan = NULL, objects = NULL, outputObjects = NULL, # nolint
+  function(FUN, ..., notOlderThan = NULL,
+           .objects = NULL, #objects = NULL,
+           outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL,
            length = getOption("reproducible.length", Inf),
            compareRasterFileLength, userTags = c(),
@@ -309,12 +310,18 @@ setGeneric(
 #' @rdname cache
 setMethod(
   "Cache",
-  definition = function(FUN, ..., notOlderThan, objects, outputObjects,  # nolint
+  definition = function(FUN, ..., notOlderThan, .objects,
+                        #objects,
+                        outputObjects,  # nolint
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick, verbose,
                         cacheId, useCache,
                         showSimilar) {
+
+    if (!is.null(list(...)$objects)) {
+      message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
+    }
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
@@ -487,7 +494,7 @@ setMethod(
         (names(modifiedDots) %in%
            c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar"))
 
-      cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], objects = objects,
+      cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
       preDigest <- cacheDigest$preDigest
@@ -496,13 +503,15 @@ setMethod(
       preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
 
       if (verbose > 1) {
-        a <- .CacheVerboseFn1(preDigest, preDigestUnlist, fnDetails,
+        preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
+        a <- .CacheVerboseFn1(preDigestUnlist, fnDetails,
                          startHashTime, modifiedDots, dotPipe, quick = quick)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
           print(.reproEnv$verboseTiming)
           message("This object is also available from .reproEnv$cacheTimings")
-          rm("verboseTiming", envir = .reproEnv)
+          if (exists("verboseTiming", envir = .reproEnv))
+            rm("verboseTiming", envir = .reproEnv)
         },
         add = TRUE)
       }
@@ -602,7 +611,7 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          output <- .getFromRepo(isInRepo, notOlderThan = notOlderThan,
+          output <- .getFromRepo(FUN, isInRepo, notOlderThan = notOlderThan,
                                  lastOne, cacheRepo, fnDetails,
                                  modifiedDots, debugCache = debugCache,
                                  verbose = verbose, sideEffect, quick,
@@ -629,7 +638,7 @@ setMethod(
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
-                                objects = outputObjects, length = length,
+                                .objects = outputObjects, length = length,
                                 algo = algo, quick = quick, classOptions = classOptions, ...)
 
       if (verbose > 1) {
@@ -863,39 +872,6 @@ setMethod(
     }
 })
 
-#' Deprecated functions
-#'
-#' @export
-#' @importFrom archivist showLocalRepo rmFromLocalRepo addTagsRepo
-#' @importFrom stats runif
-#' @inheritParams Cache
-#' @rdname reproducible-deprecated
-setGeneric("cache", signature = "...",
-           function(cacheRepo = NULL, FUN, ..., notOlderThan = NULL,  # nolint
-                    objects = NULL, outputObjects = NULL, algo = "xxhash64") {
-             archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo)
-})
-
-#' @export
-#' @rdname reproducible-deprecated
-setMethod(
-  "cache",
-  definition = function(cacheRepo, FUN, ..., notOlderThan, objects,  # nolint
-                        outputObjects, algo) {
-    .Deprecated("Cache", package = "reproducible",
-                msg = paste0(
-                  "cache from SpaDES and reproducible is deprecated.\n",
-                  "Use Cache with capital C if you want the robust Cache function.\n",
-                  "e.g., Cache(", getFunctionName(FUN, ..., overrideCall = "cache")$functionName,
-                  ", ", paste(list(...), collapse = ", "), ")"
-                )
-    )
-    Cache(FUN = FUN, ..., notOlderThan = notOlderThan, objects = objects,
-          outputObjects = outputObjects, algo = algo, cacheRepo = cacheRepo)
-})
-
-# .memoisedCacheFuns <- new.env(parent = asNamespace("reproducible"))
-# CacheMem <- memoise::memoise(Cache)
 
 .formalsCache <- formals(Cache)[-(1:2)]
 .formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
@@ -963,11 +939,12 @@ unmakeMemoiseable.default <- function(x) {
 }
 
 #' @inheritParams archivist showLocalRepo
-showLocalRepo2 <- function(repoDir) {
+#' @importFrom fastdigest fastdigest
+showLocalRepo2 <- function(repoDir, algo = "xxhash64") {
   #if (requireNamespace("future"))
   #  checkFutures() # will pause until all futures are done
   aa <- showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
-  dig <- digest(aa$md5hash)
+  dig <- fastdigest(aa$md5hash) # this is only on local computer, don't use digest::digest; too slow
   bb <- showLocalRepo3Mem(repoDir, dig)
   return(bb)
 }
@@ -1149,11 +1126,14 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
   # If arguments to FUN and Cache are identical, pass them through to FUN
   if (length(formalsInCallingAndFUN)) {
     formalsInCallingAndFUN <- grep("\\.\\.\\.", formalsInCallingAndFUN, value = TRUE, invert = TRUE)
-    commonArguments <- mget(formalsInCallingAndFUN, inherits = FALSE, envir = parent.frame())
-    if (isDoCall) {
-      modifiedDots$args[formalsInCallingAndFUN] <- commonArguments
-    } else {
-      modifiedDots[formalsInCallingAndFUN] <- commonArguments
+    commonArguments <- try(mget(formalsInCallingAndFUN, inherits = FALSE, envir = parent.frame()),
+                           silent = TRUE)
+    if (!is(commonArguments, "try-error")) {
+      if (isDoCall) {
+        modifiedDots$args[formalsInCallingAndFUN] <- commonArguments
+      } else {
+        modifiedDots[formalsInCallingAndFUN] <- commonArguments
+      }
     }
   }
   return(append(fnDetails, list(originalDots = originalDots, FUN = FUN, isPipe = isPipe,
@@ -1189,6 +1169,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #' @param ... passed to \code{.robustDigest}; this is generally empty except
 #'    for advanced use.
 #' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
+#' @inheritParams Cache
+#' @importFrom fastdigest fastdigest
 #'
 #' @return
 #' A list of length 2 with the \code{outputHash}, which is the digest
@@ -1211,20 +1193,13 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", ...) {
       # attr(x, ".Cache")$newCache <- NULL
       if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
     }
-    .robustDigest(x, ...)
+    .robustDigest(x, algo = algo, ...)
   })
 
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
   } else {
-    warnonce("useNewDigestAlgorithm",
-             simpleWarning(paste0("'reproducible' will soon change the default digest algorithm.",
-                                  "\n  This will mean that Cache values will change for the same",
-                                  "\n  call. This change will make Cache less sensitive to minor",
-                                  "\n  but irrelevant changes (like changing the order of arguments).",
-                                  "\n  To start using this new algorithm now, set ",
-                                  "\n  options('reproducible.useNewDigestAlgorithm' = TRUE)")))
-    .robustDigest(unlist(preDigest), algo = algo, ...)
+    fastdigest(preDigest)
   }
   list(outputHash = res, preDigest = preDigest)
 }

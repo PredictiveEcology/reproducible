@@ -1,6 +1,5 @@
-.CacheVerboseFn1 <- function(preDigest, preDigestUnlist, fnDetails,
+.CacheVerboseFn1 <- function(preDigestUnlist, fnDetails,
                              startHashTime, modifiedDots, dotPipe, quick) {
-  preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
   endHashTime <- Sys.time()
   verboseDF <- data.frame(
     functionName = fnDetails$functionName,
@@ -68,6 +67,7 @@
     paste0("'", ., "' pipe sequence")
 
   fnDetails$functionName <- pipeFns
+
   if (is.function(FUN)) {
     firstCall <- match.call(FUN, modifiedDots$._lhs)
     modifiedDots <- append(modifiedDots, lapply(as.list(firstCall[-1]), function(x) {
@@ -129,7 +129,7 @@
 }
 
 
-.CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, ...) {
+.CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN, ...) {
   message("sideEffect argument is poorly tested. It may not function as desired")
   needDwd <- logical(0)
   fromCopy <- character(0)
@@ -251,7 +251,7 @@
 
 }
 
-.getFromRepo <- function(isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
+.getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
                          algo, preDigest, startCacheTime, ...) {
 
@@ -303,7 +303,7 @@
 
   if (sideEffect != FALSE) {
     #if(isTRUE(sideEffect)) {
-    .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, ...)
+    .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, ...)
   }
 
   # This allows for any class specific things

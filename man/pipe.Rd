@@ -15,24 +15,9 @@ lhs \%C\% rhs
 \description{
 STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
 }
-\details{
-This pipe can only be used at the start of a pipe chain, and must
-be preceded by \code{Cache(...)} to allow other Cache arguments to be passed.
-
-This will take the input arguments of the
-first function immediately following the \code{Cache() \%C\%} and the
-entire pipe chain code, evaluate them both
-against the \code{cacheRepo} argument in \code{Cache}. If they exist, then
-the entire pipe chain will be skipped, and only the previous final result
-will be given. If there is no previous cached copy of the initial function's
-arguments, then all chain elements will be evaluated. The final result will
-be cached for future use. The entire chain must be identical, therefore.
-The required usage should be straight forward to insert into existing code
-that uses pipes (\code{Cache() \%C\% ... remaining pipes}.
-\code{This is still experimental; use with care}.
-}
 \examples{
 
+library(magrittr) # standard pipe
 # dontrun{ # these can't be automatically run due to package conflicts with magrittr
 tmpdir <- file.path(tempdir(), "testCache")
 checkPath(tmpdir, create = TRUE)
@@ -40,7 +25,7 @@ a <- rnorm(10, 16) \%>\%
      mean() \%>\%
      prod(., 6)
 b <- Cache(cacheRepo = tmpdir) \%C\% # use of the \%C\% pipe!
-     rnorm(10, 16) \%>\%
+     rnorm(10, 16) \%>\% # everything after here is NOT cached!
      mean() \%>\%
      prod(., 6)
 d <- Cache(cacheRepo = tmpdir) \%C\%
@@ -57,9 +42,45 @@ all.equal(a,d) # different because 'a' uses a unique rnorm, 'd' uses the Cached 
                #   the subsequent functions in the chain, are identical
 all.equal(a,e) # different because the final function, prod, has a changed argument.
 
+###########
+# multiple random elements shows Cached sequence up to \%C\%
+a1 <- Cache(cacheRepo = tmpdir) \%>\%
+       seq(1, 10) \%>\%
+       rnorm(2, mean = .) \%>\%
+       mean() \%C\%                # Cache pipe here --
+                                 # means this pipe is the last one that is Cached
+       rnorm(3, mean = .) \%>\%
+       mean(.) \%>\%
+       rnorm(4, mean = .)  # Random 4 numbers, the mean is same each time
+a2 <- Cache(cacheRepo = tmpdir) \%>\%
+       seq(1, 10) \%>\%
+       rnorm(2, mean = .) \%>\%
+       mean() \%C\%                # Cache pipe here --
+                                 # means this pipe is the last one that is Cached
+       rnorm(3, mean = .) \%>\%
+       mean(.) \%>\%
+       rnorm(4, mean = .)  # Random 4 numbers, the mean is same each time
+sum(a1 - a2) # not 0 # i.e., numbers are different
+
+# NOW DO WITH CACHE AT END
+b1 <- Cache(cacheRepo = tmpdir) \%>\%
+       seq(1, 10) \%>\%
+       rnorm(2, mean = .) \%>\%
+       mean() \%>\%
+                                 # means this pipe is the last one that is Cached
+       rnorm(3, mean = .) \%>\%
+       mean(.) \%C\%               # Cache pipe here --
+       rnorm(4, mean = .)        # These are samethe mean is same each time
+b2 <- Cache(cacheRepo = tmpdir) \%>\%
+       seq(1, 10) \%>\%
+       rnorm(2, mean = .) \%>\%
+       mean() \%>\%
+                                 # means this pipe is the last one that is Cached
+       rnorm(3, mean = .) \%>\%
+       mean(.) \%C\%               # Cache pipe here --
+       rnorm(4, mean = .)        # These are samethe mean is same each time
+sum(b1 - b2) # 0 # i.e., numbers are same
+
 unlink(tmpdir, recursive = TRUE)
 #}
-}
-\seealso{
-pipe2
 }

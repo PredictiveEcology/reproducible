@@ -16,61 +16,61 @@
 \alias{.robustDigest,Spatial-method}
 \title{Create reproducible digests of objects in R}
 \usage{
-.robustDigest(object, objects, length = getOption("reproducible.length",
+.robustDigest(object, .objects, length = getOption("reproducible.length",
   Inf), algo = "xxhash64", quick = getOption("reproducible.quick",
   FALSE), classOptions = list())
 
-\S4method{.robustDigest}{ANY}(object, objects,
+\S4method{.robustDigest}{ANY}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{cluster}(object, objects,
+\S4method{.robustDigest}{cluster}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{`function`}(object, objects,
+\S4method{.robustDigest}{`function`}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{expression}(object, objects,
+\S4method{.robustDigest}{expression}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{character}(object, objects,
+\S4method{.robustDigest}{character}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{Path}(object, objects,
+\S4method{.robustDigest}{Path}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{environment}(object, objects,
+\S4method{.robustDigest}{environment}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{list}(object, objects,
+\S4method{.robustDigest}{list}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{data.frame}(object, objects,
+\S4method{.robustDigest}{data.frame}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{Raster}(object, objects,
+\S4method{.robustDigest}{Raster}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
 
-\S4method{.robustDigest}{Spatial}(object, objects,
+\S4method{.robustDigest}{Spatial}(object, .objects,
   length = getOption("reproducible.length", Inf), algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
   classOptions = list())
@@ -78,11 +78,11 @@
 \arguments{
 \item{object}{an object to digest.}
 
-\item{objects}{Optional character vector indicating which objects are to
-be considered while making digestible. This argument is not used
-in the default cases; the only known method that uses this
-in the default cases; the only known method that uses this
-argument is the \code{simList} class from \code{SpaDES.core}.}
+\item{.objects}{Character vector of objects to be digested. This is only applicable
+if there is a list, environment (or similar) named objects
+within it. Only this/these objects will be considered for caching,
+i.e., only use a subset of
+the list, environment or similar objects.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
 object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
@@ -117,6 +117,12 @@ as paths, if they are file-backed.}
 \item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
 specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
+
+\item{objects}{Optional character vector indicating which objects are to
+be considered while making digestible. This argument is not used
+in the default cases; the only known method that uses this
+in the default cases; the only known method that uses this
+argument is the \code{simList} class from \code{SpaDES.core}.}
 }
 \value{
 A hash i.e., digest of the object passed in.

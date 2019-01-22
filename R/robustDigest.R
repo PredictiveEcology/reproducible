@@ -54,6 +54,7 @@
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
+#' @importFrom fastdigest fastdigest
 #' @keywords internal
 #' @rdname robustDigest
 #' @examples
@@ -100,7 +101,7 @@
 #' .robustDigest(r)
 #' .robustDigest(r1) # different
 #'
-setGeneric(".robustDigest", function(object, objects,
+setGeneric(".robustDigest", function(object, .objects,
                                     length = getOption("reproducible.length", Inf),
                                     algo = "xxhash64",
                                     quick = getOption("reproducible.quick", FALSE),
@@ -113,10 +114,13 @@ setGeneric(".robustDigest", function(object, objects,
 setMethod(
   ".robustDigest",
   signature = "ANY",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
-    digest(object, algo = algo)
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digest(object, algo = algo)
+    else
+      fastdigest(object)
 })
 
 #' @import parallel
@@ -127,10 +131,13 @@ setOldClass("cluster")
 setMethod(
   ".robustDigest",
   signature = "cluster",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     #object <- .removeCacheAtts(object)
-    digest(NULL, algo = algo)
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digest(NULL, algo = algo)
+    else
+      fastdigest(NULL)
 })
 
 #' @rdname robustDigest
@@ -138,10 +145,9 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "function",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    object <- .removeCacheAtts(object)
-    digest(format(object), algo = algo)
+    .robustDigestFormatOnly(object, algo = algo)
 })
 
 #' @rdname robustDigest
@@ -149,18 +155,17 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "expression",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    object <- .removeCacheAtts(object)
-    digest(format(object), algo = algo)
-})
+    .robustDigestFormatOnly(object, algo = algo)
+  })
 
 #' @rdname robustDigest
 #' @export
 setMethod(
   ".robustDigest",
   signature = "character",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
 
@@ -168,18 +173,30 @@ setMethod(
       if (any(unlist(lapply(object, file.exists)))) {
         unlist(lapply(object, function(x) {
           if (dir.exists(x)) {
-            digest(basename(x), algo = algo)
+            if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+              digest(basename(x), algo = algo)
+            else
+              fastdigest(basename(x))
           } else if (file.exists(x)) {
-            digest::digest(file = x, length = length, algo = algo)
+              digest(file = x, length = length, algo = algo)
           } else {
-            digest(x, algo = algo)
+            if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+              digest(x, algo = algo)
+            else
+              fastdigest(x)
           }
         }))
       } else {
-        digest(object, algo = algo)
+        if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+          digest(object, algo = algo)
+        else
+          fastdigest(object)
       }
     } else {
-      digest(object, algo = algo)
+      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+        digest(object, algo = algo)
+      else
+        fastdigest(object)
     }
 })
 
@@ -188,7 +205,7 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Path",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     nParentDirs <- attr(object, "nParentDirs")
     object <- .removeCacheAtts(object)
@@ -205,13 +222,17 @@ setMethod(
           digest::digest(file = x, length = length, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          digest(.basenames(x, nParentDirs), algo = algo)
-          #fastdigest(.basenames(x, nParentDirs))
+          if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+            digest(.basenames(x, nParentDirs), algo = algo)
+          else
+            fastdigest(.basenames(x, nParentDirs))
         }
       })
     } else {
-      digest(.basenames(object, nParentDirs), algo = algo)
-      # fastdigest(.basenames(object, nParentDirs))
+      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+        digest(.basenames(object, nParentDirs), algo = algo)
+      else
+        fastdigest(.basenames(object, nParentDirs))
     }
 })
 
@@ -220,10 +241,10 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "environment",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
-    .robustDigest(as.list(object, all.names = TRUE), objects = objects,
+    .robustDigest(as.list(object, all.names = TRUE), .objects = .objects,
                  length = length,
                  algo = algo, quick = quick)
 })
@@ -233,11 +254,11 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "list",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
     lapply(.sortDotsUnderscoreFirst(object), function(x) {
-      .robustDigest(object = x, objects = objects,
+      .robustDigest(object = x, .objects = .objects,
                    length = length,
                    algo = algo, quick = quick)
     })
@@ -248,12 +269,14 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "data.frame",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    digest(object, algo = algo)
-    #fastdigest(object)
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digest(object, algo = algo)
+    else
+      fastdigest(object)
   })
 
 
@@ -262,7 +285,7 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Raster",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
 
@@ -286,7 +309,7 @@ setMethod(
 setMethod(
   ".robustDigest",
   signature = "Spatial",
-  definition = function(object, objects, length, algo, quick,
+  definition = function(object, .objects, length, algo, quick,
                         classOptions) {
     object <- .removeCacheAtts(object)
 
@@ -306,8 +329,11 @@ setMethod(
       }
     }
 
-    # return(fastdigest(aaa))
-    digest(aaa, algo = algo)
+    #
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digest(aaa, algo = algo)
+    else
+      fastdigest(aaa)
 })
 
 .basenames <- function(object, nParentDirs) {
@@ -334,4 +360,13 @@ setMethod(
   setattr(x, ".Cache", NULL)
   setattr(x, "call", NULL)
   x
+}
+
+.robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
+                               classOptions) {
+  object <- .removeCacheAtts(object)
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    digest(format(object), algo = algo)
+  else
+    fastdigest(format(object))
 }

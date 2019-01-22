@@ -7,7 +7,7 @@
 \alias{\%<\%}
 \title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
 \usage{
-Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
+Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength, userTags = c(), digestPathContent,
@@ -18,7 +18,7 @@ Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   showSimilar = NULL)
 
-\S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
+\S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, .objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength, userTags = c(), digestPathContent,
@@ -39,7 +39,7 @@ lhs \%<\% rhs
 
 \item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 
-\item{objects}{Character vector of objects to be digested. This is only applicable
+\item{.objects}{Character vector of objects to be digested. This is only applicable
 if there is a list, environment (or similar) named objects
 within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
@@ -148,9 +148,7 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
-Cache method that accommodates environments, S4 methods, Rasters, & nested caching
-
-The special assign operator \code{\%<\%} is equivalent to Cache. See examples at the end.
+Still experimental and may change.
 }
 \details{
 Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
@@ -319,10 +317,12 @@ ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 
 # All same
 ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsC <- rnorm(10, 16) \%>\% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- Cache(cacheRepo = tmpDir) \%C\% rnorm(10, 16)  # recovers cached copy
 ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 
+###############################################
 # experimental devMode
+###############################################
 opt <- options("reproducible.useCache" = "devMode")
 clearCache(tmpDir, ask = FALSE)
 centralTendency <- function(x)

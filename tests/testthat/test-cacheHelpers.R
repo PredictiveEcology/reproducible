@@ -31,23 +31,23 @@ test_that("test miscellaneous unit tests cache-helpers", {
   fn <- function(FUN) {
     getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
   }
-  expect_true(fn(1)$functionName == "1")
+  expect_true(fn(1)$functionName == "FUN")
 
   fn <- function(FUN) {
     getFunctionName(fn, isPipe = FALSE, overrideCall = "fn")
   }
-  expect_true(fn(2)$functionName == "2")
+  expect_true(fn(2)$functionName == "FUN")
 
   fn <- function(FUN) {
     getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
   }
-  expect_true(fn(2)$functionName == "2")
+  expect_true(fn(2)$functionName == "FUN")
   expect_true(is.null(fn(2)$.FUN))
 
   fn <- function(FUN) {
     getFunctionName(1, isPipe = FALSE, overrideCall = "fn")
   }
-  expect_true(is.na(fn(log(1))$functionName))
+  expect_true(fn(log(1))$functionName== "FUN")
 
   ## nextNumericName
   b <- nextNumericName("test.pdf")
@@ -87,10 +87,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   aa <- Cache(rnorm, thing, debugCache = "quick", cacheRepo = tmpCache)
   expect_true(identical(.robustDigest(thing), aa$hash$n))
   expect_true(identical(thing, aa$content[[1]]))
-
   ## cache -- deprecated
-  aMess <- capture_warnings(a <- reproducible::cache(cacheRepo = tmpCache, rnorm, 1))
-  expect_true(grepl("deprecated", aMess))
+  # aMess <- capture_warnings(a <- reproducible::cache(cacheRepo = tmpCache, rnorm, 1))
+  # expect_true(grepl("deprecated", aMess))
 
   ## .unlistToCharacter
   expect_true(grepl("not list", unlist(.unlistToCharacter(1, 1))))

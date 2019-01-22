@@ -74,7 +74,7 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
       if (is(curPlan, "sequential"))
         future::plan(getOption("reproducible.futurePlan", "multiprocess"))
       message("  uploading object to google drive in a 'future'")
-      future::futureAssign("cloudCheckSums", assign.env = reproducible:::.reproEnv,
+      future::futureAssign("cloudCheckSums", assign.env = .reproEnv,
                            cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
                                                        checksums, checksumsFileID))
     } else {

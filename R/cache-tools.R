@@ -1,4 +1,6 @@
-#' @param x A simList or a directory containing a valid archivist repository
+#' @param x A simList or a directory containing a valid archivist repository. Note:
+#'   For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
+#'   used instead of \code{x}, though \code{x} will take precedence.
 #' @param after A time (POSIX, character understandable by data.table).
 #'                  Objects cached after this time will be shown or deleted.
 #' @param before A time (POSIX, character understandable by data.table).
@@ -60,11 +62,11 @@
 #'
 #' # All same
 #' ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-#' ranNumsC <- rnorm(10, 16) %>% Cache(cacheRepo = tmpDir) # recovers cached copy
+#' ranNumsC <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 16)  # recovers cached copy
 #' ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 #'
 #' # Any minor change makes it different
-#' ranNumsE <- rnorm(10, 6) %>% Cache(cacheRepo = tmpDir) # different
+#' ranNumsE <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 6)# different
 #'
 #' ## Example 1: basic cache use with tags
 #' ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
@@ -92,8 +94,13 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath")[1])
-      x <- getOption("reproducible.cachePath")[1]
+      x <- if (!is.null(list(...)$cacheRepo)) {
+        message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
+        list(...)$cacheRepo
+      } else  {
+        message("x not specified; using ", getOption("reproducible.cachePath")[1])
+        x <- getOption("reproducible.cachePath")[1]
+      }
     }
     if (is(x, "simList")) x <- x@paths$cachePath
 
@@ -131,7 +138,7 @@ setMethod(
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    list(...))
 
-    objsDT <- do.call(showCache, args = args)
+    objsDT <- do.call(showCache, args = args, quote = TRUE)
 
     if (isInteractive()) {
       objSizes <- as.numeric(objsDT[tagKey == "object.size"]$tagValue)

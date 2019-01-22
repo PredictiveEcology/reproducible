@@ -5,10 +5,12 @@ ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 
 # All same
 ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsC <- rnorm(10, 16) %>% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 16)  # recovers cached copy
 ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 
+###############################################
 # experimental devMode
+###############################################
 opt <- options("reproducible.useCache" = "devMode")
 clearCache(tmpDir, ask = FALSE)
 centralTendency <- function(x)
