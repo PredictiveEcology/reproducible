@@ -18,62 +18,40 @@
 \usage{
 .robustDigest(object, .objects, length = getOption("reproducible.length",
   Inf), algo = "xxhash64", quick = getOption("reproducible.quick",
-  FALSE), classOptions = list())
+  FALSE), classOptions = list(), ...)
 
-\S4method{.robustDigest}{ANY}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{ANY}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{cluster}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{cluster}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{`function`}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{`function`}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{expression}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{expression}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{character}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{character}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{Path}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{Path}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{environment}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{environment}(object, .objects, length, algo,
+  quick, classOptions)
 
-\S4method{.robustDigest}{list}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{list}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{data.frame}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{data.frame}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{Raster}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{Raster}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{Spatial}(object, .objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{Spatial}(object, .objects, length, algo, quick,
+  classOptions)
 }
 \arguments{
 \item{object}{an object to digest.}
@@ -117,6 +95,8 @@ as paths, if they are file-backed.}
 \item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
 specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
+
+\item{...}{Arguments of \code{FUN} function .}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used
