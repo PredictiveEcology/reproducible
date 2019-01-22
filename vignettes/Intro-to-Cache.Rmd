@@ -81,8 +81,7 @@ all.equal(map1, map3) # TRUE
 
 ```{r}
 library(raster)
-# magrittr, if loaded, gives an error below
-try(detach("package:magrittr", unload = TRUE), silent = TRUE)
+library(magrittr)
 
 try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 
@@ -90,11 +89,11 @@ ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 
 # All same
 ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsC <- rnorm(10, 16) %>% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 16)  # recovers cached copy
 ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 
 # Any minor change makes it different
-ranNumsE <- rnorm(10, 6) %>% Cache(cacheRepo = tmpDir) # different
+ranNumsE <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 6) # different
 ```
 
 ## Example 1: Basic cache use with tags
