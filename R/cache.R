@@ -358,7 +358,8 @@ setMethod(
       # Arguments -- this puts arguments into a special reproducible environment
       if (R.version[['minor']] <= "4.0") {
         # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
-        objs <- ls()[ls() %in% .namesCacheFormals]
+        lsCurEnv <- ls(all.names = TRUE)
+        objs <- lsCurEnv[lsCurEnv %in% .namesCacheFormals]
         objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
         args <- mget(objs)
         forms <- lapply(.formalsCache, function(x) eval(x))
