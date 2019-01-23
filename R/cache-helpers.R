@@ -1112,9 +1112,10 @@ setMethod("Copy",
     scalls <- sys.calls()
   }
 
-  otherFns <- .grepSysCalls(scalls, pattern = paste0("(test_code)|(with_reporter)|(force)|",
+  otherFns <- .grepSysCalls(scalls, pattern = paste0("(test_)|(with_reporter)|(force)|",
                                              "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
-                                             "(Cache)|(tryCatch)|(doTryCatch)"))
+                                             "(Cache)|(tryCatch)|(doTryCatch)|(withCallingHandlers)|",
+                                             "(FUN)"))
   if (length(otherFns)) {
     otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
       tryCatch(as.character(x[[1]]), error = function(y) "")

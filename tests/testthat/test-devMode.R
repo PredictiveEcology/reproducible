@@ -52,7 +52,7 @@ test_that("test devMode", {
     sort(table(x))[1]
   ranNumsH <- Cache(centralTendency, 1:11, cacheRepo = tmpdir, userTags = theTags)
 
-  a <- showCache(tmpdir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
+  a <- showCache(tmpdir) #
   expect_true(NROW(unique(a$artifact)) == 4)
 
   # Test multiple with same userTags, ie, not unambiguous

@@ -444,6 +444,9 @@ setMethod(
         NULL
       }
 
+      # extract other function names that are not the ones the focus of the Cache call
+      otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
+
       if (missing(notOlderThan)) notOlderThan <- NULL
 
       # if a simList is in ...
@@ -550,6 +553,9 @@ setMethod(
         }
       }
 
+      userTags <- c(userTags, if (!is.na(fnDetails$functionName))
+        paste0("function:", fnDetails$functionName)
+      )
 
       outputHashNew <- outputHash # Keep a copy of this because it may be replaced next, but we need to know old one
 
@@ -559,6 +565,9 @@ setMethod(
         NROW(isInRepo) == 0
       if (identical("devMode", getOption("reproducible.useCache")) && NROW(isInRepo) == 0) {
         isInRepoAlt <- localTags[localTags$tag %in% userTags, , drop = FALSE]
+        data.table::setDT(isInRepoAlt)
+        isInRepoAlt <- isInRepoAlt[, iden := identical(sum(tag %in% userTags), length(userTags)),
+                                   by = "artifact"][iden == TRUE]
         if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt$artifact)) == 1) {
           newLocalTags <- localTags[localTags$artifact %in% isInRepoAlt$artifact,]
           tags1 <- grepl("(format|name|class|date|cacheId|function|object.size|accessed|otherFunctions|preDigest)",
@@ -704,9 +713,6 @@ setMethod(
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
                                        preDigestByClass)
 
-      # extract other function names that are not the ones the focus of the Cache call
-      otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
-
       # Remove from otherFunctions if it is "function"
       alreadyIn <- gsub(otherFns, pattern = "otherFunctions:", replacement = "") %in%
         as.character(attr(output, "function"))
@@ -766,13 +772,12 @@ setMethod(
 
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
-                    if (!is.na(fnDetails$functionName))
-                      paste0("function:", fnDetails$functionName),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0(otherFns),
                     paste("preDigest", names(preDigestUnlistTrunc),
-                          preDigestUnlistTrunc, sep = ":"))
+                          preDigestUnlistTrunc, sep = ":")
+                    )
 
       written <- 0
 
