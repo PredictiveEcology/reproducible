@@ -807,8 +807,12 @@ setMethod(
                            cacheRepo = cacheRepo,
                            userTags = userTags)
           )
-        message("  Cache saved in a separate 'future' process. ",
-                "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour")
+        if (is.null(.reproEnv$alreadyMsgFuture)) {
+          message("  Cache saved in a separate 'future' process. ",
+                  "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
+                  "This message will not be shown again until next reload of reproducible")
+          .reproEnv$alreadyMsgFuture <- TRUE
+        }
       } else {
         while (written >= 0) {
           saved <- suppressWarnings(try(silent = TRUE,
