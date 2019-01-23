@@ -3,7 +3,7 @@
 \name{pipe}
 \alias{pipe}
 \alias{\%C\%}
-\title{A cache-aware pipe that does not mask with \%>\%}
+\title{A cache-aware pipe that does not mask with \code{\%>\%}}
 \usage{
 lhs \%C\% rhs
 }
@@ -13,10 +13,28 @@ lhs \%C\% rhs
 \item{rhs}{A function call using the magrittr semantics.}
 }
 \description{
-STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
+\emph{STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.}
+}
+\details{
+This pipe can only be used at any point in a pipe chain, but must
+be preceded by \code{Cache(...)} (which allows other \code{Cache} arguments to be passed).
+
+This will take the input arguments of the first function immediately following
+the \code{Cache()} and the pipe chain until the special \code{\%C\%},
+evaluate them both against the \code{cacheRepo} argument in \code{Cache}.
+If they exist, then the entire pipe chain will be skipped, and only the
+previous final result will be given.
+If there is no previous cached copy of the initial function's arguments,
+then all chain elements will be evaluated.
+The final result will be cached for future use.
+Therefore, the entire chain must be identical.
+The required usage should be straight forward to insert into existing code
+that uses pipes (\code{Cache() \%C\% ... remaining pipes}).
+}
+\note{
+\emph{This is still experimental; use with care.}
 }
 \examples{
-
 library(magrittr) # standard pipe
 # dontrun{ # these can't be automatically run due to package conflicts with magrittr
 tmpdir <- file.path(tempdir(), "testCache")

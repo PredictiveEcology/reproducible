@@ -40,7 +40,6 @@ the local Cache.
 # Make a folder on googledrive -- share it with yourself and anybody else -- either use
 #   googledrive package or do this manually on drive.google.com
 # Grab the share link -- pass it here to cloudFolderID
-options("reproducible.useNewDigestAlgorithm" = TRUE) # need new approach for this to work correctly
 
 # first time -- looks in cloudFolderID for checksums -- none there, so it makes it
 #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
