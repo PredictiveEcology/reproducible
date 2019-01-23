@@ -279,8 +279,10 @@ setMethod(
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
       !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
-      if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE)))
-        checkFutures()
+      if (exists("futureEnv", envir = .reproEnv))
+        if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE))) {
+          checkFutures()
+        }
     }
 
     objsDT <- showLocalRepo(x) %>% data.table()
@@ -457,13 +459,30 @@ setMethod(
 
 checkFutures <- function() {
   # This takes a long time -- can't use it if
-  resol <- future::resolved(.reproEnv)
+  resol1 <- FALSE
+  count <- 0
+  lsFutureEnv <- ls(.reproEnv$futureEnv)
 
-  while (any(!resol)) {
-    #numSleeps <<- numSleeps+1
-    Sys.sleep(0.001)
-    resol <- future::resolved(.reproEnv)
+  anyFutureWrite <- length(lsFutureEnv)
+
+  if (anyFutureWrite > 0) {
+
+    #objsInReproEnv <- ls(.reproEnv)
+    #objsInReproEnv <- grep("^future|cloudCheckSums", objsInReproEnv, value = TRUE)
+    while (any(!resol1)) {
+      count <- count + 1
+      #numSleeps <<- numSleeps+1
+      if (count > 1 ) {
+        Sys.sleep(0.001)
+        if (count > 1e3) {
+          message("Future is not resolved after 1 second of waiting. Allowing to proceed.")
+          break
+        }
+      }
+      resol <- future::resolved(.reproEnv$futureEnv)
+      resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
+    }
+    if (length(resol) > 0)
+      rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
   }
-  if (length(resol) > 0)
-    rm(list = names(resol)[resol], envir = .reproEnv)
 }

@@ -304,7 +304,7 @@ setGeneric(
            useCache = getOption("reproducible.useCache", TRUE),
            showSimilar = NULL) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
-})
+  })
 
 #' @export
 #' @rdname cache
@@ -458,7 +458,7 @@ setMethod(
       if (any(!isIntactRepo))
         ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
           archivist::createLocalRepo(cacheRepos[[cacheRepoInd]],
-                                                      force = isIntactRepo[cacheRepoInd])
+                                     force = isIntactRepo[cacheRepoInd])
         })
 
 
@@ -506,7 +506,7 @@ setMethod(
       if (verbose > 1) {
         preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
         a <- .CacheVerboseFn1(preDigestUnlist, fnDetails,
-                         startHashTime, modifiedDots, dotPipe, quick = quick)
+                              startHashTime, modifiedDots, dotPipe, quick = quick)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
           print(.reproEnv$verboseTiming)
@@ -562,7 +562,7 @@ setMethod(
         if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt$artifact)) == 1) {
           newLocalTags <- localTags[localTags$artifact %in% isInRepoAlt$artifact,]
           tags1 <- grepl("(format|name|class|date|cacheId|function|object.size|accessed|otherFunctions|preDigest)",
-                        newLocalTags$tag)
+                         newLocalTags$tag)
           localTagsAlt <- newLocalTags[!tags1,]
           if (all(localTagsAlt$tag %in% userTags)) {
             mess <- capture.output(type = "output",
@@ -783,6 +783,9 @@ setMethod(
         }
       }
       if (useFuture) {
+        if (exists("futureEnv", envir = .reproEnv))
+          .reproEnv$futureEnv <- new.env()
+
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess"\n',
                   'Please specify a plan by name, e.g., options("reproducible.futurePlan" = "multiprocess")')
@@ -793,7 +796,7 @@ setMethod(
             future::plan(thePlan)
           }
         }
-        .reproEnv[[paste0("future_", rndstr(1,10))]] <-
+        .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
           #saved <-
           future::futureCall(
             FUN = writeFuture,
@@ -871,7 +874,7 @@ setMethod(
 
       if (isNullOutput) return(NULL) else return(output)
     }
-})
+  })
 
 
 .formalsCache <- formals(Cache)[-(1:2)]
@@ -980,19 +983,19 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
     #future::plan(multiprocess)
     saved <- #suppressWarnings(
       try(#silent = TRUE,
-      saveToLocalRepo(
-        outputToSave,
-        repoDir = cacheRepo,
-        artifactName = NULL,
-        archiveData = FALSE,
-        archiveSessionInfo = FALSE,
-        archiveMiniature = FALSE,
-        rememberName = FALSE,
-        silent = TRUE,
-        userTags = userTags
+        saveToLocalRepo(
+          outputToSave,
+          repoDir = cacheRepo,
+          artifactName = NULL,
+          archiveData = FALSE,
+          archiveSessionInfo = FALSE,
+          archiveMiniature = FALSE,
+          rememberName = FALSE,
+          silent = TRUE,
+          userTags = userTags
+        )
+        #)
       )
-    #)
-    )
 
     # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
     written <- if (is(saved, "try-error")) {

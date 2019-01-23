@@ -77,8 +77,11 @@ cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksum
       curPlan <- future::plan()
       if (is(curPlan, "sequential"))
         future::plan(futurePlan)
-      message(msgUpload, " in a 'future'")
-      future::futureAssign("cloudCheckSums", assign.env = .reproEnv,
+      message(msgUpload, " in a 'future'\n    Filename: ", paste0(digest, ".rda"))
+      rstr <- rndstr(len = 10)
+      if (!exists("futureEnv", envir = .reproEnv))
+        .reproEnv$futureEnv <- new.env()
+      future::futureAssign(paste0("cloudCheckSums", rstr), assign.env = .reproEnv$futureEnv,
                            cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
                                                        checksums, checksumsFileID))
     } else {
@@ -114,8 +117,9 @@ cloudDownloadChecksums <- function(checksumsFileID) {
     requireNamespace("future", quietly = TRUE) &&
     !isFALSE(getOption("reproducible.futurePlan"))
   if (.onLinux)
-    if (exists("cloudChecksums", envir = .reproEnv)) # it should have been deleted in `checkFutures`
-      bb <- future::value(.reproEnv)       # but if not, then force its value here
+    if (exists("futureEnv", envir = .reproEnv))
+      if (exists("cloudChecksums", envir = .reproEnv$futureEnv)) # it should have been deleted in `checkFutures`
+        bb <- future::value(.reproEnv$futureEnv)       # but if not, then force its value here
   drive_download(as_id(checksumsFileID), path = checksumsFilename, verbose = FALSE)
   checksums <- readRDS(checksumsFilename)
 }
