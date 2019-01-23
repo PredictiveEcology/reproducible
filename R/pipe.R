@@ -1,13 +1,13 @@
 #################
-#' A cache-aware pipe that does not mask with \%>\%
+#' A cache-aware pipe that does not mask with \code{\%>\%}
 #'
-#' STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.
+#' \emph{STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.}
 #'
 #' This pipe can only be used at any point in a pipe chain, but must
 #' be preceded by \code{Cache(...)} (which allows other \code{Cache} arguments to be passed).
 #'
 #' This will take the input arguments of the first function immediately following
-#' the \code{Cache()} and the pipe chain until the special \code{%C%},
+#' the \code{Cache()} and the pipe chain until the special \code{\%C\%},
 #' evaluate them both against the \code{cacheRepo} argument in \code{Cache}.
 #' If they exist, then the entire pipe chain will be skipped, and only the
 #' previous final result will be given.
