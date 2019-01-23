@@ -566,7 +566,9 @@ setMethod(
           localTagsAlt <- newLocalTags[!tags1,]
           if (all(localTagsAlt$tag %in% userTags)) {
             mess <- capture.output(type = "output",
-                                   similars <- .findSimilar(newLocalTags, scalls = scalls, preDigestUnlistTrunc = preDigestUnlistTrunc, userTags = userTags))
+                                   similars <- .findSimilar(newLocalTags, scalls = scalls,
+                                                            preDigestUnlistTrunc = preDigestUnlistTrunc,
+                                                            userTags = userTags))
             similarsHaveNA <- sum(is.na(similars$differs))
             #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)
             #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
