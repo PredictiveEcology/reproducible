@@ -55,6 +55,8 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
 #' @param checksums A \code{data.table} that is outputted from \code{cloudCheck} that
 #'   is the the checksums file
 #' @param cloudFolderID The google folder ID where a new object should be written
+#' @param futurePlan Which \code{future::plan} to use. Default:
+#'    \code{getOption("reproducible.futurePlan")}
 #'
 #' @export
 #' @importFrom data.table data.table rbindlist

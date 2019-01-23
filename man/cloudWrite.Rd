@@ -19,6 +19,9 @@ is the the checksums file}
 
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
 provided as a character string.}
+
+\item{futurePlan}{Which \code{future::plan} to use. Default:
+\code{getOption("reproducible.futurePlan")}}
 }
 \description{
 Very experimental
