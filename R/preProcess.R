@@ -447,6 +447,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)
 
+  if (!is.null(getOption("reproducible.inputPaths"))) {
+    destinationPath <- destinationPathUser
+  }
   if (needChecksums > 0) {
     ## needChecksums 1 --> write a new CHECKSUMS.txt file
     ## needChecksums 2 --> append  to CHECKSUMS.txt file
@@ -457,7 +460,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       if (identical(checkSumFilePath, successfulCheckSumFilePath)) { # if it was in checkSumFilePath
         checkSumFilePath <- file.path(successfulDir, "CHECKSUMS.txt")   #   run Checksums in IP
       }
-      destinationPath <- destinationPathUser
     }
     checkSums <- appendChecksumsTable(
       checkSumFilePath = checkSumFilePath,
@@ -471,10 +473,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       suppressMessages(checkSums <- appendChecksumsTable(
         checkSumFilePath = checkSumFilePathInputPaths,
         filesToChecksum = unique(.basename(filesToChecksum)),
-        destinationPath = destinationPathUser,
+        destinationPath = destinationPath,
         append = needChecksums == 2
       ))
-      destinationPath <- destinationPathUser # reset to original argument AFTER checksums
     }
 
 
