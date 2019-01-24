@@ -97,6 +97,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     fun <- paste0(dots$pkg, "::", fun)
     dots$pkg <- NULL
   }
+
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
@@ -116,6 +117,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       targetFilePath <- NULL
     }
   } else {
+    if (length(targetFile) > 1)
+      stop("targetFile should be only 1 file")
     targetFile <- .basename(targetFile)
     targetFilePath <- file.path(destinationPath, targetFile)
     if (is.null(alsoExtract)) {

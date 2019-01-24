@@ -64,7 +64,9 @@ test_that(
 
   # Gets the first file it finds, the shapefile; warns the user about it
   url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesMultiLevels.zip"
-  testZip6 <- reproducible::prepInputs(url = url, destinationPath = tempdir())
+  # The warning is about the .prj file missing, which is not relevant here -
+  #   Capture it and do nothing with it
+  warn <- capture_warnings(testZip6 <- reproducible::prepInputs(url = url, destinationPath = tempdir()))
   expect_true(exists("testZip6"))
   expect_is(testZip6, "SpatialPolygonsDataFrame")
 })
