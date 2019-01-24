@@ -623,11 +623,14 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          output <- .getFromRepo(FUN, isInRepo, notOlderThan = notOlderThan,
-                                 lastOne, cacheRepo, fnDetails,
-                                 modifiedDots, debugCache = debugCache,
-                                 verbose = verbose, sideEffect, quick,
-                                 algo, preDigest, startCacheTime, ...)
+          output <- .getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
+                                 lastOne = lastOne, cacheRepo = cacheRepo,
+                                 fnDetails = fnDetails,
+                                 modifiedDots = modifiedDots, debugCache = debugCache,
+                                 verbose = verbose, sideEffect = sideEffect,
+                                 quick = quick, algo = algo,
+                                 preDigest = preDigest, startCacheTime = startCacheTime,
+                                 ...)
 
           return(output)
         }
