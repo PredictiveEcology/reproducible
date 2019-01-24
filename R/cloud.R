@@ -202,7 +202,8 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
   hasCopy <- FALSE
   hasCloudCopy <- FALSE
 
-  fnDetails <- .fnCleanup(FUN = list(...)[[1]], callingFun = "Cache", ...)
+  fnDetails <- .fnCleanup(FUN = eval(match.call(Cache, expand.dots = TRUE)$FUN),
+                          callingFun = "Cache", ...)
   cacheRepo <- suppressMessages(.checkCacheRepo(fnDetails$modifiedDots, create = TRUE))
   suppressMessages(archivist::createLocalRepo(cacheRepo))
 

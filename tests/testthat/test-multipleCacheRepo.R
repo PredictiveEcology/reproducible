@@ -37,7 +37,8 @@ test_that("test multiple cacheRepo", {
 
 ##########################
 test_that("test multiple cacheRepo with 1 of them a cloudCache", {
-  if (!interactive()) skip(message = "test cloudCache inside Cache")
+  skip(message = "test cloudCache inside Cache -- Not fully written test")
+  #if (!interactive())
   testInitOut <- testInit(libraries = "googledrive")
   on.exit({
     testOnExit(testInitOut)
@@ -50,10 +51,12 @@ test_that("test multiple cacheRepo with 1 of them a cloudCache", {
   newDir <- drive_mkdir("testFolder")
   on.exit(drive_rm(as_id(newDir$id), add = TRUE))
 
-  clearCache(ask = FALSE)
-  cloudSyncCache(cloudFolderID = newDir$id)
-  cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-  mess <- capture_messages(cloudCache(rnorm, 1, cloudFolderID = newDir$id))
+  clearCache(ask = FALSE, cacheRepo = tmpCache)
+  cloudSyncCache(cloudFolderID = newDir$id, cacheRepo = tmpCache)
+  browser()
+  cloudCache(rnorm, 1, cloudFolderID = newDir$id, cacheRepo = tmpCache)
+  mess <- capture_messages(cloudCache(rnorm, 1, cloudFolderID = newDir$id,
+                                      cacheRepo = tmpCache))
   # for (i in 1:4) cloudCache(rnorm, 1e4 + i, cloudFolderID = newDir$id)
   expect_true(all(grepl("local and cloud|loading cached result", mess)))
 
