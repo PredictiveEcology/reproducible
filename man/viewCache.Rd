@@ -132,18 +132,21 @@ toRemove <- cache1[tagKey=="object.size"][as.numeric(tagValue) > 700]$artifact
 clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 
-Cache(rnorm, 1)
+tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
+
+Cache(rnorm, 1, cacheRepo = tmpDir)
 thisTime <- Sys.time()
-Cache(rnorm, 2)
-Cache(rnorm, 3)
-Cache(rnorm, 4)
-showCache() # shows all 4 entries
-cc(ask = FALSE)
-showCache() # most recent is gone
-cc(thisTime, ask = FALSE)
-showCache() # all those after this time gone, i.e., only 1 left
-cc(ask = FALSE) # Cache is
-cc(ask = FALSE) # Cache is already empty
+Cache(rnorm, 2, cacheRepo = tmpDir)
+Cache(rnorm, 3, cacheRepo = tmpDir)
+Cache(rnorm, 4, cacheRepo = tmpDir)
+showCache(x = tmpDir) # shows all 4 entries
+cc(ask = FALSE, x = tmpDir)
+showCache(x = tmpDir) # most recent is gone
+cc(thisTime, ask = FALSE, x = tmpDir)
+showCache(x = tmpDir) # all those after thisTime gone, i.e., only 1 left
+cc(ask = FALSE, x = tmpDir) # Cache is
+cc(ask = FALSE, x = tmpDir) # Cache is already empty
 }
 \seealso{
 \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples

@@ -940,6 +940,11 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
     notWanted2 <- .formalsNotInCurrentDots(rgdal::writeOGR, ...)
     keepForDots <- c(setdiff(notWanted1, notWanted2), setdiff(names(dots), notWanted1))
     dots <- dots[keepForDots]
+    # Internally in rgdal::writeOGR, it converts the row.names to integer with this test
+    #   it creates a warning there, so capture here instead
+    warn <- testthat::capture_warnings(as.integer(row.names(x)))
+    if (isTRUE(any(grepl("NAs introduced by coercion", warn))))
+      row.names(x) <- as.character(seq_along(row.names(x)))
     do.call(shapefile, append(dots, list(x = x, filename = filename2, overwrite = overwrite)))
   }
   x
