@@ -892,11 +892,11 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 }
 
 .decodeMagicNumber <- function(magicNumberString){
-  fileExt <- if (grepl(pattern = "Zip", x = magicNumberString)) ".zip" else
-    if (grepl(pattern = "RAR", x = magicNumberString)) ".rar" else
-      if (grepl(pattern = "tar", x = magicNumberString)) ".tar" else
-        if (grepl(pattern = "TIFF", x = magicNumberString)) ".tif" else
-          if (grepl(pattern = "Shapefile", x = magicNumberString)) ".shp" else
+  fileExt <- if (any(grepl(pattern = "Zip", x = magicNumberString))) ".zip" else
+    if (any(grepl(pattern = "RAR", x = magicNumberString))) ".rar" else
+      if (any(grepl(pattern = "tar", x = magicNumberString))) ".tar" else
+        if (any(grepl(pattern = "TIFF", x = magicNumberString))) ".tif" else
+          if (any(grepl(pattern = "Shapefile", x = magicNumberString))) ".shp" else
             NULL
   return(fileExt)
 }
@@ -904,11 +904,23 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 .guessFileExtension <- function(file){
   if (identical(.Platform$OS.type, "windows")){
     tryCatch({
-      splitted <- unlist(strsplit(x = file, split = ":/"))
-      fileAdapted <- file.path(paste0("/mnt/", tolower(splitted[1])), splitted[2])
-      magicNumber <- shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE, wait = TRUE,
-                           translate = FALSE, mustWork = TRUE)
-      fileExt <- .decodeMagicNumber(magicNumberString = magicNumber)
+      possLocs <- c("C:/cygwin/bin/file.exe",
+                    "C:\\cygwin64/bin/file.exe")
+      findFile <- file.exists(possLocs)
+      if (any(findFile))
+        fileLoc <- possLocs[findFile][1]
+      warn <- testthat::capture_warnings(magicNumber <- system(paste(fileLoc, file), intern = TRUE))
+      if (length(warn) > 0) {
+        splitted <- unlist(strsplit(x = file, split = ":/"))
+        fileAdapted <- file.path(paste0("/mnt/", tolower(splitted[1])), splitted[2])
+        warn <- testthat::capture_warnings(magicNumber <- shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE, wait = TRUE,
+                             translate = FALSE, mustWork = TRUE))
+      }
+      fileExt <- if (length(warn) == 0) {
+        .decodeMagicNumber(magicNumberString = magicNumber)
+      } else {
+        NULL
+      }
       return(fileExt)
     }, error = function(e){
       fileExt <- NULL
