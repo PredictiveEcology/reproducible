@@ -1,6 +1,6 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 0.2.5.9000
+version 0.2.6
 =============
 
 ## Dependency changes
@@ -17,7 +17,7 @@ version 0.2.5.9000
 * add experimental `cloud*` functions, especially `cloudCache` which allows sharing of Cache among collaborators. Currently only works with `googledrive`
 * updated `assessDataType` to consolidate `assessDataTypeGDAL` and `assessDataType` into single function (#71, @ianmseddy)
 * `cc`: new function -- a shortcut for some commonly used options for `clearCache()`
-* added experimental capacity for `prepInputs` to handle `.rar` archives, on systems with correct binaries to deal with them. Thanks to PR #86 from Tati Micheletti.
+* added experimental capacity for `prepInputs` to handle `.rar` archives, on systems with correct binaries to deal with them (#86, @tati-micheletti)
 * remove `fastdigest::fastdigest` as it is not return the identical hash across operating systems
 
 ## Bug fixes
@@ -26,7 +26,7 @@ version 0.2.5.9000
 * under some circumstances, the `prepInputs` would cause virtually all entries in `CHECKSUMS.txt` to be deleted. 2 cases where this happened were identified and corrected. 
 * `data.table` class objects would give an error sometimes due to use of `attr(DT)`. Internally, attributes are now added with `data.table::setattr` to deal with this.
 * calling `gdalwarp` from `prostProcess` now correctly matches extent (#73, @tati-micheletti)
-* files from url that have unknown extension are now guessed with by `preProcess` (#92 ,@tati-micheletti)
+* files from url that have unknown extension are now guessed with by `preProcess` (#92, @tati-micheletti)
 
 version 0.2.5
 =============
