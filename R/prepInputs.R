@@ -743,10 +743,12 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   message(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly,\n",
           "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
           "  what to look for.")
+  csf <- if (append) tempfile(fileext = ".TXT") else checkSumFilePath
   capture.output(
     type = "message",
-    currentFiles <- Checksums(path = destinationPath, write = !append || NROW(nonCurrentFiles) == 0,
-                              files = file.path(destinationPath, filesToChecksum))
+    currentFiles <- Checksums(path = destinationPath, write = TRUE, #write = !append || NROW(nonCurrentFiles) == 0,
+                              files = file.path(destinationPath, filesToChecksum),
+                              checksumFile = csf)
   )
   if (append) { # a checksums file already existed, need to keep some of it
     currentFilesToRbind <- data.table::as.data.table(currentFiles)

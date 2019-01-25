@@ -844,7 +844,7 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
                                            checkSumFilePath = checkSumFilePath, quick = quick)
 
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
-                                    newFilesToCheck = .basename(filesExtracted$filesExtr),
+                                    newFilesToCheck = .basename(filesExtracted$filesExtracted),
                                     checkSums = filesExtracted$checkSums)
 
       filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
