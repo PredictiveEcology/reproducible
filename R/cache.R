@@ -1,6 +1,6 @@
 if (getRversion() >= "3.1.0") {
   utils::globalVariables(c(".", "artifact", "createdDate", "deeperThan3", "differs",
-                           "fun", "hash", "N", "tag", "tagKey", "tagValue"))
+                           "fun", "hash", "iden", "N", "tag", "tagKey", "tagValue"))
 }
 
 .reproEnv <- new.env(parent = asNamespace("reproducible"))
@@ -605,7 +605,7 @@ setMethod(
         }
       }
 
-      if (  identical("overwrite", useCache)  && NROW(isInRepo)>0 || needFindByTags) {
+      if (identical("overwrite", useCache)  && NROW(isInRepo) > 0 || needFindByTags) {
         suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE))
         if (identical("devMode", getOption("reproducible.useCache"))) {
           isInRepo <- isInRepo[!isInRepo$tag %in% userTags, , drop = FALSE]
