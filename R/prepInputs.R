@@ -836,16 +836,16 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       } else {
         # On Windows
         if (grepl(x = hasUnrar, pattern = "7z")) {
-          warn <- testthat::capture_warnings(filesOutput <- system(paste0("\"", hasUnrar, "\"", " l ",
-                                       archive[1]),
-                                show.output.on.console = FALSE, intern = TRUE))
+          warn <- testthat::capture_warnings({
+            filesOutput <- system(paste0("\"", hasUnrar, "\"", " l ", archive[1]),
+                                  show.output.on.console = FALSE, intern = TRUE)
+          })
         } else {
           # On Linux/MacOS
-          filesOutput <- system(paste0("unrar l ",
-                                       archive[1]), intern = TRUE)
+          filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
         }
-        if (isTRUE(any(grepl("had status 2", warn))))
-            stop(warn)
+        if (exists("warn") && isTRUE(any(grepl("had status 2", warn))))
+          stop(warn)
         if (isTRUE(any(grepl("Can not open the file as archive", filesOutput))))
           stop("rar is defective")
         filesInBetween <- grep(pattern = "----", filesOutput)
