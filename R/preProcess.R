@@ -159,8 +159,19 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
-  checkSums <- try(Checksums(path = destinationPath, write = FALSE,
-                             files = filesToCheck), silent = TRUE)
+  for (dp in c(destinationPath, getOption("reproducible.inputPaths", NULL))) {
+    checkSums <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
+                               files = basename2(filesToCheck)), silent = TRUE)
+    if (!all(is.na(checkSums$result)))
+      break
+    else
+      if (identical(dp, getOption("reproducible.inputPaths"))) {
+        destinationPathUser <- destinationPath
+        destinationPath <- dp
+        on.exit({destinationPath <- destinationPathUser}, add = TRUE)
+      }
+  }
+
 
   if (is(checkSums, "try-error")) {
     needChecksums <- 1
@@ -223,10 +234,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
   if (isTRUE(!all(isOK))) {
     results <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
-                                      alsoExtract = alsoExtract, destinationPath = destinationPath,
+                                      alsoExtract = alsoExtract, destinationPath = dp,
                                       checkSums = checkSums, needChecksums = needChecksums,
                                       checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
                                       targetFile = targetFile, quick = quick)
+
     checkSums <- results$checkSums
     needChecksums <- results$needChecksums
     neededFiles <- results$neededFiles
