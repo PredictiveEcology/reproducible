@@ -33,16 +33,16 @@ environment:
   - R_VERSION: oldrel
     RTOOLS_VERSION: 34
 
-  - R_VERSION: 3.4.0
+  - R_VERSION: 3.4.4
     RTOOLS_VERSION: 34
 
-  - R_VERSION: 3.3.0
+  - R_VERSION: 3.3.3
     RTOOLS_VERSION: 33
 
 clone_depth: 5
 
 build_script:
-  - Rscript -e "install.packages(c('igraph', 'RCurl'), repos = 'https://cran.rstudio.com')"
+  - Rscript -e "install.packages(c('RCurl'), repos = 'https://cran.rstudio.com')"
   - travis-tool.sh install_deps
 
 test_script:

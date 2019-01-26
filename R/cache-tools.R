@@ -1,4 +1,6 @@
-#' @param x A simList or a directory containing a valid archivist repository
+#' @param x A simList or a directory containing a valid archivist repository. Note:
+#'   For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
+#'   used instead of \code{x}, though \code{x} will take precedence.
 #' @param after A time (POSIX, character understandable by data.table).
 #'                  Objects cached after this time will be shown or deleted.
 #' @param before A time (POSIX, character understandable by data.table).
@@ -9,7 +11,8 @@
 #'            This must be \code{TRUE} if the use is passing a regular expression.
 #'            Otherwise, \code{userTags} will need to be exact matches. Default is
 #'            missing, which is the same as \code{TRUE}. If there are errors due
-#'            to regular expression problem, try \code{FALSE}.
+#'            to regular expression problem, try \code{FALSE}. For \code{cc}, it is
+#'            passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}
 #' @param userTags Character vector. If used, this will be used in place of the
 #'                 \code{after} and \code{before}.
 #'                 Specifying one or more \code{userTag} here will clear all
@@ -48,22 +51,20 @@
 #'
 #' @examples
 #' library(raster)
-#' try(detach("package:magrittr", unload = TRUE), silent = TRUE) # magrittr,
-#'                                     #if loaded, gives an error below
 #'
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
-#' try(clearCache(tmpDir), silent = TRUE) # just to make sure it is clear
+#' try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
 #'
 #' # Basic use
 #' ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 #'
 #' # All same
 #' ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-#' ranNumsC <- rnorm(10, 16) %>% Cache(cacheRepo = tmpDir) # recovers cached copy
+#' ranNumsC <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 16)  # recovers cached copy
 #' ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 #'
 #' # Any minor change makes it different
-#' ranNumsE <- rnorm(10, 6) %>% Cache(cacheRepo = tmpDir) # different
+#' ranNumsE <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 6)# different
 #'
 #' ## Example 1: basic cache use with tags
 #' ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
@@ -76,7 +77,7 @@
 #' # Fine control of cache elements -- pick out only the large runif object, and remove it
 #' cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
 #' toRemove <- cache1[tagKey=="object.size"][as.numeric(tagValue) > 700]$artifact
-#' clearCache(tmpDir, userTags = toRemove)
+#' clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
 setGeneric("clearCache", function(x, userTags = character(), after, before,
@@ -91,8 +92,13 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath"))
-      x <- getOption("reproducible.cachePath")
+      x <- if (!is.null(list(...)$cacheRepo)) {
+        message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
+        list(...)$cacheRepo
+      } else  {
+        message("x not specified; using ", getOption("reproducible.cachePath")[1])
+        x <- getOption("reproducible.cachePath")[1]
+      }
     }
     if (is(x, "simList")) x <- x@paths$cachePath
 
@@ -130,7 +136,7 @@ setMethod(
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    list(...))
 
-    objsDT <- do.call(showCache, args = args)
+    objsDT <- do.call(showCache, args = args, quote = TRUE)
 
     if (isInteractive()) {
       objSizes <- as.numeric(objsDT[tagKey == "object.size"]$tagValue)
@@ -187,6 +193,52 @@ setMethod(
     return(invisible(objsDT))
 })
 
+#' @rdname viewCache
+#' @export
+#' @param secs Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
+#'     a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,
+#'             the default, then it will delete the most recent entry in the Cache.
+#'
+#' @details
+#' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
+#' i.e., to remove any cache entries touched in the last \code{secs} seconds.
+#' @examples
+#' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
+#' try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
+#'
+#' Cache(rnorm, 1, cacheRepo = tmpDir)
+#' thisTime <- Sys.time()
+#' Cache(rnorm, 2, cacheRepo = tmpDir)
+#' Cache(rnorm, 3, cacheRepo = tmpDir)
+#' Cache(rnorm, 4, cacheRepo = tmpDir)
+#' showCache(x = tmpDir) # shows all 4 entries
+#' cc(ask = FALSE, x = tmpDir)
+#' showCache(x = tmpDir) # most recent is gone
+#' cc(thisTime, ask = FALSE, x = tmpDir)
+#' showCache(x = tmpDir) # all those after thisTime gone, i.e., only 1 left
+#' cc(ask = FALSE, x = tmpDir) # Cache is
+#' cc(ask = FALSE, x = tmpDir) # Cache is already empty
+cc <- function (secs, ...) {
+  if (missing(secs)) {
+    message("No time provided; removing the most recent entry to the Cache")
+    suppressMessages(theCache <- reproducible::showCache(...))
+    if (NROW(theCache) > 0) {
+      accessed <- data.table::setkey(theCache[ tagKey == "accessed"], tagValue)
+      clearCache(userTags = tail(accessed, 1)$artifact, ...)
+    } else {
+      message("Cache already empty")
+    }
+  } else {
+    if (is(secs, "POSIXct")) {
+      reproducible::clearCache(after = secs, ...)
+    } else {
+      reproducible::clearCache(after = Sys.time() - secs, ...)
+    }
+  }
+
+}
+
+
 #' Examining and modifying the cache
 #'
 #' These are convenience wrappers around \code{archivist} package functions.
@@ -219,18 +271,21 @@ setMethod(
   "showCache",
   definition = function(x, userTags, after, before, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath"))
-      x <- getOption("reproducible.cachePath")
+      message("x not specified; using ", getOption("reproducible.cachePath")[1])
+      x <- getOption("reproducible.cachePath")[1]
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
     if (is(x, "simList")) x <- x@paths$cachePath
 
     # Clear the futures that are resolved
-    .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
+    .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
+      !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
-      if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE)))
-        checkFutures()
+      if (exists("futureEnv", envir = .reproEnv))
+        if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE))) {
+          checkFutures()
+        }
     }
 
     objsDT <- showLocalRepo(x) %>% data.table()
@@ -283,8 +338,8 @@ setMethod(
   "keepCache",
   definition = function(x, userTags, after, before, ask, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath"))
-      x <- getOption("reproducible.cachePath")
+      message("x not specified; using ", getOption("reproducible.cachePath")[1])
+      x <- getOption("reproducible.cachePath")[1]
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
@@ -407,12 +462,30 @@ setMethod(
 
 checkFutures <- function() {
   # This takes a long time -- can't use it if
-  resol <- future::resolved(.reproEnv)
+  resol1 <- FALSE
+  count <- 0
+  lsFutureEnv <- ls(.reproEnv$futureEnv)
 
-  while (any(!resol)) {
-    #numSleeps <<- numSleeps+1
-    Sys.sleep(0.001)
-    resol <- future::resolved(.reproEnv)
+  anyFutureWrite <- length(lsFutureEnv)
+
+  if (anyFutureWrite > 0) {
+
+    #objsInReproEnv <- ls(.reproEnv)
+    #objsInReproEnv <- grep("^future|cloudCheckSums", objsInReproEnv, value = TRUE)
+    while (any(!resol1)) {
+      count <- count + 1
+      #numSleeps <<- numSleeps+1
+      if (count > 1 ) {
+        Sys.sleep(0.001)
+        if (count > 1e3) {
+          message("Future is not resolved after 1 second of waiting. Allowing to proceed.")
+          break
+        }
+      }
+      resol <- future::resolved(.reproEnv$futureEnv)
+      resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
+    }
+    if (length(resol) > 0)
+      rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
   }
-  rm(list = names(resol)[resol], envir = .reproEnv)
 }

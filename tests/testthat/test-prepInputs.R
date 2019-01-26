@@ -69,7 +69,6 @@ test_that("prepInputs doesn't work", {
   expect_true(is(shpEcozone2, "SpatialPolygons"))
   expect_equivalent(shpEcozone1, shpEcozone2) # different attribute newCache
 
-
   #######################################
   ### url, targetFile, alsoExtract -- with Cache ######
   #######################################
@@ -141,8 +140,8 @@ test_that("prepInputs doesn't work", {
      url = url,
      destinationPath = asPath(dPath),
      studyArea = StudyArea
-   )
-   expect_is(LCC2005, "Raster")
+  )
+  expect_is(LCC2005, "Raster")
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_identical(extent(LCC2005)[1:4],
@@ -263,7 +262,6 @@ test_that("prepInputs doesn't work", {
   # crop and mask worked:
   expect_identical(extent(LCC2005)[1:4],
                    round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
-
 })
 
 test_that("interactive prepInputs", {
@@ -1104,7 +1102,7 @@ test_that("assessDataType doesn't work", {
   expect_true(assessDataType(ras) == "FLT8S")
 })
 
-test_that("assessDataTypeGDAL doesn't work", {
+test_that("assessDataType doesn't work for GDAL", {
   testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                 "reproducible.inputPaths" = NULL),
                           needGoogle = TRUE)
@@ -1115,15 +1113,15 @@ test_that("assessDataTypeGDAL doesn't work", {
   ## Float32
   ras <- raster(ncol = 10, nrow = 10)
   ras[] <- runif(100, 0, 1)
-  expect_true(assessDataTypeGDAL(ras) == "Float32")
+  expect_true(assessDataType(ras, type = "GDAL") == "Float32")
 
   ## UInt16
   ras[] <- c(201:300)
-  expect_true(assessDataTypeGDAL(ras) == "UInt16")
+  expect_true(assessDataType(ras, type = "GDAL") == "UInt16")
 
   ##Byte
   ras[] <- 1:100
-  expect_true(assessDataTypeGDAL(ras) == "Byte")
+  expect_true(assessDataType(ras, type = "GDAL") == "Byte")
 })
 
 test_that("lightweight tests for code coverage", {
@@ -1243,6 +1241,13 @@ test_that("lightweight tests for code coverage", {
 
   a <- projectInputs(ras2, targetCRS = crs(ras3), rasterToMatch = ras3, method = "ngb")
   expect_is(a, "RasterLayer")
+  expect_true(identical(crs(a), crs(ras3)))
+
+  #warns if bilinear is passed for reprojecting integer
+  expect_warning(projectInputs(ras2, rasterToMatch = ras3, method = "bilinear"))
+
+  #Works with no rasterToMatch
+  a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
   expect_true(identical(crs(a), crs(ras3)))
 
   # sp::CRS("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"))
@@ -1477,4 +1482,191 @@ test_that("rasters aren't properly resampled", {
   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
                      destinationPath = tempdir(), filename2 = tempfile(fileext = ".tif"))
   expect_true(dataType(out3) == "FLT4S")
+})
+
+test_that("System call gdal works", {
+  skip_on_cran()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
+  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+
+  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+
+  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE)
+  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+  expect_true(dataType(test1) == "INT1U") #properly resampled
+
+  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
+  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+  test2 <- prepInputs(targetFile = ras@file@name,
+                      destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
+  expect_true(dataType(test2) == "FLT4S")
+
+  on.exit(raster::rasterOptions(todisk = FALSE))
+})
+
+test_that("System call gdal works using multicores for both projecting and masking", {
+  skip_on_cran()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
+  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+
+  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  coords <- structure(c(2, 6, 8, 6, 2,
+                        2.2, 4, 5, 4.6, 2.2),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+
+# Passing a specific integer for cores
+  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2)
+  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+# Passing as float for cores
+  test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3)
+  expect_true(file.exists(test2@file@name)) #exists on disk after gdalwarp
+# Not passing cores
+  test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea)
+  expect_true(file.exists(test3@file@name)) #exists on disk after gdalwarp
+# Passing cores as AUTO
+  test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO")
+  expect_true(file.exists(test4@file@name)) #exists on disk after gdalwarp
+# Passing cores as any other character than 'AUTO'
+  expect_error(test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA"))
+
+  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
+  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+
+  on.exit(raster::rasterOptions(todisk = FALSE))
+})
+
+test_that("System call gdal will make the rasters match for rasterStack", {
+
+  skip_on_cran()
+
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  ras <- raster(extent(0, 4, 0, 4), res = 2, vals = 1:4)
+  crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  #next line generates intermittent error: In .Internal(gc(verbose, reset, full)) :
+  #closing unused connection 3 (C:/Temp/RtmpU5EOTS/raster/r_tmp_2018-12-03_143339_14468_30160.gri)
+  ras1 <- suppressWarnings(raster::projectRaster(from = ras, crs = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0", method = "ngb"))
+
+  ras1 <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+
+  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+  crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+
+  test1 <- prepInputs(targetFile = ras1@file@name, destinationPath = tempdir(),
+                      rasterToMatch = ras2, useCache = FALSE, method = 'ngb')
+
+  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+  expect_true(dataType(test1) == "INT1U")
+  expect_identical(raster::res(ras2), raster::res(test1))
+  expect_identical(raster::extent(ras2), raster::extent(test1))
+  expect_identical(raster::crs(ras2), raster::crs(test1))
+
+  on.exit(raster::rasterOptions(todisk = FALSE))
+})
+
+test_that("message when files from archive are already present", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                  targetFile = "rasterTest.tif",
+                                  destinationPath = tmpdir)
+  testthat::expect_message(ras <- reproducible::preProcess(archive = "rasterTest.zip",
+                                                         destinationPath = tmpdir))
+})
+
+test_that("message when file is a shapefile", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip",
+                                  destinationPath = tmpdir))
+})
+
+test_that("message when doesn't know the targetFile extension", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_message(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip",
+                                  destinationPath = tmpdir))
+})
+
+test_that("When supplying two files without archive, when archive and files have different names", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/twoKnownFiles.zip",
+                                                         targetFile = c("rasterTest.tif", "shapefileTest.shp"),
+                                                         destinationPath = tmpdir))
+})
+
+test_that("message when archive has two known files (raster and shapefile)", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  testthat::expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip",
+                                                           archive = "knownFiles.zip", targetFile = c("knownFiles.tif", "knownFiles.shp"),
+                                                           destinationPath = tmpdir))
+})
+
+test_that("message when extracting a file that is already present", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip",
+                                  targetFile = "rasterTest.tif",
+                                  destinationPath = tmpdir)
+  shp <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip",
+                                  destinationPath = tmpdir)
+  testthat::expect_message(fl <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip",
+                                                         destinationPath = tmpdir))
 })

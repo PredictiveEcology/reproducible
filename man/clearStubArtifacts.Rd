@@ -44,7 +44,7 @@ suppressWarnings(clearStubArtifacts(tmpDir))
 showCache(tmpDir) # stubs are removed
 
 # cleanup
-clearCache(tmpDir)
+clearCache(tmpDir, ask = FALSE)
 unlink(tmpDir, recursive = TRUE)
 
 }

@@ -1,64 +1,103 @@
-# Setup
+# SpaDES
 
-## Platform
+Version: 2.0.2
 
-|setting  |value                        |
-|:--------|:----------------------------|
-|version  |R version 3.5.1 (2018-07-02) |
-|system   |x86_64, darwin15.6.0         |
-|ui       |RStudio (1.1.419)            |
-|language |(EN)                         |
-|collate  |en_CA.UTF-8                  |
-|tz       |America/Edmonton             |
-|date     |2018-11-08                   |
+## Newly broken
 
-## Packages
+*   checking re-building of vignette outputs ... WARNING
+    ```
+    ...
+    loading SpaDES.tools     0.3.0
+    loading SpaDES.addins    0.1.1
+    
+    Default paths for SpaDES directories set to:
+      cachePath:  /tmp/RtmpNM5B36/SpaDES/cache
+      inputPath:  /tmp/RtmpNM5B36/SpaDES/inputs
+      modulePath: /tmp/RtmpNM5B36/SpaDES/modules
+      outputPath: /tmp/RtmpNM5B36/SpaDES/outputs
+    These can be changed using 'setPaths()'. See '?setPaths'.
+    ###### Module Code Checking - Still experimental - please report problems ######## 
+    /home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/revdep/library/SpaDES/SpaDES.core/sampleModules/randomLandscapes/randomLandscapes.R
+    randomLandscapes: defineParameter: '.useCache' is not of specified type 'logical'.
+    randomLandscapes: inputObjects: stackName is used from sim inside doEvent.randomLandscapes, but is not declared in inputObjects
+    /home/achubaty/Documents/GitHub/PredictiveEcology/reproducible/revdep/library/SpaDES/SpaDES.core/sampleModules/fireSpread/fireSpread.R
+    fireSpread: module code: landscape, testStats are declared in inputObjects, but no default(s) are provided in .inputObjects
+    fireSpread: inputObjects: stackName, DEM, Fires are used from sim inside doEvent.fireSpread, but are not declared in inputObjects
+    ###### Module Code Checking ########
+    Quitting from lines 66-68 (iii-cache.Rmd) 
+    Error: processing vignette 'iii-cache.Rmd' failed with diagnostics:
+    could not find symbol "objects" in environment of the generic function
+    Execution halted
+    ```
 
-|package      |*  |version |date       |source                                          |
-|:------------|:--|:-------|:----------|:-----------------------------------------------|
-|Rcpp         |   |1.0.0   |2018-11-07 |cran (@1.0.0)                                   |
-|reproducible |   |0.2.5   |2018-11-09 |Github (PredictiveEcology/reproducible@5ed6a72) |
+# SpaDES.core
 
-# Check results
+Version: 0.2.3
 
-1 packages with problems
+## Newly broken
 
-|package     |version | errors| warnings| notes|
-|:-----------|:-------|------:|--------:|-----:|
-|SpaDES.core |0.2.2   |      1|        1|     0|
+*   checking tests ...
+    ```
+     ERROR
+    Running the tests in ‘tests/test-all.R’ failed.
+    Last 13 lines of output:
+      OK: 333 SKIPPED: 34 FAILED: 9
+      1. Error: test cache (@test-cache.R#29) 
+      2. Error: test event-level cache (@test-cache.R#80) 
+      3. Error: test module-level cache (@test-cache.R#128) 
+      4. Error: test .prepareOutput (@test-cache.R#187) 
+      5. Error: test .robustDigest for simLists (@test-cache.R#222) 
+      6. Error: Cache of sim objects via .Cache attr -- using preDigest and postDigest (@test-cache.R#385) 
+      7. Error: spades calls with different signatures don't work (@test-simulation.R#124) 
+      8. Error: timeunits with child and parent modules work correctly (@test-timeunits.R#238) 
+      9. Error: test userSuppliedObj (@test-userSuppliedObjs.R#35) 
+      
+      Error: testthat unit tests failed
+      In addition: Warning message:
+      In fun(libname, pkgname) : couldn't connect to display ":99"
+      Execution halted
+    ```
 
-## SpaDES.core (0.2.2)
-Maintainer: Alex M Chubaty <alex.chubaty@gmail.com>  
-Bug reports: https://github.com/PredictiveEcology/SpaDES.core/issues
+*   checking for code/documentation mismatches ... WARNING
+    ```
+    Codoc mismatches from documentation object '.robustDigest,simList-method':
+    \S4method{.robustDigest}{simList}
+      Code: function(object, objects, length, algo, quick, classOptions)
+      Docs: function(object, objects, length =
+                     getOption("reproducible.length", Inf), algo =
+                     "xxhash64", quick = getOption("reproducible.quick",
+                     FALSE), classOptions = list())
+      Mismatches in argument default values (first 3):
+        Name: 'length' Code:  Docs: getOption("reproducible.length", Inf)
+        Name: 'algo' Code:  Docs: "xxhash64"
+        Name: 'quick' Code:  Docs: getOption("reproducible.quick", FALSE)
+    ```
 
-1 error  | 1 warning  | 0 notes
+## In both
 
-```
-checking tests ... ERROR
-  Running ‘test-all.R’ [99s/102s]
-Running the tests in ‘tests/test-all.R’ failed.
-Last 13 lines of output:
-  
-  [34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
-  [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
-  [39m[34m  Using memoised copy of .inputObjects event in test module
-  [39m[34m  Using cached copy of .inputObjects event in test module. Adding to memoised copy.
-  [39m[31m──[39m [31m1. Failure: test objSize (@test-cache.R#333) [39m [31m──────────[39m
-  length(os) == 4 isn't true.
-  
-  [34m  Using cached copy of .inputObjects event in child6 module. Adding to memoised copy.
-  [39m══ testthat results  ══════════════════════════════════════
-  OK: 310 SKIPPED: 35 FAILED: 1
-  1. Failure: test objSize (@test-cache.R#333) 
-  
-  Error: testthat unit tests failed
-  Execution halted
-
-checking Rd cross-references ... WARNING
-Missing link or links in documentation object 'moduleCoverage.Rd':
-  ‘[covr]{shine}’
-
-See section 'Cross-references' in the 'Writing R Extensions' manual.
-
-```
+*   checking re-building of vignette outputs ... WARNING
+    ```
+    ...
+    The following object is masked from 'package:RandomFieldsUtils':
+    
+        RFoptions
+    
+    The following objects are masked from 'package:base':
+    
+        abs, acosh, asin, asinh, atan, atan2, atanh, cos, cosh, exp,
+        expm1, floor, gamma, lgamma, log, log1p, log2, logb, max, min,
+        round, sin, sinh, sqrt, tan, tanh, trunc
+    
+    
+    Attaching package: 'data.table'
+    
+    The following object is masked from 'package:raster':
+    
+        shift
+    
+    Quitting from lines 637-677 (ii-modules.Rmd) 
+    Error: processing vignette 'ii-modules.Rmd' failed with diagnostics:
+    Column 6 of by= (5) is type 'list', not yet supported
+    Execution halted
+    ```
 

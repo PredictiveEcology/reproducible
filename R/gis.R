@@ -55,6 +55,11 @@ checkGDALVersion <- function(version) {
 #' @param y  A \code{SpatialPolygons} object. If it is not in the same projection
 #'           as \code{x}, it will be reprojected on the fly to that of \code{x}
 #'
+#' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
+#'           triggered. \code{'AUTO'*} will calculate 90% of the total
+#'           number of cores in the system, while an integer or rounded
+#'           float will be passed as the exact number of cores to be used.
+#'
 #' @return A \code{Raster*} object, masked (i.e., smaller extent and/or
 #'         several pixels converted to NA)
 #'
@@ -64,6 +69,7 @@ checkGDALVersion <- function(version) {
 #' @importFrom raster crop extract mask nlayers raster stack crs
 #' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
+#' @importFrom parallel detectCores
 #'
 #' @examples
 #' library(raster)
@@ -98,7 +104,7 @@ checkGDALVersion <- function(version) {
 #'   plot(shp, add = TRUE)
 #' }
 #'
-fastMask <- function(x, y) {
+fastMask <- function(x, y, cores = NULL) {
   if (requireNamespace("sf") && requireNamespace("fasterize")) {
     message("fastMask is using sf and fasterize")
 
@@ -125,7 +131,7 @@ fastMask <- function(x, y) {
 
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
-        dType <- assessDataType(raster(x))
+        dType <- assessDataType(raster(x), type = "writeRaster")
         writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
         rm(x)
         gc()
@@ -143,10 +149,24 @@ fastMask <- function(x, y) {
       if (.Platform$OS.type == "windows") {
         exe <- ".exe"
       } else exe <- ""
-      dType <- assessDataTypeGDAL(raster(tempSrcRaster))
+      dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+      if (is.null(cores) || cores =="AUTO") {
+        cores <- as.integer(parallel::detectCores()*0.9)
+        prll <- paste0("-wo NUM_THREADS=", cores, " ")
+      } else {
+        if (!is.integer(cores)) {
+          if (is.character(cores) | is.logical(cores)) {
+            stop ("'cores' needs to be passed as numeric or 'AUTO'")
+          } else {
+            prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
+          }
+        } else {
+          prll <- paste0("-wo NUM_THREADS=", cores, " ")
+        }
+      }
       system(
         paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-               "-multi ",
+               " -multi ", prll,
                "-ot ",
                dType, " ",
                "-crop_to_cutline ",

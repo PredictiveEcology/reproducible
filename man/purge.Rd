@@ -24,7 +24,7 @@ See table in \code{\link{preProcess}}.}
 
 \item{archive}{Optional character string giving the path of an archive
 containing \code{targetFile}, or a vector giving a set of nested archives
-(e.g., \code{c("xxx.tar", "inner.zip")}). If there is/are (an) inner
+(e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
 the \code{targetFile}. See table in \code{\link{preProcess}}.}
 

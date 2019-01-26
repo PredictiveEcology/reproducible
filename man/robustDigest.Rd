@@ -11,72 +11,56 @@
 \alias{.robustDigest,Path-method}
 \alias{.robustDigest,environment-method}
 \alias{.robustDigest,list-method}
+\alias{.robustDigest,data.frame-method}
 \alias{.robustDigest,Raster-method}
 \alias{.robustDigest,Spatial-method}
 \title{Create reproducible digests of objects in R}
 \usage{
-.robustDigest(object, objects, length = getOption("reproducible.length",
+.robustDigest(object, .objects, length = getOption("reproducible.length",
   Inf), algo = "xxhash64", quick = getOption("reproducible.quick",
-  FALSE), classOptions = list())
+  FALSE), classOptions = list(), ...)
 
-\S4method{.robustDigest}{ANY}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{ANY}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{cluster}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{cluster}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{`function`}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{`function`}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{expression}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{expression}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{character}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{character}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{Path}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{Path}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{environment}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{environment}(object, .objects, length, algo,
+  quick, classOptions)
 
-\S4method{.robustDigest}{list}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{list}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{Raster}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{data.frame}(object, .objects, length, algo, quick,
+  classOptions)
 
-\S4method{.robustDigest}{Spatial}(object, objects,
-  length = getOption("reproducible.length", Inf), algo = "xxhash64",
-  quick = getOption("reproducible.quick", FALSE),
-  classOptions = list())
+\S4method{.robustDigest}{Raster}(object, .objects, length, algo, quick,
+  classOptions)
+
+\S4method{.robustDigest}{Spatial}(object, .objects, length, algo, quick,
+  classOptions)
 }
 \arguments{
 \item{object}{an object to digest.}
 
-\item{objects}{Optional character vector indicating which objects are to
-be considered while making digestible. This argument is not used
-in the default cases; the only known method that uses this
-in the default cases; the only known method that uses this
-argument is the \code{simList} class from \code{SpaDES.core}.}
+\item{.objects}{Character vector of objects to be digested. This is only applicable
+if there is a list, environment (or similar) named objects
+within it. Only this/these objects will be considered for caching,
+i.e., only use a subset of
+the list, environment or similar objects.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
 object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
@@ -111,20 +95,26 @@ as paths, if they are file-backed.}
 \item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
 specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
+
+\item{...}{Arguments of \code{FUN} function .}
+
+\item{objects}{Optional character vector indicating which objects are to
+be considered while making digestible. This argument is not used
+in the default cases; the only known method that uses this
+in the default cases; the only known method that uses this
+argument is the \code{simList} class from \code{SpaDES.core}.}
 }
 \value{
 A hash i.e., digest of the object passed in.
 }
 \description{
 Not all aspects of R objects are captured by current hashing tools in R (e.g.
-\code{digest::digest}, \code{fastdigest::fastdigest}, \code{knitr} caching,
+\code{digest::digest}, \code{knitr} caching,
 \code{archivist::cache}). This is mostly because many objects have "transient"
-(e.g., functions have environments), or "disk-backed" features. This function
-allows for these accommodations to be made and uses \code{\link[fastdigest]{fastdigest}}
-internally.  Since
+(e.g., functions have environments), or "disk-backed" features. Since
 the goal of using reproducibility is to have tools that are not session specific,
 this function
-attempts to strip all session specific information so that the fastdigest
+attempts to strip all session specific information so that the digest
 works between sessions and operating systems. It is tested under many
 conditions and object types, there are bound to be others that don't
 work correctly.
@@ -147,7 +137,7 @@ Functions (which are contained within environments) are
 converted to a text representation via a call to \code{format(FUN)}.
 
 Objects contained within a list or environment are recursively hashed
-using \code{\link[fastdigest]{fastdigest}}, while removing all references to
+using \code{\link[digest]{digest}}, while removing all references to
 environments.
 
 Character strings are first assessed with \code{dir.exists} and \code{file.exists}
@@ -165,8 +155,8 @@ save(a, file = tmpfile1)
 save(a, file = tmpfile2)
 
 # treats as character string, so 2 filenames are different
-fastdigest::fastdigest(tmpfile1)
-fastdigest::fastdigest(tmpfile2)
+digest::digest(tmpfile1)
+digest::digest(tmpfile2)
 
 # tests to see whether character string is representing a file
 .robustDigest(tmpfile1)
@@ -191,8 +181,8 @@ r2 <- writeRaster(r, file = tmpfile2)
 
 digest::digest(r1)
 digest::digest(r2) # different
-fastdigest::fastdigest(r1)
-fastdigest::fastdigest(r2) # different
+digest::digest(r1)
+digest::digest(r2) # different
 .robustDigest(r1)
 .robustDigest(r2) # same... data are the same in the file
 
@@ -203,8 +193,6 @@ fastdigest::fastdigest(r2) # different
 }
 \seealso{
 \code{\link[archivist]{cache}}.
-
-\code{\link[fastdigest]{fastdigest}}.
 }
 \author{
 Eliot McIntire

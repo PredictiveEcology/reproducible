@@ -6,21 +6,7 @@
   opts <- options()
   checkPath(.reproducibleTempCacheDir, create = TRUE)
   checkPath(.reproducibleTempInputDir, create = TRUE)
-  opts.reproducible <- list( # nolint
-    reproducible.ask = TRUE,
-    reproducible.cachePath = file.path(.reproducibleTempCacheDir),
-    reproducible.destinationPath = NULL,
-    reproducible.futurePlan = FALSE, #future::plan("multiprocess"), #memoise
-    reproducible.inputPaths = NULL,
-    reproducible.inputPathsRecursive = FALSE,
-    reproducible.length = Inf,
-    reproducible.overwrite = FALSE,
-    reproducible.quick = FALSE,
-    reproducible.useCache = TRUE, # override Cache function
-    reproducible.useMemoise = TRUE, #memoise
-    reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
-    reproducible.verbose = FALSE
-  )
+  opts.reproducible <- reproducibleOptions()
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
 
@@ -31,7 +17,11 @@
 #' @importFrom utils packageVersion
 .onAttach <- function(libname, pkgname) {
   if (isInteractive()) {
-    packageStartupMessage("Using reproducible version ", utils::packageVersion("reproducible"), ".")
+    packageStartupMessage("Using reproducible version ",
+                          utils::packageVersion("reproducible"), ".",
+                          "\n  'reproducible' has changed the default digest algorithm.",
+                          "\n  See ?reproducibleOptions for details. To revert to the old:",
+                          "\n  options('reproducible.useNewDigestAlgorithm' = FALSE)")
   }
 }
 
@@ -59,3 +49,4 @@
                                           names(formals(determineFilename)),
                                           names(formals(writeOutputs)),
                                           unlist(lapply(methods("postProcess"), function(x) names(formals(x))))))
+

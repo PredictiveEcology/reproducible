@@ -8,7 +8,7 @@ matrix:
   include:
   - os: linux
     dist: trusty
-    r: 3.3.0
+    r: 3.3
     addons:
       apt:
         sources:
@@ -26,7 +26,7 @@ matrix:
     - rgeos
   - os: linux
     dist: trusty
-    r: 3.4.0
+    r: 3.4
     addons:
       apt:
         sources:

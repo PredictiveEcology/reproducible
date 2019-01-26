@@ -116,3 +116,20 @@ rndstr <- function(n = 1, len = 8) {
 }
 
 isInteractive <- function() interactive()
+
+#' A version of \code{base::basename} that is \code{NULL} resistant
+#'
+#' Returns \code{NULL} if x is \code{NULL}, otherwise, as \code{basename}.
+#'
+#' @param x A character vector of paths
+#' @export
+#' @return Same as \code{\link[base]{basename}}
+#'
+basename2 <- function (x) {
+  if (is.null(x)) {
+    NULL
+  }
+  else {
+    basename(x)
+  }
+}

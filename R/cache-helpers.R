@@ -205,7 +205,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
-      cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")))) {
+      cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
         message("No cacheRepo supplied. Using value in getOption('reproducible.cachePath')")
         getOption("reproducible.cachePath", tempdir())
       } else {
@@ -332,8 +332,7 @@ setMethod(
 #' @importFrom methods selectMethod showMethods
 #' @keywords internal
 #' @rdname cacheHelper
-getFunctionName <- function(FUN, originalDots, ...,
-                            overrideCall, isPipe) { # nolint
+getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # nolint
   callIndex <- numeric()
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
@@ -389,17 +388,22 @@ getFunctionName <- function(FUN, originalDots, ...,
       callIndices <- .grepSysCalls(scalls, pattern = paste0("^", overrideCall))
       functionCall <- scalls[callIndices]
     } else {
-      callIndices <- .grepSysCalls(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+      callIndices <- .grepSysCalls(scalls,
+        pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache|^cloudCache")
+      callIndicesDoCall <- .grepSysCalls(scalls, pattern = "^do.call")
+      doCall1st2Elements <- lapply(scalls[callIndicesDoCall], function(x) x[1:2])
+      callIndicesDoCall <- callIndicesDoCall[grep("Cache", doCall1st2Elements)]
       # The next line takes too long to grep if scalls has enormous objects
       # callIndices <- grep(scalls, pattern = "^Cache|^SpaDES::Cache|^reproducible::Cache")
+      callIndices <- unique(sort(c(callIndices, callIndicesDoCall)))
       functionCall <- scalls[callIndices]
     }
     if (length(functionCall)) {
       # for() loop is a work around for R-devel that produces a different final call in the
       # sys.calls() stack which is NOT .Method ... and produces a Cache(FUN = FUN...)
-      for (callIndex in rev(callIndices)) {
+      for (callIndex in head(rev(callIndices), 2)) {
         if (!missing(overrideCall)) {
-          env <- sys.frames()[[callIndices]]
+          env <- sys.frames()[[callIndex]]
           matchedCall <- match.call(get(overrideCall, envir = env), scalls[[callIndex]])#parse(text = callIndex))
           forms <- tryCatch("FUN" %in% formalArgs(overrideCall), error = function(x) NULL)
           if (!is.null(forms)) {
@@ -408,11 +412,36 @@ getFunctionName <- function(FUN, originalDots, ...,
             functionName <- matchedCall[[2]]
           }
         } else {
-          matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
-          functionName <- matchedCall$FUN
+          foundCall <- FALSE
+          if (exists("callIndicesDoCall", inherits = FALSE))
+            if (length(callIndicesDoCall) > 0) {
+              if (callIndex %in% callIndicesDoCall) {
+                mcDoCall <- match.call(do.call, scalls[[callIndex]])
+                for (i in 1:2) {
+                  fnLookup <- try(eval(mcDoCall$args, envir = sys.frames()[[callIndex - i]]), silent = TRUE)
+                  if (!is(fnLookup, "try-error"))
+                    break
+                }
+                functionName <- if (isTRUE("FUN" %in% names(fnLookup)))
+                  fnLookup$FUN
+                else
+                  fnLookup[[1]]
+
+                foundCall <- TRUE
+              }
+            }
+          if (!foundCall) {
+            matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
+            functionName <- matchedCall$FUN
+          }
         }
-        functionName <- deparse(functionName, width.cutoff = 300)
-        if (all(functionName != c("FUN"))) break
+        functionName <- if (is(functionName, "name")) {
+          deparse(functionName, width.cutoff = 300)
+        } else {
+          "FUN"
+        }
+
+        if (all(functionName != c("FUN")) && all(functionName != c("NULL"))) break
       }
     } else {
       functionName <- ""
@@ -539,7 +568,7 @@ setAs(from = "character", to = "Path", function(from) {
 #' showCache(tmpDir) # stubs are removed
 #'
 #' # cleanup
-#' clearCache(tmpDir)
+#' clearCache(tmpDir, ask = FALSE)
 #' unlink(tmpDir, recursive = TRUE)
 #'
 setGeneric("clearStubArtifacts", function(repoDir = NULL) {
@@ -548,6 +577,7 @@ setGeneric("clearStubArtifacts", function(repoDir = NULL) {
 
 #' @export
 #' @rdname clearStubArtifacts
+#' @importFrom magrittr %>%
 setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
@@ -864,9 +894,9 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
 #' @rdname cacheHelper
-#' @importFrom fastdigest fastdigest
 #' @importFrom methods slotNames
 #' @importFrom digest digest
+#' @importFrom fastdigest fastdigest
 #' @importFrom raster res crs extent
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
@@ -875,8 +905,14 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   sn <- sn[!(sn %in% c("min", "max", "haveminmax", "names", "isfactor",
                        "dropped", "nlayers", "fromdisk", "inmemory", "offset", "gain"))]
   dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
-  dig <- fastdigest(append(list(dim(object), res(object), crs(object),
-                         extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig <- digest(append(list(dim(object), res(object), crs(object),
+                         extent(object)), dataSlotsToDigest),
+                algo = algo) # don't include object@data -- these are volatile
+  else
+    dig <- fastdigest(append(list(dim(object), res(object), crs(object),
+                              extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
+
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
     filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
@@ -888,7 +924,12 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
     dig <- c(dig, dig2)
   }
-  dig <- fastdigest(dig)
+
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig <- digest(dig, algo = algo)
+  else
+    dig <- fastdigest(dig)
+  dig
 }
 
 #' Recursive copying of nested environments, and other "hard to copy" objects
@@ -1027,14 +1068,19 @@ setMethod("Copy",
     namesObj <- obj
   }
 
-  namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
-  allLower <- tolower(namesObj) == namesObj
-  namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
+  if (is.character(namesObj)) {
+    namesObj <- gsub(namesObj, pattern = "\\.|_", replacement = "aa")
+    allLower <- tolower(namesObj) == namesObj
+    namesObj[allLower] <- paste0("abALLLOWER", namesObj[allLower])
 
-  onesChanged <- startsWith(namesObj, prefix = "a")
-  namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
+    onesChanged <- startsWith(namesObj, prefix = "a")
+    namesObj[!onesChanged] <- paste0("ZZZZZZZZZ", namesObj[!onesChanged])
 
-  order(namesObj)
+    out <- order(namesObj)
+  } else {
+    out <- seq_along(obj)
+  }
+  out
 }
 
 ################################################################################
@@ -1066,9 +1112,10 @@ setMethod("Copy",
     scalls <- sys.calls()
   }
 
-  otherFns <- .grepSysCalls(scalls, pattern = paste0("(test_code)|(with_reporter)|(force)|",
+  otherFns <- .grepSysCalls(scalls, pattern = paste0("(test_)|(with_reporter)|(force)|",
                                              "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
-                                             "(Cache)|(tryCatch)|(doTryCatch)"))
+                                             "(Cache)|(tryCatch)|(doTryCatch)|(withCallingHandlers)|",
+                                             "(FUN)"))
   if (length(otherFns)) {
     otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
       tryCatch(as.character(x[[1]]), error = function(y) "")
@@ -1107,8 +1154,7 @@ nextNumericName <- function(string) {
     highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split,1)))),
                          na.rm = TRUE)
     preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_"))))
-
-    out <- paste0(dirname(saveFilenameSansExt), preNumeric, "_", highestNumber + 1) # keep rndstr in here, so that both streams keep same rnd number state
+    out <- file.path(dirname(saveFilenameSansExt), paste0(preNumeric, "_", highestNumber + 1)) # keep rndstr in here, so that both streams keep same rnd number state
   } else {
     out <- paste0(saveFilenameSansExt, "_1")
   }

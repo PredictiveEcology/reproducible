@@ -8,33 +8,33 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
     for caching, downloading and verifying or writing checksums, post-processing 
     of common spatial datasets, and accessing GitHub repositories. 
     Some features are still under active development.
+AdditionalRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows)  to work with '.rar' files.
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2018-11-15
-Version: 0.2.5
+Date: 2018-01-25
+Version: 0.2.6
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
-    role = c("aut", "cre"), comment=c(ORCID = "0000-0002-6914-8316")),
+    role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
     person("Alex M", "Chubaty", email = "alex.chubaty@gmail.com",
     role = c("aut"), comment = c(ORCID = "0000-0001-7146-8135")),
     person("Tati", "Micheletti", email = "tati.micheletti@gmail.com",
-    role = c("ctb"), comment=c(ORCID = "0000-0003-4838-8342")),
+    role = c("ctb"), comment = c(ORCID = "0000-0003-4838-8342")),
     person("Ceres", "Barros", email = "cbarros@mail.ubc.ca",
-    role = c("ctb"), comment=c(ORCID = "0000-0003-4036-977X")),
+    role = c("ctb"), comment = c(ORCID = "0000-0003-4036-977X")),
     person("Ian", "Eddy", email = "ian.eddy@canada.com",
-    role = c("ctb"), comment=c(ORCID = "0000-0001-7397-2116")),
+    role = c("ctb"), comment = c(ORCID = "0000-0001-7397-2116")),
     person("Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada",
     role = "cph")
     )
 Depends:
-    R (>= 3.3.0)
+    R (>= 3.3)
 Imports:
     archivist (>= 2.1.2),
     backports,
     crayon,
     data.table (>= 1.10.4),
-    devtools,
     digest,
     dplyr,
     fastdigest,
@@ -59,7 +59,6 @@ Imports:
     sf,
     sp,
     testthat,
-    tibble,
     tools,
     utils,
     versions
@@ -76,14 +75,16 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 6.1.0.9000
+RoxygenNote: 6.1.1
 Collate: 
     'RcppExports.R'
     'cache-helpers.R'
+    'cache-internals.R'
     'cache-tools.R'
     'robustDigest.R'
     'cache.R'
     'checksums.R'
+    'cloud.R'
     'consistentPaths.R'
     'convertPaths.R'
     'download.R'
@@ -91,6 +92,7 @@ Collate:
     'git.R'
     'helpers.R'
     'objectSize.R'
+    'options.R'
     'packages.R'
     'pipe.R'
     'postProcess.R'

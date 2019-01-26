@@ -81,6 +81,7 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
 #' @importFrom crayon magenta
 #' @importFrom methods formalArgs
 #' @importFrom utils read.table write.table
+#' @importFrom R.utils isAbsolutePath
 #' @rdname Checksums
 setMethod(
   "Checksums",
@@ -106,6 +107,10 @@ setMethod(
     if (is.null(files)) {
       files <- list.files(path, full.names = TRUE) %>%
         grep(basename(checksumFile), ., value = TRUE, invert = TRUE)
+    } else {
+      isAbs <- R.utils::isAbsolutePath(files)
+      if (!all(isAbs))
+        files <- file.path(path, basename(files))
     }
 
     txt <- if (file.size(checksumFile) == 0) {

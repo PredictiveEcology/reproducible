@@ -9,7 +9,7 @@ if (packageVersion("devtools") < "2.0.1") {
   library("revdepcheck")
 
   revdep_reset()
-  revdep_check(num_workers = getOption("Ncpus", 1))
+  revdepcheck::revdep_check(num_workers = getOption("Ncpus", 4), timeout = 30*60) ## 30 mins
   revdep_report_cran() ## update cran-comments with this output
 
   ### email maintainers of revdep packages (need to edit: `revdep/email.yml`)

@@ -42,8 +42,9 @@ test_that("package-related functions work", {
     suppressWarnings(Require("latdiag", libPath = packageDir, packageVersionFile = packageVersionFile,
                              standAlone = FALSE))
     iv <- data.frame(installed.packages(lib.loc = packageDir), stringsAsFactors = FALSE)
+    if (!grepl(pattern = "3.5", x = R.Version()[["version.string"]])) {
     expect_true(iv[iv$Package == "latdiag", "Version"] == versionlatdiag)
-
+    }
     Require("achubaty/meow", libPath = packageDir,
             install_githubArgs = list(force = TRUE, dependencies = c("Depends", "Imports")),
             standAlone = TRUE)

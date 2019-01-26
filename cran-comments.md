@@ -2,34 +2,28 @@
 
 This is an enhancement release. Several new functions and new options. 
 
-
 ## Test environments
 
 ### Previous R versions
-* Ubuntu 14.04        (travis-ci), R 3.1.0
-* Ubuntu 14.04        (travis-ci), R 3.2.0
-* Ubuntu 14.04        (travis-ci), R 3.3.0
-* Ubuntu 14.04        (travis-ci), R 3.4.0
-* Windows              (appveyor), R 3.1.0
-* Windows              (appveyor), R 3.2.0
-* Windows              (appveyor), R 3.3.0
-* Windows              (appveyor), R 3.4.0
+* Ubuntu 14.04        (travis-ci), R 3.3.3
+* Ubuntu 14.04        (travis-ci), R 3.4.4
+* Windows              (appveyor), R 3.3.3
+* Windows              (appveyor), R 3.4.4
 
 ### Current R versions
-* macOS El Capitan        (r-hub), R 3.5.0
-* macOS High Sierra   (travis-ci), R 3.5.0
-* macOS Mojave            (local), R 3.5.1
-* Ubuntu 14.04        (travis-ci), R 3.5.1
-* Ubuntu 18.04            (local), R 3.5.1
-* Windows              (appveyor), R 3.5.1
-* Windows           (win-builder), R 3.5.1
-* Windows 7               (local), R 3.5.1
+* macOS Mojave        (travis-ci), R 3.5.2
+* macOS Mojave            (local), R 3.5.2
+* Ubuntu 14.04        (travis-ci), R 3.5.2
+* Ubuntu 18.04            (local), R 3.5.2
+* Windows              (appveyor), R 3.5.2
+* Windows           (win-builder), R 3.5.2
+* Windows 7               (local), R 3.5.2
 
 ### Development R version
-* Ubuntu 14.04     (travis-ci), R 3.6.0 (2018-11-15 r75610)
-* Ubuntu 18.04         (local), R 3.6.0 (2018-11-06 r75553)
-* Windows           (appveyor), R 3.6.0 (2018-11-14 r75608)
-* Windows        (win-builder), R 3.6.0 (2018-11-14 r75608)
+* Ubuntu 14.04        (travis-ci), R 3.6.0 (2019-01-22 r76003)
+* Ubuntu 18.04            (local), R 3.6.0 (2019-01-25 r76014)
+* Windows              (appveyor), R 3.6.0 (2019-01-13 r75986)
+* Windows           (win-builder), R 3.6.0 (2019-01-23 r76007)
 
 ## R CMD check results
 
@@ -48,4 +42,4 @@ There were 1 NOTEs:
 We have run R CMD check on downstream dependencies, and all have passed except those noted below.
 Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
 
-* `SpaDES.core` throws some ERRORs, which are fixed in the next version (will be submitted shortly).
+* problems detected on the CRAN versions of `SpaDES` and `SpaDES.core` are fixed in the versions to be submitted shatly to CRAN.

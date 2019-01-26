@@ -13,7 +13,7 @@ projectInputs(x, targetCRS, ...)
 \method{projectInputs}{default}(x, targetCRS, ...)
 
 \method{projectInputs}{Raster}(x, targetCRS = NULL,
-  rasterToMatch = NULL, ...)
+  rasterToMatch = NULL, cores = NULL, ...)
 
 \method{projectInputs}{sf}(x, targetCRS, ...)
 
@@ -30,6 +30,11 @@ projectInputs(x, targetCRS, ...)
 \code{\link[raster]{projectRaster}}, thus will changing the
 resolution and projection of \code{x}.
 See details in \code{\link{postProcess}}.}
+
+\item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
+triggered. \code{'AUTO'*} will calculate 90% of the total
+number of cores in the system, while an integer or rounded
+float will be passed as the exact number of cores to be used.}
 }
 \value{
 A file of the same type as starting, but with projection (and possibly other

@@ -7,25 +7,25 @@
 \alias{\%<\%}
 \title{Cache method that accommodates environments, S4 methods, Rasters, & nested caching}
 \usage{
-Cache(FUN, ..., notOlderThan = NULL, objects = NULL,
+Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength, userTags = c(), digestPathContent,
   omitArgs = NULL, classOptions = list(), debugCache = character(),
   sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
+  verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   showSimilar = NULL)
 
-\S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, objects = NULL,
+\S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, .objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
   length = getOption("reproducible.length", Inf),
   compareRasterFileLength, userTags = c(), digestPathContent,
   omitArgs = NULL, classOptions = list(), debugCache = character(),
   sideEffect = FALSE, makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", FALSE), cacheId = NULL,
+  verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   showSimilar = NULL)
 
@@ -39,7 +39,7 @@ lhs \%<\% rhs
 
 \item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
 
-\item{objects}{Character vector of objects to be digested. This is only applicable
+\item{.objects}{Character vector of objects to be digested. This is only applicable
 if there is a list, environment (or similar) named objects
 within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
@@ -83,7 +83,7 @@ If \code{"complete"}, then the returned object from the Cache
 function will have two attributes, \code{debugCache1} and \code{debugCache2},
 which are the entire \code{list(...)} and that same object, but after all
 \code{.robustDigest} calls, at the moment that it is digested using
-\code{fastdigest}, respectively. This \code{attr(mySimOut, "debugCache2")}
+\code{digest}, respectively. This \code{attr(mySimOut, "debugCache2")}
 can then be compared to a subsequent call and individual items within
 the object \code{attr(mySimOut, "debugCache1")} can be compared.
 If \code{"quick"}, then it will return the same two objects directly,
@@ -117,7 +117,8 @@ the contents of the file(s) are hashed.
 If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
 as paths, if they are file-backed.}
 
-\item{verbose}{Logical. This will output much more information about the internals of
+\item{verbose}{Numeric, with 0 being off, 1 being a little, 2 being more verbose etc.
+Above 1 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges.}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
@@ -128,17 +129,7 @@ This may help in some particularly finicky situations
 where Cache is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
-\item{useCache}{Logical or \code{"overwrite"}. If \code{FALSE},
-then the entire Caching mechanism is bypassed
-and the function is evaluated as if it was not being Cached.
-Default is \code{getOption("reproducible.useCache")}),
-which is \code{FALSE} by default, meaning use the Cache mechanism. This
-may be useful to turn all Caching on or off in very complex scripts and
-nested functions. If \code{"overwrite"} (which can be set with
-\code{options("reproducible.useCache" = "overwrite")}),
-then the function invoke the caching mechanism but will purge
-any entry that is matched, and it will be replaced with the
-results of the current call.}
+\item{useCache}{Logical or \code{"overwrite"} or \code{"devMode"}. See details.}
 
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache
@@ -157,9 +148,9 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
-Cache method that accommodates environments, S4 methods, Rasters, & nested caching
-
-The special assign operator \code{\%<\%} is equivalent to Cache. See examples at the end.
+Still experimental and may change. This form cannot pass any arguments to
+]code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
+it is a clean alternative for simple cases.
 }
 \details{
 Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
@@ -181,10 +172,9 @@ though quite common, cases by:
         Currently, only file-backed \code{Raster*} objects are digested
         (e.g., not \code{ff} objects, or any other R object where the data
         are on disk instead of in RAM);
-  \item using \code{\link[fastdigest]{fastdigest}} internally when the object
-        is in RAM, which can be up to ten times faster than
-        \code{\link[digest]{digest}}. Note that file-backed objects are still
-        hashed using \code{\link[digest]{digest}}.
+  \item Uses \code{\link[digest]{digest}} (formerly fastdigest, which does
+        not translate between operating systems).
+        This is used for file-backed objects as well.
   \item Cache will save arguments passed by user in a hidden environment. Any
         nested Cache functions will use arguments in this order 1) actual arguments
         passed at each Cache call, 2) any inherited arguments from an outer Cache
@@ -270,6 +260,36 @@ of stochastic outcomes are required. It will also be very useful in a
 reproducible workflow.
 }
 
+\section{useCache}{
+
+If \code{FALSE}, then the entire Caching mechanism is bypassed and the
+function is evaluated as if it was not being Cached. Default is
+\code{getOption("reproducible.useCache")}), which is \code{TRUE} by default,
+meaning use the Cache mechanism. This may be useful to turn all Caching on or
+off in very complex scripts and nested functions.
+
+If \code{"overwrite"}
+(which can be set with \code{options("reproducible.useCache" =
+"overwrite")}), then the function invoke the caching mechanism but will purge
+any entry that is matched, and it will be replaced with the results of the
+current call.
+
+If \code{"devMode"}: The point of this mode is to facilitate using the Cache when
+functions and datasets are continually in flux, and old Cache entries are
+likely stale very often. In `devMode`, the cache mechanism will work as
+normal if the Cache call is the first time for a function OR if it
+successfully finds a copy in the cache based on the normal Cache mechanism.
+It *differs* from the normal Cache if the Cache call does *not* find a copy
+in the `cacheRepo`, but it does find an entry that matches based on
+`userTags`. In this case, it will delete the old entry in the `cacheRepo`
+(identified based on matching `userTags`), then continue with normal `Cache`.
+For this to work correctly, `userTags` must be unique for each function call.
+This should be used with caution as it is still experimental. Currently, if
+\code{userTags} are not unique to a single entry in the cacheRepo, it will
+default to the behaviour of \code{useCache = TRUE} with a message. This means
+that \code{"devMode"} is most useful if used from the start of a project.
+}
+
 \section{\code{sideEffect}}{
 
 If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
@@ -299,8 +319,37 @@ ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 
 # All same
 ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsC <- rnorm(10, 16) \%>\% Cache(cacheRepo = tmpDir) # recovers cached copy
+ranNumsC <- Cache(cacheRepo = tmpDir) \%C\% rnorm(10, 16)  # recovers cached copy
 ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
+
+###############################################
+# experimental devMode
+###############################################
+opt <- options("reproducible.useCache" = "devMode")
+clearCache(tmpDir, ask = FALSE)
+centralTendency <- function(x)
+  mean(x)
+funnyData <- c(1,1,1,1,10)
+uniqueUserTags <- c("thisIsUnique", "reallyUnique")
+ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpDir,
+                  userTags = uniqueUserTags) # sets new value to Cache
+showCache(tmpDir) # 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474
+
+# During development, we often redefine function internals
+centralTendency <- function(x)
+  median(x)
+# When we rerun, we don't want to keep the "old" cache because the function will
+#   never again be defined that way. Here, because of userTags being the same,
+#   it will replace the entry in the Cache, effetively overwriting it, even though
+#   it has a different cacheId
+ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = uniqueUserTags)
+showCache(tmpDir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
+
+# If it finds it by cacheID, doesn't matter what the userTags are
+ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpDir, userTags = "thisIsUnique")
+
+options(opt)
+
 # For more in depth uses, see vignette
 \dontrun{
   browseVignettes(package = "reproducible")
