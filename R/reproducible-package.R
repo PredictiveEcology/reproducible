@@ -33,7 +33,7 @@
 #'                     locations or in their original online data repositories,
 #'                     \code{without altering code} between the first, second, third etc. times
 #'                     the code is run.\cr
-#'   \code{Require} \tab A verion of \code{require} that incorporates elements of
+#'   \code{Require} \tab A version of \code{require} that incorporates elements of
 #'                    \code{install.packages}, \code{devtools::install_github}, \code{packrat}.
 #'                    It allows for users code to work for a new user on a new machine that
 #'                    may or may not have all packages installed.\cr

@@ -923,7 +923,7 @@ setMethod(
 
 #' Generic method to make or unmake objects memoisable
 #'
-#' This is just a pass through for all clases in reproducible.
+#' This is just a pass through for all classes in reproducible.
 #' This generic is here so that downstream methods can be created.
 #'
 #' @param x  An object to make memoiseable.
