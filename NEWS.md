@@ -73,7 +73,7 @@ version 0.2.5
 * Deal with new `raster` package changes in development version of `raster` package
 * Added checks for float point number issues in raster resolutions produced by `raster::projectRaster`
 * `.robustDigest` now does not include `Cache`-added attributes
-* Additonal tests for `preProcess()` (#68, @tati-micheletti)
+* Additional tests for `preProcess()` (#68, @tati-micheletti)
 * Many new unit tests written, which caught several minor bugs
 
 version 0.2.3
@@ -117,7 +117,7 @@ version 0.2.2
 
 ## Other changes
 
-- most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistent test building
+- most tests now use a standardized approach to attaching libraries, creating objects, paths, enabling easier, error resistant test building
 
 version 0.2.1
 =============
@@ -136,7 +136,7 @@ version 0.2.1
 ## Bug fixes
 
 * `copyFile` correctly handles directory names containing spaces.
-* `makeMemoisable` fixed to handle additonal edge cases.
+* `makeMemoisable` fixed to handle additional edge cases.
 * other minor bug fixes.
 
 version 0.2.0
