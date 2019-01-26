@@ -162,14 +162,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   for (dp in c(destinationPath, getOption("reproducible.inputPaths", NULL))) {
     checkSums <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
                                files = basename2(filesToCheck)), silent = TRUE)
-    if (!all(is.na(checkSums$result)))
-      break
-    else
+    if (!all(is.na(checkSums$result))) { # found something
       if (identical(dp, getOption("reproducible.inputPaths"))) {
         destinationPathUser <- destinationPath
         destinationPath <- dp
         on.exit({destinationPath <- destinationPathUser}, add = TRUE)
       }
+      break
+    }
   }
 
 
