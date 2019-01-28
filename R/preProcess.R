@@ -253,6 +253,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       )
     }
   }
+
   # Check for local copies in all values of getOption("reproducible.inputPaths")
   # At the end of this function, the files will be present in destinationPath, if they existed
   #  in options("reproducible.inputPaths")
@@ -269,11 +270,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
   if (!is.null(getOption("reproducible.inputPaths"))) {
-    destinationPathUser <- destinationPath
-    on.exit({
-      destinationPath <- destinationPathUser
-    }, add = TRUE)
-    destinationPath <- getOption("reproducible.inputPaths")[1]
+    # may already have been changed above
+    if (!identical(destinationPath, getOption("reproducible.inputPaths", NULL))) {
+      destinationPathUser <- destinationPath
+      on.exit({
+        destinationPath <- destinationPathUser
+      }, add = TRUE)
+      destinationPath <- getOption("reproducible.inputPaths")[1]
+    }
+
     if (isTRUE(any(grepl(archive, pattern = destinationPathUser)))) {
       # might have a "." as destinationPath -- messes with grepl
       patt <- if (grepl("^\\.", destinationPathUser))
@@ -718,6 +723,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           }
         }
       }
+    }
+    # do a check here that destinationPath is already the inputPaths
+    #   need to emulate the above behaviour
+    if (identical(destinationPath, getOption("reproducible.inputPaths", NULL))) {
+      foundInInputPaths <- filesInHand
+      successfulDir <- destinationPath
+      successfulCheckSumFilePath <- checkSumFilePath
     }
   }
   list(checkSums = checkSums, needChecksums = needChecksums,
