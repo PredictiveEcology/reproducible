@@ -97,7 +97,7 @@ version 0.2.2
 * `prepInputs` will automatically use `readRDS` if the file is a `.rds`.
 * `prepInputs` will return a `list` if `fun = "base::load"`, with a message; can still pass an `envir` to obtain standard behaviour of `base::load`.
 * `clearCache` - new argument `ask`.
-* new function `assessDataType`, used in `postProcess`, to identify smallest `datatype` for Raster* objects, if user does not pass an explicity `datatype` in `prepInputs` or `postProcess` (#39, @CeresBarros).
+* new function `assessDataType`, used in `postProcess`, to identify smallest `datatype` for Raster* objects, if user does not pass an explicit `datatype` in `prepInputs` or `postProcess` (#39, @CeresBarros).
 
 ## Bug fixes
 

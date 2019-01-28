@@ -897,7 +897,7 @@ setMethod(
 
 .loadFromLocalRepoMem2 <- function(md5hash, ...) {
   out <- loadFromLocalRepo(md5hash, ...)
-  out <- makeMemoiseable(out)
+  out <- makeMemoisable(out)
   return(out)
 }
 
@@ -926,33 +926,33 @@ setMethod(
 #' This is just a pass through for all classes in reproducible.
 #' This generic is here so that downstream methods can be created.
 #'
-#' @param x  An object to make memoiseable.
+#' @param x  An object to make memoisable.
 #'           See individual methods in other packages.
 #' @return The same object, but with any modifications, especially
 #' dealing with saving of environments, which memoising doesn't handle
 #' correctly in some cases.
 #'
 #' @export
-#' @rdname makeMemoiseable
-makeMemoiseable <- function(x) {
-  UseMethod("makeMemoiseable")
+#' @rdname makeMemoisable
+makeMemoisable <- function(x) {
+  UseMethod("makeMemoisable")
 }
 
 #' @export
-#' @rdname makeMemoiseable
-makeMemoiseable.default <- function(x) {
+#' @rdname makeMemoisable
+makeMemoisable.default <- function(x) {
   x
 }
 
 #' @export
-#' @rdname makeMemoiseable
-unmakeMemoiseable <- function(x) {
-  UseMethod("unmakeMemoiseable")
+#' @rdname makeMemoisable
+unmakeMemoisable <- function(x) {
+  UseMethod("unmakeMemoisable")
 }
 
 #' @export
-#' @rdname makeMemoiseable
-unmakeMemoiseable.default <- function(x) {
+#' @rdname makeMemoisable
+unmakeMemoisable.default <- function(x) {
   x
 }
 
