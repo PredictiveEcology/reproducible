@@ -271,7 +271,7 @@
     loadFromMgs <- "Loading from memoise version of repo"
     output <- .loadFromLocalRepoMem(isInRepo$artifact[lastOne],
                                     repoDir = cacheRepo, value = TRUE)
-    output <- unmakeMemoiseable(output)
+    output <- unmakeMemoisable(output)
     #if (is(output, "simList_")) output <- as(output, "simList")
   } else {
     loadFromMgs <- "Loading from repo"
