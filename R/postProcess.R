@@ -468,14 +468,13 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                !identical(extent(x), extent(rasterToMatch))) {
       doProjection <- TRUE
     }
-
-      if (doProjection) {
-        if (!canProcessInMemory(x, 4)) {
-          message("   large raster: reprojecting after writing to temp drive...")
-          #rasters need to go to same file so it can be unlinked at end without losing other temp files
-          tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
-          tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
-          tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"a_reproj.tif")) #fails if x = stack
+    if (doProjection) {
+      if (!canProcessInMemory(x, 4)) {
+        message("   large raster: reprojecting after writing to temp drive...")
+        #rasters need to go to same file so it can be unlinked at end without losing other temp files
+        tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
+        tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
+        tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names, "a_reproj.tif")) #fails if x = stack
 
         if (!is.null(rasterToMatch)) {
           tr <- res(rasterToMatch)
@@ -612,7 +611,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
     } else {
       message("    no reprojecting because target characteristics same as input Raster.")
     }
-
   }
 
   if (isFactorRaster) {
@@ -805,7 +803,6 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 determineFilename <- function(filename2 = TRUE, filename1 = NULL,
                               destinationPath = getOption("reproducible.destinationPath"),
                               prefix = "Small", ...) {
-
   if (!is.null(filename2)) {
     dots <- list(...)
 
