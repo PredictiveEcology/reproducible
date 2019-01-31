@@ -512,21 +512,28 @@ test_that("test Cache argument inheritance to inner functions", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
+  tmpDirFiles <- dir(tempdir())
+  on.exit({
+    newOnes <- setdiff(tmpDirFiles, dir(tempdir()))
+    unlink(newOnes, recursive = TRUE)
+  }, add = TRUE)
 
   outer <- function(n) {
     Cache(rnorm, n)
   }
-  expect_silent(Cache(outer, n = 2, cacheRepo = tmpdir))
-  clearCache(tmpdir, ask = FALSE)
 
+  expect_silent(Cache(outer, n = 2, cacheRepo = tmpdir))
+  clearCache(ask = FALSE, x = tmpdir)
+
+  options(reproducible.cachePath = tempdir())
   out <- capture_messages(Cache(outer, n = 2))
-  expect_true(all(unlist(lapply(c("No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)",
-                                  "No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)"),
+  expect_true(all(unlist(lapply(c("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary",
+                                  "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary"),
                                 function(mess) any(grepl(mess, out))))))
 
   # does Sys.time() propagate to outer ones
   out <- capture_messages(Cache(outer, n = 2, notOlderThan = Sys.time()))
-  expect_true(all(grepl("No cacheRepo supplied. Using value in getOption\\('reproducible.cachePath'\\)", out)))
+  expect_true(all(grepl("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary", out)))
 
   # does Sys.time() propagate to outer ones -- no message about cacheRepo being tempdir()
   out <- expect_silent(Cache(outer, n = 2, notOlderThan = Sys.time(),

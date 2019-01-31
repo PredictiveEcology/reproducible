@@ -208,7 +208,7 @@ setMethod(
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
         tmpDir <- tempdir()
         if (identical(normPath(getOption("reproducible.cachePath")), normPath(tmpDir))) {
-          message("No cacheRepo supplied and getOption('reproducible.cachePath' is the temporary directory;",
+          message("No cacheRepo supplied and getOption('reproducible.cachePath') is the temporary directory;\n  ",
                   "this will not persist across R sessions.")
         }
         getOption("reproducible.cachePath", tmpDir)
