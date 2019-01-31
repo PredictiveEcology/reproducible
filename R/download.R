@@ -262,7 +262,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                                    targetFile = targetFile,
                                    destinationPath = destinationPath)
 
-  #destFile <- tempfile(fileext = paste0(".",tools::file_ext(downloadFilename)))
+  #destFile <- tempfile(fileext = paste0(".", tools::file_ext(downloadFilename)))
   destFile <- file.path(tempdir(), rndstr(len = 5), basename(downloadFilename))
   checkPath(dirname(destFile), create = TRUE)
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {

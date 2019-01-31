@@ -66,7 +66,7 @@ checkGDALVersion <- function(version) {
 #' @author Eliot McIntire
 #' @export
 #' @importFrom fasterize fasterize
-#' @importFrom raster crop extract mask nlayers raster stack crs
+#' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #' @importFrom parallel detectCores
@@ -140,7 +140,7 @@ fastMask <- function(x, y, cores = NULL) {
       }
 
       #GDAL requires file path to cutline - write to disk
-      tempSrcShape <- file.path(tempfile(), ".shp", fsep = "")
+      tempSrcShape <- file.path(tempfile(tmpdir = tmpDir()), ".shp", fsep = "")
       ysf <- sf::st_as_sf(y)
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
@@ -196,4 +196,3 @@ fastMask <- function(x, y, cores = NULL) {
     raster::mask(x, y)
   }
 }
-

@@ -274,8 +274,8 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #'                      \code{extentTomatch} instead of \code{rasterToMatch}
 #'
 #' @export
+#' @importFrom raster projectExtent tmpDir
 #' @rdname cropInputs
-#' @importFrom raster projectExtent
 cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL, ...) {
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
@@ -311,11 +311,10 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
         if (canProcessInMemory(x, 4)) {
-        x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
+          x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
         } else {
-          x <- do.call(raster::crop, args = append(list(x = x,
-                                                        y = cropExtent,
-                                                        filename = paste0(tempfile(), ".tif")),
+          x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent,
+                                                        filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
                                                    dots))
         }
         if (is.null(x)) {
@@ -798,6 +797,7 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 #'  absolute or relative path and used as is if absolute or prepended with
 #'  \code{destinationPath} if provided, and if \code{filename2} is relative.
 #'
+#' @importFrom raster tmpDir
 #' @rdname determineFilename
 #' @example inst/examples/example_postProcess.R
 determineFilename <- function(filename2 = TRUE, filename1 = NULL,
@@ -834,7 +834,7 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
     filename2 <- if (!identical(filename2, FALSE)) { # allow TRUE or path
       if (isTRUE(filename2) ) {
         if (is.null(filename1)) {
-          tmpfile <- basename(tempfile())
+          tmpfile <- basename(tempfile(tmpdir = tmpDir()))
           filename1 <- tmpfile
         }
         .prefix(filename1, prefix)
@@ -855,7 +855,6 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
     if (exists("tmpfile", inherits = FALSE)) {
       message("Saving output to ", filename2, ". Specify filename1 or filename2 for more control")
     }
-
   }
   filename2
 }
