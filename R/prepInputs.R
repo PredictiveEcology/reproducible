@@ -280,7 +280,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Stage 1 - load into R
   x <- if (is.null(out$object)) {
     message("Loading object into R")
-    if (identical(out$fun, raster::raster)) {
+    if (identical(out$fun, raster::raster) |
+        identical(out$fun, raster::stack) |
+        identical(out$fun, raster::brick)) {
       ## Don't cache the reading of a raster
       ## -- normal reading of raster on disk is fast b/c only reads metadata
       do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
