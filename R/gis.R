@@ -66,10 +66,10 @@ checkGDALVersion <- function(version) {
 #' @author Eliot McIntire
 #' @export
 #' @importFrom fasterize fasterize
+#' @importFrom parallel detectCores
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
-#' @importFrom parallel detectCores
 #'
 #' @examples
 #' library(raster)
@@ -105,7 +105,7 @@ checkGDALVersion <- function(version) {
 #' }
 #'
 fastMask <- function(x, y, cores = NULL) {
-  if (requireNamespace("sf") && requireNamespace("fasterize")) {
+  if (is(x, "RasterLayer") && requireNamespace("sf") && requireNamespace("fasterize")) {
     message("fastMask is using sf and fasterize")
 
     if (!identical(crs(y), crs(x))) {

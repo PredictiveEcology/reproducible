@@ -219,7 +219,7 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
       # writeOutputs
       ##################################
       x <- do.call(writeOutputs, append(list(x = x, filename2 = newFilename,
-                                              overwrite = overwrite), dots))
+                                             overwrite = overwrite), dots))
 
       if (dir.exists(file.path(raster::tmpDir(), "bigRasters"))) {
         ## Delete gdalwarp results in temp
