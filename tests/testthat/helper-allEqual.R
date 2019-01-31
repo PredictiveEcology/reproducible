@@ -45,7 +45,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   checkPath(tmpCache, create = TRUE)
 
   opts <- append(list(reproducible.overwrite = TRUE,
-                      reproducible.useNewDigestAlgorithm = TRUE), opts)
+                      reproducible.useNewDigestAlgorithm = TRUE,
+                      reproducible.cachePath = tmpCache), opts)
 
   if (!is.null(opts)) {
     if (needGoogle) {

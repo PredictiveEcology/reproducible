@@ -4,6 +4,7 @@
 \alias{cropInputs}
 \alias{cropInputs.default}
 \alias{cropInputs.spatialObjects}
+\alias{cropInputs.sf}
 \title{Crop a \code{Spatial*} or \code{Raster*} object}
 \usage{
 cropInputs(x, studyArea, rasterToMatch, ...)
@@ -12,6 +13,9 @@ cropInputs(x, studyArea, rasterToMatch, ...)
 
 \method{cropInputs}{spatialObjects}(x, studyArea = NULL,
   rasterToMatch = NULL, extentToMatch = NULL, extentCRS = NULL, ...)
+
+\method{cropInputs}{sf}(x, studyArea = NULL, rasterToMatch = NULL,
+  extentToMatch = NULL, extentCRS = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{Spatial*}, \code{sf}, or \code{Raster*} object.}
