@@ -434,6 +434,12 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
 
   if (is.null(archive)) {
     fileAttr <- googledrive::drive_get(googledrive::as_id(url))
+    fileSize <- fileAttr$drive_resource[[1]]$size
+    if (!is.null(fileSize)) {
+      fileSize <- as.numeric(fileSize)
+      class(fileSize) <- "object_size"
+      message("  File on Google Drive is ", format(fileSize, units = "auto"))
+    }
     archive <- .isArchive(fileAttr$name)
     if (is.null(archive)) {
       if (is.null(targetFile)) {
