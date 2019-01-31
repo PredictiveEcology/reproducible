@@ -206,8 +206,12 @@ setMethod(
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
-        message("No cacheRepo supplied. Using value in getOption('reproducible.cachePath')")
-        getOption("reproducible.cachePath", tempdir())
+        tmpDir <- tempdir()
+        if (identical(normPath(getOption("reproducible.cachePath")), normPath(tmpDir))) {
+          message("No cacheRepo supplied and getOption('reproducible.cachePath' is the temporary directory;",
+                  "this will not persist across R sessions.")
+        }
+        getOption("reproducible.cachePath", tmpDir)
       } else {
         message("No cacheRepo supplied. Using tempdir()")
         tempdir()
