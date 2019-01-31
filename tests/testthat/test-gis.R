@@ -49,3 +49,31 @@ test_that("fastMask produces correct results", {
 
 })
 
+test_that("testing prepInputs with sf class objects", {
+  skip("These are very long to run")
+  testInitOut <- testInit(needGoogle = TRUE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  BCR6_VT <- prepInputs(
+    url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
+    targetFile = "BCR6.shp",
+    overwrite = TRUE
+  )
+
+  NFDB_PT <- Cache(
+    prepInputs,
+    url = "https://drive.google.com/open?id=1fvi4Xx56j2mDzQIr5Up5sIdWFZhJF-r1",
+    overwrite = TRUE,
+    targetFile = "NFDB_point_20181129.shp",
+    alsoExtract = "similar",
+    fun = sf::st_read
+  )
+
+  NFDB_PT_BCR6 <- Cache(
+    postProcess,
+    NFDB_PT,
+    studyArea = BCR6_VT
+  )
+
+})

@@ -4,6 +4,7 @@
 \alias{maskInputs}
 \alias{maskInputs.Raster}
 \alias{maskInputs.Spatial}
+\alias{maskInputs.sf}
 \title{Mask module inputs}
 \usage{
 maskInputs(x, studyArea, ...)
@@ -12,6 +13,8 @@ maskInputs(x, studyArea, ...)
   maskWithRTM = FALSE, ...)
 
 \method{maskInputs}{Spatial}(x, studyArea, ...)
+
+\method{maskInputs}{sf}(x, studyArea, ...)
 }
 \arguments{
 \item{x}{An object to do a geographic raster::mask/raster::intersect.
