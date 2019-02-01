@@ -500,6 +500,9 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun) {
+  if (!is.character(fun)) {
+    stop("fun must be a character string, not the function")
+  }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- file_ext(possibleFiles)
   isShapefile <- grepl("shp", fileExt)
@@ -548,9 +551,9 @@ extractFromArchive <- function(archive,
       message("  More than one possible files to load: ", paste(targetFilePath, collapse = ", "),
               ". Picking the last one. If not correct, specify a targetFile.")
       targetFilePath <- targetFilePath[length(targetFilePath)]
-    } else {
-      message("  Trying ", targetFilePath, " with ", fun, ".")
-    }
+    } #else {
+      #message("  Trying ", targetFilePath, " with ", fun, ".")
+    #}
     targetFile <- targetFilePath
     if (!is.null(targetFile)) targetFilePath <- file.path(destinationPath, targetFile)
   }
