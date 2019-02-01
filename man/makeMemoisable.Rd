@@ -25,6 +25,6 @@ dealing with saving of environments, which memoising doesn't handle
 correctly in some cases.
 }
 \description{
-This is just a pass through for all classes in reproducible.
+This is just a pass through for all classes in \pkg{reproducible}.
 This generic is here so that downstream methods can be created.
 }
