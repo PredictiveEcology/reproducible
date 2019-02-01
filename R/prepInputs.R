@@ -519,9 +519,10 @@ extractFromArchive <- function(archive,
   }
   if (is.null(targetFilePath)) {
     message("  targetFile was not specified. ", if (any(isShapefile)) {
-      c(" Trying raster::shapefile on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
-        " If that is not correct, please specify a different targetFile",
-        " and/or fun.")
+      c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
+          " If that is not correct, please specify a different targetFile",
+          " and/or fun.")
+
     } else {
       c(" Trying ", fun,
         ". If that is not correct, please specify a targetFile",
@@ -532,7 +533,7 @@ extractFromArchive <- function(archive,
 
     targetFilePath <- if (is.null(fun)) {
       NULL
-    } else if (endsWith(suffix = "shapefile", fun )) {
+    } else if (length(possibleFiles[isShapefile]) > 0) {
       possibleFiles[isShapefile]
     } else {
       if (any(isRaster)) {
