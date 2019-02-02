@@ -1,5 +1,15 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.7
+=============
+
+## New features
+
+* Some support within the `postProcess` family for `sf` class objects
+
+## bug fixes
+* mostly minor
+
 version 0.2.6
 =============
 

@@ -500,6 +500,9 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun) {
+  if (!is.character(fun)) {
+    stop("fun must be a character string, not the function")
+  }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- file_ext(possibleFiles)
   isShapefile <- grepl("shp", fileExt)
@@ -519,9 +522,10 @@ extractFromArchive <- function(archive,
   }
   if (is.null(targetFilePath)) {
     message("  targetFile was not specified. ", if (any(isShapefile)) {
-      c(" Trying raster::shapefile on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
-        " If that is not correct, please specify a different targetFile",
-        " and/or fun.")
+      c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
+          " If that is not correct, please specify a different targetFile",
+          " and/or fun.")
+
     } else {
       c(" Trying ", fun,
         ". If that is not correct, please specify a targetFile",
@@ -532,7 +536,7 @@ extractFromArchive <- function(archive,
 
     targetFilePath <- if (is.null(fun)) {
       NULL
-    } else if (endsWith(suffix = "shapefile", fun )) {
+    } else if (length(possibleFiles[isShapefile]) > 0) {
       possibleFiles[isShapefile]
     } else {
       if (any(isRaster)) {
@@ -547,9 +551,9 @@ extractFromArchive <- function(archive,
       message("  More than one possible files to load: ", paste(targetFilePath, collapse = ", "),
               ". Picking the last one. If not correct, specify a targetFile.")
       targetFilePath <- targetFilePath[length(targetFilePath)]
-    } else {
-      message("  Trying ", targetFilePath, " with ", fun, ".")
-    }
+    } #else {
+      #message("  Trying ", targetFilePath, " with ", fun, ".")
+    #}
     targetFile <- targetFilePath
     if (!is.null(targetFile)) targetFilePath <- file.path(destinationPath, targetFile)
   }
