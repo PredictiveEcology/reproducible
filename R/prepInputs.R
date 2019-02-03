@@ -500,7 +500,7 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun) {
-  if (!is.character(fun)) {
+  if (!is.null(fun) && !is.character(fun)) {
     stop("fun must be a character string, not the function")
   }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
