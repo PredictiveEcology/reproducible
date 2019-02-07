@@ -581,6 +581,7 @@ extractFromArchive <- function(archive,
 }
 
 #' @keywords internal
+#' @importFrom utils capture.output
 .unzipOrUnTar <- function(fun, args, files, overwrite = TRUE) {
   argList <- list(files = files)
   if (is.character(fun)) {
@@ -631,7 +632,10 @@ extractFromArchive <- function(archive,
     } else {
       c(argList)
     }
-    extractedFiles <- do.call(fun, c(args, argList))
+    opt <- options("warn")$warn
+    on.exit(options(warn = opt))
+    options(warn = 1)
+    mess <- capture.output(type = "message", extractedFiles <- do.call(fun, c(args, argList)))
     worked <- if (isUnzip) {
       all(normPath(file.path(args$exdir, basename(argList[[1]]))) %in% normPath(extractedFiles))
     } else {
@@ -640,7 +644,7 @@ extractFromArchive <- function(archive,
     if (!isTRUE(worked)) {
       message(
         paste0(
-          "File unzipping do not appear to have worked properly.",
+          "File unzipping does not appear to have worked.",
           " Trying a system call of unzip..."
         )
       )
@@ -652,8 +656,9 @@ extractFromArchive <- function(archive,
         if (file.exists(file.path(args$exdir, args[[1]]))){
           pathToFile <-  normPath(file.path(args$exdir, args[[1]]))
         } else {
+          warning(mess)
           stop("prepInputs cannot find the file ", basename(args[[1]]),
-               ". Maybe the file was moved during unzipping?")
+               ". The file might have been moved during unzipping or is corrupted")
         }
       }
       system2("unzip",
