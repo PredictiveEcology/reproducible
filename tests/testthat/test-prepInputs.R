@@ -1732,3 +1732,22 @@ test_that("message when extracting a file that is already present", {
   testthat::expect_message(fl <- reproducible::preProcess(url = url3,
                                                           destinationPath = tmpdir))
 })
+
+
+
+test_that("Test to fix issue #101 prepInputs on raster from disk", {
+  if (interactive()) {
+    testInitOut <- testInit("raster", needGoogle = TRUE)
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+    smallRT <- prepInputs(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
+    a <- raster::extent(smallRT)
+    a <- raster::extend(a, -3.5e5) # make it small
+    test <- raster(a, res = 250, vals = 1)
+    crs(test) <- crs(smallRT)
+    a <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
+    expect_true(is(a, "RasterLayer"))
+
+  }
+})

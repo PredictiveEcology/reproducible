@@ -621,7 +621,7 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom raster filename dataType inMemory nlayers writeRaster
+#' @importFrom raster filename dataType inMemory nlayers writeRaster hasValues
 #' @importFrom methods is selectMethod slot slot<-
 #' @rdname prepareFileBackedRaster
 #' @examples
@@ -645,7 +645,7 @@ setMethod(
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
 
-  if (inMemory(obj)) {
+  if (inMemory(obj) || !hasValues(obj)) {
     isFilebacked <- FALSE
     if (isTRUE(any(raster::is.factor(obj)))) {
       fileExt <- ".grd"
