@@ -189,10 +189,21 @@ fastMask <- function(x, y, cores = NULL) {
       }
     }
   } else {
-    message("This function is using the much slower raster::mask. ",
-            "See https://github.com/r-spatial/sf to install gdal ",
-            "on your system. Then, 'install.packages(\"sf\")",
-            "; install.packages(\"fasterize\")')")
-    raster::mask(x, y)
+    message("This function is using raster::mask")
+    if (is(x, "RasterStack") || is(x, "RasterBrick")) {
+      message(" because fastMask doesn't have a specific method ",
+              "for these classes yet")
+    } else {
+      message("This may be slow in large cases. ",
+              "To use sf and gdal instead, see ",
+              "https://github.com/r-spatial/sf to install gdal ",
+              "on your system. Then, 'install.packages(\"sf\")",
+              "; install.packages(\"fasterize\")')")
+    }
+    if (is(x, "RasterStack")) {
+      raster::stack(raster::mask(x, y))
+    } else {
+      raster::mask(x, y)
+    }
   }
 }
