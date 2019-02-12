@@ -41,8 +41,8 @@
 #'
 #' @section Package options:
 #'
-#' \code{reproducible} has the following \code{\link{options}} to configure behaviour.
-#' See \code{\link{reproducibleOptions}}
+#' See \code{\link{reproducibleOptions}} for a complete description of package
+#' \code{\link{options}} to configure behaviour.
 #'
 #' @import methods
 #' @importFrom Rcpp evalCpp
