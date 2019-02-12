@@ -50,8 +50,8 @@ code sequence for a project of arbitrary size can be run \code{from the start} e
 \section{Package options}{
 
 
-\code{reproducible} has the following \code{\link{options}} to configure behaviour.
-See \code{\link{reproducibleOptions}}
+See \code{\link{reproducibleOptions}} for a complete description of package
+\code{\link{options}} to configure behaviour.
 }
 
 \seealso{
