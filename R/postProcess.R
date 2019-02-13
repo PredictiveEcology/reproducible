@@ -285,7 +285,8 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
 }
 
 #' @export
-#' @importFrom sf st_crs st_crop st_transform
+#' @importFrom raster crs extent projectExtent raster
+#' @importFrom sf st_crop st_crs st_transform
 #' @rdname cropInputs
 cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           extentToMatch = NULL, extentCRS = NULL, ...) {
@@ -492,9 +493,9 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @importFrom parallel detectCores
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
+#' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL, ...) {
   dots <- list(...)
@@ -674,7 +675,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 }
 
 #' @export
-#' @importFrom sf st_transform st_is st_is_valid st_buffer st_crs
+#' @importFrom sf st_buffer st_crs st_is st_is_valid st_transform
 #' @rdname projectInputs
 projectInputs.sf <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
@@ -810,7 +811,7 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 
 #' @export
 #' @rdname maskInputs
-#' @importFrom sf st_as_sf st_intersects st_join st_geometry st_combine st_sf
+#' @importFrom sf st_as_sf st_combine st_geometry st_intersection st_intersects st_join st_sf
 maskInputs.sf <- function(x, studyArea, ...) {
   if (!is.null(studyArea)) {
     message("maskInputs with sf class objects is still experimental")
