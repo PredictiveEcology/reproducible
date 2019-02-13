@@ -18,6 +18,11 @@ postProcess.default <- function(x, ...) {
   x
 }
 
+#' @importFrom rlang eval_tidy
+postProcess.quosure <- function(x, ...) {
+  postProcess(rlang::eval_tidy(x), ...)
+}
+
 #' @export
 #' @rdname postProcess
 postProcess.list <- function(x, ...) {
@@ -1172,6 +1177,7 @@ assessDataTypeGDAL <- function(ras) {
   datatype
 }
 
+#' @importFrom rlang eval_tidy
 postProcessChecks <- function(studyArea, rasterToMatch, dots) {
   if (!is.null(studyArea) & !is(studyArea, "Spatial")) {
     if (!is.null(studyArea) & !is(studyArea, "sf")) {
@@ -1201,6 +1207,10 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
+
+  if (!is.null(studyArea)) if (is(studyArea, "quosure")) studyArea <- rlang::eval_tidy(studyArea)
+  if (!is.null(rasterToMatch)) if (is(rasterToMatch, "quosure")) rasterToMatch <- rlang::eval_tidy(rasterToMatch)
+
   extraDots <- postProcessChecks(studyArea = studyArea, rasterToMatch = rasterToMatch, dots = dots)
   dots <- extraDots$dots
   if (!is.null(extraDots$filename1))

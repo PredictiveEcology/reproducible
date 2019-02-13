@@ -2,9 +2,22 @@
 % Please edit documentation in R/postProcess.R
 \name{fixErrors}
 \alias{fixErrors}
+\alias{fixErrors.default}
+\alias{fixErrors.SpatialPolygons}
+\alias{fixErrors.sf}
 \title{Do some minor error fixing}
 \usage{
 fixErrors(x, objectName, attemptErrorFixes = TRUE,
+  useCache = getOption("reproducible.useCache", FALSE), ...)
+
+\method{fixErrors}{default}(x, objectName, attemptErrorFixes = TRUE,
+  useCache = getOption("reproducible.useCache", FALSE), ...)
+
+\method{fixErrors}{SpatialPolygons}(x, objectName = NULL,
+  attemptErrorFixes = TRUE,
+  useCache = getOption("reproducible.useCache", FALSE), ...)
+
+\method{fixErrors}{sf}(x, objectName = NULL, attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE), ...)
 }
 \arguments{
@@ -22,11 +35,18 @@ Default \code{TRUE}, though this may not be the right action for all cases.}
 Cache is used on the internal \code{raster::buffer} command.}
 
 \item{...}{Passed to methods. None currently implemented.}
+
+\item{x}{A \code{SpatialPolygons} object}
+
+\item{x}{A \code{SpatialPolygons} object}
 }
 \description{
 These must be very common for this function to be useful. Currently, the only
 meaningful method is on SpatialPolygons, and it runs \code{rgeos::gIsValid}. If
 \code{FALSE}, then it runs a buffer of width 0.
+
+This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
+failures to \code{rgeos::gIsValid}
 }
 \examples{
 # Add a study area to Crop and Mask to

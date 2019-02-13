@@ -152,6 +152,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom data.table data.table
 #' @importFrom digest digest
 #' @importFrom methods is
+#' @importFrom rlang quo
 #' @importFrom R.utils isAbsolutePath isFile
 #' @importFrom utils methods
 #' @include checksums.R download.R postProcess.R
@@ -319,7 +320,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             is.null(out$dots$rasterToMatch),
             is.null(out$dots$targetCRS)))) {
     message("Running postProcess")
-    x <- Cache(do.call, postProcess, append(list(x = x, filename1 = out$targetFilePath,
+
+    # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
+    #  This rlang stuff is a way to pass through objects without evaluating them
+    spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is (x, "sf"))
+    out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
+    x <- Cache(do.call, postProcess, append(list(x = rlang::quo(x), filename1 = out$targetFilePath,
                                                  overwrite = overwrite,
                                                  destinationPath = out$destinationPath),
                                   out$dots),
