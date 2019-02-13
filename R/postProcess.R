@@ -311,7 +311,9 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
         projectExtent(cropTo, crs(x))
       } else {
         if (is(studyArea, "sf")) {
-          sf::st_transform( x = cropTo, crs = st_crs(x))
+          sf::st_transform(x = cropTo, crs = st_crs(x))
+        } else if (is(studyArea, "Spatial")) {
+          sf::st_transform(x = sf::st_as_sf(cropTo), crs = st_crs(x))
         } else {
           NULL
         }
