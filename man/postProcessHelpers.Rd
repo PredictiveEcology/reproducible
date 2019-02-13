@@ -4,7 +4,7 @@
 \alias{.getTargetCRS}
 \title{Hierarchically get crs from \code{Raster*}, \code{Spatial*}}
 \usage{
-.getTargetCRS(useSAcrs, studyArea, rasterToMatch)
+.getTargetCRS(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL)
 }
 \arguments{
 \item{useSAcrs}{Logical. If \code{FALSE}, the default, then the desired projection

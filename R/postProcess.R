@@ -669,13 +669,15 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
 #' @inheritParams postProcess.spatialObjects
 #' @rdname postProcessHelpers
 #' @keywords internal
-.getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch) {
-  targetCRS <- if (useSAcrs) {
-    crs(studyArea)
-  } else if (!is.null(rasterToMatch)) {
-    crs(rasterToMatch)
-  } else {
-    NULL # don't reproject a Raster if only has studyArea -- too lossy
+.getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL) {
+  if (is.null(targetCRS)) {
+    targetCRS <- if (useSAcrs) {
+      crs(studyArea)
+    } else if (!is.null(rasterToMatch)) {
+      crs(rasterToMatch)
+    } else {
+      NULL # don't reproject a Raster if only has studyArea -- too lossy
+    }
   }
   targetCRS
 }
@@ -1197,14 +1199,15 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 }
 
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
-                                  filename2, useSAcrs, overwrite, ...) {
+                                  filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
   extraDots <- postProcessChecks(studyArea = studyArea, rasterToMatch = rasterToMatch, dots = dots)
   dots <- extraDots$dots
   if (!is.null(extraDots$filename1))
     filename1 <- extraDots$filename1
 
-  if (!is.null(studyArea) || !is.null(rasterToMatch)) {
+  if (!is.null(studyArea) || !is.null(rasterToMatch) ||
+      !is.null(targetCRS)) {
     # fix errors if methods available
     skipCacheMess <- "useCache is FALSE, skipping Cache"
     skipCacheMess2 <- "No cacheRepo supplied"
@@ -1234,7 +1237,8 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # projectInputs
       ##################################
-      targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch)
+      targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
+                                 targetCRS)
 
       x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
                  rasterToMatch = rasterToMatch, useCache = useCache, ...)
