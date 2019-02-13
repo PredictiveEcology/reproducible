@@ -253,7 +253,9 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         projectExtent(cropTo, crs(x))
       } else {
         if (is(studyArea, "Spatial")) {
-          spTransform(x = cropTo, CRSobj = crs(x))
+          theExtent <- as(extent(cropTo), "SpatialPolygons")
+          crs(theExtent) <- crs(cropTo)
+          raster::extent(spTransform(x = theExtent, CRSobj = crs(x)))
         } else {
           NULL
         }
@@ -361,6 +363,7 @@ fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
 
 #' @export
 #' @keywords internal
+#' @rdname fixErrors
 fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
                               useCache = getOption("reproducible.useCache", FALSE), ...) {
   x
@@ -375,6 +378,7 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #' @param x A \code{SpatialPolygons} object
 #' @inheritParams fixErrors
 #' @importFrom testthat capture_warnings
+#' @rdname fixErrors
 fixErrors.SpatialPolygons <- function(x, objectName = NULL,
                                       attemptErrorFixes = TRUE,
                                       useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -410,6 +414,48 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
   }
   return(x)
 }
+
+#' @export
+#' @param x A \code{SpatialPolygons} object
+#' @inheritParams fixErrors
+#' @importFrom testthat capture_warnings
+#' @rdname fixErrors
+fixErrors.sf <- function(x, objectName = NULL,
+                                      attemptErrorFixes = TRUE,
+                                      useCache = getOption("reproducible.useCache", FALSE), ...) {
+  if (attemptErrorFixes) {
+    if (is.null(objectName)) objectName = "SimpleFeature"
+    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY")) {
+      message("Checking for errors in ", objectName)
+      if (suppressWarnings(any(!sf::st_is_valid(x)))) {
+        message("Found errors in ", objectName, ". Attempting to correct.")
+        warn <- capture_warnings(
+          x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
+        )
+
+        # prevent the warning about not projected, because we are buffering 0, which doesn't matter
+        warnAboutNotProjected <- startsWith(warn, "Spatial object is not projected; GEOS expects planar coordinates")
+        if (any(warnAboutNotProjected))
+          warn <- warn[!warnAboutNotProjected]
+        if (length(warn))
+          warning(warn)
+
+        if (is(x1, "try-error")) {
+          message("There are errors with ", objectName,
+                  ". Couldn't fix them with raster::buffer(..., width = 0)")
+        } else {
+          x <- x1
+          message("  Some or all of the errors fixed.")
+        }
+
+      } else {
+        message("  Found no errors.")
+      }
+    }
+  }
+  return(x)
+}
+
 
 
 #' Project \code{Raster*} or {Spatial*} or \code{sf} objects
@@ -633,13 +679,15 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 #' @rdname projectInputs
 projectInputs.sf <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
-    warning("sf class objects not fully implemented. Use with projectInputs.sf caution.")
+    warning("sf class objects not fully tested Use with projectInputs.sf caution.")
     if (requireNamespace("sf")) {
       if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid <- sf::st_is_valid(x))) {
         x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
       }
 
-      x <- sf::st_transform(x = x, crs = sf::st_crs(targetCRS@projargs), ...)
+      if ("projargs" %in% slotNames(targetCRS) )
+        targetCRS <- sf::st_crs(targetCRS@projargs)
+      x <- sf::st_transform(x = x, crs = targetCRS, ...)
     } else {
       stop("Please install sf package: https://github.com/r-spatial/sf")
     }
@@ -732,8 +780,10 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 maskInputs.Spatial <- function(x, studyArea, ...) {
   if (!is.null(studyArea)) {
     message("    intersecting ...")
-    studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
-    studyArea <- spTransform(studyArea, CRSobj = crs(x))
+    if (NROW(studyArea) > 1)
+      studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
+    if (!identical(crs(x), crs(studyArea)))
+      studyArea <- spTransform(studyArea, CRSobj = crs(x))
     suppressWarnings(studyArea <- fixErrors(studyArea, "studyArea"))
     # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
     #  specifically ecodistricts.shp . It created an invalid object with
@@ -766,16 +816,19 @@ maskInputs.sf <- function(x, studyArea, ...) {
   if (!is.null(studyArea)) {
     message("maskInputs with sf class objects is still experimental")
     message("    intersecting ...")
-    if (is(sf::st_geometry(x), "sfc_POINT")) {
     #studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
-      studyArea1 <- sf::st_transform(studyArea, crs = st_crs(x))
-      studyArea1 <- sf::st_combine(studyArea1)
-      studyArea <- sf::st_sf(studyArea1)
+    if (!identical(st_crs(x), st_crs(studyArea)))
+      studyArea <- sf::st_transform(studyArea, crs = st_crs(x))
+    if (NROW(studyArea) > 1)
+      studyArea <- sf::st_combine(studyArea)
+    studyArea <- sf::st_sf(studyArea)
+    if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
       y2 <- sapply(y1, function(x) length(x) == 1)
       y <- x[y2,]
     } else {
-      stop("sf polygon being masked with sf studyArea not yet implemented")
+      studyArea <- fixErrors(studyArea)
+      y <- sf::st_intersection(x, studyArea)
     }
     return(y)
   } else {
