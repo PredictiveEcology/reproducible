@@ -681,7 +681,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 #' @rdname projectInputs
 projectInputs.sf <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
-    warning("sf class objects not fully tested Use with projectInputs.sf caution.")
+    warning("sf class objects not fully tested Use with caution.")
     if (requireNamespace("sf")) {
       if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid <- sf::st_is_valid(x))) {
         x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
@@ -816,6 +816,9 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 #' @importFrom sf st_as_sf st_combine st_geometry st_intersection st_intersects st_join st_sf
 maskInputs.sf <- function(x, studyArea, ...) {
   if (!is.null(studyArea)) {
+    if (is(studyArea, "Spatial"))
+      studyArea <- sf::st_as_sf(studyArea)
+
     message("maskInputs with sf class objects is still experimental")
     message("    intersecting ...")
     #studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
@@ -823,6 +826,7 @@ maskInputs.sf <- function(x, studyArea, ...) {
       studyArea <- sf::st_transform(studyArea, crs = st_crs(x))
     if (NROW(studyArea) > 1)
       studyArea <- sf::st_combine(studyArea)
+
     studyArea <- sf::st_sf(studyArea)
     if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
