@@ -415,14 +415,15 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
   return(x)
 }
 
-#' @export
-#' @param x A \code{SpatialPolygons} object
 #' @inheritParams fixErrors
+#' @param x A \code{SpatialPolygons} object
+#'
+#' @export
+#' @importFrom sf st_buffer st_geometry st_is_valid
 #' @importFrom testthat capture_warnings
 #' @rdname fixErrors
-fixErrors.sf <- function(x, objectName = NULL,
-                                      attemptErrorFixes = TRUE,
-                                      useCache = getOption("reproducible.useCache", FALSE), ...) {
+fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
+                         useCache = getOption("reproducible.useCache", FALSE), ...) {
   if (attemptErrorFixes) {
     if (is.null(objectName)) objectName = "SimpleFeature"
     if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY")) {
@@ -447,7 +448,6 @@ fixErrors.sf <- function(x, objectName = NULL,
           x <- x1
           message("  Some or all of the errors fixed.")
         }
-
       } else {
         message("  Found no errors.")
       }
@@ -456,13 +456,10 @@ fixErrors.sf <- function(x, objectName = NULL,
   return(x)
 }
 
-
-
 #' Project \code{Raster*} or {Spatial*} or \code{sf} objects
 #'
 #' A simple wrapper around the various different tools for these GIS types.
 #'
-#' @export
 #' @param x A \code{Raster*}, \code{Spatial*} or \code{sf} object
 #' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
 #' @param ... Passed to \code{\link[raster]{projectRaster}}.
@@ -475,11 +472,13 @@ fixErrors.sf <- function(x, objectName = NULL,
 #'                      number of cores in the system, while an integer or rounded
 #'                      float will be passed as the exact number of cores to be used.
 #'
-#' @rdname projectInputs
+#' @return A file of the same type as starting, but with projection (and possibly
+#' other characteristics, including resolution, origin, extent if changed).
+#'
+#' @export
 #' @importFrom raster canProcessInMemory
-#' @return
-#' A file of the same type as starting, but with projection (and possibly other
-#' characteristics, including resolution, origin, extent if changed.
+#' @rdname projectInputs
+#'
 #' @example inst/examples/example_postProcess.R
 projectInputs <- function(x, targetCRS, ...) {
   UseMethod("projectInputs")
