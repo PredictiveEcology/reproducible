@@ -1119,7 +1119,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
             aa <- try(names(formals(paste0(whatArg, ".", theClass))))
             aa
           } else {
-            if (is.na(classes)) {
+            if (all(is.na(classes))) {
               names(formals(doCallFUN))
             } else {
               names(formals(whatArg))
