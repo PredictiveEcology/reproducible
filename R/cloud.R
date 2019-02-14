@@ -320,10 +320,16 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'
 #' @inheritParams Cache
 #' @inheritParams cloudCache
+#' @inheritParams clearCache
 #' @param cacheRepo See \code{x} in \code{\link{showCache}}
 #' @param delete Logical. If \code{TRUE}, the default, it will delete any objects
 #'   that are in \code{cloudFolderID} that are absent from local \code{cacheRepo}.
 #'   If \code{FALSE}, it will not delete objects.
+#' @param upload Logical. If \code{TRUE}, the default, it will upload any objects
+#'   identified by the internal \code{showCache(...)} call. See examples. If \code{FALSE},
+#'   then no files will be uploaded. Can be used in conjunction with \code{delete}
+#'   to create behaviours similar to \code{clearCache} and \code{keepCache}.
+#' @param ... Passed to \code{showCache} to get the artifacts to delete
 #'
 #' @export
 #' @importFrom crayon blue
@@ -334,6 +340,7 @@ getChecksumsFileID <- function(cloudFolderID) {
 #' @examples
 #' \dontrun{
 #'   #make a google drive folder
+#'   opts <- options("reproducible.cachePath" = tempdir(), "reproducible.ask" = FALSE)
 #'   library(googledrive)
 #'   newDir <- drive_mkdir("testFolder")
 #'   a <- Cache(rnorm, 1)
@@ -343,7 +350,7 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'   cloudSyncCache(cloudFolderID = newDir$id)
 #'
 #'   # remove a local one
-#'   clearCache(userTags = CacheDigest(list(rnorm, 2))$outputHash, ask = FALSE)
+#'   clearCache(userTags = CacheDigest(list(rnorm, 2))$outputHash)
 #'
 #'   # Now will delete the object in the cloud that was just deleted locally
 #'   cloudSyncCache(cloudFolderID = newDir$id)
@@ -352,12 +359,45 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'   clearCache(ask = FALSE)
 #'   cloudSyncCache(cloudFolderID = newDir$id)
 #'
+#'   #######################################################################
+#'   # use showCache args to have control ... on upload & delete NOTE difference!
+#'   #######################################################################
+#'   a <- Cache(rnorm, 1)
+#'   b <- Cache(rnorm, 2)
+#'   # only sync the one with rnorm, 2 as arguments
+#'   tag <- CacheDigest(list(rnorm, 2))$outputHash
+#'   cloudSyncCache(cloudFolderID = newDir$id, userTags = tag) # only syncs the one that is identified with userTags
+#'
+#'   cloudSyncCache(cloudFolderID = newDir$id) # sync any other ones
+#'
+#'   # Now clear an object locally -- next how to propagate this deletion to cloud
+#'   clearCache(userTags = tag)
+#'
+#'   # Add one more to local, so now local has 2 (a and d), cloud has 2 (a and b)
+#'   d <- Cache(rnorm, 4)
+#'
+#'   # DELETING IS DIFFERENT
+#'   # Doesn't quite work same way for deleting -- this tag is not in local Cache, so can't find it this way,
+#'   #  This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because showCache(userTags = tags) shows empty
+#'   #  cloudSyncCache(cloudFolderID = newDir$id, userTags = tag)
+#'
+#'   # Only delete the one that was removed from local cache, set upload = FALSE, leaving only 1 in cloud, a
+#'   cloudSyncCache(cloudFolderID = newDir$id, upload = FALSE)
+#'   # Upload the d, because it is the only one in the localCache not in the cloudCache
+#'   cloudSyncCache(cloudFolderID = newDir$id)
+#'
+#'   # clean up
+#'   clearCache(ask = FALSE)
+#'   cloudSyncCache(cloudFolderID = newDir$id)
+#'
 #'   # To remove whole folder:
 #'   drive_rm(as_id(newDir$id))
+#'   options(opts)
 #' }
 cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
                            checksumsFileID = NULL, cloudFolderID = NULL,
-                           delete = TRUE, ...) {
+                           delete = TRUE, upload = TRUE, ask = getOption("reproducible.ask"),
+                           ...) {
   if (is.null(checksumsFileID)) {
     if (!is.null(cloudFolderID)) {
       checksumsFileID <- getChecksumsFileID(cloudFolderID)
@@ -370,14 +410,17 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
   suppressMessages(localCache <- showCache(x = cacheRepo, ...))
   out <- NULL
 
-  if (NROW(localCache)) {
-    uniqueCacheArtifacts <- unique(localCache$artifact)
+  needToDelete <- NULL
+  uniqueCacheArtifacts <- unique(localCache$artifact)
+  if (!is.null(uniqueCacheArtifacts))
     cacheIDs <- localCache[artifact %in% uniqueCacheArtifacts & tagKey == "cacheId"]$tagValue
+  if (NROW(localCache) && isTRUE(upload)) {
     needToUpload <- !(cacheIDs %in% checksums$cacheId)
 
     if (sum(needToUpload) > 0) {
-      message(crayon::blue("Uploading", length(needToUpload), "files, ",
-                           "\n ", paste(uniqueCacheArtifacts[needToUpload], ".rda", sep = "",
+      message(crayon::blue("Uploading", sum(needToUpload), "files, ",
+                           "\n ", paste(cacheIDs[needToUpload], ".rda ( == ",
+                                        uniqueCacheArtifacts[needToUpload], ".rda in local cache)", sep = "",
                                         collapse = "\n  ")))
       out <- lapply(uniqueCacheArtifacts[needToUpload], function(art) {
         cacheID <- localCache[artifact == art & tagKey == "cacheId"]$tagValue
@@ -388,29 +431,49 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
       })
       checksums <- rbindlist(
         list(checksums,
-             data.table(cacheId = cacheIDs, id = rbindlist(out)$id, time = as.character(Sys.time()),
-                        filesize = file.size(file.path(cacheRepo, "gallery", paste0(uniqueCacheArtifacts, ".rda"))))),
+             data.table(cacheId = cacheIDs[needToUpload], id = rbindlist(out)$id, time = as.character(Sys.time()),
+                        filesize = file.size(file.path(cacheRepo, "gallery",
+                                                       paste0(uniqueCacheArtifacts[needToUpload], ".rda"))))),
         use.names = TRUE, fill = TRUE)
       out <- rbindlist(out)
     }
 
-    needToDelete <- !(checksums$cacheId %in% cacheIDs)
   } else {
-    needToDelete <- rep(TRUE, NROW(checksums))
+    if (NROW(localCache) == 0) {
+      needToDelete <- rep(TRUE, NROW(checksums))
+    }
   }
+  if (is.null(needToDelete))
+    if (!is.null(uniqueCacheArtifacts))
+      needToDelete <- !(checksums$cacheId %in% cacheIDs)
 
   if (isTRUE(delete) && any(needToDelete)) {
-    rmRes <- drive_rm(as_id(checksums$id[needToDelete]), verbose = FALSE)
+    out <- if (isTRUE(ask)) {
+      readline(paste0("Are you sure you want to delete:\n  ",
+                      paste(checksums$cacheId[needToDelete], ".rda",
+                            sep = "", collapse = "\n  "), "\n Y or N: "))
+    } else {
+      "Y"
+    }
+    rmRes <- if (identical(tolower(out), "y")) {
+      drive_rm(as_id(checksums$id[needToDelete]), verbose = FALSE)
+    } else {
+      FALSE
+    }
     if (isTRUE(all(rmRes))) {
       message(crayon::blue(sum(needToDelete), "file(s) deleted:",
                            "\n ", paste(checksums$cacheId[needToDelete], ".rda",
                                         sep = "", collapse = "\n  ")))
+      checksums <- checksums[!needToDelete]
     }
-    checksums <- checksums[!needToDelete]
+  } else {
+    if (any(needToDelete))
+      message("There were files identified to delete to create full sync, but delete = FALSE")
   }
   suppressMessages(cloudUpdateChecksums(checksums, checksumsFileID))
   return(invisible(checksums))
 }
+
 
 cloudUploadFileAndChecksums <- function(objectFile, cloudFolderID, digest,
                                         checksums, checksumsFileID) {
