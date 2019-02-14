@@ -5,7 +5,8 @@
 \title{Sync cloud with local Cache}
 \usage{
 cloudSyncCache(cacheRepo = getOption("reproducible.cachePath")[1],
-  checksumsFileID = NULL, cloudFolderID = NULL, delete = TRUE, ...)
+  checksumsFileID = NULL, cloudFolderID = NULL, delete = TRUE,
+  upload = TRUE, ask = getOption("reproducible.ask"), ...)
 }
 \arguments{
 \item{cacheRepo}{See \code{x} in \code{\link{showCache}}}
@@ -21,7 +22,15 @@ provided as a character string.}
 that are in \code{cloudFolderID} that are absent from local \code{cacheRepo}.
 If \code{FALSE}, it will not delete objects.}
 
-\item{...}{Arguments of \code{FUN} function .}
+\item{upload}{Logical. If \code{TRUE}, the default, it will upload any objects
+identified by the internal \code{showCache(...)} call. See examples. If \code{FALSE},
+then no files will be uploaded. Can be used in conjunction with \code{delete}
+to create behaviours similar to \code{clearCache} and \code{keepCache}.}
+
+\item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions using
+\code{clearCache} or \code{keepCache}. Default is \code{TRUE}}
+
+\item{...}{Passed to \code{showCache} to get the artifacts to delete}
 }
 \description{
 This is still experimental, see examples.
@@ -32,6 +41,7 @@ This is still experimental, see examples.
 \examples{
 \dontrun{
   #make a google drive folder
+  opts <- options("reproducible.cachePath" = tempdir(), "reproducible.ask" = FALSE)
   library(googledrive)
   newDir <- drive_mkdir("testFolder")
   a <- Cache(rnorm, 1)
@@ -41,7 +51,7 @@ This is still experimental, see examples.
   cloudSyncCache(cloudFolderID = newDir$id)
 
   # remove a local one
-  clearCache(userTags = CacheDigest(list(rnorm, 2))$outputHash, ask = FALSE)
+  clearCache(userTags = CacheDigest(list(rnorm, 2))$outputHash)
 
   # Now will delete the object in the cloud that was just deleted locally
   cloudSyncCache(cloudFolderID = newDir$id)
@@ -50,8 +60,40 @@ This is still experimental, see examples.
   clearCache(ask = FALSE)
   cloudSyncCache(cloudFolderID = newDir$id)
 
+  #######################################################################
+  # use showCache args to have control ... on upload & delete NOTE difference!
+  #######################################################################
+  a <- Cache(rnorm, 1)
+  b <- Cache(rnorm, 2)
+  # only sync the one with rnorm, 2 as arguments
+  tag <- CacheDigest(list(rnorm, 2))$outputHash
+  cloudSyncCache(cloudFolderID = newDir$id, userTags = tag) # only syncs the one that is identified with userTags
+
+  cloudSyncCache(cloudFolderID = newDir$id) # sync any other ones
+
+  # Now clear an object locally -- next how to propagate this deletion to cloud
+  clearCache(userTags = tag)
+
+  # Add one more to local, so now local has 2 (a and d), cloud has 2 (a and b)
+  d <- Cache(rnorm, 4)
+
+  # DELETING IS DIFFERENT
+  # Doesn't quite work same way for deleting -- this tag is not in local Cache, so can't find it this way,
+  #  This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because showCache(userTags = tags) shows empty
+  #  cloudSyncCache(cloudFolderID = newDir$id, userTags = tag)
+
+  # Only delete the one that was removed from local cache, set upload = FALSE, leaving only 1 in cloud, a
+  cloudSyncCache(cloudFolderID = newDir$id, upload = FALSE)
+  # Upload the d, because it is the only one in the localCache not in the cloudCache
+  cloudSyncCache(cloudFolderID = newDir$id)
+
+  # clean up
+  clearCache(ask = FALSE)
+  cloudSyncCache(cloudFolderID = newDir$id)
+
   # To remove whole folder:
   drive_rm(as_id(newDir$id))
+  options(opts)
 }
 }
 \seealso{
