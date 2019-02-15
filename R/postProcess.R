@@ -508,7 +508,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
   }
 
   if (is.null(rasterToMatch) & is.null(targetCRS)) {
-    message("     no reprojecting because no rasterToMatch & useSAcrs are FALSE.")
+    message("     no reprojecting because no rasterToMatch & targetCRS are FALSE (or NULL).")
   } else if (is.null(rasterToMatch) & identical(crs(x), targetCRS)) {
     message("    no reprojecting because target CRS is same as input CRS.")
   } else {
@@ -649,6 +649,10 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
             }
           }
         }
+        if (!identical(crs(x), targetCRS)) {
+          crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
+                              #  they should be
+        }
 
         # return the integer class to the data in the raster object
         if (isTRUE(isInteger)) {
@@ -690,6 +694,11 @@ projectInputs.sf <- function(x, targetCRS, ...) {
       if ("projargs" %in% slotNames(targetCRS) )
         targetCRS <- sf::st_crs(targetCRS@projargs)
       x <- sf::st_transform(x = x, crs = targetCRS, ...)
+      if (!identical(crs(x), targetCRS)) {
+        crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
+        #  they should be
+      }
+
     } else {
       stop("Please install sf package: https://github.com/r-spatial/sf")
     }
@@ -713,6 +722,10 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
       }
     }
     x <- spTransform(x = x, CRSobj = targetCRS)
+    if (!identical(crs(x), targetCRS)) {
+      crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
+      #  they should be
+    }
   }
   x
 }
@@ -804,6 +817,11 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
       xTmp <- sf::st_join(st_as_sf(x), st_as_sf(studyArea), join = st_intersects)
       y <- as(xTmp, "Spatial")
     }
+    if (!identical(crs(y), crs(x))) {
+      crs(y) <- crs(x) # sometimes the proj4string is rearranged, so they are not identical:
+      #  they should be
+    }
+
 
     return(y)
   } else {
@@ -838,6 +856,11 @@ maskInputs.sf <- function(x, studyArea, ...) {
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
     }
+    if (!identical(crs(y), crs(x))) {
+      crs(y) <- crs(x) # sometimes the proj4string is rearranged, so they are not identical:
+      #  they should be
+    }
+
     return(y)
   } else {
     return(x)
