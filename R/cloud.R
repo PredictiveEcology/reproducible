@@ -366,7 +366,9 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'   b <- Cache(rnorm, 2)
 #'   # only sync the one with rnorm, 2 as arguments
 #'   tag <- CacheDigest(list(rnorm, 2))$outputHash
-#'   cloudSyncCache(cloudFolderID = newDir$id, userTags = tag) # only syncs the one that is identified with userTags
+#'   cloudSyncCache(cloudFolderID = newDir$id, userTags = tag) # only syncs the one
+#'                                                             # that is identified
+#'                                                             # with userTags
 #'
 #'   cloudSyncCache(cloudFolderID = newDir$id) # sync any other ones
 #'
@@ -377,11 +379,14 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'   d <- Cache(rnorm, 4)
 #'
 #'   # DELETING IS DIFFERENT
-#'   # Doesn't quite work same way for deleting -- this tag is not in local Cache, so can't find it this way,
-#'   #  This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because showCache(userTags = tags) shows empty
-#'   #  cloudSyncCache(cloudFolderID = newDir$id, userTags = tag)
+#'   # Doesn't quite work same way for deleting -- this tag is not in local Cache,
+#'   # so can't find it this way.
+#'   # This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because
+#'   #    showCache(userTags = tags) shows empty
+#'   #    cloudSyncCache(cloudFolderID = newDir$id, userTags = tag)
 #'
-#'   # Only delete the one that was removed from local cache, set upload = FALSE, leaving only 1 in cloud, a
+#'   # Only delete the one that was removed from local cache, set upload = FALSE,
+#'   #    leaving only 1 in cloud: a
 #'   cloudSyncCache(cloudFolderID = newDir$id, upload = FALSE)
 #'   # Upload the d, because it is the only one in the localCache not in the cloudCache
 #'   cloudSyncCache(cloudFolderID = newDir$id)

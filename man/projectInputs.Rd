@@ -37,8 +37,8 @@ number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 }
 \value{
-A file of the same type as starting, but with projection (and possibly other
-characteristics, including resolution, origin, extent if changed.
+A file of the same type as starting, but with projection (and possibly
+other characteristics, including resolution, origin, extent if changed).
 }
 \description{
 A simple wrapper around the various different tools for these GIS types.

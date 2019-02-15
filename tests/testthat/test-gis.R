@@ -63,17 +63,19 @@ test_that("testing prepInputs with sf class objects", {
 
     NFDB_PT <- Cache(
       prepInputs,
-      url = "https://drive.google.com/open?id=1fvi4Xx56j2mDzQIr5Up5sIdWFZhJF-r1",
+      url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
       overwrite = TRUE,
-      targetFile = "NFDB_point_20181129.shp",
+      #targetFile = "NFDB_point_20181129.shp",
       alsoExtract = "similar",
-      fun = sf::st_read
+      fun = "sf::st_read"
     )
 
-    NFDB_PT_BCR6 <- Cache(
+    warn <- capture_warnings(NFDB_PT_BCR6 <- Cache(
       postProcess,
       NFDB_PT,
       studyArea = BCR6_VT
-    )
+    )) # warning is "attribute variables are assumed to be spatially constant"
+    if (!all(grepl("attribute variables are assumed to be spatially constant", warn)))
+      warnings(warn)
   }
 })

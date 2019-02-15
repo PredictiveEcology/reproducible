@@ -18,6 +18,11 @@ postProcess.default <- function(x, ...) {
   x
 }
 
+#' @importFrom rlang eval_tidy
+postProcess.quosure <- function(x, ...) {
+  postProcess(rlang::eval_tidy(x), ...)
+}
+
 #' @export
 #' @rdname postProcess
 postProcess.list <- function(x, ...) {
@@ -248,7 +253,9 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         projectExtent(cropTo, crs(x))
       } else {
         if (is(studyArea, "Spatial")) {
-          spTransform(x = cropTo, CRSobj = crs(x))
+          theExtent <- as(extent(cropTo), "SpatialPolygons")
+          crs(theExtent) <- crs(cropTo)
+          raster::extent(spTransform(x = theExtent, CRSobj = crs(x)))
         } else {
           NULL
         }
@@ -278,7 +285,8 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
 }
 
 #' @export
-#' @importFrom sf st_crs st_crop st_transform
+#' @importFrom raster crs extent projectExtent raster
+#' @importFrom sf st_crop st_crs st_transform
 #' @rdname cropInputs
 cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           extentToMatch = NULL, extentCRS = NULL, ...) {
@@ -303,7 +311,9 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
         projectExtent(cropTo, crs(x))
       } else {
         if (is(studyArea, "sf")) {
-          sf::st_transform( x = cropTo, crs = st_crs(x))
+          sf::st_transform(x = cropTo, crs = st_crs(x))
+        } else if (is(studyArea, "Spatial")) {
+          sf::st_transform(x = sf::st_as_sf(cropTo), crs = st_crs(x))
         } else {
           NULL
         }
@@ -356,6 +366,7 @@ fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
 
 #' @export
 #' @keywords internal
+#' @rdname fixErrors
 fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
                               useCache = getOption("reproducible.useCache", FALSE), ...) {
   x
@@ -370,6 +381,7 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #' @param x A \code{SpatialPolygons} object
 #' @inheritParams fixErrors
 #' @importFrom testthat capture_warnings
+#' @rdname fixErrors
 fixErrors.SpatialPolygons <- function(x, objectName = NULL,
                                       attemptErrorFixes = TRUE,
                                       useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -406,12 +418,51 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
   return(x)
 }
 
+#' @inheritParams fixErrors
+#' @param x A \code{SpatialPolygons} object
+#'
+#' @export
+#' @importFrom sf st_buffer st_geometry st_is_valid
+#' @importFrom testthat capture_warnings
+#' @rdname fixErrors
+fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
+                         useCache = getOption("reproducible.useCache", FALSE), ...) {
+  if (attemptErrorFixes) {
+    if (is.null(objectName)) objectName = "SimpleFeature"
+    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY")) {
+      message("Checking for errors in ", objectName)
+      if (suppressWarnings(any(!sf::st_is_valid(x)))) {
+        message("Found errors in ", objectName, ". Attempting to correct.")
+        warn <- capture_warnings(
+          x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
+        )
+
+        # prevent the warning about not projected, because we are buffering 0, which doesn't matter
+        warnAboutNotProjected <- startsWith(warn, "Spatial object is not projected; GEOS expects planar coordinates")
+        if (any(warnAboutNotProjected))
+          warn <- warn[!warnAboutNotProjected]
+        if (length(warn))
+          warning(warn)
+
+        if (is(x1, "try-error")) {
+          message("There are errors with ", objectName,
+                  ". Couldn't fix them with raster::buffer(..., width = 0)")
+        } else {
+          x <- x1
+          message("  Some or all of the errors fixed.")
+        }
+      } else {
+        message("  Found no errors.")
+      }
+    }
+  }
+  return(x)
+}
 
 #' Project \code{Raster*} or {Spatial*} or \code{sf} objects
 #'
 #' A simple wrapper around the various different tools for these GIS types.
 #'
-#' @export
 #' @param x A \code{Raster*}, \code{Spatial*} or \code{sf} object
 #' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
 #' @param ... Passed to \code{\link[raster]{projectRaster}}.
@@ -424,11 +475,13 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 #'                      number of cores in the system, while an integer or rounded
 #'                      float will be passed as the exact number of cores to be used.
 #'
-#' @rdname projectInputs
+#' @return A file of the same type as starting, but with projection (and possibly
+#' other characteristics, including resolution, origin, extent if changed).
+#'
+#' @export
 #' @importFrom raster canProcessInMemory
-#' @return
-#' A file of the same type as starting, but with projection (and possibly other
-#' characteristics, including resolution, origin, extent if changed.
+#' @rdname projectInputs
+#'
 #' @example inst/examples/example_postProcess.R
 projectInputs <- function(x, targetCRS, ...) {
   UseMethod("projectInputs")
@@ -442,9 +495,9 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @importFrom parallel detectCores
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
+#' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL, ...) {
   dots <- list(...)
@@ -624,17 +677,19 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 }
 
 #' @export
-#' @importFrom sf st_transform st_is st_is_valid st_buffer st_crs
+#' @importFrom sf st_buffer st_crs st_is st_is_valid st_transform
 #' @rdname projectInputs
 projectInputs.sf <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
-    warning("sf class objects not fully implemented. Use with projectInputs.sf caution.")
+    warning("sf class objects not fully tested Use with caution.")
     if (requireNamespace("sf")) {
       if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid <- sf::st_is_valid(x))) {
         x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
       }
 
-      x <- sf::st_transform(x = x, crs = sf::st_crs(targetCRS@projargs), ...)
+      if ("projargs" %in% slotNames(targetCRS) )
+        targetCRS <- sf::st_crs(targetCRS@projargs)
+      x <- sf::st_transform(x = x, crs = targetCRS, ...)
     } else {
       stop("Please install sf package: https://github.com/r-spatial/sf")
     }
@@ -727,8 +782,10 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 maskInputs.Spatial <- function(x, studyArea, ...) {
   if (!is.null(studyArea)) {
     message("    intersecting ...")
-    studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
-    studyArea <- spTransform(studyArea, CRSobj = crs(x))
+    if (NROW(studyArea) > 1)
+      studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
+    if (!identical(crs(x), crs(studyArea)))
+      studyArea <- spTransform(studyArea, CRSobj = crs(x))
     suppressWarnings(studyArea <- fixErrors(studyArea, "studyArea"))
     # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
     #  specifically ecodistricts.shp . It created an invalid object with
@@ -756,21 +813,30 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 
 #' @export
 #' @rdname maskInputs
-#' @importFrom sf st_as_sf st_intersects st_join st_geometry st_combine st_sf
+#' @importFrom sf st_as_sf st_combine st_geometry st_intersection st_intersects st_join st_sf
 maskInputs.sf <- function(x, studyArea, ...) {
   if (!is.null(studyArea)) {
+    if (is(studyArea, "Spatial"))
+      studyArea <- sf::st_as_sf(studyArea)
+
     message("maskInputs with sf class objects is still experimental")
     message("    intersecting ...")
-    if (is(sf::st_geometry(x), "sfc_POINT")) {
     #studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
-      studyArea1 <- sf::st_transform(studyArea, crs = st_crs(x))
-      studyArea1 <- sf::st_combine(studyArea1)
-      studyArea <- sf::st_sf(studyArea1)
+    if (!identical(st_crs(x), st_crs(studyArea)))
+      studyArea <- sf::st_transform(studyArea, crs = st_crs(x))
+    if (NROW(studyArea) > 1)
+      studyArea <- sf::st_combine(studyArea)
+
+    studyArea <- sf::st_sf(studyArea)
+    if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
       y2 <- sapply(y1, function(x) length(x) == 1)
+      ## TODO: usevapply instead of sapply; sapply is not type-safe
+      #y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
       y <- x[y2,]
     } else {
-      stop("sf polygon being masked with sf studyArea not yet implemented")
+      studyArea <- fixErrors(studyArea)
+      y <- sf::st_intersection(x, studyArea)
     }
     return(y)
   } else {
@@ -1172,6 +1238,7 @@ assessDataTypeGDAL <- function(ras) {
   datatype
 }
 
+#' @importFrom rlang eval_tidy
 postProcessChecks <- function(studyArea, rasterToMatch, dots) {
   if (!is.null(studyArea) & !is(studyArea, "Spatial")) {
     if (!is.null(studyArea) & !is(studyArea, "sf")) {
@@ -1201,6 +1268,10 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
+
+  if (!is.null(studyArea)) if (is(studyArea, "quosure")) studyArea <- rlang::eval_tidy(studyArea)
+  if (!is.null(rasterToMatch)) if (is(rasterToMatch, "quosure")) rasterToMatch <- rlang::eval_tidy(rasterToMatch)
+
   extraDots <- postProcessChecks(studyArea = studyArea, rasterToMatch = rasterToMatch, dots = dots)
   dots <- extraDots$dots
   if (!is.null(extraDots$filename1))
