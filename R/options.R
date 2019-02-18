@@ -119,6 +119,7 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
     reproducible.useCache = TRUE, # override Cache function
+    reproducible.useCloud = FALSE, #
     reproducible.useMemoise = TRUE, #memoise
     reproducible.useNewDigestAlgorithm = TRUE,
     reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
