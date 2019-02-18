@@ -590,22 +590,24 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 .checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums,
                              checkSumFilePath = NULL) {
-  if (is.null(checkSumFilePath) || length(checkSumFilePath) == 0)
-    checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
-  if (!file.exists(checkSumFilePath)) {
-    checkSums
-  } else {
-    suppressMessages(checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
-                                                 files = newFilesToCheck, checksumFile = checkSumFilePath), silent = TRUE))
-    if (!is(checkSums2, "try-error")) {
-      checkSums <- rbindlist(list(checkSums, checkSums2))
-      data.table::setkey(checkSums, result)
-      checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
-      checkSums <- rbindlist(list(checkSums[compareNA("OK", result)],
-                                  checkSums[compareNA("FAIL", result)],
-                                  checkSums[is.na(result)]))
+  if (!is.null(newFilesToCheck)) {
+    if (is.null(checkSumFilePath) || length(checkSumFilePath) == 0)
+      checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
+    if (!file.exists(checkSumFilePath)) {
+      checkSums
     } else {
-      stop("checkSumFilePath is not a CHECKSUMS.txt file")
+      suppressMessages(checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
+                                                   files = newFilesToCheck, checksumFile = checkSumFilePath), silent = TRUE))
+      if (!is(checkSums2, "try-error")) {
+        checkSums <- rbindlist(list(checkSums, checkSums2))
+        data.table::setkey(checkSums, result)
+        checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
+        checkSums <- rbindlist(list(checkSums[compareNA("OK", result)],
+                                    checkSums[compareNA("FAIL", result)],
+                                    checkSums[is.na(result)]))
+      } else {
+        stop("checkSumFilePath is not a CHECKSUMS.txt file")
+      }
     }
   }
   checkSums
