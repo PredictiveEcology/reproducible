@@ -4,7 +4,7 @@
 \alias{CacheDigest}
 \title{The exact digest function that \code{Cache} uses}
 \usage{
-CacheDigest(objsToDigest, algo = "xxhash64", ...)
+CacheDigest(objsToDigest, algo = "xxhash64", calledFrom = "Cache", ...)
 }
 \arguments{
 \item{objsToDigest}{A list of all the objects (e.g., arguments) to be digested}
@@ -13,6 +13,10 @@ CacheDigest(objsToDigest, algo = "xxhash64", ...)
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64} and
     \code{murmur32}.}
+
+\item{calledFrom}{a Character string, length 1, with the function to
+compare with. Default is "Cache". All other values may not produce
+robust CacheDigest results.}
 
 \item{...}{passed to \code{.robustDigest}; this is generally empty except
 for advanced use.}

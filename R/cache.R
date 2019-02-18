@@ -496,7 +496,7 @@ setMethod(
       # remove some of the arguments passed to Cache, which are irrelevant for digest
       argsToOmitForDigest <- dotPipe |
         (names(modifiedDots) %in%
-           c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar"))
+           .defaultCacheOmitArgs)
 
       cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], .objects = .objects,
                                  length = length, algo = algo, quick = quick,
@@ -1187,6 +1187,10 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #' @param ... passed to \code{.robustDigest}; this is generally empty except
 #'    for advanced use.
 #' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
+#' @param calledFrom a Character string, length 1, with the function to
+#'    compare with. Default is "Cache". All other values may not produce
+#'    robust CacheDigest results.
+#'
 #' @inheritParams Cache
 #' @importFrom fastdigest fastdigest
 #'
@@ -1203,7 +1207,21 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #'   CacheDigest(list(rnorm, 1))
 #'
 #' }
-CacheDigest <- function(objsToDigest, algo = "xxhash64", ...) {
+CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", ...) {
+  if (identical("Cache", calledFrom)) {
+    namesOTD <- names(objsToDigest)
+    lengthChars <- nchar(namesOTD)
+    if (!any(namesOTD == "FUN")) {
+      zeroLength <- which(lengthChars == 0)
+      if (sum(zeroLength ) > 0) {
+        names(objsToDigest)[zeroLength[1]] <- ".FUN"
+      }
+    }
+  }
+
+  # need to omit arguments that are in Cache function call
+  objsToDigest[names(objsToDigest) %in% .defaultCacheOmitArgs] <- NULL
+
   preDigest <- lapply(objsToDigest, function(x) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
@@ -1301,3 +1319,5 @@ getLocalTags <- function(cacheRepo) {
   }
   localTags
 }
+
+.defaultCacheOmitArgs <- c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar")
