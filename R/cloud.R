@@ -402,6 +402,7 @@ getChecksumsFileID <- function(cloudFolderID) {
 cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
                            checksumsFileID = NULL, cloudFolderID = NULL,
                            delete = TRUE, upload = TRUE, ask = getOption("reproducible.ask"),
+                           cacheIds = NULL,
                            ...) {
   if (is.null(checksumsFileID)) {
     if (!is.null(cloudFolderID)) {
@@ -419,6 +420,15 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
   uniqueCacheArtifacts <- unique(localCache$artifact)
   if (!is.null(uniqueCacheArtifacts))
     cacheIDs <- localCache[artifact %in% uniqueCacheArtifacts & tagKey == "cacheId"]$tagValue
+
+  if (!is.null(cacheIds)) {
+    cacheIdsExisting <- which(cacheIDs %in% cacheIds)
+    if (length(cacheIdsExisting) == 0) {
+      message("None of the supplied cacheIds exist: \n  ", paste(cacheIds, sep = "\n  "))
+    }
+    cacheIDs <- cacheIDs[cacheIdsExisting]
+  }
+
   if (NROW(localCache) && isTRUE(upload)) {
     needToUpload <- !(cacheIDs %in% checksums$cacheId)
 
@@ -448,9 +458,17 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
       needToDelete <- rep(TRUE, NROW(checksums))
     }
   }
-  if (is.null(needToDelete))
-    if (!is.null(uniqueCacheArtifacts))
-      needToDelete <- !(checksums$cacheId %in% cacheIDs)
+  if (is.null(needToDelete)) {
+    if (!is.null(uniqueCacheArtifacts)) {
+
+      needToDelete <- if (!is.null(cacheIds)) {
+        (checksums$cacheId %in% cacheIDs)
+      } else {
+        !(checksums$cacheId %in% cacheIDs)
+      }
+
+    }
+  }
 
   if (isTRUE(delete) && any(needToDelete)) {
     out <- if (isTRUE(ask)) {
