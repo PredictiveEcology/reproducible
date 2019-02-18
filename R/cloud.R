@@ -482,16 +482,23 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
 
 cloudUploadFileAndChecksums <- function(objectFile, cloudFolderID, digest,
                                         checksums, checksumsFileID) {
-  uploadRes <- drive_upload(objectFile, path = as_id(cloudFolderID),
-                            name = paste0(digest, ".rda"), verbose = FALSE)
-  checksums <- rbindlist(
-    list(checksums,
-         data.table(cacheId = digest, id = uploadRes$id, time = as.character(Sys.time()),
-                    filesize = file.size(objectFile))), use.names = TRUE, fill = TRUE)
-  saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
-  res <- drive_update(as_id(checksumsFileID),
-               media = getOption("reproducible.cloudChecksumsFilename"),
-               verbose = FALSE)
+  uploadRes <- try(drive_upload(objectFile, path = as_id(cloudFolderID),
+                            name = paste0(digest, ".rda"), verbose = FALSE), silent = TRUE)
+  if (!is(uploadRes, "try-error")) {
+
+    checksums <- rbindlist(
+      list(checksums,
+           data.table(cacheId = digest, id = uploadRes$id, time = as.character(Sys.time()),
+                      filesize = file.size(objectFile))), use.names = TRUE, fill = TRUE)
+    saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
+    res <- drive_update(as_id(checksumsFileID),
+                        media = getOption("reproducible.cloudChecksumsFilename"),
+                        verbose = FALSE)
+  } else {
+    if (any(grepl("403", uploadRes))) {
+      message("No write access to cloudFolderID; not uploading cached copy")
+    }
+  }
   return(invisible(res))
 }
 
