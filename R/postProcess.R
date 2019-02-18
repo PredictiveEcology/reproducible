@@ -694,8 +694,8 @@ projectInputs.sf <- function(x, targetCRS, ...) {
       if ("projargs" %in% slotNames(targetCRS) )
         targetCRS <- sf::st_crs(targetCRS@projargs)
       x <- sf::st_transform(x = x, crs = targetCRS, ...)
-      if (!identical(crs(x), targetCRS)) {
-        crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
+      if (!identical(sf::st_crs(x), targetCRS)) {
+        sf::st_crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
         #  they should be
       }
 
