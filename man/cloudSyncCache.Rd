@@ -6,7 +6,8 @@
 \usage{
 cloudSyncCache(cacheRepo = getOption("reproducible.cachePath")[1],
   checksumsFileID = NULL, cloudFolderID = NULL, delete = TRUE,
-  upload = TRUE, ask = getOption("reproducible.ask"), ...)
+  upload = TRUE, ask = getOption("reproducible.ask"),
+  cacheIds = NULL, ...)
 }
 \arguments{
 \item{cacheRepo}{See \code{x} in \code{\link{showCache}}}
@@ -29,6 +30,11 @@ to create behaviours similar to \code{clearCache} and \code{keepCache}.}
 
 \item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions using
 \code{clearCache} or \code{keepCache}. Default is \code{TRUE}}
+
+\item{cacheIds}{If supplied, then only this/these cacheId objects
+will be uploaded or deleted. Default is \code{NULL}, meaning do
+full sync (i.e., match cloudFolder with local cacheRepo, constrained by
+\code{delete} or \code{upload})}
 
 \item{...}{Passed to \code{showCache} to get the artifacts to delete}
 }
@@ -66,6 +72,7 @@ This is still experimental, see examples.
   a <- Cache(rnorm, 1)
   b <- Cache(rnorm, 2)
   # only sync the one with rnorm, 2 as arguments
+  #   This CacheDigest is the same algorithm used by Cache
   tag <- CacheDigest(list(rnorm, 2))$outputHash
   cloudSyncCache(cloudFolderID = newDir$id, userTags = tag) # only syncs the one
                                                             # that is identified
@@ -87,10 +94,24 @@ This is still experimental, see examples.
   #    cloudSyncCache(cloudFolderID = newDir$id, userTags = tag)
 
   # Only delete the one that was removed from local cache, set upload = FALSE,
-  #    leaving only 1 in cloud: a
+  #    leaving only 1 in cloud: a  -- this is still a sync, so, it will only
+  #    delete 1 file because local has 1 few files -- see next for just deleting 1 artifact
   cloudSyncCache(cloudFolderID = newDir$id, upload = FALSE)
   # Upload the d, because it is the only one in the localCache not in the cloudCache
   cloudSyncCache(cloudFolderID = newDir$id)
+
+  f <- Cache(rnorm, 5)
+  g <- Cache(rnorm, 6)
+  # upload both
+  cloudSyncCache(cloudFolderID = newDir$id) # only syncs the one
+  tag5 <- CacheDigest(list(rnorm, 5))$outputHash # this is the same algorithm used by Cache
+  tag6 <- CacheDigest(list(rnorm, 6))$outputHash
+  clearCache(userTags = tag5)
+  clearCache(userTags = tag6)
+  # delete only one by tag
+  cloudSyncCache(cloudFolderID = newDir$id, cacheIds = tag5) # will delete only this obj in cloud
+  # delete another one by tag
+  cloudSyncCache(cloudFolderID = newDir$id, cacheIds = tag6)
 
   # clean up
   clearCache(ask = FALSE)
