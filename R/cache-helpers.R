@@ -435,8 +435,11 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
               }
             }
           if (!foundCall) {
-            matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
-            functionName <- matchedCall$FUN
+            matchedCall <- try(match.call(Cache, scalls[[callIndex]]), silent = TRUE)#parse(text = callIndex))
+            functionName <- if (!is(matchedCall, "try-error"))
+              matchedCall$FUN
+            else
+              ""
           }
         }
         functionName <- if (is(functionName, "name")) {
