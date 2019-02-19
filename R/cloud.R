@@ -424,7 +424,7 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
   if (!is.null(cacheIds)) {
     cacheIdsExisting <- which(cacheIDs %in% cacheIds)
     if (length(cacheIdsExisting) == 0) {
-      message("None of the supplied cacheIds exist: \n  ", paste(cacheIds, sep = "\n  "))
+      message("None of the supplied cacheIds exist locally: \n  ", paste(cacheIds, sep = "\n  "))
     }
     cacheIDs <- cacheIDs[cacheIdsExisting]
   }
@@ -462,7 +462,7 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
     if (!is.null(uniqueCacheArtifacts)) {
 
       needToDelete <- if (!is.null(cacheIds)) {
-        (checksums$cacheId %in% cacheIDs)
+        (checksums$cacheId %in% cacheIds)
       } else {
         !(checksums$cacheId %in% cacheIDs)
       }
