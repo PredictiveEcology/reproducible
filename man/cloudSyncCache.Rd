@@ -89,7 +89,8 @@ This is still experimental, see examples.
   # DELETING IS DIFFERENT
   # Doesn't quite work same way for deleting -- this tag is not in local Cache,
   # so can't find it this way.
-  # This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because
+  # This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because there is
+  #         no entry in the local cache -- use cacheId arg instead -- see below
   #    showCache(userTags = tags) shows empty
   #    cloudSyncCache(cloudFolderID = newDir$id, userTags = tag)
 
