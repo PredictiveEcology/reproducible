@@ -1320,4 +1320,11 @@ getLocalTags <- function(cacheRepo) {
   localTags
 }
 
-.defaultCacheOmitArgs <- c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar")
+.defaultCacheOmitArgs <- c("useCloud", "checksumsFileID", "cloudFolderID",
+  "notOlderThan", ".objects", "outputObjects", "algo", "cacheRepo",
+  "length", "compareRasterFileLength", "userTags", "digestPathContent",
+  "omitArgs", "classOptions", "debugCache", "sideEffect", "makeCopy",
+  "quick", "verbose", "cacheId", "useCache", "showSimilar")
+
+#.defaultCacheOmitArgs <- c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar", "quick",
+#                           "useCloud", "cloudFolderID")
