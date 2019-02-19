@@ -6,8 +6,8 @@
 \usage{
 cloudSyncCache(cacheRepo = getOption("reproducible.cachePath")[1],
   checksumsFileID = NULL, cloudFolderID = NULL, delete = TRUE,
-  upload = TRUE, ask = getOption("reproducible.ask"),
-  cacheIds = NULL, ...)
+  upload = TRUE, download = !delete,
+  ask = getOption("reproducible.ask"), cacheIds = NULL, ...)
 }
 \arguments{
 \item{cacheRepo}{See \code{x} in \code{\link{showCache}}}
@@ -27,6 +27,12 @@ If \code{FALSE}, it will not delete objects.}
 identified by the internal \code{showCache(...)} call. See examples. If \code{FALSE},
 then no files will be uploaded. Can be used in conjunction with \code{delete}
 to create behaviours similar to \code{clearCache} and \code{keepCache}.}
+
+\item{download}{Logical. If \code{FALSE}, the default, then the function will
+either delete the remote copy if \code{delete = TRUE} and there is no local
+copy, or upload the local copy if \code{upload = TRUE} and there is a local
+copy. If \code{TRUE}, then this will override \code{delete}, and download
+to local machine if it exists remotely.}
 
 \item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions using
 \code{clearCache} or \code{keepCache}. Default is \code{TRUE}}

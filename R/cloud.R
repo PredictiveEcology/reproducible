@@ -29,15 +29,7 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
   suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
   hashExists <- checksums$cacheId == dig
   out <- if (isTRUE(any(hashExists))) {
-    objectFilename2 <- tempfile(fileext = ".rda");
-    a <- checksums[hashExists]$filesize
-    class(a) <- "object_size"
-    message("  downloading object from google drive; this could take a while; it is: ",
-            format(a, "auto"))
-    drive_download(as_id(checksums[hashExists, id]), path = objectFilename2, verbose = FALSE)
-    env <- new.env()
-    load(objectFilename2, envir = env)
-    as.list(env)[[1]]
+    cloudDownload(checksums[hashExists])
   } else {
     NULL
   }
@@ -333,6 +325,11 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'   identified by the internal \code{showCache(...)} call. See examples. If \code{FALSE},
 #'   then no files will be uploaded. Can be used in conjunction with \code{delete}
 #'   to create behaviours similar to \code{clearCache} and \code{keepCache}.
+#' @param download Logical. If \code{FALSE}, the default, then the function will
+#'   either delete the remote copy if \code{delete = TRUE} and there is no local
+#'   copy, or upload the local copy if \code{upload = TRUE} and there is a local
+#'   copy. If \code{TRUE}, then this will override \code{delete}, and download
+#'   to local machine if it exists remotely.
 #' @param ... Passed to \code{showCache} to get the artifacts to delete
 #'
 #' @export
@@ -421,9 +418,11 @@ getChecksumsFileID <- function(cloudFolderID) {
 #' }
 cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
                            checksumsFileID = NULL, cloudFolderID = NULL,
-                           delete = TRUE, upload = TRUE, ask = getOption("reproducible.ask"),
+                           delete = TRUE, upload = TRUE, download = !delete,
+                           ask = getOption("reproducible.ask"),
                            cacheIds = NULL,
                            ...) {
+  if (isTRUE(download)) delete <- FALSE
   if (is.null(checksumsFileID)) {
     if (!is.null(cloudFolderID)) {
       checksumsFileID <- getChecksumsFileID(cloudFolderID)
@@ -513,8 +512,56 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
       checksums <- checksums[!needToDelete]
     }
   } else {
-    if (any(needToDelete))
-      message("There were files identified to delete to create full sync, but delete = FALSE")
+    if (any(needToDelete)) {
+      needToDownload <- needToDelete
+      if (isTRUE(download)) {
+        if (!cacheIds %in% localCache[artifact %in% uniqueCacheArtifacts & tagKey == "cacheId"]$tagValue) {
+          out <- cloudDownload(checksums[needToDownload,])
+          objSize <- sum(unlist(objSize(out)))
+          #preDigestUnlistTrunc <- unlist(.unlistToCharacter(CacheDigest(list(out))$preDigest, 3))
+          userTags <- c(#if (!is.na(fnDetails$functionName))
+            #paste0("function:", fnDetails$functionName),
+            paste0("object.size:", objSize),
+            paste0("accessed:", Sys.time())#,
+            #paste("preDigest", names(preDigestUnlistTrunc),
+            #      preDigestUnlistTrunc, sep = ":")
+          )
+
+          written <- 0
+          suppressMessages(cacheRepo <- .checkCacheRepo(cacheRepo, create = TRUE))
+          setattr(out, "tags", paste0("cacheId:", checksums[needToDownload, cacheId]))
+          message("  Writing to local cacheRepo")
+          while (written >= 0) {
+            saved <- suppressWarnings(try(silent = TRUE,
+                                          archivist::saveToLocalRepo(
+                                            out,
+                                            repoDir = cacheRepo,
+                                            artifactName = NULL,
+                                            archiveData = FALSE,
+                                            archiveSessionInfo = FALSE,
+                                            archiveMiniature = FALSE,
+                                            rememberName = FALSE,
+                                            silent = TRUE,
+                                            userTags = userTags
+                                          )
+            ))
+
+            # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+            written <- if (is(saved, "try-error")) {
+              Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+              written + 1
+            } else {
+              -1
+            }
+          }
+        } else {
+          message("  cacheIds already present locally")
+        }
+      } else {
+        message("There were files identified to delete to create full sync, but delete = FALSE")
+      }
+    }
+
   }
   suppressMessages(cloudUpdateChecksums(checksums, checksumsFileID))
   return(invisible(checksums))
@@ -549,5 +596,21 @@ cloudUploadFileAndChecksums <- function(objectFile, cloudFolderID, digest,
   b <- match.call(eval(a$FUN), a, expand.dots = TRUE)
   b[names(b) %in% eval(b$omitArgs) | names(b) %in% forms | names(b) %in% names(.formalsCache)] <- NULL
   dots <- lapply(b, eval, envir = envir)
+
+}
+
+cloudDownload <- function(checksums) {
+  if (NROW(checksums) > 1) {
+    stop("Can only download 1 file at a time, currently")
+  }
+  objectFilename2 <- tempfile(fileext = ".rda");
+  a <- checksums$filesize
+  class(a) <- "object_size"
+  message("  downloading object from google drive; this could take a while; it is: ",
+          format(a, "auto"))
+  drive_download(as_id(checksums[, id]), path = objectFilename2, verbose = FALSE)
+  env <- new.env()
+  load(objectFilename2, envir = env)
+  as.list(env)[[1]]
 
 }
