@@ -302,7 +302,7 @@ setGeneric(
            quick = getOption("reproducible.quick", FALSE),
            verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
-           showSimilar = NULL) {
+           showSimilar = getOption("reproducible.showSimilar", FALSE)) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
   })
 
