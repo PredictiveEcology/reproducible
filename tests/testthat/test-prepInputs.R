@@ -138,9 +138,9 @@ test_that("prepInputs doesn't work", {
   #######################################
   # messages received below may help for filling in more arguments in the subsequent call
   LCC2005 <- prepInputs(
-     url = url,
-     destinationPath = asPath(dPath),
-     studyArea = StudyArea
+    url = url,
+    destinationPath = asPath(dPath),
+    studyArea = StudyArea
   )
   expect_is(LCC2005, "Raster")
 
@@ -271,7 +271,7 @@ test_that("interactive prepInputs", {
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ),
-                          needGoogle = TRUE)
+  needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -398,7 +398,7 @@ test_that("preProcess doesn't work", {
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ),
-                          needGoogle = TRUE)
+  needGoogle = TRUE)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -945,11 +945,11 @@ test_that("prepInputs doesn't work", {
     }, add = TRUE)
     mess1 <- capture_messages({
       test1 <- prepInputs(#targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-                          targetFile = targetFileLuxRDS,
-                          #destinationPath = ".",
-                          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                          path = tmpdir)
+        targetFile = targetFileLuxRDS,
+        #destinationPath = ".",
+        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+        #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+        path = tmpdir)
     })
     mess2 <- capture_messages({
       test2 <- prepInputs(targetFile = targetFileLuxRDS,
@@ -1011,8 +1011,8 @@ test_that("prepInputs doesn't work", {
       testOnExit(testInitOut)
       testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
                                                     "reproducible.overwrite" = TRUE
-                                                    ),
-                              needGoogle = TRUE)
+      ),
+      needGoogle = TRUE)
       opts <- options("reproducible.cachePath" = tmpCache)
       on.exit({options(opts)}, add = TRUE)
       googledrive::drive_auth_config(active = TRUE)
@@ -1525,7 +1525,7 @@ test_that("rasters aren't properly resampled", {
   expect_true(dataType(out) == "INT2U")
 
   out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
-                    destinationPath = tempdir(), method = "bilinear", filename2 = tempfile(fileext = ".tif"))
+                     destinationPath = tempdir(), method = "bilinear", filename2 = tempfile(fileext = ".tif"))
   expect_true(dataType(out2) == "FLT4S")
 
   c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
@@ -1594,25 +1594,25 @@ test_that("System call gdal works using multicores for both projecting and maski
   crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
-# Passing a specific integer for cores
+  # Passing a specific integer for cores
   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2)
   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
-# Passing as float for cores
+  # Passing as float for cores
   test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3)
   expect_true(file.exists(test2@file@name)) #exists on disk after gdalwarp
-# Not passing cores
+  # Not passing cores
   test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea)
   expect_true(file.exists(test3@file@name)) #exists on disk after gdalwarp
-# Passing cores as AUTO
+  # Passing cores as AUTO
   test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO")
   expect_true(file.exists(test4@file@name)) #exists on disk after gdalwarp
-# Passing cores as any other character than 'AUTO'
+  # Passing cores as any other character than 'AUTO'
   expect_error(test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA"))
+                                   rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA"))
 
   ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
@@ -1654,6 +1654,67 @@ test_that("System call gdal will make the rasters match for rasterStack", {
 
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
+
+test_that("Resolution doesn't change if only study Area is provided", {
+  skip_on_cran()
+
+  testInitOut <- testInit("raster", opts = list(
+    "rasterTmpDir" = file.path(tempdir(), "raster"),
+    "reproducible.cachePath" = .reproducibleTempCacheDir,
+    "reproducible.inputPaths" = NULL,
+    "reproducible.overwrite" = TRUE)
+  )
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  # Add a study area to Crop and Mask to
+  # Create a "study area"
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98,
+                        59.9, 65.73, 63.58, 54.79, 59.9),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+  tmpdir <- tempdir()
+  dPath <- file.path(tmpdir, "ecozones")
+
+  # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
+  #   but the StudyArea does get reprojected, need to use rasterToMatch
+  lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
+  url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
+                   "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
+
+  LCC2005 <- prepInputs(
+    targetFile = lcc2005Filename,
+    url = url,
+    destinationPath = asPath(dPath),
+    useCache = FALSE
+  )
+
+  LCC2005_SA <- postProcess(LCC2005,
+                            studyArea = StudyArea,
+                            useSAcrs = TRUE,
+                            useCache = FALSE)
+
+  expect_true(all(res(LCC2005) %==% res(LCC2005_SA)))
+
+  LCC2005_SA <- prepInputs(
+    targetFile = lcc2005Filename,
+    url = url,
+    destinationPath = asPath(dPath),
+    studyArea = StudyArea,
+    useSAcrs = TRUE,
+    useCache = FALSE
+  )
+
+  expect_true(all(res(LCC2005) %==% res(LCC2005_SA)))
+
+  on.exit(raster::rasterOptions(todisk = FALSE))
+})
+
 
 test_that("message when files from archive are already present", {
   skip_on_cran()

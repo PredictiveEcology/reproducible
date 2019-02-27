@@ -631,8 +631,18 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         message(paste0("reprojecting using ", dots$method, "..."))
 
         if (is.null(rasterToMatch)) {
-          Args <- append(dots, list(from = x, crs = targetCRS))
+          targetRes <- res(x)
+          Args <- append(dots, list(from = x, crs = targetCRS, res = targetRes))
           warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
+
+          if (identical(crs(x), targetCRS) & any(res(x) != targetRes)) {
+            if (all(res(x) %==% targetRes)) {
+              res(x) <- targetRes
+            } else {
+              stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
+                          "You can try increasing error tolerance in options('fpCompare.tolerance')."))
+            }
+          }
 
         } else {
           # projectRaster does silly things with integers, i.e., it converts to numeric
