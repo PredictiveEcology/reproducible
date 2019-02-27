@@ -49,6 +49,7 @@
 #'                 instead of the \code{digest::digest(file)}.
 #'                 Less robust to changes, but faster. NOTE: this will only affect objects
 #'                 on disk.\cr
+#'   \code{showSimilar} \tab Passed to \code{Cache}. Default \code{FALSE}.\cr
 #'   \code{useCache} \tab \code{TRUE} \tab Used in \code{\link{Cache}}. If \code{FALSE}, then
 #'                         the entire \code{Cache} machinery is skipped and the functions
 #'                         are run as if there was no Cache occurring. Can also take 2 other values:
@@ -69,6 +70,7 @@
 #'                         this option will default back to the non devMode behaviour to avoid
 #'                         deleting objects. This, therefore, is most useful if the user is
 #'                         using unique values for \code{userTags}\cr
+#'   \code{useCloud} \tab Passed to \code{Cache}. Default \code{FALSE}.\cr
 #'   \code{useMemoise} \tab \code{TRUE} \tab Used in \code{\link{Cache}}. If \code{TRUE},
 #'                   recovery of cached elements from the cacheRepo will use
 #'                   \code{memoise::memoise}. This means that the 3rd time running a function
@@ -118,6 +120,7 @@ reproducibleOptions <- function() {
     reproducible.length = Inf,
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
+    reproducible.showSimilar = FALSE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useMemoise = TRUE, #memoise

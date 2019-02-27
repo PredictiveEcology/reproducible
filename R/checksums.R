@@ -264,7 +264,7 @@ setMethod(
 })
 
 writeChecksumsTable <- function(out, checksumFile, dots) {
-  out <- out[order(out$file), ] ## sort by filename alphabetically
+  out <- out[.orderDotsUnderscoreFirst(out$file), ] ## sort by filename alphabetically
   do.call(write.table,
           args = append(list(x = out, file = checksumFile, eol = "\n",
                              col.names = !isTRUE(dots$append),

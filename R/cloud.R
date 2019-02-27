@@ -187,20 +187,28 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
                        checksumsFileID = NULL, cloudFolderID = NULL) {
 
-  if (is.null(checksumsFileID))
-    if (is.null(cloudFolderID))
-      stop("You must supply a checksumsFileID or, if not supplied, a cloudFolderID where the",
-           "\n checksums file will be made")
   hasCopy <- FALSE
   hasCloudCopy <- FALSE
 
-  fnDetails <- .fnCleanup(FUN = eval(match.call(Cache, expand.dots = TRUE)$FUN),
-                          callingFun = "Cache", ...)
-  cacheRepo <- suppressMessages(.checkCacheRepo(fnDetails$modifiedDots, create = TRUE))
-  suppressMessages(archivist::createLocalRepo(cacheRepo))
+  if (is.null(list(...)$cacheRepo)) {
+    cacheRepos <- suppressMessages(.checkCacheRepo(list(...), create = TRUE))
+  } else {
+    cacheRepos <- lapply(list(...)$cacheRepo, function(repo) {
+      repo <- checkPath(repo, create = TRUE)
+    })
+  }
+  cacheRepo <- cacheRepos[[1]]
 
-  dots <- list(...)
+  #cacheRepo <- suppressMessages(.checkCacheRepo(list(...), create = TRUE))#fnDetails$modifiedDots, create = TRUE))
+  suppressMessages(archivist::createLocalRepo(cacheRepo))
   if (isTRUE(useCloud)) {
+
+    if (is.null(checksumsFileID))
+      if (is.null(cloudFolderID))
+        stop("You must supply a checksumsFileID or, if not supplied, a cloudFolderID where the",
+             "\n checksums file will be made")
+
+    dots <- list(...)
     if (!is.null(dots$omitArgs)) {
       dots <- .CacheDigestWithOmitArgs(sys.call(), envir = sys.frame(-1))
     }
@@ -225,6 +233,10 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
       hasCloudCopy <- any(cachedCopy$checksums$cacheId %in% cachedCopy$digest)
       # it may not have a cloud copy either, meaning it will have a NULL
       if (!is.null(cachedCopy$object)) {
+
+        fnDetails <- .fnCleanup(FUN = eval(match.call(Cache, expand.dots = TRUE)$FUN),
+                                callingFun = "Cache", ...)
+
         message("  writing to local Cache")
         objSize <- sum(unlist(objSize(cachedCopy)))
         preDigestUnlistTrunc <- unlist(.unlistToCharacter(dig$preDigest, 3))
@@ -265,7 +277,11 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
     }
   }
   out <- if (!hasCloudCopy || hasLocalCopy) {
-    Cache(..., cacheRepo = cacheRepo)
+    if ("cacheRepo" %in% names(list(...))) {
+      Cache(...)
+    } else {
+      Cache(..., cacheRepo = cacheRepo)
+    }
   } else {
     cachedCopy$object
   }

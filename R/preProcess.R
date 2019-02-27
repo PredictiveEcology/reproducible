@@ -162,7 +162,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
   if (!is.null(reproducible.inputPaths))
     reproducible.inputPaths <- path.expand(reproducible.inputPaths)
-  
+
   for (dp in c(destinationPath, reproducible.inputPaths)) {
     checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
                                files = basename2(filesToCheck)), silent = TRUE)

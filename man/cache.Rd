@@ -16,7 +16,7 @@ Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
-  showSimilar = NULL)
+  showSimilar = getOption("reproducible.showSimilar", FALSE))
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, .objects = NULL,
   outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
@@ -27,7 +27,7 @@ Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
-  showSimilar = NULL)
+  showSimilar = getOption("reproducible.showSimilar", FALSE))
 
 lhs \%<\% rhs
 }
