@@ -612,7 +612,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         # should be faster than assessDataType, as it is a class determination,
         # not a numeric assessment:
-        isInteger <- if (is.integer(x[])) TRUE else FALSE
+        isInteger <- if (is.integer(getValues(x))) TRUE else FALSE
 
         if (isInteger) {
           if (!is.null(dots$method)) {
@@ -657,7 +657,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         # return the integer class to the data in the raster object
         if (isTRUE(isInteger)) {
           dataType(x) <- origDataType
-          x[] <- as.integer(x[])
+          x[] <- as.integer(getValues(x))
         }
 
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
