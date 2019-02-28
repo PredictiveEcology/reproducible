@@ -822,7 +822,6 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
       #  they should be
     }
 
-
     return(y)
   } else {
     return(x)

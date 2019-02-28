@@ -1,5 +1,5 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("checksumsFilename", "checksumsID", "id"))
+  utils::globalVariables(c("cacheID", "checksumsFilename", "checksumsID", "id"))
 }
 
 #' Basic tool for using cloud-based caching
@@ -470,7 +470,8 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
     if (sum(needToUpload) > 0) {
       message(crayon::blue("Uploading", sum(needToUpload), "files, ",
                            "\n ", paste(cacheIDs[needToUpload], ".rda ( == ",
-                                        uniqueCacheArtifacts[needToUpload], ".rda in local cache)", sep = "",
+                                        uniqueCacheArtifacts[needToUpload],
+                                        ".rda in local cache)", sep = "",
                                         collapse = "\n  ")))
       out <- lapply(uniqueCacheArtifacts[needToUpload], function(art) {
         cacheID <- localCache[artifact == art & tagKey == "cacheId"]$tagValue
@@ -481,9 +482,14 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
       })
       checksums <- rbindlist(
         list(checksums,
-             data.table(cacheId = cacheIDs[needToUpload], id = rbindlist(out)$id, time = as.character(Sys.time()),
-                        filesize = file.size(file.path(cacheRepo, "gallery",
-                                                       paste0(uniqueCacheArtifacts[needToUpload], ".rda"))))),
+             data.table(
+               cacheId = cacheIDs[needToUpload],
+               id = rbindlist(out)$id,
+               time = as.character(Sys.time()),
+               filesize = file.size(file.path(cacheRepo, "gallery",
+                                              paste0(uniqueCacheArtifacts[needToUpload], ".rda")))
+             )
+        ),
         use.names = TRUE, fill = TRUE)
       out <- rbindlist(out)
     }
