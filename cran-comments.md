@@ -20,10 +20,10 @@ This is an enhancement release. Several new functions and new options.
 * Windows 7               (local), R 3.5.2
 
 ### Development R version
-* Ubuntu 14.04        (travis-ci), R 3.6.0 (2019-01-22 r76003)
-* Ubuntu 18.04            (local), R 3.6.0 (2019-01-25 r76014)
-* Windows              (appveyor), R 3.6.0 (2019-01-13 r75986)
-* Windows           (win-builder), R 3.6.0 (2019-01-25 r76015)
+* Ubuntu 14.04       (travis-ci), R 3.6.0 (2019-02-11 r76084)
+* Ubuntu 18.04           (local), R 3.6.0 (2019-02-10 r76083)
+* Windows             (appveyor), R 3.6.0 (2019-02-10 r76083)
+* Windows          (win-builder), R 3.6.0 (2019-02-07 r76069)
 
 ## R CMD check results
 
