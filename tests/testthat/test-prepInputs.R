@@ -146,7 +146,7 @@ test_that("prepInputs doesn't work", {
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) ## TODO: fix failure (#93)
 
   #######################################
   ### url, targetFile, archive     ######
@@ -262,7 +262,7 @@ test_that("prepInputs doesn't work", {
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   # crop and mask worked:
   expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) ## TODO: fix failure (#93)
 })
 
 test_that("interactive prepInputs", {
@@ -1621,9 +1621,7 @@ test_that("System call gdal works using multicores for both projecting and maski
 })
 
 test_that("System call gdal will make the rasters match for rasterStack", {
-
   skip_on_cran()
-
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
@@ -1733,8 +1731,6 @@ test_that("message when extracting a file that is already present", {
   testthat::expect_message(fl <- reproducible::preProcess(url = url3,
                                                           destinationPath = tmpdir))
 })
-
-
 
 test_that("Test to fix issue #101 prepInputs on raster from disk", {
   if (interactive()) {
