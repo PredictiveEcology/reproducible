@@ -1,5 +1,5 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("cacheID", "checksumsFilename", "checksumsID", "id"))
+  utils::globalVariables(c("cacheId", "checksumsFilename", "checksumsID", "id"))
 }
 
 #' Basic tool for using cloud-based caching
