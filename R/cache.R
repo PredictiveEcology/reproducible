@@ -582,7 +582,7 @@ setMethod(
             #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)
             #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
 
-            if (similarsHaveNA == 0) {
+            if (similarsHaveNA < 2) {
               if (verbose > 0)
                 message("Using devMode; overwriting previous Cache entry with tags: ",
                         paste(userTags, collapse = ", "))
