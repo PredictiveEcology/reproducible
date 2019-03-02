@@ -1262,7 +1262,11 @@ warnonce <- function(id, ...) {
   userTags3 <- c(userTags, userTags2)
   aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
   setkeyv(aa, "N")
-  similar <- localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N == max(N)]
+  similar <- if (NROW(localTags) > 0) {
+    localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N == max(N)]
+  } else {
+    localTags
+  }
   if (NROW(similar)) {
     similar2 <- similar[grepl("preDigest", tag)]
     cacheIdOfSimilar <- similar[grepl("cacheId", tag)]$tag
