@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Recursive object.size — objSize • reproducible</title>
+<title>Generic method to make or unmake objects memoisable — makeMemoisable • reproducible</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,11 +30,10 @@
 
 
 
-<meta property="og:title" content="Recursive object.size — objSize" />
+<meta property="og:title" content="Generic method to make or unmake objects memoisable — makeMemoisable" />
 
-<meta property="og:description" content="This has methods for various types of things that may not correctly report
-their object.size using object\.size. Also, for lists and environments,
-it will return the object.size separately for each element." />
+<meta property="og:description" content="This is just a pass through for all classes in reproducible.
+This generic is here so that downstream methods can be created." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -126,73 +125,53 @@ it will return the object.size separately for each element." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Recursive object.size</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/objectSize.R'><code>R/objectSize.R</code></a></small>
-    <div class="hidden name"><code>objSize.Rd</code></div>
+    <h1>Generic method to make or unmake objects memoisable</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache.R'><code>R/cache.R</code></a></small>
+    <div class="hidden name"><code>makeMemoisable.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>This has methods for various types of things that may not correctly report
-their object.size using <code>object\.size</code>. Also, for lists and environments,
-it will return the object.size separately for each element.</p>
+    <p>This is just a pass through for all classes in <span class="pkg">reproducible</span>.
+This generic is here so that downstream methods can be created.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='no'>quick</span>)
-
-<span class='co'># S3 method for list</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>))
-
-<span class='co'># S3 method for environment</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
-  <span class='fl'>FALSE</span>))
+    <pre class="usage"><span class='fu'>makeMemoisable</span>(<span class='no'>x</span>)
 
 <span class='co'># S3 method for default</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
-  <span class='fl'>FALSE</span>))
+<span class='fu'>makeMemoisable</span>(<span class='no'>x</span>)
 
-<span class='co'># S3 method for Path</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>))</pre>
+<span class='fu'>unmakeMemoisable</span>(<span class='no'>x</span>)
+
+<span class='co'># S3 method for default</span>
+<span class='fu'>unmakeMemoisable</span>(<span class='no'>x</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>An object</p></td>
-    </tr>
-    <tr>
-      <th>quick</th>
-      <td><p>Logical. Only some methods use this. e.g.,
-<code>Path</code> class objects. In which case, <code>file.size</code> will be
-used instead of <code>object.size</code>.</p></td>
+      <td><p>An object to make memoisable.
+See individual methods in other packages.</p></td>
     </tr>
     </table>
     
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/environment'>new.env</a></span>()
-<span class='no'>a</span>$<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
-<span class='no'>a</span>$<span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
+    <p>The same object, but with any modifications, especially
+dealing with saving of environments, which memoising doesn't handle
+correctly in some cases.</p>
+    
 
-<span class='fu'>objSize</span>(<span class='no'>a</span>) <span class='co'># all the elements in the environment</span></div><div class='output co'>#&gt; $`a$b`
-#&gt; 96 bytes
-#&gt; 
-#&gt; $`a$d`
-#&gt; 96 bytes
-#&gt; 
-#&gt; $a
-#&gt; 56 bytes
-#&gt; </div><div class='input'><span class='fu'><a href='https://www.rdocumentation.org/packages/utils/topics/object.size'>object.size</a></span>(<span class='no'>a</span>) <span class='co'># different - only measuring the environment as an object</span></div><div class='output co'>#&gt; 56 bytes</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-            
-      <li><a href="#examples">Examples</a></li>
-    </ul>
+      
+      <li><a href="#value">Value</a></li>
+          </ul>
 
   </div>
 </div>

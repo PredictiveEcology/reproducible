@@ -10,6 +10,7 @@ version 0.2.7
 * Experimental support within the `postProcess` family for `sf` class objects
 
 ## bug fixes
+
 * mostly minor
 * `cloudCache` bugfixes for more cases
 

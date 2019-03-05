@@ -73,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.7</span>
       </span>
     </div>
 
@@ -183,8 +183,8 @@ float will be passed as the exact number of cores to be used.</p></td>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A file of the same type as starting, but with projection (and possibly other
-characteristics, including resolution, origin, extent if changed.</p>
+    <p>A file of the same type as starting, but with projection (and possibly
+other characteristics, including resolution, origin, extent if changed).</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -212,7 +212,8 @@ characteristics, including resolution, origin, extent if changed.</p>
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile1a198222364bb. Specify filename1 or filename2 for more control</span></div><div class='input'><span class='co'>#'</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile170f45378b220. Specify filename1 or filename2 for more control</span>
+#&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'>projectInputs</span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
 <span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='fixErrors.html'>fixErrors</a></span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'>

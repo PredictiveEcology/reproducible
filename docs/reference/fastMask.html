@@ -73,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.7</span>
       </span>
     </div>
 
@@ -184,7 +184,7 @@ float will be passed as the exact number of cores to be used.</p></td>
 <span class='no'>origStack</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/raster/topics/stack'>stack</a></span>(<span class='no'>poly</span>)
 <span class='co'># original mask function in raster</span>
 <span class='no'>newStack1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/raster/topics/mask'>mask</a></span>(<span class='no'>origStack</span>, <span class='kw'>mask</span> <span class='kw'>=</span> <span class='no'>shp</span>)
-<span class='no'>newStack2</span> <span class='kw'>&lt;-</span> <span class='fu'>fastMask</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>origStack</span>, <span class='kw'>y</span> <span class='kw'>=</span> <span class='no'>shp</span>)</div><div class='output co'>#&gt; <span class='message'>fastMask is using sf and fasterize</span></div><div class='input'>
+<span class='no'>newStack2</span> <span class='kw'>&lt;-</span> <span class='fu'>fastMask</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>origStack</span>, <span class='kw'>y</span> <span class='kw'>=</span> <span class='no'>shp</span>)</div><div class='output co'>#&gt; <span class='message'>This function is using raster::mask</span></div><div class='output co'>#&gt; <span class='message'> because fastMask doesn't have a specific method for these classes yet</span></div><div class='input'>
 <span class='co'># test all equal</span>
 <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/all.equal'>all.equal</a></span>(<span class='no'>newStack1</span>, <span class='no'>newStack2</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='no'>newStack1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/raster/topics/stack'>stack</a></span>(<span class='no'>newStack1</span>)
