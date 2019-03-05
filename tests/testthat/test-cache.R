@@ -228,9 +228,8 @@ test_that("test 'quick' argument", {
   mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
                                           cacheRepo = tmpdir, quick = TRUE))
   expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
-  expect_message(out1c <- Cache(quickFun, asPath(filename(r1)),
-                                cacheRepo = tmpdir, quick = FALSE),
-                 regexp = "There is no similar item in the cacheRepo")
+  expect_silent(out1c <- Cache(quickFun, asPath(filename(r1)),
+                                cacheRepo = tmpdir, quick = FALSE))
 
   # Using Raster directly -- not file
   quickFun <- function(ras) {
@@ -242,8 +241,7 @@ test_that("test 'quick' argument", {
   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
   mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE))
   expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
-  expect_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE),
-                 regexp = "There is no similar item in the cacheRepo")
+  expect_silent(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE))
 })
 
 test_that("test date-based cache removal", {
@@ -387,8 +385,8 @@ test_that("test asPath", {
   # Third -- finally has all same as second time
   a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
 
-  expect_true(grepl("There is no similar item in the cacheRepo", a1))
-  expect_true(grepl("There is no similar item in the cacheRepo", a2))
+  expect_true(length(a1) == 0)
+  expect_true(length(a2) == 0)
   expect_true(grepl("loading cached result", a3))
 
   unlink("filename.RData")
@@ -399,7 +397,7 @@ test_that("test asPath", {
                                quick = TRUE, cacheRepo = tmpdir))
   a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
                                quick = TRUE, cacheRepo = tmpdir))
-  expect_true(grepl("There is no similar item in the cacheRepo", a1))
+  expect_true(length(a1) == 0)
   expect_true(grepl("loading cached result", a2))
   expect_true(grepl("loading memoised result from previous saveRDS call", a3))
 
@@ -411,7 +409,7 @@ test_that("test asPath", {
                                quick = TRUE, cacheRepo = tmpdir))
   a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
                                quick = TRUE, cacheRepo = tmpdir))
-  expect_true(grepl("There is no similar item in the cacheRepo", a1))
+  expect_true(length(a1) == 0)
   expect_true(grepl("loading cached result", a2))
   expect_true(grepl("loading memoised result from previous saveRDS call", a3))
 
@@ -519,8 +517,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n)
   }
 
-  expect_message(Cache(outer, n = 2, cacheRepo = tmpdir),
-                 regexp = "There is no similar item in the cacheRepo")
+  expect_silent(Cache(outer, n = 2, cacheRepo = tmpdir))
   clearCache(ask = FALSE, x = tmpdir)
 
   options(reproducible.cachePath = tempdir())
@@ -535,8 +532,7 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_true(all(grepl("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary", out)))
 
   # does Sys.time() propagate to outer ones -- no message about cacheRepo being tempdir()
-  expect_message(Cache(outer, n = 2, notOlderThan = Sys.time(), cacheRepo = tmpdir),
-                 regexp = "There is no similar item in the cacheRepo")
+  expect_silent(Cache(outer, n = 2, notOlderThan = Sys.time(), cacheRepo = tmpdir))
 
   # does cacheRepo propagate to outer ones -- no message about cacheRepo being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
@@ -549,7 +545,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n)
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out) == 2)
+  expect_true(length(out) == 1)
   msgGrep <- paste("loading cached result from previous rnorm call",
                    "There is no similar item in the cacheRepo",
                    sep = "|")
@@ -561,7 +557,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time())
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out) == 1)
+  expect_true(length(out) == 0)
   expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
 
   # change the outer function, so no cache on that, & have notOlderThan on rnorm,
@@ -571,7 +567,7 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n, notOlderThan = Sys.time())
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out) == 1)
+  expect_true(length(out) == 0)
   expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
