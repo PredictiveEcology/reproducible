@@ -21,7 +21,7 @@ This is a maintenance release which fixes some minor bugs. See `NEWS.md`.
 
 ### Development R version
 * Ubuntu 14.04       (travis-ci), R 3.6.0 (2019-03-05 r76199)
-* Ubuntu 18.04           (local), R 3.6.0 (2019-02-28 r76173)
+* Ubuntu 18.04           (local), R 3.6.0 (2019-03-06 r76204)
 * Windows             (appveyor), R 3.6.0 (2019-03-04 r76198)
 * Windows          (win-builder), R 3.6.0 (2019-03-03 r76192)
 
@@ -39,7 +39,5 @@ There were 1 NOTEs:
  
 ## Downstream dependencies
 
-We have run R CMD check on downstream dependencies, and all have passed except those noted below.
+We have run R CMD check on downstream dependencies, and all have passed.
 Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
-
-* problems detected on the CRAN versions of `SpaDES` and `SpaDES.core` are fixed in the versions to be submitted shortly to CRAN.
