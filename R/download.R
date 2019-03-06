@@ -262,7 +262,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                                    targetFile = targetFile,
                                    destinationPath = destinationPath)
 
-  #destFile <- tempfile(fileext = paste0(".",tools::file_ext(downloadFilename)))
+  #destFile <- tempfile(fileext = paste0(".", tools::file_ext(downloadFilename)))
   destFile <- file.path(tempdir(), rndstr(len = 5), basename(downloadFilename))
   checkPath(dirname(destFile), create = TRUE)
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
@@ -434,6 +434,12 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
 
   if (is.null(archive)) {
     fileAttr <- googledrive::drive_get(googledrive::as_id(url))
+    fileSize <- fileAttr$drive_resource[[1]]$size
+    if (!is.null(fileSize)) {
+      fileSize <- as.numeric(fileSize)
+      class(fileSize) <- "object_size"
+      message("  File on Google Drive is ", format(fileSize, units = "auto"))
+    }
     archive <- .isArchive(fileAttr$name)
     if (is.null(archive)) {
       if (is.null(targetFile)) {

@@ -66,10 +66,10 @@ checkGDALVersion <- function(version) {
 #' @author Eliot McIntire
 #' @export
 #' @importFrom fasterize fasterize
-#' @importFrom raster crop extract mask nlayers raster stack crs
+#' @importFrom parallel detectCores
+#' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
-#' @importFrom parallel detectCores
 #'
 #' @examples
 #' library(raster)
@@ -105,7 +105,7 @@ checkGDALVersion <- function(version) {
 #' }
 #'
 fastMask <- function(x, y, cores = NULL) {
-  if (requireNamespace("sf") && requireNamespace("fasterize")) {
+  if (is(x, "RasterLayer") && requireNamespace("sf") && requireNamespace("fasterize")) {
     message("fastMask is using sf and fasterize")
 
     if (!identical(crs(y), crs(x))) {
@@ -140,7 +140,7 @@ fastMask <- function(x, y, cores = NULL) {
       }
 
       #GDAL requires file path to cutline - write to disk
-      tempSrcShape <- file.path(tempfile(), ".shp", fsep = "")
+      tempSrcShape <- file.path(tempfile(tmpdir = tmpDir()), ".shp", fsep = "")
       ysf <- sf::st_as_sf(y)
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
@@ -189,11 +189,21 @@ fastMask <- function(x, y, cores = NULL) {
       }
     }
   } else {
-    message("This function is using the much slower raster::mask. ",
-            "See https://github.com/r-spatial/sf to install gdal ",
-            "on your system. Then, 'install.packages(\"sf\")",
-            "; install.packages(\"fasterize\")')")
-    raster::mask(x, y)
+    message("This function is using raster::mask")
+    if (is(x, "RasterStack") || is(x, "RasterBrick")) {
+      message(" because fastMask doesn't have a specific method ",
+              "for these classes yet")
+    } else {
+      message("This may be slow in large cases. ",
+              "To use sf and gdal instead, see ",
+              "https://github.com/r-spatial/sf to install gdal ",
+              "on your system. Then, 'install.packages(\"sf\")",
+              "; install.packages(\"fasterize\")')")
+    }
+    if (is(x, "RasterStack")) {
+      raster::stack(raster::mask(x, y))
+    } else {
+      raster::mask(x, y)
+    }
   }
 }
-

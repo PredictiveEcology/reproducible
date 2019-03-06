@@ -159,16 +159,23 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
-  for (dp in c(destinationPath, getOption("reproducible.inputPaths", NULL))) {
-    checkSums <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
+  reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
+  if (!is.null(reproducible.inputPaths))
+    reproducible.inputPaths <- path.expand(reproducible.inputPaths)
+
+  for (dp in c(destinationPath, reproducible.inputPaths)) {
+    checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
                                files = basename2(filesToCheck)), silent = TRUE)
-    if (!all(is.na(checkSums$result))) { # found something
-      if (identical(dp, getOption("reproducible.inputPaths"))) {
-        destinationPathUser <- destinationPath
-        destinationPath <- dp
-        on.exit({destinationPath <- destinationPathUser}, add = TRUE)
+    if (!is(checkSumsTmp1, "try-error")) {
+      checkSums <- checkSumsTmp1
+      if (!all(is.na(checkSums$result))) { # found something
+        if (identical(dp, reproducible.inputPaths)) {
+          destinationPathUser <- destinationPath
+          destinationPath <- dp
+          on.exit({destinationPath <- destinationPathUser}, add = TRUE)
+        }
+        break
       }
-      break
     }
   }
 
@@ -253,12 +260,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       )
     }
   }
-  # Check for local copies in all values of getOption("reproducible.inputPaths")
+
+  # Check for local copies in all values of reproducible.inputPaths
   # At the end of this function, the files will be present in destinationPath, if they existed
   #  in options("reproducible.inputPaths")
   localChecks <- .checkLocalSources(neededFiles, checkSums = checkSums,
                                     checkSumFilePath = checkSumFilePath,
-                                    otherPaths = getOption("reproducible.inputPaths"),
+                                    otherPaths = reproducible.inputPaths,
                                     destinationPath, needChecksums = needChecksums)
   checkSums <- localChecks$checkSums
   needChecksums <- localChecks$needChecksums
@@ -268,12 +276,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
-  if (!is.null(getOption("reproducible.inputPaths"))) {
-    destinationPathUser <- destinationPath
-    on.exit({
-      destinationPath <- destinationPathUser
-    }, add = TRUE)
-    destinationPath <- getOption("reproducible.inputPaths")[1]
+  if (!is.null(reproducible.inputPaths)) {
+    # may already have been changed above
+    if (!identical(destinationPath, reproducible.inputPaths)) {
+      destinationPathUser <- destinationPath
+      on.exit({
+        destinationPath <- destinationPathUser
+      }, add = TRUE)
+      destinationPath <- reproducible.inputPaths[1]
+    }
+
     if (isTRUE(any(grepl(archive, pattern = destinationPathUser)))) {
       # might have a "." as destinationPath -- messes with grepl
       patt <- if (grepl("^\\.", destinationPathUser))
@@ -378,7 +390,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # link back to destinationPath if options("reproducible.inputPaths") was used.
   #  destinationPath had been overwritten to be options("reproducible.inputPaths")
-  if (!is.null(getOption("reproducible.inputPaths"))) {
+  if (!is.null(reproducible.inputPaths)) {
     #foundRecursively <- localChecks$foundRecursively
     foundInInputPaths <- localChecks$foundInInputPaths
     copyToIP <- (!filesExtr %in% foundInInputPaths)
@@ -459,7 +471,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)
 
-  if (!is.null(getOption("reproducible.inputPaths"))) {
+  if (!is.null(reproducible.inputPaths)) {
     destinationPath <- destinationPathUser
   }
   if (needChecksums > 0) {
@@ -479,8 +491,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       destinationPath = destinationPath,
       append = needChecksums >= 2
     )
-    if (!is.null(getOption("reproducible.inputPaths")) && needChecksums != 3) {
-      checkSumFilePathInputPaths <- file.path(getOption("reproducible.inputPaths")[[1]],
+    if (!is.null(reproducible.inputPaths) && needChecksums != 3) {
+      checkSumFilePathInputPaths <- file.path(reproducible.inputPaths[[1]],
                                               "CHECKSUMS.txt")
       suppressMessages(checkSums <- appendChecksumsTable(
         checkSumFilePath = checkSumFilePathInputPaths,
@@ -578,22 +590,24 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
 .checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums,
                              checkSumFilePath = NULL) {
-  if (is.null(checkSumFilePath) || length(checkSumFilePath) == 0)
-    checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
-  if (!file.exists(checkSumFilePath)) {
-    checkSums
-  } else {
-    suppressMessages(checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
-                                                 files = newFilesToCheck, checksumFile = checkSumFilePath), silent = TRUE))
-    if (!is(checkSums2, "try-error")) {
-      checkSums <- rbindlist(list(checkSums, checkSums2))
-      data.table::setkey(checkSums, result)
-      checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
-      checkSums <- rbindlist(list(checkSums[compareNA("OK", result)],
-                                  checkSums[compareNA("FAIL", result)],
-                                  checkSums[is.na(result)]))
+  if (!is.null(newFilesToCheck)) {
+    if (is.null(checkSumFilePath) || length(checkSumFilePath) == 0)
+      checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
+    if (!file.exists(checkSumFilePath)) {
+      checkSums
     } else {
-      stop("checkSumFilePath is not a CHECKSUMS.txt file")
+      suppressMessages(checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
+                                                   files = newFilesToCheck, checksumFile = checkSumFilePath), silent = TRUE))
+      if (!is(checkSums2, "try-error")) {
+        checkSums <- rbindlist(list(checkSums, checkSums2))
+        data.table::setkey(checkSums, result)
+        checkSums <- unique(checkSums, fromLast = TRUE, by = "expectedFile")
+        checkSums <- rbindlist(list(checkSums[compareNA("OK", result)],
+                                    checkSums[compareNA("FAIL", result)],
+                                    checkSums[is.na(result)]))
+      } else {
+        stop("checkSumFilePath is not a CHECKSUMS.txt file")
+      }
     }
   }
   checkSums
@@ -718,6 +732,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           }
         }
       }
+    }
+    # do a check here that destinationPath is already the inputPaths
+    #   need to emulate the above behaviour
+    reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
+    if (!is.null(reproducible.inputPaths))
+      reproducible.inputPaths <- path.expand(reproducible.inputPaths)
+
+    if (identical(destinationPath, reproducible.inputPaths)) {
+      foundInInputPaths <- filesInHand
+      successfulDir <- destinationPath
+      successfulCheckSumFilePath <- checkSumFilePath
     }
   }
   list(checkSums = checkSums, needChecksums = needChecksums,

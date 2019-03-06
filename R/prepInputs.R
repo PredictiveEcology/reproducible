@@ -152,6 +152,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom data.table data.table
 #' @importFrom digest digest
 #' @importFrom methods is
+#' @importFrom rlang quo
 #' @importFrom R.utils isAbsolutePath isFile
 #' @importFrom utils methods
 #' @include checksums.R download.R postProcess.R
@@ -280,7 +281,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Stage 1 - load into R
   x <- if (is.null(out$object)) {
     message("Loading object into R")
-    if (identical(out$fun, raster::raster)) {
+    if (identical(out$fun, raster::raster) |
+        identical(out$fun, raster::stack) |
+        identical(out$fun, raster::brick)) {
       ## Don't cache the reading of a raster
       ## -- normal reading of raster on disk is fast b/c only reads metadata
       do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
@@ -313,12 +316,21 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
-  if (!(all(is.null(out$dots$studyArea), is.null(out$dots$rasterToMatch)))) {
+  if (!(all(is.null(out$dots$studyArea),
+            is.null(out$dots$rasterToMatch),
+            is.null(out$dots$targetCRS)))) {
     message("Running postProcess")
-    x <- Cache(do.call, postProcess, append(list(x = x, filename1 = out$targetFilePath,
+
+    # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
+    #  This rlang stuff is a way to pass through objects without evaluating them
+    spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is (x, "sf"))
+    out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
+    x <- Cache(do.call, postProcess, append(list(x = rlang::quo(x), filename1 = out$targetFilePath,
                                                  overwrite = overwrite,
-                                                 destinationPath = out$destinationPath), out$dots),
-               useCache = useCache)
+                                                 destinationPath = out$destinationPath),
+                                  out$dots),
+               useCache = useCache
+    )
   }
 
   return(x)
@@ -498,6 +510,9 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun) {
+  if (!is.null(fun) && !is.character(fun)) {
+    stop("fun must be a character string, not the function")
+  }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- file_ext(possibleFiles)
   isShapefile <- grepl("shp", fileExt)
@@ -517,9 +532,10 @@ extractFromArchive <- function(archive,
   }
   if (is.null(targetFilePath)) {
     message("  targetFile was not specified. ", if (any(isShapefile)) {
-      c(" Trying raster::shapefile on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
-        " If that is not correct, please specify a different targetFile",
-        " and/or fun.")
+      c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
+          " If that is not correct, please specify a different targetFile",
+          " and/or fun.")
+
     } else {
       c(" Trying ", fun,
         ". If that is not correct, please specify a targetFile",
@@ -530,7 +546,7 @@ extractFromArchive <- function(archive,
 
     targetFilePath <- if (is.null(fun)) {
       NULL
-    } else if (endsWith(suffix = "shapefile", fun )) {
+    } else if (length(possibleFiles[isShapefile]) > 0) {
       possibleFiles[isShapefile]
     } else {
       if (any(isRaster)) {
@@ -545,9 +561,9 @@ extractFromArchive <- function(archive,
       message("  More than one possible files to load: ", paste(targetFilePath, collapse = ", "),
               ". Picking the last one. If not correct, specify a targetFile.")
       targetFilePath <- targetFilePath[length(targetFilePath)]
-    } else {
-      message("  Trying ", targetFilePath, " with ", fun, ".")
-    }
+    } #else {
+      #message("  Trying ", targetFilePath, " with ", fun, ".")
+    #}
     targetFile <- targetFilePath
     if (!is.null(targetFile)) targetFilePath <- file.path(destinationPath, targetFile)
   }
@@ -575,6 +591,7 @@ extractFromArchive <- function(archive,
 }
 
 #' @keywords internal
+#' @importFrom utils capture.output
 .unzipOrUnTar <- function(fun, args, files, overwrite = TRUE) {
   argList <- list(files = files)
   if (is.character(fun)) {
@@ -625,7 +642,10 @@ extractFromArchive <- function(archive,
     } else {
       c(argList)
     }
-    extractedFiles <- do.call(fun, c(args, argList))
+    opt <- options("warn")$warn
+    on.exit(options(warn = opt))
+    options(warn = 1)
+    mess <- capture.output(type = "message", extractedFiles <- do.call(fun, c(args, argList)))
     worked <- if (isUnzip) {
       all(normPath(file.path(args$exdir, basename(argList[[1]]))) %in% normPath(extractedFiles))
     } else {
@@ -634,7 +654,7 @@ extractFromArchive <- function(archive,
     if (!isTRUE(worked)) {
       message(
         paste0(
-          "File unzipping do not appear to have worked properly.",
+          "File unzipping does not appear to have worked.",
           " Trying a system call of unzip..."
         )
       )
@@ -646,8 +666,9 @@ extractFromArchive <- function(archive,
         if (file.exists(file.path(args$exdir, args[[1]]))){
           pathToFile <-  normPath(file.path(args$exdir, args[[1]]))
         } else {
+          warning(mess)
           stop("prepInputs cannot find the file ", basename(args[[1]]),
-               ". Maybe the file was moved during unzipping?")
+               ". The file might have been moved during unzipping or is corrupted")
         }
       }
       system2("unzip",

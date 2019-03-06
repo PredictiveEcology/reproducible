@@ -1,6 +1,6 @@
 ## Updated release
 
-This is an enhancement release. Several new functions and new options. 
+This is a maintenance release which fixes some minor bugs. See `NEWS.md`.
 
 ## Test environments
 
@@ -20,10 +20,10 @@ This is an enhancement release. Several new functions and new options.
 * Windows 7               (local), R 3.5.2
 
 ### Development R version
-* Ubuntu 14.04        (travis-ci), R 3.6.0 (2019-01-22 r76003)
-* Ubuntu 18.04            (local), R 3.6.0 (2019-01-25 r76014)
-* Windows              (appveyor), R 3.6.0 (2019-01-13 r75986)
-* Windows           (win-builder), R 3.6.0 (2019-01-25 r76015)
+* Ubuntu 14.04       (travis-ci), R 3.6.0 (2019-03-05 r76199)
+* Ubuntu 18.04           (local), R 3.6.0 (2019-02-28 r76173)
+* Windows             (appveyor), R 3.6.0 (2019-03-04 r76198)
+* Windows          (win-builder), R 3.6.0 (2019-03-03 r76192)
 
 ## R CMD check results
 

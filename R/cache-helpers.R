@@ -206,8 +206,12 @@ setMethod(
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
-        message("No cacheRepo supplied. Using value in getOption('reproducible.cachePath')")
-        getOption("reproducible.cachePath", tempdir())
+        tmpDir <- tempdir()
+        if (identical(normPath(getOption("reproducible.cachePath")), normPath(tmpDir))) {
+          message("No cacheRepo supplied and getOption('reproducible.cachePath') is the temporary directory;\n  ",
+                  "this will not persist across R sessions.")
+        }
+        getOption("reproducible.cachePath", tmpDir)
       } else {
         message("No cacheRepo supplied. Using tempdir()")
         tempdir()
@@ -431,8 +435,11 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
               }
             }
           if (!foundCall) {
-            matchedCall <- match.call(Cache, scalls[[callIndex]])#parse(text = callIndex))
-            functionName <- matchedCall$FUN
+            matchedCall <- try(match.call(Cache, scalls[[callIndex]]), silent = TRUE)#parse(text = callIndex))
+            functionName <- if (!is(matchedCall, "try-error"))
+              matchedCall$FUN
+            else
+              ""
           }
         }
         functionName <- if (is(functionName, "name")) {
@@ -617,7 +624,7 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom raster filename dataType inMemory nlayers writeRaster
+#' @importFrom raster filename dataType inMemory nlayers writeRaster hasValues
 #' @importFrom methods is selectMethod slot slot<-
 #' @rdname prepareFileBackedRaster
 #' @examples
@@ -641,7 +648,7 @@ setMethod(
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
 
-  if (inMemory(obj)) {
+  if (inMemory(obj) || !hasValues(obj)) {
     isFilebacked <- FALSE
     if (isTRUE(any(raster::is.factor(obj)))) {
       fileExt <- ".grd"

@@ -34,7 +34,9 @@
 
 <meta property="og:description" content="These must be very common for this function to be useful. Currently, the only
 meaningful method is on SpatialPolygons, and it runs rgeos::gIsValid. If
-FALSE, then it runs a buffer of width 0." />
+FALSE, then it runs a buffer of width 0.
+This uses raster::buffer(..., width = 0) internally, which fixes some
+failures to rgeos::gIsValid" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -75,7 +77,7 @@ FALSE, then it runs a buffer of width 0." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.7</span>
       </span>
     </div>
 
@@ -136,10 +138,25 @@ FALSE, then it runs a buffer of width 0." />
     <p>These must be very common for this function to be useful. Currently, the only
 meaningful method is on SpatialPolygons, and it runs <code><a href='https://www.rdocumentation.org/packages/rgeos/topics/pred-unary-gIsValid'>rgeos::gIsValid</a></code>. If
 <code>FALSE</code>, then it runs a buffer of width 0.</p>
+<p>This uses <code><a href='https://www.rdocumentation.org/packages/raster/topics/buffer'>raster::buffer(..., width = 0)</a></code> internally, which fixes some
+failures to <code><a href='https://www.rdocumentation.org/packages/rgeos/topics/pred-unary-gIsValid'>rgeos::gIsValid</a></code></p>
     
     </div>
 
     <pre class="usage"><span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='no'>objectName</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)
+
+<span class='co'># S3 method for default</span>
+<span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='no'>objectName</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)
+
+<span class='co'># S3 method for SpatialPolygons</span>
+<span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='kw'>objectName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)
+
+<span class='co'># S3 method for sf</span>
+<span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='kw'>objectName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -148,7 +165,7 @@ meaningful method is on SpatialPolygons, and it runs <code><a href='https://www.
     <tr>
       <th>x</th>
       <td><p>Any object that could be fixed for errors.
-See <code><a href='fixErrors.SpatialPolygons.html'>fixErrors.SpatialPolygons</a></code></p></td>
+See <code>fixErrors.SpatialPolygons</code></p></td>
     </tr>
     <tr>
       <th>objectName</th>
@@ -169,6 +186,14 @@ Cache is used on the internal <code><a href='https://www.rdocumentation.org/pack
     <tr>
       <th>...</th>
       <td><p>Passed to methods. None currently implemented.</p></td>
+    </tr>
+    <tr>
+      <th>x</th>
+      <td><p>A <code>SpatialPolygons</code> object</p></td>
+    </tr>
+    <tr>
+      <th>x</th>
+      <td><p>A <code>SpatialPolygons</code> object</p></td>
     </tr>
     </table>
     
@@ -198,7 +223,8 @@ Cache is used on the internal <code><a href='https://www.rdocumentation.org/pack
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied. Using value in getOption('reproducible.cachePath')</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile12f7a49e003eb. Specify filename1 or filename2 for more control</span></div><div class='input'><span class='co'>#'</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile949a11352291. Specify filename1 or filename2 for more control</span>
+#&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
 <span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'>fixErrors</span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'>

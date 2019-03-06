@@ -49,3 +49,33 @@ test_that("fastMask produces correct results", {
 
 })
 
+test_that("testing prepInputs with sf class objects", {
+  if (interactive()) {
+    testInitOut <- testInit(needGoogle = TRUE)
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+    BCR6_VT <- prepInputs(
+      url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
+      targetFile = "BCR6.shp",
+      overwrite = TRUE
+    )
+
+    NFDB_PT <- Cache(
+      prepInputs,
+      url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
+      overwrite = TRUE,
+      #targetFile = "NFDB_point_20181129.shp",
+      alsoExtract = "similar",
+      fun = "sf::st_read"
+    )
+
+    warn <- capture_warnings(NFDB_PT_BCR6 <- Cache(
+      postProcess,
+      NFDB_PT,
+      studyArea = BCR6_VT
+    )) # warning is "attribute variables are assumed to be spatially constant"
+    if (!all(grepl("attribute variables are assumed to be spatially constant", warn)))
+      warnings(warn)
+  }
+})

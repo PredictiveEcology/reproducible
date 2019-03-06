@@ -1,5 +1,19 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.7
+=============
+
+## New features
+
+* `CHECKSUMS.txt` should now be ordered consistently across operating systems (note: `base::order` will not succeed in doing this --> now using `.orderDotsUnderscoreFirst`)
+* `cloudSyncCache` has a new argument: `cacheIds`. Now user can control entries by `cacheId`, so  can delete/upload individual objects by `cacheId`
+* Experimental support within the `postProcess` family for `sf` class objects
+
+## bug fixes
+
+* mostly minor
+* `cloudCache` bugfixes for more cases
+
 version 0.2.6
 =============
 

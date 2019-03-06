@@ -27,13 +27,17 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   if (isTRUE(needGoogle)) {
     googledrive::drive_auth_config(active = TRUE)
+    if (quickPlot::isRstudioServer()) {
+      options(httr_oob_default = TRUE)
+    }
 
     if (interactive()) {
       if (file.exists("~/.httr-oauth")) {
         linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
       } else {
         googledrive::drive_auth()
-        file.copy(".httr-oauth", "~/.httr-oauth")
+        print("copying .httr-oauth to ~/.httr-oauth")
+        file.copy(".httr-oauth", "~/.httr-oauth", overwrite = TRUE)
       }
     }
     if (!file.exists("~/.httr-oauth")) message("Please put an .httr-oauth file in your ~ directory")
@@ -45,11 +49,13 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   checkPath(tmpCache, create = TRUE)
 
   opts <- append(list(reproducible.overwrite = TRUE,
-                      reproducible.useNewDigestAlgorithm = TRUE), opts)
+                      reproducible.useNewDigestAlgorithm = TRUE,
+                      reproducible.cachePath = tmpCache), opts)
 
   if (!is.null(opts)) {
     if (needGoogle) {
-      optsGoogle <- list(httr_oob_default = FALSE, httr_oauth_cache = "~/.httr-oauth")
+      optsGoogle <- list(httr_oob_default = quickPlot::isRstudioServer(),
+                         httr_oauth_cache = "~/.httr-oauth")
       opts <- append(opts, optsGoogle)
     }
     opts <- options(opts)

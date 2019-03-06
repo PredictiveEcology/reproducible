@@ -17,8 +17,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(all(grepl("adding", mess)))
 
   # .checkCacheRepo
+  options(reproducible.cachePath = dirname(tmpdir))
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cacheRepo supplied.*getOption", mess)))
+  expect_true(any(grepl("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary", mess)))
 
   opt <- options("reproducible.cachePath" = NULL)
   on.exit({

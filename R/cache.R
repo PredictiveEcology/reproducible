@@ -302,7 +302,7 @@ setGeneric(
            quick = getOption("reproducible.quick", FALSE),
            verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
-           showSimilar = NULL) {
+           showSimilar = getOption("reproducible.showSimilar", FALSE)) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
   })
 
@@ -496,7 +496,7 @@ setMethod(
       # remove some of the arguments passed to Cache, which are irrelevant for digest
       argsToOmitForDigest <- dotPipe |
         (names(modifiedDots) %in%
-           c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar"))
+           .defaultCacheOmitArgs)
 
       cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], .objects = .objects,
                                  length = length, algo = algo, quick = quick,
@@ -561,9 +561,9 @@ setMethod(
 
       # First, if this is not matched by outputHash, test that it is matched by
       #   userTags and in devMode
-      needFindByTags <- identical("devMode", getOption("reproducible.useCache")) &&
+      needFindByTags <- identical("devMode", useCache) &&
         NROW(isInRepo) == 0
-      if (identical("devMode", getOption("reproducible.useCache")) && NROW(isInRepo) == 0) {
+      if (identical("devMode", useCache) && NROW(isInRepo) == 0) {
         isInRepoAlt <- localTags[localTags$tag %in% userTags, , drop = FALSE]
         data.table::setDT(isInRepoAlt)
         isInRepoAlt <- isInRepoAlt[, iden := identical(sum(tag %in% userTags), length(userTags)),
@@ -577,12 +577,13 @@ setMethod(
             mess <- capture.output(type = "output",
                                    similars <- .findSimilar(newLocalTags, scalls = scalls,
                                                             preDigestUnlistTrunc = preDigestUnlistTrunc,
-                                                            userTags = userTags))
+                                                            userTags = userTags,
+                                                            useCache = useCache))
             similarsHaveNA <- sum(is.na(similars$differs))
             #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)
             #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
 
-            if (similarsHaveNA == 0) {
+            if (similarsHaveNA < 2) {
               if (verbose > 0)
                 message("Using devMode; overwriting previous Cache entry with tags: ",
                         paste(userTags, collapse = ", "))
@@ -607,7 +608,7 @@ setMethod(
 
       if (identical("overwrite", useCache)  && NROW(isInRepo) > 0 || needFindByTags) {
         suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE))
-        if (identical("devMode", getOption("reproducible.useCache"))) {
+        if (identical("devMode", useCache)) {
           isInRepo <- isInRepo[!isInRepo$tag %in% userTags, , drop = FALSE]
           outputHash <- outputHashNew
           message("Overwriting Cache entry with userTags: '",paste(userTags, collapse = ", ") ,"'")
@@ -637,7 +638,9 @@ setMethod(
       } else {
         # find similar -- in progress
         if (!is.null(showSimilar)) { # TODO: Needs testing
-          .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags)
+          if (!isFALSE(showSimilar))
+            .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
+                         userTags, useCache = useCache)
         }
       }
 
@@ -923,7 +926,7 @@ setMethod(
 
 #' Generic method to make or unmake objects memoisable
 #'
-#' This is just a pass through for all classes in reproducible.
+#' This is just a pass through for all classes in \pkg{reproducible}.
 #' This generic is here so that downstream methods can be created.
 #'
 #' @param x  An object to make memoisable.
@@ -1119,7 +1122,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
             aa <- try(names(formals(paste0(whatArg, ".", theClass))))
             aa
           } else {
-            if (is.na(classes)) {
+            if (all(is.na(classes))) {
               names(formals(doCallFUN))
             } else {
               names(formals(whatArg))
@@ -1187,6 +1190,10 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #' @param ... passed to \code{.robustDigest}; this is generally empty except
 #'    for advanced use.
 #' @param objsToDigest A list of all the objects (e.g., arguments) to be digested
+#' @param calledFrom a Character string, length 1, with the function to
+#'    compare with. Default is "Cache". All other values may not produce
+#'    robust CacheDigest results.
+#'
 #' @inheritParams Cache
 #' @importFrom fastdigest fastdigest
 #'
@@ -1203,7 +1210,21 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
 #'   CacheDigest(list(rnorm, 1))
 #'
 #' }
-CacheDigest <- function(objsToDigest, algo = "xxhash64", ...) {
+CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", ...) {
+  if (identical("Cache", calledFrom)) {
+    namesOTD <- names(objsToDigest)
+    lengthChars <- nchar(namesOTD)
+    if (!any(namesOTD == "FUN")) {
+      zeroLength <- which(lengthChars == 0)
+      if (sum(zeroLength ) > 0) {
+        names(objsToDigest)[zeroLength[1]] <- ".FUN"
+      }
+    }
+  }
+
+  # need to omit arguments that are in Cache function call
+  objsToDigest[names(objsToDigest) %in% .defaultCacheOmitArgs] <- NULL
+
   preDigest <- lapply(objsToDigest, function(x) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
@@ -1235,16 +1256,21 @@ warnonce <- function(id, ...) {
 
 #' @importFrom data.table setDT setkeyv
 #' @keywords internal
-.findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags) {
+.findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
+                         useCache = getOption("reproducible.useCache", TRUE)) {
   setDT(localTags)
-  if (identical("devMode", getOption("reproducible.useCache")))
+  if (identical("devMode", useCache))
     showSimilar <- 1
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":"))
   userTags3 <- c(userTags, userTags2)
   aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
   setkeyv(aa, "N")
-  similar <- localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N == max(N)]
+  similar <- if (NROW(localTags) > 0) {
+    localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N == max(N)]
+  } else {
+    localTags
+  }
   if (NROW(similar)) {
     similar2 <- similar[grepl("preDigest", tag)]
     cacheIdOfSimilar <- similar[grepl("cacheId", tag)]$tag
@@ -1279,7 +1305,7 @@ warnonce <- function(id, ...) {
     print(paste0("artifact with cacheId ", cacheIdOfSimilar))
     print(similar2[,c("fun", "differs")])
   } else {
-    if (!identical("devMode", getOption("reproducible.useCache")))
+    if (!identical("devMode", useCache))
       message("There is no similar item in the cacheRepo")
   }
 }
@@ -1301,3 +1327,12 @@ getLocalTags <- function(cacheRepo) {
   }
   localTags
 }
+
+.defaultCacheOmitArgs <- c("useCloud", "checksumsFileID", "cloudFolderID",
+  "notOlderThan", ".objects", "outputObjects", "algo", "cacheRepo",
+  "length", "compareRasterFileLength", "userTags", "digestPathContent",
+  "omitArgs", "classOptions", "debugCache", "sideEffect", "makeCopy",
+  "quick", "verbose", "cacheId", "useCache", "showSimilar")
+
+#.defaultCacheOmitArgs <- c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar", "quick",
+#                           "useCloud", "cloudFolderID")

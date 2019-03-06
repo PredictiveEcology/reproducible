@@ -75,7 +75,7 @@ See Details below." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.7</span>
       </span>
     </div>
 
@@ -198,6 +198,9 @@ file so they persist between sessions.</p>
 <tr><td><code>Cache</code></td><td>to use</td><td><code><a href='https://www.rdocumentation.org/packages/base/topics/file.info'>file.size(file)</a></code></td></tr>
 <tr><td></td><td>instead of the</td><td><code><a href='https://www.rdocumentation.org/packages/digest/topics/digest'>digest::digest(file)</a></code></td></tr>
 <tr><td>.</td><td>Less robust to changes, but faster. NOTE: this will only affect objects</td><td>on disk.</td></tr>
+<tr><td></td><td></td><td><code>showSimilar</code></td></tr>
+<tr><td></td><td>Passed to</td><td><code>Cache</code></td></tr>
+<tr><td>. Default</td><td><code>FALSE</code></td><td>.</td></tr>
 <tr><td></td><td></td><td><code>useCache</code></td></tr>
 <tr><td></td><td></td><td><code>TRUE</code></td></tr>
 <tr><td></td><td>Used in</td><td><code><a href='cache.html'>Cache</a></code></td></tr>
@@ -215,6 +218,9 @@ file so they persist between sessions.</p>
 <tr><td>clean of stale objects. If there is ambiguity in the</td><td><code>userTags</code></td><td>, i.e</td></tr>
 <tr><td>they do not uniquely identify a single entry in the cacheRepo, then</td><td>this option will default back to the non devMode behaviour to avoid</td><td>deleting objects. This, therefore, is most useful if the user is</td></tr>
 <tr><td>using unique values for</td><td><code>userTags</code></td><td></td></tr>
+<tr><td></td><td></td><td><code>useCloud</code></td></tr>
+<tr><td></td><td>Passed to</td><td><code>Cache</code></td></tr>
+<tr><td>. Default</td><td><code>FALSE</code></td><td>.</td></tr>
 <tr><td></td><td></td><td><code>useMemoise</code></td></tr>
 <tr><td></td><td></td><td><code>TRUE</code></td></tr>
 <tr><td></td><td>Used in</td><td><code><a href='cache.html'>Cache</a></code></td></tr>
