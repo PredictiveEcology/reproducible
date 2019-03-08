@@ -182,8 +182,17 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 #' # now both local and cloud exist
 #' a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 #'
+#' #  more than one cacheRepo
+#'   opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"), file.path(tempdir(), "test2")),
+#'   "reproducible.ask" = FALSE)
+#'   cachePaths <- getOption("reproducible.cachePath")
+#' Cache(rnorm, 4, cacheRepo = cachePaths[3]) # put it in 3rd cacheRepo
+#' cloudCache(rnorm, 4, cloudFolderID = newDir$id) # gets it locally even though it is in the 3rd cacheRepo,
+#'                                                 # uploads to cloudCache
+#'
 #' # Clean up -- also see cloudSyncCache
 #' clearCache(ask = FALSE)
+#' # lapply(cachePaths, clearCache, ask = FALSE)
 #' cloudSyncCache(cloudFolderID = newDir$id)
 #'
 #' }
@@ -200,10 +209,10 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
       repo <- checkPath(repo, create = TRUE)
     })
   }
-  cacheRepo <- cacheRepos[[1]]
+  # cacheRepo <- cacheRepos[[1]]
 
   #cacheRepo <- suppressMessages(.checkCacheRepo(list(...), create = TRUE))#fnDetails$modifiedDots, create = TRUE))
-  suppressMessages(archivist::createLocalRepo(cacheRepo))
+  suppressMessages(archivist::createLocalRepo(cacheRepos[1]))
   if (isTRUE(useCloud)) {
 
     if (is.null(checksumsFileID))
@@ -216,8 +225,13 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
       dots <- .CacheDigestWithOmitArgs(sys.call(), envir = sys.frame(-1))
     }
     dig <- CacheDigest(dots)
-    checkLocalFirst <- try(suppressMessages(showCache(userTags = dig$outputHash, x = cacheRepo)))
-    hasLocalCopy <- NROW(checkLocalFirst) > 0 && !is(checkLocalFirst, "try-error")
+    suppressMessages(checkLocalFirst <- lapply(cacheRepos, function(cacheRepo, ...) {
+      tryCatch(showCache(x = cacheRepo, userTags = dig$outputHash), error = function(x) NULL)
+    }))
+
+    #checkLocalFirst <- try(suppressMessages(showCache(userTags = dig$outputHash, x = cacheRepo)))
+    hasLocalCopy <- NROW(rbindlist(checkLocalFirst, fill = TRUE, use.names = TRUE)) > 0 &&
+      !is(checkLocalFirst, "try-error")
     if (hasLocalCopy) {
       if (is.null(checksumsFileID))
         checksumsFileID <- getChecksumsFileID(cloudFolderID)
@@ -283,7 +297,7 @@ cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
     if ("cacheRepo" %in% names(list(...))) {
       Cache(...)
     } else {
-      Cache(..., cacheRepo = cacheRepo)
+      Cache(..., cacheRepo = cacheRepos)
     }
   } else {
     cachedCopy$object
