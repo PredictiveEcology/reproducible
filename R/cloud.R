@@ -182,7 +182,10 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 #' # now both local and cloud exist
 #' a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 #'
-#' # Clean up -- see cloudSyncCache
+#' # Clean up -- also see cloudSyncCache
+#' clearCache(ask = FALSE)
+#' cloudSyncCache(cloudFolderID = newDir$id)
+#'
 #' }
 cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
                        checksumsFileID = NULL, cloudFolderID = NULL) {
@@ -357,9 +360,13 @@ getChecksumsFileID <- function(cloudFolderID) {
 #' @examples
 #' \dontrun{
 #'   #make a google drive folder
-#'   opts <- options("reproducible.cachePath" = tempdir(), "reproducible.ask" = FALSE)
+#'   #   Can use >1 cacheRepo
+#'   opts <- options("reproducible.cachePath" = c(tempdir()))#, file.path(tempdir(), "test"), file.path(tempdir(), "test2")),
+#'   "reproducible.ask" = FALSE)
+#'   cachePaths <- getOption("reproducible.cachePath")
 #'   library(googledrive)
 #'   newDir <- drive_mkdir("testFolder")
+#'   #a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3])
 #'   a <- Cache(rnorm, 1)
 #'   b <- Cache(rnorm, 2)
 #'
@@ -373,12 +380,14 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'   cloudSyncCache(cloudFolderID = newDir$id)
 #'
 #'   # clean up
-#'   clearCache(ask = FALSE)
+#'   lapply(cachePaths, clearCache, ask = FALSE)
+#'   # clearCache(ask = FALSE) # if there were only 1 cacheRepo
 #'   cloudSyncCache(cloudFolderID = newDir$id)
 #'
 #'   #######################################################################
 #'   # use showCache args to have control ... on upload & delete NOTE difference!
 #'   #######################################################################
+#'   # a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3]) # multiple cacheRepos!
 #'   a <- Cache(rnorm, 1)
 #'   b <- Cache(rnorm, 2)
 #'   # only sync the one with rnorm, 2 as arguments
@@ -425,14 +434,15 @@ getChecksumsFileID <- function(cloudFolderID) {
 #'   cloudSyncCache(cloudFolderID = newDir$id, cacheIds = tag6)
 #'
 #'   # clean up
-#'   clearCache(ask = FALSE)
+#'   # clearCache(ask = FALSE) # if only one cacheRepo
+#'   lapply(cachePaths, clearCache, ask = FALSE)
 #'   cloudSyncCache(cloudFolderID = newDir$id)
 #'
 #'   # To remove whole folder:
 #'   drive_rm(as_id(newDir$id))
 #'   options(opts)
 #' }
-cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
+cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath"),
                            checksumsFileID = NULL, cloudFolderID = NULL,
                            delete = TRUE, upload = TRUE, download = !delete,
                            ask = getOption("reproducible.ask"),
@@ -448,34 +458,57 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
   }
 
   suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
-  suppressMessages(localCache <- showCache(x = cacheRepo, ...))
+
+  # get cacheRepo if not supplied
+  names(cacheRepo) <- normPath(cacheRepo)
+  cacheRepos <- lapply(cacheRepo, function(repo) {
+      repo <- checkPath(repo, create = TRUE)
+    })
+
+  # cacheRepo <- cacheRepos[[1]]
+  suppressMessages(localCaches <- lapply(cacheRepos, ..., function(cacheRepo, ...) {
+    tryCatch(showCache(x = cacheRepo, ...), error = function(x) NULL)
+  }))
+  #suppressMessages(localCache <- showCache(x = cacheRepo, ...))
   out <- NULL
 
   needToDelete <- NULL
-  uniqueCacheArtifacts <- unique(localCache$artifact)
-  if (!is.null(uniqueCacheArtifacts))
-    cacheIDs <- localCache[artifact %in% uniqueCacheArtifacts & tagKey == "cacheId"]$tagValue
+  uniqueCacheArtifacts <- lapply(localCaches, function(x) unique(x$artifact))
+  cacheIDs <- lapply(cacheRepos, function(uca) {
+    if (!is.null(uniqueCacheArtifacts[[uca]]))
+      localCaches[[uca]][artifact %in% uniqueCacheArtifacts[[uca]] & tagKey == "cacheId"]$tagValue
+
+  })
 
   if (!is.null(cacheIds)) {
-    cacheIdsExisting <- which(cacheIDs %in% cacheIds)
-    if (length(cacheIdsExisting) == 0) {
+    cacheIDs <- lapply(cacheIDs, function(cacheIDsInner) {
+      cacheIdsExisting <- which(cacheIDsInner %in% cacheIds)
+      cacheIDsInner[cacheIdsExisting]
+    })
+    if (all(unlist(lapply(cacheIDs, function(x) length(x) == 0)))) {
       message("None of the supplied cacheIds exist locally: \n  ", paste(cacheIds, sep = "\n  "))
     }
-    cacheIDs <- cacheIDs[cacheIdsExisting]
+
   }
 
-  if (NROW(localCache) && isTRUE(upload)) {
-    needToUpload <- !(cacheIDs %in% checksums$cacheId)
+  if ( any(unlist(lapply(localCaches, NROW))>0) && isTRUE(upload)) {
+    needToUpload <- !(unlist(cacheIDs) %in% checksums$cacheId)
 
     if (sum(needToUpload) > 0) {
+      df <- data.frame(repo = rep(names(uniqueCacheArtifacts), sapply(uniqueCacheArtifacts, length)),
+                 artifact = unname(unlist(uniqueCacheArtifacts)), stringsAsFactors = FALSE)
       message(crayon::blue("Uploading", sum(needToUpload), "files, ",
-                           "\n ", paste(cacheIDs[needToUpload], ".rda ( == ",
-                                        uniqueCacheArtifacts[needToUpload],
+                           "\n ", paste(unlist(cacheIDs)[needToUpload], ".rda ( == ",
+                                        unlist(uniqueCacheArtifacts)[needToUpload],
                                         ".rda in local cache)", sep = "",
                                         collapse = "\n  ")))
-      out <- lapply(uniqueCacheArtifacts[needToUpload], function(art) {
-        cacheID <- localCache[artifact == art & tagKey == "cacheId"]$tagValue
-        drive_upload(file.path(cacheRepo, "gallery", paste0(art, ".rda")),
+      whCache <- match(df$repo, unlist(cacheRepos ))
+      uniqueOnes <- df[needToUpload,]
+      out <- lapply(seq(NROW(uniqueOnes)), function(artSeq) {
+        repo <- uniqueOnes[artSeq, "repo"]
+        art <- uniqueOnes[artSeq, "artifact"]
+        cacheID <- localCaches[[repo]][artifact == art & tagKey == "cacheId"]$tagValue
+        drive_upload(file.path(repo, "gallery", paste0(art, ".rda")),
                      path = as_id(cloudFolderID),
                      name = paste0(cacheID, ".rda"),
                      verbose = FALSE)
@@ -483,11 +516,11 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
       checksums <- rbindlist(
         list(checksums,
              data.table(
-               cacheId = cacheIDs[needToUpload],
+               cacheId = unlist(cacheIDs)[needToUpload],
                id = rbindlist(out)$id,
                time = as.character(Sys.time()),
-               filesize = file.size(file.path(cacheRepo, "gallery",
-                                              paste0(uniqueCacheArtifacts[needToUpload], ".rda")))
+               filesize = file.size(file.path(df[needToUpload, "repo"], "gallery",
+                                              paste0(df[needToUpload, "artifact"], ".rda")))
              )
         ),
         use.names = TRUE, fill = TRUE)
@@ -495,12 +528,12 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
     }
 
   } else {
-    if (NROW(localCache) == 0) {
+    if (NROW(rbindlist(localCaches, use.names = TRUE, fill = TRUE)) == 0) {
       needToDelete <- rep(TRUE, NROW(checksums))
     }
   }
   if (is.null(needToDelete)) {
-    if (!is.null(uniqueCacheArtifacts)) {
+    if (!is.null(unlist(uniqueCacheArtifacts))) {
       needToDelete <- if (!is.null(cacheIds)) {
         out <- (checksums$cacheId %in% cacheIds)
         if (all(!out)) {
@@ -508,7 +541,7 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
         }
         out
       } else {
-        !(checksums$cacheId %in% cacheIDs)
+        !(checksums$cacheId %in% unlist(cacheIDs))
       }
 
     }
@@ -537,6 +570,7 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
     if (any(needToDelete)) {
       needToDownload <- needToDelete
       if (isTRUE(download)) {
+        stop("This is not implemented yet; please contact author eliot.mcintire@canada.ca")
         if (!cacheIds %in% localCache[artifact %in% uniqueCacheArtifacts & tagKey == "cacheId"]$tagValue) {
           out <- cloudDownload(checksums[needToDownload,])
           objSize <- sum(unlist(objSize(out)))
@@ -585,6 +619,7 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath")[1],
     }
 
   }
+  message("uploading updated checksums file on googledrive")
   suppressMessages(cloudUpdateChecksums(checksums, checksumsFileID))
   return(invisible(checksums))
 }
