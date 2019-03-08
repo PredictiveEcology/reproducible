@@ -183,9 +183,9 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 #' a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 #'
 #' #  more than one cacheRepo
-#'   opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"), file.path(tempdir(), "test2")),
-#'   "reproducible.ask" = FALSE)
-#'   cachePaths <- getOption("reproducible.cachePath")
+#' opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"), file.path(tempdir(), "test2")),
+#'                 "reproducible.ask" = FALSE)
+#' cachePaths <- getOption("reproducible.cachePath")
 #' Cache(rnorm, 4, cacheRepo = cachePaths[3]) # put it in 3rd cacheRepo
 #' cloudCache(rnorm, 4, cloudFolderID = newDir$id) # gets it locally even though it is in the 3rd cacheRepo,
 #'                                                 # uploads to cloudCache
