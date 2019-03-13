@@ -587,8 +587,8 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath"),
       needToDownload <- needToDelete
       if (isTRUE(download)) {
         stop("This is not implemented yet; please contact author eliot.mcintire@canada.ca")
-        if (!cacheIds %in% localCaches[artifact %in% uniqueCacheArtifacts &
-                                       tagKey == "cacheId"]$tagValue) {
+        if (!cacheIds %in% localCache[artifact %in% uniqueCacheArtifacts &
+                                      tagKey == "cacheId"]$tagValue) {
           out <- cloudDownload(checksums[needToDownload,])
           objSize <- sum(unlist(objSize(out)))
           #preDigestUnlistTrunc <- unlist(.unlistToCharacter(CacheDigest(list(out))$preDigest, 3))
