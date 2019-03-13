@@ -183,12 +183,14 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 #' a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 #'
 #' #  more than one cacheRepo
-#' opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"), file.path(tempdir(), "test2")),
+#' opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"),
+#'                                              file.path(tempdir(), "test2")),
 #'                 "reproducible.ask" = FALSE)
 #' cachePaths <- getOption("reproducible.cachePath")
 #' Cache(rnorm, 4, cacheRepo = cachePaths[3]) # put it in 3rd cacheRepo
-#' cloudCache(rnorm, 4, cloudFolderID = newDir$id) # gets it locally even though it is in the 3rd cacheRepo,
-#'                                                 # uploads to cloudCache
+#'
+#' # gets it locally even though it is in the 3rd cacheRepo, uploads to cloudCache
+#' cloudCache(rnorm, 4, cloudFolderID = newDir$id)
 #'
 #' # Clean up -- also see cloudSyncCache
 #' clearCache(ask = FALSE)
@@ -375,8 +377,8 @@ getChecksumsFileID <- function(cloudFolderID) {
 #' \dontrun{
 #'   #make a google drive folder
 #'   #   Can use >1 cacheRepo
-#'   opts <- options("reproducible.cachePath" = c(tempdir()))#, file.path(tempdir(), "test"), file.path(tempdir(), "test2")),
-#'   "reproducible.ask" = FALSE)
+#'   opts <- options("reproducible.cachePath" = c(tempdir()),
+#'                   "reproducible.ask" = FALSE)
 #'   cachePaths <- getOption("reproducible.cachePath")
 #'   library(googledrive)
 #'   newDir <- drive_mkdir("testFolder")
@@ -585,7 +587,8 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath"),
       needToDownload <- needToDelete
       if (isTRUE(download)) {
         stop("This is not implemented yet; please contact author eliot.mcintire@canada.ca")
-        if (!cacheIds %in% localCache[artifact %in% uniqueCacheArtifacts & tagKey == "cacheId"]$tagValue) {
+        if (!cacheIds %in% localCaches[artifact %in% uniqueCacheArtifacts &
+                                       tagKey == "cacheId"]$tagValue) {
           out <- cloudDownload(checksums[needToDownload,])
           objSize <- sum(unlist(objSize(out)))
           #preDigestUnlistTrunc <- unlist(.unlistToCharacter(CacheDigest(list(out))$preDigest, 3))
@@ -637,7 +640,6 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath"),
   suppressMessages(cloudUpdateChecksums(checksums, checksumsFileID))
   return(invisible(checksums))
 }
-
 
 cloudUploadFileAndChecksums <- function(objectFile, cloudFolderID, digest,
                                         checksums, checksumsFileID) {
