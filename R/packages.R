@@ -1006,18 +1006,26 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
   allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
   allPkgsDESC <- allPkgsDESC[order(rownames(allPkgsDESC)),]
   # .snap <- file.path(libPath, ".snapshot.RDS")
+  .snapFilePath <- file.path(getOption("reproducible.cachePath"), ".snapshot.RDS")
   needSnapshot <- FALSE
   needInstalledVersions <- FALSE
-  fromInstalledVersionsObj <- getFromNamespace(".installedVersions", "reproducible")
-  # installedVersionsFile <- file.path(libPath, ".installedVersions.RDS")
-  #if (!file.exists(installedVersionsFile)) {
-  if (NROW(fromInstalledVersionsObj) == 0) {
+  #fromInstalledVersionsObj <- getFromNamespace(".installedVersions", "reproducible")
+  installedVersionsFile <- file.path(getOption("reproducible.cachePath"),
+                                     ".installedVersions.RDS")
+  #installedVersionsFile <- file.path(libPath, ".installedVersions.RDS")
+  if (!file.exists(installedVersionsFile)) {
+  # if (NROW(fromInstalledVersionsObj) == 0) {
     needSnapshot <- TRUE
     needInstalledVersions <- TRUE
   }
-  fromDotSnap <- getFromNamespace(".snap", "reproducible")
+
+  fromDotSnap <- if (file.exists(.snapFilePath)) {
+    readRDS(.snapFilePath)
+  } else {
+    data.frame()
+  }
   inDotSnap <- fromDotSnap[dirname(rownames(fromDotSnap)) %in% libPathListFiles,]
-  inDotSnap[order(rownames(inDotSnap)),]
+  inDotSnap <- inDotSnap[order(rownames(inDotSnap)),]
 
   if (!(identical(inDotSnap, allPkgsDESC))) {
     needSnapshot <- TRUE
@@ -1030,8 +1038,8 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
   if (needSnapshot) {
     allPkgsDESC <- unique(rbind(fromDotSnap, allPkgsDESC))
     allPkgsDESC <- allPkgsDESC[order(rownames(allPkgsDESC)),]
-    assignInMyNamespace(x = ".snap", allPkgsDESC)
-    # saveRDS(allPkgsDESC, file = .snap)
+    #assignInMyNamespace(x = ".snap", allPkgsDESC)
+    saveRDS(allPkgsDESC, file = .snapFilePath)
   }
 
   if (needInstalledVersions) {
@@ -1040,11 +1048,11 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
     } else {
       instVers <- installedVersions(libPathListFilesBase, dirname(libPathListFiles))
     }
-    assignInMyNamespace(".installedVersions", instVers)
-    #saveRDS(instVers, file = installedVersionsFile)
+    #assignInMyNamespace(".installedVersions", instVers)
+    saveRDS(instVers, file = installedVersionsFile)
   } else {
-    instVers <- getFromNamespace(".installedVersions", "reproducible")
-    #instVers <- readRDS(file = installedVersionsFile)
+    #instVers <- getFromNamespace(".installedVersions", "reproducible")
+    instVers <- readRDS(file = installedVersionsFile)
   }
 
   return(instVers)
