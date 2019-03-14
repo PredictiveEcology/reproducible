@@ -200,7 +200,6 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 #' }
 cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
                        checksumsFileID = NULL, cloudFolderID = NULL) {
-
   hasCopy <- FALSE
   hasCloudCopy <- FALSE
 
