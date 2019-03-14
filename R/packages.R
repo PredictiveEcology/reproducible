@@ -1004,25 +1004,34 @@ pickFirstVersion <- function(instPkgs, instVers) {
 installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE,
                                    libPathListFilesBase) {
   allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
-  .snap <- file.path(libPath, ".snapshot.RDS")
+  allPkgsDESC <- allPkgsDESC[order(rownames(allPkgsDESC)),]
+  # .snap <- file.path(libPath, ".snapshot.RDS")
   needSnapshot <- FALSE
   needInstalledVersions <- FALSE
-  installedVersionsFile <- file.path(libPath, ".installedVersions.RDS")
-  if (!file.exists(installedVersionsFile)) {
+  fromInstalledVersionsObj <- getFromNamespace(".installedVersions", "reproducible")
+  # installedVersionsFile <- file.path(libPath, ".installedVersions.RDS")
+  #if (!file.exists(installedVersionsFile)) {
+  if (NROW(fromInstalledVersionsObj) == 0) {
     needSnapshot <- TRUE
     needInstalledVersions <- TRUE
   }
-  if (file.exists(.snap)) {
-    if (!(identical(readRDS(file = .snap), allPkgsDESC))) {
-      needSnapshot <- TRUE
-      needInstalledVersions <- TRUE
-    }
-  } else {
+  fromDotSnap <- getFromNamespace(".snap", "reproducible")
+  inDotSnap <- fromDotSnap[dirname(rownames(fromDotSnap)) %in% libPathListFiles,]
+  inDotSnap[order(rownames(inDotSnap)),]
+
+  if (!(identical(inDotSnap, allPkgsDESC))) {
     needSnapshot <- TRUE
     needInstalledVersions <- TRUE
   }
+  #} else {
+  #  needSnapshot <- TRUE
+  #  needInstalledVersions <- TRUE
+  #}
   if (needSnapshot) {
-    saveRDS(allPkgsDESC, file = .snap)
+    allPkgsDESC <- unique(rbind(fromDotSnap, allPkgsDESC))
+    allPkgsDESC <- allPkgsDESC[order(rownames(allPkgsDESC)),]
+    assignInMyNamespace(x = ".snap", allPkgsDESC)
+    # saveRDS(allPkgsDESC, file = .snap)
   }
 
   if (needInstalledVersions) {
@@ -1031,10 +1040,15 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
     } else {
       instVers <- installedVersions(libPathListFilesBase, dirname(libPathListFiles))
     }
-    saveRDS(instVers, file = installedVersionsFile)
+    assignInMyNamespace(".installedVersions", instVers)
+    #saveRDS(instVers, file = installedVersionsFile)
   } else {
-    instVers <- readRDS(file = installedVersionsFile)
+    instVers <- getFromNamespace(".installedVersions", "reproducible")
+    #instVers <- readRDS(file = installedVersionsFile)
   }
 
   return(instVers)
 }
+
+.snap <- data.frame()
+.installedVersions <- list()
