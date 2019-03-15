@@ -29,7 +29,11 @@ cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
   suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
   hashExists <- checksums$cacheId == dig
   out <- if (isTRUE(any(hashExists))) {
-    cloudDownload(checksums[hashExists])
+    if (sum(hashExists) > 1) {
+      stop("running cloudCheck with >1 object toDigest is not implemented yet;",
+           "contact eliot.mcintire@canada.ca")
+    }
+    cloudDownload(checksums[hashExists])[[1]]
   } else {
     NULL
   }
@@ -694,17 +698,16 @@ cloudUploadFileAndChecksums <- function(objectFile, cloudFolderID, digest,
 }
 
 cloudDownload <- function(checksums) {
-  if (NROW(checksums) > 1) {
-    stop("Can only download 1 file at a time, currently")
-  }
-  objectFilename2 <- tempfile(fileext = ".rda");
-  a <- checksums$filesize
-  class(a) <- "object_size"
-  message("  downloading object from google drive; this could take a while; it is: ",
-          format(a, "auto"))
-  drive_download(as_id(checksums[, id]), path = objectFilename2, verbose = FALSE)
-  env <- new.env()
-  load(objectFilename2, envir = env)
-  as.list(env)[[1]]
+  out <- lapply(seq(NROW(checksums)), function(checksumsIndex) {
+    objectFilename2 <- tempfile(fileext = ".rda");
+    a <- checksums[checksumsIndex,]$filesize
+    class(a) <- "object_size"
+    message("  downloading object from google drive; it is: ",
+            format(a, "auto"))
+    drive_download(as_id(checksums[checksumsIndex, id]), path = objectFilename2, verbose = FALSE)
+    env <- new.env()
+    load(objectFilename2, envir = env)
+    as.list(env)[[1]]
+  })
 
 }
