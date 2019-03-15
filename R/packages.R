@@ -136,6 +136,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     if (length(githubPkgs)) {
       packages[packages %in% githubPkgs] <- githubPkgNames
     }
+
     if (!dir.exists(libPath)) dir.create(libPath)
     libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
 
@@ -164,12 +165,13 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
                              nonLibPathPkgs = nonLibPathPkgs, libPath = libPath,
                              standAlone = standAlone, forget = forget)
       allPkgsNeeded <- aa$allPkgsNeeded
-      if (standAlone) {
-        libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths()[length(.libPaths())])),
-                                          dir, full.names = TRUE))
-      } else {
-        libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
-      }
+      libPathListFiles <- .libPathListFiles(standAlone, libPath)
+      # if (standAlone) {
+      #   libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths()[length(.libPaths())])),
+      #                                     dir, full.names = TRUE))
+      # } else {
+      #   libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
+      # }
       libPathListFiles <- libPathListFiles[basename(libPathListFiles) %in% allPkgsNeeded]
       currentVersions <- installedVersionsQuick(libPathListFiles, libPath, standAlone = standAlone,
                              basename(libPathListFiles))
@@ -179,7 +181,10 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
         }
     }
 
-    autoFile <- file.path(libPath, "._packageVersionsAuto.txt")
+    collapsedLibPath <- gsub("\\/", replacement = "_", libPath)
+    pathToRequireFolder <- file.path(getOption("reproducible.cachePath"), ".Require",
+                                     collapsedLibPath)
+    autoFile <- paste0(pathToRequireFolder, "._packageVersionsAuto.txt")
     if (is.null(aa$haveVers)) {
       if (length(currentVersions)) {
         pkgsToSnapshot <- pickFirstVersion(names(currentVersions), unlist(currentVersions))
@@ -578,11 +583,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   if (file.exists(packageVersionFile)) {
     libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
     message("Reading ", packageVersionFile)
-    if (standAlone) {
-      libPathListFiles <- dir(libPath, full.names = TRUE)
-    } else {
-      libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
-    }
+    libPathListFiles <- .libPathListFiles(standAlone, libPath)
+    # if (standAlone) {
+    #   libPathListFiles <- dir(libPath, full.names = TRUE)
+    # } else {
+    #   libPathListFiles <- unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
+    # }
 
     supposedToBe <- data.table::fread(packageVersionFile, header = TRUE)
     supposedToBe <- unique(supposedToBe, by = c("instPkgs", "instVers"))
@@ -597,6 +603,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
     instVers <- installedVersionsQuick(libPathListFiles, libPath, standAlone,
                                                libPathListFilesBase)
+    #nas <- unlist(lapply(instVers, is.na))
+    instVers <- instVers[libPathListFilesBase]
 
     if (length(instVers) != length(libPathListFilesBase)) {
       stop("Package folder, ", libPath, " has become corrupt.",
@@ -970,9 +978,12 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = FALSE) {
       }
     }
 
-  if (!isAbsolute) packageVersionFile <- file.path(libPath[1], basename(packageVersionFile))
+  collapsedLibPath <- gsub("\\/", replacement = "_", libPath[1])
+  pathToRequireFolder <- file.path(getOption("reproducible.cachePath"), ".Require")
+  autoFile <- file.path(pathToRequireFolder, paste0(collapsedLibPath))
+  if (!isAbsolute) packageVersionFile <- paste0(autoFile, "_", basename(packageVersionFile))
 
-  autoFile <- file.path(libPath[1], "._packageVersionsAuto.txt")
+  autoFile <- paste0(autoFile, "._packageVersionsAuto.txt")
   if (!standAlone & file.exists(autoFile)){
       file.copy(autoFile, packageVersionFile, overwrite = TRUE)
       out <- data.table::fread(autoFile)
@@ -1005,13 +1016,21 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
                                    libPathListFilesBase) {
   allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
   allPkgsDESC <- allPkgsDESC[order(rownames(allPkgsDESC)),]
+  collapsedLibPath <- gsub("\\/", replacement = "_", libPath)
+  pathToRequireFolder <- file.path(getOption("reproducible.cachePath"), ".Require")
+  if (!dir.exists(pathToRequireFolder)) {
+    checkPath(pathToRequireFolder, create = TRUE)
+  }
   # .snap <- file.path(libPath, ".snapshot.RDS")
-  .snapFilePath <- file.path(getOption("reproducible.cachePath"), ".snapshot.RDS")
+  .snapFilePath <- file.path(pathToRequireFolder, paste0(collapsedLibPath, ".snapshot.RDS"))
+
   needSnapshot <- FALSE
   needInstalledVersions <- FALSE
   #fromInstalledVersionsObj <- getFromNamespace(".installedVersions", "reproducible")
   installedVersionsFile <- file.path(getOption("reproducible.cachePath"),
-                                     ".installedVersions.RDS")
+                                     ".Require",
+                                     paste0(collapsedLibPath, ".installedVersions.RDS"))
+
   #installedVersionsFile <- file.path(libPath, ".installedVersions.RDS")
   if (!file.exists(installedVersionsFile)) {
   # if (NROW(fromInstalledVersionsObj) == 0) {
@@ -1060,3 +1079,12 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
 
 .snap <- data.frame()
 .installedVersions <- list()
+
+.libPathListFiles <- function(standAlone, libPath) {
+  if (standAlone) {
+    unlist(lapply(unique(c(libPath, .libPaths()[length(.libPaths())])),
+                                      dir, full.names = TRUE))
+  } else {
+    unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
+  }
+}

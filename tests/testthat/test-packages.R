@@ -9,8 +9,15 @@ test_that("package-related functions work", {
   # cat("\nD: ", nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@", file = "~/test.txt", append = TRUE)
   skip_on_cran()
   #if (isTRUE(nchar(getCRANrepos()["CRAN"][1]) > 0 && getCRANrepos()["CRAN"] != "@CRAN@")) {
-    packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
-    packageDir1 <- normalizePath(file.path(tempdir(), "test6"), winslash = "/", mustWork = FALSE)
+
+    #packageDir <- normalizePath(file.path(tempdir(), "test5"), winslash = "/", mustWork = FALSE)
+    #packageDir1 <- normalizePath(file.path(tempdir(), "test6"), winslash = "/", mustWork = FALSE)
+    packageDir <- checkPath(file.path(tempdir(), rndstr(1, 7)), create = TRUE)
+    packageDir1 <- checkPath(file.path(tempdir(), rndstr(1, 7)), create = TRUE)
+    on.exit({
+      unlink(packageDir, recursive = TRUE)
+      unlink(packageDir1, recursive = TRUE)
+    }, add = TRUE)
     suppressWarnings(Require("TimeWarp", libPath = packageDir1, standAlone = TRUE))
     expect_true(any(grepl(pattern = "package:TimeWarp", search())))
     expect_true(require("TimeWarp", lib.loc = packageDir1))
@@ -66,7 +73,7 @@ test_that("package-related functions work", {
     installed <- data.table::fread(packageVersionFile)
     pkgDeps <- sort(c("Holidays", unique(unlist(pkgDep("Holidays", recursive = TRUE,
                                                        libPath = packageDir)))))
-    expect_true(all(sort(installed$instPkgs) == pkgDeps))
+    expect_true(all(pkgDeps %in% installed$instPkgs))
 
     # Check that the snapshot works even if packages aren't in packageDir,
     # i.e., standAlone is FALSE, or there are base packages
@@ -75,13 +82,13 @@ test_that("package-related functions work", {
     Require(allInstalled, libPath = packageDir)
     packageVersionFile <- file.path(packageDir, ".packageVersion3.txt")
     pkgSnapshot(libPath = packageDir, packageVersionFile, standAlone = FALSE)
-    installed <- data.table::fread(packageVersionFile)
+    installed <- unique(data.table::fread(packageVersionFile))
 
     pkgDeps <- sort(c(allInstalledNames, unique(unlist(pkgDep(libPath = packageDir,
                                                               allInstalledNames,
                                                               recursive = TRUE)))))
 
-    expect_true(all(sort(unique(installed$instPkgs)) == sort(unique(pkgDeps))))
+    expect_true(all(unique(pkgDeps) %in% unique(installed$instPkgs)))
 
     packageDirList <- dir(packageDir)
     expect_true(all(packageDirList %in% installed$instPkgs))
@@ -91,6 +98,7 @@ test_that("package-related functions work", {
     inBase <- unlist(installedVersions(installedNotInLibPath$instPkgs,
                                        libPath = .libPaths()[length(.libPaths())]))
     inBaseDT <- na.omit(data.table::data.table(instPkgs = names(inBase), instVers = inBase))
+    inBaseDT <- unique(inBaseDT)
     merged <- installed[inBaseDT, on = c("instPkgs", "instVers"), nomatch = 0]
 
     # This test that the installed versions in Base are the same as the ones that
@@ -100,11 +108,12 @@ test_that("package-related functions work", {
 
     try(detach("package:meow", unload = TRUE))
     try(detach("package:Holidays", unload = TRUE))
+    try(detach("package:TimeWarp", unload = TRUE))
 
     ## Test passing package as unquoted name
-    expect_silent(Require(TimeWarp, libPath = packageDir1, standAlone = TRUE))
+    expect_true(Require(TimeWarp, libPath = packageDir1, standAlone = TRUE))
 
-    unlink(packageDir, recursive = TRUE, force = TRUE)
+    #unlink(packageDir, recursive = TRUE, force = TRUE)
 
   #}
 })
