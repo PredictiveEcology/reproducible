@@ -28,9 +28,6 @@ be concatenated tagKey:tagValue}
 
 \item{artifact}{Character vector of artifact values in the
 \code{artifact} column of \code{showCache}}
-
-\item{cacheId}{Character vector of \code{cacheId} values in the
-\code{tagValue} column of \code{showCache}.}
 }
 \value{
 \code{getCacheId} returns the \code{cacheId} values for 1 or more

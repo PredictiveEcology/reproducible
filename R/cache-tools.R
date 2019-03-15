@@ -548,8 +548,6 @@ getCacheId <- function(cacheRepo, shownCache, artifact) {
 }
 
 #' @rdname cache-helpers
-#' @param cacheId Character vector of \code{cacheId} values in the
-#'   \code{tagValue} column of \code{showCache}.
 #'
 #' @export
 #' @return
