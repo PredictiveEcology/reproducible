@@ -1,5 +1,18 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.8
+=============
+
+## New features
+
+* new functions for accessing specific items from the `cacheRepo`: `getArtifact`, `getCacheId`, `getUserTags`
+* `cloudSyncCache` has more options that are implemented 
+
+## bug fixes
+
+* mostly minor
+* unit tests for `cloudSyncCache`
+
 version 0.2.7
 =============
 
