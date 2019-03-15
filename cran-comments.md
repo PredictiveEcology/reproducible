@@ -11,12 +11,12 @@ This is a maintenance release which fixes some minor bugs. See `NEWS.md`.
 * Windows              (appveyor), R 3.4.4
 
 ### Current R versions
-* macOS Mojave        (travis-ci), R 3.5.2
-* macOS Mojave            (local), R 3.5.2
-* Ubuntu 14.04        (travis-ci), R 3.5.2
-* Ubuntu 18.04            (local), R 3.5.2
-* Windows              (appveyor), R 3.5.2
-* Windows           (win-builder), R 3.5.2
+* macOS Mojave        (travis-ci), R 3.5.3
+* macOS Mojave            (local), R 3.5.3
+* Ubuntu 14.04        (travis-ci), R 3.5.3
+* Ubuntu 18.04            (local), R 3.5.3
+* Windows              (appveyor), R 3.5.3
+* Windows           (win-builder), R 3.5.3
 * Windows 7               (local), R 3.5.2
 
 ### Development R version

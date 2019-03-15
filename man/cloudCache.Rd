@@ -57,7 +57,21 @@ a3 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 # now both local and cloud exist
 a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
 
-# Clean up -- see cloudSyncCache
+#  more than one cacheRepo
+opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"),
+                                             file.path(tempdir(), "test2")),
+                "reproducible.ask" = FALSE)
+cachePaths <- getOption("reproducible.cachePath")
+Cache(rnorm, 4, cacheRepo = cachePaths[3]) # put it in 3rd cacheRepo
+
+# gets it locally even though it is in the 3rd cacheRepo, uploads to cloudCache
+cloudCache(rnorm, 4, cloudFolderID = newDir$id)
+
+# Clean up -- also see cloudSyncCache
+clearCache(ask = FALSE)
+# lapply(cachePaths, clearCache, ask = FALSE)
+cloudSyncCache(cloudFolderID = newDir$id)
+
 }
 }
 \seealso{
