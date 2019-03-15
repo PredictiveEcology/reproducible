@@ -1,5 +1,15 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.8
+=============
+
+## New features
+
+
+## bug fixes
+* `prepInputs` wasn't correctly passing `useCache` -- fixes issue #93
+* `cropInputs` was reprojecting extent of y as a time saving approach, but this was incorrect if `studyArea` is a `SpatialPolygon` that is not close to filling the extent. It now reprojects `studyArea` directly which will be slower, but correct.
+
 version 0.2.7
 =============
 
