@@ -327,9 +327,10 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
     x <- Cache(do.call, postProcess, append(list(x = rlang::quo(x), filename1 = out$targetFilePath,
                                                  overwrite = overwrite,
-                                                 destinationPath = out$destinationPath),
+                                                 destinationPath = out$destinationPath,
+                                                 useCache = useCache), # passed into postProcess
                                   out$dots),
-               useCache = useCache
+               useCache = useCache # used here
     )
   }
 

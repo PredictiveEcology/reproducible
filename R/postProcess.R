@@ -253,9 +253,9 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         projectExtent(cropTo, crs(x))
       } else {
         if (is(studyArea, "Spatial")) {
-          theExtent <- as(extent(cropTo), "SpatialPolygons")
-          crs(theExtent) <- crs(cropTo)
-          raster::extent(spTransform(x = theExtent, CRSobj = crs(x)))
+          #theExtent <- as(extent(cropTo), "SpatialPolygons")
+          #crs(theExtent) <- crs(cropTo)
+          raster::extent(spTransform(x = cropTo, CRSobj = crs(x)))
         } else {
           NULL
         }
