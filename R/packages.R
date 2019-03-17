@@ -1064,6 +1064,7 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
   if (needInstalledVersions) {
     if (standAlone) {
       instVers <- installedVersions(libPathListFilesBase, libPath)
+      names(instVers) <- libPathListFilesBase
     } else {
       instVers <- installedVersions(libPathListFilesBase, dirname(libPathListFiles))
     }
