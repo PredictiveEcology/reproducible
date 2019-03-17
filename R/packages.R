@@ -981,10 +981,11 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = FALSE) {
   collapsedLibPath <- gsub("\\/", replacement = "_", libPath[1])
   pathToRequireFolder <- file.path(getOption("reproducible.cachePath"), ".Require")
   autoFile <- file.path(pathToRequireFolder, paste0(collapsedLibPath))
+  autoFile <- gsub(":_", "_", autoFile) # on Windows, rm the c: in the middle
   if (!isAbsolute) packageVersionFile <- paste0(autoFile, "_", basename(packageVersionFile))
 
   autoFile <- paste0(autoFile, "._packageVersionsAuto.txt")
-  if (!standAlone & file.exists(autoFile)){
+  if (!standAlone & file.exists(autoFile)) {
       file.copy(autoFile, packageVersionFile, overwrite = TRUE)
       out <- data.table::fread(autoFile)
   } else {
@@ -995,6 +996,7 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = FALSE) {
               paste(libPath, collapse = ", "))
     }
     instPkgs <- dir(libPath)
+    instPkgs <- instPkgs[!instPkgs %in% c("backpack.db", "gallery")]
     instVers <- unlist(lapply(libPath, function(lib)
                     na.omit(unlist(installedVersions(instPkgs, libPath = lib)))))
     if (length(instVers) == 1) names(instVers) <- instPkgs
@@ -1017,6 +1019,8 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
   allPkgsDESC <- file.info(file.path(libPathListFiles, "DESCRIPTION"))
   allPkgsDESC <- allPkgsDESC[order(rownames(allPkgsDESC)),]
   collapsedLibPath <- gsub("\\/", replacement = "_", libPath)
+  collapsedLibPath <- gsub(":_", "_", collapsedLibPath) # on Windows, rm the c: in the middle
+
   pathToRequireFolder <- file.path(getOption("reproducible.cachePath"), ".Require")
   if (!dir.exists(pathToRequireFolder)) {
     checkPath(pathToRequireFolder, create = TRUE)
