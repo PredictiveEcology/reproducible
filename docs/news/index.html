@@ -70,7 +70,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.8</span>
       </span>
     </div>
 
@@ -125,13 +125,40 @@
       <small>Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="version-0-2-7" class="section level1">
+    <div id="version-0-2-8" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-7" class="anchor"></a>version 0.2.7<small> Unreleased </small>
+<a href="#version-0-2-8" class="anchor"></a>version 0.2.8<small> Unreleased </small>
 </h1>
 <div id="new-features" class="section level2">
 <h2 class="hasAnchor">
 <a href="#new-features" class="anchor"></a>New features</h2>
+<ul>
+<li>new functions for accessing specific items from the <code>cacheRepo</code>: <code>getArtifact</code>, <code>getCacheId</code>, <code>getUserTags</code>
+</li>
+<li>
+<code>cloudSyncCache</code> has more options that are implemented and many unitTests</li>
+</ul>
+</div>
+<div id="bug-fixes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#bug-fixes" class="anchor"></a>bug fixes</h2>
+<ul>
+<li>
+<code>prepInputs</code> wasn’t correctly passing <code>useCache</code>
+</li>
+<li>
+<code>cropInputs</code> was reprojecting extent of y as a time saving approach, but this was incorrect if <code>studyArea</code> is a <code>SpatialPolygon</code> that is not close to filling the extent. It now reprojects <code>studyArea</code> directly which will be slower, but correct. – fixes issue <a href='https://github.com/PredictiveEcology/reproducible/issues/93'>#93</a></li>
+<li>other minor</li>
+</ul>
+</div>
+</div>
+    <div id="version-0-2-7" class="section level1">
+<h1 class="page-header">
+<a href="#version-0-2-7" class="anchor"></a>version 0.2.7<small> 2019-03-07 </small>
+</h1>
+<div id="new-features-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#new-features-1" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <code>CHECKSUMS.txt</code> should now be ordered consistently across operating systems (note: <code><a href="https://www.rdocumentation.org/packages/base/topics/order">base::order</a></code> will not succeed in doing this –&gt; now using <code>.orderDotsUnderscoreFirst</code>)</li>
@@ -141,9 +168,9 @@
 <li>Experimental support within the <code>postProcess</code> family for <code>sf</code> class objects</li>
 </ul>
 </div>
-<div id="bug-fixes" class="section level2">
+<div id="bug-fixes-1" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes" class="anchor"></a>bug fixes</h2>
+<a href="#bug-fixes-1" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>mostly minor</li>
 <li>
@@ -162,16 +189,16 @@
 <li>remove <code>tibble</code> from Imports as it’s no longer being used</li>
 </ul>
 </div>
-<div id="new-features-1" class="section level2">
+<div id="new-features-2" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-1" class="anchor"></a>New features</h2>
+<a href="#new-features-2" class="anchor"></a>New features</h2>
 <ul>
 <li>remove <code>%&gt;%</code> pipe that was long ago deprecated. User should use <code>%C%</code> if they want a pipe that is Cache-aware. See examples.</li>
 <li>Full rewrite of all <code>options</code> descriptions now in <code>reproducible</code>, see <code><a href="../reference/reproducibleOptions.html">?reproducibleOptions</a></code>
 </li>
 <li>now <code>cacheRepo</code> and <code><a href="https://www.rdocumentation.org/packages/base/topics/options">options("reproducible.cachePath")</a></code> can take a vector of paths. Similar to how .libPaths() works for libraries, <code>Cache</code> will search first in the first entry in the <code>cacheRepo</code>, then the second etc. until it finds an entry. It will only write to the first entry.</li>
 <li>new value for the option: <code><a href="https://www.rdocumentation.org/packages/base/topics/options">options("reproducible.useCache" = "devMode")</a></code>. The point of this mode is to facilitate using the Cache when functions and datasets are continually in flux, and old Cache entries are likely stale very often. In <code>devMode</code>, the cache mechanism will work as normal if the Cache call is the first time for a function OR if it successfully finds a copy in the cache based on the normal Cache mechanism. It <em>differs</em> from the normal Cache if the Cache call does <em>not</em> find a copy in the <code>cacheRepo</code>, but it does find an entry that matches based on <code>userTags</code>. In this case, it will delete the old entry in the <code>cacheRepo</code> (identified based on matching <code>userTags</code>), then continue with normal <code>Cache</code>. For this to work correctly, <code>userTags</code> must be unique for each function call. This should be used with caution as it is still experimental.</li>
-<li>change to how hashes are calculated. This will cause existing caches to not work correctly. To allow a user to keep old behaviour (during a transition period), the “old” algorigthm can be used, with <code><a href="https://www.rdocumentation.org/packages/base/topics/options">options("reproducible.useNewDigestAlgorithm" = FALSE)</a></code>. There is a message of this change on package load.</li>
+<li>change to how hashes are calculated. This will cause existing caches to not work correctly. To allow a user to keep old behaviour (during a transition period), the “old” algorithm can be used, with <code><a href="https://www.rdocumentation.org/packages/base/topics/options">options("reproducible.useNewDigestAlgorithm" = FALSE)</a></code>. There is a message of this change on package load.</li>
 <li>add experimental <code>cloud*</code> functions, especially <code>cloudCache</code> which allows sharing of Cache among collaborators. Currently only works with <code>googledrive</code>
 </li>
 <li>updated <code>assessDataType</code> to consolidate <code>assessDataTypeGDAL</code> and <code>assessDataType</code> into single function (<a href='https://github.com/PredictiveEcology/reproducible/issues/71'>#71</a>, <a href='https://github.com/ianmseddy'>@ianmseddy</a>)</li>
@@ -182,9 +209,9 @@
 <li>remove <code><a href="https://www.rdocumentation.org/packages/fastdigest/topics/fastdigest">fastdigest::fastdigest</a></code> as it is not return the identical hash across operating systems</li>
 </ul>
 </div>
-<div id="bug-fixes-1" class="section level2">
+<div id="bug-fixes-2" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-1" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-2" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>
 <code>prepInputs</code> on GIS objects that don’t use <code><a href="https://www.rdocumentation.org/packages/raster/topics/raster">raster::raster</a></code> to load object were skipping <code>postProcess</code>. Fixed.</li>
@@ -208,9 +235,9 @@
 </li>
 </ul>
 </div>
-<div id="new-features-2" class="section level2">
+<div id="new-features-3" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-2" class="anchor"></a>New features</h2>
+<a href="#new-features-3" class="anchor"></a>New features</h2>
 <ul>
 <li>New value possible for <code><a href="https://www.rdocumentation.org/packages/base/topics/options">options(reproducible.useCache = 'overwrite')</a></code>, which allows use of <code>Cache</code> in cases where the function call has an entry in the <code>cacheRepo</code>, will purge it and add the output of the current call instead.</li>
 <li>New option <code>reproducible.inputPaths</code> (default <code>NULL</code>) and <code>reproducible.inputPathsRecursive</code> (default <code>FALSE</code>), which will be used in <code>prepInputs</code> as possible directory sources (searched recursively or not) for files being downloaded/extracted/prepared. This allows the using of local copies of files in (an)other location(s) instead of downloading them. If local location does not have the required files, it will proceed to download so there is little cost in setting this option. If files do exist on local system, the function will attempt to use a hardlink before making a copy.</li>
@@ -231,9 +258,9 @@
 </li>
 </ul>
 </div>
-<div id="bug-fixes-2" class="section level2">
+<div id="bug-fixes-3" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-2" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-3" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>Work around internally inside <code>extractFromArchive</code> for large (&gt;2GB) zip files. In the <code>R</code> help manual, <code>unzip</code> fails for zip files &gt;2GB. This uses a system call if the zip file is too large and fails using <code>base::unzip</code>.</li>
 <li>Work around for <code><a href="https://www.rdocumentation.org/packages/raster/topics/getData">raster::getData</a></code> issues.</li>
@@ -276,9 +303,9 @@
 <li>Add <code>future</code> to Suggests.</li>
 </ul>
 </div>
-<div id="new-features-3" class="section level2">
+<div id="new-features-4" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-3" class="anchor"></a>New features</h2>
+<a href="#new-features-4" class="anchor"></a>New features</h2>
 <ul>
 <li>new option on non-Windows OSs to use <code>future</code> for <code>Cache</code> saving to SQLite database, via <code><a href="https://www.rdocumentation.org/packages/base/topics/options">options("reproducible.futurePlan")</a></code>, if the <code>future</code> package is installed. This is <code>FALSE</code> by default.</li>
 <li>If a <code>do.call</code> function is Cached, previously, it would be labelled in the database as <code>do.call</code>. Now it attempts to extract the actual function being called by the <code>do.call</code>. Messaging is similarly changed.</li>
@@ -294,9 +321,9 @@
 <li>new function <code>assessDataType</code>, used in <code>postProcess</code>, to identify smallest <code>datatype</code> for Raster* objects, if user does not pass an explicit <code>datatype</code> in <code>prepInputs</code> or <code>postProcess</code> (<a href='https://github.com/PredictiveEcology/reproducible/issues/39'>#39</a>, <a href='https://github.com/CeresBarros'>@CeresBarros</a>).</li>
 </ul>
 </div>
-<div id="bug-fixes-3" class="section level2">
+<div id="bug-fixes-4" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-3" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-4" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>fix problems with tests introduced by recent <code>git2r</code> update (<a href='https://github.com/stewid'>@stewid</a>, <a href='https://github.com/PredictiveEcology/reproducible/issues/36'>#36</a>).</li>
 <li>
@@ -334,9 +361,9 @@
 <h1 class="page-header">
 <a href="#version-0-2-1" class="anchor"></a>version 0.2.1<small> 2018-07-07 </small>
 </h1>
-<div id="new-features-4" class="section level2">
+<div id="new-features-5" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-4" class="anchor"></a>New features</h2>
+<a href="#new-features-5" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <p>new functions:</p>
@@ -355,9 +382,9 @@
 </li>
 </ul>
 </div>
-<div id="bug-fixes-4" class="section level2">
+<div id="bug-fixes-5" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-4" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-5" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>
 <code>copyFile</code> correctly handles directory names containing spaces.</li>
@@ -371,9 +398,9 @@
 <h1 class="page-header">
 <a href="#version-0-2-0" class="anchor"></a>version 0.2.0<small> 2018-06-17 </small>
 </h1>
-<div id="new-features-5" class="section level2">
+<div id="new-features-6" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-5" class="anchor"></a>New features</h2>
+<a href="#new-features-6" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <p>new functions:</p>
@@ -499,6 +526,7 @@
     <div id="tocnav">
       <h2>Contents</h2>
       <ul class="nav nav-pills nav-stacked">
+        <li><a href="#version-0-2-8">0.2.8</a></li>
         <li><a href="#version-0-2-7">0.2.7</a></li>
         <li><a href="#version-0-2-6">0.2.6</a></li>
         <li><a href="#version-0-2-5">0.2.5</a></li>

@@ -20,10 +20,10 @@ This is a maintenance release which fixes some minor bugs. See `NEWS.md`.
 * Windows 7               (local), R 3.5.2
 
 ### Development R version
-* Ubuntu 14.04       (travis-ci), R 3.6.0 (2019-03-05 r76199)
-* Ubuntu 18.04           (local), R 3.6.0 (2019-02-28 r76173)
-* Windows             (appveyor), R 3.6.0 (2019-03-04 r76198)
-* Windows          (win-builder), R 3.6.0 (2019-03-03 r76192)
+* Ubuntu 14.04       (travis-ci), R 3.6.0 (2019-03-15 r76244)
+* Ubuntu 18.04           (local), R 3.6.0 (2019-03-18 r76245)
+* Windows             (appveyor), R 3.6.0 (2019-03-15 r76239)
+* Windows          (win-builder), R 3.6.0 (2019-03-15 r76244)
 
 ## R CMD check results
 

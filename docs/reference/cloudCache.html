@@ -73,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.8</span>
       </span>
     </div>
 
@@ -205,7 +205,21 @@ the local Cache.</p>
 <span class='co'># now both local and cloud exist</span>
 <span class='no'>a4</span> <span class='kw'>&lt;-</span> <span class='fu'>cloudCache</span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>, <span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='no'>newDir</span>$<span class='no'>id</span>)
 
-<span class='co'># Clean up -- see cloudSyncCache</span>
+<span class='co'>#  more than one cacheRepo</span>
+<span class='no'>opts</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>options</a></span>(<span class='st'>"reproducible.cachePath"</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/tempfile'>tempdir</a></span>(), <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/file.path'>file.path</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/tempfile'>tempdir</a></span>(), <span class='st'>"test"</span>),
+                                             <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/file.path'>file.path</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/tempfile'>tempdir</a></span>(), <span class='st'>"test2"</span>)),
+                <span class='st'>"reproducible.ask"</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='no'>cachePaths</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>)
+<span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>cachePaths</span>[<span class='fl'>3</span>]) <span class='co'># put it in 3rd cacheRepo</span>
+
+<span class='co'># gets it locally even though it is in the 3rd cacheRepo, uploads to cloudCache</span>
+<span class='fu'>cloudCache</span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='no'>newDir</span>$<span class='no'>id</span>)
+
+<span class='co'># Clean up -- also see cloudSyncCache</span>
+<span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='co'># lapply(cachePaths, clearCache, ask = FALSE)</span>
+<span class='fu'><a href='cloudSyncCache.html'>cloudSyncCache</a></span>(<span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='no'>newDir</span>$<span class='no'>id</span>)
+
 <span class='co'># }</span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">

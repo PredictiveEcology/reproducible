@@ -73,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.8</span>
       </span>
     </div>
 
@@ -135,7 +135,7 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>cloudDownloadChecksums</span>(<span class='no'>checksumsFileID</span>)
+    <pre class="usage"><span class='fu'>cloudDownloadChecksums</span>(<span class='kw'>checksumsFileID</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
 
 <span class='fu'>cloudUpdateChecksums</span>(<span class='no'>checksums</span>, <span class='no'>checksumsFileID</span>)</pre>
     
@@ -145,6 +145,12 @@
     <tr>
       <th>checksumsFileID</th>
       <td><p>A google file ID where the checksums data.table is located,
+provided as a character string.</p></td>
+    </tr>
+    <tr>
+      <th>cloudFolderID</th>
+      <td><p>The google folder ID where a new checksums file should
+ be written. This will only be used if <code>checksumsFileID</code> is not provided
 provided as a character string.</p></td>
     </tr>
     <tr>
