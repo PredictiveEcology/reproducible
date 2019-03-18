@@ -312,7 +312,10 @@ setMethod(
     if (inherits(aaa, "SpatialPolygonsDataFrame")) {
       bbb <- unlist(lapply(as.data.frame(aaa), is.numeric))
       if (sum(bbb)) {
-        for (i in names(aaa)[bbb]) {
+        bbbWh <- which(bbb)
+        for (i in bbbWh) { # changed because may not have correct names, can be NAs, Eliot March 2019
+                           #  Error was: Error in round(aaa[[i]], 4) :
+                           # non-numeric argument to mathematical function
           aaa[[i]] <- round(aaa[[i]], 4)
         }
       }

@@ -6,12 +6,16 @@
 \alias{cloudUpdateChecksums}
 \title{Cloud extras}
 \usage{
-cloudDownloadChecksums(checksumsFileID)
+cloudDownloadChecksums(checksumsFileID = NULL, cloudFolderID = NULL)
 
 cloudUpdateChecksums(checksums, checksumsFileID)
 }
 \arguments{
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
+provided as a character string.}
+
+\item{cloudFolderID}{The google folder ID where a new checksums file should
+ be written. This will only be used if \code{checksumsFileID} is not provided
 provided as a character string.}
 
 \item{checksums}{A \code{data.table} that is outputted from \code{cloudCheck} that

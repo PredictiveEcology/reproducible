@@ -489,3 +489,81 @@ checkFutures <- function() {
       rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
   }
 }
+
+#' Cache helpers
+#'
+#' A few helpers to get specific things from the cache repository
+#' @rdname cache-helpers
+#' @inheritParams Cache
+#' @export
+#' @param shownCache Primary way of supplying \code{cacheRepo}; the data.table obj
+#'   resulting from \code{showCache}, i.e., it will override \code{cacheRepo}.
+#'   If this and \code{cacheRepo} are missing, then it will default to
+#'   \code{getOption('reproducible.cachePath')}
+#' @param cacheId A character vector of o cacheId values to use in the cache
+#' @param concatenated Logical. If \code{TRUE}, the returned userTags will
+#'   be concatenated tagKey:tagValue
+getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
+  if (missing(shownCache)) {
+    if (missing(cacheRepo)) {
+      cacheRepos <- .checkCacheRepo(create = TRUE)
+      cacheRepo <- cacheRepos[[1]]
+    }
+    suppressMessages(shownCache <- showCache(cacheRepo))
+  }
+  arts <- getArtifact(shownCache = shownCache, cacheId = cacheId)
+  if (!missing(cacheId)) {
+    shownCache <- shownCache[artifact %in% arts]
+  }
+
+  userTags <- shownCache[!tagKey %in% c("format", "name", "class", "date", "cacheId"),
+                         list(tagKey, tagValue)]
+  if (concatenated)
+    userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
+  userTags
+}
+
+
+#' @rdname cache-helpers
+#' @param artifact Character vector of artifact values in the
+#'   \code{artifact} column of \code{showCache}
+#'
+#' @export
+#' @return
+#' \code{getCacheId} returns the \code{cacheId} values for 1 or more
+#' artifacts in the cache.
+getCacheId <- function(cacheRepo, shownCache, artifact) {
+  if (missing(shownCache)) {
+    if (missing(cacheRepo)) {
+      cacheRepos <- .checkCacheRepo(create = TRUE)
+      cacheRepo <- cacheRepos[[1]]
+    }
+    suppressMessages(shownCache <- showCache(cacheRepo))
+  }
+  if (!missing(artifact)) {
+    artifacts <- artifact
+    shownCache <- shownCache[artifact %in% artifacts]
+  }
+  shownCache[tagKey == "cacheId"]$tagValue
+}
+
+#' @rdname cache-helpers
+#'
+#' @export
+#' @return
+#' \code{getArtifact} returns the \code{artifact} value for 1 or more
+#' entries in the cache, by \code{cacheId}.
+getArtifact <- function(cacheRepo, shownCache, cacheId) {
+  if (missing(shownCache)) {
+    if (missing(cacheRepo)) {
+      cacheRepos <- .checkCacheRepo(create = TRUE)
+      cacheRepo <- cacheRepos[[1]]
+    }
+    suppressMessages(shownCache <- showCache(cacheRepo))
+  }
+  if (!missing(cacheId)) {
+    shownCache <- shownCache[tagValue %in% cacheId]
+  }
+  shownCache[tagKey == "cacheId", artifact]
+}
+

@@ -4,7 +4,7 @@
 \alias{cloudSyncCache}
 \title{Sync cloud with local Cache}
 \usage{
-cloudSyncCache(cacheRepo = getOption("reproducible.cachePath")[1],
+cloudSyncCache(cacheRepo = getOption("reproducible.cachePath"),
   checksumsFileID = NULL, cloudFolderID = NULL, delete = TRUE,
   upload = TRUE, download = !delete,
   ask = getOption("reproducible.ask"), cacheIds = NULL, ...)
@@ -53,9 +53,13 @@ This is still experimental, see examples.
 \examples{
 \dontrun{
   #make a google drive folder
-  opts <- options("reproducible.cachePath" = tempdir(), "reproducible.ask" = FALSE)
+  #   Can use >1 cacheRepo
+  opts <- options("reproducible.cachePath" = c(tempdir()),
+                  "reproducible.ask" = FALSE)
+  cachePaths <- getOption("reproducible.cachePath")
   library(googledrive)
   newDir <- drive_mkdir("testFolder")
+  #a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3])
   a <- Cache(rnorm, 1)
   b <- Cache(rnorm, 2)
 
@@ -69,12 +73,14 @@ This is still experimental, see examples.
   cloudSyncCache(cloudFolderID = newDir$id)
 
   # clean up
-  clearCache(ask = FALSE)
+  lapply(cachePaths, clearCache, ask = FALSE)
+  # clearCache(ask = FALSE) # if there were only 1 cacheRepo
   cloudSyncCache(cloudFolderID = newDir$id)
 
   #######################################################################
   # use showCache args to have control ... on upload & delete NOTE difference!
   #######################################################################
+  # a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3]) # multiple cacheRepos!
   a <- Cache(rnorm, 1)
   b <- Cache(rnorm, 2)
   # only sync the one with rnorm, 2 as arguments
@@ -121,7 +127,8 @@ This is still experimental, see examples.
   cloudSyncCache(cloudFolderID = newDir$id, cacheIds = tag6)
 
   # clean up
-  clearCache(ask = FALSE)
+  # clearCache(ask = FALSE) # if only one cacheRepo
+  lapply(cachePaths, clearCache, ask = FALSE)
   cloudSyncCache(cloudFolderID = newDir$id)
 
   # To remove whole folder:

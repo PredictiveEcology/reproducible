@@ -28,7 +28,7 @@ Version: 0.2.4
       [34m  Using cached copy of .inputObjects event in child6 module.   
       [39m[34m  Using memoised copy of .inputObjects event in child6 module
       [39m[34m  Using memoised copy of .inputObjects event in child6 module
-      [39m══ testthat results  ═════════════════════════════════════════════════════════════════════════════
+      [39m══ testthat results  ═════════════════════════════════════════════
       OK: 458 SKIPPED: 32 FAILED: 2
       1. Failure: simulation runs with simInit and spades (@test-simulation.R#86) 
       2. Failure: simulation runs with simInit and spades (@test-simulation.R#87) 
