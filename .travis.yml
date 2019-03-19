@@ -12,54 +12,54 @@ matrix:
     addons:
       apt:
         sources:
-        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
+          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-        - libgdal-dev
-        - libgdal1-dev
-        - libgeos-dev
-        - libnlopt-dev
-        - libproj-dev
-        - libudunits2-dev
-        - gdal-bin
+          - libgdal-dev
+          - libgdal1-dev
+          - libgeos-dev
+          - libnlopt-dev
+          - libproj-dev
+          - libudunits2-dev
+          - gdal-bin
     r_packages:
-    - rgdal
-    - rgeos
+      - rgdal
+      - rgeos
   - os: linux
     dist: trusty
     r: 3.4
     addons:
       apt:
         sources:
-        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
+          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-        - libgdal-dev
-        - libgdal1-dev
-        - libgeos-dev
-        - libnlopt-dev
-        - libproj-dev
-        - libudunits2-dev
-        - gdal-bin
+          - libgdal-dev
+          - libgdal1-dev
+          - libgeos-dev
+          - libnlopt-dev
+          - libproj-dev
+          - libudunits2-dev
+          - gdal-bin
     r_packages:
-    - rgdal
-    - rgeos
+      - rgdal
+      - rgeos
   - os: linux
     dist: trusty
     r: oldrel
     addons:
       apt:
         sources:
-        - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
+          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-        - libgdal-dev
-        - libgdal1-dev
-        - libgeos-dev
-        - libnlopt-dev
-        - libproj-dev
-        - libudunits2-dev
-        - gdal-bin
+          - libgdal-dev
+          - libgdal1-dev
+          - libgeos-dev
+          - libnlopt-dev
+          - libproj-dev
+          - libudunits2-dev
+          - gdal-bin
     r_packages:
-    - rgdal
-    - rgeos
+      - rgdal
+      - rgeos
   - os: linux
     dist: trusty
     r: release
@@ -94,24 +94,27 @@ matrix:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-        - libgdal-dev
-        - libgdal1-dev
-        - libgeos-dev
-        - libnlopt-dev
-        - libproj-dev
-        - libudunits2-dev
-        - gdal-bin
+          - libgdal-dev
+          - libgdal1-dev
+          - libgeos-dev
+          - libnlopt-dev
+          - libproj-dev
+          - libudunits2-dev
+          - gdal-bin
     r_packages:
-    - devtools
-    - rgdal
-    - rgeos
+      - devtools
+      - rgdal
+      - rgeos
   - os: osx
     osx_image: xcode9.4
     latex: false
     r_build_args: '--no-build-vignettes'
     r_check_args: '--as-cran --ignore-vignettes --no-examples'
+    before_install:
+      - brew update
+      - brew install libgit2 llvm
     before_script:
-    - Rscript -e "install.packages(c('rgdal', 'rgeos'), type = 'source')"
+      - Rscript -e "install.packages(c('rgdal', 'rgeos'), type = 'source')"
 r_build_args: " "
 r_check_args: "--as-cran"
 warnings_are_errors: true
