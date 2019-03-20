@@ -121,10 +121,10 @@ test_that("test cache-helpers with stacks", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  tmpfile <- tempfile(fileext = ".tif")
+  tmpfile2 <- tempfile(fileext = ".tif")
   r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
-  r1 <- raster(extent(0,5,0,5), res = 1, vals = rep(1:2, length.out = 25))
+  r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   s <- raster::stack(r, r1)
 
   ## in memory
