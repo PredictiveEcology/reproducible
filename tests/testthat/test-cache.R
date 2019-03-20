@@ -706,9 +706,9 @@ test_that("test cache-helpers", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  tmpfile <- tempfile(fileext = ".grd")
-  tmpfile2 <- tempfile(fileext = ".grd")
-  tmpfile3 <- tempfile(fileext = ".grd")
+  tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
+  tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
+  tmpfile3 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
   r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   levels(r) <- data.frame(ID = 1:2, Val = 3:4)
   b <- .prepareFileBackedRaster(r, tmpCache)
@@ -729,7 +729,7 @@ test_that("test cache-helpers", {
   expect_error(b <- .prepareFileBackedRaster(r1, tmpCache), "The following file-backed rasters")
 
   # Test wrong folder names
-  tmpfile <- file.path(tmpCache, basename(tempfile(fileext = ".grd")))
+  tmpfile <- file.path(tmpCache, basename(tempfile(tmpdir = tmpdir, fileext = ".grd")))
   r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
   r@file@name <- gsub(pattern = normalizePath(tempdir(), winslash = "/", mustWork = FALSE),
                       normalizePath(tmpfile, winslash = "/", mustWork = FALSE),
@@ -751,7 +751,7 @@ test_that("test cache-helpers", {
 
   r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
-  tmpfile <- tempfile(fileext = ".grd")
+  tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
   r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
   r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
   s <- addLayer(r, r1)
