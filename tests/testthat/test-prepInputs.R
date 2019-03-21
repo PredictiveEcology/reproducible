@@ -1521,11 +1521,11 @@ test_that("rasters aren't properly resampled", {
   writeRaster(b, filename = tiftemp2)
 
   out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
-                    destinationPath = tempdir(), useCache = FALSE)
+                    destinationPath = dirname(tiftemp1), useCache = FALSE)
   expect_true(dataType(out) == "INT2U")
 
   out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
-                    destinationPath = tempdir(), method = "bilinear",
+                    destinationPath = dirname(tiftemp1), method = "bilinear",
                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
   expect_true(dataType(out2) == "FLT4S")
 
@@ -1535,7 +1535,7 @@ test_that("rasters aren't properly resampled", {
   writeRaster(c, filename = tiftemp3)
 
   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
-                     destinationPath = tempdir(),
+                     destinationPath = dirname(tiftemp3),
                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
   expect_true(dataType(out3) == "FLT4S")
 })
