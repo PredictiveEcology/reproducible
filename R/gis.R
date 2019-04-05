@@ -120,7 +120,7 @@ fastMask <- function(x, y, cores = NULL) {
     #numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
     #  is.numeric(y[[x]])
     #})))[1]]
-    if (!raster::canProcessInMemory(x, n = 4)) {
+    if (!raster::canProcessInMemory(x, n = 3)) {
      #call gdal
       message("fastMask is using gdalwarp")
 

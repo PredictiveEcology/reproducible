@@ -268,7 +268,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
-        if (canProcessInMemory(x, 4)) {
+        if (canProcessInMemory(x, 3)) {
           x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
         } else {
           x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent,
