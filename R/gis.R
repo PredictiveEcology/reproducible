@@ -145,8 +145,19 @@ fastMask <- function(x, y, cores = NULL) {
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
 
-      gdalUtils::gdal_setInstallation()
-      if (.Platform$OS.type == "windows") {
+      gdalPath <- NULL
+      if (identical(.Platform$OS.type, "windows")) {
+        message("Searching for gdal installation")
+        possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
+                                  "C:/GuidosToolbox/QGIS/bin",
+                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin")
+        gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
+        if (any(gdalInfoExists))
+          gdalPath <- possibleWindowsPaths
+      }
+      gdalUtils::gdal_setInstallation(gdalPath)
+      if (identical(.Platform$OS.type, "windows")) {
+        message("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
         exe <- ".exe"
       } else exe <- ""
       dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
