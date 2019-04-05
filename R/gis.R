@@ -178,7 +178,13 @@ fastMask <- function(x, y, cores = NULL) {
         wait = TRUE)
       x <- raster(tempDstRaster)
     } else {
+      extentY <- extent(y)
+      if (xmin(x) < xmin(extentY) && xmax(x) > xmax(extentY) &&
+          ymin(x) < ymin(extentY) && ymax(x) > ymax(extentY) )
+        x <- cropInputs(x, y)
       a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+      if (canProcessInMemory(x, 3) && fromDisk(x))
+        x[] <- x[]
       m <- is.na(a[])
       x[m] <- NA
 
