@@ -182,6 +182,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     }
 
     collapsedLibPath <- gsub("\\/", replacement = "_", libPath)
+    collapsedLibPath <- gsub(":_", "_", collapsedLibPath)
     pathToRequireFolder <- file.path(getOption("reproducible.cachePath"), ".Require",
                                      collapsedLibPath)
     autoFile <- paste0(pathToRequireFolder, "._packageVersionsAuto.txt")
