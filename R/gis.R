@@ -139,8 +139,8 @@ fastMask <- function(x, y, cores = NULL) {
         tempSrcRaster <- x@file@name #Keep original raster.
       }
 
-      #GDAL requires file path to cutline - write to disk
-      tempSrcShape <- file.path(tempfile(tmpdir = tmpDir()), ".shp", fsep = "")
+      ## GDAL requires file path to cutline - write to disk
+      tempSrcShape <- file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = "")
       ysf <- sf::st_as_sf(y)
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
@@ -148,10 +148,12 @@ fastMask <- function(x, y, cores = NULL) {
       gdalUtils::gdal_setInstallation()
       if (.Platform$OS.type == "windows") {
         exe <- ".exe"
-      } else exe <- ""
+      } else {
+        exe <- ""
+      }
       dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-      if (is.null(cores) || cores =="AUTO") {
-        cores <- as.integer(parallel::detectCores()*0.9)
+      if (is.null(cores) || cores == "AUTO") {
+        cores <- as.integer(parallel::detectCores() * 0.9)
         prll <- paste0("-wo NUM_THREADS=", cores, " ")
       } else {
         if (!is.integer(cores)) {
@@ -195,8 +197,8 @@ fastMask <- function(x, y, cores = NULL) {
               "for these classes yet")
     } else {
       message("This may be slow in large cases. ",
-              "To use sf and gdal instead, see ",
-              "https://github.com/r-spatial/sf to install gdal ",
+              "To use sf and GDAL instead, see ",
+              "https://github.com/r-spatial/sf to install GDAL ",
               "on your system. Then, 'install.packages(\"sf\")",
               "; install.packages(\"fasterize\")')")
     }
