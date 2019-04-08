@@ -271,9 +271,10 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         if (canProcessInMemory(x, 3)) {
           x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
         } else {
-          x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent,
-                                                        filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-                                                   dots))
+          x <- do.call(raster::crop,
+                       args = append(list(x = x, y = cropExtent,
+                                          filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
+                                     dots))
         }
         if (is.null(x)) {
           message("    polygons do not intersect.")
@@ -495,11 +496,21 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
+#' @param useGDAL Logical, defaults to getOption("reproducible.useGDAL" = TRUE).
+#'     If \code{TRUE}, then this function will use \code{gdalwarp} only when not
+#'     small enough to fit in memory (i.e., \emph{if the operation fails} the
+#'     \code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
+#'     usually be faster than \code{raster::projectRaster}, the function used
+#'     if this is \code{FALSE}. Since since the two options use different algorithms,
+#'     there may be different projection results.
+#'
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
-projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL, ...) {
+projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
+                                 useGDAL = getOption("reproducible.useGDAL" = TRUE),
+                                 ...) {
   dots <- list(...)
   isFactorRaster <- FALSE
   if (isTRUE(raster::is.factor(x))) {
@@ -525,7 +536,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
       doProjection <- TRUE
     }
     if (doProjection) {
-      if (!canProcessInMemory(x, 4)) {
+      if (!canProcessInMemory(x, 3) && isTRUE(useGDAL)) {
         ## the raster is in memory, but large enough to trigger this function: write it to disk
         message("   large raster: reprojecting after writing to temp drive...")
         ## rasters need to go to same file so it can be unlinked at end without losing other temp files

@@ -71,6 +71,8 @@
 #'                         deleting objects. This, therefore, is most useful if the user is
 #'                         using unique values for \code{userTags}\cr
 #'   \code{useCloud} \tab Passed to \code{Cache}. Default \code{FALSE}.\cr
+#'   \code{useGDAL} \tab Passed to \code{useGDAL} in \code{projectInputs.Raster}.
+#'                   Default \code{TRUE}.\cr
 #'   \code{useMemoise} \tab \code{TRUE} \tab Used in \code{\link{Cache}}. If \code{TRUE},
 #'                   recovery of cached elements from the cacheRepo will use
 #'                   \code{memoise::memoise}. This means that the 3rd time running a function
@@ -123,6 +125,7 @@ reproducibleOptions <- function() {
     reproducible.showSimilar = FALSE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
+    reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = TRUE, #memoise
     reproducible.useNewDigestAlgorithm = TRUE,
     reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",

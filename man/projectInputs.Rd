@@ -13,7 +13,8 @@ projectInputs(x, targetCRS, ...)
 \method{projectInputs}{default}(x, targetCRS, ...)
 
 \method{projectInputs}{Raster}(x, targetCRS = NULL,
-  rasterToMatch = NULL, cores = NULL, ...)
+  rasterToMatch = NULL, cores = NULL,
+  useGDAL = getOption(reproducible.useGDAL = TRUE), ...)
 
 \method{projectInputs}{sf}(x, targetCRS, ...)
 
@@ -35,6 +36,14 @@ See details in \code{\link{postProcess}}.}
 triggered. \code{'AUTO'*} will calculate 90% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
+
+\item{useGDAL}{Logical, defaults to getOption("reproducible.useGDAL" = TRUE).
+If \code{TRUE}, then this function will use \code{gdalwarp} only when not
+small enough to fit in memory (i.e., \emph{if the operation fails} the
+\code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
+usually be faster than \code{raster::projectRaster}, the function used
+if this is \code{FALSE}. Since since the two options use different algorithms,
+there may be different projection results.}
 }
 \value{
 A file of the same type as starting, but with projection (and possibly

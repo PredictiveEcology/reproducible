@@ -76,6 +76,8 @@ The following options are likely of interest to most users
                         deleting objects. This, therefore, is most useful if the user is
                         using unique values for \code{userTags}\cr
   \code{useCloud} \tab Passed to \code{Cache}. Default \code{FALSE}.\cr
+  \code{useGDAL} \tab Passed to \code{useGDAL} in \code{projectInputs.Raster}.
+                  Default \code{TRUE}.\cr
   \code{useMemoise} \tab \code{TRUE} \tab Used in \code{\link{Cache}}. If \code{TRUE},
                   recovery of cached elements from the cacheRepo will use
                   \code{memoise::memoise}. This means that the 3rd time running a function

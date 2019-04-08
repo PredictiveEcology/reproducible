@@ -65,9 +65,11 @@ checkGDALVersion <- function(version) {
 #'
 #' @author Eliot McIntire
 #' @export
+#' @inheritParams projectInputs.Raster
 #' @importFrom fasterize fasterize
 #' @importFrom parallel detectCores
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
+#' @importFrom raster xmin xmax ymin ymax fromDisk
 #' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
@@ -104,7 +106,7 @@ checkGDALVersion <- function(version) {
 #'   plot(shp, add = TRUE)
 #' }
 #'
-fastMask <- function(x, y, cores = NULL) {
+fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL" = TRUE)) {
   if (is(x, "RasterLayer") && requireNamespace("sf") && requireNamespace("fasterize")) {
     message("fastMask is using sf and fasterize")
 
@@ -120,7 +122,7 @@ fastMask <- function(x, y, cores = NULL) {
     #numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
     #  is.numeric(y[[x]])
     #})))[1]]
-    if (!raster::canProcessInMemory(x, n = 3)) {
+    if (!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)) {
      #call gdal
       message("fastMask is using gdalwarp")
 
