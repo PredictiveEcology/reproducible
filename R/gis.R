@@ -150,10 +150,15 @@ fastMask <- function(x, y, cores = NULL) {
         message("Searching for gdal installation")
         possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
                                   "C:/GuidosToolbox/QGIS/bin",
-                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin")
+                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
+                                  "C:/Program Files (x86)/QGIS 3.6/bin",
+                                  "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
+                                  "C:/Program Files/GDAL",
+                                  "C:/Program Files (x86)/GDAL",
+                                  "C:/Program Files (x86)/QGIS 2.18/bin")
         gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
         if (any(gdalInfoExists))
-          gdalPath <- possibleWindowsPaths
+          gdalPath <- possibleWindowsPaths[gdalInfoExists]
       }
       gdalUtils::gdal_setInstallation(gdalPath)
       if (identical(.Platform$OS.type, "windows")) {
