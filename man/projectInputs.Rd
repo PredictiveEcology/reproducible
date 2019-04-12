@@ -14,7 +14,7 @@ projectInputs(x, targetCRS, ...)
 
 \method{projectInputs}{Raster}(x, targetCRS = NULL,
   rasterToMatch = NULL, cores = NULL,
-  useGDAL = getOption(reproducible.useGDAL = TRUE), ...)
+  useGDAL = getOption("reproducible.useGDAL", TRUE), ...)
 
 \method{projectInputs}{sf}(x, targetCRS, ...)
 

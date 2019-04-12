@@ -4,8 +4,8 @@
 \alias{fastMask}
 \title{Faster operations on rasters}
 \usage{
-fastMask(x, y, cores = NULL, useGDAL = getOption(reproducible.useGDAL =
-  TRUE))
+fastMask(x, y, cores = NULL,
+  useGDAL = getOption("reproducible.useGDAL", TRUE))
 }
 \arguments{
 \item{x}{A \code{Raster*} object.}

@@ -106,7 +106,7 @@ checkGDALVersion <- function(version) {
 #'   plot(shp, add = TRUE)
 #' }
 #'
-fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL" = TRUE)) {
+fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
   if (is(x, "RasterLayer") && requireNamespace("sf") && requireNamespace("fasterize")) {
     message("fastMask is using sf and fasterize")
 

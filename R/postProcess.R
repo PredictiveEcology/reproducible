@@ -509,7 +509,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
-                                 useGDAL = getOption("reproducible.useGDAL" = TRUE),
+                                 useGDAL = getOption("reproducible.useGDAL", TRUE),
                                  ...) {
   dots <- list(...)
   isFactorRaster <- FALSE
