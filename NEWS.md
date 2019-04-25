@@ -12,7 +12,7 @@ version 0.2.8
 
 * `prepInputs` wasn't correctly passing `useCache` 
 * `cropInputs` was reprojecting extent of y as a time saving approach, but this was incorrect if `studyArea` is a `SpatialPolygon` that is not close to filling the extent. It now reprojects `studyArea` directly which will be slower, but correct. -- fixes issue #93
-* other minor
+* other minor, included fixes for #115
 
 version 0.2.7
 =============
