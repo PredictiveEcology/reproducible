@@ -973,8 +973,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 .fixNoFileExtension <- function(downloadFileResult, targetFile, archive,
                                 destinationPath) {
   if (!is.null(downloadFileResult$downloaded) &&
-      file_ext(normPath(.basename(downloadFileResult$downloaded))) == "") {
-    if (!is.null(targetFile) && file_ext(normPath(.basename(downloadFileResult$neededFiles))) != "") {
+      identical(file_ext(normPath(.basename(downloadFileResult$downloaded))), "")) {
+    if (!is.null(targetFile) && !identical(file_ext(normPath(.basename(downloadFileResult$neededFiles))), "")) {
       if (is.null(archive)) {
         message(
           "Downloaded file has no extension: targetFile is provided, but archive is not.\n",
