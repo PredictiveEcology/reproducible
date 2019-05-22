@@ -4,6 +4,9 @@
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
   opts <- options()
+  assignInMyNamespace(".reproducibleTempCacheDir", file.path(tempdir(), "reproducible", "cache"))
+  assignInMyNamespace(".reproducibleTempInputDir",  file.path(tempdir(), "reproducible", "inputs"))
+
   checkPath(.reproducibleTempCacheDir, create = TRUE)
   checkPath(.reproducibleTempInputDir, create = TRUE)
   opts.reproducible <- reproducibleOptions()
