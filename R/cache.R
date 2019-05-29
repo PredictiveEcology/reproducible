@@ -624,14 +624,20 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          output <- .getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
+          output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
                                  lastOne = lastOne, cacheRepo = cacheRepo,
                                  fnDetails = fnDetails,
                                  modifiedDots = modifiedDots, debugCache = debugCache,
                                  verbose = verbose, sideEffect = sideEffect,
                                  quick = quick, algo = algo,
                                  preDigest = preDigest, startCacheTime = startCacheTime,
-                                 ...)
+                                 ...))
+          if (is(output, "try-error")) {
+            cID <- gsub("cacheId:", "", isInRepo$tag)
+            stop("Error in trying to recover cacheID: ", cID,
+                 "You will likely need to remove that item from Cache, e.g., ",
+                 "\nclearCache(userTags = '", cID, "')")
+          }
 
           return(output)
         }
