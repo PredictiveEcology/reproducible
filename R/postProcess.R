@@ -1338,9 +1338,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
       projections <- na.omit(projections)
       if (!any(projections)) {
-        if (is.null(rasterToMatch)) {
-          useBuffer <- TRUE
-        } else if (max(res(rasterToMatch)) < min(res(x))) {
+        if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
           useBuffer <- TRUE
         }
       }
@@ -1354,14 +1352,14 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         tempPoly <- as(extent(newExtent), "SpatialPolygons")
         crs(tempPoly) <- crs(x)
         #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
-        tempPoly <- buffer(tempPoly, width = max(res(x))*1.5)
+        tempPoly <- raster::buffer(tempPoly, width = max(res(x))*1.5)
         extRTM <- tempPoly
         crsRTM <- crs(tempPoly)
       } else {
         bufferSA <- TRUE
         origStudyArea <- studyArea
-        studyArea <- spTransform(studyArea, CRSobj = crs(x))
-        studyArea <- buffer(studyArea, width = max(res(x)) * 1.5)
+        studyArea <- sp::spTransform(studyArea, CRSobj = crs(x))
+        studyArea <- raster::buffer(studyArea, width = max(res(x)) * 1.5)
         #confirm you could only pass study area, because buffering will require reprojecting first.
         #buffer studyArea
       }
