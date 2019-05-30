@@ -5,6 +5,9 @@
 #'           See individual methods.
 #' @importClassesFrom quickPlot spatialObjects
 #' @importFrom utils capture.output
+#' @importFrom raster buffer
+#' @importFrom sf st_is_longlat
+#' @importFrom sp spTransform
 #' @seealso \code{prepInputs}
 #' @inheritParams prepInputs
 #' @rdname postProcess
