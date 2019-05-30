@@ -1655,6 +1655,37 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
 
+
+test_that("cropInputs crops too closely when input projections are different", {
+  skip_on_cran()
+  skip_on_appveyor()
+
+  testInitOut <- testInit("raster", opts = list(
+    "rasterTmpDir" = file.path(tempdir(), "raster"),
+    "reproducible.overwrite" = TRUE,
+    "reproducible.inputPaths" = NULL
+  ),
+  needGoogle = TRUE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  ext <- new("Extent", xmin = -3229772.32501426, xmax = 3680227.67498574,
+             ymin = -365833.605586135, ymax = 3454166.39441387)
+  x <- raster(ext,
+              crs = "+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs ",
+              res = c(10000, 10000))
+  x <- setValues(x, 1)
+  RTMext <- new("Extent", xmin = -1613500.00000023, xmax = -882500.000000228,
+                ymin = 7904500, ymax = 9236000)
+  RTM <- raster(RTMext,
+                crs = '+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs',
+                res = c(250, 250))
+  RTM <- setValues(RTM, 2)
+  out <- postProcess(x = x, rasterToMatch = RTM, filename2 = NULL)
+  expect_null(out[is.na(out) & !is.na(RTM)])
+
+})
 test_that("message when files from archive are already present", {
   skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
