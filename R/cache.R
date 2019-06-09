@@ -834,6 +834,13 @@ setMethod(
         }
       } else {
         while (written >= 0) {
+          otsObjSize <- gsub(grep("object.size", userTags, value = TRUE),
+                             pattern = "object.size:", replacement = "")
+          otsObjSize <- as.numeric(otsObjSize)
+          class(otsObjSize) <- "object_size"
+
+          if (otsObjSize > 1e7)
+            message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
           saved <- suppressWarnings(try(silent = TRUE,
                                         saveToLocalRepo(
                                           outputToSave,
