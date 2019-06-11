@@ -1,13 +1,9 @@
 sudo: required
-cache:
-  - ccache
 language: r
 cran: https://cran.rstudio.com/
 env:
   global:
     - CRAN_REPO=https://cran.rstudio.com
-before_install:
-  - mkdir $HOME/.R && echo -e 'CXX_STD = CXX14\n\nVER=\nCCACHE=ccache\nCC=$(CCACHE) gcc$(VER) -std=gnu99\nCXX=$(CCACHE) g++$(VER)\nC11=$(CCACHE) g++$(VER)\nC14=$(CCACHE) g++$(VER)\nFC=$(CCACHE) gfortran$(VER)\nF77=$(CCACHE) gfortran$(VER)' > $HOME/.R/Makevars
 matrix:
   include:
   - os: linux
@@ -20,7 +16,6 @@ matrix:
         sources:
          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - ccache
           - libgdal-dev
           - libgeos-dev
           - libglpk-dev
@@ -37,7 +32,6 @@ matrix:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - ccache
           - libgdal-dev
           - libgeos-dev
           - libglpk-dev
@@ -54,7 +48,6 @@ matrix:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - ccache
           - libgdal-dev
           - libgdal1-dev
           - libgeos-dev
@@ -73,7 +66,6 @@ matrix:
         sources:
         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-        - ccache
         - libgdal-dev
         - libgdal1-dev
         - libgeos-dev
@@ -102,7 +94,6 @@ matrix:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - ccache
           - libgdal-dev
           - libgdal1-dev
           - libgeos-dev
@@ -131,5 +122,3 @@ notifications:
   email:
     on_success: change
     on_failure: change
-
-# ccache is cited here https://pjs-web.de/post/using-ccache-to-speed-up-r-package-checks-on-travis-ci/
