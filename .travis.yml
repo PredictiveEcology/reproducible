@@ -1,44 +1,12 @@
 sudo: required
 language: r
 cache: packages
-cran: https://cran.rstudio.com/
+cran: https://cloud.r-project.org
 env:
   global:
-    - CRAN_REPO=https://cran.rstudio.com
+    - CRAN_REPO=https://cloud.r-project.org
 matrix:
   include:
-  - os: linux
-    dist: xenial
-    services:
-      - xvfb
-    r: 3.3
-    addons:
-      apt:
-        sources:
-         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
-        packages:
-          - libgdal-dev
-          - libgeos-dev
-          - libglpk-dev
-          - libnlopt-dev
-          - libproj-dev
-          - libudunits2-dev
-  - os: linux
-    dist: xenial
-    services:
-      - xvfb
-    r: 3.4
-    addons:
-      apt:
-        sources:
-          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
-        packages:
-          - libgdal-dev
-          - libgeos-dev
-          - libglpk-dev
-          - libnlopt-dev
-          - libproj-dev
-          - libudunits2-dev
   - os: linux
     dist: trusty
     services:
