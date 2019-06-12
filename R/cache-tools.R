@@ -500,7 +500,7 @@ checkFutures <- function() {
 #'   resulting from \code{showCache}, i.e., it will override \code{cacheRepo}.
 #'   If this and \code{cacheRepo} are missing, then it will default to
 #'   \code{getOption('reproducible.cachePath')}
-#' @param cacheId A character vector of o cacheId values to use in the cache
+#' @param cacheId A character vector of cacheId values to use in the cache
 #' @param concatenated Logical. If \code{TRUE}, the returned userTags will
 #'   be concatenated tagKey:tagValue
 getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
