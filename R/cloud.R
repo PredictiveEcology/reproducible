@@ -209,6 +209,7 @@ cloudUpdateChecksums <- function(checksums, checksumsFileID) {
 #' }
 cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
                        checksumsFileID = NULL, cloudFolderID = NULL) {
+  .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
   hasCopy <- FALSE
   hasCloudCopy <- FALSE
 
@@ -472,6 +473,9 @@ cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath"),
                            ask = getOption("reproducible.ask"),
                            cacheIds = NULL,
                            ...) {
+
+  .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
+
   if (isTRUE(download)) {
     if (isTRUE(delete)) {
       delete <- FALSE

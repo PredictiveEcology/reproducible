@@ -25,7 +25,12 @@
 #'                 Also, length \code{userTags} > 1, then matching is by `and`.
 #'                 For `or` matching, use \code{|} in a single character string.
 #'                 See examples.
+#' @param useCloud Logical. If \code{TRUE}, then every object that is deleted locally will
+#'    also be deleted in the \code{cloudFolderID}, if it is non-\code{NULL}
 #'
+#' @inheritParams Cache
+#'
+#' @details
 #' If neither \code{after} or \code{before} are provided, nor \code{userTags},
 #' then all objects will be removed.
 #' If both \code{after} and \code{before} are specified, then all objects between
@@ -81,7 +86,9 @@
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
 setGeneric("clearCache", function(x, userTags = character(), after, before,
-                                  ask = getOption("reproducible.ask"), ...) {
+                                  ask = getOption("reproducible.ask"),
+                                  useCloud = FALSE,
+                                  cloudFolderID = NULL, ...) {
   standardGeneric("clearCache")
 })
 
@@ -90,7 +97,8 @@ setGeneric("clearCache", function(x, userTags = character(), after, before,
 #' @rdname viewCache
 setMethod(
   "clearCache",
-  definition = function(x, userTags, after, before, ask, ...) {
+  definition = function(x, userTags, after, before, ask, useCloud = FALSE,
+                        cloudFolderID = NULL, ...) {
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
         message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
@@ -103,7 +111,31 @@ setMethod(
     if (is(x, "simList")) x <- x@paths$cachePath
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
-    if (all(missing(userTags), missing(after), missing(before))) {
+    clearWholeCache <- all(missing(userTags), missing(after), missing(before))
+
+    if (useCloud || !clearWholeCache) {
+      if (missing(after)) after <- "1970-01-01"
+      if (missing(before)) before <- Sys.time() + 1e5
+
+      args <- append(list(x = x, after = after, before = before, userTags = userTags),
+                     list(...))
+
+      objsDT <- do.call(showCache, args = args, quote = TRUE)
+      if (useCloud) {
+        if (is.null(cloudFolderID)) {
+          stop("If using 'useCloud', 'cloudFolderID' must be provided. If you don't know what should be used, ",
+               "try getOption('reproducible.cloudFolderID')")
+        }
+        gdriveLs <- drive_ls(path = as_id(cloudFolderID))
+        filenamesToRm <- paste0(objsDT[tagKey == "cacheId", tagValue], ".rda")
+        isInCloud <- gdriveLs$name %in% filenamesToRm
+        message("From Cloud:")
+        drive_rm(as_id(gdriveLs$id[isInCloud]))
+      }
+    }
+
+
+    if (clearWholeCache) {
       if (isInteractive()) {
         cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
         class(cacheSize) <- "object_size"
@@ -124,19 +156,12 @@ setMethod(
       unlink(file.path(x, "gallery"), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
       unlink(file.path(x, "backpack.db"))
+
       checkPath(x, create = TRUE)
       createLocalRepo(x)
       memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
     }
-
-    if (missing(after)) after <- "1970-01-01"
-    if (missing(before)) before <- Sys.time() + 1e5
-
-    args <- append(list(x = x, after = after, before = before, userTags = userTags),
-                   list(...))
-
-    objsDT <- do.call(showCache, args = args, quote = TRUE)
 
     if (isInteractive()) {
       objSizes <- as.numeric(objsDT[tagKey == "object.size"]$tagValue)
