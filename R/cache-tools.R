@@ -30,6 +30,7 @@
 #'
 #' @inheritParams Cache
 #'
+#' @details
 #' If neither \code{after} or \code{before} are provided, nor \code{userTags},
 #' then all objects will be removed.
 #' If both \code{after} and \code{before} are specified, then all objects between
