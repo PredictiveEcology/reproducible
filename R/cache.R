@@ -244,6 +244,23 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param useCache Logical or \code{"overwrite"} or \code{"devMode"}. See details.
 #'
+#' @param useCloud Logical. If \code{TRUE}, then this Cache call will download
+#'   (if local copy doesn't exist,
+#'   but cloud copy does exist), upload (local copy does or doesn't exist and
+#'   cloud copy doesn't exist), or
+#'   will not download nor upload if object exists in both. If \code{TRUE} will be at
+#'   least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
+#'   cloud folder gets large. If a user wishes to keep "high-level" control, set this to
+#'   \code{getOption("reproducible.useCloud", FALSE)} or
+#'   \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
+#'   be FALSE or TRUE, respectively) so it can be turned on and off with
+#'   this option
+#'
+#' @param cloudFolderID A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
+#'   left as \code{NULL}, the function will create a cloud folder with a warning. The warning
+#'   will have the cloudFolderID that should be used in subsequent calls. It will also be
+#'   added to options("reproducible.cloudFolderID"), but this will not persist across sessions.
+#'
 #' @param showSimilar A logical or numeric. Useful for debugging.
 #'        If \code{TRUE} or \code{1}, then if the Cache
 #'        does not find an identical archive in the cacheRepo, it will report (via message)
@@ -284,6 +301,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
+#' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
 #' @rdname cache
 #'
 #' @example inst/examples/example_Cache.R
@@ -302,6 +320,8 @@ setGeneric(
            quick = getOption("reproducible.quick", FALSE),
            verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
+           useCloud = FALSE,
+           cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
            showSimilar = getOption("reproducible.showSimilar", FALSE)) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
   })
@@ -542,6 +562,17 @@ setMethod(
 
       # compare outputHash to existing Cache record
       tries <- 1
+      if (useCloud) {
+        if (is.null(cloudFolderID)) {
+          newDir <- drive_mkdir("testFolder")
+          cloudFolderID = newDir$id
+          warning("No cloudFolderID supplied; if this is the first time using 'useCloud', this cloudFolderID, ",
+                  cloudFolderID," should likely be kept and used in all subsequent calls to Cache using 'useCloud = TRUE'.",
+                  " Making a new cloud folder and setting options('reproducible.cloudFolderID' = ", cloudFolderID, ")")
+          options('reproducible.cloudFolderID' = cloudFolderID)
+        }
+        gdriveLs <- drive_ls(path = as_id(cloudFolderID))
+      }
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         tries <- tries + 1
@@ -639,6 +670,21 @@ setMethod(
                  "\nclearCache(userTags = '", cID, "')")
           }
 
+          if (useCloud) {
+            # Here, upload local copy to cloud folder
+            artifact <- isInRepo$artifact[1]
+            artifactFileName <- paste0(artifact, ".rda")
+            newFileName <- paste0(outputHash,".rda")
+            isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
+
+            if (!any(isInCloud)) {
+              message("Uploading local copy of ", artifactFileName,", with cacheId: ",
+                      outputHash," to cloud folder")
+              drive_upload(media = file.path(cacheRepo, "gallery", artifactFileName),
+                           path = as_id(cloudFolderID), name = newFileName)
+            }
+          }
+
           return(output)
         }
       } else {
@@ -655,10 +701,31 @@ setMethod(
         startRunTime <- Sys.time()
       }
 
-      if (fnDetails$isPipe) {
-        output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
-      } else {
-        output <- FUN(...) #do.call(FUN, fnDetails$originalDots)
+      if (useCloud) {
+        # Here, download cloud copy to local folder, skip the running of FUN
+        newFileName <- paste0(outputHash,".rda")
+        isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
+        if (any(isInCloud)) {
+          message("Downloading cloud copy of ", newFileName,", with cacheId: ",
+                  outputHash)
+          localNewFilename <- file.path(tempdir(), newFileName)
+          drive_download(file = as_id(gdriveLs$id[isInCloud][1]),
+                         path = localNewFilename, # take first if there are duplicates
+                         overwrite = TRUE)
+          ee <- new.env(parent = emptyenv())
+          loadedObjName <- load(localNewFilename)
+          output <- get(loadedObjName, inherits = FALSE)
+          rm(loadedObjName)
+        }
+      }
+
+      # Run the FUN
+      if (!exists("output", inherits = FALSE)) { # check that it didn't come from cloud
+        if (fnDetails$isPipe) {
+          output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
+        } else {
+          output <- FUN(...) #do.call(FUN, fnDetails$originalDots)
+        }
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
@@ -864,6 +931,17 @@ setMethod(
           }
         }
 
+      }
+
+      if (useCloud) {
+        if (!any(isInCloud)) { # Here, upload local clopy to cloud folder if it isn't already there
+          cacheIdFileName <- paste0(outputHash,".rda")
+          newFileName <- paste0(saved, ".rda")
+          message("Uploading new cached object ", newFileName,", with cacheId: ",
+                  outputHash," to cloud folder")
+          drive_upload(media = file.path(cacheRepo, "gallery", newFileName),
+                       path = as_id(cloudFolderID), name = cacheIdFileName)
+        }
       }
 
       if (verbose > 1) {

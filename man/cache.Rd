@@ -16,6 +16,8 @@ Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
+  useCloud = getOption("reproducible.useCloud", TRUE),
+  cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE))
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, .objects = NULL,
@@ -27,6 +29,8 @@ Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
+  useCloud = getOption("reproducible.useCloud", TRUE),
+  cloudFolderID = NULL,
   showSimilar = getOption("reproducible.showSimilar", FALSE))
 
 lhs \%<\% rhs

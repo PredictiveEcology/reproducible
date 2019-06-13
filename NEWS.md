@@ -5,8 +5,10 @@ version 0.2.8
 
 ## New features
 
+* Cache has 2 new arguments, `useCloud` and `cloudFolderID`. This is a new, simpler approach to cloud caching.
+* Slowly deprecating cloudCache and family of functions in favour of a new approach using arguments to `Cache`, i.e., `useCache` and `cloudFolderID`
 * new functions for accessing specific items from the `cacheRepo`: `getArtifact`, `getCacheId`, `getUserTags`
-* `cloudSyncCache` has more options that are implemented and many unitTests
+* `cloudSyncCache` has more options that are implemented and many unitTests -- but being deprecated
 
 ## bug fixes
 
