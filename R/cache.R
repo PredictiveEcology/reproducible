@@ -301,6 +301,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
+#' @importFrom tools file_path_sans_ext
 #' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
 #' @rdname cache
 #'
@@ -563,6 +564,9 @@ setMethod(
       # compare outputHash to existing Cache record
       tries <- 1
       if (useCloud) {
+        browser()
+        # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
+        #  returns NROW 0 gdriveLs if not present
         if (is.null(cloudFolderID)) {
           newDir <- drive_mkdir("testFolder")
           cloudFolderID = newDir$id
@@ -571,7 +575,7 @@ setMethod(
                   " Making a new cloud folder and setting options('reproducible.cloudFolderID' = ", cloudFolderID, ")")
           options('reproducible.cloudFolderID' = cloudFolderID)
         }
-        gdriveLs <- drive_ls(path = as_id(cloudFolderID))
+        gdriveLs <- drive_ls(path = as_id(cloudFolderID), pattern = outputHash)
       }
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
@@ -666,11 +670,12 @@ setMethod(
           if (is(output, "try-error")) {
             cID <- gsub("cacheId:", "", isInRepo$tag)
             stop("Error in trying to recover cacheID: ", cID,
-                 "You will likely need to remove that item from Cache, e.g., ",
+                 "\nYou will likely need to remove that item from Cache, e.g., ",
                  "\nclearCache(userTags = '", cID, "')")
           }
 
           if (useCloud) {
+            browser()
             # Here, upload local copy to cloud folder
             artifact <- isInRepo$artifact[1]
             artifactFileName <- paste0(artifact, ".rda")
@@ -702,6 +707,7 @@ setMethod(
       }
 
       if (useCloud) {
+        browser()
         # Here, download cloud copy to local folder, skip the running of FUN
         newFileName <- paste0(outputHash,".rda")
         isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
@@ -715,6 +721,21 @@ setMethod(
           ee <- new.env(parent = emptyenv())
           loadedObjName <- load(localNewFilename)
           output <- get(loadedObjName, inherits = FALSE)
+          if (is(output, "Raster")) {
+            cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
+            checkPath(cacheRepoRasterDir, create = TRUE)
+            gdriveLs2 <- drive_ls(path = as_id(cloudFolderID), pattern = paste(collapse = "|", basename(filename(output))))
+
+            lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
+              localNewFilename <- file.path(cacheRepoRasterDir, basename(gdriveLs2$name[idRowNum]))
+              drive_download(file = as_id(gdriveLs2$id[idRowNum]),
+                             path = localNewFilename, # take first if there are duplicates
+                             overwrite = TRUE)
+
+            })
+            output <- .prepareFileBackedRaster(output, repoDir = cacheRepo, overwrite = FALSE)
+
+          }
           rm(loadedObjName)
         }
       }
@@ -934,13 +955,26 @@ setMethod(
       }
 
       if (useCloud) {
-        if (!any(isInCloud)) { # Here, upload local clopy to cloud folder if it isn't already there
+        browser()
+        # Here, upload local copy to cloud folder if it isn't already there
+        if (!any(isInCloud)) {
           cacheIdFileName <- paste0(outputHash,".rda")
           newFileName <- paste0(saved, ".rda")
           message("Uploading new cached object ", newFileName,", with cacheId: ",
                   outputHash," to cloud folder")
           drive_upload(media = file.path(cacheRepo, "gallery", newFileName),
                        path = as_id(cloudFolderID), name = cacheIdFileName)
+          if (any(rasters)) {
+            rasterFilename <- filename(outputToSave)
+            rasterDirname <- dirname(rasterFilename)
+            browser()
+            allRelevantFiles <- dir(rasterDirname, pattern = file_path_sans_ext(basename(rasterFilename)),
+                                    full.names = TRUE)
+            out <- lapply(allRelevantFiles, function(file) {
+              drive_upload(media = file,  path = as_id(cloudFolderID), name = basename(file))
+            })
+
+          }
         }
       }
 

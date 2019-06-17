@@ -98,7 +98,8 @@ setGeneric("clearCache", function(x, userTags = character(), after, before,
 setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, useCloud = FALSE,
-                        cloudFolderID = NULL, ...) {
+                        cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+                        ...) {
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
         message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
@@ -126,8 +127,9 @@ setMethod(
           stop("If using 'useCloud', 'cloudFolderID' must be provided. If you don't know what should be used, ",
                "try getOption('reproducible.cloudFolderID')")
         }
-        gdriveLs <- drive_ls(path = as_id(cloudFolderID))
-        filenamesToRm <- paste0(objsDT[tagKey == "cacheId", tagValue], ".rda")
+        cacheIds <- objsDT[tagKey == "cacheId", tagValue]
+        gdriveLs <- drive_ls(path = as_id(cloudFolderID), pattern = paste(cacheIds, collapse = "|"))
+        filenamesToRm <- paste0(cacheIds, ".rda")
         isInCloud <- gdriveLs$name %in% filenamesToRm
         message("From Cloud:")
         drive_rm(as_id(gdriveLs$id[isInCloud]))
