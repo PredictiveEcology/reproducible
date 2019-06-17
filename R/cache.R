@@ -363,9 +363,8 @@ setMethod(
         do.call(FUN, args = modifiedDots)
       }
     } else {
-      if (verbose > 1) {
-        startCacheTime <- Sys.time()
-      }
+
+      startCacheTime <- verboseTime(verbose)
 
       if (!missing(compareRasterFileLength)) {
         message("compareRasterFileLength argument being deprecated. Use 'length'")
@@ -510,9 +509,7 @@ setMethod(
         .preDigestByClass(modifiedDots[!dotPipe][[x]])
       })
 
-      if (verbose > 1) {
-        startHashTime <- Sys.time()
-      }
+      startHashTime <- verboseTime(verbose)
 
       # remove some of the arguments passed to Cache, which are irrelevant for digest
       argsToOmitForDigest <- dotPipe |
@@ -528,8 +525,7 @@ setMethod(
       preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
 
       if (verbose > 1) {
-        preDigestUnlist <- .unlistToCharacter(preDigest, 4)#recursive = TRUE)
-        a <- .CacheVerboseFn1(preDigestUnlist, fnDetails,
+        a <- .CacheVerboseFn1(preDigest, fnDetails,
                               startHashTime, modifiedDots, dotPipe, quick = quick)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
@@ -611,24 +607,17 @@ setMethod(
             #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
 
             if (similarsHaveNA < 2) {
-              if (verbose > 0)
-                message("Using devMode; overwriting previous Cache entry with tags: ",
-                        paste(userTags, collapse = ", "))
+              verboseMessage1(verbose, userTags)
               outputHash <- gsub("cacheId:", "",  newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact &
                                                                  startsWith(newLocalTags$tag, "cacheId"), ]$tag)
               isInRepo <- isInRepoAlt
             } else {
-              if (verbose > 0)
-                message("Using devMode; Found entry with identical userTags, ",
-                        "but since it is very different, adding new entry")
+              verboseMessage2(verbose)
 
             }
           }
         } else {
-          if (length(unique(isInRepoAlt$artifact)) > 1) {
-            if (verbose > 0)
-              message("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE")
-          }
+          verboseMessage3(verbose, isInRepoAlt$artifact)
           needFindByTags <- FALSE # it isn't there
         }
       }
@@ -682,9 +671,7 @@ setMethod(
         }
       }
 
-      if (verbose > 1) {
-        startRunTime <- Sys.time()
-      }
+      startRunTime <- verboseTime(verbose)
 
       .CacheIsNew <- TRUE
       if (useCloud) {
@@ -709,21 +696,7 @@ setMethod(
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
                                 .objects = outputObjects, length = length,
                                 algo = algo, quick = quick, classOptions = classOptions, ...)
-      if (verbose > 1) {
-        endRunTime <- Sys.time()
-        verboseDF <- data.frame(
-          functionName = fnDetails$functionName,
-          component = paste("Running", fnDetails$functionName),
-          elapsedTime = as.numeric(difftime(endRunTime, startRunTime, units = "secs")),
-          units = "secs",
-          stringsAsFactors = FALSE
-        )
-
-        if (exists("verboseTiming", envir = .reproEnv)) {
-          .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-        }
-
-      }
+      verboseDF1(verbose, fnDetails$functionName, startRunTime)
 
       # Delete previous version if notOlderThan violated --
       #   but do this AFTER new run on previous line, in case function call
@@ -816,10 +789,7 @@ setMethod(
         }
       }
 
-      if (verbose > 1) {
-        startSaveTime <- Sys.time()
-      }
-
+      startSaveTime <- verboseTime(verbose)
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
@@ -912,37 +882,9 @@ setMethod(
         cloudUploadFromCache(isInCloud, outputHash, saved, cacheRepo, cloudFolderID, outputToSave, rasters)
       }
 
-      if (verbose > 1) {
-        endSaveTime <- Sys.time()
-        verboseDF <-
-          data.frame(
-            functionName = fnDetails$functionName,
-            component = "Saving to repo",
-            elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
-            units = "secs",
-            stringsAsFactors = FALSE
-          )
+      verboseDF2(verbose, fnDetails$functionName, startSaveTime)
 
-        if (exists("verboseTiming", envir = .reproEnv)) {
-          .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-        }
-      }
-
-      if (verbose > 1) {
-        endCacheTime <- Sys.time()
-        verboseDF <- data.frame(functionName = fnDetails$functionName,
-                                component = "Whole Cache call",
-                                elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
-                                                                  units = "secs")),
-                                units = "secs",
-                                stringsAsFactors = FALSE)
-
-        if (exists("verboseTiming", envir = .reproEnv)) {
-          .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
-        }
-        # on.exit({message("Loading from repo took ", format(endLoadTime - startLoadTime))},
-        #   add = TRUE)
-      }
+      verboseDF3(verbose, fnDetails$functionName, startCacheTime)
 
       if (isNullOutput) return(NULL) else return(output)
     }
@@ -1391,3 +1333,83 @@ getLocalTags <- function(cacheRepo) {
 
 #.defaultCacheOmitArgs <- c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar", "quick",
 #                           "useCloud", "cloudFolderID")
+
+verboseTime <- function(verbose) {
+  if (verbose > 1) {
+    return(Sys.time())
+  }
+}
+
+verboseMessage1 <- function(verbose, userTags) {
+  if (verbose > 0)
+    message("Using devMode; overwriting previous Cache entry with tags: ",
+            paste(userTags, collapse = ", "))
+  invisible(NULL)
+}
+
+verboseMessage2 <- function(verbose) {
+  if (verbose > 0)
+    message("Using devMode; Found entry with identical userTags, ",
+            "but since it is very different, adding new entry")
+  invisible(NULL)
+}
+
+verboseMessage3 <- function(verbose, artifact) {
+  if (length(unique(artifact)) > 1) {
+    if (verbose > 0)
+      message("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE")
+  }
+
+}
+
+verboseDF1 <- function(verbose, functionName, startRunTime) {
+  if (verbose > 1) {
+    endRunTime <- Sys.time()
+    verboseDF <- data.frame(
+      functionName = functionName,
+      component = paste("Running", functionName),
+      elapsedTime = as.numeric(difftime(endRunTime, startRunTime, units = "secs")),
+      units = "secs",
+      stringsAsFactors = FALSE
+    )
+
+    if (exists("verboseTiming", envir = .reproEnv)) {
+      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+    }
+
+  }
+}
+
+verboseDF2 <- function(verbose, functionName, startSaveTime) {
+  if (verbose > 1) {
+    endSaveTime <- Sys.time()
+    verboseDF <-
+      data.frame(
+        functionName = fnDetails$functionName,
+        component = "Saving to repo",
+        elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
+        units = "secs",
+        stringsAsFactors = FALSE
+      )
+
+    if (exists("verboseTiming", envir = .reproEnv)) {
+      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+    }
+  }
+}
+
+verboseDF3 <- function(verbose, functionName, startCacheTime) {
+  if (verbose > 1) {
+    endCacheTime <- Sys.time()
+    verboseDF <- data.frame(functionName = functionName,
+                            component = "Whole Cache call",
+                            elapsedTime = as.numeric(difftime(endCacheTime, startCacheTime,
+                                                              units = "secs")),
+                            units = "secs",
+                            stringsAsFactors = FALSE)
+
+    if (exists("verboseTiming", envir = .reproEnv)) {
+      .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
+    }
+  }
+}
