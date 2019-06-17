@@ -28,7 +28,12 @@ checkAndMakeCloudFolderID <- function(cloudFolderID) {
 #'
 #' Meant for internal use, as there are internal objects as arguments.
 #'
+#' @param isInRepo A data.table with the information about an object that is in the local cacheRepo
+#' @param outputHash The \code{cacheId} of the object to upload
+#' @param gdriveLs The result of \code{googledrive::drive_ls(as_id(cloudFolderID), pattern = "outputHash")}
+#' @param output The output object of FUN that was run in \code{Cache}
 #' @importFrom googledrive drive_upload
+#' @inheritParams Cache
 cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output) {
   artifact <- isInRepo$artifact[1]
   artifactFileName <- paste0(artifact, ".rda")
@@ -68,11 +73,17 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 #'
 #' Meant for internal use, as there are internal objects as arguments.
 #'
+#' @name cloudDownload
+#'
+#' @param newFileName The character string of the local filename that the downloaded object will have
+#' @inheritParams cloudUpload
 #' @importFrom googledrive drive_download
-cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID, isInCloud) {
+cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID) {
   message("Downloading cloud copy of ", newFileName,", with cacheId: ",
           outputHash)
   localNewFilename <- file.path(tempdir(), newFileName)
+  isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
+
   drive_download(file = as_id(gdriveLs$id[isInCloud][1]),
                  path = localNewFilename, # take first if there are duplicates
                  overwrite = TRUE)
@@ -100,6 +111,16 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   output
 }
 
+#' Upload a file to cloud directly from local cacheRepo
+#'
+#' Meant for internal use, as there are internal objects as arguments.
+#'
+#' @param isInCloud A logical indicating whether an outputHash is in the cloud already
+#' @param saved The character string of the saved file's archivist digest value
+#' @param outputToSave Only required if \code{any(rasters) == TRUE}. This is the Raster* object.
+#' @param rasters A logical vector of length >= 1 indicating which elements in outputToSave are Raster* objects
+#' @inheritParams cloudUpload
+#' @importFrom googledrive drive_download
 cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudFolderID, outputToSave, rasters) {
 if (!any(isInCloud)) {
   cacheIdFileName <- paste0(outputHash,".rda")
