@@ -1331,9 +1331,6 @@ getLocalTags <- function(cacheRepo) {
   "omitArgs", "classOptions", "debugCache", "sideEffect", "makeCopy",
   "quick", "verbose", "cacheId", "useCache", "showSimilar")
 
-#.defaultCacheOmitArgs <- c("debug", "notOlderThan", "debugCache", "verbose", "useCache", "showSimilar", "quick",
-#                           "useCloud", "cloudFolderID")
-
 verboseTime <- function(verbose) {
   if (verbose > 1) {
     return(Sys.time())
@@ -1385,7 +1382,7 @@ verboseDF2 <- function(verbose, functionName, startSaveTime) {
     endSaveTime <- Sys.time()
     verboseDF <-
       data.frame(
-        functionName = fnDetails$functionName,
+        functionName = functionName,
         component = "Saving to repo",
         elapsedTime = as.numeric(difftime(endSaveTime, startSaveTime, units = "secs")),
         units = "secs",
