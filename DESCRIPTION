@@ -86,7 +86,7 @@ Collate:
     'cache.R'
     'checksums.R'
     'cloud.R'
-    'cloud2.R'
+    'cloudOld.R'
     'consistentPaths.R'
     'convertPaths.R'
     'download.R'

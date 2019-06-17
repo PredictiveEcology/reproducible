@@ -694,7 +694,7 @@ setMethod(
         newFileName <- paste0(outputHash,".rda")
         isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
         if (any(isInCloud)) {
-          output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID, isInCloud)
+          output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID)
           .CacheIsNew <- FALSE
         }
       }
