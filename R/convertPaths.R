@@ -62,3 +62,24 @@ convertRasterPaths <- function(x, patterns, replacements) {
   }
   x # handles null case
 }
+
+
+#' Return the filename or filenames from a Raster* object
+#'
+#' The \code{filename} in \code{Raster} packages returns an empty string for
+#' a \code{RasterStack}. This function will return a vector of length 1 (RasterLayer or
+#' RasterBrick) or length >1 for RasterStack. This is mostly just a wrapper aroung
+#' \code{filename}
+#'
+#' @param Raster A Raster* object (i.e., RasterLayer, RasterStack, RasterBrick)
+#'
+#' @author Eliot McIntire
+#' @export
+#' @rdname Filename
+Filename <- function(Raster) {
+  if (is(Raster, "RasterStack")) {
+    unlist(lapply(seq_along(names(Raster)), function(index) filename(Raster[[index]])))
+  } else {
+    filename(Raster)
+  }
+}
