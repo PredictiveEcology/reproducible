@@ -682,14 +682,12 @@ setMethod(
         }
       }
 
-      # RUN the function call
       if (verbose > 1) {
         startRunTime <- Sys.time()
       }
 
       .CacheIsNew <- TRUE
       if (useCloud) {
-        browser(expr = exists("aaa"))
         # Here, download cloud copy to local folder, skip the running of FUN
         newFileName <- paste0(outputHash,".rda")
         isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
@@ -704,7 +702,7 @@ setMethod(
         if (fnDetails$isPipe) {
           output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
         } else {
-          output <- FUN(...) #do.call(FUN, fnDetails$originalDots)
+          output <- FUN(...)
         }
       }
 
@@ -724,9 +722,6 @@ setMethod(
         if (exists("verboseTiming", envir = .reproEnv)) {
           .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
         }
-
-        # on.exit({message("Running ", fnDetails$functionName, " took ", format(endRunTime - startRunTime))},
-        #         add = TRUE)
 
       }
 
@@ -783,7 +778,6 @@ setMethod(
       } else {
         rasters <- is(outputToSave, "Raster")
       }
-      browser(expr = exists("bbb"))
       if (any(rasters)) {
         if (outputToSaveIsList) {
           outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
