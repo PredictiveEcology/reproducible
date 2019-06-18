@@ -375,78 +375,28 @@ setMethod(
         quick <- !digestPathContent
       }
 
-      # Arguments -- this puts arguments into a special reproducible environment
-      if (R.version[['minor']] <= "4.0") {
-        # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
-        lsCurEnv <- ls(all.names = TRUE)
-        objs <- lsCurEnv[lsCurEnv %in% .namesCacheFormals]
-        objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
-        args <- mget(objs)
-        forms <- lapply(.formalsCache, function(x) eval(x))
-        objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
-        userCacheArgs <- objs[!objOverride]
-        namesUserCacheArgs <- userCacheArgs
-      } else {
-        mc <- as.list(match.call(expand.dots = TRUE)[-1])
-        namesMatchCall <- names(mc)
-        userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
-        namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
-        objOverride <- is.na(userCacheArgs)
-      }
-
-      if (any(!objOverride)) { # put into .reproEnv
-        lsDotReproEnv <- ls(.reproEnv)
-        namesMatchCallUserCacheArgs <- namesUserCacheArgs
-        prevVals <- namesMatchCallUserCacheArgs %in% lsDotReproEnv
-
-        # userTags is special because it gets appended
-        prevUserTags <- if ("userTags" %in% namesMatchCallUserCacheArgs &&
-                            "userTags" %in% lsDotReproEnv) {
-          TRUE
-        } else {
-          FALSE
-        }
-
-        if (prevUserTags) {
-          oldUserTags <- .reproEnv$userTags
-          userTags <- c(userTags, .reproEnv$userTags)
-          list2env(list(userTags = userTags), .reproEnv)
-          on.exit({
-            .reproEnv$userTags <- oldUserTags
-          }, add = TRUE)
-        }
-
-        if (any(!prevVals)) {
-          # don't override previous values -- except for userTags
-          list2env(mget(namesUserCacheArgs[!prevVals]), .reproEnv)
-          on.exit({
+      nestedTags <- determineNestedTags(envir = environment(),
+                                                  mc = match.call(expand.dots = TRUE),
+                                                  userTags = userTags)
+      userTags <- unique(c(userTags, .reproEnv$userTags))
+      if (any(!nestedTags$objOverride)) {
+        on.exit({
+          if (any(!nestedTags$prevVals)) {
             # THe suppressWarnings is about objects that aren't there -- so far only happens
             #  when interrupting a process, which means it is spurious
-            suppressWarnings(rm(list = namesUserCacheArgs, envir = .reproEnv))
-            if (prevUserTags) {
-              .reproEnv$userTags <- oldUserTags
-            }
-          }, add = TRUE)
-        }
-      }
-
-      if (any(objOverride)) {
-        # get from .reproEnv
-        lsDotReproEnv <- ls(.reproEnv)
-        prevVals <- .namesCacheFormals[objOverride] %in% lsDotReproEnv
-        if (any(prevVals)) {
-          list2env(mget(.namesCacheFormals[objOverride][prevVals], .reproEnv), environment())
-        }
+            suppressWarnings(rm(list = nestedTags$namesUserCacheArgs,
+                                envir = .reproEnv))
+            if (nestedTags$prevUserTags)
+              .reproEnv$userTags <- nestedTags$oldUserTags
+          }
+          if (nestedTags$prevUserTags) {
+            .reproEnv$userTags <- nestedTags$oldUserTags
+          }
+        }, add = TRUE)
       }
 
       # get cacheRepo if not supplied
-      if (is.null(cacheRepo)) {
-        cacheRepos <- .checkCacheRepo(modifiedDots, create = TRUE)
-      } else {
-        cacheRepos <- lapply(cacheRepo, function(repo) {
-          repo <- checkPath(repo, create = TRUE)
-        })
-      }
+      cacheRepos <- getCacheRepos(cacheRepo, modifiedDots)
       cacheRepo <- cacheRepos[[1]]
 
       if (fnDetails$isPipe) {
@@ -458,11 +408,7 @@ setMethod(
       modifiedDots$.FUN <- fnDetails$.FUN # put in modifiedDots for digesting  # nolint
 
       # This is for Pipe operator -- needs special consideration
-      scalls <- if (!is(FUN, "function")) {
-        .CacheInternalFn1(FUN, sys.calls())
-      } else {
-        NULL
-      }
+      scalls <- if (!is(FUN, "function")) .CacheFn1(FUN, sys.calls()) else NULL
 
       # extract other function names that are not the ones the focus of the Cache call
       otherFns <- .getOtherFnNamesAndTags(scalls = scalls)
@@ -487,11 +433,7 @@ setMethod(
 
       # List file prior to cache
       if (sideEffect != FALSE) {
-        if (isTRUE(sideEffect)) {
-          priorRepo <- list.files(cacheRepo, full.names = TRUE)
-        } else {
-          priorRepo <- list.files(sideEffect, full.names = TRUE)
-        }
+        priorRepo <- list.files(sideEffect, full.names = TRUE)
       }
 
       # remove things in the Cache call that are not relevant to Caching
@@ -552,11 +494,6 @@ setMethod(
         outputHash <- outputHashManual
       }
 
-      if (length(debugCache)) {
-        if (!is.na(pmatch(debugCache, "iterative")))
-          browser()
-      }
-
       # compare outputHash to existing Cache record
       tries <- 1
       if (useCloud) {
@@ -587,39 +524,10 @@ setMethod(
       needFindByTags <- identical("devMode", useCache) &&
         NROW(isInRepo) == 0
       if (identical("devMode", useCache) && NROW(isInRepo) == 0) {
-        isInRepoAlt <- localTags[localTags$tag %in% userTags, , drop = FALSE]
-        data.table::setDT(isInRepoAlt)
-        isInRepoAlt <- isInRepoAlt[, iden := identical(sum(tag %in% userTags), length(userTags)),
-                                   by = "artifact"][iden == TRUE]
-        if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt$artifact)) == 1) {
-          newLocalTags <- localTags[localTags$artifact %in% isInRepoAlt$artifact,]
-          tags1 <- grepl("(format|name|class|date|cacheId|function|object.size|accessed|otherFunctions|preDigest)",
-                         newLocalTags$tag)
-          localTagsAlt <- newLocalTags[!tags1,]
-          if (all(localTagsAlt$tag %in% userTags)) {
-            mess <- capture.output(type = "output",
-                                   similars <- .findSimilar(newLocalTags, scalls = scalls,
-                                                            preDigestUnlistTrunc = preDigestUnlistTrunc,
-                                                            userTags = userTags,
-                                                            useCache = useCache))
-            similarsHaveNA <- sum(is.na(similars$differs))
-            #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)
-            #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
-
-            if (similarsHaveNA < 2) {
-              verboseMessage1(verbose, userTags)
-              outputHash <- gsub("cacheId:", "",  newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact &
-                                                                 startsWith(newLocalTags$tag, "cacheId"), ]$tag)
-              isInRepo <- isInRepoAlt
-            } else {
-              verboseMessage2(verbose)
-
-            }
-          }
-        } else {
-          verboseMessage3(verbose, isInRepoAlt$artifact)
-          needFindByTags <- FALSE # it isn't there
-        }
+        devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
+        outputHash <- devModeOut$outputHash
+        isInRepo <- devModeOut$isInRepo
+        needFindByTags <- devModeOut$needFindByTags
       }
 
       if (identical("overwrite", useCache)  && NROW(isInRepo) > 0 || needFindByTags) {
@@ -713,7 +621,6 @@ setMethod(
       # need something to attach tags to if it is actually NULL
       isNullOutput <- if (is.null(output)) TRUE else FALSE
       if (isNullOutput) output <- "NULL"
-
 
       .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
       setattr(output, "tags", paste0("cacheId:", outputHash))
@@ -1409,4 +1316,119 @@ verboseDF3 <- function(verbose, functionName, startCacheTime) {
       .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
     }
   }
+}
+
+determineNestedTags <- function(envir, mc, userTags) {
+  if (R.version[['minor']] <= "4.0") {
+    # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
+    lsCurEnv <- ls(all.names = TRUE, envir = envir)
+    objs <- lsCurEnv[lsCurEnv %in% .namesCacheFormals]
+    objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
+    args <- mget(objs, envir = envir)
+    forms <- lapply(.formalsCache, function(x) eval(x))
+    objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
+    userCacheArgs <- objs[!objOverride]
+    namesUserCacheArgs <- userCacheArgs
+  } else {
+    mc <- as.list(mc[-1])
+    namesMatchCall <- names(mc)
+    userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
+    namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
+    objOverride <- is.na(userCacheArgs)
+  }
+
+  oldUserTags <- NULL
+  prevUserTags <- FALSE
+  prevValsInitial <- NULL
+  if (any(!objOverride)) { # put into .reproEnv
+    lsDotReproEnv <- ls(.reproEnv)
+    namesMatchCallUserCacheArgs <- namesUserCacheArgs
+    prevVals <- namesMatchCallUserCacheArgs %in% lsDotReproEnv
+
+    # userTags is special because it gets appended
+    prevUserTags <- if ("userTags" %in% namesMatchCallUserCacheArgs &&
+                        "userTags" %in% lsDotReproEnv) {
+      TRUE
+    } else {
+      FALSE
+    }
+
+    if (prevUserTags) {
+      oldUserTags <- .reproEnv$userTags
+      userTags <- c(userTags, .reproEnv$userTags)
+      list2env(list(userTags = userTags), .reproEnv)
+      # on.exit({
+      #   .reproEnv$userTags <- oldUserTags
+      # }, add = TRUE)
+    }
+
+    if (any(!prevVals)) {
+      # don't override previous values -- except for userTags
+      list2env(mget(namesUserCacheArgs[!prevVals], envir = envir), .reproEnv)
+    }
+    prevValsInitial <- prevVals
+  }
+
+
+  if (any(objOverride)) {
+    # get from .reproEnv
+    lsDotReproEnv <- ls(.reproEnv)
+    prevVals <- .namesCacheFormals[objOverride] %in% lsDotReproEnv
+    if (any(prevVals)) {
+      list2env(mget(.namesCacheFormals[objOverride][prevVals], .reproEnv), envir = envir)
+    }
+  }
+
+  return(list(oldUserTags = oldUserTags, namesUserCacheArgs = namesUserCacheArgs,
+              prevVals = prevValsInitial, prevUserTags = prevUserTags,
+              objOverride = objOverride))
+}
+
+getCacheRepos <- function(cacheRepo, modifiedDots) {
+  if (is.null(cacheRepo)) {
+    cacheRepos <- .checkCacheRepo(modifiedDots, create = TRUE)
+  } else {
+    cacheRepos <- lapply(cacheRepo, function(repo) {
+      repo <- checkPath(repo, create = TRUE)
+    })
+  }
+  return(cacheRepos)
+}
+
+devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash) {
+  isInRepoAlt <- localTags[localTags$tag %in% userTags, , drop = FALSE]
+  data.table::setDT(isInRepoAlt)
+  isInRepoAlt <- isInRepoAlt[, iden := identical(sum(tag %in% userTags), length(userTags)),
+                             by = "artifact"][iden == TRUE]
+  if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt$artifact)) == 1) {
+    newLocalTags <- localTags[localTags$artifact %in% isInRepoAlt$artifact,]
+    tags1 <- grepl("(format|name|class|date|cacheId|function|object.size|accessed|otherFunctions|preDigest)",
+                   newLocalTags$tag)
+    localTagsAlt <- newLocalTags[!tags1,]
+    if (all(localTagsAlt$tag %in% userTags)) {
+      mess <- capture.output(type = "output",
+                             similars <- .findSimilar(newLocalTags, scalls = scalls,
+                                                      preDigestUnlistTrunc = preDigestUnlistTrunc,
+                                                      userTags = userTags,
+                                                      useCache = useCache))
+      similarsHaveNA <- sum(is.na(similars$differs))
+      #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)
+      #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
+
+      if (similarsHaveNA < 2) {
+        verboseMessage1(verbose, userTags)
+        outputHash <- gsub("cacheId:", "",  newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact &
+                                                           startsWith(newLocalTags$tag, "cacheId"), ]$tag)
+        isInRepo <- isInRepoAlt
+      } else {
+        verboseMessage2(verbose)
+
+      }
+    }
+    needFindByTags <- TRUE # it isn't there
+  } else {
+    verboseMessage3(verbose, isInRepoAlt$artifact)
+    needFindByTags <- FALSE # it isn't there
+  }
+  return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
 }
