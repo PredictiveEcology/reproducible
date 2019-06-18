@@ -94,7 +94,7 @@
   return(list(modifiedDots = modifiedDots, fnDetails = fnDetails))
 }
 
-.CacheInternalFn1 <- function(FUN, scalls) {
+.CacheFn1 <- function(FUN, scalls) {
 
   if (!is(FUN, "function")) {
     # scalls <- sys.calls()
