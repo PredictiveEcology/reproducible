@@ -523,7 +523,6 @@ setMethod(
       #   userTags and in devMode
       needFindByTags <- identical("devMode", useCache) &&
         NROW(isInRepo) == 0
-      browser()
       if (identical("devMode", useCache) && NROW(isInRepo) == 0) {
         devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
         outputHash <- devModeOut$outputHash
