@@ -1,5 +1,6 @@
-.CacheVerboseFn1 <- function(preDigestUnlist, fnDetails,
+.CacheVerboseFn1 <- function(preDigest, fnDetails,
                              startHashTime, modifiedDots, dotPipe, quick) {
+  preDigestUnlist <- .unlistToCharacter(preDigest, 4)
   endHashTime <- Sys.time()
   verboseDF <- data.frame(
     functionName = fnDetails$functionName,

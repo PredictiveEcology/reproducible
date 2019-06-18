@@ -2,716 +2,139 @@ if (getRversion() >= "3.1.0") {
   utils::globalVariables(c("cacheId", "checksumsFilename", "checksumsID", "id"))
 }
 
-#' Basic tool for using cloud-based caching
+#' Check for presence of checkFolderID (for \code{Cache(useCloud)})
 #'
-#' Very experimental
-#' @param toDigest The R object to consider, e.g., all the arguments to a function.
+#' Will check for presence of a \code{cloudFolderID} and make a new one
+#' if one not present on googledrive, with a warning.
 #'
-#' @param checksumsFileID A google file ID where the checksums data.table is located,
-#'   provided as a character string.
-#'
-#' @param cloudFolderID The google folder ID where a new checksums file should
-#'    be written. This will only be used if \code{checksumsFileID} is not provided
-#'   provided as a character string.
+#' @param cloudFolderID The google folder ID where cloud caching will occur.
 #' @export
-#' @importFrom googledrive as_id drive_download drive_upload
-#' @seealso \code{\link{cloudSyncCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}}
-cloudCheck <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
-  dig <- CacheDigest(toDigest)$outputHash
-  if (is.null(checksumsFileID)) {
-    if (!is.null(cloudFolderID)) {
-      checksumsFileID <- getChecksumsFileID(cloudFolderID)
-    } else {
-      stop("checksumsFileID must be supplied, or else cloudFolderID to create a new one")
-    }
+#' @importFrom googledrive drive_mkdir
+checkAndMakeCloudFolderID <- function(cloudFolderID) {
+  if (is.null(cloudFolderID)) {
+    newDir <- drive_mkdir("testFolder")
+    cloudFolderID = newDir$id
+    warning("No cloudFolderID supplied; if this is the first time using 'useCloud', this cloudFolderID, ",
+            cloudFolderID," should likely be kept and used in all subsequent calls to Cache using 'useCloud = TRUE'.",
+            " Making a new cloud folder and setting options('reproducible.cloudFolderID' = ", cloudFolderID, ")")
+    options('reproducible.cloudFolderID' = cloudFolderID)
   }
-
-  suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
-  hashExists <- checksums$cacheId == dig
-  out <- if (isTRUE(any(hashExists))) {
-    if (sum(hashExists) > 1) {
-      stop("running cloudCheck with >1 object toDigest is not implemented yet;",
-           "contact eliot.mcintire@canada.ca")
-    }
-    cloudDownload(checksums[hashExists])[[1]]
-  } else {
-    NULL
-  }
-  return(list(object = out, digest = dig, checksums = checksums,
-              checksumsFileID = checksumsFileID))
+  return(cloudFolderID)
 }
 
-#' Basic tool for using cloud-based caching
-#'
-#' Very experimental
-#'
-#' @inheritParams cloudCheck
-#' @param object The R object to write to cloud
-#' @param digest The cacheId of the input arguments, outputted from \code{cloudCheck}
-#' @param checksums A \code{data.table} that is outputted from \code{cloudCheck} that
-#'   is the the checksums file
-#' @param cloudFolderID The google folder ID where a new object should be written
-#' @param futurePlan Which \code{future::plan} to use. Default:
-#'    \code{getOption("reproducible.futurePlan")}
-#'
-#' @export
-#' @importFrom data.table data.table rbindlist
-#' @importFrom googledrive as_id drive_update drive_upload
-#' @seealso \code{\link{cloudSyncCache}}, \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
-cloudWrite <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID,
-                       futurePlan = getOption("reproducible.futurePlan")) {
-  if (!is.null(cloudFolderID)) {
-    objectFile <- tempfile(fileext = ".rda")
-    save(object, file = objectFile)
-    # checksums <- cloudDownloadChecksums(checksumsFileID)
-    os <- tolower(Sys.info()[["sysname"]])
-    .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux" &&
-      requireNamespace("future", quietly = TRUE) &&
-      !isFALSE(futurePlan)
-    a <- file.size(objectFile)
-    class(a) <- "object_size"
-    msgUpload <-   paste0("  uploading file (", format(a, "auto"),") to google drive")
-    if (.onLinux) {
-      curPlan <- future::plan()
-      if (is(curPlan, "sequential"))
-        future::plan(futurePlan)
-      message(msgUpload, " in a 'future'\n    Filename: ", paste0(digest, ".rda"))
-      rstr <- rndstr(len = 10)
-      if (!exists("futureEnv", envir = .reproEnv))
-        .reproEnv$futureEnv <- new.env()
-      future::futureAssign(paste0("cloudCheckSums", rstr), assign.env = .reproEnv$futureEnv,
-                           cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
-                                                       checksums, checksumsFileID))
-    } else {
-      message(msgUpload)
-      cloudUploadFileAndChecksums(objectFile, cloudFolderID, digest,
-                                  checksums, checksumsFileID)
 
-    }
-
-  } else {
-    stop("cloudFolder must be provided as a google id string to a folder (not a file)")
-  }
-}
-
-#' Cloud extras
+#' Upload to cloud, if necessary
 #'
-#' Mostly for internal use, but may be useful to a user.
+#' Meant for internal use, as there are internal objects as arguments.
 #'
-#' @details
-#' \code{cloudDownloadChecksums} gets the checksums data.table directly.
-#'
-#' @inheritParams cloudCheck
-#'
-#' @aliases cloudExtras
-#' @export
-#' @importFrom googledrive as_id drive_download
-#' @rdname cloudExtras
-#' @seealso \code{\link{cloudSyncCache}}, \code{\link{cloudCache}}, \code{\link{cloudExtras}}
-cloudDownloadChecksums <- function(checksumsFileID = NULL, cloudFolderID = NULL) {
-
-  if (is.null(checksumsFileID))
-    checksumsFileID <- getChecksumsFileID(cloudFolderID)
-
-  checksumsFilename <- tempfile(fileext = ".rds");
-  os <- tolower(Sys.info()[["sysname"]])
-  .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux" &&
-    requireNamespace("future", quietly = TRUE) &&
-    !isFALSE(getOption("reproducible.futurePlan"))
-  if (.onLinux)
-    if (exists("futureEnv", envir = .reproEnv))
-      if (exists("cloudChecksums", envir = .reproEnv$futureEnv)) # it should have been deleted in `checkFutures`
-        bb <- future::value(.reproEnv$futureEnv)       # but if not, then force its value here
-  drive_download(as_id(checksumsFileID), path = checksumsFilename, verbose = FALSE)
-  checksums <- readRDS(checksumsFilename)
-  return(checksums)
-}
-
-#' @details
-#' \code{cloudDownloadChecksums} gets the checksums data.table directly.
-#'
-#' @inheritParams cloudWrite
-#'
-#' @export
-#' @importFrom googledrive as_id drive_update
-#' @rdname cloudExtras
-cloudUpdateChecksums <- function(checksums, checksumsFileID) {
-  saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
-  drive_update(as_id(checksumsFileID), media = getOption("reproducible.cloudChecksumsFilename"),
-               verbose = FALSE)
-}
-
-#' Experimental use of googledrive for Caching
-#'
-#' This is still very experimental. See examples.
-#'
-#' @details
-#' This has \code{Cache} internally. The main goal of this function is to look at
-#' local Cache first, if the object is there locally, then use it & upload it to
-#' googledrive. If the object is not there locally, check on googledrive for the
-#' object. If it is there, download it, then add it to the local Cache. If it is
-#' not there, then run the function de novo, wrapped in \code{Cache} and upload
-#' the object to googledrive (i.e., it will be in local Cache and cloud location).
-#'
-#' @note This is essentially a wrapper around \code{Cache}, so it will still use
-#' the local Cache.
-#'
-#' @inheritParams cloudCheck
-#' @inheritParams cloudWrite
-#' @param ... Passed to \code{\link{Cache}}
-#' @param useCloud Logical. This allows this to be turned off; will send all arguments to
-#'   \code{Cache} (including possibly \code{useCache}, where all caching can be turned off)
-#'
-#' @export
-#' @importFrom archivist createLocalRepo saveToLocalRepo
-#' @importFrom data.table setattr
-#' @rdname cloudCache
-#' @seealso \code{\link{cloudSyncCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}},
-#'   \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
-#'
-#' @examples
-#' \dontrun{
-#' # Make a folder on googledrive -- share it with yourself and anybody else -- either use
-#' #   googledrive package or do this manually on drive.google.com
-#' # Grab the share link -- pass it here to cloudFolderID
-#'
-#' # first time -- looks in cloudFolderID for checksums -- none there, so it makes it
-#' #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
-#' #   2 places
-#' library(googledrive)
-#' newDir <- drive_mkdir("testFolder")
-#' a1 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#' # second time -- sees that it is in both places, takes local
-#' a2 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' # clear local -- get from cloud copy, make a local copy in cacheRepo
-#' clearCache(ask = FALSE)
-#' a3 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' # now both local and cloud exist
-#' a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' #  more than one cacheRepo
-#' opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"),
-#'                                              file.path(tempdir(), "test2")),
-#'                 "reproducible.ask" = FALSE)
-#' cachePaths <- getOption("reproducible.cachePath")
-#' Cache(rnorm, 4, cacheRepo = cachePaths[3]) # put it in 3rd cacheRepo
-#'
-#' # gets it locally even though it is in the 3rd cacheRepo, uploads to cloudCache
-#' cloudCache(rnorm, 4, cloudFolderID = newDir$id)
-#'
-#' # Clean up -- also see cloudSyncCache
-#' clearCache(ask = FALSE)
-#' # lapply(cachePaths, clearCache, ask = FALSE)
-#' cloudSyncCache(cloudFolderID = newDir$id)
-#'
-#' }
-cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
-                       checksumsFileID = NULL, cloudFolderID = NULL) {
-  .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
-  hasCopy <- FALSE
-  hasCloudCopy <- FALSE
-
-  if (is.null(list(...)$cacheRepo)) {
-    cacheRepos <- suppressMessages(.checkCacheRepo(list(...), create = TRUE))
-  } else {
-    cacheRepos <- lapply(list(...)$cacheRepo, function(repo) {
-      repo <- checkPath(repo, create = TRUE)
-    })
-  }
-  # cacheRepo <- cacheRepos[[1]]
-
-  #cacheRepo <- suppressMessages(.checkCacheRepo(list(...), create = TRUE))#fnDetails$modifiedDots, create = TRUE))
-  suppressMessages(archivist::createLocalRepo(cacheRepos[1]))
-  if (isTRUE(useCloud)) {
-
-    if (is.null(checksumsFileID))
-      if (is.null(cloudFolderID))
-        stop("You must supply a checksumsFileID or, if not supplied, a cloudFolderID where the",
-             "\n checksums file will be made")
-
-    dots <- list(...)
-    if (!is.null(dots$omitArgs)) {
-      dots <- .CacheDigestWithOmitArgs(sys.call(), envir = sys.frame(-1))
-    }
-    dig <- CacheDigest(dots)
-    suppressMessages(checkLocalFirst <- lapply(cacheRepos, function(cacheRepo, ...) {
-      tryCatch(showCache(x = cacheRepo, userTags = dig$outputHash), error = function(x) NULL)
-    }))
-
-    #checkLocalFirst <- try(suppressMessages(showCache(userTags = dig$outputHash, x = cacheRepo)))
-    hasLocalCopy <- NROW(rbindlist(checkLocalFirst, fill = TRUE, use.names = TRUE)) > 0 &&
-      !is(checkLocalFirst, "try-error")
-    if (hasLocalCopy) {
-      if (is.null(checksumsFileID))
-        checksumsFileID <- getChecksumsFileID(cloudFolderID)
-      suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
-      hasCloudCopy <- any(checksums$cacheId %in% dig$outputHash)
-      if (hasCloudCopy)
-        message("  local and cloud copy exist; using local")
-      else
-        message("  local copy exists; using it; need to upload copy to googledrive")
-
-      cachedCopy <- list(digest = dig$outputHash, checksums = checksums,
-                         checksumsFileID = checksumsFileID)
-    } else {
-      cachedCopy <- cloudCheck(dots, checksumsFileID, cloudFolderID)
-      checksumsFileID <- cachedCopy$checksumsFileID
-      hasCloudCopy <- any(cachedCopy$checksums$cacheId %in% cachedCopy$digest)
-      # it may not have a cloud copy either, meaning it will have a NULL
-      if (!is.null(cachedCopy$object)) {
-
-        fnDetails <- .fnCleanup(FUN = eval(match.call(Cache, expand.dots = TRUE)$FUN),
-                                callingFun = "Cache", ...)
-
-        message("  writing to local Cache")
-        objSize <- sum(unlist(objSize(cachedCopy)))
-        preDigestUnlistTrunc <- unlist(.unlistToCharacter(dig$preDigest, 3))
-        userTags <- c(if (!is.na(fnDetails$functionName))
-          paste0("function:", fnDetails$functionName),
-          paste0("object.size:", objSize),
-          paste0("accessed:", Sys.time()),
-          paste("preDigest", names(preDigestUnlistTrunc),
-                preDigestUnlistTrunc, sep = ":")
-        )
-        written <- 0
-        suppressMessages(cacheRepo <- .checkCacheRepo(fnDetails$modifiedDots, create = TRUE))
-        setattr(cachedCopy$object, "tags", paste0("cacheId:", dig$outputHash))
-        while (written >= 0) {
-          saved <- suppressWarnings(try(silent = TRUE,
-                                        archivist::saveToLocalRepo(
-                                          cachedCopy$object,
-                                          repoDir = cacheRepo,
-                                          artifactName = NULL,
-                                          archiveData = FALSE,
-                                          archiveSessionInfo = FALSE,
-                                          archiveMiniature = FALSE,
-                                          rememberName = FALSE,
-                                          silent = TRUE,
-                                          userTags = userTags
-                                        )
-          ))
-
-          # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-          written <- if (is(saved, "try-error")) {
-            Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-            written + 1
-          } else {
-            -1
-          }
-        }
-      }
-    }
-  }
-  out <- if (!hasCloudCopy || hasLocalCopy) {
-    if ("cacheRepo" %in% names(list(...))) {
-      Cache(...)
-    } else {
-      Cache(..., cacheRepo = cacheRepos)
-    }
-  } else {
-    cachedCopy$object
-  }
-  if (isTRUE(useCloud)) {
-    if (!(hasCloudCopy)) {
-      cloudWrite(out, digest = cachedCopy$digest, checksums = cachedCopy$checksums,
-                 cloudFolderID = cloudFolderID,
-                 checksumsFileID = cachedCopy$checksumsFileID)
-    }
-  }
-  setattr(out, "reproducible.checksumsFileID", checksumsFileID)
-  return(out)
-}
-
-#' @importFrom crayon blue
-#' @importFrom data.table data.table
-#' @importFrom googledrive as_id drive_ls drive_upload
-#' @keywords internal
-getChecksumsFileID <- function(cloudFolderID) {
-  lsFiles <- googledrive::drive_ls(as_id(cloudFolderID))
-  whChecksums <- which(lsFiles$name %in% "checksums")
-  checksumsFileID <- if (length(whChecksums) > 0) {
-    lsFiles[whChecksums[1],]$id
-  } else {
-    message(crayon::blue("There is no checkums file yet; creating it and uploading"))
-    checksums <- data.table(cacheId = character(), id = character(), time = character(),
-                            filesize = integer())
-    saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
-    res <- drive_upload(getOption("reproducible.cloudChecksumsFilename"),
-                        path = as_id(cloudFolderID),
-                        name = "checksums",
-                        verbose = FALSE)
-    res$id
-  }
-  return(checksumsFileID)
-}
-
-#' Sync cloud with local Cache
-#'
-#' This is still experimental, see examples.
-#'
-#' @details
-#' \code{cloudSyncCache} will remove any entries in a cloudCache that are not in a
-#'
+#' @param isInRepo A data.table with the information about an object that is in the local cacheRepo
+#' @param outputHash The \code{cacheId} of the object to upload
+#' @param gdriveLs The result of \code{googledrive::drive_ls(as_id(cloudFolderID), pattern = "outputHash")}
+#' @param output The output object of FUN that was run in \code{Cache}
+#' @importFrom googledrive drive_upload
 #' @inheritParams Cache
-#' @inheritParams cloudCache
-#' @inheritParams clearCache
-#' @param cacheRepo See \code{x} in \code{\link{showCache}}
-#' @param cacheIds If supplied, then only this/these cacheId objects
-#'   will be uploaded or deleted. Default is \code{NULL}, meaning do
-#'   full sync (i.e., match cloudFolder with local cacheRepo, constrained by
-#'   \code{delete} or \code{upload})
-#' @param delete Logical. If \code{TRUE}, the default, it will delete any objects
-#'   that are in \code{cloudFolderID} that are absent from local \code{cacheRepo}.
-#'   If \code{FALSE}, it will not delete objects.
-#' @param upload Logical. If \code{TRUE}, the default, it will upload any objects
-#'   identified by the internal \code{showCache(...)} call. See examples. If \code{FALSE},
-#'   then no files will be uploaded. Can be used in conjunction with \code{delete}
-#'   to create behaviours similar to \code{clearCache} and \code{keepCache}.
-#' @param download Logical. If \code{FALSE}, the default, then the function will
-#'   either delete the remote copy if \code{delete = TRUE} and there is no local
-#'   copy, or upload the local copy if \code{upload = TRUE} and there is a local
-#'   copy. If \code{TRUE}, then this will override \code{delete}, and download
-#'   to local machine if it exists remotely.
-#' @param ... Passed to \code{showCache} to get the artifacts to delete
-#'
-#' @export
-#' @importFrom crayon blue
-#' @importFrom data.table data.table rbindlist
-#' @importFrom googledrive as_id drive_rm drive_upload
-#' @seealso \code{\link{cloudCache}}, \code{\link{Cache}}, \code{\link{cloudWrite}},
-#'   \code{\link{cloudCheck}}, \code{\link{cloudExtras}}
-#' @examples
-#' \dontrun{
-#'   #make a google drive folder
-#'   #   Can use >1 cacheRepo
-#'   opts <- options("reproducible.cachePath" = c(tempdir()),
-#'                   "reproducible.ask" = FALSE)
-#'   cachePaths <- getOption("reproducible.cachePath")
-#'   library(googledrive)
-#'   newDir <- drive_mkdir("testFolder")
-#'   #a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3])
-#'   a <- Cache(rnorm, 1)
-#'   b <- Cache(rnorm, 2)
-#'
-#'   # Will copy the 2 to the cloud
-#'   cloudSyncCache(cloudFolderID = newDir$id)
-#'
-#'   # remove a local one
-#'   clearCache(userTags = CacheDigest(list(rnorm, 2))$outputHash)
-#'
-#'   # Now will delete the object in the cloud that was just deleted locally
-#'   cloudSyncCache(cloudFolderID = newDir$id)
-#'
-#'   # clean up
-#'   lapply(cachePaths, clearCache, ask = FALSE)
-#'   # clearCache(ask = FALSE) # if there were only 1 cacheRepo
-#'   cloudSyncCache(cloudFolderID = newDir$id)
-#'
-#'   #######################################################################
-#'   # use showCache args to have control ... on upload & delete NOTE difference!
-#'   #######################################################################
-#'   # a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3]) # multiple cacheRepos!
-#'   a <- Cache(rnorm, 1)
-#'   b <- Cache(rnorm, 2)
-#'   # only sync the one with rnorm, 2 as arguments
-#'   #   This CacheDigest is the same algorithm used by Cache
-#'   tag <- CacheDigest(list(rnorm, 2))$outputHash
-#'   cloudSyncCache(cloudFolderID = newDir$id, userTags = tag) # only syncs the one
-#'                                                             # that is identified
-#'                                                             # with userTags
-#'
-#'   cloudSyncCache(cloudFolderID = newDir$id) # sync any other ones
-#'
-#'   # Now clear an object locally -- next how to propagate this deletion to cloud
-#'   clearCache(userTags = tag)
-#'
-#'   # Add one more to local, so now local has 2 (a and d), cloud has 2 (a and b)
-#'   d <- Cache(rnorm, 4)
-#'
-#'   # DELETING IS DIFFERENT
-#'   # Doesn't quite work same way for deleting -- this tag is not in local Cache,
-#'   # so can't find it this way.
-#'   # This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because there is
-#'   #         no entry in the local cache -- use cacheId arg instead -- see below
-#'   #    showCache(userTags = tags) shows empty
-#'   #    cloudSyncCache(cloudFolderID = newDir$id, userTags = tag)
-#'
-#'   # Only delete the one that was removed from local cache, set upload = FALSE,
-#'   #    leaving only 1 in cloud: a  -- this is still a sync, so, it will only
-#'   #    delete 1 file because local has 1 few files -- see next for just deleting 1 artifact
-#'   cloudSyncCache(cloudFolderID = newDir$id, upload = FALSE)
-#'   # Upload the d, because it is the only one in the localCache not in the cloudCache
-#'   cloudSyncCache(cloudFolderID = newDir$id)
-#'
-#'   f <- Cache(rnorm, 5)
-#'   g <- Cache(rnorm, 6)
-#'   # upload both
-#'   cloudSyncCache(cloudFolderID = newDir$id) # only syncs the one
-#'   tag5 <- CacheDigest(list(rnorm, 5))$outputHash # this is the same algorithm used by Cache
-#'   tag6 <- CacheDigest(list(rnorm, 6))$outputHash
-#'   clearCache(userTags = tag5)
-#'   clearCache(userTags = tag6)
-#'   # delete only one by tag
-#'   cloudSyncCache(cloudFolderID = newDir$id, cacheIds = tag5) # will delete only this obj in cloud
-#'   # delete another one by tag
-#'   cloudSyncCache(cloudFolderID = newDir$id, cacheIds = tag6)
-#'
-#'   # clean up
-#'   # clearCache(ask = FALSE) # if only one cacheRepo
-#'   lapply(cachePaths, clearCache, ask = FALSE)
-#'   cloudSyncCache(cloudFolderID = newDir$id)
-#'
-#'   # To remove whole folder:
-#'   drive_rm(as_id(newDir$id))
-#'   options(opts)
-#' }
-cloudSyncCache <- function(cacheRepo = getOption("reproducible.cachePath"),
-                           checksumsFileID = NULL, cloudFolderID = NULL,
-                           delete = TRUE, upload = TRUE, download = !delete,
-                           ask = getOption("reproducible.ask"),
-                           cacheIds = NULL,
-                           ...) {
+cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output) {
+  artifact <- isInRepo$artifact[1]
+  artifactFileName <- paste0(artifact, ".rda")
+  newFileName <- paste0(outputHash,".rda")
+  isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
 
-  .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
+  if (!any(isInCloud)) {
+    message("Uploading local copy of ", artifactFileName,", with cacheId: ",
+            outputHash," to cloud folder")
+    drive_upload(media = file.path(cacheRepo, "gallery", artifactFileName),
+                 path = as_id(cloudFolderID), name = newFileName)
 
-  if (isTRUE(download)) {
-    if (isTRUE(delete)) {
-      delete <- FALSE
-      message("download is TRUE; setting delete to FALSE")
-    }
-  }
-  if (is.null(checksumsFileID)) {
-    if (!is.null(cloudFolderID)) {
-      checksumsFileID <- getChecksumsFileID(cloudFolderID)
+    outputIsList <- is.list(output)
+    if (outputIsList) {
+      rasters <- unlist(lapply(output, is, "Raster"))
     } else {
-      stop("checksumsFileID must be supplied, or else cloudFolderID to create a new one")
+      rasters <- is(output, "Raster")
+    }
+
+    if (any(rasters)) {
+      cloudUploadRasterBackends(raster = output, cloudFolderID)
     }
   }
+}
 
-  suppressMessages(checksums <- cloudDownloadChecksums(checksumsFileID))
 
-  # get cacheRepo if not supplied
-  names(cacheRepo) <- normPath(cacheRepo)
-  cacheRepos <- lapply(cacheRepo, function(repo) {
-      repo <- checkPath(repo, create = TRUE)
-    })
+#' Download from cloud, if necessary
+#'
+#' Meant for internal use, as there are internal objects as arguments.
+#'
+#' @param newFileName The character string of the local filename that the downloaded object will have
+#' @inheritParams cloudUpload
+#' @importFrom googledrive drive_download
+cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID) {
+  message("Downloading cloud copy of ", newFileName,", with cacheId: ",
+          outputHash)
+  localNewFilename <- file.path(tempdir(), newFileName)
+  isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
 
-  # cacheRepo <- cacheRepos[[1]]
-  suppressMessages(localCaches <- lapply(cacheRepos, ..., function(cacheRepo, ...) {
-    tryCatch(showCache(x = cacheRepo, ...), error = function(x) NULL)
-  }))
-  #suppressMessages(localCache <- showCache(x = cacheRepo, ...))
-  out <- NULL
+  drive_download(file = as_id(gdriveLs$id[isInCloud][1]),
+                 path = localNewFilename, # take first if there are duplicates
+                 overwrite = TRUE)
+  ee <- new.env(parent = emptyenv())
+  loadedObjName <- load(localNewFilename)
+  output <- get(loadedObjName, inherits = FALSE)
+  if (is(output, "Raster")) {
+    output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID)
+  }
+  output
+}
 
-  needToDelete <- NULL
-  uniqueCacheArtifacts <- lapply(localCaches, function(x) unique(x$artifact))
-  cacheIDs <- lapply(cacheRepos, function(uca) {
-    if (!is.null(uniqueCacheArtifacts[[uca]]))
-      localCaches[[uca]][artifact %in% uniqueCacheArtifacts[[uca]] & tagKey == "cacheId"]$tagValue
+#' Upload a file to cloud directly from local cacheRepo
+#'
+#' Meant for internal use, as there are internal objects as arguments.
+#'
+#' @param isInCloud A logical indicating whether an outputHash is in the cloud already
+#' @param saved The character string of the saved file's archivist digest value
+#' @param outputToSave Only required if \code{any(rasters) == TRUE}. This is the Raster* object.
+#' @param rasters A logical vector of length >= 1 indicating which elements in outputToSave are Raster* objects
+#' @inheritParams cloudUpload
+#' @importFrom googledrive drive_download
+cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudFolderID, outputToSave, rasters) {
+if (!any(isInCloud)) {
+  cacheIdFileName <- paste0(outputHash,".rda")
+  newFileName <- paste0(saved, ".rda")
+  message("Uploading new cached object ", newFileName,", with cacheId: ",
+          outputHash," to cloud folder")
+  drive_upload(media = file.path(cacheRepo, "gallery", newFileName),
+               path = as_id(cloudFolderID), name = cacheIdFileName)
+  if (any(rasters)) {
+    cloudUploadRasterBackends(raster = outputToSave, cloudFolderID)
+  }
+}
+}
+
+
+cloudUploadRasterBackends <- function(raster, cloudFolderID) {
+  rasterFilename <- Filename(raster)
+  rasterDirname <- dirname(rasterFilename)
+  allRelevantFiles <- unique(dir(rasterDirname, pattern = paste(collapse = "|",
+                                                                file_path_sans_ext(basename(rasterFilename))),
+                                 full.names = TRUE))
+  out <- lapply(allRelevantFiles, function(file) {
+    drive_upload(media = file,  path = as_id(cloudFolderID), name = basename(file))
+  })
+}
+
+
+cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID) {
+  cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
+  checkPath(cacheRepoRasterDir, create = TRUE)
+  gdriveLs2 <- drive_ls(path = as_id(cloudFolderID),
+                        pattern = paste(collapse = "|", file_path_sans_ext(basename(Filename(output)))))
+
+  lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
+    localNewFilename <- file.path(cacheRepoRasterDir, basename(gdriveLs2$name[idRowNum]))
+    drive_download(file = as_id(gdriveLs2$id[idRowNum]),
+                   path = localNewFilename, # take first if there are duplicates
+                   overwrite = TRUE)
 
   })
-
-  if (!is.null(cacheIds)) {
-    cacheIDs <- lapply(cacheIDs, function(cacheIDsInner) {
-      cacheIdsExisting <- which(cacheIDsInner %in% cacheIds)
-      cacheIDsInner[cacheIdsExisting]
-    })
-    if (all(unlist(lapply(cacheIDs, function(x) length(x) == 0)))) {
-      message("None of the supplied cacheIds exist locally: \n  ", paste(cacheIds, sep = "\n  "))
-    }
-
-  }
-
-  ########################################################
-  # Upload to the Cloud
-  ########################################################
-  if ( any(unlist(lapply(localCaches, NROW))>0) ) {
-    needToUpload <- !(unlist(cacheIDs) %in% checksums$cacheId)
-    if (isTRUE(upload)) {
-      if (sum(needToUpload) > 0) {
-        df <- data.frame(repo = rep(names(uniqueCacheArtifacts), sapply(uniqueCacheArtifacts, length)),
-                   artifact = unname(unlist(uniqueCacheArtifacts)), stringsAsFactors = FALSE)
-        message(crayon::blue("Uploading", sum(needToUpload), "files, ",
-                             "\n ", paste(unlist(cacheIDs)[needToUpload], ".rda ( == ",
-                                          unlist(uniqueCacheArtifacts)[needToUpload],
-                                          ".rda in local cache)", sep = "",
-                                          collapse = "\n  ")))
-        whCache <- match(df$repo, unlist(cacheRepos ))
-        uniqueOnes <- df[needToUpload,]
-        out <- lapply(seq(NROW(uniqueOnes)), function(artSeq) {
-          repo <- uniqueOnes[artSeq, "repo"]
-          art <- uniqueOnes[artSeq, "artifact"]
-          cacheID <- localCaches[[repo]][artifact == art & tagKey == "cacheId"]$tagValue
-          drive_upload(file.path(repo, "gallery", paste0(art, ".rda")),
-                       path = as_id(cloudFolderID),
-                       name = paste0(cacheID, ".rda"),
-                       verbose = FALSE)
-        })
-        checksums <- rbindlist(
-          list(checksums,
-               data.table(
-                 cacheId = unlist(cacheIDs)[needToUpload],
-                 id = rbindlist(out)$id,
-                 time = as.character(Sys.time()),
-                 filesize = file.size(file.path(df[needToUpload, "repo"], "gallery",
-                                                paste0(df[needToUpload, "artifact"], ".rda")))
-               )
-          ),
-          use.names = TRUE, fill = TRUE)
-        out <- rbindlist(out)
-      }
-    } else {
-      if (length(needToUpload) > 0)
-        message("Need to upload, but upload = FALSE: \n  ",
-                paste(unlist(cacheIDs)[needToUpload]))
-    }
-
-  } else {
-    if (NROW(rbindlist(localCaches, use.names = TRUE, fill = TRUE)) == 0) {
-      needToDelete <- rep(TRUE, NROW(checksums))
-    }
-  }
-
-  ########################################################
-  # Delete in the Cloud
-  ########################################################
-  if (is.null(needToDelete)) {
-    if (!is.null(unlist(uniqueCacheArtifacts))) {
-      needToDelete <- if (!is.null(cacheIds)) {
-        out <- (checksums$cacheId %in% cacheIds)
-        if (all(!out)) {
-          message("That/those cacheId(s) are not in the cloudFolderID. Nothing to delete.")
-        }
-        out
-      } else {
-        !(checksums$cacheId %in% unlist(cacheIDs))
-      }
-
-    }
-  }
-
-  if (isTRUE(delete) && any(needToDelete)) { # there are 1 or more to delete, and delete is TRUE
-    out <- if (isTRUE(ask)) {
-      readline(paste0("Are you sure you want to delete:\n  ",
-                      paste(checksums$cacheId[needToDelete], ".rda",
-                            sep = "", collapse = "\n  "), "\n Y or N: "))
-    } else {
-      "Y"
-    }
-    rmRes <- if (identical(tolower(out), "y")) {
-      drive_rm(as_id(checksums$id[needToDelete]), verbose = FALSE)
-    } else {
-      FALSE
-    }
-    if (isTRUE(all(rmRes))) {
-      message(crayon::blue(sum(needToDelete), "file(s) deleted:",
-                           "\n ", paste(checksums$cacheId[needToDelete], ".rda",
-                                        sep = "", collapse = "\n  ")))
-      checksums <- checksums[!needToDelete]
-    }
-  } else {
-    if (any(needToDelete)) {
-      needToDownload <- needToDelete # sync when local is missing -- either delete the cloud or download from cloud
-      if (isTRUE(download)) {
-        message("Object in cloud, not in local; delete = FALSE, download = TRUE; downloading...: \n  ",
-                paste(checksums$cacheId[needToDownload], ".rda",
-                      sep = "", collapse = "\n  "))
-        cacheIdsToDownload <- checksums$cacheId[needToDownload]
-        outs <- cloudDownload(checksums[needToDownload,])
-        suppressMessages(cacheRepo <- .checkCacheRepo(cacheRepos[1], create = TRUE)) # write to 1st one
-        message("  Writing to local cacheRepo")
-        saved <- lapply(outs, function(out) {
-          objSize <- sum(unlist(objSize(out)))
-          userTags <- c(#if (!is.na(fnDetails$functionName))
-            #paste0("function:", fnDetails$functionName),
-            paste0("object.size:", objSize),
-            paste0("accessed:", Sys.time())#,
-            #paste("preDigest", names(preDigestUnlistTrunc),
-            #      preDigestUnlistTrunc, sep = ":")
-          )
-
-          written <- 0
-          setattr(out, "tags", paste0("cacheId:", checksums[needToDownload, cacheId]))
-          while (written >= 0) {
-            saved <- suppressWarnings(try(silent = TRUE,
-                                          archivist::saveToLocalRepo(
-                                            out,
-                                            repoDir = cacheRepo,
-                                            artifactName = NULL,
-                                            archiveData = FALSE,
-                                            archiveSessionInfo = FALSE,
-                                            archiveMiniature = FALSE,
-                                            rememberName = FALSE,
-                                            silent = TRUE,
-                                            userTags = userTags
-                                          )
-            ))
-
-            # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-            written <- if (is(saved, "try-error")) {
-              Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-              written + 1
-            } else {
-              -1
-            }
-          }
-
-        })
-      } else {
-        message("There were files identified to delete to create full sync, but delete = FALSE")
-        #message("  cacheIds already present locally")
-      }
-    }
-  }
-  message("uploading updated checksums file on googledrive")
-  suppressMessages(cloudUpdateChecksums(checksums, checksumsFileID))
-  return(invisible(checksums))
-}
-
-cloudUploadFileAndChecksums <- function(objectFile, cloudFolderID, digest,
-                                        checksums, checksumsFileID) {
-  uploadRes <- try(drive_upload(objectFile, path = as_id(cloudFolderID),
-                            name = paste0(digest, ".rda"), verbose = FALSE), silent = TRUE)
-  if (!is(uploadRes, "try-error")) {
-
-    checksums <- rbindlist(
-      list(checksums,
-           data.table(cacheId = digest, id = uploadRes$id, time = as.character(Sys.time()),
-                      filesize = file.size(objectFile))), use.names = TRUE, fill = TRUE)
-    saveRDS(checksums, file = getOption("reproducible.cloudChecksumsFilename"))
-    res <- drive_update(as_id(checksumsFileID),
-                        media = getOption("reproducible.cloudChecksumsFilename"),
-                        verbose = FALSE)
-  } else {
-    if (any(grepl("403", uploadRes))) {
-      message("No write access to cloudFolderID; not uploading cached copy")
-    }
-  }
-  return(invisible(res))
-}
-
-.CacheDigestWithOmitArgs <- function(sysCallWCloudCache, envir) {
-  a <- match.call(Cache, sysCallWCloudCache, expand.dots = TRUE)[-1]
-  forms <- formalArgs(cloudCache)
-  b <- match.call(eval(a$FUN), a, expand.dots = TRUE)
-  b[names(b) %in% eval(b$omitArgs) | names(b) %in% forms | names(b) %in% names(.formalsCache)] <- NULL
-  dots <- lapply(b, eval, envir = envir)
-
-}
-
-cloudDownload <- function(checksums) {
-  out <- lapply(seq(NROW(checksums)), function(checksumsIndex) {
-    objectFilename2 <- tempfile(fileext = ".rda");
-    a <- checksums[checksumsIndex,]$filesize
-    class(a) <- "object_size"
-    message("  downloading object from google drive; it is: ",
-            format(a, "auto"))
-    drive_download(as_id(checksums[checksumsIndex, id]), path = objectFilename2, verbose = FALSE)
-    env <- new.env()
-    load(objectFilename2, envir = env)
-    as.list(env)[[1]]
-  })
-
+  if (!all(file.exists(Filename(output))))
+    output <- .prepareFileBackedRaster(output, repoDir = cacheRepo, overwrite = FALSE)
+  output
 }

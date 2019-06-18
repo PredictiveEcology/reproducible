@@ -17,7 +17,7 @@ clearCache(x, userTags = character(), after, before,
 
 \S4method{clearCache}{ANY}(x, userTags = character(), after, before,
   ask = getOption("reproducible.ask"), useCloud = FALSE,
-  cloudFolderID = NULL, ...)
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL), ...)
 
 cc(secs, ...)
 
