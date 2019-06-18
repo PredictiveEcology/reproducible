@@ -1425,6 +1425,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 
       }
     }
+    needFindByTags <- TRUE # it isn't there
   } else {
     verboseMessage3(verbose, isInRepoAlt$artifact)
     needFindByTags <- FALSE # it isn't there
