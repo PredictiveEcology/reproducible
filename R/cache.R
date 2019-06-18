@@ -254,7 +254,7 @@ if (getRversion() >= "3.1.0") {
 #'   \code{getOption("reproducible.useCloud", FALSE)} or
 #'   \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
 #'   be FALSE or TRUE, respectively) so it can be turned on and off with
-#'   this option
+#'   this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
 #'
 #' @param cloudFolderID A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
 #'   left as \code{NULL}, the function will create a cloud folder with a warning. The warning
@@ -1319,6 +1319,7 @@ verboseDF3 <- function(verbose, functionName, startCacheTime) {
 }
 
 determineNestedTags <- function(envir, mc, userTags) {
+  argsNoNesting <- "useCloud"
   if (R.version[['minor']] <= "4.0") {
     # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
     lsCurEnv <- ls(all.names = TRUE, envir = envir)
@@ -1332,6 +1333,7 @@ determineNestedTags <- function(envir, mc, userTags) {
   } else {
     mc <- as.list(mc[-1])
     namesMatchCall <- names(mc)
+    namesMatchCall <- namesMatchCall[!namesMatchCall %in% argsNoNesting]
     userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
     namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
     objOverride <- is.na(userCacheArgs)

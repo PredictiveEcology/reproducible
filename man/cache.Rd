@@ -145,7 +145,7 @@ cloud folder gets large. If a user wishes to keep "high-level" control, set this
 \code{getOption("reproducible.useCloud", FALSE)} or
 \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
 be FALSE or TRUE, respectively) so it can be turned on and off with
-this option}
+this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})}
 
 \item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
 left as \code{NULL}, the function will create a cloud folder with a warning. The warning
