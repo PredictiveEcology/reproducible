@@ -91,7 +91,6 @@ if (!any(isInCloud)) {
           outputHash," to cloud folder")
   drive_upload(media = file.path(cacheRepo, "gallery", newFileName),
                path = as_id(cloudFolderID), name = cacheIdFileName)
-  browser()
   cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
 }
 }
