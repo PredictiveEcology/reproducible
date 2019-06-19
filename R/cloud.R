@@ -45,16 +45,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
     drive_upload(media = file.path(cacheRepo, "gallery", artifactFileName),
                  path = as_id(cloudFolderID), name = newFileName)
 
-    outputIsList <- is.list(output)
-    if (outputIsList) {
-      rasters <- unlist(lapply(output, is, "Raster"))
-    } else {
-      rasters <- is(output, "Raster")
-    }
-
-    if (any(rasters)) {
-      cloudUploadRasterBackends(raster = output, cloudFolderID)
-    }
+    cloudUploadRasterBackends(obj = output, cloudFolderID)
   }
 }
 
@@ -78,9 +69,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   ee <- new.env(parent = emptyenv())
   loadedObjName <- load(localNewFilename)
   output <- get(loadedObjName, inherits = FALSE)
-  if (is(output, "Raster")) {
-    output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID)
-  }
+  output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID)
   output
 }
 
@@ -102,39 +91,56 @@ if (!any(isInCloud)) {
           outputHash," to cloud folder")
   drive_upload(media = file.path(cacheRepo, "gallery", newFileName),
                path = as_id(cloudFolderID), name = cacheIdFileName)
-  if (any(rasters)) {
-    cloudUploadRasterBackends(raster = outputToSave, cloudFolderID)
+  browser()
+  cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
+}
+}
+
+
+cloudUploadRasterBackends <- function(obj, cloudFolderID) {
+  rasterFilename <- Filenames(obj)
+  if (!is.null(rasterFilename)) {
+    allRelevantFiles <- sapply(rasterFilename, function(file) {
+      unique(dir(dirname(file), pattern = paste(collapse = "|",
+                                                file_path_sans_ext(basename(file))),
+                 full.names = TRUE))
+    })
+    out <- lapply(allRelevantFiles, function(file) {
+      drive_upload(media = file,  path = as_id(cloudFolderID), name = basename(file))
+    })
   }
-}
-}
-
-
-cloudUploadRasterBackends <- function(raster, cloudFolderID) {
-  rasterFilename <- Filename(raster)
-  rasterDirname <- dirname(rasterFilename)
-  allRelevantFiles <- unique(dir(rasterDirname, pattern = paste(collapse = "|",
-                                                                file_path_sans_ext(basename(rasterFilename))),
-                                 full.names = TRUE))
-  out <- lapply(allRelevantFiles, function(file) {
-    drive_upload(media = file,  path = as_id(cloudFolderID), name = basename(file))
-  })
+  return(invisible())
 }
 
 
 cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID) {
-  cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
-  checkPath(cacheRepoRasterDir, create = TRUE)
-  gdriveLs2 <- drive_ls(path = as_id(cloudFolderID),
-                        pattern = paste(collapse = "|", file_path_sans_ext(basename(Filename(output)))))
+  rasterFilename <- Filenames(output)
+  if (!is.null(rasterFilename)) {
+    cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
+    checkPath(cacheRepoRasterDir, create = TRUE)
+    gdriveLs2 <- drive_ls(path = as_id(cloudFolderID),
+                          pattern = paste(collapse = "|", file_path_sans_ext(basename(rasterFilename))))
 
-  lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
-    localNewFilename <- file.path(cacheRepoRasterDir, basename(gdriveLs2$name[idRowNum]))
-    drive_download(file = as_id(gdriveLs2$id[idRowNum]),
-                   path = localNewFilename, # take first if there are duplicates
-                   overwrite = TRUE)
+    lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
+      localNewFilename <- file.path(cacheRepoRasterDir, basename(gdriveLs2$name[idRowNum]))
+      drive_download(file = as_id(gdriveLs2$id[idRowNum]),
+                     path = localNewFilename, # take first if there are duplicates
+                     overwrite = TRUE)
 
-  })
-  if (!all(file.exists(Filename(output))))
-    output <- .prepareFileBackedRaster(output, repoDir = cacheRepo, overwrite = FALSE)
+    })
+    if (!all(file.exists(Filenames(output))))
+      output <- .prepareFileBackedRaster(output, repoDir = cacheRepo, overwrite = FALSE)
+  }
   output
+}
+
+isOrHasRaster <- function(obj) {
+  rasters <- if (is(obj, "environment")) {
+    sapply(mget(ls(obj), envir = obj), is, "Raster")
+  } else if (is.list(obj)) {
+    unlist(lapply(obj, is, "Raster"))
+  } else {
+    is(obj, "Raster")
+  }
+  return(rasters)
 }
