@@ -71,15 +71,73 @@ convertRasterPaths <- function(x, patterns, replacements) {
 #' RasterBrick) or length >1 for RasterStack. This is mostly just a wrapper aroung
 #' \code{filename}
 #'
-#' @param Raster A Raster* object (i.e., RasterLayer, RasterStack, RasterBrick)
+#' @param obj A Raster* object (i.e., RasterLayer, RasterStack, RasterBrick)
 #'
 #' @author Eliot McIntire
 #' @export
-#' @rdname Filename
-Filename <- function(Raster) {
-  if (is(Raster, "RasterStack")) {
-    unlist(lapply(seq_along(names(Raster)), function(index) filename(Raster[[index]])))
-  } else {
-    filename(Raster)
-  }
-}
+#' @rdname Filenames
+setGeneric("Filenames", function(obj) {
+  standardGeneric("Filenames")
+})
+
+#' @export
+#' @rdname Filenames
+setMethod(
+  "Filenames",
+  signature = "ANY",
+  definition = function(obj) {
+    NULL
+  })
+
+#' @export
+#' @rdname Filenames
+setMethod(
+  "Filenames",
+  signature = "Raster",
+  definition = function(obj) {
+    filename(obj)
+})
+
+#' @export
+#' @rdname Filenames
+setMethod(
+  "Filenames",
+  signature = "RasterStack",
+  definition = function(obj) {
+    unlist(lapply(seq_along(names(obj)), function(index) filename(obj[[index]])))
+  })
+
+#' @export
+#' @rdname Filenames
+setMethod(
+  "Filenames",
+  signature = "environment",
+  definition = function(obj) {
+    rastersLogical<- isOrHasRaster(obj)
+    rasterFilename <- NULL
+    if (any(rastersLogical)) {
+      rasterNames <- names(rastersLogical)[rastersLogical]
+      if (!is.null(rasterNames)) {
+        diskBacked <- sapply(mget(rasterNames, envir = obj), fromDisk)
+        rasterFilename <- if (sum(diskBacked)>0) {
+          sapply(mget(rasterNames[diskBacked], envir = obj), Filenames)
+        } else {
+          NULL
+        }
+      }
+    }
+    rasterFilenameDups <- duplicated(rasterFilename)
+    rasterFilename <- rasterFilename[!rasterFilenameDups]
+  return(rasterFilename)
+
+  })
+
+#' @export
+#' @rdname Filenames
+setMethod(
+  "Filenames",
+  signature = "list",
+  definition = function(obj) {
+    # convert a list to an environment -- this is to align it with a simList and environment
+    Filenames(as.environment(obj))
+  })

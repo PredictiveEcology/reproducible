@@ -247,7 +247,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
 
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   r1EndData <- r1End[]
-  r1EndFilename <- Filename(r1End)
+  r1EndFilename <- Filenames(r1End)
   r1EndCacheAttr <- attr(r1End, ".Cache")$newCache
 
   # Clear local copy
@@ -268,11 +268,11 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   }
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   expect_true(identical(unname(r1EndData), unname(r2End[])))
-  expect_false(identical(r1EndFilename, Filename(r2End)))
-  expect_false(identical(Filename(r2Orig), Filename(r1Orig)))
+  expect_false(identical(r1EndFilename, Filenames(r2End)))
+  expect_false(identical(Filenames(r2Orig), Filenames(r1Orig)))
   expect_true(r1EndCacheAttr == TRUE)
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
-  filnames2End <- unique(dir(dirname(Filename(r2End)), pattern = paste(collapse = "|", basename(file_path_sans_ext(Filename(r2End))))))
+  filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(file_path_sans_ext(Filenames(r2End))))))
   filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(file_path_sans_ext(r1EndFilename)))))
   expect_true(NROW(filnames1End) == numRasterFiles * 2) # both sets because of the _1 -- a bit of an artifact due to same folder
   expect_true(NROW(filnames2End) == numRasterFiles) # both sets because of the _1
@@ -299,9 +299,9 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_true(attr(r4End, ".Cache")$newCache == FALSE) # new to local cache
   driveLs <- drive_ls(as_id(cloudFolderID))
   data.table::setDT(driveLs)
-  expect_true(all(basename(Filename(r4End)) %in% driveLs$name))
+  expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
   # should have 2 files in cloud b/c of grd and gri
-  expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filename(r4End)))) == numRasterFiles)
+  expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
   expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)), by = "artifact"))==1)
 
