@@ -12,6 +12,9 @@ cloudSyncCacheOld(cacheRepo = getOption("reproducible.cachePath"),
 \arguments{
 \item{cacheRepo}{See \code{x} in \code{\link{showCache}}}
 
+\item{checksumsFileID}{A google file ID where the checksums data.table is located,
+provided as a character string.}
+
 \item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
 left as \code{NULL}, the function will create a cloud folder with a warning. The warning
 will have the cloudFolderID that should be used in subsequent calls. It will also be

@@ -191,6 +191,8 @@ getChecksumsFileIDOld <- function(cloudFolderID) {
 #' @inheritParams cloudCache
 #' @inheritParams clearCache
 #' @param cacheRepo See \code{x} in \code{\link{showCache}}
+#' @param checksumsFileID A google file ID where the checksums data.table is located,
+#'   provided as a character string.
 #' @param cacheIds If supplied, then only this/these cacheId objects
 #'   will be uploaded or deleted. Default is \code{NULL}, meaning do
 #'   full sync (i.e., match cloudFolder with local cacheRepo, constrained by
@@ -207,7 +209,7 @@ getChecksumsFileIDOld <- function(cloudFolderID) {
 #'   copy, or upload the local copy if \code{upload = TRUE} and there is a local
 #'   copy. If \code{TRUE}, then this will override \code{delete}, and download
 #'   to local machine if it exists remotely.
-#' @param ... Passed to \code{showCache} to get the artifacts to delete
+#' @param ... Passed to \code{showCache} to get the artifacts to delete.
 #'
 #' @export
 #' @importFrom crayon blue
@@ -301,11 +303,10 @@ getChecksumsFileIDOld <- function(cloudFolderID) {
 #'   options(opts)
 #' }
 cloudSyncCacheOld <- function(cacheRepo = getOption("reproducible.cachePath"),
-                           checksumsFileID = NULL, cloudFolderID = NULL,
-                           delete = TRUE, upload = TRUE, download = !delete,
-                           ask = getOption("reproducible.ask"),
-                           cacheIds = NULL,
-                           ...) {
+                              checksumsFileID = NULL, cloudFolderID = NULL,
+                              delete = TRUE, upload = TRUE, download = !delete,
+                              ask = getOption("reproducible.ask"),
+                              cacheIds = NULL, ...) {
 
   .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
 
