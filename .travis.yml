@@ -9,23 +9,22 @@ matrix:
   include:
   - os: linux
     dist: xenial
+    services:
+      - xvfb
     r: oldrel
     addons:
       apt:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - gdal-bin
           - libgdal-dev
           - libgdal1-dev
           - libgeos-dev
-          - libgit2-dev
           - libnlopt-dev
           - libproj-dev
           - libudunits2-dev
-     services:
-      - xvfb
-   r_packages:
+          - gdal-bin
+    r_packages:
       - rgdal
       - rgeos
   - os: linux
@@ -36,44 +35,41 @@ matrix:
         sources:
         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - gdal-bin
-          - libgdal-dev
-          - libgdal1-dev
-          - libgeos-dev
-          - libgit2-dev
-          - libnlopt-dev
-          - libproj-dev
-          - libudunits2-dev
-    services:
-      - xvfb
+        - libgdal-dev
+        - libgdal1-dev
+        - libgeos-dev
+        - libnlopt-dev
+        - libproj-dev
+        - libudunits2-dev
+        - gdal-bin
     r_packages:
       - covr
       - devtools
-      - rgdal
-      - rgeos
     r_github_packages:
       - jimhester/lintr
     after_success:
     - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
     - Rscript -e 'lintr::lint_package()'
+    r_packages:
+    - rgdal
+    - rgeos
   - os: linux
     dist: xenial
+    services:
+      - xvfb
     r: devel
     addons:
       apt:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - gdal-bin
           - libgdal-dev
           - libgdal1-dev
           - libgeos-dev
-          - libgit2-dev
           - libnlopt-dev
           - libproj-dev
           - libudunits2-dev
-    services:
-      - xvfb
+          - gdal-bin
     r_packages:
       - devtools
       - rgdal

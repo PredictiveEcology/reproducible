@@ -88,14 +88,25 @@ downloadFile <- function(archive, targetFile, neededFiles,
       skipDownloadMsg <- "Skipping download of url; local copy already exists and passes checksums"
 
       # The download step
-      downloadResults <- downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
-                                        targetFile = targetFile, fileToDownload = fileToDownload,
-                                        skipDownloadMsg = skipDownloadMsg,
-                                        checkSums = checkSums,
-                                        dlFun = dlFun,
-                                        destinationPath = destinationPath,
-                                        overwrite = overwrite,
-                                        needChecksums = needChecksums, ...)
+      failed <- 1
+      while(failed > 0  && failed < 4) {
+        downloadResults <- try(downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
+                                          targetFile = targetFile, fileToDownload = fileToDownload,
+                                          skipDownloadMsg = skipDownloadMsg,
+                                          checkSums = checkSums,
+                                          dlFun = dlFun,
+                                          destinationPath = destinationPath,
+                                          overwrite = overwrite,
+                                          needChecksums = needChecksums, ...))
+        if (is(downloadResults, "try-error")) {
+          failed <- failed + 1
+          if (failed >= 4)
+            stop("Failed downloading from GoogleDrive")
+            Sys.sleep(0.5)
+        } else {
+          failed <- 0
+        }
+      }
       if (file.exists(checksumFile)) {
         if (is.null(fileToDownload) || tryCatch(is.na(fileToDownload), warning = function(x) FALSE))  { # This is case where we didn't know what file to download, and only now
           # do we know

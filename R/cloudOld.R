@@ -141,188 +141,21 @@ cloudUpdateChecksumsOld <- function(checksums, checksumsFileID) {
                verbose = FALSE)
 }
 
-#' Experimental use of googledrive for Caching
+#' Deprecated
 #'
-#' This is still very experimental. See examples.
-#'
-#' @details
-#' This has \code{Cache} internally. The main goal of this function is to look at
-#' local Cache first, if the object is there locally, then use it & upload it to
-#' googledrive. If the object is not there locally, check on googledrive for the
-#' object. If it is there, download it, then add it to the local Cache. If it is
-#' not there, then run the function de novo, wrapped in \code{Cache} and upload
-#' the object to googledrive (i.e., it will be in local Cache and cloud location).
-#'
-#' @note This is essentially a wrapper around \code{Cache}, so it will still use
-#' the local Cache.
+#' Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 #'
 #' @inheritParams cloudCheckOld
 #' @inheritParams cloudWriteOld
 #' @param ... Passed to \code{\link{Cache}}
-#' @param useCloud Logical. This allows this to be turned off; will send all arguments to
-#'   \code{Cache} (including possibly \code{useCache}, where all caching can be turned off)
 #'
 #' @export
 #' @importFrom archivist createLocalRepo saveToLocalRepo
 #' @importFrom data.table setattr
-#' @rdname cloudCache
+#' @rdname Deprcated
 #' @seealso \code{\link{cloudSyncCacheOld}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
 #'   \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
-#'
-#' @examples
-#' \dontrun{
-#' # Make a folder on googledrive -- share it with yourself and anybody else -- either use
-#' #   googledrive package or do this manually on drive.google.com
-#' # Grab the share link -- pass it here to cloudFolderID
-#'
-#' # first time -- looks in cloudFolderID for checksums -- none there, so it makes it
-#' #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
-#' #   2 places
-#' library(googledrive)
-#' newDir <- drive_mkdir("testFolder")
-#' a1 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#' # second time -- sees that it is in both places, takes local
-#' a2 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' # clear local -- get from cloud copy, make a local copy in cacheRepo
-#' clearCache(ask = FALSE)
-#' a3 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' # now both local and cloud exist
-#' a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' #  more than one cacheRepo
-#' opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"),
-#'                                              file.path(tempdir(), "test2")),
-#'                 "reproducible.ask" = FALSE)
-#' cachePaths <- getOption("reproducible.cachePath")
-#' Cache(rnorm, 4, cacheRepo = cachePaths[3]) # put it in 3rd cacheRepo
-#'
-#' # gets it locally even though it is in the 3rd cacheRepo, uploads to cloudCache
-#' cloudCache(rnorm, 4, cloudFolderID = newDir$id)
-#'
-#' # Clean up -- also see cloudSyncCacheOld
-#' clearCache(ask = FALSE)
-#' # lapply(cachePaths, clearCache, ask = FALSE)
-#' cloudSyncCacheOld(cloudFolderID = newDir$id)
-#'
-#' }
-cloudCache <- function(..., useCloud = getOption("reproducible.useCloud", TRUE),
-                       checksumsFileID = NULL, cloudFolderID = NULL) {
-  .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
-  hasCopy <- FALSE
-  hasCloudCopy <- FALSE
-
-  if (is.null(list(...)$cacheRepo)) {
-    cacheRepos <- suppressMessages(.checkCacheRepo(list(...), create = TRUE))
-  } else {
-    cacheRepos <- lapply(list(...)$cacheRepo, function(repo) {
-      repo <- checkPath(repo, create = TRUE)
-    })
-  }
-  # cacheRepo <- cacheRepos[[1]]
-
-  #cacheRepo <- suppressMessages(.checkCacheRepo(list(...), create = TRUE))#fnDetails$modifiedDots, create = TRUE))
-  suppressMessages(archivist::createLocalRepo(cacheRepos[1]))
-  if (isTRUE(useCloud)) {
-
-    if (is.null(checksumsFileID))
-      if (is.null(cloudFolderID))
-        stop("You must supply a checksumsFileID or, if not supplied, a cloudFolderID where the",
-             "\n checksums file will be made")
-
-    dots <- list(...)
-    if (!is.null(dots$omitArgs)) {
-      dots <- .CacheDigestWithOmitArgs(sys.call(), envir = sys.frame(-1))
-    }
-    dig <- CacheDigest(dots)
-    suppressMessages(checkLocalFirst <- lapply(cacheRepos, function(cacheRepo, ...) {
-      tryCatch(showCache(x = cacheRepo, userTags = dig$outputHash), error = function(x) NULL)
-    }))
-
-    #checkLocalFirst <- try(suppressMessages(showCache(userTags = dig$outputHash, x = cacheRepo)))
-    hasLocalCopy <- NROW(rbindlist(checkLocalFirst, fill = TRUE, use.names = TRUE)) > 0 &&
-      !is(checkLocalFirst, "try-error")
-    if (hasLocalCopy) {
-      if (is.null(checksumsFileID))
-        checksumsFileID <- getChecksumsFileIDOld(cloudFolderID)
-      suppressMessages(checksums <- cloudDownloadChecksumsOld(checksumsFileID))
-      hasCloudCopy <- any(checksums$cacheId %in% dig$outputHash)
-      if (hasCloudCopy)
-        message("  local and cloud copy exist; using local")
-      else
-        message("  local copy exists; using it; need to upload copy to googledrive")
-
-      cachedCopy <- list(digest = dig$outputHash, checksums = checksums,
-                         checksumsFileID = checksumsFileID)
-    } else {
-      cachedCopy <- cloudCheckOld(dots, checksumsFileID, cloudFolderID)
-      checksumsFileID <- cachedCopy$checksumsFileID
-      hasCloudCopy <- any(cachedCopy$checksums$cacheId %in% cachedCopy$digest)
-      # it may not have a cloud copy either, meaning it will have a NULL
-      if (!is.null(cachedCopy$object)) {
-
-        fnDetails <- .fnCleanup(FUN = eval(match.call(Cache, expand.dots = TRUE)$FUN),
-                                callingFun = "Cache", ...)
-
-        message("  writing to local Cache")
-        objSize <- sum(unlist(objSize(cachedCopy)))
-        preDigestUnlistTrunc <- unlist(.unlistToCharacter(dig$preDigest, 3))
-        userTags <- c(if (!is.na(fnDetails$functionName))
-          paste0("function:", fnDetails$functionName),
-          paste0("object.size:", objSize),
-          paste0("accessed:", Sys.time()),
-          paste("preDigest", names(preDigestUnlistTrunc),
-                preDigestUnlistTrunc, sep = ":")
-        )
-        written <- 0
-        suppressMessages(cacheRepo <- .checkCacheRepo(fnDetails$modifiedDots, create = TRUE))
-        setattr(cachedCopy$object, "tags", paste0("cacheId:", dig$outputHash))
-        while (written >= 0) {
-          saved <- suppressWarnings(try(silent = TRUE,
-                                        archivist::saveToLocalRepo(
-                                          cachedCopy$object,
-                                          repoDir = cacheRepo,
-                                          artifactName = NULL,
-                                          archiveData = FALSE,
-                                          archiveSessionInfo = FALSE,
-                                          archiveMiniature = FALSE,
-                                          rememberName = FALSE,
-                                          silent = TRUE,
-                                          userTags = userTags
-                                        )
-          ))
-
-          # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-          written <- if (is(saved, "try-error")) {
-            Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-            written + 1
-          } else {
-            -1
-          }
-        }
-      }
-    }
-  }
-  out <- if (!hasCloudCopy || hasLocalCopy) {
-    if ("cacheRepo" %in% names(list(...))) {
-      Cache(...)
-    } else {
-      Cache(..., cacheRepo = cacheRepos)
-    }
-  } else {
-    cachedCopy$object
-  }
-  if (isTRUE(useCloud)) {
-    if (!(hasCloudCopy)) {
-      cloudWriteOld(out, digest = cachedCopy$digest, checksums = cachedCopy$checksums,
-                 cloudFolderID = cloudFolderID,
-                 checksumsFileID = cachedCopy$checksumsFileID)
-    }
-  }
-  setattr(out, "reproducible.checksumsFileID", checksumsFileID)
-  return(out)
-}
+cloudCache <- function(...) Cache(...)
 
 #' @importFrom crayon blue
 #' @importFrom data.table data.table

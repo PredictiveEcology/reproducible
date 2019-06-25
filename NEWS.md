@@ -7,6 +7,7 @@ version 0.2.8
 
 * Cache has 2 new arguments, `useCloud` and `cloudFolderID`. This is a new, simpler approach to cloud caching. It has been tested with file backed RasterLayer, RasterStack and RasterBrick.
 * Slowly deprecating cloudCache and family of functions in favour of a new approach using arguments to `Cache`, i.e., `useCache` and `cloudFolderID`
+* `downloadData` from GoogleDrive now protects against HTTP2 error by capturing error and retrying. This is a curl defect.
 * new functions for accessing specific items from the `cacheRepo`: `getArtifact`, `getCacheId`, `getUserTags`
 * `cloudSyncCache` has more options that are implemented and many unitTests -- but being deprecated
 
