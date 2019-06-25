@@ -23,9 +23,9 @@ matrix:
           - libnlopt-dev
           - libproj-dev
           - libudunits2-dev
-     services:
+    services:
       - xvfb
-   r_packages:
+    r_packages:
       - rgdal
       - rgeos
   - os: linux
