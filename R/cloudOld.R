@@ -141,73 +141,21 @@ cloudUpdateChecksumsOld <- function(checksums, checksumsFileID) {
                verbose = FALSE)
 }
 
-#' Experimental use of googledrive for Caching
+#' Deprecated
 #'
-#' This is still very experimental. See examples.
-#'
-#' @details
-#' This has \code{Cache} internally. The main goal of this function is to look at
-#' local Cache first, if the object is there locally, then use it & upload it to
-#' googledrive. If the object is not there locally, check on googledrive for the
-#' object. If it is there, download it, then add it to the local Cache. If it is
-#' not there, then run the function de novo, wrapped in \code{Cache} and upload
-#' the object to googledrive (i.e., it will be in local Cache and cloud location).
-#'
-#' @note This is essentially a wrapper around \code{Cache}, so it will still use
-#' the local Cache.
+#' Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 #'
 #' @inheritParams cloudCheckOld
 #' @inheritParams cloudWriteOld
 #' @param ... Passed to \code{\link{Cache}}
-#' @param useCloud Logical. This allows this to be turned off; will send all arguments to
-#'   \code{Cache} (including possibly \code{useCache}, where all caching can be turned off)
 #'
 #' @export
 #' @importFrom archivist createLocalRepo saveToLocalRepo
 #' @importFrom data.table setattr
-#' @rdname cloudCache
+#' @rdname Deprcated
 #' @seealso \code{\link{cloudSyncCacheOld}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
 #'   \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
-#'
-#' @examples
-#' \dontrun{
-#' # Make a folder on googledrive -- share it with yourself and anybody else -- either use
-#' #   googledrive package or do this manually on drive.google.com
-#' # Grab the share link -- pass it here to cloudFolderID
-#'
-#' # first time -- looks in cloudFolderID for checksums -- none there, so it makes it
-#' #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
-#' #   2 places
-#' library(googledrive)
-#' newDir <- drive_mkdir("testFolder")
-#' a1 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#' # second time -- sees that it is in both places, takes local
-#' a2 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' # clear local -- get from cloud copy, make a local copy in cacheRepo
-#' clearCache(ask = FALSE)
-#' a3 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' # now both local and cloud exist
-#' a4 <- cloudCache(rnorm, 1, cloudFolderID = newDir$id)
-#'
-#' #  more than one cacheRepo
-#' opts <- options("reproducible.cachePath" = c(tempdir(), file.path(tempdir(), "test"),
-#'                                              file.path(tempdir(), "test2")),
-#'                 "reproducible.ask" = FALSE)
-#' cachePaths <- getOption("reproducible.cachePath")
-#' Cache(rnorm, 4, cacheRepo = cachePaths[3]) # put it in 3rd cacheRepo
-#'
-#' # gets it locally even though it is in the 3rd cacheRepo, uploads to cloudCache
-#' cloudCache(rnorm, 4, cloudFolderID = newDir$id)
-#'
-#' # Clean up -- also see cloudSyncCacheOld
-#' clearCache(ask = FALSE)
-#' # lapply(cachePaths, clearCache, ask = FALSE)
-#' cloudSyncCacheOld(cloudFolderID = newDir$id)
-#'
-#' }
-cloudCache <- Cache
+cloudCache <- function(...) Cache(...)
 
 #' @importFrom crayon blue
 #' @importFrom data.table data.table
