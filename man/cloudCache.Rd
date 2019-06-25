@@ -4,17 +4,24 @@
 \alias{cloudCache}
 \title{Experimental use of googledrive for Caching}
 \usage{
-cloudCache(..., useCloud = getOption("reproducible.useCloud", TRUE),
-  checksumsFileID = NULL, cloudFolderID = NULL)
+Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
+  outputObjects = NULL, algo = "xxhash64", cacheRepo = NULL,
+  length = getOption("reproducible.length", Inf),
+  compareRasterFileLength, userTags = c(), digestPathContent,
+  omitArgs = NULL, classOptions = list(), debugCache = character(),
+  sideEffect = FALSE, makeCopy = FALSE,
+  quick = getOption("reproducible.quick", FALSE),
+  verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
+  useCache = getOption("reproducible.useCache", TRUE),
+  useCloud = FALSE,
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  showSimilar = getOption("reproducible.showSimilar", FALSE))
 }
 \arguments{
 \item{...}{Passed to \code{\link{Cache}}}
 
 \item{useCloud}{Logical. This allows this to be turned off; will send all arguments to
 \code{Cache} (including possibly \code{useCache}, where all caching can be turned off)}
-
-\item{checksumsFileID}{A google file ID where the checksums data.table is located,
-provided as a character string.}
 
 \item{cloudFolderID}{The google folder ID where a new checksums file should
  be written. This will only be used if \code{checksumsFileID} is not provided
