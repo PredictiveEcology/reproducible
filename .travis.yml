@@ -17,15 +17,14 @@ matrix:
         packages:
           - gdal-bin
           - libgdal-dev
-          - libgdal1-dev
           - libgeos-dev
           - libgit2-dev
           - libnlopt-dev
           - libproj-dev
           - libudunits2-dev
-     services:
+    services:
       - xvfb
-   r_packages:
+    r_packages:
       - rgdal
       - rgeos
   - os: linux
@@ -38,7 +37,6 @@ matrix:
         packages:
           - gdal-bin
           - libgdal-dev
-          - libgdal1-dev
           - libgeos-dev
           - libgit2-dev
           - libnlopt-dev
@@ -66,7 +64,6 @@ matrix:
         packages:
           - gdal-bin
           - libgdal-dev
-          - libgdal1-dev
           - libgeos-dev
           - libgit2-dev
           - libnlopt-dev
@@ -95,4 +92,3 @@ notifications:
   email:
     on_success: change
     on_failure: change
-
