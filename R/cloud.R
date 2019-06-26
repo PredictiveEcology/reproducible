@@ -70,6 +70,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   loadedObjName <- load(localNewFilename)
   output <- get(loadedObjName, inherits = FALSE)
   output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID)
+  browser()
   output
 }
 
@@ -117,20 +118,33 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID) {
   if (!is.null(rasterFilename)) {
     cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
     checkPath(cacheRepoRasterDir, create = TRUE)
+    simpleFilenames <- file_path_sans_ext(basename(unlist(rasterFilename)))
     gdriveLs2 <- drive_ls(path = as_id(cloudFolderID),
-                          pattern = paste(collapse = "|", file_path_sans_ext(basename(rasterFilename))))
+                          pattern = paste(collapse = "|", simpleFilenames))
 
-    lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
-      localNewFilename <- file.path(cacheRepoRasterDir, basename(gdriveLs2$name[idRowNum]))
-      drive_download(file = as_id(gdriveLs2$id[idRowNum]),
-                     path = localNewFilename, # take first if there are duplicates
-                     overwrite = TRUE)
+    if (all(simpleFilenames %in%gdriveLs2$name)) {
+      lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
+        localNewFilename <- file.path(cacheRepoRasterDir, basename(gdriveLs2$name[idRowNum]))
+        drive_download(file = as_id(gdriveLs2$id[idRowNum]),
+                       path = localNewFilename, # take first if there are duplicates
+                       overwrite = TRUE)
 
-    })
-    if (!all(file.exists(Filenames(output))))
-      output <- .prepareFileBackedRaster(output, repoDir = cacheRepo, overwrite = FALSE)
+      })
+      if (!all(file.exists(unlist(Filenames(output))))) {
+        lapply(names(rasterFilename), function(rasName) {
+          output[[rasName]] <- .prepareFileBackedRaster(output[[rasName]],
+                                                        repoDir = cacheRepo, overwrite = FALSE)
+        })
+        output <- .prepareFileBackedRaster(output, repoDir = cacheRepo, overwrite = FALSE)
+      }
+    } else {
+      warning("Raster backed files are not available in googledrive; \n",
+              "will proceed with rerunning code because cloud copy is incomplete")
+      output <- NULL
+    }
   }
   output
+
 }
 
 isOrHasRaster <- function(obj) {
