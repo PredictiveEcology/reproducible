@@ -588,12 +588,19 @@ setMethod(
         isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
         if (any(isInCloud)) {
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID)
-          .CacheIsNew <- FALSE
+          if (is.null(output)) {
+            drive_rm(as_id(gdriveLs$id[isInCloud]))
+            isInCloud[isInCloud] <- FALSE
+          } else {
+            .CacheIsNew <- FALSE
+          }
+
         }
       }
 
-      # Run the FUN
-      if (!exists("output", inherits = FALSE)) { # check that it didn't come from cloud
+      # check that it didn't come from cloud or failed to find complete cloud (i.e., output is NULL)
+      if (!exists("output", inherits = FALSE) || is.null(output)) {
+        # Run the FUN
         if (fnDetails$isPipe) {
           output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
         } else {

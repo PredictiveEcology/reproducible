@@ -119,16 +119,17 @@ setMethod(
       rasterNames <- names(rastersLogical)[rastersLogical]
       if (!is.null(rasterNames)) {
         diskBacked <- sapply(mget(rasterNames, envir = obj), fromDisk)
+        names(rasterNames) <- rasterNames
         rasterFilename <- if (sum(diskBacked)>0) {
-          sapply(mget(rasterNames[diskBacked], envir = obj), Filenames)
+          lapply(mget(rasterNames[diskBacked], envir = obj), Filenames)
         } else {
           NULL
         }
       }
     }
-    rasterFilenameDups <- duplicated(rasterFilename)
-    rasterFilename <- rasterFilename[!rasterFilenameDups]
-  return(rasterFilename)
+    rasterFilenameDups <- lapply(rasterFilename, duplicated)
+    rasterFilename <- lapply(names(rasterFilenameDups), function(nam) rasterFilename[[nam]][!rasterFilenameDups[[nam]]])
+    return(rasterFilename)
 
   })
 
