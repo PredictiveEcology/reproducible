@@ -70,7 +70,6 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   loadedObjName <- load(localNewFilename)
   output <- get(loadedObjName, inherits = FALSE)
   output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID)
-  browser()
   output
 }
 
@@ -99,7 +98,7 @@ if (!any(isInCloud)) {
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   rasterFilename <- Filenames(obj)
-  if (!is.null(rasterFilename)) {
+  if (!is.null(rasterFilename) && length(rasterFilename) > 0) {
     allRelevantFiles <- sapply(rasterFilename, function(file) {
       unique(dir(dirname(file), pattern = paste(collapse = "|",
                                                 file_path_sans_ext(basename(file))),
@@ -115,7 +114,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
 
 cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID) {
   rasterFilename <- Filenames(output)
-  if (!is.null(rasterFilename)) {
+  if (!is.null(rasterFilename) && length(rasterFilename) > 0) {
     cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
     checkPath(cacheRepoRasterDir, create = TRUE)
     simpleFilenames <- file_path_sans_ext(basename(unlist(rasterFilename)))
@@ -130,7 +129,7 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID) {
                        overwrite = TRUE)
 
       })
-      if (!all(file.exists(unlist(Filenames(output))))) {
+      if (!all(file.exists(unlist(rasterFilename)))) {
         lapply(names(rasterFilename), function(rasName) {
           output[[rasName]] <- .prepareFileBackedRaster(output[[rasName]],
                                                         repoDir = cacheRepo, overwrite = FALSE)
