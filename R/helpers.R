@@ -133,3 +133,33 @@ basename2 <- function (x) {
     basename(x)
   }
 }
+
+#' A wrapper around \code{try} that retries on failure
+#'
+#' This is useful for functions that are "flaky", such as
+#' \code{curl}, which may fail for unknown reasons that do not
+#' persist.
+#' @param ... Passed to \code{try}
+#' @param sleep Passed to \code{Sys.sleep}, the default
+#'   delay in seconds bewteen repeated tries
+#' @param retries Numeric. The maximum number of retries.
+#' @export
+#' @details
+#' The same as \code{try}
+#'
+retry <- function(..., sleep = 0.5, retries = 5) {
+  failed <- 1
+  while(failed > 0  && failed < retries) {
+    downloadResults <- try(...)
+    if (is(downloadResults, "try-error")) {
+      failed <- failed + 1
+      print("retrying")
+      if (failed >= retries)
+        stop("Failed uploading to GoogleDrive")
+      Sys.sleep(sleep)
+    } else {
+      failed <- 0
+    }
+  }
+
+}

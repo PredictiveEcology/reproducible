@@ -500,7 +500,7 @@ setMethod(
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
-        gdriveLs <- drive_ls(path = as_id(cloudFolderID), pattern = outputHash)
+        gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
       }
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
@@ -589,7 +589,7 @@ setMethod(
         if (any(isInCloud)) {
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID)
           if (is.null(output)) {
-            drive_rm(as_id(gdriveLs$id[isInCloud]))
+            retry(drive_rm(as_id(gdriveLs$id[isInCloud])))
             isInCloud[isInCloud] <- FALSE
           } else {
             .CacheIsNew <- FALSE

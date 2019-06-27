@@ -43,7 +43,7 @@ will be uploaded or deleted. Default is \code{NULL}, meaning do
 full sync (i.e., match cloudFolder with local cacheRepo, constrained by
 \code{delete} or \code{upload})}
 
-\item{...}{Passed to \code{showCache} to get the artifacts to delete}
+\item{...}{Passed to \code{showCache} to get the artifacts to delete.}
 }
 \description{
 This is still experimental, see examples.
