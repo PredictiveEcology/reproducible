@@ -121,7 +121,7 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID) {
     retry(gdriveLs2 <- drive_ls(path = as_id(cloudFolderID),
                           pattern = paste(collapse = "|", simpleFilenames)))
 
-    if (all(simpleFilenames %in%gdriveLs2$name)) {
+    if (all(simpleFilenames %in% file_path_sans_ext(gdriveLs2$name))) {
       lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
         localNewFilename <- file.path(cacheRepoRasterDir, basename(gdriveLs2$name[idRowNum]))
         retry(drive_download(file = as_id(gdriveLs2$id[idRowNum]),
