@@ -161,5 +161,6 @@ retry <- function(..., sleep = 0.5, retries = 5) {
       failed <- 0
     }
   }
+  downloadResults
 
 }
