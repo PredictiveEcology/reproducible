@@ -10,6 +10,7 @@ version 0.2.8
 * `downloadData` from GoogleDrive now protects against HTTP2 error by capturing error and retrying. This is a curl issue for interrupted connections.
 * new functions for accessing specific items from the `cacheRepo`: `getArtifact`, `getCacheId`, `getUserTags`
 * `retry`, a new function, wraps `try` with an explicit attempt to retry the same code upon error. Useful for flaky functions, such as `googldrive::drive_download` which sometimes fails due to `curl` HTTP2 error.
+* removed all `Rcpp` functionality as the functions were no longer faster than their R base alternatives.
 
 ## bug fixes
 
