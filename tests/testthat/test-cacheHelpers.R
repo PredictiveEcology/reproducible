@@ -88,9 +88,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   aa <- Cache(rnorm, thing, debugCache = "quick", cacheRepo = tmpCache)
   expect_true(identical(.robustDigest(thing), aa$hash$n))
   expect_true(identical(thing, aa$content[[1]]))
-  ## cache -- deprecated
-  aMess <- capture_warnings(a <- reproducible::cache(cacheRepo = tmpCache, rnorm, 1))
-  expect_true(grepl("deprecated", aMess))
 
   ## .unlistToCharacter
   expect_true(grepl("not list", unlist(.unlistToCharacter(1, 1))))
@@ -120,47 +117,47 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }
 })
 
-# test_that("test cache-helpers with stacks", {
-#   testInitOut <- testInit("raster")
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#
-#   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-#   tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-#   r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
-#   r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
-#   s <- raster::stack(r, r1)
-#
-#   ## in memory
-#   b <- .prepareFileBackedRaster(s, tmpCache)
-#   is(b, "RasterStack")
-#   expect_true(length(list.files(file.path(tmpCache, "rasters"))) == 0)
-#
-#   ## with 1 backups
-#   r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
-#   s <- addLayer(r, r1)
-#   b <- .prepareFileBackedRaster(s, tmpCache)
-#
-#   expect_true(all(basename(c(tmpfile)) %in% basename(list.files(tmpCache, recursive = TRUE))))
-#   expect_false(all(basename(c(tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
-#
-#   ## with 2 backups
-#   r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
-#   s <- addLayer(r, r1)
-#   b <- .prepareFileBackedRaster(s, tmpCache)
-#   expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
-#
-#   ## removing entry from Cache
-#   grep(basename(tmpfile),
-#        list.files(tmpCache,, recursive = TRUE, full.names = TRUE),
-#        value = TRUE) %>%
-#     file.remove(.)
-#   expect_false(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
-#   b <- .prepareFileBackedRaster(s, tmpCache)
-#   expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
-#
-#   # Test deleted raster backed file
-#   file.remove(tmpfile2)
-#   expect_error(b <- .prepareFileBackedRaster(s, tmpCache), "The following file-backed rasters")
-# })
+test_that("test cache-helpers with stacks", {
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
+  r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
+  s <- raster::stack(r, r1)
+
+  ## in memory
+  b <- .prepareFileBackedRaster(s, tmpCache)
+  is(b, "RasterStack")
+  expect_true(length(list.files(file.path(tmpCache, "rasters"))) == 0)
+
+  ## with 1 backups
+  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  s <- addLayer(r, r1)
+  b <- .prepareFileBackedRaster(s, tmpCache)
+
+  expect_true(all(basename(c(tmpfile)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+  expect_false(all(basename(c(tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+
+  ## with 2 backups
+  r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
+  s <- addLayer(r, r1)
+  b <- .prepareFileBackedRaster(s, tmpCache)
+  expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+
+  ## removing entry from Cache
+  grep(basename(tmpfile),
+       list.files(tmpCache,, recursive = TRUE, full.names = TRUE),
+       value = TRUE) %>%
+    file.remove(.)
+  expect_false(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+  b <- .prepareFileBackedRaster(s, tmpCache)
+  expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+
+  # Test deleted raster backed file
+  file.remove(tmpfile2)
+  expect_error(b <- .prepareFileBackedRaster(s, tmpCache), "The following file-backed rasters")
+})
