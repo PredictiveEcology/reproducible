@@ -340,3 +340,11 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_true(identical(driveLsAfter, driveLsBefore))
 }
 
+fnCacheHelper1 <- function() {
+  1
+}
+
+fnCacheHelper <- function(a, cacheRepo2) {
+  Cache(fnCacheHelper1, cacheRepo = cacheRepo2, verbose = 2)
+}
+

@@ -5,10 +5,10 @@ test_that("test Cache(useCloud=TRUE, ...)", {
                                         "reproducible.ask" = FALSE))
     on.exit({
       testOnExit(testInitOut)
-      drive_rm(as_id(newDir$id))
+      retry(drive_rm(as_id(newDir$id)))
     }, add = TRUE)
     clearCache(x = tmpCache)
-    newDir <- drive_mkdir("testFolder")
+    newDir <- retry(drive_mkdir("testFolder"))
     cloudFolderID = newDir$id
     #######################################
     # local absent, cloud absent
@@ -108,19 +108,19 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
     on.exit({
       testOnExit(testInitOut)
-      drive_rm(as_id(newDir$id))
+      retry(drive_rm(as_id(newDir$id)))
       options(opts)
     }, add = TRUE)
     clearCache(x = tmpdir)
-    newDir <- drive_mkdir("testFolder")
+    newDir <- retry(drive_mkdir("testFolder"))
     cloudFolderID = newDir$id
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Raster")
 
-    drive_rm(as_id(newDir$id))
+    retry(drive_rm(as_id(newDir$id)))
     clearCache(x = tmpdir)
-    newDir <- drive_mkdir("testFolder")
+    newDir <- retry(drive_mkdir("testFolder"))
     cloudFolderID = newDir$id
 
     testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
@@ -138,11 +138,11 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
     on.exit({
       testOnExit(testInitOut)
-      drive_rm(as_id(newDir$id))
+      retry(drive_rm(as_id(newDir$id)))
       options(opts)
     }, add = TRUE)
     clearCache(x = tmpdir)
-    newDir <- drive_mkdir("testFolder")
+    newDir <- retry(drive_mkdir("testFolder"))
     cloudFolderID = newDir$id
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
@@ -160,11 +160,11 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
     suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
     on.exit({
       testOnExit(testInitOut)
-      drive_rm(as_id(newDir$id))
+      retry(drive_rm(as_id(newDir$id)))
       options(opts)
     }, add = TRUE)
     clearCache(x = tmpdir)
-    newDir <- drive_mkdir("testFolder")
+    newDir <- retry(drive_mkdir("testFolder"))
     cloudFolderID = newDir$id
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,

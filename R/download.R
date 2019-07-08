@@ -278,8 +278,8 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   checkPath(dirname(destFile), create = TRUE)
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     message("  Downloading from Google Drive.")
-    googledrive::drive_download(googledrive::as_id(url), path = destFile,
-                                overwrite = overwrite, verbose = TRUE)
+    retry(googledrive::drive_download(googledrive::as_id(url), path = destFile,
+                                overwrite = overwrite, verbose = TRUE))
   } else {
     message(skipDownloadMsg)
     needChecksums <- 0
@@ -444,7 +444,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     googledrive::drive_auth() ## needed for use on e.g., rstudio-server
 
   if (is.null(archive)) {
-    fileAttr <- googledrive::drive_get(googledrive::as_id(url))
+    fileAttr <- retry(googledrive::drive_get(googledrive::as_id(url)))
     fileSize <- fileAttr$drive_resource[[1]]$size
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)
