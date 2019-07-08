@@ -276,8 +276,7 @@ newLibPaths <- function(libPath) {
 
 #' Determine versions all installed packages
 #'
-#' This code is adapted from \code{\link[versions]{installed.versions}},
-#' but uses an \code{Rcpp} alternative to \code{readLines} for speed.
+#' This code is adapted from \code{\link[versions]{installed.versions}}.
 #' It will be anywhere from 2x to 10x faster than the
 #' \code{\link[versions]{installed.versions}} function.
 #' This is also many times faster than \code{utils::installed.packages},
@@ -315,7 +314,7 @@ installedVersions <- function(packages, libPath) {
   if (!file.exists(desc_path)) {
     return(NA)
   } else {
-    lines <- readLinesRcpp(desc_path);
+    lines <- readLines(desc_path);
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     on.exit(Sys.setlocale(locale = ""))
     vers_line <- lines[grep("^Version: *", lines)] # nolint
@@ -400,7 +399,7 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
   if (!file.exists(desc_path)) {
     return(NA)
   } else {
-    lines <- readLinesRcpp(desc_path)
+    lines <- readLines(desc_path)
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     on.exit(Sys.setlocale(locale = ""))
     deps_line <- grep("^Depends: *", lines) # nolint

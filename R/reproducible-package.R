@@ -45,6 +45,4 @@
 #' \code{\link{options}} to configure behaviour.
 #'
 #' @import methods
-#' @importFrom Rcpp evalCpp
-#' @useDynLib reproducible
 "_PACKAGE"
