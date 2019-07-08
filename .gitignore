@@ -8,7 +8,7 @@
 .Rproj.user
 inst/doc
 /revdep/.cache.rds
-src/
+src/*.cpp
 src/reproducible\.dll
 src-i386/
 src-x64/
