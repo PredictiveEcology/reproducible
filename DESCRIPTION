@@ -78,7 +78,6 @@ BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 6.1.1
 Collate: 
-    'RcppExports.R'
     'cache-helpers.R'
     'cache-internals.R'
     'cache-tools.R'
