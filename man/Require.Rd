@@ -42,7 +42,7 @@ refresh that dependency calculation.}
 }
 \description{
 This is an "all in one" function that will run \code{install.packages} for
-CRAN packages, \code{remotes::install_github} for \url{GitHub.com} packages and
+CRAN packages, \code{remotes::install_github} for \url{https://github.com/} packages and
 will install specific versions of each package if there is a
 \code{packageVersionFile} supplied. Plus, when \code{packages} is provided as
 a character vector, or a \code{packageVersionFile} is supplied, all package
