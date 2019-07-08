@@ -7,6 +7,7 @@ This is a release which adds several new features and fixes some minor bugs. See
 ### Previous R versions
 * Ubuntu 16.04        (travis-ci), R 3.5.0
 * Windows              (appveyor), R 3.5.0
+* Windows 7               (local), R 3.5.3
 
 ### Current R versions
 * macOS Mojave        (travis-ci), R 3.6.1
