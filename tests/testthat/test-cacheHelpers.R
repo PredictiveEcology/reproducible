@@ -106,7 +106,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   #   1
   # }
 
-  if (interactive()) {
+  #if (interactive()) {
     try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
     bMess <- capture_output(aMess <-
                               capture_messages(aa <- Cache(fnCacheHelper, 1,
@@ -114,7 +114,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
                                                            cacheRepo2 = tmpCache)))
     expect_true(any(grepl("fnCacheHelper1", bMess))) # TODO: fix this;
     expect_true(any(grepl("The hashing details", aMess)))
-  }
+  #}
 })
 
 test_that("test cache-helpers with stacks", {
