@@ -1,106 +1,76 @@
 sudo: required
 language: r
-cran: https://cran.rstudio.com/
+cache: packages
+cran: https://cloud.r-project.org
 env:
   global:
-    - CRAN_REPO=https://cran.rstudio.com
+    - CRAN_REPO=https://cloud.r-project.org
 matrix:
   include:
   - os: linux
-    dist: trusty
-    r: 3.3
-    addons:
-      apt:
-        sources:
-          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
-        packages:
-          - libgdal-dev
-          - libgdal1-dev
-          - libgeos-dev
-          - libnlopt-dev
-          - libproj-dev
-          - libudunits2-dev
-          - gdal-bin
-    r_packages:
-      - rgdal
-      - rgeos
-  - os: linux
-    dist: trusty
-    r: 3.4
-    addons:
-      apt:
-        sources:
-          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
-        packages:
-          - libgdal-dev
-          - libgdal1-dev
-          - libgeos-dev
-          - libnlopt-dev
-          - libproj-dev
-          - libudunits2-dev
-          - gdal-bin
-    r_packages:
-      - rgdal
-      - rgeos
-  - os: linux
-    dist: trusty
+    dist: xenial
     r: oldrel
     addons:
       apt:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
+          - gdal-bin
           - libgdal-dev
-          - libgdal1-dev
           - libgeos-dev
+          - libgit2-dev
           - libnlopt-dev
           - libproj-dev
           - libudunits2-dev
-          - gdal-bin
+    services:
+      - xvfb
     r_packages:
       - rgdal
       - rgeos
   - os: linux
-    dist: trusty
+    dist: xenial
     r: release
     addons:
       apt:
         sources:
         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-        - libgdal-dev
-        - libgdal1-dev
-        - libgeos-dev
-        - libnlopt-dev
-        - libproj-dev
-        - libudunits2-dev
-        - gdal-bin
+          - gdal-bin
+          - libgdal-dev
+          - libgeos-dev
+          - libgit2-dev
+          - libnlopt-dev
+          - libproj-dev
+          - libudunits2-dev
+    services:
+      - xvfb
     r_packages:
       - covr
       - devtools
+      - rgdal
+      - rgeos
     r_github_packages:
       - jimhester/lintr
     after_success:
     - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
     - Rscript -e 'lintr::lint_package()'
-    r_packages:
-    - rgdal
-    - rgeos
   - os: linux
-    dist: trusty
+    dist: xenial
     r: devel
     addons:
       apt:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
+          - gdal-bin
           - libgdal-dev
-          - libgdal1-dev
           - libgeos-dev
+          - libgit2-dev
           - libnlopt-dev
           - libproj-dev
           - libudunits2-dev
-          - gdal-bin
+    services:
+      - xvfb
     r_packages:
       - devtools
       - rgdal

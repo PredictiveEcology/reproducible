@@ -5,11 +5,16 @@ version 0.2.8
 
 ## New features
 
+* Cache has 2 new arguments, `useCloud` and `cloudFolderID`. This is a new approach to cloud caching. It has been tested with file backed RasterLayer, RasterStack and RasterBrick and all normal R objects. It will not work for any other class of disk-backed files, e.g., `ff` or `bigmatrix`, nor is it likely to work for R6 class objects.
+* Slowly deprecating cloudCache and family of functions in favour of a new approach using arguments to `Cache`, i.e., `useCache` and `cloudFolderID`
+* `downloadData` from GoogleDrive now protects against HTTP2 error by capturing error and retrying. This is a curl defect.
 * new functions for accessing specific items from the `cacheRepo`: `getArtifact`, `getCacheId`, `getUserTags`
-* `cloudSyncCache` has more options that are implemented and many unitTests
+* `cloudSyncCache` has more options that are implemented and many unitTests -- but being deprecated
+* `retry`, a new function, wraps `try` with an explicit attempt to retry the same code upon error. Useful for flaky functions, such as `googldrive::drive_download` which sometimes fails due to `curl` HTTP2 error.
 
 ## bug fixes
 
+* fixes for `rcnst` errors on R-devel
 * `prepInputs` wasn't correctly passing `useCache` 
 * `cropInputs` was reprojecting extent of y as a time saving approach, but this was incorrect if `studyArea` is a `SpatialPolygon` that is not close to filling the extent. It now reprojects `studyArea` directly which will be slower, but correct. -- fixes issue #93
 * other minor, included fixes for #115

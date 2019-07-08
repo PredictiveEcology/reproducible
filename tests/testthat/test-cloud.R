@@ -1,178 +1,212 @@
-test_that("test cloudSyncCache", {
+test_that("test Cache(useCloud=TRUE, ...)", {
   if (interactive()) {
-    testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"),
+    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
                             opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                                         "reproducible.ask" = FALSE))
     on.exit({
       testOnExit(testInitOut)
+      retry(drive_rm(as_id(newDir$id)))
     }, add = TRUE)
-    #   Can use >1 cacheRepo
-    cachePaths <- getOption("reproducible.cachePath")
-    library(googledrive)
-    newDir <- drive_mkdir("testFolder")
-    # To remove whole folder:
-    on.exit({
-      drive_rm(as_id(newDir$id))
-    }, add = TRUE)
-    #a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3])
-    a <- Cache(rnorm, 1)
-    b <- Cache(rnorm, 2)
+    clearCache(x = tmpCache)
+    newDir <- retry(drive_mkdir("testFolder"))
+    cloudFolderID = newDir$id
+    #######################################
+    # local absent, cloud absent
+    #######################################
+    mess1 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
+                                         cacheRepo = tmpCache, useCloud = TRUE))
+    expect_true(any(grepl("uploaded", mess1)))
 
-    # Will copy the 2 to the cloud
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-    expect_true(NROW(a) == 2)
-    #'
-    # remove a local one
-    clearCache(userTags = CacheDigest(list(rnorm, 2))$outputHash)
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 1)
+    #######################################
+    # local present, cloud present
+    #######################################
+    mess2 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
+                                         cacheRepo = tmpCache, useCloud = TRUE))
+    expect_true(grepl("loading cached", mess2))
+    expect_false(grepl("uploaded", mess2))
+    expect_false(grepl("download", mess2))
 
-    # Now will delete the object in the cloud that was just deleted locally
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-    expect_true(NROW(a) == 1)
-    #'
-    # clean up
-    lapply(cachePaths, clearCache, ask = FALSE)
-    # clearCache(ask = FALSE) # if there were only 1 cacheRepo
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-    expect_true(NROW(a) == 0)
-    #'
-    #######################################################################
-    # use showCache args to have control ... on upload & delete NOTE difference!
-    #######################################################################
-    # a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3]) # multiple cacheRepos!
-    a <- Cache(rnorm, 1)
-    b <- Cache(rnorm, 2)
-    # only sync the one with rnorm, 2 as arguments
-    #   This CacheDigest is the same algorithm used by Cache
-    tag <- CacheDigest(list(rnorm, 2))$outputHash
-    a <- cloudSyncCache(cloudFolderID = newDir$id, userTags = tag) # only syncs the one
-    expect_true(NROW(a) == 1)
-    # that is identified
-    # with userTags
-    #'
-    a <- cloudSyncCache(cloudFolderID = newDir$id) # sync any other ones
-    expect_true(NROW(a) == 2)
+    #######################################
+    # local absent, cloud present
+    #######################################
+    clearCache(userTags = .robustDigest(1), x = tmpCache)
+    mess3 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
+                                          cacheRepo = tmpCache, useCloud = TRUE))
+    expect_false(any(grepl("loading cached", mess3)))
+    expect_false(any(grepl("uploaded", mess3)))
+    expect_true(any(grepl("download", mess3)))
 
-    # Now clear an object locally -- next how to propagate this deletion to cloud
-    clearCache(userTags = tag)
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 1)
+    #######################################
+    # local present, cloud absent
+    #######################################
+    clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    a1 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache)
+    mess4 <- capture_messages(a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID,
+                                          cacheRepo = tmpCache, useCloud = TRUE))
 
-    # Add one more to local, so now local has 2 (a and d), cloud has 2 (a and b)
-    d <- Cache(rnorm, 4)
-    #'
-    # DELETING IS DIFFERENT
-    # Doesn't quite work same way for deleting -- this tag is not in local Cache,
-    # so can't find it this way.
-    # This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because there is
-    #         no entry in the local cache -- use cacheId arg instead -- see below
-    #    showCache(userTags = tags) shows empty
-    #    cloudSyncCache(cloudFolderID = newDir$id, userTags = tag)
-    #'
-    # Only delete the one that was removed from local cache, set upload = FALSE,
-    #    leaving only 1 in cloud: a  -- this is still a sync, so, it will only
-    #    delete 1 file because local has 1 fewer files -- see next for just deleting 1 artifact
-    a <- cloudSyncCache(cloudFolderID = newDir$id, upload = FALSE)
-    expect_true(NROW(a) == 1)
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 2)
+    expect_true(any(grepl("loading cached", mess4)))
+    expect_true(any(grepl("uploaded", mess4)))
+    expect_false(any(grepl("download", mess4)))
 
-    # Upload the d, because it is the only one in the localCache not in the cloudCache
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-    expect_true(NROW(a) == 2)
+    #######################################
+    # cloudFolderID missing
+    #######################################
+    clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
 
-    f <- Cache(rnorm, 5)
-    g <- Cache(rnorm, 6)
-    # upload both -- a "sync"
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-    expect_true(NROW(a) == 4)
+    opts <- options("reproducible.cloudFolderID" = NULL)
+    warn5 <- capture_warnings(
+      mess5 <- capture_messages(
+        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)))
 
-    # now start deleting
-    tag5 <- CacheDigest(list(rnorm, 5))$outputHash # this is the same algorithm used by Cache
-    tag6 <- CacheDigest(list(rnorm, 6))$outputHash
-    clearCache(userTags = tag5) # delete one locally by tag
-    clearCache(userTags = tag6) # delete one locally by tag
-    # delete only one by tag
-    a <- cloudSyncCache(cloudFolderID = newDir$id, cacheIds = tag5) # will delete only this obj in cloud
-    expect_true(NROW(a) == 3)
-    # delete another one by tag
-    a <- cloudSyncCache(cloudFolderID = newDir$id, cacheIds = tag6)
-    expect_true(NROW(a) == 2)
+    expect_true(any(grepl("Folder created", mess5)))
+    expect_true(any(grepl("Uploading", mess5)))
+    expect_false(any(grepl("download", mess5)))
+    expect_true(any(grepl("No cloudFolderID", warn5)))
 
+    warn6 <- capture_warnings(
+      mess6 <- capture_messages(
+        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)))
 
-    ################################################
-    # Now, with 1 to delete and 1 to upload, but using delete = FALSE or TRUE for control
-    f <- Cache(rnorm, 5)
-    g <- Cache(rnorm, 6)
-    i <- Cache(rnorm, 7)
-    # upload all 3 -- a "sync"
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-    expect_true(NROW(a) == 5)
+    expect_false(any(grepl("Folder created", mess6)))
+    expect_false(any(grepl("Uploading", mess6)))
+    expect_false(any(grepl("download", mess6)))
+    expect_true(any(grepl("loading cached", mess6)))
+    expect_true(isTRUE(all.equal(length(warn6), 0)))
 
-    # Now, with 2 missing locally, 1 missing in cloud
-    h <- Cache(rnorm, 8)
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 6)
+    ########
+    clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    # Add 3 things to cloud and local -- then clear them all
+    for (i in 1:3)
+      a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    expect_silent(mess1 <- capture_messages(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)))
+    expect_true(NROW(drive_ls(path = as_id(cloudFolderID)))==0)
 
-    clearCache(userTags = tag5) # delete one locally by tag
-    clearCache(userTags = tag6) # delete another locally by tag
+    # Add 3 things to local, only 2 to cloud -- clear them all, without an error
+    for (i in 1:2)
+      a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    a1 <- Cache(rnorm, 3, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = FALSE)
+    expect_silent(mess2 <- capture_messages(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)))
+    expect_true(NROW(drive_ls(path = as_id(cloudFolderID)))==0)
 
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 4)
-    # With a sync -- there is ambiguity if there is something missing --
-    #  If a cloud exists which is not local,
-    #   should it delete the cloud (sync up) or download to local (sync down)
-    tryDelete = TRUE # can try both TRUE or FALSE and get the two behaviours
-    # If delete is FALSE
-    #   will cause download to local Cache of 2 objs, 5 and 6
-    # Alternatively, if delete is TRUE, then the 2 objects would be deleted in the cloud
-    a <- cloudSyncCache(cloudFolderID = newDir$id, delete = tryDelete, upload = FALSE)
-    expect_true(NROW(a) == 3) # 2 less due to delete
-    # Check this worked --> yes! Only one to upload still
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 4)
-    # Do it again; ensure nothing changes
-    a <- cloudSyncCache(cloudFolderID = newDir$id, delete = tryDelete, upload = FALSE)
-    expect_true(NROW(a) == 3) # 2 less due to delete
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 4)
+    # Add 2 things to local, only 1 to cloud -- clear them all, without an error
+    Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    expect_silent(mess2 <- capture_messages(clearCache(x = tmpCache, userTags = .robustDigest(1), useCloud = TRUE, cloudFolderID = cloudFolderID)))
 
-    # Do it again with tryDelete = FALSE
-    f <- Cache(rnorm, 5)
-    g <- Cache(rnorm, 6)
-    i <- Cache(rnorm, 7)
-    # upload all 3 -- a "sync"
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-    expect_true(NROW(a) == 6) # 2 less due to delete
+    expect_true(NROW(drive_ls(path = as_id(cloudFolderID)))==1)
 
-    j <- Cache(rnorm, 9)
-    clearCache(userTags = tag5) # delete one locally by tag
-    clearCache(userTags = tag6) # delete another locally by tag
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 4)
-    tryDelete = FALSE # can try both TRUE or FALSE and get the two behaviours
-    # If delete is FALSE
-    #   will cause download to local Cache of 2 objs, 5 and 6
-    # Alternatively, if delete is TRUE, then the 2 objects would be deleted in the cloud
-    a <- cloudSyncCache(cloudFolderID = newDir$id, delete = tryDelete, upload = FALSE)
-    expect_true(NROW(a) == 6)
-    sc1 <- suppressMessages(unique(showCache()$artifact))
-    expect_true(NROW(sc1) == 7)
-
-    # Now let the upload happen
-    a <- cloudSyncCache(cloudFolderID = newDir$id, delete = FALSE)
-    expect_true(NROW(a) == 7) # plus 1 more -- j
-
-    # Nothing left to sync
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-    expect_true(NROW(a) == 7) # plus 1 more -- j
-
-    # clean up
-    # clearCache(ask = FALSE) # if only one cacheRepo
-    lapply(cachePaths, clearCache, ask = FALSE)
-    a <- cloudSyncCache(cloudFolderID = newDir$id)
-
-    expect_true(NROW(a) == 0)
   }
 })
+
+
+test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd", {
+  if (interactive()) {
+    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+                            opts = list("reproducible.ask" = FALSE))
+
+    opts <- options("reproducible.cachePath" = tmpdir)
+    suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
+    on.exit({
+      testOnExit(testInitOut)
+      retry(drive_rm(as_id(newDir$id)))
+      options(opts)
+    }, add = TRUE)
+    clearCache(x = tmpdir)
+    newDir <- retry(drive_mkdir("testFolder"))
+    cloudFolderID = newDir$id
+
+    testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
+                      type = "Raster")
+
+    retry(drive_rm(as_id(newDir$id)))
+    clearCache(x = tmpdir)
+    newDir <- retry(drive_mkdir("testFolder"))
+    cloudFolderID = newDir$id
+
+    testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
+                      type = "Raster")
+
+  }
+})
+
+test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
+  if (interactive()) {
+    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+                            opts = list("reproducible.ask" = FALSE))
+
+    opts <- options("reproducible.cachePath" = tmpdir)
+    suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
+    on.exit({
+      testOnExit(testInitOut)
+      retry(drive_rm(as_id(newDir$id)))
+      options(opts)
+    }, add = TRUE)
+    clearCache(x = tmpdir)
+    newDir <- retry(drive_mkdir("testFolder"))
+    cloudFolderID = newDir$id
+
+    testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
+                      type = "Stack")
+
+  }
+})
+
+test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
+  if (interactive()) {
+    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+                            opts = list("reproducible.ask" = FALSE))
+
+    opts <- options("reproducible.cachePath" = tmpdir)
+    suppressWarnings(rm(list = "aaa", envir = .GlobalEnv))
+    on.exit({
+      testOnExit(testInitOut)
+      retry(drive_rm(as_id(newDir$id)))
+      options(opts)
+    }, add = TRUE)
+    clearCache(x = tmpdir)
+    newDir <- retry(drive_mkdir("testFolder"))
+    cloudFolderID = newDir$id
+
+    testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
+                      type = "Brick")
+
+  }
+})
+
+
+test_that("Filenames for environment", {
+    testInitOut <- testInit(c("raster"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
+                            opts = list("reproducible.ask" = FALSE))
+
+    on.exit({
+      testOnExit(testInitOut)
+      options(opts)
+      rm(s)
+    }, add = TRUE)
+
+    s <- new.env(parent = emptyenv())
+    s$r <- raster(extent(0,10,0,10), vals = 1, res = 1)
+    s$r2 <- raster(extent(0,10,0,10), vals = 1, res = 1)
+    s$r <- writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE)
+    s$r2 <- writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE)
+    s$s <- stack(s$r, s$r2)
+    s$b <- writeRaster(s$s, filename = tmpfile[5], overwrite = TRUE)
+
+    Fns <- Filenames(s)
+
+    expect_true(identical(Fns$b, filename(s$b)))
+    expect_true(identical(Fns$r, filename(s$r)))
+    expect_true(identical(Fns$r2, filename(s$r2)))
+    expect_true(identical(Fns$s, sapply(seq_len(nlayers(s$s)), function(rInd) filename(s$s[[rInd]]))))
+
+    FnsR <- Filenames(s$r)
+    expect_true(identical(FnsR, filename(s$r)))
+
+    FnsS <- Filenames(s$s)
+    expect_true(identical(FnsS, sapply(seq_len(nlayers(s$s)), function(rInd) filename(s$s[[rInd]]))))
+
+    FnsB <- Filenames(s$b)
+    expect_true(identical(FnsB, filename(s$b)))
+
+})
+

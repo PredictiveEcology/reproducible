@@ -12,10 +12,12 @@
 \title{Examining and modifying the cache}
 \usage{
 clearCache(x, userTags = character(), after, before,
-  ask = getOption("reproducible.ask"), ...)
+  ask = getOption("reproducible.ask"), useCloud = FALSE,
+  cloudFolderID = NULL, ...)
 
 \S4method{clearCache}{ANY}(x, userTags = character(), after, before,
-  ask = getOption("reproducible.ask"), ...)
+  ask = getOption("reproducible.ask"), useCloud = FALSE,
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL), ...)
 
 cc(secs, ...)
 
@@ -35,23 +37,17 @@ For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
 used instead of \code{x}, though \code{x} will take precedence.}
 
 \item{userTags}{Character vector. If used, this will be used in place of the
-                \code{after} and \code{before}.
-                Specifying one or more \code{userTag} here will clear all
-                objects that match those tags.
-                Matching is via regular expression, meaning partial matches
-                will work unless strict beginning (^) and end ($) of string
-                characters are used.
-                Matching will be against any of the 3 columns returned by \code{showCache()},
-                i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
-                Also, length \code{userTags} > 1, then matching is by `and`.
-                For `or` matching, use \code{|} in a single character string.
-                See examples.
-
-If neither \code{after} or \code{before} are provided, nor \code{userTags},
-then all objects will be removed.
-If both \code{after} and \code{before} are specified, then all objects between
-\code{after} and \code{before} will be deleted.
-If \code{userTags} is used, this will override \code{after} or \code{before}.}
+\code{after} and \code{before}.
+Specifying one or more \code{userTag} here will clear all
+objects that match those tags.
+Matching is via regular expression, meaning partial matches
+will work unless strict beginning (^) and end ($) of string
+characters are used.
+Matching will be against any of the 3 columns returned by \code{showCache()},
+i.e., \code{artifact}, \code{tagValue} or \code{tagName}.
+Also, length \code{userTags} > 1, then matching is by `and`.
+For `or` matching, use \code{|} in a single character string.
+See examples.}
 
 \item{after}{A time (POSIX, character understandable by data.table).
 Objects cached after this time will be shown or deleted.}
@@ -61,6 +57,14 @@ Objects cached before this time will be shown or deleted.}
 
 \item{ask}{Logical. If \code{FALSE}, then it will not ask to confirm deletions using
 \code{clearCache} or \code{keepCache}. Default is \code{TRUE}}
+
+\item{useCloud}{Logical. If \code{TRUE}, then every object that is deleted locally will
+also be deleted in the \code{cloudFolderID}, if it is non-\code{NULL}}
+
+\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
+left as \code{NULL}, the function will create a cloud folder with a warning. The warning
+will have the cloudFolderID that should be used in subsequent calls. It will also be
+added to options("reproducible.cloudFolderID"), but this will not persist across sessions.}
 
 \item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
 This must be \code{TRUE} if the use is passing a regular expression.
@@ -85,6 +89,12 @@ These are convenience wrappers around \code{archivist} package functions.
 They allow the user a bit of control over what is being cached.
 }
 \details{
+If neither \code{after} or \code{before} are provided, nor \code{userTags},
+then all objects will be removed.
+If both \code{after} and \code{before} are specified, then all objects between
+\code{after} and \code{before} will be deleted.
+If \code{userTags} is used, this will override \code{after} or \code{before}.
+
 \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
 i.e., to remove any cache entries touched in the last \code{secs} seconds.
 

@@ -526,6 +526,12 @@ asPath.character <- function(obj, nParentDirs = 0) {  # nolint
   return(obj)
 }
 
+#' @export
+#' @rdname Path-class
+asPath.null <- function(obj, nParentDirs = 0) {  # nolint
+  return(NULL)
+}
+
 #' If using \code{as("string", "Path")}, there is no option to pass \code{nParentDirs}.
 #' So, using \code{asPath} directly (e.g., \code{asPath("string", 0))}) is preferred.
 #' @export
@@ -645,6 +651,7 @@ setMethod(
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
+  browser(expr = exists("bbb"))
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
 

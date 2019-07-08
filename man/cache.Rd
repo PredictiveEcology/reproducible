@@ -16,6 +16,8 @@ Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
+  useCloud = FALSE,
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   showSimilar = getOption("reproducible.showSimilar", FALSE))
 
 \S4method{Cache}{ANY}(FUN, ..., notOlderThan = NULL, .objects = NULL,
@@ -27,6 +29,8 @@ Cache(FUN, ..., notOlderThan = NULL, .objects = NULL,
   quick = getOption("reproducible.quick", FALSE),
   verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
+  useCloud = FALSE,
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   showSimilar = getOption("reproducible.showSimilar", FALSE))
 
 lhs \%<\% rhs
@@ -130,6 +134,23 @@ where Cache is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
 \item{useCache}{Logical or \code{"overwrite"} or \code{"devMode"}. See details.}
+
+\item{useCloud}{Logical. If \code{TRUE}, then this Cache call will download
+(if local copy doesn't exist,
+but cloud copy does exist), upload (local copy does or doesn't exist and
+cloud copy doesn't exist), or
+will not download nor upload if object exists in both. If \code{TRUE} will be at
+least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
+cloud folder gets large. If a user wishes to keep "high-level" control, set this to
+\code{getOption("reproducible.useCloud", FALSE)} or
+\code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
+be FALSE or TRUE, respectively) so it can be turned on and off with
+this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})}
+
+\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
+left as \code{NULL}, the function will create a cloud folder with a warning. The warning
+will have the cloudFolderID that should be used in subsequent calls. It will also be
+added to options("reproducible.cloudFolderID"), but this will not persist across sessions.}
 
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache

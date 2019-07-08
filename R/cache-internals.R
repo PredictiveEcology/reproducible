@@ -1,5 +1,6 @@
-.CacheVerboseFn1 <- function(preDigestUnlist, fnDetails,
+.CacheVerboseFn1 <- function(preDigest, fnDetails,
                              startHashTime, modifiedDots, dotPipe, quick) {
+  preDigestUnlist <- .unlistToCharacter(preDigest, 4)
   endHashTime <- Sys.time()
   verboseDF <- data.frame(
     functionName = fnDetails$functionName,
@@ -93,7 +94,7 @@
   return(list(modifiedDots = modifiedDots, fnDetails = fnDetails))
 }
 
-.CacheInternalFn1 <- function(FUN, scalls) {
+.CacheFn1 <- function(FUN, scalls) {
 
   if (!is(FUN, "function")) {
     # scalls <- sys.calls()
