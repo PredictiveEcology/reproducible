@@ -526,6 +526,12 @@ asPath.character <- function(obj, nParentDirs = 0) {  # nolint
   return(obj)
 }
 
+#' @export
+#' @rdname Path-class
+asPath.null <- function(obj, nParentDirs = 0) {  # nolint
+  return(NULL)
+}
+
 #' If using \code{as("string", "Path")}, there is no option to pass \code{nParentDirs}.
 #' So, using \code{asPath} directly (e.g., \code{asPath("string", 0))}) is preferred.
 #' @export
@@ -645,32 +651,53 @@ setMethod(
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
+  browser(expr = exists("bbb"))
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
 
-  if (inMemory(obj) || !hasValues(obj)) {
-    isFilebacked <- FALSE
-    if (isTRUE(any(raster::is.factor(obj)))) {
-      fileExt <- ".grd"
-    } else {
-      fileExt <- ".tif"
-    }
-    curFilename <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
+  ## check which files are backed
+  whichInMemory <- if (!isStack) {
+    inMemory(obj)
   } else {
-    isFilebacked <- TRUE
+   sapply(obj@layers, inMemory)
+  }
+  whichHasValues <- if (!isStack) {
+    hasValues(obj)
+  } else {
+    sapply(obj@layers, hasValues)
+  }
+  isFilebacked <- !(whichInMemory | !whichHasValues)
+
+  ## create a storage vector of file names to be filled
+  curFilename <- rep("", length(isFilebacked))
+
+  if (any(!isFilebacked)) {
+    fileExt <- if (!isStack) {
+      raster::is.factor(obj)
+    } else {
+      sapply(obj@layers, raster::is.factor)
+    }
+
+    fileExt <- ifelse(fileExt, ".grd", ".tif")
+    tempName <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
+    curFilename[!isFilebacked] <- tempName[!isFilebacked]
+  }
+  if (any(isFilebacked)){
     if (is(obj, "RasterLayer") || is(obj, "RasterBrick")) {
       curFilename <- normalizePath(filename(obj), winslash = "/", mustWork = FALSE)
     } else  {
       curFilenames <- unlist(lapply(obj@layers, function(x)
         normalizePath(filename(x), winslash = "/", mustWork = FALSE)))
-      curFilename <- unique(curFilenames)
+      curFilename[isFilebacked] <- curFilenames[isFilebacked]
     }
   }
 
-  if (any(!file.exists(curFilename)) & isFilebacked & isRasterLayer) {
+  ## check for files that should've been backed, but don't exist
+  if (any(!file.exists(curFilename) & isFilebacked & isRasterLayer)) {
+    badFileNames <- curFilename[!file.exists(curFilename) & isFilebacked]
 
-    # File is in wrong folder, usually the result of a copy of cache bewteen 2 machines
-    splittedFilenames <- strsplit(curFilename, split = basename(repoDir))
+    # File is in wrong folder, usually the result of a copy of cache between 2 machines
+    splittedFilenames <- strsplit(badFileNames, split = basename(repoDir))
     trySaveFilename <- if (length(splittedFilenames) == 1) {
       normalizePath(
         file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
@@ -685,13 +712,21 @@ setMethod(
     if (any(!file.exists(trySaveFilename))) {
       stop("The following file-backed rasters are supposed to be on disk ",
            "but appear to have been deleted:\n",
-           paste("    ", curFilename, collapse = "\n"),
+           paste("    ", badFileNames, collapse = "\n"),
            ". The most likely reason is that two functions had the same output ",
            "and one of them was removed with clearCache(...). ",
            "The best solution to this is never have two functions create the same ",
            "file-backed raster.")
     } else {
-      slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
+      if (!isStack) {
+        slot(slot(obj, "file"), "name") <- saveFilename <- curFilename <- trySaveFilename
+      } else {
+        curFilename[!file.exists(curFilename) & isFilebacked] <- trySaveFilename
+        saveFilename <- curFilename
+        for (i in seq_len(nlayers(obj))) {
+          slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename[i]
+        }
+      }
     }
   } else {
     saveFilename <- if (isRepo) {
@@ -699,7 +734,6 @@ setMethod(
     } else {
       file.path(repoDir, basename(curFilename))
     }
-
     saveFilename <- normalizePath(saveFilename, winslash = "/", mustWork = FALSE)
   }
 
@@ -716,58 +750,73 @@ setMethod(
              }))
     }
   }
-  # filenames are not the same
-  if (any(saveFilename != curFilename)) {
-    if (isFilebacked) {
-      shouldCopy <- rep(TRUE, length(curFilename))
-      if (any(shouldCopy)) {
-        pathExists <- dir.exists(dirname(saveFilename))
+  # filenames are not the same, check if backed, act accordingly
+
+if (any(saveFilename != curFilename)) {
+  notSameButBacked <- saveFilename != curFilename & isFilebacked
+
+  if (any(notSameButBacked)) {
+    ## deal only with files that have been backed
+      saveFilename2 <- saveFilename[notSameButBacked]
+      curFilename2 <- curFilename[notSameButBacked]
+
+        pathExists <- dir.exists(dirname(saveFilename2))
         if (any(!pathExists)) {
-          dirname(saveFilename) %>%
+          dirname(saveFilename2) %>%
             unique() %>%
             sapply(., dir.create, recursive = TRUE)
         }
-        if (any(saveFilename %>% grepl(., pattern = "[.]grd$"))) {
-          copyFile(from = curFilename, to = saveFilename, overwrite = TRUE, silent = TRUE)
-          griFilename <- sub(saveFilename, pattern = "[.]grd$", replacement = ".gri")
-          curGriFilename <- sub(curFilename, pattern = "[.]grd$", replacement = ".gri")
+
+        if (any(saveFilename2 %>% grepl(., pattern = "[.]grd$"))) {
+          copyFile(from = curFilename2, to = saveFilename2, overwrite = TRUE, silent = TRUE)
+          griFilename <- sub(saveFilename2, pattern = "[.]grd$", replacement = ".gri")
+          curGriFilename <- sub(curFilename2, pattern = "[.]grd$", replacement = ".gri")
           copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
         } else {
-          saveFilename <- unlist(lapply(seq_along(curFilename),
-                                        function(x) {
-                                          # change filename if it already exists
-                                          if (file.exists(saveFilename[x])) {
-                                            saveFilename[x] <- nextNumericName(saveFilename[x])
-                                          }
-                                          copyFile(to = saveFilename[x],
-                                                   overwrite = TRUE,
-                                                   from = curFilename[x], silent = TRUE)
-                                        }))
+          saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
+            # change filename if it already exists
+              if (file.exists(saveFilename2[x])) {
+                saveFilename2[x] <- nextNumericName(saveFilename2[x])
+              }
+              copyFile(to = saveFilename2[x],
+                       overwrite = TRUE,
+                       from = curFilename2[x], silent = TRUE)
+          })
         }
-      }
-      # for a stack with independent Raster Layers (each with own file)
-      if (length(curFilename) > 1) {
-        for (i in seq_along(curFilename)) {
-          slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- saveFilename[i]
-        }
-      } else {
-        if (!isStack) {
-          slot(slot(obj, "file"), "name") <- saveFilename
+
+        # for a stack with independent Raster Layers (each with own file)
+        if (length(curFilename2) > 1) {
+          for (i in seq_along(curFilename2)) {
+            slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- saveFilename2[i]
+          }
         } else {
-          for (i in seq_len(nlayers(obj))) {
-            whFilename <- match(basename(saveFilename), basename(curFilenames))
-            slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename[whFilename]
+          if (!isStack) {
+            slot(slot(obj, "file"), "name") <- saveFilename2
+          } else {
+            for (i in seq_len(nlayers(obj))) {
+              whFilename <- match(basename(saveFilename2), basename(curFilename2))
+              slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename2[whFilename]
+            }
+          }
+        }
+
+        ## update saveFilename
+        saveFilename[notSameButBacked] <- saveFilename2[notSameButBacked]
+    }
+  if (any(!notSameButBacked)) {
+      ## deal with files that haven't been backed
+      checkPath(dirname(saveFilename[!notSameButBacked]), create = TRUE) #SpaDES dependency
+      if (any(!whichInMemory[!notSameButBacked])) {
+        if (!isStack) {
+          obj <- writeRaster(obj, filename = saveFilename[!notSameButBacked], datatype = dataType(obj))
+        } else {
+          for (i in which(!notSameButBacked)) {
+            obj@layers[[i]] <- writeRaster(obj@layers[[i]], filename = saveFilename[i], datatype = dataType(obj@layers[[i]]))
           }
         }
       }
-    } else {
-      checkPath(dirname(saveFilename), create = TRUE) #SpaDES dependency
-      if (!inMemory(obj)) {
-        obj <- writeRaster(obj, filename = saveFilename, datatype = dataType(obj))
-      }
     }
   }
-
   return(obj)
 }
 

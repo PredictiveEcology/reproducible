@@ -146,7 +146,7 @@ test_that("prepInputs doesn't work", {
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) ## TODO: fix failure (#93)
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) ## TODO: fix intermittent failure (#93)
 
   #######################################
   ### url, targetFile, archive     ######
@@ -1317,12 +1317,12 @@ test_that("lightweight tests 2 for code coverage", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  theZipFile <- tempfile(fileext = ".zip")
-  theZipFile2 <- tempfile(fileext = ".zip")
-  theZipFile3 <- tempfile(fileext = ".zip")
+  theZipFile <- tempfile(tmpdir = tmpdir, fileext = ".zip")
+  theZipFile2 <- tempfile(tmpdir = tmpdir, fileext = ".zip")
+  theZipFile3 <- tempfile(tmpdir = tmpdir, fileext = ".zip")
   theZipName <- file.path(tmpdir, "hi.zip")
-  theZapFile <- tempfile(fileext = ".zap")
-  theRDSFile <- tempfile(fileext = ".rds")
+  theZapFile <- tempfile(tmpdir = tmpdir, fileext = ".zap")
+  theRDSFile <- tempfile(tmpdir = tmpdir, fileext = ".rds")
   a <- 1
   saveRDS(a, file = theRDSFile)
   origWD <- setwd(dirname(theRDSFile))
@@ -1488,7 +1488,7 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   }, add = TRUE)
   a <- raster(extent(0, 2, 0, 2), res = 1, vals = c(1, 1, 2, 2))
   levels(a) <- data.frame(ID = 1:2, Factor = c("This", "That"))
-  tifTmp <- tempfile(fileext = ".tif")
+  tifTmp <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   file.create(tifTmp)
   tifTmp <- normPath(tifTmp)
 
@@ -1514,27 +1514,29 @@ test_that("rasters aren't properly resampled", {
   crs(a) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   crs(b) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-  tiftemp1 <- tempfile(fileext = ".tif")
+  tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   writeRaster(a, filename = tiftemp1)
 
-  tiftemp2 <- tempfile(fileext = ".tif")
+  tiftemp2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   writeRaster(b, filename = tiftemp2)
 
   out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
-                    destinationPath = tempdir(), useCache = FALSE)
+                    destinationPath = dirname(tiftemp1), useCache = FALSE)
   expect_true(dataType(out) == "INT2U")
 
   out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
-                    destinationPath = tempdir(), method = "bilinear", filename2 = tempfile(fileext = ".tif"))
+                    destinationPath = dirname(tiftemp1), method = "bilinear",
+                    filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
   expect_true(dataType(out2) == "FLT4S")
 
   c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
   crs(c) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  tiftemp3 <- tempfile(fileext = ".tif")
+  tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   writeRaster(c, filename = tiftemp3)
 
   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
-                     destinationPath = tempdir(), filename2 = tempfile(fileext = ".tif"))
+                     destinationPath = dirname(tiftemp3),
+                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
   expect_true(dataType(out3) == "FLT4S")
 })
 

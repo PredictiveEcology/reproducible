@@ -123,11 +123,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     targetFilePath <- file.path(destinationPath, targetFile)
     if (is.null(alsoExtract)) {
       if (file.exists(checkSumFilePath)) {
-        # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with same base name, without extension
-        checksumsTmp <- as.data.table(read.table(checkSumFilePath))
-        alsoExtract <- grep(paste0(file_path_sans_ext(targetFile),"\\."), checksumsTmp$file,
-                            value = TRUE)
-        rm(checksumsTmp) # clean up
+        if (file.size(checkSumFilePath) > 0) {
+          # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with same base name, without extension
+          checksumsTmp <- as.data.table(read.table(checkSumFilePath))
+          alsoExtract <- grep(paste0(file_path_sans_ext(targetFile),"\\."), checksumsTmp$file,
+                              value = TRUE)
+          rm(checksumsTmp) # clean up
+        }
       }
     }
   }
@@ -973,8 +975,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
 .fixNoFileExtension <- function(downloadFileResult, targetFile, archive,
                                 destinationPath) {
   if (!is.null(downloadFileResult$downloaded) &&
-      file_ext(normPath(.basename(downloadFileResult$downloaded))) == "") {
-    if (!is.null(targetFile) && file_ext(normPath(.basename(downloadFileResult$neededFiles))) != "") {
+      identical(file_ext(normPath(.basename(downloadFileResult$downloaded))), "")) {
+    if (!is.null(targetFile) && !identical(file_ext(normPath(.basename(downloadFileResult$neededFiles))), "")) {
       if (is.null(archive)) {
         message(
           "Downloaded file has no extension: targetFile is provided, but archive is not.\n",

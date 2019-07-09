@@ -268,12 +268,13 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
-        if (canProcessInMemory(x, 4)) {
+        if (canProcessInMemory(x, 3)) {
           x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
         } else {
-          x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent,
-                                                        filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-                                                   dots))
+          x <- do.call(raster::crop,
+                       args = append(list(x = x, y = cropExtent,
+                                          filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
+                                     dots))
         }
         if (is.null(x)) {
           message("    polygons do not intersect.")
@@ -495,11 +496,21 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
+#' @param useGDAL Logical, defaults to getOption("reproducible.useGDAL" = TRUE).
+#'     If \code{TRUE}, then this function will use \code{gdalwarp} only when not
+#'     small enough to fit in memory (i.e., \emph{if the operation fails} the
+#'     \code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
+#'     usually be faster than \code{raster::projectRaster}, the function used
+#'     if this is \code{FALSE}. Since since the two options use different algorithms,
+#'     there may be different projection results.
+#'
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
-projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL, ...) {
+projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
+                                 useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                 ...) {
   dots <- list(...)
   isFactorRaster <- FALSE
   if (isTRUE(raster::is.factor(x))) {
@@ -525,9 +536,10 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
       doProjection <- TRUE
     }
     if (doProjection) {
-      if (!canProcessInMemory(x, 4)) {
+      if (!canProcessInMemory(x, 3) && isTRUE(useGDAL)) {
+        ## the raster is in memory, but large enough to trigger this function: write it to disk
         message("   large raster: reprojecting after writing to temp drive...")
-        #rasters need to go to same file so it can be unlinked at end without losing other temp files
+        ## rasters need to go to same file so it can be unlinked at end without losing other temp files
         tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
         tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
         tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names, "a_reproj.tif")) #fails if x = stack
@@ -537,7 +549,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         } else {
           tr <- res(x)
         }
-        # the raster is in memory, but large enough to trigger this function: write it to disk
 
         gdalUtils::gdal_setInstallation()
         if (.Platform$OS.type == "windows") {
@@ -557,7 +568,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         if (inMemory(x)) { #must be written to disk
           dType <- assessDataType(x, type = "writeRaster")
           writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
-          rm(x) #Saves memory if this was a huge raster but be careufl
+          rm(x) #Saves memory if this was a huge raster, but be careful
           gc()
         } else {
           tempSrcRaster <- x@file@name #Keep original raster
@@ -1291,16 +1302,20 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
 
-  if (!is.null(studyArea)) if (is(studyArea, "quosure")) studyArea <- rlang::eval_tidy(studyArea)
-  if (!is.null(rasterToMatch)) if (is(rasterToMatch, "quosure")) rasterToMatch <- rlang::eval_tidy(rasterToMatch)
+  if (!is.null(studyArea))
+    if (is(studyArea, "quosure"))
+      studyArea <- rlang::eval_tidy(studyArea)
+
+  if (!is.null(rasterToMatch))
+    if (is(rasterToMatch, "quosure"))
+      rasterToMatch <- rlang::eval_tidy(rasterToMatch)
 
   extraDots <- postProcessChecks(studyArea = studyArea, rasterToMatch = rasterToMatch, dots = dots)
   dots <- extraDots$dots
   if (!is.null(extraDots$filename1))
     filename1 <- extraDots$filename1
 
-  if (!is.null(studyArea) || !is.null(rasterToMatch) ||
-      !is.null(targetCRS)) {
+  if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(targetCRS)) {
     # fix errors if methods available
     skipCacheMess <- "useCache is FALSE, skipping Cache"
     skipCacheMess2 <- "No cacheRepo supplied"

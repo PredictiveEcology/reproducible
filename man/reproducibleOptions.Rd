@@ -76,6 +76,8 @@ The following options are likely of interest to most users
                         deleting objects. This, therefore, is most useful if the user is
                         using unique values for \code{userTags}\cr
   \code{useCloud} \tab Passed to \code{Cache}. Default \code{FALSE}.\cr
+  \code{useGDAL} \tab Passed to \code{useGDAL} in \code{projectInputs.Raster}.
+                  Default \code{TRUE}.\cr
   \code{useMemoise} \tab \code{TRUE} \tab Used in \code{\link{Cache}}. If \code{TRUE},
                   recovery of cached elements from the cacheRepo will use
                   \code{memoise::memoise}. This means that the 3rd time running a function
@@ -96,7 +98,6 @@ The following options are likely of interest to most users
      and the time it took to digest them and also the time it took to run
      the call and save the call to the cache repository or load the cached
      copy from the repository. This may help diagnosing some problems that may occur.\cr
-
 }
 }
 \section{Advanced}{
@@ -112,6 +113,6 @@ The following options are likely not needed by a user.
                      NA values in their first MANY elements\cr
   \code{useragent} \tab \code{"http://github.com/PredictiveEcology/reproducible"}
           \tab User agent for downloads using this package.\cr
-   }
+}
 }
 

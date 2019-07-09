@@ -5,7 +5,7 @@ if (getRversion() >= "3.1.0") {
 #' Repeatability-safe install and load packages, optionally with specific versions
 #'
 #' This is an "all in one" function that will run \code{install.packages} for
-#' CRAN packages, \code{remotes::install_github} for \url{GitHub.com} packages and
+#' CRAN packages, \code{remotes::install_github} for \url{https://github.com/} packages and
 #' will install specific versions of each package if there is a
 #' \code{packageVersionFile} supplied. Plus, when \code{packages} is provided as
 #' a character vector, or a \code{packageVersionFile} is supplied, all package
@@ -182,6 +182,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     }
 
     collapsedLibPath <- gsub("\\/", replacement = "_", libPath)
+    collapsedLibPath <- gsub(":_", "_", collapsedLibPath)
     pathToRequireFolder <- file.path(getOption("reproducible.cachePath"), ".Require",
                                      collapsedLibPath)
     autoFile <- paste0(pathToRequireFolder, "._packageVersionsAuto.txt")
@@ -275,8 +276,7 @@ newLibPaths <- function(libPath) {
 
 #' Determine versions all installed packages
 #'
-#' This code is adapted from \code{\link[versions]{installed.versions}},
-#' but uses an \code{Rcpp} alternative to \code{readLines} for speed.
+#' This code is adapted from \code{\link[versions]{installed.versions}}.
 #' It will be anywhere from 2x to 10x faster than the
 #' \code{\link[versions]{installed.versions}} function.
 #' This is also many times faster than \code{utils::installed.packages},
@@ -314,7 +314,7 @@ installedVersions <- function(packages, libPath) {
   if (!file.exists(desc_path)) {
     return(NA)
   } else {
-    lines <- readLinesRcpp(desc_path);
+    lines <- readLines(desc_path);
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     on.exit(Sys.setlocale(locale = ""))
     vers_line <- lines[grep("^Version: *", lines)] # nolint
@@ -399,7 +399,7 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
   if (!file.exists(desc_path)) {
     return(NA)
   } else {
-    lines <- readLinesRcpp(desc_path)
+    lines <- readLines(desc_path)
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     on.exit(Sys.setlocale(locale = ""))
     deps_line <- grep("^Depends: *", lines) # nolint

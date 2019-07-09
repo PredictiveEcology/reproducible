@@ -21,7 +21,7 @@ resulting from \code{showCache}, i.e., it will override \code{cacheRepo}.
 If this and \code{cacheRepo} are missing, then it will default to
 \code{getOption('reproducible.cachePath')}}
 
-\item{cacheId}{A character vector of o cacheId values to use in the cache}
+\item{cacheId}{A character vector of cacheId values to use in the cache}
 
 \item{concatenated}{Logical. If \code{TRUE}, the returned userTags will
 be concatenated tagKey:tagValue}

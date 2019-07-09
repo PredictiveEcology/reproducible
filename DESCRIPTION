@@ -4,15 +4,15 @@ Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
 Description: Collection of high-level, robust, machine- and OS-independent tools
     for making deeply reproducible and reusable content in R.
     This includes light weight package management (similar to 'packrat' and
-    'checkpoint', but more flexible, lightweight and simpler than both), tools
-    for caching, downloading and verifying or writing checksums, post-processing 
+    'checkpoint', but more flexible, lightweight, simpler and less tested than both), 
+    tools for caching, downloading and verifying or writing checksums, post-processing 
     of common spatial datasets, and accessing GitHub repositories. 
     Some features are still under active development.
 SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows)  to work with '.rar' files.
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2019-03-18
+Date: 2019-07-08
 Version: 0.2.8
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
@@ -51,7 +51,6 @@ Imports:
     quickPlot,
     R.utils,
     raster,
-    Rcpp (>= 0.12.13),
     RCurl (>= 1.95-4.8),
     remotes,
     rgdal,
@@ -71,14 +70,12 @@ Suggests:
     TimeWarp
 Encoding: UTF-8
 Language: en-CA
-LinkingTo: Rcpp
 License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 6.1.1
 Collate: 
-    'RcppExports.R'
     'cache-helpers.R'
     'cache-internals.R'
     'cache-tools.R'
@@ -86,6 +83,7 @@ Collate:
     'cache.R'
     'checksums.R'
     'cloud.R'
+    'cloudOld.R'
     'consistentPaths.R'
     'convertPaths.R'
     'download.R'

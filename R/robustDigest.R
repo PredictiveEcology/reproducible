@@ -116,11 +116,13 @@ setMethod(
   signature = "ANY",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    object <- .removeCacheAtts(object)
+    # passByReference -- while doing pass by reference attribute setting is faster, is
+    #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
+    object1 <- .removeCacheAtts(object, passByReference = FALSE)
     if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-      digest(object, algo = algo)
+      digest(object1, algo = algo)
     else
-      fastdigest(object)
+      fastdigest(object1)
 })
 
 #' @import parallel
@@ -346,11 +348,26 @@ setMethod(
   object
 }
 
+#' Remove attributes that are highly varying
+#'
 #' @importFrom data.table setattr
-.removeCacheAtts <- function(x) {
-  setattr(x, "tags", NULL)
-  setattr(x, ".Cache", NULL)
-  setattr(x, "call", NULL)
+#' @param x Any arbitrary R object that could have attributes
+#' @param passByReference Logical. If \code{TRUE}, the default, this uses data.table::setattr to
+#'   remove several attributes that are unnecessary for digesting, specifically \code{tags},
+#'   \code{.Cache} and \code{call}
+.removeCacheAtts <- function(x, passByReference = TRUE) {
+  if (passByReference) {
+    setattr(x, "tags", NULL)
+    setattr(x, ".Cache", NULL)
+    setattr(x, "call", NULL)
+  } else {
+    if (!is.null(attr(x, "tags")))
+      attr(x, "tags") <- NULL
+    if (!is.null(attr(x, ".Cache")))
+      attr(x, ".Cache") <- NULL
+    if (!is.null(attr(x, "call")))
+      attr(x, "call") <- NULL
+  }
   x
 }
 

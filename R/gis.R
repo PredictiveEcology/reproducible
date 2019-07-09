@@ -65,9 +65,11 @@ checkGDALVersion <- function(version) {
 #'
 #' @author Eliot McIntire
 #' @export
+#' @inheritParams projectInputs.Raster
 #' @importFrom fasterize fasterize
 #' @importFrom parallel detectCores
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
+#' @importFrom raster xmin xmax ymin ymax fromDisk
 #' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
@@ -104,7 +106,7 @@ checkGDALVersion <- function(version) {
 #'   plot(shp, add = TRUE)
 #' }
 #'
-fastMask <- function(x, y, cores = NULL) {
+fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
   if (is(x, "RasterLayer") && requireNamespace("sf") && requireNamespace("fasterize")) {
     message("fastMask is using sf and fasterize")
 
@@ -120,7 +122,7 @@ fastMask <- function(x, y, cores = NULL) {
     #numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
     #  is.numeric(y[[x]])
     #})))[1]]
-    if (!raster::canProcessInMemory(x, n = 4)) {
+    if (!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)) {
      #call gdal
       message("fastMask is using gdalwarp")
 
@@ -139,19 +141,37 @@ fastMask <- function(x, y, cores = NULL) {
         tempSrcRaster <- x@file@name #Keep original raster.
       }
 
-      #GDAL requires file path to cutline - write to disk
-      tempSrcShape <- file.path(tempfile(tmpdir = tmpDir()), ".shp", fsep = "")
+      ## GDAL requires file path to cutline - write to disk
+      tempSrcShape <- file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = "")
       ysf <- sf::st_as_sf(y)
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
 
-      gdalUtils::gdal_setInstallation()
-      if (.Platform$OS.type == "windows") {
+      gdalPath <- NULL
+      if (identical(.Platform$OS.type, "windows")) {
+        message("Searching for gdal installation")
+        possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
+                                  "C:/GuidosToolbox/QGIS/bin",
+                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
+                                  "C:/Program Files (x86)/QGIS 3.6/bin",
+                                  "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
+                                  "C:/Program Files/GDAL",
+                                  "C:/Program Files (x86)/GDAL",
+                                  "C:/Program Files (x86)/QGIS 2.18/bin")
+        gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
+        if (any(gdalInfoExists))
+          gdalPath <- possibleWindowsPaths[gdalInfoExists]
+      }
+      gdalUtils::gdal_setInstallation(gdalPath)
+      if (identical(.Platform$OS.type, "windows")) {
+        message("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
         exe <- ".exe"
-      } else exe <- ""
+      } else {
+        exe <- ""
+      }
       dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-      if (is.null(cores) || cores =="AUTO") {
-        cores <- as.integer(parallel::detectCores()*0.9)
+      if (is.null(cores) || cores == "AUTO") {
+        cores <- as.integer(parallel::detectCores() * 0.9)
         prll <- paste0("-wo NUM_THREADS=", cores, " ")
       } else {
         if (!is.integer(cores)) {
@@ -178,7 +198,13 @@ fastMask <- function(x, y, cores = NULL) {
         wait = TRUE)
       x <- raster(tempDstRaster)
     } else {
+      extentY <- extent(y)
+      if (xmin(x) < xmin(extentY) && xmax(x) > xmax(extentY) &&
+          ymin(x) < ymin(extentY) && ymax(x) > ymax(extentY) )
+        x <- cropInputs(x, y)
       a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+      if (canProcessInMemory(x, 3) && fromDisk(x))
+        x[] <- x[]
       m <- is.na(a[])
       x[m] <- NA
 
@@ -195,8 +221,8 @@ fastMask <- function(x, y, cores = NULL) {
               "for these classes yet")
     } else {
       message("This may be slow in large cases. ",
-              "To use sf and gdal instead, see ",
-              "https://github.com/r-spatial/sf to install gdal ",
+              "To use sf and GDAL instead, see ",
+              "https://github.com/r-spatial/sf to install GDAL ",
               "on your system. Then, 'install.packages(\"sf\")",
               "; install.packages(\"fasterize\")')")
     }

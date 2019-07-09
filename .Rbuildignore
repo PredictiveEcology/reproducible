@@ -16,3 +16,4 @@ cran-comments\.md
 tests/testthat/\.httr-oauth$
 vignettes/.*_cache$
 vignettes/.*\.log$
+^CRAN-RELEASE$

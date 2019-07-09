@@ -74,8 +74,8 @@ test_that("test miscellaneous unit tests cache-helpers", {
   ## showSimilar
   try(clearCache(ask = FALSE, x = tmpCache), silent = TRUE)
   aMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
-  bMess <- capture_messages(b <- Cache(rnorm, 2, showSimilar = TRUE, cacheRepo = tmpCache))
-  expect_true(any(grepl("different n", bMess)))
+  #bMess <- capture_messages(b <- Cache(rnorm, 2, showSimilar = TRUE, cacheRepo = tmpCache))
+  #expect_true(any(grepl("different n", bMess)))
 
   ## debugCache -- "complete"
   thing <- 1
@@ -88,9 +88,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   aa <- Cache(rnorm, thing, debugCache = "quick", cacheRepo = tmpCache)
   expect_true(identical(.robustDigest(thing), aa$hash$n))
   expect_true(identical(thing, aa$content[[1]]))
-  ## cache -- deprecated
-  # aMess <- capture_warnings(a <- reproducible::cache(cacheRepo = tmpCache, rnorm, 1))
-  # expect_true(grepl("deprecated", aMess))
 
   ## .unlistToCharacter
   expect_true(grepl("not list", unlist(.unlistToCharacter(1, 1))))
@@ -102,16 +99,65 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
 
   ## verbose -- need 2 nested levels to run all lin
-  fn <- function(a) {
-    Cache(fn1, cacheRepo = tmpCache, verbose = 2)
-  }
-  fn1 <- function() {
-    2
-  }
+  # fn <- function(a) {
+  #   Cache(fn1, cacheRepo = tmpCache, verbose = 2)
+  # }
+  # fn1 <- function() {
+  #   1
+  # }
 
-  try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
-  bMess <- capture_output(aMess <- capture_messages(aa <- Cache(fn, 1, verbose = 2, cacheRepo = tmpCache)))
-  expect_true(any(grepl("fn1", bMess))) # TODO: fix this;
-  expect_true(any(grepl("The hashing details", aMess)))
+  if (interactive()) {
+    try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
+    bMess <- capture_output(aMess <-
+                              capture_messages(aa <- Cache(fnCacheHelper, 1,
+                                                           verbose = 2, cacheRepo = tmpCache,
+                                                           cacheRepo2 = tmpCache)))
+    expect_true(any(grepl("fnCacheHelper1", bMess))) # TODO: fix this;
+    expect_true(any(grepl("The hashing details", aMess)))
+  }
 })
 
+test_that("test cache-helpers with stacks", {
+  testInitOut <- testInit("raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
+  r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
+  s <- raster::stack(r, r1)
+
+  ## in memory
+  b <- .prepareFileBackedRaster(s, tmpCache)
+  is(b, "RasterStack")
+  expect_true(length(list.files(file.path(tmpCache, "rasters"))) == 0)
+
+  ## with 1 backups
+  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  s <- addLayer(r, r1)
+  b <- .prepareFileBackedRaster(s, tmpCache)
+
+  expect_true(all(basename(c(tmpfile)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+  expect_false(all(basename(c(tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+
+  ## with 2 backups
+  r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
+  s <- addLayer(r, r1)
+  b <- .prepareFileBackedRaster(s, tmpCache)
+  expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+
+  ## removing entry from Cache
+  grep(basename(tmpfile),
+       list.files(tmpCache,, recursive = TRUE, full.names = TRUE),
+       value = TRUE) %>%
+    file.remove(.)
+  expect_false(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+  b <- .prepareFileBackedRaster(s, tmpCache)
+  expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
+
+  # Test deleted raster backed file
+  file.remove(tmpfile2)
+  expect_error(b <- .prepareFileBackedRaster(s, tmpCache), "The following file-backed rasters")
+})
