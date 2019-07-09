@@ -27,7 +27,6 @@ There were no ERRORs nor WARNINGs, nor NOTEs.
 
 ## Downstream dependencies
 
-We have run R CMD check on downstream dependencies, and all have passed except those noted below.
-Summary at https://github.com/PredictiveEcology/reproducible/blob/master/revdep/README.md.
+We have run R CMD check on downstream dependencies, and all have passed with no problems:
+*Wow, no problems at all. :)*
 
-* problems detected on the CRAN versions of `SpaDES` and `SpaDES.core` are fixed in the versions to be submitted shatly to CRAN.

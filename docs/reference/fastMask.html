@@ -73,7 +73,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
       </span>
     </div>
 
@@ -135,7 +135,8 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>fastMask</span>(<span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>cores</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+    <pre class="usage"><span class='fu'>fastMask</span>(<span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>cores</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>useGDAL</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useGDAL"</span>, <span class='fl'>TRUE</span>))</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -155,6 +156,16 @@ as <code>x</code>, it will be reprojected on the fly to that of <code>x</code></
 triggered. <code>'AUTO'*</code> will calculate 90<!-- % of the total -->
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.</p></td>
+    </tr>
+    <tr>
+      <th>useGDAL</th>
+      <td><p>Logical, defaults to getOption("reproducible.useGDAL" = TRUE).
+If <code>TRUE</code>, then this function will use <code>gdalwarp</code> only when not
+small enough to fit in memory (i.e., <em>if the operation fails</em> the
+<code><a href='https://www.rdocumentation.org/packages/raster/topics/programming'>raster::canProcessInMemory(x, 3)</a></code> test). Using <code>gdalwarp</code> will
+usually be faster than <code><a href='https://www.rdocumentation.org/packages/raster/topics/projectRaster'>raster::projectRaster</a></code>, the function used
+if this is <code>FALSE</code>. Since since the two options use different algorithms,
+there may be different projection results.</p></td>
     </tr>
     </table>
     
