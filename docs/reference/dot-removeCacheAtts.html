@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>The known path for unrar or 7z — unrarPath • reproducible</title>
+<title>Remove attributes that are highly varying — .removeCacheAtts • reproducible</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="The known path for unrar or 7z — unrarPath" />
+<meta property="og:title" content="Remove attributes that are highly varying — .removeCacheAtts" />
 
-<meta property="og:description" content="The known path for unrar or 7z" />
+<meta property="og:description" content="Remove attributes that are highly varying" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -124,31 +124,41 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>The known path for unrar or 7z</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/prepInputs.R'><code>R/prepInputs.R</code></a></small>
-    <div class="hidden name"><code>unrarPath.Rd</code></div>
+    <h1>Remove attributes that are highly varying</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/robustDigest.R'><code>R/robustDigest.R</code></a></small>
+    <div class="hidden name"><code>dot-removeCacheAtts.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>The known path for unrar or 7z</p>
+    <p>Remove attributes that are highly varying</p>
     
     </div>
 
-    <pre class="usage"><span class='no'>.unrarPath</span></pre>
-        
-    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
-
-    <p>An object of class <code>NULL</code> of length 0.</p>
+    <pre class="usage"><span class='fu'>.removeCacheAtts</span>(<span class='no'>x</span>, <span class='kw'>passByReference</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+    
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x</th>
+      <td><p>Any arbitrary R object that could have attributes</p></td>
+    </tr>
+    <tr>
+      <th>passByReference</th>
+      <td><p>Logical. If <code>TRUE</code>, the default, this uses data.table::setattr to
+remove several attributes that are unnecessary for digesting, specifically <code>tags</code>,
+<code>.Cache</code> and <code>call</code></p></td>
+    </tr>
+    </table>
     
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      
-      <li><a href="#format">Format</a></li>
-          </ul>
+      <li><a href="#arguments">Arguments</a></li>
+                </ul>
 
   </div>
 </div>

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>The known path for unrar or 7z — unrarPath • reproducible</title>
+<title>Basic tool for using cloud-based caching — cloudCheckOld • reproducible</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="The known path for unrar or 7z — unrarPath" />
+<meta property="og:title" content="Basic tool for using cloud-based caching — cloudCheckOld" />
 
-<meta property="og:description" content="The known path for unrar or 7z" />
+<meta property="og:description" content="Very experimental" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -124,30 +124,51 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>The known path for unrar or 7z</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/prepInputs.R'><code>R/prepInputs.R</code></a></small>
-    <div class="hidden name"><code>unrarPath.Rd</code></div>
+    <h1>Basic tool for using cloud-based caching</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cloudOld.R'><code>R/cloudOld.R</code></a></small>
+    <div class="hidden name"><code>cloudCheckOld.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>The known path for unrar or 7z</p>
+    <p>Very experimental</p>
     
     </div>
 
-    <pre class="usage"><span class='no'>.unrarPath</span></pre>
-        
-    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
+    <pre class="usage"><span class='fu'>cloudCheckOld</span>(<span class='no'>toDigest</span>, <span class='kw'>checksumsFileID</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+    
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>toDigest</th>
+      <td><p>The R object to consider, e.g., all the arguments to a function.</p></td>
+    </tr>
+    <tr>
+      <th>checksumsFileID</th>
+      <td><p>A google file ID where the checksums data.table is located,
+provided as a character string.</p></td>
+    </tr>
+    <tr>
+      <th>cloudFolderID</th>
+      <td><p>The google folder ID where a new checksums file should
+ be written. This will only be used if <code>checksumsFileID</code> is not provided
+provided as a character string.</p></td>
+    </tr>
+    </table>
+    
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <p>An object of class <code>NULL</code> of length 0.</p>
+    <div class='dont-index'><p><code><a href='cloudSyncCacheOld.html'>cloudSyncCacheOld</a></code>, <code><a href='cache.html'>Cache</a></code>, <code><a href='cloudWriteOld.html'>cloudWriteOld</a></code></p></div>
     
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
+      <li><a href="#arguments">Arguments</a></li>
       
-      <li><a href="#format">Format</a></li>
+      <li><a href="#see-also">See also</a></li>
           </ul>
 
   </div>

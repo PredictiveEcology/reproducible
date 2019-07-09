@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>The known path for unrar or 7z — unrarPath • reproducible</title>
+<title>Return the filename or filenames from a Raster* object — Filenames • reproducible</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,12 @@
 
 
 
-<meta property="og:title" content="The known path for unrar or 7z — unrarPath" />
+<meta property="og:title" content="Return the filename or filenames from a Raster* object — Filenames" />
 
-<meta property="og:description" content="The known path for unrar or 7z" />
+<meta property="og:description" content="The filename in Raster packages returns an empty string for
+a RasterStack. This function will return a vector of length 1 (RasterLayer or
+RasterBrick) or length &amp;gt;1 for RasterStack. This is mostly just a wrapper aroung
+filename" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -124,32 +127,56 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>The known path for unrar or 7z</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/prepInputs.R'><code>R/prepInputs.R</code></a></small>
-    <div class="hidden name"><code>unrarPath.Rd</code></div>
+    <h1>Return the filename or filenames from a Raster* object</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/convertPaths.R'><code>R/convertPaths.R</code></a></small>
+    <div class="hidden name"><code>Filenames.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>The known path for unrar or 7z</p>
+    <p>The <code>filename</code> in <code>Raster</code> packages returns an empty string for
+a <code>RasterStack</code>. This function will return a vector of length 1 (RasterLayer or
+RasterBrick) or length &gt;1 for RasterStack. This is mostly just a wrapper aroung
+<code>filename</code></p>
     
     </div>
 
-    <pre class="usage"><span class='no'>.unrarPath</span></pre>
-        
-    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
+    <pre class="usage"><span class='fu'>Filenames</span>(<span class='no'>obj</span>)
 
-    <p>An object of class <code>NULL</code> of length 0.</p>
+<span class='co'># S4 method for ANY</span>
+<span class='fu'>Filenames</span>(<span class='no'>obj</span>)
+
+<span class='co'># S4 method for Raster</span>
+<span class='fu'>Filenames</span>(<span class='no'>obj</span>)
+
+<span class='co'># S4 method for RasterStack</span>
+<span class='fu'>Filenames</span>(<span class='no'>obj</span>)
+
+<span class='co'># S4 method for environment</span>
+<span class='fu'>Filenames</span>(<span class='no'>obj</span>)
+
+<span class='co'># S4 method for list</span>
+<span class='fu'>Filenames</span>(<span class='no'>obj</span>)</pre>
+    
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>obj</th>
+      <td><p>A Raster* object (i.e., RasterLayer, RasterStack, RasterBrick)</p></td>
+    </tr>
+    </table>
     
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      
-      <li><a href="#format">Format</a></li>
-          </ul>
+      <li><a href="#arguments">Arguments</a></li>
+                </ul>
 
+    <h2>Author</h2>
+    <p>Eliot McIntire</p>
   </div>
 </div>
 
