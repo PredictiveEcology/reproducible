@@ -13,6 +13,12 @@
     <loc>http://reproducible.predictiveecology.org/reference/Copy.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/Deprcated.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/Filenames.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/Path-class.html</loc>
   </url>
   <url>
@@ -49,6 +55,9 @@
     <loc>http://reproducible.predictiveecology.org/reference/cacheMessage.html</loc>
   </url>
   <url>
+    <loc>http://reproducible.predictiveecology.org/reference/checkAndMakeCloudFolderID.html</loc>
+  </url>
+  <url>
     <loc>http://reproducible.predictiveecology.org/reference/checkCacheRepo.html</loc>
   </url>
   <url>
@@ -70,19 +79,25 @@
     <loc>http://reproducible.predictiveecology.org/reference/clearStubArtifacts.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/cloudCache.html</loc>
+    <loc>http://reproducible.predictiveecology.org/reference/cloudCheckOld.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/cloudCheck.html</loc>
+    <loc>http://reproducible.predictiveecology.org/reference/cloudDownload.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/cloudExtras.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/cloudSyncCache.html</loc>
+    <loc>http://reproducible.predictiveecology.org/reference/cloudSyncCacheOld.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/cloudWrite.html</loc>
+    <loc>http://reproducible.predictiveecology.org/reference/cloudUpload.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/cloudUploadFromCache.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/cloudWriteOld.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/compareNA.html</loc>
@@ -113,6 +128,9 @@
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/dot-formalsNotInCurrentDots.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/dot-removeCacheAtts.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/downloadFile.html</loc>
@@ -214,16 +232,13 @@
     <loc>http://reproducible.predictiveecology.org/reference/purge.html</loc>
   </url>
   <url>
-    <loc>http://reproducible.predictiveecology.org/reference/readLinesRcpp.html</loc>
-  </url>
-  <url>
-    <loc>http://reproducible.predictiveecology.org/reference/readLinesRcppInternal.html</loc>
-  </url>
-  <url>
     <loc>http://reproducible.predictiveecology.org/reference/reproducible-package.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/reproducibleOptions.html</loc>
+  </url>
+  <url>
+    <loc>http://reproducible.predictiveecology.org/reference/retry.html</loc>
   </url>
   <url>
     <loc>http://reproducible.predictiveecology.org/reference/robustDigest.html</loc>

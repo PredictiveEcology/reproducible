@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Cache helpers — getUserTags • reproducible</title>
+<title>Remove attributes that are highly varying — .removeCacheAtts • reproducible</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Cache helpers — getUserTags" />
+<meta property="og:title" content="Remove attributes that are highly varying — .removeCacheAtts" />
 
-<meta property="og:description" content="A few helpers to get specific things from the cache repository" />
+<meta property="og:description" content="Remove attributes that are highly varying" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -124,60 +124,33 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Cache helpers</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-tools.R'><code>R/cache-tools.R</code></a></small>
-    <div class="hidden name"><code>cache-helpers.Rd</code></div>
+    <h1>Remove attributes that are highly varying</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/robustDigest.R'><code>R/robustDigest.R</code></a></small>
+    <div class="hidden name"><code>dot-removeCacheAtts.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>A few helpers to get specific things from the cache repository</p>
+    <p>Remove attributes that are highly varying</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>getUserTags</span>(<span class='no'>cacheRepo</span>, <span class='no'>shownCache</span>, <span class='no'>cacheId</span>, <span class='kw'>concatenated</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-
-<span class='fu'>getCacheId</span>(<span class='no'>cacheRepo</span>, <span class='no'>shownCache</span>, <span class='no'>artifact</span>)
-
-<span class='fu'>getArtifact</span>(<span class='no'>cacheRepo</span>, <span class='no'>shownCache</span>, <span class='no'>cacheId</span>)</pre>
+    <pre class="usage"><span class='fu'>.removeCacheAtts</span>(<span class='no'>x</span>, <span class='kw'>passByReference</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>cacheRepo</th>
-      <td><p>A repository used for storing cached objects.
-This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
+      <th>x</th>
+      <td><p>Any arbitrary R object that could have attributes</p></td>
     </tr>
     <tr>
-      <th>shownCache</th>
-      <td><p>Primary way of supplying <code>cacheRepo</code>; the data.table obj
-resulting from <code>showCache</code>, i.e., it will override <code>cacheRepo</code>.
-If this and <code>cacheRepo</code> are missing, then it will default to
-<code><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption('reproducible.cachePath')</a></code></p></td>
-    </tr>
-    <tr>
-      <th>cacheId</th>
-      <td><p>A character vector of cacheId values to use in the cache</p></td>
-    </tr>
-    <tr>
-      <th>concatenated</th>
-      <td><p>Logical. If <code>TRUE</code>, the returned userTags will
-be concatenated tagKey:tagValue</p></td>
-    </tr>
-    <tr>
-      <th>artifact</th>
-      <td><p>Character vector of artifact values in the
-<code>artifact</code> column of <code>showCache</code></p></td>
+      <th>passByReference</th>
+      <td><p>Logical. If <code>TRUE</code>, the default, this uses data.table::setattr to
+remove several attributes that are unnecessary for digesting, specifically <code>tags</code>,
+<code>.Cache</code> and <code>call</code></p></td>
     </tr>
     </table>
-    
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
-
-    <p><code>getCacheId</code> returns the <code>cacheId</code> values for 1 or more
-artifacts in the cache.</p>
-<p><code>getArtifact</code> returns the <code>artifact</code> value for 1 or more
-entries in the cache, by <code>cacheId</code>.</p>
     
 
   </div>
@@ -185,9 +158,7 @@ entries in the cache, by <code>cacheId</code>.</p>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
-      <li><a href="#value">Value</a></li>
-          </ul>
+                </ul>
 
   </div>
 </div>
