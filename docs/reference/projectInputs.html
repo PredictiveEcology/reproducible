@@ -142,7 +142,8 @@
 
 <span class='co'># S3 method for Raster</span>
 <span class='fu'>projectInputs</span>(<span class='no'>x</span>, <span class='kw'>targetCRS</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>cores</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>)
+  <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>cores</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>useGDAL</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useGDAL"</span>, <span class='fl'>TRUE</span>), <span class='no'>...</span>)
 
 <span class='co'># S3 method for sf</span>
 <span class='fu'>projectInputs</span>(<span class='no'>x</span>, <span class='no'>targetCRS</span>, <span class='no'>...</span>)
@@ -179,6 +180,16 @@ triggered. <code>'AUTO'*</code> will calculate 90<!-- % of the total -->
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.</p></td>
     </tr>
+    <tr>
+      <th>useGDAL</th>
+      <td><p>Logical, defaults to getOption("reproducible.useGDAL" = TRUE).
+If <code>TRUE</code>, then this function will use <code>gdalwarp</code> only when not
+small enough to fit in memory (i.e., <em>if the operation fails</em> the
+<code><a href='https://www.rdocumentation.org/packages/raster/topics/programming'>raster::canProcessInMemory(x, 3)</a></code> test). Using <code>gdalwarp</code> will
+usually be faster than <code><a href='https://www.rdocumentation.org/packages/raster/topics/projectRaster'>raster::projectRaster</a></code>, the function used
+if this is <code>FALSE</code>. Since since the two options use different algorithms,
+there may be different projection results.</p></td>
+    </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -212,7 +223,7 @@ other characteristics, including resolution, origin, extent if changed).</p>
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile131d53875761e. Specify filename1 or filename2 for more control</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile19101c9bdbaa. Specify filename1 or filename2 for more control</span>
 #&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'>projectInputs</span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)

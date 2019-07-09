@@ -221,6 +221,10 @@ file so they persist between sessions.</p>
 <tr><td></td><td></td><td><code>useCloud</code></td></tr>
 <tr><td></td><td>Passed to</td><td><code>Cache</code></td></tr>
 <tr><td>. Default</td><td><code>FALSE</code></td><td>.</td></tr>
+<tr><td></td><td></td><td><code>useGDAL</code></td></tr>
+<tr><td></td><td>Passed to</td><td><code>useGDAL</code></td></tr>
+<tr><td>in</td><td><code>projectInputs.Raster</code></td><td>.</td></tr>
+<tr><td>Default</td><td><code>TRUE</code></td><td>.</td></tr>
 <tr><td></td><td></td><td><code>useMemoise</code></td></tr>
 <tr><td></td><td></td><td><code>TRUE</code></td></tr>
 <tr><td></td><td>Used in</td><td><code><a href='cache.html'>Cache</a></code></td></tr>
@@ -241,7 +245,6 @@ file so they persist between sessions.</p>
 <tr><td><code>TRUE</code></td><td>then every Cache</td><td>call will show a summary of the objects being cached, their</td></tr>
 <tr><td><code>object.size</code></td><td></td><td>and the time it took to digest them and also the time it took to run</td></tr>
 <tr><td>the call and save the call to the cache repository or load the cached</td><td>copy from the repository. This may help diagnosing some problems that may occur.</td><td></td></tr>
-<tr><td></td><td></td><td></td></tr>
 </table>
     
     <h2 class="hasAnchor" id="advanced"><a class="anchor" href="#advanced"></a>Advanced</h2>
@@ -251,7 +254,7 @@ file so they persist between sessions.</p>
 <tr><td></td><td></td><td><code>cloudChecksumsFilename</code></td></tr>
 <tr><td></td><td></td><td><code><a href='https://www.rdocumentation.org/packages/base/topics/file.path'>file.path(dirname(.reproducibleTempCacheDir), "checksums.rds")</a></code></td></tr>
 <tr><td></td><td></td><td>Used in</td></tr>
-<tr><td><code><a href='cloudCache.html'>cloudCache</a></code></td><td></td><td></td></tr>
+<tr><td><code><a href='Deprcated.html'>cloudCache</a></code></td><td></td><td></td></tr>
 <tr><td></td><td><code>length</code></td><td></td></tr>
 <tr><td></td><td><code>Inf</code></td><td></td></tr>
 <tr><td>Used in</td><td><code><a href='cache.html'>Cache</a></code></td><td>, specifically to the internal</td></tr>

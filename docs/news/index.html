@@ -127,28 +127,36 @@
 
     <div id="version-0-2-8" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-8" class="anchor"></a>version 0.2.8<small> Unreleased </small>
+<a href="#version-0-2-8" class="anchor"></a>version 0.2.8<small> 2019-03-18 </small>
 </h1>
 <div id="new-features" class="section level2">
 <h2 class="hasAnchor">
 <a href="#new-features" class="anchor"></a>New features</h2>
 <ul>
+<li>Cache has 2 new arguments, <code>useCloud</code> and <code>cloudFolderID</code>. This is a new approach to cloud caching. It has been tested with file backed RasterLayer, RasterStack and RasterBrick and all normal R objects. It will not work for any other class of disk-backed files, e.g., <code>ff</code> or <code>bigmatrix</code>, nor is it likely to work for R6 class objects.</li>
+<li>Slowly deprecating cloudCache and family of functions in favour of a new approach using arguments to <code>Cache</code>, i.e., <code>useCache</code> and <code>cloudFolderID</code>
+</li>
+<li>
+<code>downloadData</code> from GoogleDrive now protects against HTTP2 error by capturing error and retrying. This is a curl issue for interrupted connections.</li>
 <li>new functions for accessing specific items from the <code>cacheRepo</code>: <code>getArtifact</code>, <code>getCacheId</code>, <code>getUserTags</code>
 </li>
 <li>
-<code>cloudSyncCache</code> has more options that are implemented and many unitTests</li>
+<code>retry</code>, a new function, wraps <code>try</code> with an explicit attempt to retry the same code upon error. Useful for flaky functions, such as <code>googldrive::drive_download</code> which sometimes fails due to <code>curl</code> HTTP2 error.</li>
+<li>removed all <code>Rcpp</code> functionality as the functions were no longer faster than their R base alternatives.</li>
 </ul>
 </div>
 <div id="bug-fixes" class="section level2">
 <h2 class="hasAnchor">
 <a href="#bug-fixes" class="anchor"></a>bug fixes</h2>
 <ul>
+<li>fixes for <code>rcnst</code> errors on R-devel, tested using <code><a href="https://www.rdocumentation.org/packages/devtools/topics/check">devtools::check(env_vars = list("R_COMPILE_PKGS"=1, "R_JIT_STRATEGY"=4, "R_CHECK_CONSTANTS"=5))</a></code>
+</li>
 <li>
 <code>prepInputs</code> wasn’t correctly passing <code>useCache</code>
 </li>
 <li>
 <code>cropInputs</code> was reprojecting extent of y as a time saving approach, but this was incorrect if <code>studyArea</code> is a <code>SpatialPolygon</code> that is not close to filling the extent. It now reprojects <code>studyArea</code> directly which will be slower, but correct. – fixes issue <a href='https://github.com/PredictiveEcology/reproducible/issues/93'>#93</a></li>
-<li>other minor</li>
+<li>other minor, included fixes for <a href='https://github.com/PredictiveEcology/reproducible/issues/115'>#115</a></li>
 </ul>
 </div>
 </div>
