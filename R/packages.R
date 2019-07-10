@@ -409,7 +409,7 @@ pkgDep <- function(packages, libPath, recursive = TRUE, depends = TRUE,
       ll1
     })
 
-    # package_dependencies and PkgDep will differ under the following circumstances
+    # package_dependencies and pkgDep will differ under the following circumstances
     # 1. github packages are not detected using tools::package_dependencies
     # 2. package_dependencies does not detect the dependencies of base packages,
     #    e.g,. methods depends on stats and graphics
@@ -420,14 +420,29 @@ pkgDep <- function(packages, libPath, recursive = TRUE, depends = TRUE,
       paste(names(ll2[notInstalled]), collapse = ", ")
       repos <- getCRANrepos(repos)
 
+      if (!is.memoised(available.packagesMem)) {
+        assignInMyNamespace("available.packagesMem", memoise(available.packages, ~timeout(360))) # nolint
+      }
+
+      parentFramePackages <- tryCatch(get("packages", envir = parent.frame()), error = function(x) NULL)
+
+      if (!is.null(parentFramePackages))
+        message(paste(parentFramePackages, collapse = ", "), " depencies: ")
+      message("  ", paste(names(ll2[notInstalled]), collapse = ", "),
+              " not installed locally; check for dependencies on CRAN")
       availPackagesDb <- available.packagesMem(repos = repos)
       ll3 <- package_dependenciesMem(names(ll2[notInstalled]), db = availPackagesDb,
                                      recursive = recursive)
+      if (recursive) {
+        .pkgEnv$.depsAll[["recursive"]][[typeString]] <- append(.pkgEnv$.depsAll[["recursive"]][[typeString]], ll3)
+      } else {
+        .pkgEnv$.depsAll[["nonRecursive"]][[typeString]] <- append(.pkgEnv$.depsAll[["nonRcursive"]][[typeString]], ll3)
+      }
       # the previous line will miss base packages
       ll3 <- lapply(ll3, function(x) {
         unique(c(x, unlist(pkgDep(x, libPath = unique(c(libPath, .libPaths())),
                                   recursive = recursive,
-                                  depends = depends, imports = imports, suggests = suggests,
+                                  depends = depends, imports = imports, suggests = FALSE, # don't propagate suggests
                                   linkingTo = linkingTo,
                                   refresh = FALSE))))
       })
