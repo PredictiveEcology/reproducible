@@ -159,8 +159,8 @@ test_that("test pkgDep", {
     }, add = TRUE)
 
     N <- 4
-    aTime <- system.time(for (i in 1:N) aStart <- pkgDep("quickPlot", refresh = TRUE))
-    bTime <- system.time(for (i in 1:N) bStart <- pkgDep("quickPlot", refresh = FALSE))
+    aTime <- system.time(for (i in 1:N) aStart <- pkgDep("reproducible", refresh = TRUE))
+    bTime <- system.time(for (i in 1:N) bStart <- pkgDep("reproducible", refresh = FALSE))
     expect_identical(aStart,bStart)
     expect_true(aTime[3] > bTime[3])
 
@@ -200,22 +200,22 @@ test_that("test pkgDep", {
       })
     })
 
-    a2 <- pkgDep("quickPlot", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
-    b2 <- pkgDep("quickPlot", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
+    a2 <- pkgDep("reproducible", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
+    b2 <- pkgDep("reproducible", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
     expect_identical(a2,b2)
 
-    a3 <- pkgDep("quickPlot", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
-    b3 <- pkgDep("quickPlot", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    a3 <- pkgDep("reproducible", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    b3 <- pkgDep("reproducible", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
     expect_identical(a3,b3)
 
-    a4 <- pkgDep("quickPlot", refresh = TRUE, suggests = FALSE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
-    b4 <- pkgDep("quickPlot", refresh = FALSE, suggests = FALSE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    a4 <- pkgDep("reproducible", refresh = TRUE, suggests = FALSE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    b4 <- pkgDep("reproducible", refresh = FALSE, suggests = FALSE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
     expect_identical(a4,b4)
 
     # rebuild recursive manually
     d <- list()
-    d[[1]] <- pkgDep("quickPlot", refresh = TRUE, recursive = FALSE)
-    b2 <- pkgDep("quickPlot", refresh = FALSE, recursive = FALSE)
+    d[[1]] <- pkgDep("reproducible", refresh = TRUE, recursive = FALSE)
+    b2 <- pkgDep("reproducible", refresh = FALSE, recursive = FALSE)
     expect_identical(d[[1]],b2)
 
     i <- 1
@@ -225,7 +225,10 @@ test_that("test pkgDep", {
     }
 
     e2 <- sort(unique(unlist(c(b2,d))))
-    expect_identical(e2, sort(aStart$quickPlot))
+    expect_identical(e2, sort(aStart$reproducible))
+
+  })
+
 test_that("test pkgDep2", {
   testInitOut <- testInit()
   on.exit({
