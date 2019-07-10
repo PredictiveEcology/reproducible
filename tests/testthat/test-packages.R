@@ -1,5 +1,6 @@
 test_that("package-related functions work", {
 
+
   skip_on_cran()
 
   testInitOut <- testInit()
@@ -150,3 +151,81 @@ test_that("package-related functions work", {
   # expect_true(any(grepl("Trying to install", Mess)))
 
 })
+
+test_that("test pkgDep", {
+    testInitOut <- testInit()
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+
+    N <- 4
+    aTime <- system.time(for (i in 1:N) aStart <- pkgDep("quickPlot", refresh = TRUE))
+    bTime <- system.time(for (i in 1:N) bStart <- pkgDep("quickPlot", refresh = FALSE))
+    expect_identical(aStart,bStart)
+    expect_true(aTime[3] > bTime[3])
+
+    pkg <- "dplyr"
+    df <- expand.grid(suggests = c(TRUE, FALSE),
+                      #depends = c(TRUE, FALSE),
+                      imports = c(TRUE, FALSE),
+                      linkingTo = c(TRUE, FALSE)
+                      )
+    #df <- data.frame(df, count = apply(df, 1, sum) - df$depends)
+
+    # Test "refresh"
+    a <- list()
+    b <- list()
+    out <- lapply(seq(NROW(df)), function(n) {
+      f <- df[n,]
+      n <- paste(as.logical(f), collapse = "_")
+      a[[n]] <<- pkgDep(pkg, refresh = TRUE, suggests = f$suggests, imports = f$imports, #depends = f$depends,
+                        linkingTo = f$linkingTo,
+                        recursive = FALSE)
+      b[[n]] <<- pkgDep(pkg, refresh = FALSE, suggests = f$suggests, imports = f$imports, #depends = f$depends,
+                        linkingTo = f$linkingTo,
+                        recursive = FALSE)
+      expect_identical(a[[n]],b[[n]])
+    })
+
+    out <- lapply(seq(NROW(df)), function(n) {
+      f1 <- df[n,]
+      names(f1) <- colnames(df)
+
+      subDF <- expand.grid(lapply(f1, function(x) unique(c(FALSE, x))))
+      dfCompare <- subDF[sapply(seq_len(NROW(subDF)), function(x) !identical(as.logical(subDF[x,]), as.logical(f1))),]
+
+      lapply(as.numeric(rownames(dfCompare)), function(x) {
+        x <- paste(as.logical(dfCompare[x,]), collapse = "_")
+        browser(expr = x == 1 && n == 2)
+        expect_true(length(a[[n]][[1]]) > length(a[[x]][[1]]))
+      })
+    })
+
+    a2 <- pkgDep("quickPlot", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
+    b2 <- pkgDep("quickPlot", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
+    expect_true(length(a2$quickPlot) < length(a1$quickPlot)) # Rcpp in linkingTo
+
+    a3 <- pkgDep("quickPlot", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    b3 <- pkgDep("quickPlot", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    expect_identical(a3,b3)
+
+    a4 <- pkgDep("quickPlot", refresh = TRUE, suggests = FALSE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    b4 <- pkgDep("quickPlot", refresh = FALSE, suggests = FALSE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    expect_identical(a4,b4)
+
+    # rebuild recursive manually
+    d <- list()
+    d[[1]] <- pkgDep("quickPlot", refresh = TRUE, recursive = FALSE)
+    b2 <- pkgDep("quickPlot", refresh = FALSE, recursive = FALSE)
+    expect_identical(d[[1]],b2)
+
+    i <- 1
+    while (length(d[[i]]) > 0) {
+      d[[i+1]] <- unique(unname(unlist(lapply(d[[i]], pkgDep, recursive = FALSE))))
+      i <- i + 1
+    }
+
+    e2 <- sort(unique(c(names(d2), unlist(c(b2,d)))))
+    expect_identical(e2, sort(aStart$quickPlot))
+
+  })

@@ -2,16 +2,12 @@
 % Please edit documentation in R/packages.R
 \name{pkgDep}
 \alias{pkgDep}
-\alias{pkgDep2}
 \title{Determine package dependencies, first looking at local filesystem}
 \usage{
 pkgDep(packages, libPath, recursive = TRUE, depends = TRUE,
   imports = TRUE, suggests = FALSE, linkingTo = TRUE,
-  repos = getOption("repos"))
-
-pkgDep2(packages, libPath, recursive = TRUE, depends = TRUE,
-  imports = TRUE, suggests = FALSE, linkingTo = TRUE,
-  repos = getOption("repos"))
+  repos = getOption("repos"), refresh = FALSE,
+  verbose = getOption("reproducible.verbose"))
 }
 \arguments{
 \item{packages}{a character vector of package names.}
@@ -32,6 +28,12 @@ NOTE: Dependencies of suggests will not be recursive. Default \code{TRUE}.}
 
 \item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
 \code{install.packages}, \code{install_github} or \code{installVersions}.}
+
+\item{refresh}{There is an internal type of caching. If the results are wrong, likely
+set \code{refresh = TRUE}.}
+
+\item{verbose}{logical indicating if output should monitor the package
+    search cycles.}
 }
 \description{
 This is intended to replace \code{\link[tools]{package_dependencies}} or
