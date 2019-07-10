@@ -1,5 +1,16 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+
+version 0.2.10
+=============
+
+## New features
+
+
+## bug fixes
+
+* `pkgDep` was becoming unreliable for unknown reasons. It has been reimplemented, much faster, without memoising. The speed gains should be immediately noticeable (6 second to 0.1 second for `pkgDep("reproducible")`)
+
 version 0.2.9
 =============
 
