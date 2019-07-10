@@ -112,9 +112,6 @@ test_that("package-related functions work", {
   ## Test passing package as unquoted name
   expect_true(Require(TimeWarp, libPath = packageDir1, standAlone = TRUE))
 
-  #unlink(packageDir, recursive = TRUE, force = TRUE)
-
-  #}
 })
 
 test_that("package-related functions work", {

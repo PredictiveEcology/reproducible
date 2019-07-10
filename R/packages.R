@@ -301,9 +301,9 @@ installedVersions <- function(packages, libPath) {
   }
   if (length(packages) > 1) {
     if (length(packages) == length(libPath)) {
-      ans <- lapply(seq_along(packages), function(x) installedVersions(packages[x], libPath[x]))
+      ans <- lapply(seq_along(packages), function(x) unlist(installedVersions(packages[x], libPath[x])))
     } else {
-      ans <- lapply(packages, installedVersions, libPath)
+      ans <- lapply(packages, function(x) unlist(installedVersions(x, libPath)))
     }
     names(ans) <- packages
     return(ans)
@@ -319,6 +319,8 @@ installedVersions <- function(packages, libPath) {
     on.exit(Sys.setlocale(locale = ""))
     vers_line <- lines[grep("^Version: *", lines)] # nolint
     vers <- gsub("Version: ", "", vers_line)
+    vers <- list(vers)
+    names(vers) <- packages
     return(vers)
   }
 }
