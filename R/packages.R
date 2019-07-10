@@ -580,6 +580,34 @@ pkgDep <- function(packages, libPath, recursive = TRUE, depends = TRUE,
   }
 }
 
+#' @description
+#' \code{pkgDep2} is a convenience wrapper of \code{pkgDep} that
+#' "goes one level in" i.e., the first order dependencies, and runs
+#' the \code{pkgDep} on those.
+#' @rdname pkgDep
+#' @export
+#' @param sorted Logical. If \code{TRUE}, the default, the packages will be sorted in
+#'   the returned list from most number of dependencies to least.
+#' @examples
+#' pkgDep2("reproducible")
+pkgDep2 <- function(packages, recursive = TRUE, depends = TRUE,
+                    imports = TRUE, suggests = FALSE, linkingTo = TRUE,
+                    repos = getOption("repos"), refresh = FALSE,
+                    verbose = getOption("reproducible.verbose"),
+                    sorted = TRUE) {
+  a <- lapply(pkgDep(packages, recursive = FALSE, depends = depends, imports = imports, suggests = suggests,
+                     linkingTo = linkingTo)[[1]],
+              recursive = recursive,
+              pkgDep, depends = depends, imports = imports, suggests = suggests,
+              linkingTo = linkingTo
+  )
+  a <- unlist(a, recursive = FALSE)
+  if (sorted) {
+    ord <- order(sapply(a, function(x) length(x)), decreasing = TRUE)
+    a <- a[ord]
+  }
+  return(a)
+}
 
 #' Memoised version of package_dependencies
 #'

@@ -6,6 +6,7 @@ version 0.2.10
 
 ## New features
 
+* `pkgDep2`, a new convenience function to get the dependencies of the "first order" dependencies.
 
 ## bug fixes
 

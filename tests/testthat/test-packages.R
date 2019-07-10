@@ -226,5 +226,23 @@ test_that("test pkgDep", {
 
     e2 <- sort(unique(unlist(c(b2,d))))
     expect_identical(e2, sort(aStart$quickPlot))
+test_that("test pkgDep2", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
-  })
+  a <- pkgDep2("reproducible", recursive = TRUE, suggests = FALSE, depends = TRUE,
+               imports = TRUE, sort = FALSE)
+  b <- pkgDep("reproducible", recursive = FALSE, suggests = FALSE, depends = TRUE,
+              imports = TRUE)
+  expect_identical(names(a), b$reproducible)
+
+  a <- pkgDep2("reproducible", recursive = TRUE, suggests = FALSE, depends = TRUE,
+               imports = TRUE, sort = FALSE)
+  b <- pkgDep("reproducible", recursive = TRUE, suggests = FALSE, depends = TRUE,
+              imports = TRUE)
+  expect_identical(sort(unique(c(names(a), unique(unlist(a))))), sort(b$reproducible))
+
+
+})
