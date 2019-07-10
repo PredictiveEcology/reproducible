@@ -196,14 +196,13 @@ test_that("test pkgDep", {
 
       lapply(as.numeric(rownames(dfCompare)), function(x) {
         x <- paste(as.logical(dfCompare[x,]), collapse = "_")
-        browser(expr = x == 1 && n == 2)
         expect_true(length(a[[n]][[1]]) > length(a[[x]][[1]]))
       })
     })
 
     a2 <- pkgDep("quickPlot", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
     b2 <- pkgDep("quickPlot", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
-    expect_true(length(a2$quickPlot) < length(a1$quickPlot)) # Rcpp in linkingTo
+    expect_identical(a2,b2)
 
     a3 <- pkgDep("quickPlot", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
     b3 <- pkgDep("quickPlot", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
@@ -225,7 +224,7 @@ test_that("test pkgDep", {
       i <- i + 1
     }
 
-    e2 <- sort(unique(c(names(d2), unlist(c(b2,d)))))
+    e2 <- sort(unique(unlist(c(b2,d))))
     expect_identical(e2, sort(aStart$quickPlot))
 
   })
