@@ -71,7 +71,8 @@ test_that("package-related functions work", {
   installed <- data.table::fread(packageVersionFile)
   pkgDeps <- sort(c("Holidays", unique(unlist(pkgDep("Holidays", recursive = TRUE,
                                                      libPath = packageDir)))))
-  expect_true(all(pkgDeps %in% installed$instPkgs))
+  if (.Platform$OS.type %in% c("windows", "unix")) # Alex debug
+    expect_true(all(pkgDeps %in% installed$instPkgs))
 
   # Check that the snapshot works even if packages aren't in packageDir,
   # i.e., standAlone is FALSE, or there are base packages
@@ -86,32 +87,36 @@ test_that("package-related functions work", {
                                                             allInstalledNames,
                                                             recursive = TRUE)))))
 
-  expect_true(all(unique(pkgDeps) %in% unique(installed$instPkgs)))
+  if (.Platform$OS.type %in% c("windows", "unix")) # Alex debug
+    expect_true(all(unique(pkgDeps) %in% unique(installed$instPkgs)))
 
   packageDirList <- dir(packageDir)
   packageDirList <- packageDirList[!packageDirList %in% defaultFilesInPackageDir]
-  expect_true(all(packageDirList %in% installed$instPkgs))
+  if (.Platform$OS.type %in% c("windows", "unix")) # Alex debug
+    expect_true(all(packageDirList %in% installed$instPkgs))
   expect_false(all(installed$instPkgs %in% packageDirList))
-  expect_true(any(installed$instPkgs %in% packageDirList))
+  if (.Platform$OS.type %in% c("windows", "unix")) # Alex debug
+    expect_true(any(installed$instPkgs %in% packageDirList))
   installedNotInLibPath <- installed[!(installed$instPkgs %in% packageDirList), ]
   inBase <- unlist(installedVersions(installedNotInLibPath$instPkgs,
                                      libPath = .libPaths()[length(.libPaths())]))
   inBaseDT <- na.omit(data.table::data.table(instPkgs = names(inBase), instVers = inBase))
   inBaseDT <- unique(inBaseDT)
-  merged <- installed[inBaseDT, on = c("instPkgs", "instVers"), nomatch = 0]
+  if (.Platform$OS.type %in% c("windows", "unix")) { # Alex debug
+    merged <- installed[inBaseDT, on = c("instPkgs", "instVers"), nomatch = 0]
 
-  # This test that the installed versions in Base are the same as the ones that
-  # are expected in packageVersionFile, which is the ones that were used when
-  # looking for the dependencies of latdiag during Require call
-  expect_true(identical(merged, unique(merged)))
+    # This test that the installed versions in Base are the same as the ones that
+    # are expected in packageVersionFile, which is the ones that were used when
+    # looking for the dependencies of latdiag during Require call
+    expect_true(identical(merged, unique(merged)))
 
-  try(detach("package:meow", unload = TRUE))
-  try(detach("package:Holidays", unload = TRUE))
-  try(detach("package:TimeWarp", unload = TRUE))
+    try(detach("package:meow", unload = TRUE))
+    try(detach("package:Holidays", unload = TRUE))
+    try(detach("package:TimeWarp", unload = TRUE))
 
-  ## Test passing package as unquoted name
-  expect_true(Require(TimeWarp, libPath = packageDir1, standAlone = TRUE))
-
+    ## Test passing package as unquoted name
+    expect_true(Require(TimeWarp, libPath = packageDir1, standAlone = TRUE))
+  }
 })
 
 test_that("package-related functions work", {
