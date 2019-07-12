@@ -7,6 +7,7 @@ version 0.2.10
 ## New features
 
 * `pkgDep2`, a new convenience function to get the dependencies of the "first order" dependencies.
+* `useCache`, used in many functions (incl `Cache`, `postProcess`) can now be numeric, a qualitative indicator of "how deep" nested `Cache` calls should set `useCache = TRUE` -- implemented as 1 or 2 in `postProcess` currently. See `?Cache`
 
 ## bug fixes
 
