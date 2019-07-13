@@ -149,12 +149,12 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  x <- postProcessAllSpatial(x = x, studyArea = studyArea,
-                             rasterToMatch = rasterToMatch, useCache = useCache,
+  x1 <- postProcessAllSpatial(x = x, studyArea = studyArea,
+                             rasterToMatch = rasterToMatch, useCache = useCache > 1,
                              filename1 =filename1, filename2 = filename2,
                              useSAcrs = useSAcrs, overwrite = overwrite,
                              ...)
-  return(x)
+  return(x1)
 }
 
 #' @export
@@ -178,7 +178,7 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
   }
 
   x <- postProcessAllSpatial(x = x, studyArea = studyArea,
-                             rasterToMatch = rasterToMatch, useCache = useCache,
+                             rasterToMatch = rasterToMatch, useCache = useCache > 1,
                              filename1 =filename1, filename2 = filename2,
                              useSAcrs = useSAcrs, overwrite = overwrite,
                              ...)
@@ -393,7 +393,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
       if (suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
         warn <- capture_warnings(
-          x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
+          x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache > 1))
         )
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
@@ -435,7 +435,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
         warn <- capture_warnings(
-          x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
+          x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache > 1))
         )
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
@@ -1334,7 +1334,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     x <- Cache(cropInputs, x = x, studyArea = studyArea,
                extentToMatch = extRTM,
                extentCRS = crsRTM,
-               useCache = useCache, ...)
+               useCache = useCache > 1, ...)
 
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
@@ -1349,7 +1349,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                                  targetCRS)
 
       x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
-                 rasterToMatch = rasterToMatch, useCache = useCache, ...)
+                 rasterToMatch = rasterToMatch, useCache = useCache > 1, ...)
       # may need to fix again
       x <- fixErrors(x = x, objectName = objectName,
                      useCache = useCache, ...)
@@ -1358,7 +1358,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       # maskInputs
       ##################################
       x <- Cache(maskInputs, x = x, studyArea = studyArea,
-                 rasterToMatch = rasterToMatch, useCache = useCache, ...)
+                 rasterToMatch = rasterToMatch, useCache = useCache > 1, ...)
 
       ##################################
       # filename
