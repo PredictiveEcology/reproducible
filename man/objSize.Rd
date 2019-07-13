@@ -6,19 +6,25 @@
 \alias{objSize.environment}
 \alias{objSize.default}
 \alias{objSize.Path}
+\alias{objSize.function}
 \title{Recursive object.size}
 \usage{
-objSize(x, quick)
+objSize(x, quick, ...)
 
-\method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE))
+\method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE),
+  ...)
 
 \method{objSize}{environment}(x, quick = getOption("reproducible.quick",
-  FALSE))
+  FALSE), ...)
 
 \method{objSize}{default}(x, quick = getOption("reproducible.quick",
-  FALSE))
+  FALSE), ...)
 
-\method{objSize}{Path}(x, quick = getOption("reproducible.quick", FALSE))
+\method{objSize}{Path}(x, quick = getOption("reproducible.quick", FALSE),
+  ...)
+
+\method{objSize}{function}(x, quick = getOption("reproducible.quick",
+  FALSE), enclosingEnvs = TRUE)
 }
 \arguments{
 \item{x}{An object}
@@ -26,6 +32,9 @@ objSize(x, quick)
 \item{quick}{Logical. Only some methods use this. e.g.,
 \code{Path} class objects. In which case, \code{file.size} will be
 used instead of \code{object.size}.}
+
+\item{...}{Other arguments passed to methods, e.g., \code{objSize.function}
+has \code{enclosingEnvs}}
 }
 \description{
 This has methods for various types of things that may not correctly report
