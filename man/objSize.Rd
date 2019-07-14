@@ -24,7 +24,7 @@ objSize(x, quick, ...)
   ...)
 
 \method{objSize}{function}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE)
+  FALSE), enclosingEnvs = TRUE, ...)
 }
 \arguments{
 \item{x}{An object}
@@ -40,6 +40,13 @@ has \code{enclosingEnvs}}
 This has methods for various types of things that may not correctly report
 their object.size using \code{object\.size}. Also, for lists and environments,
 it will return the object.size separately for each element.
+}
+\details{
+For functions, a user can include the enclosing environment as described
+\url{https://www.r-bloggers.com/using-closures-as-objects-in-r/} and
+\url{http://adv-r.had.co.nz/memory.html}. It is not entirely clear which estimate
+is better. However, if the enclosing environment is the .GlobalEnv, it will
+not be included even though \code{enclosingEnvs = TRUE}.
 }
 \examples{
 a <- new.env()

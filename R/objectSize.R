@@ -72,7 +72,7 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE), ...)
 #' is better. However, if the enclosing environment is the .GlobalEnv, it will
 #' not be included even though \code{enclosingEnvs = TRUE}.
 objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
-                             enclosingEnvs = TRUE) {
+                             enclosingEnvs = TRUE, ...) {
   varName <- deparse(substitute(x))
   if (isTRUE(enclosingEnvs) && (!identical(.GlobalEnv, environment(x)))) {
     x <- mget(ls(envir=environment(x)), envir = environment(x))
