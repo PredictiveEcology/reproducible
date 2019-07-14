@@ -554,6 +554,10 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
+          objSize <- file.size(file.path(cacheRepo, "gallery", paste0(isInRepo$artifact, ".rda")))
+          class(objSize) <- "object_size"
+          if (objSize > 1e6)
+            message(crayon::blue(paste0("  ...(Object to retrieve is large: ", format(objSize, units = "auto"), ")")))
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
                                  lastOne = lastOne, cacheRepo = cacheRepo,
                                  fnDetails = fnDetails,
