@@ -1,20 +1,33 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 0.2.8
+
+version 0.2.10
+=============
+
+## New features
+
+* `pkgDep2`, a new convenience function to get the dependencies of the "first order" dependencies.
+* `useCache`, used in many functions (incl `Cache`, `postProcess`) can now be numeric, a qualitative indicator of "how deep" nested `Cache` calls should set `useCache = TRUE` -- implemented as 1 or 2 in `postProcess` currently. See `?Cache`
+
+## bug fixes
+
+* `pkgDep` was becoming unreliable for unknown reasons. It has been reimplemented, much faster, without memoising. The speed gains should be immediately noticeable (6 second to 0.1 second for `pkgDep("reproducible")`)
+
+version 0.2.9
 =============
 
 ## New features
 
 * Cache has 2 new arguments, `useCloud` and `cloudFolderID`. This is a new approach to cloud caching. It has been tested with file backed RasterLayer, RasterStack and RasterBrick and all normal R objects. It will not work for any other class of disk-backed files, e.g., `ff` or `bigmatrix`, nor is it likely to work for R6 class objects.
 * Slowly deprecating cloudCache and family of functions in favour of a new approach using arguments to `Cache`, i.e., `useCache` and `cloudFolderID`
-* `downloadData` from GoogleDrive now protects against HTTP2 error by capturing error and retrying. This is a curl defect.
+* `downloadData` from GoogleDrive now protects against HTTP2 error by capturing error and retrying. This is a curl issue for interrupted connections.
 * new functions for accessing specific items from the `cacheRepo`: `getArtifact`, `getCacheId`, `getUserTags`
-* `cloudSyncCache` has more options that are implemented and many unitTests -- but being deprecated
 * `retry`, a new function, wraps `try` with an explicit attempt to retry the same code upon error. Useful for flaky functions, such as `googldrive::drive_download` which sometimes fails due to `curl` HTTP2 error.
+* removed all `Rcpp` functionality as the functions were no longer faster than their R base alternatives.
 
 ## bug fixes
 
-* fixes for `rcnst` errors on R-devel
+* fixes for `rcnst` errors on R-devel, tested using `devtools::check(env_vars = list("R_COMPILE_PKGS"=1, "R_JIT_STRATEGY"=4, "R_CHECK_CONSTANTS"=5))`
 * `prepInputs` wasn't correctly passing `useCache` 
 * `cropInputs` was reprojecting extent of y as a time saving approach, but this was incorrect if `studyArea` is a `SpatialPolygon` that is not close to filling the extent. It now reprojects `studyArea` directly which will be slower, but correct. -- fixes issue #93
 * other minor, included fixes for #115

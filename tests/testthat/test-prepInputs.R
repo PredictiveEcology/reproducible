@@ -5,13 +5,14 @@ test_that("prepInputs doesn't work", {
 
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = file.path(tempdir(), "raster"),
-    "reproducible.cachePath" = .reproducibleTempCacheDir,
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE)
   )
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
+
+  options("reproducible.cachePath" = tmpdir)
 
   # Add a study area to Crop and Mask to
   # Create a "study area"

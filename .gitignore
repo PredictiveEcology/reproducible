@@ -1,17 +1,12 @@
 .csv
 .httr-oauth
 .log
-*.o
 .Rapp.history
 *.RData
 .Rhistory
 .Rproj.user
 inst/doc
 /revdep/.cache.rds
-src/
-src/reproducible\.dll
-src-i386/
-src-x64/
 vignettes/Intro-to-Cache\.html
 vignettes/Intro-to-Cache\.R
 

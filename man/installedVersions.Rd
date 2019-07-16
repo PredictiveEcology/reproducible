@@ -14,8 +14,7 @@ installed in the \code{libPath}.}
 (i.e., call \code{library})}
 }
 \description{
-This code is adapted from \code{\link[versions]{installed.versions}},
-but uses an \code{Rcpp} alternative to \code{readLines} for speed.
+This code is adapted from \code{\link[versions]{installed.versions}}.
 It will be anywhere from 2x to 10x faster than the
 \code{\link[versions]{installed.versions}} function.
 This is also many times faster than \code{utils::installed.packages},

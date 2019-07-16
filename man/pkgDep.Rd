@@ -7,11 +7,13 @@
 \usage{
 pkgDep(packages, libPath, recursive = TRUE, depends = TRUE,
   imports = TRUE, suggests = FALSE, linkingTo = TRUE,
-  repos = getOption("repos"))
+  repos = getOption("repos"), refresh = FALSE,
+  verbose = getOption("reproducible.verbose"))
 
-pkgDep2(packages, libPath, recursive = TRUE, depends = TRUE,
-  imports = TRUE, suggests = FALSE, linkingTo = TRUE,
-  repos = getOption("repos"))
+pkgDep2(packages, recursive = TRUE, depends = TRUE, imports = TRUE,
+  suggests = FALSE, linkingTo = TRUE, repos = getOption("repos"),
+  refresh = FALSE, verbose = getOption("reproducible.verbose"),
+  sorted = TRUE)
 }
 \arguments{
 \item{packages}{a character vector of package names.}
@@ -32,6 +34,15 @@ NOTE: Dependencies of suggests will not be recursive. Default \code{TRUE}.}
 
 \item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
 \code{install.packages}, \code{install_github} or \code{installVersions}.}
+
+\item{refresh}{There is an internal type of caching. If the results are wrong, likely
+set \code{refresh = TRUE}.}
+
+\item{verbose}{logical indicating if output should monitor the package
+    search cycles.}
+
+\item{sorted}{Logical. If \code{TRUE}, the default, the packages will be sorted in
+the returned list from most number of dependencies to least.}
 }
 \description{
 This is intended to replace \code{\link[tools]{package_dependencies}} or
@@ -39,6 +50,10 @@ This is intended to replace \code{\link[tools]{package_dependencies}} or
 It will first check local package directories in \code{libPath}, and it if
 the function cannot find the packages there, then it will use
 \code{\link[tools]{package_dependencies}}.
+
+\code{pkgDep2} is a convenience wrapper of \code{pkgDep} that
+"goes one level in" i.e., the first order dependencies, and runs
+the \code{pkgDep} on those.
 }
 \note{
 \code{package_dependencies} and \code{pkgDep} will differ under the following
@@ -51,4 +66,5 @@ circumstances:
 }
 \examples{
 pkgDep("crayon")
+pkgDep2("reproducible")
 }

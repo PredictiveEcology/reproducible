@@ -5,7 +5,7 @@ if (getRversion() >= "3.1.0") {
 #' Repeatability-safe install and load packages, optionally with specific versions
 #'
 #' This is an "all in one" function that will run \code{install.packages} for
-#' CRAN packages, \code{remotes::install_github} for \url{GitHub.com} packages and
+#' CRAN packages, \code{remotes::install_github} for \url{https://github.com/} packages and
 #' will install specific versions of each package if there is a
 #' \code{packageVersionFile} supplied. Plus, when \code{packages} is provided as
 #' a character vector, or a \code{packageVersionFile} is supplied, all package
@@ -276,8 +276,7 @@ newLibPaths <- function(libPath) {
 
 #' Determine versions all installed packages
 #'
-#' This code is adapted from \code{\link[versions]{installed.versions}},
-#' but uses an \code{Rcpp} alternative to \code{readLines} for speed.
+#' This code is adapted from \code{\link[versions]{installed.versions}}.
 #' It will be anywhere from 2x to 10x faster than the
 #' \code{\link[versions]{installed.versions}} function.
 #' This is also many times faster than \code{utils::installed.packages},
@@ -302,9 +301,9 @@ installedVersions <- function(packages, libPath) {
   }
   if (length(packages) > 1) {
     if (length(packages) == length(libPath)) {
-      ans <- lapply(seq_along(packages), function(x) installedVersions(packages[x], libPath[x]))
+      ans <- lapply(seq_along(packages), function(x) unlist(installedVersions(packages[x], libPath[x])))
     } else {
-      ans <- lapply(packages, installedVersions, libPath)
+      ans <- lapply(packages, function(x) unlist(installedVersions(x, libPath)))
     }
     names(ans) <- packages
     return(ans)
@@ -315,18 +314,67 @@ installedVersions <- function(packages, libPath) {
   if (!file.exists(desc_path)) {
     return(NA)
   } else {
-    lines <- readLinesRcpp(desc_path);
+    lines <- readLines(desc_path);
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     on.exit(Sys.setlocale(locale = ""))
     vers_line <- lines[grep("^Version: *", lines)] # nolint
     vers <- gsub("Version: ", "", vers_line)
+    vers <- list(vers)
+    names(vers) <- packages
     return(vers)
   }
 }
 
-pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
-                      imports = TRUE, suggests = FALSE, linkingTo = TRUE,
-                      repos = getOption("repos")) {
+
+#' Determine package dependencies, first looking at local filesystem
+#'
+#' This is intended to replace \code{\link[tools]{package_dependencies}} or
+#' \code{pkgDep} in the \pkg{miniCRAN} package, but with modifications for speed.
+#' It will first check local package directories in \code{libPath}, and it if
+#' the function cannot find the packages there, then it will use
+#' \code{\link[tools]{package_dependencies}}.
+#'
+#' @note \code{package_dependencies} and \code{pkgDep} will differ under the following
+#' circumstances:
+#' \enumerate{
+#'   \item GitHub packages are not detected using \code{tools::package_dependencies};
+#'   \item \code{tools::package_dependencies} does not detect the dependencies of base packages
+#'     among themselves, \emph{e.g.}, \code{methods} depends on \code{stats} and \code{graphics}.
+#' }
+#'
+#' @inheritParams tools::package_dependencies
+#' @inheritParams Require
+#' @inheritParams Cache
+#' @param depends Logical. Include packages listed in "Depends". Default \code{TRUE}.
+#' @param imports Logical. Include packages listed in "Imports". Default \code{TRUE}.
+#' @param suggests Logical. Include packages listed in "Suggests". Default \code{FALSE}.
+#' @param linkingTo Logical. Include packages listed in "LinkingTo". Default \code{TRUE}.
+#' @param recursive Logical. Should dependencies of dependencies be searched, recursively.
+#'                  NOTE: Dependencies of suggests will not be recursive. Default \code{TRUE}.
+#' @param refresh There is an internal type of caching. If the results are wrong, likely
+#'   set \code{refresh = TRUE}.
+#' @export
+#' @importFrom memoise memoise
+#' @rdname pkgDep
+#'
+#' @examples
+#' pkgDep("crayon")
+pkgDep <- function(packages, libPath, recursive = TRUE, depends = TRUE,
+                   imports = TRUE, suggests = FALSE, linkingTo = TRUE,
+                   repos = getOption("repos"), refresh = FALSE,
+                   verbose = getOption("reproducible.verbose")) {
+  if (all(c(!depends, !imports, !suggests, !linkingTo))) {
+    names(packages) <- packages
+    needed <- lapply(packages, function(x) character())
+    return(needed)
+  }
+  typeString <- paste("depends"[depends], "imports"[imports],
+                      "suggests"[suggests], "linkingTo"[linkingTo], sep = "_")
+  if (isTRUE(refresh)) {
+   .pkgEnv$.depsAll[["recursive"]][[typeString]] <- NULL
+   .pkgEnv$.depsAll[["nonRecursive"]][[typeString]] <- NULL
+  }
+
   if (missing(libPath) || is.null(libPath)) {
     libPath <- .libPaths()#[1L]
   }
@@ -336,7 +384,11 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
     # Using loop next allows the ability to break out of search
     #  if initial .libPaths have the package
     for (lp in libPath) {
-       ans1 <- pkgDep(packages, lp)
+      # message("  Searching in ", lp)
+      ans1 <- pkgDep(packages, lp, recursive = recursive,
+                      depends = depends, imports = imports, suggests = suggests,
+                      linkingTo = linkingTo,
+                      refresh = FALSE)
        ans <- append(ans, list(ans1))
        if (all(unlist(lapply(ans, function(x) all(unlist(lapply(x, is.character))))))) {
          break
@@ -359,7 +411,7 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
       ll1
     })
 
-    # package_dependencies and PkgDep will differ under the following circumstances
+    # package_dependencies and pkgDep will differ under the following circumstances
     # 1. github packages are not detected using tools::package_dependencies
     # 2. package_dependencies does not detect the dependencies of base packages,
     #    e.g,. methods depends on stats and graphics
@@ -370,13 +422,31 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
       paste(names(ll2[notInstalled]), collapse = ", ")
       repos <- getCRANrepos(repos)
 
+      if (!is.memoised(available.packagesMem)) {
+        assignInMyNamespace("available.packagesMem", memoise(available.packages, ~timeout(360))) # nolint
+      }
+
+      parentFramePackages <- tryCatch(get("packages", envir = parent.frame()), error = function(x) NULL)
+
+      if (!is.null(parentFramePackages))
+        message(paste(parentFramePackages, collapse = ", "), " depencies: ")
+      message("  ", paste(names(ll2[notInstalled]), collapse = ", "),
+              " not installed locally; check for dependencies on CRAN")
       availPackagesDb <- available.packagesMem(repos = repos)
       ll3 <- package_dependenciesMem(names(ll2[notInstalled]), db = availPackagesDb,
                                      recursive = recursive)
+      if (recursive) {
+        .pkgEnv$.depsAll[["recursive"]][[typeString]] <- append(.pkgEnv$.depsAll[["recursive"]][[typeString]], ll3)
+      } else {
+        .pkgEnv$.depsAll[["nonRecursive"]][[typeString]] <- append(.pkgEnv$.depsAll[["nonRcursive"]][[typeString]], ll3)
+      }
       # the previous line will miss base packages
       ll3 <- lapply(ll3, function(x) {
         unique(c(x, unlist(pkgDep(x, libPath = unique(c(libPath, .libPaths())),
-                                  recursive = recursive))))
+                                  recursive = recursive,
+                                  depends = depends, imports = imports, suggests = FALSE, # don't propagate suggests
+                                  linkingTo = linkingTo,
+                                  refresh = FALSE))))
       })
 
       ll2[notInstalled] <- ll3
@@ -386,9 +456,16 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 
   if (length(packages) > 1) {
     if (length(packages) == length(libPath)) {
-      ans <- lapply(seq_along(packages), function(x) pkgDep(packages[x], libPath[x]))
+      ans <- lapply(seq_along(packages), function(x) pkgDep(packages[x], libPath[x],
+                                                            recursive = recursive,
+                                                            depends = depends, imports = imports, suggests = suggests,
+                                                            linkingTo = linkingTo,
+                                                            refresh = FALSE))
     } else {
-      ans <- lapply(packages, pkgDep, libPath)
+      ans <- lapply(packages, pkgDep, libPath, recursive = recursive,
+                    depends = depends, imports = imports, suggests = suggests,
+                    linkingTo = linkingTo,
+                    refresh = FALSE)
     }
     names(ans) <- packages
     return(ans)
@@ -396,11 +473,24 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
     return(character())
   }
 
+  if (recursive) {
+    if (isTRUE(packages %in% names(.pkgEnv$.depsAll[["recursive"]][[typeString]]))) {
+      if (!is.null(.pkgEnv$.depsAll[["recursive"]][[typeString]][[packages]])) {
+        return(.pkgEnv$.depsAll[["recursive"]][[typeString]][[packages]])
+      }
+    }
+  } else {
+    if (isTRUE(packages %in% names(.pkgEnv$.depsAll[["nonRecursive"]][[typeString]]))) {
+      if (!is.null(.pkgEnv$.depsAll[["nonRecursive"]][[typeString]][[packages]]))
+        return(.pkgEnv$.depsAll[["nonRecursive"]][[typeString]][[packages]])
+    }
+  }
+
   desc_path <- sprintf("%s/%s/DESCRIPTION", libPath, packages) # nolint
   if (!file.exists(desc_path)) {
     return(NA)
   } else {
-    lines <- readLinesRcpp(desc_path)
+    lines <- readLines(desc_path)
     Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
     on.exit(Sys.setlocale(locale = ""))
     deps_line <- grep("^Depends: *", lines) # nolint
@@ -465,50 +555,76 @@ pkgDepRaw <- function(packages, libPath, recursive = TRUE, depends = TRUE,
     if (recursive) {
       # note that recursive searching must search in all libPaths, not just current one
       # like miniCRAN::pkgDep not recursive on Suggests
-      needed2 <- pkgDep(needed, libPath = unique(c(libPath, .libPaths())),
-                                  depends = depends, imports = imports, suggests = FALSE)
-      needed <- na.omit(unique(c(needed, unlist(needed2))))
+      if (verbose) message(packages)
+      needed <- unique(needed)
+      namesSP <- names(.pkgEnv$.depsAll[["nonRecursive"]][[typeString]])
+      oldNeeded <- character()
+      if (!is.null(namesSP)) {
+        oldNeeded <- unlist(needed[needed %in% namesSP])
+        needed <- needed[!needed %in% namesSP]
+      }
+      if (verbose) {
+        if (length(needed) > 0)
+          message("      Recursive: ", paste(needed, collapse = ","))
+        if (length(oldNeeded) > 0)
+          message("        Skipped: ", paste(oldNeeded, collapse = ","))
+      }
+      .packages <- list(character())
+      names(.packages) <- packages
+      names(needed) <- needed
+      .needed <- lapply(needed, function(x) NULL)
+      .pkgEnv$.depsAll[["nonRecursive"]][[typeString]] <- c(.pkgEnv$.depsAll[["nonRecursive"]][[typeString]], .needed)
+      .pkgEnv$.depsAll[["nonRecursive"]][[typeString]][[packages]] <- unique(c(needed, oldNeeded))
+      .pkgEnv$.depsAll[["recursive"]][[typeString]] <- c(.pkgEnv$.depsAll[["recursive"]][[typeString]], .needed)
+
+      if (length(needed) > 0) {
+        uniqueLibPaths <- unique(c(libPath, .libPaths()))
+        needed2 <- pkgDep(needed, libPath = uniqueLibPaths, recursive = recursive,
+                          depends = depends, imports = imports, suggests = FALSE,
+                          linkingTo = linkingTo,
+                          refresh = FALSE)
+        needed <- na.omit(unique(c(needed, unlist(needed2)))) # collapses recursive on non-recursive
+      }
+      if (length(oldNeeded) > 0) { # just because we don't need to find its depenencies, doesn't mean it isn't needed
+        needed <- unique(c(needed, oldNeeded, unlist(.pkgEnv$.depsAll[["recursive"]][[typeString]][oldNeeded])))
+      }
+      .pkgEnv$.depsAll[["recursive"]][[typeString]][[packages]] <- needed # recursive
       attr(needed, "na.action") <- NULL
       attr(needed, "class") <- NULL
+      #}
     }
     return(needed)
   }
 }
 
-#' Determine package dependencies, first looking at local filesystem
-#'
-#' This is intended to replace \code{\link[tools]{package_dependencies}} or
-#' \code{pkgDep} in the \pkg{miniCRAN} package, but with modifications for speed.
-#' It will first check local package directories in \code{libPath}, and it if
-#' the function cannot find the packages there, then it will use
-#' \code{\link[tools]{package_dependencies}}.
-#'
-#' @note \code{package_dependencies} and \code{pkgDep} will differ under the following
-#' circumstances:
-#' \enumerate{
-#'   \item GitHub packages are not detected using \code{tools::package_dependencies};
-#'   \item \code{tools::package_dependencies} does not detect the dependencies of base packages
-#'     among themselves, \emph{e.g.}, \code{methods} depends on \code{stats} and \code{graphics}.
-#' }
-#'
-#' @inheritParams tools::package_dependencies
-#' @inheritParams Require
-#' @param depends Logical. Include packages listed in "Depends". Default \code{TRUE}.
-#' @param imports Logical. Include packages listed in "Imports". Default \code{TRUE}.
-#' @param suggests Logical. Include packages listed in "Suggests". Default \code{FALSE}.
-#' @param linkingTo Logical. Include packages listed in "LinkingTo". Default \code{TRUE}.
-#' @param recursive Logical. Should dependencies of dependencies be searched, recursively.
-#'                  NOTE: Dependencies of suggests will not be recursive. Default \code{TRUE}.
+#' @description
+#' \code{pkgDep2} is a convenience wrapper of \code{pkgDep} that
+#' "goes one level in" i.e., the first order dependencies, and runs
+#' the \code{pkgDep} on those.
+#' @rdname pkgDep
 #' @export
-#' @importFrom memoise memoise
-#' @rdname pkgDep
-#'
+#' @param sorted Logical. If \code{TRUE}, the default, the packages will be sorted in
+#'   the returned list from most number of dependencies to least.
 #' @examples
-#' pkgDep("crayon")
-pkgDep <- memoise::memoise(pkgDepRaw)
-
-#' @rdname pkgDep
-pkgDep2 <- memoise::memoise(pkgDepRaw)
+#' pkgDep2("reproducible")
+pkgDep2 <- function(packages, recursive = TRUE, depends = TRUE,
+                    imports = TRUE, suggests = FALSE, linkingTo = TRUE,
+                    repos = getOption("repos"), refresh = FALSE,
+                    verbose = getOption("reproducible.verbose"),
+                    sorted = TRUE) {
+  a <- lapply(pkgDep(packages, recursive = FALSE, depends = depends, imports = imports, suggests = suggests,
+                     linkingTo = linkingTo)[[1]],
+              recursive = recursive,
+              pkgDep, depends = depends, imports = imports, suggests = suggests,
+              linkingTo = linkingTo
+  )
+  a <- unlist(a, recursive = FALSE)
+  if (sorted) {
+    ord <- order(sapply(a, function(x) length(x)), decreasing = TRUE)
+    a <- a[ord]
+  }
+  return(a)
+}
 
 #' Memoised version of package_dependencies
 #'
@@ -854,10 +970,12 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     assignInMyNamespace("available.packagesMem", memoise(available.packages, ~timeout(360))) # nolint
   }
 
-  forget(pkgDep)
-  if (forget) forget(pkgDep2)
-  deps <- unlist(pkgDep2(packages, unique(c(libPath, .libPaths())),
-                                              recursive = TRUE))
+  #forget(pkgDep)
+  #if (forget) forget(pkgDep2)
+  deps <- unlist(pkgDep(packages, unique(c(libPath, .libPaths())),
+                         recursive = TRUE))
+  #deps <- unlist(pkgDep2(packages, unique(c(libPath, .libPaths())),
+  #                                            recursive = TRUE))
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
 

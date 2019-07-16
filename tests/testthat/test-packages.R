@@ -1,5 +1,6 @@
 test_that("package-related functions work", {
 
+
   skip_on_cran()
 
   testInitOut <- testInit()
@@ -70,6 +71,8 @@ test_that("package-related functions work", {
   installed <- data.table::fread(packageVersionFile)
   pkgDeps <- sort(c("Holidays", unique(unlist(pkgDep("Holidays", recursive = TRUE,
                                                      libPath = packageDir)))))
+  skip_on_os("mac")
+  # Alex debug on mac
   expect_true(all(pkgDeps %in% installed$instPkgs))
 
   # Check that the snapshot works even if packages aren't in packageDir,
@@ -85,18 +88,22 @@ test_that("package-related functions work", {
                                                             allInstalledNames,
                                                             recursive = TRUE)))))
 
+  # Alex debug on mac
   expect_true(all(unique(pkgDeps) %in% unique(installed$instPkgs)))
 
   packageDirList <- dir(packageDir)
   packageDirList <- packageDirList[!packageDirList %in% defaultFilesInPackageDir]
+  # Alex debug on mac
   expect_true(all(packageDirList %in% installed$instPkgs))
   expect_false(all(installed$instPkgs %in% packageDirList))
+  # Alex debug on mac
   expect_true(any(installed$instPkgs %in% packageDirList))
   installedNotInLibPath <- installed[!(installed$instPkgs %in% packageDirList), ]
   inBase <- unlist(installedVersions(installedNotInLibPath$instPkgs,
                                      libPath = .libPaths()[length(.libPaths())]))
   inBaseDT <- na.omit(data.table::data.table(instPkgs = names(inBase), instVers = inBase))
   inBaseDT <- unique(inBaseDT)
+  # Alex debug on mac
   merged <- installed[inBaseDT, on = c("instPkgs", "instVers"), nomatch = 0]
 
   # This test that the installed versions in Base are the same as the ones that
@@ -111,9 +118,6 @@ test_that("package-related functions work", {
   ## Test passing package as unquoted name
   expect_true(Require(TimeWarp, libPath = packageDir1, standAlone = TRUE))
 
-  #unlink(packageDir, recursive = TRUE, force = TRUE)
-
-  #}
 })
 
 test_that("package-related functions work", {
@@ -148,5 +152,103 @@ test_that("package-related functions work", {
   #                                  packageVersionFile = packageVersionFile, standAlone = TRUE))
   # expect_true(any(grepl("Already have", Mess)))
   # expect_true(any(grepl("Trying to install", Mess)))
+
+})
+
+test_that("test pkgDep", {
+    testInitOut <- testInit()
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+
+    N <- 4
+    aTime <- system.time(for (i in 1:N) aStart <- pkgDep("reproducible", refresh = TRUE))
+    bTime <- system.time(for (i in 1:N) bStart <- pkgDep("reproducible", refresh = FALSE))
+    expect_identical(aStart,bStart)
+    expect_true(aTime[3] > bTime[3])
+
+    pkg <- "dplyr"
+    df <- expand.grid(suggests = c(TRUE, FALSE),
+                      #depends = c(TRUE, FALSE),
+                      imports = c(TRUE, FALSE),
+                      linkingTo = c(TRUE, FALSE)
+                      )
+    #df <- data.frame(df, count = apply(df, 1, sum) - df$depends)
+
+    # Test "refresh"
+    a <- list()
+    b <- list()
+    out <- lapply(seq(NROW(df)), function(n) {
+      f <- df[n,]
+      n <- paste(as.logical(f), collapse = "_")
+      a[[n]] <<- pkgDep(pkg, refresh = TRUE, suggests = f$suggests, imports = f$imports, #depends = f$depends,
+                        linkingTo = f$linkingTo,
+                        recursive = FALSE)
+      b[[n]] <<- pkgDep(pkg, refresh = FALSE, suggests = f$suggests, imports = f$imports, #depends = f$depends,
+                        linkingTo = f$linkingTo,
+                        recursive = FALSE)
+      expect_identical(a[[n]],b[[n]])
+    })
+
+    out <- lapply(seq(NROW(df)), function(n) {
+      f1 <- df[n,]
+      names(f1) <- colnames(df)
+
+      subDF <- expand.grid(lapply(f1, function(x) unique(c(FALSE, x))))
+      dfCompare <- subDF[sapply(seq_len(NROW(subDF)), function(x) !identical(as.logical(subDF[x,]), as.logical(f1))),]
+
+      lapply(as.numeric(rownames(dfCompare)), function(x) {
+        x <- paste(as.logical(dfCompare[x,]), collapse = "_")
+        expect_true(length(a[[n]][[1]]) > length(a[[x]][[1]]))
+      })
+    })
+
+    a2 <- pkgDep("reproducible", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
+    b2 <- pkgDep("reproducible", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE)
+    expect_identical(a2,b2)
+
+    a3 <- pkgDep("reproducible", refresh = TRUE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    b3 <- pkgDep("reproducible", refresh = FALSE, suggests = TRUE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    expect_identical(a3,b3)
+
+    a4 <- pkgDep("reproducible", refresh = TRUE, suggests = FALSE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    b4 <- pkgDep("reproducible", refresh = FALSE, suggests = FALSE, imports = FALSE, linkingTo = FALSE, depends = FALSE)
+    expect_identical(a4,b4)
+
+    # rebuild recursive manually
+    d <- list()
+    d[[1]] <- pkgDep("reproducible", refresh = TRUE, recursive = FALSE)
+    b2 <- pkgDep("reproducible", refresh = FALSE, recursive = FALSE)
+    expect_identical(d[[1]],b2)
+
+    i <- 1
+    while (length(d[[i]]) > 0) {
+      d[[i+1]] <- unique(unname(unlist(lapply(d[[i]], pkgDep, recursive = FALSE))))
+      i <- i + 1
+    }
+
+    e2 <- sort(unique(unlist(c(b2,d))))
+    expect_identical(e2, sort(aStart$reproducible))
+
+  })
+
+test_that("test pkgDep2", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  a <- pkgDep2("reproducible", recursive = TRUE, suggests = FALSE, depends = TRUE,
+               imports = TRUE, sort = FALSE)
+  b <- pkgDep("reproducible", recursive = FALSE, suggests = FALSE, depends = TRUE,
+              imports = TRUE)
+  expect_identical(names(a), b$reproducible)
+
+  a <- pkgDep2("reproducible", recursive = TRUE, suggests = FALSE, depends = TRUE,
+               imports = TRUE, sort = FALSE)
+  b <- pkgDep("reproducible", recursive = TRUE, suggests = FALSE, depends = TRUE,
+              imports = TRUE)
+  expect_identical(sort(unique(c(names(a), unique(unlist(a))))), sort(b$reproducible))
+
 
 })

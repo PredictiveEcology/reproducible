@@ -133,7 +133,7 @@ This may help in some particularly finicky situations
 where Cache is not correctly detecting unchanged inputs. This will guarantee
 the object will be identical each time; this may be useful in operational code.}
 
-\item{useCache}{Logical or \code{"overwrite"} or \code{"devMode"}. See details.}
+\item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
 
 \item{useCloud}{Logical. If \code{TRUE}, then this Cache call will download
 (if local copy doesn't exist,
@@ -283,11 +283,17 @@ reproducible workflow.
 
 \section{useCache}{
 
-If \code{FALSE}, then the entire Caching mechanism is bypassed and the
+Logical or numeric. If \code{FALSE} or \code{0}, then the entire Caching
+mechanism is bypassed and the
 function is evaluated as if it was not being Cached. Default is
 \code{getOption("reproducible.useCache")}), which is \code{TRUE} by default,
 meaning use the Cache mechanism. This may be useful to turn all Caching on or
-off in very complex scripts and nested functions.
+off in very complex scripts and nested functions. Increasing levels of numeric
+values will cause deeper levels of Caching to occur. Currently, only implemented
+in \code{postProcess}: to do both caching of inner \code{cropInputs}, \code{projectInputs}
+and \code{maskInputs}, and caching of outer \code{postProcess}, use
+\code{useCache = 2}; to skip the inner sequence of 3 functions, use \code{useCache = 1}.
+For large objects, this may prevent many duplicated save to disk events.
 
 If \code{"overwrite"}
 (which can be set with \code{options("reproducible.useCache" =
