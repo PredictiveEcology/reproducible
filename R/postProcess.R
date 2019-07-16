@@ -5,6 +5,9 @@
 #'           See individual methods.
 #' @importClassesFrom quickPlot spatialObjects
 #' @importFrom utils capture.output
+#' @importFrom raster buffer
+#' @importFrom sf st_is_longlat
+#' @importFrom sp spTransform
 #' @seealso \code{prepInputs}
 #' @inheritParams prepInputs
 #' @rdname postProcess
@@ -1330,17 +1333,55 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       extRTM <- NULL
       crsRTM <- NULL
     }
+    useBuffer <- FALSE
+    bufferSA <- FALSE
+
+    if (class(x) == "RasterLayer") {
+      #if all CRS are projected, then check if buffer is necessary
+      projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
+      projections <- na.omit(projections)
+      if (!any(projections)) {
+        if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
+          useBuffer <- TRUE
+        }
+      }
+    }
+
+    if (useBuffer) {
+      #replace extentRTM and crsRTM, because they will supersede all arguments
+      if (!is.null(rasterToMatch)) {
+        #reproject rasterToMatch, extend by res
+        newExtent <- projectExtent(rasterToMatch, crs = crs(x))
+        tempPoly <- as(extent(newExtent), "SpatialPolygons")
+        crs(tempPoly) <- crs(x)
+        #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
+        tempPoly <- raster::buffer(tempPoly, width = max(res(x))*1.5)
+        extRTM <- tempPoly
+        crsRTM <- crs(tempPoly)
+      } else {
+        bufferSA <- TRUE
+        origStudyArea <- studyArea
+        studyArea <- sp::spTransform(studyArea, CRSobj = crs(x))
+        studyArea <- raster::buffer(studyArea, width = max(res(x)) * 1.5)
+        #confirm you could only pass study area, because buffering will require reprojecting first.
+        #buffer studyArea
+      }
+    }
 
     x <- Cache(cropInputs, x = x, studyArea = studyArea,
                extentToMatch = extRTM,
                extentCRS = crsRTM,
                useCache = useCache > 1, ...)
 
+    if (bufferSA) {
+      studyArea <- origStudyArea
+    }
+
     # cropInputs may have returned NULL if they don't overlap
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
       x <- fixErrors(x = x, objectName = objectName,
-                     useCache = useCache, ...)
+                     useCache = useCache > 1, ...)
 
       ##################################
       # projectInputs
@@ -1352,7 +1393,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                  rasterToMatch = rasterToMatch, useCache = useCache > 1, ...)
       # may need to fix again
       x <- fixErrors(x = x, objectName = objectName,
-                     useCache = useCache, ...)
+                     useCache = useCache > 1, ...)
 
       ##################################
       # maskInputs
