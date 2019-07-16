@@ -1388,7 +1388,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
       x <- fixErrors(x = x, objectName = objectName,
-                     useCache = useCache > 1, ...)
+                     useCache = useCache, ...)
 
       ##################################
       # projectInputs
@@ -1400,7 +1400,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                  rasterToMatch = rasterToMatch, useCache = useCache > 1, ...)
       # may need to fix again
       x <- fixErrors(x = x, objectName = objectName,
-                     useCache = useCache > 1, ...)
+                     useCache = useCache, ...)
 
       ##################################
       # maskInputs
