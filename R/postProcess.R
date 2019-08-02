@@ -395,9 +395,9 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
-        warn <- capture_warnings(
+        warn <- capture_warnings({
           x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache > 1))
-        )
+        })
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
         warnAboutNotProjected <- startsWith(warn, "Spatial object is not projected; GEOS expects planar coordinates")
@@ -437,12 +437,13 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
-        warn <- capture_warnings(
+        warn <- capture_warnings({
           x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache > 1))
-        )
+        })
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        warnAboutNotProjected <- startsWith(warn, "Spatial object is not projected; GEOS expects planar coordinates")
+        warnAboutNotProjected <- startsWith(warn, paste("Spatial object is not projected;",
+                                                        "GEOS expects planar coordinates"))
         if (any(warnAboutNotProjected))
           warn <- warn[!warnAboutNotProjected]
         if (length(warn))
@@ -511,6 +512,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
+#' @importFrom testthat capture_warnings
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
                                  useGDAL = getOption("reproducible.useGDAL", TRUE),
                                  ...) {
@@ -545,7 +547,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         ## rasters need to go to same file so it can be unlinked at end without losing other temp files
         tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
         tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
-        tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names, "a_reproj.tif")) #fails if x = stack
+        tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names, "a_reproj.tif")) # fails if x = stack
 
         if (!is.null(rasterToMatch)) {
           tr <- res(rasterToMatch)
@@ -584,13 +586,13 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                                           extent(rasterToMatch)@xmax, " ",
                                           extent(rasterToMatch)@ymax, " "))
         }
-        if (is.null(cores) || cores =="AUTO") {
-          cores <- as.integer(parallel::detectCores()*0.9)
+        if (is.null(cores) || cores == "AUTO") {
+          cores <- as.integer(parallel::detectCores() * 0.9)
           prll <- paste0("-wo NUM_THREADS=", cores, " ")
         } else {
           if (!is.integer(cores)) {
             if (is.character(cores) | is.logical(cores)) {
-              stop ("'cores' needs to be passed as numeric or 'AUTO'")
+              stop("'cores' needs to be passed as numeric or 'AUTO'")
             } else {
               prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
             }
@@ -646,13 +648,16 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         if (is.null(rasterToMatch)) {
           Args <- append(dots, list(from = x, crs = targetCRS))
-          warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
-
+          warn <- capture_warnings({
+            x <- do.call(projectRaster, args = Args)
+          })
         } else {
           # projectRaster does silly things with integers, i.e., it converts to numeric
           tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS)
           Args <- append(dots, list(from = x, to = tempRas))
-          warn <- capture_warnings(x <- do.call(projectRaster, args = Args))
+          warn <- capture_warnings({
+            x <- do.call(projectRaster, args = Args)
+          })
 
           if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
             if (all(res(x) %==% res(rasterToMatch))) {
@@ -701,7 +706,8 @@ projectInputs.sf <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
     warning("sf class objects not fully tested Use with caution.")
     if (requireNamespace("sf")) {
-      if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid <- sf::st_is_valid(x))) {
+      isValid <- sf::st_is_valid(x)
+      if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid)) {
         x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
       }
 
@@ -749,8 +755,8 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
 #' This is the function that follows the table of order of
 #' preference for determining CRS. See \code{\link{postProcess}}
 #' @inheritParams postProcess.spatialObjects
-#' @rdname postProcessHelpers
 #' @keywords internal
+#' @rdname postProcessHelpers
 .getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL) {
   if (is.null(targetCRS)) {
     targetCRS <- if (useSAcrs) {
@@ -1062,6 +1068,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
   x
 }
 
+#' @importFrom testthat capture_warnings
 #' @rdname writeOutputs
 writeOutputs.Spatial <- function(x, filename2 = NULL,
                                  overwrite = getOption("reproducible.overwrite", TRUE),

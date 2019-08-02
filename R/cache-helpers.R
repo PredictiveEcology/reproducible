@@ -647,7 +647,6 @@ setMethod(
 #'
 #' r # now in "rasters" subfolder of tempdir()
 #'
-#'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
@@ -949,11 +948,11 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 #' @rdname copyFile
 copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
-#' @rdname cacheHelper
 #' @importFrom methods slotNames
 #' @importFrom digest digest
 #' @importFrom fastdigest fastdigest
 #' @importFrom raster res crs extent
+#' @rdname cacheHelper
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
@@ -1117,7 +1116,6 @@ setMethod("Copy",
 #' @export
 #' @rdname sortDotsUnderscoreFirst
 .orderDotsUnderscoreFirst <- function(obj) {
-
   if (!is.null(names(obj))) {
     namesObj <- names(obj)
   } else {
@@ -1154,7 +1152,6 @@ setMethod("Copy",
 #' @author Eliot McIntire
 #' @importFrom data.table setattr
 #' @rdname debugCache
-#'
 .debugCache <- function(obj, preDigest, ...) {
   setattr(obj, "debugCache1", list(...))
   setattr(obj, "debugCache2", preDigest)
@@ -1163,6 +1160,7 @@ setMethod("Copy",
 
 # loadFromLocalRepoMem <- memoise::memoise(loadFromLocalRepo)
 
+#' @keywords internal
 .getOtherFnNamesAndTags <- function(scalls) {
   if (is.null(scalls)) {
     scalls <- sys.calls()
@@ -1194,6 +1192,7 @@ setMethod("Copy",
 }
 
 #' @importFrom tools file_path_sans_ext file_ext
+#' @keywords internal
 nextNumericName <- function(string) {
   theExt <- file_ext(string)
   saveFilenameSansExt <- file_path_sans_ext(string)
@@ -1209,8 +1208,9 @@ nextNumericName <- function(string) {
     splits <- strsplit(allSimilarFilesInDirSansExt[alreadyHasNumeric], split = "_")
     highestNumber <- max(unlist(lapply(splits, function(split) as.numeric(tail(split,1)))),
                          na.rm = TRUE)
-    preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_"))))
-    out <- file.path(dirname(saveFilenameSansExt), paste0(preNumeric, "_", highestNumber + 1)) # keep rndstr in here, so that both streams keep same rnd number state
+    preNumeric <- unique(unlist(lapply(splits, function(spl) paste(spl[-length(spl)], collapse = "_")))) #nolint
+    ## keep rndstr in here (below), so that both streams keep same rnd number state
+    out <- file.path(dirname(saveFilenameSansExt), paste0(preNumeric, "_", highestNumber + 1))
   } else {
     out <- paste0(saveFilenameSansExt, "_1")
   }
@@ -1218,19 +1218,20 @@ nextNumericName <- function(string) {
   paste0(out, ".", theExt)
 }
 
-#' Internal function
+#' Grep system calls
 #'
 #' A faster way of grepping the system call stack than just
 #' \code{grep(sys.calls(), pattern = "test")}
 #'
-#' @keywords internal
-#' @export
-#' @rdname grepSysCalls
-#' @param sysCalls The return from sys.calls()
+#' @param sysCalls The return from \code{sys.calls()}
 #' @param pattern Character, passed to grep
 #' @return
 #' Numeric vector, equivalent to return from \code{grep(sys.calls(), pattern = "test")},
 #' but faster if \code{sys.calls()} is very big.
+#'
+#' @export
+#' @keywords internal
+#' @rdname grepSysCalls
 .grepSysCalls <- function(sysCalls, pattern) {
   scallsFirstElement <- lapply(sysCalls, function(x) x[1])
   grep(scallsFirstElement, pattern = pattern)

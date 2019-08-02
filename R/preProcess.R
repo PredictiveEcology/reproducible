@@ -546,14 +546,18 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums
 }
 
+#' @keywords internal
 .emptyChecksumsResult <- data.table::data.table(expectedFile = character(),
                                                 actualFile = character(),
                                                 result = character())
+
+#' @keywords internal
 .emptyChecksumsFileContent <- data.frame(file = character(),
                                          checksum = character(),
                                          filesize = character(),
                                          algorithm = character())
 
+#' @keywords internal
 .extractFunction <- function(fun) {
   if (!is.null(fun)) {
     if (!is.function(fun)) {
@@ -570,6 +574,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun
 }
 
+#' @keywords internal
 .guessAtFile <- function(url, archive, targetFile, destinationPath) {
   guessedFile <- if (!is.null(url)) {
     if (grepl("drive.google.com", url)) {
@@ -590,6 +595,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   guessedFile
 }
 
+#' @keywords internal
 .checkSumsUpdate <- function(destinationPath, newFilesToCheck, checkSums,
                              checkSumFilePath = NULL) {
   if (!is.null(newFilesToCheck)) {
@@ -598,8 +604,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (!file.exists(checkSumFilePath)) {
       checkSums
     } else {
-      suppressMessages(checkSums2 <- try(Checksums(path = destinationPath, write = FALSE,
-                                                   files = newFilesToCheck, checksumFile = checkSumFilePath), silent = TRUE))
+      checkSums2 <- suppressMessages(try(Checksums(path = destinationPath, write = FALSE,
+                                                   files = newFilesToCheck,
+                                                   checksumFile = checkSumFilePath), silent = TRUE))
       if (!is(checkSums2, "try-error")) {
         checkSums <- rbindlist(list(checkSums, checkSums2))
         data.table::setkey(checkSums, result)
@@ -615,6 +622,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSums
 }
 
+#' @keywords internal
 .similarFilesInCheckSums <- function(file, checkSums) {
   if (NROW(checkSums)) {
     anySimilarInCS <- checkSums[grepl(paste0(file_path_sans_ext(file),"\\."),
@@ -629,6 +637,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 }
 
+#' @keywords internal
 .checkForSimilar <- function(neededFiles, alsoExtract, archive, targetFile,
                              destinationPath, checkSums, url) {
   lookForSimilar <- if (is.null(alsoExtract)) {
@@ -670,6 +679,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   list(neededFiles = neededFiles, checkSums = checkSums)
 }
 
+#' @keywords internal
 .checkLocalSources <- function(neededFiles, checkSumFilePath, checkSums, otherPaths, needChecksums,
                                destinationPath) {
   #foundRecursively <- character()
@@ -701,9 +711,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           # check CHECKSUMS.txt files, first the one in destinationPath, then ones in inputPaths
           for (dirOPFiles in c(uniqueDirsOPFiles[1], uniqueDirsOPFiles)) {
             #for (i in seq(1 + length(uniqueDirsOPFiles))) {
-            suppressMessages(checkSumsInputPath <- Checksums(path = dirOPFiles, write = FALSE,
-                                                             files = file.path(dirNameOPFiles, neededFiles),
-                                                             checksumFile = checkSumFilePathTry))
+            checkSumsInputPath <- suppressMessages(
+              Checksums(path = dirOPFiles, write = FALSE,
+                        files = file.path(dirNameOPFiles, neededFiles),
+                        checksumFile = checkSumFilePathTry)
+            )
             isOK <- checkSumsInputPath[checkSumsInputPath$expectedFile %in% neededFiles, ]$result
             if (length(isOK))
               if (all(compareNA(isOK, "OK"))) {
@@ -717,7 +729,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
             checkSumFilePathTry <- file.path(dirOPFiles, "CHECKSUMS.txt")
           }
-          checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"),]
+          checkSumsIPOnlyNeeded <- checkSumsInputPath[compareNA(checkSumsInputPath$result, "OK"), ]
           filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
           filesInHandIPLogical <- neededFiles %in% filesInHandIP
           if (any(filesInHandIPLogical)) {
@@ -771,6 +783,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
+#' @importFrom testthat capture_warnings
+#'
 #' @examples
 #' library(datasets)
 #' library(magrittr)
@@ -815,7 +829,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' ## cleanup
 #' unlink(tmpDir, recursive = TRUE)
-linkOrCopy <- function (from, to, symlink = TRUE) {
+linkOrCopy <- function(from, to, symlink = TRUE) {
   existsLogical <- file.exists(from)
   toCollapsed <- paste(to, collapse = ", ")
   fromCollapsed <- paste(from, collapse = ", ")
@@ -828,7 +842,9 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
     dups <- duplicated(.basename(from))
 
     # Try hard link first -- the only type that R deeply recognizes
-    warns <- capture_warnings(result <- file.link(from[!dups], to))
+    warns <- testthat::capture_warnings({
+      result <- file.link(from[!dups], to)
+    })
     if (isTRUE(all(result))) {
       message("Hardlinked version of file created at: ", toCollapsed, ", which points to "
               , fromCollapsed, "; no copy was made.")
@@ -844,8 +860,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
       if (!identical(.Platform$OS.type, "windows")) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
-          message("Symlinked version of file created at: ", toCollapsed, ", which points to "
-                  , fromCollapsed, "; no copy was made.")
+          message("Symlinked version of file created at: ", toCollapsed, ", which points to ",
+                  fromCollapsed, "; no copy was made.")
         }
       }
     }
@@ -861,6 +877,7 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   return(result)
 }
 
+#' @keywords internal
 .tryExtractFromArchive <- function(archive,
                                    neededFiles,
                                    filesToChecksum,
@@ -872,7 +889,7 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
                                    targetFile,
                                    quick) {
   neededFiles <- unique(c(neededFiles, if (!is.null(alsoExtract)) .basename(alsoExtract)))
-  neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from needed files. It is for extracting.
+  neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from neededFiles; for extracting
 
   filesExtr <- NULL
   if (!is.null(archive)) {
@@ -891,7 +908,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
       needChecksums <- filesExtracted$needChecksums
       data.table::setDT(filesExtracted$checkSums)
       dontNeedChecksums <- filesExtracted$checkSums[filesExtracted$checkSums$expectedFile %in%
-                                                      filesToChecksum & compareNA(result, "OK"), expectedFile]
+                                                      filesToChecksum & compareNA(result, "OK"),
+                                                    expectedFile]
       filesToChecksum <- setdiff(filesToChecksum, dontNeedChecksums)
 
       if (needChecksums > 0) {
@@ -922,6 +940,7 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
        neededFiles = neededFiles, checkSums = checkSums)
 }
 
+#' @keywords internal
 .basename <- function(x) {
   if (is.null(x)) {
     NULL
@@ -930,7 +949,8 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   }
 }
 
-.decodeMagicNumber <- function(magicNumberString){
+#' @keywords internal
+.decodeMagicNumber <- function(magicNumberString) {
   fileExt <- if (any(grepl(pattern = "Zip", x = magicNumberString))) ".zip" else
     if (any(grepl(pattern = "RAR", x = magicNumberString))) ".rar" else
       if (any(grepl(pattern = "tar", x = magicNumberString))) ".tar" else
@@ -940,20 +960,26 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   return(fileExt)
 }
 
-.guessFileExtension <- function(file){
-  if (identical(.Platform$OS.type, "windows")){
+#' @importFrom testthat capture_warnings
+#' @keywords internal
+.guessFileExtension <- function(file) {
+  if (identical(.Platform$OS.type, "windows")) {
     tryCatch({
       possLocs <- c("C:/cygwin/bin/file.exe",
                     "C:\\cygwin64/bin/file.exe")
       findFile <- file.exists(possLocs)
       if (any(findFile))
         fileLoc <- possLocs[findFile][1]
-      warn <- testthat::capture_warnings(magicNumber <- system(paste(fileLoc, file), intern = TRUE))
+      warn <- testthat::capture_warnings({
+        magicNumber <- system(paste(fileLoc, file), intern = TRUE)
+      })
       if (length(warn) > 0) {
         splitted <- unlist(strsplit(x = file, split = ":/"))
         fileAdapted <- file.path(paste0("/mnt/", tolower(splitted[1])), splitted[2])
-        warn <- testthat::capture_warnings(magicNumber <- shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE, wait = TRUE,
-                             translate = FALSE, mustWork = TRUE))
+        warn <- testthat::capture_warnings({
+          magicNumber <- shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE,
+                               wait = TRUE, translate = FALSE, mustWork = TRUE)
+        })
       }
       fileExt <- if (length(warn) == 0) {
         .decodeMagicNumber(magicNumberString = magicNumber)
@@ -972,6 +998,7 @@ linkOrCopy <- function (from, to, symlink = TRUE) {
   }
 }
 
+#' @keywords internal
 .fixNoFileExtension <- function(downloadFileResult, targetFile, archive,
                                 destinationPath) {
   if (!is.null(downloadFileResult$downloaded) &&

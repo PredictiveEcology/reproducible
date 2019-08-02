@@ -812,21 +812,28 @@ setMethod(
 
       if (isNullOutput) return(NULL) else return(output)
     }
-  })
+})
 
-
+#' @keywords internal
 .formalsCache <- formals(Cache)[-(1:2)]
+
+#' @keywords internal
 .formalsCache[c("compareRasterFileLength", "digestPathContent")] <- NULL
+
+#' @keywords internal
 .namesCacheFormals <- names(.formalsCache)[]
 
+#' @keywords internal
 .loadFromLocalRepoMem2 <- function(md5hash, ...) {
   out <- loadFromLocalRepo(md5hash, ...)
   out <- makeMemoisable(out)
   return(out)
 }
 
+#' @keywords internal
 .loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
 
+#' @keywords internal
 .unlistToCharacter <- function(l, max.level = 1) {
   if (max.level > 0) {
     lapply(l, function(l1) {
@@ -1164,6 +1171,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   list(outputHash = res, preDigest = preDigest)
 }
 
+#' @keywords internal
 warnonce <- function(id, ...) {
   if (!isTRUE(get0(flag <- paste0("warned.", as.character(id)[1L]),
                    .reproEnv, ifnotfound = FALSE))) {
@@ -1183,7 +1191,7 @@ warnonce <- function(id, ...) {
   if (identical("devMode", useCache))
     showSimilar <- 1
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
-  userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":"))
+  userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")) #nolint
   userTags3 <- c(userTags, userTags2)
   aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
   setkeyv(aa, "N")
@@ -1231,6 +1239,7 @@ warnonce <- function(id, ...) {
   }
 }
 
+#' @keywords internal
 getLocalTags <- function(cacheRepo) {
   written <- 0
   while (written >= 0) {
@@ -1249,18 +1258,21 @@ getLocalTags <- function(cacheRepo) {
   localTags
 }
 
+#' @keywords internal
 .defaultCacheOmitArgs <- c("useCloud", "checksumsFileID", "cloudFolderID",
-  "notOlderThan", ".objects", "outputObjects", "algo", "cacheRepo",
-  "length", "compareRasterFileLength", "userTags", "digestPathContent",
-  "omitArgs", "classOptions", "debugCache", "sideEffect", "makeCopy",
-  "quick", "verbose", "cacheId", "useCache", "showSimilar")
+                           "notOlderThan", ".objects", "outputObjects", "algo", "cacheRepo",
+                           "length", "compareRasterFileLength", "userTags", "digestPathContent",
+                           "omitArgs", "classOptions", "debugCache", "sideEffect", "makeCopy",
+                           "quick", "verbose", "cacheId", "useCache", "showSimilar")
 
+#' @keywords internal
 verboseTime <- function(verbose) {
   if (verbose > 1) {
     return(Sys.time())
   }
 }
 
+#' @keywords internal
 verboseMessage1 <- function(verbose, userTags) {
   if (verbose > 0)
     message("Using devMode; overwriting previous Cache entry with tags: ",
@@ -1268,6 +1280,7 @@ verboseMessage1 <- function(verbose, userTags) {
   invisible(NULL)
 }
 
+#' @keywords internal
 verboseMessage2 <- function(verbose) {
   if (verbose > 0)
     message("Using devMode; Found entry with identical userTags, ",
@@ -1275,14 +1288,15 @@ verboseMessage2 <- function(verbose) {
   invisible(NULL)
 }
 
+#' @keywords internal
 verboseMessage3 <- function(verbose, artifact) {
   if (length(unique(artifact)) > 1) {
     if (verbose > 0)
       message("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE")
   }
-
 }
 
+#' @keywords internal
 verboseDF1 <- function(verbose, functionName, startRunTime) {
   if (verbose > 1) {
     endRunTime <- Sys.time()
@@ -1297,10 +1311,10 @@ verboseDF1 <- function(verbose, functionName, startRunTime) {
     if (exists("verboseTiming", envir = .reproEnv)) {
       .reproEnv$verboseTiming <- rbind(.reproEnv$verboseTiming, verboseDF)
     }
-
   }
 }
 
+#' @keywords internal
 verboseDF2 <- function(verbose, functionName, startSaveTime) {
   if (verbose > 1) {
     endSaveTime <- Sys.time()
@@ -1319,6 +1333,7 @@ verboseDF2 <- function(verbose, functionName, startSaveTime) {
   }
 }
 
+#' @keywords internal
 verboseDF3 <- function(verbose, functionName, startCacheTime) {
   if (verbose > 1) {
     endCacheTime <- Sys.time()
@@ -1335,6 +1350,7 @@ verboseDF3 <- function(verbose, functionName, startCacheTime) {
   }
 }
 
+#' @keywords internal
 determineNestedTags <- function(envir, mc, userTags) {
   argsNoNesting <- "useCloud"
   if (R.version[['minor']] <= "4.0") {
@@ -1414,34 +1430,39 @@ getCacheRepos <- function(cacheRepo, modifiedDots) {
   return(cacheRepos)
 }
 
-devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash) {
+devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose,
+                       isInRepo, outputHash) {
   isInRepoAlt <- localTags[localTags$tag %in% userTags, , drop = FALSE]
   data.table::setDT(isInRepoAlt)
   isInRepoAlt <- isInRepoAlt[, iden := identical(sum(tag %in% userTags), length(userTags)),
                              by = "artifact"][iden == TRUE]
   if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt$artifact)) == 1) {
     newLocalTags <- localTags[localTags$artifact %in% isInRepoAlt$artifact,]
-    tags1 <- grepl("(format|name|class|date|cacheId|function|object.size|accessed|otherFunctions|preDigest)",
+    tags1 <- grepl(paste0("(",
+                          paste("accessed", "cacheId", "class", "date", "format", "function",
+                                "name", "object.size", "otherFunctions", "preDigest",
+                                sep = "|"),
+                          ")"),
                    newLocalTags$tag)
     localTagsAlt <- newLocalTags[!tags1,]
     if (all(localTagsAlt$tag %in% userTags)) {
-      mess <- capture.output(type = "output",
-                             similars <- .findSimilar(newLocalTags, scalls = scalls,
-                                                      preDigestUnlistTrunc = preDigestUnlistTrunc,
-                                                      userTags = userTags,
-                                                      useCache = useCache))
+      mess <- capture.output(type = "output", {
+        similars <- .findSimilar(newLocalTags, scalls = scalls,
+                                 preDigestUnlistTrunc = preDigestUnlistTrunc,
+                                 userTags = userTags,
+                                 useCache = useCache)
+      })
       similarsHaveNA <- sum(is.na(similars$differs))
       #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)
       #likelyNotSame <- sum(similarsHaveNA, similarsAreDifferent)/NROW(similars)
 
       if (similarsHaveNA < 2) {
         verboseMessage1(verbose, userTags)
-        outputHash <- gsub("cacheId:", "",  newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact &
-                                                           startsWith(newLocalTags$tag, "cacheId"), ]$tag)
+        outputHash <- gsub("cacheId:", "", newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact & #nolint
+                                                          startsWith(newLocalTags$tag, "cacheId"), ]$tag) #nolint
         isInRepo <- isInRepoAlt
       } else {
         verboseMessage2(verbose)
-
       }
     }
     needFindByTags <- TRUE # it isn't there

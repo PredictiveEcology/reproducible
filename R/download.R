@@ -17,7 +17,8 @@
 downloadFile <- function(archive, targetFile, neededFiles,
                          destinationPath = getOption("reproducible.destinationPath"), quick,
                          checksumFile, dlFun = NULL,
-                         checkSums, url, needChecksums, overwrite = getOption("reproducible.overwrite", TRUE),
+                         checkSums, url, needChecksums,
+                         overwrite = getOption("reproducible.overwrite", TRUE),
                          purge = FALSE, ...) {
 
   if (!is.null(url) || !is.null(dlFun)) {
@@ -268,7 +269,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
-
   downloadFilename <- assessGoogle(url = url, archive = archive,
                                    targetFile = targetFile,
                                    destinationPath = destinationPath)
@@ -298,7 +298,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @keywords internal
 #' @importFrom crayon magenta
 #' @importFrom httr GET http_error progress stop_for_status user_agent write_disk
-#'
 dlGeneric <- function(url, needChecksums) {
   destFile <- file.path(tempdir(), basename(url))
 
@@ -318,13 +317,14 @@ dlGeneric <- function(url, needChecksums) {
   list(destFile = destFile, needChecksums = needChecksums)
 }
 
+#' @importFrom testthat capture_warnings
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, skipDownloadMsg,
                            destinationPath, overwrite, needChecksums, ...) {
-
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
-      if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  {# NA means archive already in hand
+      if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  {
+        ## NA means archive already in hand
         if (!is.null(dlFun)) {
           dlFunName <- dlFun
           dlFun <- .extractFunction(dlFun)
@@ -399,7 +399,9 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           # Try hard link first -- the only type that R deeply recognizes
           # if that fails, fall back to copying the file.
           # NOTE: never use symlink because the original will be deleted.
-          warns <- capture_warnings(result <- file.link(downloadResults$destFile, desiredPath))
+          warns <- capture_warnings({
+            result <- file.link(downloadResults$destFile, desiredPath)
+          })
           if (isFALSE(result)) {
             result <- file.copy(downloadResults$destFile, desiredPath)
           }

@@ -2,12 +2,12 @@
 % Please edit documentation in R/cache-helpers.R
 \name{.grepSysCalls}
 \alias{.grepSysCalls}
-\title{Internal function}
+\title{Grep system calls}
 \usage{
 .grepSysCalls(sysCalls, pattern)
 }
 \arguments{
-\item{sysCalls}{The return from sys.calls()}
+\item{sysCalls}{The return from \code{sys.calls()}}
 
 \item{pattern}{Character, passed to grep}
 }

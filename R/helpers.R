@@ -1,3 +1,4 @@
+#' @keywords internal
 .pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
   inst <- data.frame(instPkgs, instVers = unlist(instVers), stringsAsFactors = FALSE)
   write.table(inst, file = packageVersionFile, row.names = FALSE)
@@ -5,6 +6,7 @@
 }
 
 #' @importFrom utils chooseCRANmirror
+#' @keywords internal
 getCRANrepos <- function(repos = NULL) {
   if (is.null(repos)) {
     repos <- getOption("repos")["CRAN"]
@@ -89,6 +91,7 @@ getCRANrepos <- function(repos = NULL) {
   out
 }
 
+#' @keywords internal
 rndstr <- function(n = 1, len = 8) {
   unlist(lapply(character(n), function(x) {
     x <- paste0(sample(c(0:9, letters, LETTERS), size = len,
@@ -96,6 +99,7 @@ rndstr <- function(n = 1, len = 8) {
   }))
 }
 
+#' @keywords internal
 isInteractive <- function() interactive()
 
 #' A version of \code{base::basename} that is \code{NULL} resistant
@@ -106,11 +110,10 @@ isInteractive <- function() interactive()
 #' @export
 #' @return Same as \code{\link[base]{basename}}
 #'
-basename2 <- function (x) {
+basename2 <- function(x) {
   if (is.null(x)) {
     NULL
-  }
-  else {
+  } else {
     basename(x)
   }
 }
@@ -130,7 +133,7 @@ basename2 <- function (x) {
 #'
 retry <- function(..., sleep = 0.5, retries = 5) {
   failed <- 1
-  while(failed > 0  && failed < retries) {
+  while (failed > 0  && failed < retries) {
     downloadResults <- try(...)
     if (is(downloadResults, "try-error")) {
       failed <- failed + 1
@@ -143,5 +146,4 @@ retry <- function(..., sleep = 0.5, retries = 5) {
     }
   }
   downloadResults
-
 }

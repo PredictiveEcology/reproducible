@@ -42,7 +42,6 @@ r <- .prepareFileBackedRaster(r, tempdir())
 
 r # now in "rasters" subfolder of tempdir()
 
-
 }
 \author{
 Eliot McIntire

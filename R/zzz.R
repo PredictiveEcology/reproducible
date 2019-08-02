@@ -51,7 +51,8 @@
                                           names(formals(raster::projectRaster)),
                                           names(formals(determineFilename)),
                                           names(formals(writeOutputs)),
-                                          unlist(lapply(methods("postProcess"), function(x) names(formals(x))))))
+                                          unlist(lapply(methods("postProcess"),
+                                                        function(x) names(formals(x))))))
 
 
 

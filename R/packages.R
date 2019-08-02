@@ -200,11 +200,13 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
 
     # Actual package loading
-    warns <- capture_warnings(
-      mess <- capture.output(type = "message",
-                             packagesLoaded <- unlist(lapply(packages, function(p) {
-      try(require(p, character.only = TRUE))
-    }))))
+    warns <- capture_warnings({
+      mess <- capture.output(type = "message", {
+        packagesLoaded <- unlist(lapply(packages, function(p) {
+          try(require(p, character.only = TRUE))
+        }))
+      })
+    })
     .libPaths(oldLibPath)
 
     if (any(!packagesLoaded)) {
@@ -220,8 +222,6 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       packagesLoaded2 <- unlist(lapply(packages[!packagesLoaded], function(p) {
         try(require(p, character.only = TRUE, quietly = TRUE))
       }))
-
-
     }
   } else {
     packagesLoaded <- NULL
@@ -324,7 +324,6 @@ installedVersions <- function(packages, libPath) {
     return(vers)
   }
 }
-
 
 #' Determine package dependencies, first looking at local filesystem
 #'

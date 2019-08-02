@@ -828,18 +828,19 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   neededFiles
 }
 
-#' List files in either a zip or tar
+#' List files in either a \code{.zip} or or \code{.tar} file
 #'
-#' Makes the outputs from tar or zip the same, which they aren't by default.
-#'
-#' @return
-#' A character string of all files in the archive.
+#' Makes the outputs from\code{.tar}\code{.zip} the same, which they aren't by default.
 #'
 #' @param archive A character string of a single file name to list files in.
+#'
+#' @return A character string of all files in the archive.
+#'
+#' @importFrom testthat capture_warnings
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
-  if (length(archive)>0 && tools::file_ext(archive[1]) == "rar"){
+  if (length(archive) > 0 && tools::file_ext(archive[1]) == "rar") {
     hasUnrar <- .testForUnrar()
   }
   funWArgs <- .whichExtractFn(archive[1], NULL)
@@ -850,9 +851,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
         if ("Name" %in% names(filesInArchive)) {
           # for zips, rm directories (length = 0)
-          filesInArchive <-
-            filesInArchive[filesInArchive$Length != 0,]$Name
-        } else { # untar
+          filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
+        } else {
+          # untar
           filesInArchive
         }
       } else {
