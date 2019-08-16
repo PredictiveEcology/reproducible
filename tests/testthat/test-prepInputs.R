@@ -183,9 +183,10 @@ test_that("prepInputs doesn't work", {
   expect_equivalent(LCC2005, LCC2005_2)
 
   ######################################
-  ##  archive     ######
+  ##  archive                     ######
   ######################################
-  # don't pass url -- use local copy of archive only - use purge = TRUE to rm checksums file, rewrite it here
+  ## don't pass url -- use local copy of archive only
+  ## use purge = TRUE to rm checksums file, rewrite it here
   shpEcozone <- prepInputs(destinationPath = dPath,
                            archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
   expect_true(is(shpEcozone, "SpatialPolygons"))
@@ -195,8 +196,8 @@ test_that("prepInputs doesn't work", {
   #######################################
   shpEcozone <- prepInputs(destinationPath = dPath,
                            archive = file.path(dPath, "ecozone_shp.zip"),
-                           alsoExtract = c("ecozones.dbf", "ecozones.prj",
-                                           "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
+                           alsoExtract = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn",
+                                           "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
   expect_true(is(shpEcozone, "SpatialPolygons"))
 
   rm(shpEcozone)
@@ -211,8 +212,8 @@ test_that("prepInputs doesn't work", {
   shpEcozone <- prepInputs(destinationPath = dPath,
                            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
                            archive = file.path(dPath, "ecozone_shp.zip"),
-                           alsoExtract = c("ecozones.dbf", "ecozones.prj",
-                                           "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
+                           alsoExtract = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn",
+                                           "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
   expect_true(is(shpEcozone, "SpatialPolygons"))
 
   lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
@@ -237,11 +238,13 @@ test_that("prepInputs doesn't work", {
   ### archive                      ######
   #######################################
   rm(LCC2005)
-  mess <- capture_messages(LCC2005 <- prepInputs(
-    archive = "LandCoverOfCanada2005_V1_4.zip",
-    destinationPath = asPath(dPath),
-    studyArea = StudyArea
-  ))
+  mess <- capture_messages({
+    LCC2005 <- prepInputs(
+      archive = "LandCoverOfCanada2005_V1_4.zip",
+      destinationPath = asPath(dPath),
+      studyArea = StudyArea
+    )
+  })
   expect_true(any(grepl("No targetFile supplied. Extracting all files from archive", mess)))
   expect_true(is(LCC2005, "Raster"))
 
@@ -250,12 +253,14 @@ test_that("prepInputs doesn't work", {
   #######################################
   # only targetFile -- i.e., skip download, extract ... but do postProcess
   rm(LCC2005)
-  mess <- capture_messages(LCC2005 <- prepInputs(
-    targetFile = lcc2005Filename,
-    destinationPath = asPath(dPath),
-    studyArea = StudyArea,
-    purge = TRUE
-  ))
+  mess <- capture_messages({
+    LCC2005 <- prepInputs(
+      targetFile = lcc2005Filename,
+      destinationPath = asPath(dPath),
+      studyArea = StudyArea,
+      purge = TRUE
+    )
+  })
   expect_false(any(grepl("extract", mess))) # nothing that talks about extracting ...
   #which means no extractFromArchive or even skipping extract
 
@@ -282,10 +287,12 @@ test_that("interactive prepInputs", {
     #######################################
     #tmpdir <- "data/FMA"
     #checkPath(tmpdir, create = TRUE)
-    warns <- capture_warnings(test <- prepInputs(
-      url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
-      destinationPath = tmpdir
-    ))
+    warns <- capture_warnings({
+      test <- prepInputs(
+        url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
+        destinationPath = tmpdir
+      )
+    })
     files <- dir(tmpdir, pattern = "FMA_Boundary")
     expect_true(length(files) == 9)
     expect_is(test, "SpatialPolygons")
@@ -296,11 +303,13 @@ test_that("interactive prepInputs", {
     # need authentication for this
     #tmpdir <- "data/FMA"
     #checkPath(tmpdir, create = TRUE)
-    warns <- capture_warnings(test <- prepInputs(
-      targetFile = "FMA_Boundary_Updated.shp",
-      url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
-      destinationPath = tmpdir
-    ))
+    warns <- capture_warnings({
+      test <- prepInputs(
+        targetFile = "FMA_Boundary_Updated.shp",
+        url = "https://drive.google.com/file/d/1nTFOcrdMf1hIsxd_yNCSTr8RrYNHHwuc/view?usp=sharing",
+        destinationPath = tmpdir
+      )
+    })
     # There is a meaningless warning for this unit test -- ignore it :
     # In rgdal::readOGR(dirname(x), fn, stringsAsFactors = stringsAsFactors,  :
     #                  Z-dimension discarded
@@ -994,33 +1003,43 @@ test_that("prepInputs doesn't work", {
             expectedMess = expectedMessagePostProcess,
             filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
-    testOnExit(testInitOut)
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
     testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                   "reproducible.inputPaths" = NULL),
                             needGoogle = TRUE)
-    mess1 <- capture_messages(test <- prepInputs(
-      targetFile = "DEM.tif",
-      url = urlTif1,
-      destinationPath = tmpdir,
-      useCache = TRUE
-    ))
+    mess1 <- capture_messages({
+      test <- prepInputs(
+        targetFile = "DEM.tif",
+        url = urlTif1,
+        destinationPath = tmpdir,
+        useCache = TRUE
+      )
+    })
     runTest("1_2_5_6_7_13", "Raster", 1, mess1, expectedMess = expectedMessage,
             filePattern = "DEM", tmpdir = tmpdir,
             test = test)
 
-    if (interactive()){
-      testOnExit(testInitOut)
+    if (interactive()) {
       testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                    "reproducible.overwrite" = TRUE
-                                                    ),
+                                                    "reproducible.overwrite" = TRUE),
                               needGoogle = TRUE)
       opts <- options("reproducible.cachePath" = tmpCache)
-      on.exit({options(opts)}, add = TRUE)
-      googledrive::drive_auth_config(active = TRUE)
-      mess2 <- capture_messages(warn <- capture_warnings(test3 <- prepInputs(
-        url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing",
-        studyArea = StudyArea,
-        fun = "base::readRDS")))
+      on.exit({
+        options(opts)
+        testOnExit(testInitOut)
+      }, add = TRUE)
+
+      mess2 <- capture_messages({
+        warn <- capture_warnings({
+          test3 <- prepInputs(
+            url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing", #nolint
+            studyArea = StudyArea,
+            fun = "base::readRDS"
+          )
+        })
+      })
       runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
               expectedMess = expectedMessagePostProcess,
               filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)

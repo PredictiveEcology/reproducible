@@ -15,6 +15,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     options("reproducible.ask" = ask)
   else
     list()
+
   optsVerbose <- if (verbose)
     options(reproducible.verbose = verbose)
   else
@@ -26,11 +27,17 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpdir <- normPath(file.path(tempdir(), rndstr(1, 6)))
 
   if (isTRUE(needGoogle)) {
-    googledrive::drive_auth_config(active = TRUE)
+    if (utils::packageVersion("googledrive") >= "1.0.0")
+      googledrive::drive_auth()
+    else
+      googledrive::drive_auth_config(active = TRUE)
+
     if (quickPlot::isRstudioServer()) {
       options(httr_oob_default = TRUE)
     }
 
+    ## TODO: #119 changes use of .httr-oauth (i.e., no longer used)
+    ## instead, uses ~/.R/gargle/gargle-oauth
     if (interactive()) {
       if (file.exists("~/.httr-oauth")) {
         linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
@@ -40,8 +47,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
         file.copy(".httr-oauth", "~/.httr-oauth", overwrite = TRUE)
       }
     }
-    if (!file.exists("~/.httr-oauth")) message("Please put an .httr-oauth file in your ~ directory")
-
+    if (!file.exists("~/.httr-oauth"))
+      message("Please put an .httr-oauth file in your ~ directory")
   }
   checkPath(tmpdir, create = TRUE)
   origDir <- setwd(tmpdir)
@@ -89,24 +96,26 @@ testOnExit <- function(testInitOut) {
     options(testInitOut$opts)
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
-  if (isTRUE(testInitOut$needGoogle))
-    googledrive::drive_auth_config(active = FALSE)
+  if (isTRUE(testInitOut$needGoogle)) {
+    if (utils::packageVersion("googledrive") >= "1.0.0")
+      googledrive::drive_deauth()
+    else
+      googledrive::drive_auth_config(active = FALSE)
+  }
   lapply(testInitOut$libs, function(lib) {
     detach(paste0("package:", lib), character.only = TRUE)}
   )
 }
 
-runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir,
-                    test) {
+runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {
   files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
   expect_true(length(files) == numFiles)
   expect_is(test, class)
   message(mess)
-  print(hasMessageNum <-
-          paste(collapse = "_", which(unlist(
-            lapply(strsplit(expectedMess, "\\|")[[1]], function(m)
-              any(grepl(m, mess)))
-          ))))
+  hasMessageNum <- print(paste(collapse = "_", which(unlist(
+    lapply(strsplit(expectedMess, "\\|")[[1]], function(m)
+      any(grepl(m, mess)))
+  ))))
 
   isOK <- hasMessageNum == prod
   if (!isOK) {
@@ -119,7 +128,6 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
   }
   expect_true(isOK) #
 }
-
 
 expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
                         "From:Shapefile", "Checking local", "Finished checking",

@@ -1,5 +1,19 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.10.9000
+==============
+
+## Dependency changes
+
+* made compatible with `googledrive` v 1.0.0
+
+## New features
+
+* ?
+
+## bug fixes
+
+* ?
 
 version 0.2.10
 =============
