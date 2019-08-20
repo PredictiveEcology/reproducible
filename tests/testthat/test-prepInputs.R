@@ -1159,9 +1159,7 @@ test_that("prepInputs doesn't work (part 2)", {
             expectedMess = expectedMessagePostProcess,
             filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
+    testOnExit(testInitOut)
     testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                   "reproducible.inputPaths" = NULL),
                             needGoogle = TRUE)
