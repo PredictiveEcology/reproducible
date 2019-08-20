@@ -28,7 +28,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   if (isTRUE(needGoogle)) {
     if (utils::packageVersion("googledrive") >= "1.0.0")
-      googledrive::drive_auth()
+      googledrive::drive_deauth()
     else
       googledrive::drive_auth_config(active = TRUE)
 
@@ -36,19 +36,24 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
       options(httr_oob_default = TRUE)
     }
 
-    ## TODO: #119 changes use of .httr-oauth (i.e., no longer used)
-    ## instead, uses ~/.R/gargle/gargle-oauth
+    ## #119 changed use of .httr-oauth (i.e., no longer used)
+    ## instead, uses ~/.R/gargle/gargle-oauth/long_random_token_name_with_email
     if (interactive()) {
-      if (file.exists("~/.httr-oauth")) {
-        linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
-      } else {
+      if (utils::packageVersion("googledrive") >= "1.0.0") {
         googledrive::drive_auth()
-        print("copying .httr-oauth to ~/.httr-oauth")
-        file.copy(".httr-oauth", "~/.httr-oauth", overwrite = TRUE)
+      } else {
+        if (file.exists("~/.httr-oauth")) {
+          linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
+        } else {
+          googledrive::drive_auth()
+          print("copying .httr-oauth to ~/.httr-oauth")
+          file.copy(".httr-oauth", "~/.httr-oauth", overwrite = TRUE)
+        }
+
+        if (!file.exists("~/.httr-oauth"))
+          message("Please put an .httr-oauth file in your ~ directory")
       }
     }
-    if (!file.exists("~/.httr-oauth"))
-      message("Please put an .httr-oauth file in your ~ directory")
   }
   checkPath(tmpdir, create = TRUE)
   origDir <- setwd(tmpdir)
@@ -61,8 +66,12 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   if (!is.null(opts)) {
     if (needGoogle) {
-      optsGoogle <- list(httr_oob_default = quickPlot::isRstudioServer(),
-                         httr_oauth_cache = "~/.httr-oauth")
+      optsGoogle <- if (utils::packageVersion("googledrive") >= "1.0.0") {
+        list(httr_oob_default = quickPlot::isRstudioServer(),
+             httr_oauth_cache = "~/.httr-oauth")
+      } else {
+        list(httr_oob_default = quickPlot::isRstudioServer())
+      }
       opts <- append(opts, optsGoogle)
     }
     opts <- options(opts)
@@ -97,9 +106,7 @@ testOnExit <- function(testInitOut) {
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
   if (isTRUE(testInitOut$needGoogle)) {
-    if (utils::packageVersion("googledrive") >= "1.0.0")
-      googledrive::drive_deauth()
-    else
+    if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
   }
   lapply(testInitOut$libs, function(lib) {
