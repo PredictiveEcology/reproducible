@@ -264,7 +264,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
-#' @importFrom googledrive as_id drive_auth drive_get
+#' @importFrom googledrive as_id drive_get
 #'
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
@@ -279,7 +279,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     message("  Downloading from Google Drive.")
     retry(googledrive::drive_download(googledrive::as_id(url), path = destFile,
-                                overwrite = overwrite, verbose = TRUE))
+                                      overwrite = overwrite, verbose = TRUE))
   } else {
     message(skipDownloadMsg)
     needChecksums <- 0
@@ -433,7 +433,7 @@ missingFiles <- function(files, checkSums, targetFile) {
       is.null(files))
 }
 
-#' @importFrom googledrive as_id drive_get drive_token
+#' @importFrom googledrive as_id drive_auth drive_get drive_token
 #' @importFrom quickPlot isRstudioServer
 assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath")) {
