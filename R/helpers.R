@@ -120,30 +120,31 @@ basename2 <- function(x) {
 
 #' A wrapper around \code{try} that retries on failure
 #'
-#' This is useful for functions that are "flaky", such as
-#' \code{curl}, which may fail for unknown reasons that do not
-#' persist.
-#' @param ... Passed to \code{try}
-#' @param sleep Passed to \code{Sys.sleep}, the default
-#'   delay in seconds bewteen repeated tries
-#' @param retries Numeric. The maximum number of retries.
-#' @export
-#' @details
-#' The same as \code{try}
+#' This is useful for functions that are "flaky", such as \code{curl}, which may fail for unknown
+#' reasons that do not persist.
 #'
-retry <- function(..., sleep = 0.5, retries = 5) {
-  failed <- 1
-  while (failed > 0  && failed < retries) {
-    downloadResults <- try(...)
-    if (is(downloadResults, "try-error")) {
-      failed <- failed + 1
-      print("retrying")
-      if (failed >= retries)
-        stop("Failed uploading to GoogleDrive")
-      Sys.sleep(sleep)
+#' @details
+#' Based on \url{https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525}.
+#'
+#' @param expr     Expression to run.
+#' @param retries  Numeric. The maximum number of retries.
+#' @param silent   Logical indicating whether to \code{try} silently.
+#'
+#' @export
+retry <- function(expr, retries = 5, silent = FALSE) {
+  for (i in seq_len(retries)) {
+    results <- try(expr = expr, silent = silent)
+    if (inherits(results, "try-error")) {
+      backoff <- runif(n = 1, min = 0, max = 2^i - 1)
+      Sys.sleep(backoff)
     } else {
-      failed <- 0
+      break
     }
   }
-  downloadResults
+
+  if (inherits(results, "try-error")) {
+    stop("Failed after ", retries, " attempts.")
+  } else {
+    return(result)
+  }
 }
