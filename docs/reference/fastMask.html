@@ -163,7 +163,7 @@ float will be passed as the exact number of cores to be used.</p></td>
     </tr>
     <tr>
       <th>useGDAL</th>
-      <td><p>Logical, defaults to getOption("reproducible.useGDAL" = TRUE).
+      <td><p>Logical, defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.useGDAL" = TRUE)</a></code>.
 If <code>TRUE</code>, then this function will use <code>gdalwarp</code> only when not
 small enough to fit in memory (i.e., <em>if the operation fails</em> the
 <code><a href='https://rdrr.io/pkg/raster/man/programming.html'>raster::canProcessInMemory(x, 3)</a></code> test). Using <code>gdalwarp</code> will

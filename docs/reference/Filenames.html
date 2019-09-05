@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Return the filename or filenames from a Raster* object — Filenames • reproducible</title>
+<title>Return the filename(s) from a <code>Raster*</code> object — Filenames • reproducible</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -32,12 +32,11 @@
 
 
 
-<meta property="og:title" content="Return the filename or filenames from a Raster* object — Filenames" />
+<meta property="og:title" content="Return the filename(s) from a <code>Raster*</code> object — Filenames" />
 
-<meta property="og:description" content="The filename in Raster packages returns an empty string for
-a RasterStack. This function will return a vector of length 1 (RasterLayer or
-RasterBrick) or length &amp;gt;1 for RasterStack. This is mostly just a wrapper aroung
-filename" />
+<meta property="og:description" content="This is mostly just a wrapper around filename from the raster package, except that
+instead of returning an empty string for a RasterStack object, it will return a vector of
+length &amp;gt;1 for RasterStack." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -131,17 +130,16 @@ filename" />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Return the filename or filenames from a Raster* object</h1>
+    <h1>Return the filename(s) from a <code>Raster*</code> object</h1>
     <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/convertPaths.R'><code>R/convertPaths.R</code></a></small>
     <div class="hidden name"><code>Filenames.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>The <code>filename</code> in <code>Raster</code> packages returns an empty string for
-a <code>RasterStack</code>. This function will return a vector of length 1 (RasterLayer or
-RasterBrick) or length &gt;1 for RasterStack. This is mostly just a wrapper aroung
-<code>filename</code></p>
+    <p>This is mostly just a wrapper around <code>filename</code> from the <span class="pkg">raster</span> package, except that
+instead of returning an empty string for a <code>RasterStack</code> object, it will return a vector of
+length &gt;1 for <code>RasterStack</code>.</p>
     
     </div>
 
@@ -167,7 +165,7 @@ RasterBrick) or length &gt;1 for RasterStack. This is mostly just a wrapper arou
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>obj</th>
-      <td><p>A Raster* object (i.e., RasterLayer, RasterStack, RasterBrick)</p></td>
+      <td><p>A <code>Raster*</code> object (i.e., <code>RasterLayer</code>, <code>RasterStack</code>, <code>RasterBrick</code>)</p></td>
     </tr>
     </table>
     

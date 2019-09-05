@@ -169,11 +169,11 @@
 <h2 class="hasAnchor">
 <a href="#new-features-1" class="anchor"></a>New features</h2>
 <ul>
-<li>Cache has 2 new arguments, <code>useCloud</code> and <code>cloudFolderID</code>. This is a new approach to cloud caching. It has been tested with file backed RasterLayer, RasterStack and RasterBrick and all normal R objects. It will not work for any other class of disk-backed files, e.g., <code>ff</code> or <code>bigmatrix</code>, nor is it likely to work for R6 class objects.</li>
+<li>Cache has 2 new arguments, <code>useCloud</code> and <code>cloudFolderID</code>. This is a new approach to cloud caching. It has been tested with file backed <code>RasterLayer</code>, <code>RasterStack</code> and <code>RasterBrick</code> and all normal R objects. It will not work for any other class of disk-backed files, e.g., <code>ff</code> or <code>bigmatrix</code>, nor is it likely to work for R6 class objects.</li>
 <li>Slowly deprecating cloudCache and family of functions in favour of a new approach using arguments to <code>Cache</code>, i.e., <code>useCache</code> and <code>cloudFolderID</code>
 </li>
 <li>
-<code>downloadData</code> from GoogleDrive now protects against HTTP2 error by capturing error and retrying. This is a curl issue for interrupted connections.</li>
+<code>downloadData</code> from Google Drive now protects against HTTP2 error by capturing error and retrying. This is a curl issue for interrupted connections.</li>
 </ul>
 </div>
 <div id="bug-fixes-1" class="section level2">
@@ -182,7 +182,7 @@
 <ul>
 <li>fixes for <code>rcnst</code> errors on R-devel, tested using <code><a href="https://rdrr.io/pkg/devtools/man/check.html">devtools::check(env_vars = list("R_COMPILE_PKGS"=1, "R_JIT_STRATEGY"=4, "R_CHECK_CONSTANTS"=5))</a></code>
 </li>
-<li>other minor impovements, included fixes for <a href='https://github.com/PredictiveEcology/reproducible/issues/115'>#115</a></li>
+<li>other minor improvements, including fixes for <a href='https://github.com/PredictiveEcology/reproducible/issues/115'>#115</a></li>
 </ul>
 </div>
 </div>
@@ -206,10 +206,10 @@
 <a href="#bug-fixes-2" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>
-<code>prepInputs</code> wasn’t correctly passing <code>useCache</code>
+<code>prepInputs</code> was not correctly passing <code>useCache</code>
 </li>
 <li>
-<code>cropInputs</code> was reprojecting extent of y as a time saving approach, but this was incorrect if <code>studyArea</code> is a <code>SpatialPolygon</code> that is not close to filling the extent. It now reprojects <code>studyArea</code> directly which will be slower, but correct. – fixes issue <a href='https://github.com/PredictiveEcology/reproducible/issues/93'>#93</a></li>
+<code>cropInputs</code> was reprojecting extent of y as a time saving approach, but this was incorrect if <code>studyArea</code> is a <code>SpatialPolygon</code> that is not close to filling the extent. It now reprojects <code>studyArea</code> directly which will be slower, but correct. (<a href='https://github.com/PredictiveEcology/reproducible/issues/93'>#93</a>)</li>
 <li>other minor improvements</li>
 </ul>
 </div>

@@ -158,10 +158,11 @@ provided as a character string.</p></td>
     </tr>
     <tr>
       <th>cloudFolderID</th>
-      <td><p>A googledrive id of a folder, e.g., using <code>drive_mkdir()</code>. If
-left as <code>NULL</code>, the function will create a cloud folder with a warning. The warning
-will have the cloudFolderID that should be used in subsequent calls. It will also be
-added to options("reproducible.cloudFolderID"), but this will not persist across sessions.</p></td>
+      <td><p>A googledrive id of a folder, e.g., using <code>drive_mkdir()</code>.
+If left as <code>NULL</code>, the function will create a cloud folder with a warning.
+The warning will have the <code>cloudFolderID</code> that should be used in subsequent calls.
+It will also be added to <code><a href='https://rdrr.io/r/base/options.html'>options("reproducible.cloudFolderID")</a></code>,
+but this will not persist across sessions.</p></td>
     </tr>
     <tr>
       <th>delete</th>
