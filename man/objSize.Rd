@@ -6,19 +6,25 @@
 \alias{objSize.environment}
 \alias{objSize.default}
 \alias{objSize.Path}
+\alias{objSize.function}
 \title{Recursive object.size}
 \usage{
-objSize(x, quick)
+objSize(x, quick, ...)
 
-\method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE))
+\method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE),
+  ...)
 
 \method{objSize}{environment}(x, quick = getOption("reproducible.quick",
-  FALSE))
+  FALSE), ...)
 
 \method{objSize}{default}(x, quick = getOption("reproducible.quick",
-  FALSE))
+  FALSE), ...)
 
-\method{objSize}{Path}(x, quick = getOption("reproducible.quick", FALSE))
+\method{objSize}{Path}(x, quick = getOption("reproducible.quick", FALSE),
+  ...)
+
+\method{objSize}{function}(x, quick = getOption("reproducible.quick",
+  FALSE), enclosingEnvs = TRUE, ...)
 }
 \arguments{
 \item{x}{An object}
@@ -26,11 +32,21 @@ objSize(x, quick)
 \item{quick}{Logical. Only some methods use this. e.g.,
 \code{Path} class objects. In which case, \code{file.size} will be
 used instead of \code{object.size}.}
+
+\item{...}{Other arguments passed to methods, e.g., \code{objSize.function}
+has \code{enclosingEnvs}}
 }
 \description{
 This has methods for various types of things that may not correctly report
 their object.size using \code{object\.size}. Also, for lists and environments,
 it will return the object.size separately for each element.
+}
+\details{
+For functions, a user can include the enclosing environment as described
+\url{https://www.r-bloggers.com/using-closures-as-objects-in-r/} and
+\url{http://adv-r.had.co.nz/memory.html}. It is not entirely clear which estimate
+is better. However, if the enclosing environment is the .GlobalEnv, it will
+not be included even though \code{enclosingEnvs = TRUE}.
 }
 \examples{
 a <- new.env()

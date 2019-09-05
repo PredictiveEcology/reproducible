@@ -4,16 +4,16 @@ Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
 Description: Collection of high-level, robust, machine- and OS-independent tools
     for making deeply reproducible and reusable content in R.
     This includes light weight package management (similar to 'packrat' and
-    'checkpoint', but more flexible, lightweight, simpler and less tested than both), 
+    'checkpoint', but more flexible, lightweight, simpler yet less tested than both), 
     tools for caching, downloading and verifying or writing checksums, post-processing 
     of common spatial datasets, and accessing GitHub repositories. 
     Some features are still under active development.
-SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows)  to work with '.rar' files.
+SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.rar' files.
 URL: 
     http://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2019-07-08
-Version: 0.2.9
+Date: 2019-09-05
+Version: 0.2.10
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -29,7 +29,7 @@ Authors@R: c(
     role = "cph")
     )
 Depends:
-    R (>= 3.3)
+    R (>= 3.5)
 Imports:
     archivist (>= 2.1.2),
     backports,

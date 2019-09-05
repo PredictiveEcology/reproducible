@@ -1,5 +1,22 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.10
+==============
+
+## Dependency changes
+
+* made compatible with `googledrive` v 1.0.0 (#119)
+
+## New features
+
+* `pkgDep2`, a new convenience function to get the dependencies of the "first order" dependencies.
+* `useCache`, used in many functions (incl `Cache`, `postProcess`) can now be numeric, a qualitative indicator of "how deep" nested `Cache` calls should set `useCache = TRUE` -- implemented as 1 or 2 in `postProcess` currently. See `?Cache`
+
+## bug fixes
+
+* `pkgDep` was becoming unreliable for unknown reasons. It has been reimplemented, much faster, without memoising. The speed gains should be immediately noticeable (6 second to 0.1 second for `pkgDep("reproducible")`)
+* improved `retry` to use exponential backoff when attempting to access online resources (#121)
+
 version 0.2.9
 =============
 

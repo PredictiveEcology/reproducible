@@ -1,3 +1,4 @@
+#' @keywords internal
 .pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
   inst <- data.frame(instPkgs, instVers = unlist(instVers), stringsAsFactors = FALSE)
   write.table(inst, file = packageVersionFile, row.names = FALSE)
@@ -5,6 +6,7 @@
 }
 
 #' @importFrom utils chooseCRANmirror
+#' @keywords internal
 getCRANrepos <- function(repos = NULL) {
   if (is.null(repos)) {
     repos <- getOption("repos")["CRAN"]
@@ -89,6 +91,7 @@ getCRANrepos <- function(repos = NULL) {
   out
 }
 
+#' @keywords internal
 rndstr <- function(n = 1, len = 8) {
   unlist(lapply(character(n), function(x) {
     x <- paste0(sample(c(0:9, letters, LETTERS), size = len,
@@ -96,6 +99,7 @@ rndstr <- function(n = 1, len = 8) {
   }))
 }
 
+#' @keywords internal
 isInteractive <- function() interactive()
 
 #' A version of \code{base::basename} that is \code{NULL} resistant
@@ -106,42 +110,43 @@ isInteractive <- function() interactive()
 #' @export
 #' @return Same as \code{\link[base]{basename}}
 #'
-basename2 <- function (x) {
+basename2 <- function(x) {
   if (is.null(x)) {
     NULL
-  }
-  else {
+  } else {
     basename(x)
   }
 }
 
 #' A wrapper around \code{try} that retries on failure
 #'
-#' This is useful for functions that are "flaky", such as
-#' \code{curl}, which may fail for unknown reasons that do not
-#' persist.
-#' @param ... Passed to \code{try}
-#' @param sleep Passed to \code{Sys.sleep}, the default
-#'   delay in seconds bewteen repeated tries
-#' @param retries Numeric. The maximum number of retries.
-#' @export
-#' @details
-#' The same as \code{try}
+#' This is useful for functions that are "flaky", such as \code{curl}, which may fail for unknown
+#' reasons that do not persist.
 #'
-retry <- function(..., sleep = 0.5, retries = 5) {
-  failed <- 1
-  while(failed > 0  && failed < retries) {
-    downloadResults <- try(...)
-    if (is(downloadResults, "try-error")) {
-      failed <- failed + 1
-      print("retrying")
-      if (failed >= retries)
-        stop("Failed uploading to GoogleDrive")
-      Sys.sleep(sleep)
+#' @details
+#' Based on \url{https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525}.
+#'
+#' @param expr     Expression to run.
+#' @param retries  Numeric. The maximum number of retries.
+#' @param silent   Logical indicating whether to \code{try} silently.
+#'
+#' @export
+retry <- function(expr, retries = 5, silent = FALSE) {
+  for (i in seq_len(retries)) {
+    results <- try(expr = expr, silent = silent)
+    if (inherits(results, "try-error")) {
+      backoff <- runif(n = 1, min = 0, max = 2^i - 1)
+      if (backoff > 3)
+        message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
+      Sys.sleep(backoff)
     } else {
-      failed <- 0
+      break
     }
   }
-  downloadResults
 
+  if (inherits(results, "try-error")) {
+    stop("Failed after ", retries, " attempts.")
+  } else {
+    return(result)
+  }
 }

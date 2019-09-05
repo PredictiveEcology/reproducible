@@ -16,13 +16,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -36,7 +38,10 @@
 pkgDep in the miniCRAN package, but with modifications for speed.
 It will first check local package directories in libPath, and it if
 the function cannot find the packages there, then it will use
-package_dependencies." />
+package_dependencies.
+pkgDep2 is a convenience wrapper of pkgDep that
+&quot;goes one level in&quot; i.e., the first order dependencies, and runs
+the pkgDep on those." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -61,6 +66,7 @@ package_dependencies." />
   gtag('config', 'UA-58633549-5');
 </script>
 
+
   </head>
 
   <body>
@@ -77,7 +83,7 @@ package_dependencies." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.10</span>
       </span>
     </div>
 
@@ -85,7 +91,7 @@ package_dependencies." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -112,7 +118,7 @@ package_dependencies." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -123,6 +129,7 @@ package_dependencies." />
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -135,21 +142,26 @@ package_dependencies." />
 
     <div class="ref-description">
     
-    <p>This is intended to replace <code><a href='https://www.rdocumentation.org/packages/tools/topics/package_dependencies'>package_dependencies</a></code> or
+    <p>This is intended to replace <code><a href='https://rdrr.io/r/tools/package_dependencies.html'>package_dependencies</a></code> or
 <code>pkgDep</code> in the <span class="pkg">miniCRAN</span> package, but with modifications for speed.
 It will first check local package directories in <code>libPath</code>, and it if
 the function cannot find the packages there, then it will use
-<code><a href='https://www.rdocumentation.org/packages/tools/topics/package_dependencies'>package_dependencies</a></code>.</p>
+<code><a href='https://rdrr.io/r/tools/package_dependencies.html'>package_dependencies</a></code>.</p>
+<p><code>pkgDep2</code> is a convenience wrapper of <code>pkgDep</code> that
+"goes one level in" i.e., the first order dependencies, and runs
+the <code>pkgDep</code> on those.</p>
     
     </div>
 
     <pre class="usage"><span class='fu'>pkgDep</span>(<span class='no'>packages</span>, <span class='no'>libPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>depends</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>imports</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>suggests</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>linkingTo</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"repos"</span>))
+  <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"repos"</span>), <span class='kw'>refresh</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>))
 
-<span class='fu'>pkgDep2</span>(<span class='no'>packages</span>, <span class='no'>libPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>depends</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>imports</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>suggests</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>linkingTo</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"repos"</span>))</pre>
+<span class='fu'>pkgDep2</span>(<span class='no'>packages</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>depends</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>imports</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>suggests</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>linkingTo</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"repos"</span>),
+  <span class='kw'>refresh</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>),
+  <span class='kw'>sorted</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -189,21 +201,175 @@ NOTE: Dependencies of suggests will not be recursive. Default <code>TRUE</code>.
       <td><p>The remote repository (e.g., a CRAN mirror), passed to either
 <code>install.packages</code>, <code>install_github</code> or <code>installVersions</code>.</p></td>
     </tr>
+    <tr>
+      <th>refresh</th>
+      <td><p>There is an internal type of caching. If the results are wrong, likely
+set <code>refresh = TRUE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>logical indicating if output should monitor the package
+    search cycles.</p></td>
+    </tr>
+    <tr>
+      <th>sorted</th>
+      <td><p>Logical. If <code>TRUE</code>, the default, the packages will be sorted in
+the returned list from most number of dependencies to least.</p></td>
+    </tr>
     </table>
     
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
     <p><code>package_dependencies</code> and <code>pkgDep</code> will differ under the following
 circumstances:</p><ol>
-<li><p>GitHub packages are not detected using <code><a href='https://www.rdocumentation.org/packages/tools/topics/package_dependencies'>tools::package_dependencies</a></code>;</p></li>
-<li><p><code><a href='https://www.rdocumentation.org/packages/tools/topics/package_dependencies'>tools::package_dependencies</a></code> does not detect the dependencies of base packages
+<li><p>GitHub packages are not detected using <code><a href='https://rdrr.io/r/tools/package_dependencies.html'>tools::package_dependencies</a></code>;</p></li>
+<li><p><code><a href='https://rdrr.io/r/tools/package_dependencies.html'>tools::package_dependencies</a></code> does not detect the dependencies of base packages
     among themselves, <em>e.g.</em>, <code>methods</code> depends on <code>stats</code> and <code>graphics</code>.</p></li>
 </ol>
+
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'>pkgDep</span>(<span class='st'>"crayon"</span>)</div><div class='output co'>#&gt; $crayon
 #&gt; [1] "grDevices" "methods"   "utils"     "stats"     "graphics" 
+#&gt; </div><div class='input'><span class='fu'>pkgDep2</span>(<span class='st'>"reproducible"</span>)</div><div class='output co'>#&gt; $quickPlot
+#&gt;  [1] "ggplot2"      "gridBase"     "igraph"       "RColorBrewer" "rgeos"       
+#&gt;  [6] "gtable"       "lazyeval"     "MASS"         "mgcv"         "reshape2"    
+#&gt; [11] "scales"       "viridisLite"  "withr"        "grid"         "grDevices"   
+#&gt; [16] "utils"        "methods"      "graphics"     "stats"        "Matrix"      
+#&gt; [21] "splines"      "nlme"         "lattice"      "plyr"         "Rcpp"        
+#&gt; [26] "stringr"      "glue"         "stringi"      "tools"        "magrittr"    
+#&gt; [31] "labeling"     "munsell"      "colorspace"   "R6"           "digest"      
+#&gt; [36] "rlang"        "tibble"       "cli"          "fansi"        "pillar"      
+#&gt; [41] "assertthat"   "crayon"       "utf8"         "vctrs"        "backports"   
+#&gt; [46] "ellipsis"     "zeallot"      "pkgconfig"    "sp"           "data.table"  
+#&gt; [51] "fpCompare"    "raster"       "rgdal"       
+#&gt; 
+#&gt; $archivist
+#&gt;  [1] "RCurl"       "digest"      "httr"        "DBI"         "lubridate"  
+#&gt;  [6] "RSQLite"     "magrittr"    "flock"       "bitops"      "methods"    
+#&gt; [11] "stats"       "graphics"    "grDevices"   "utils"       "curl"       
+#&gt; [16] "jsonlite"    "mime"        "openssl"     "R6"          "tools"      
+#&gt; [21] "askpass"     "sys"         "stringr"     "Rcpp"        "glue"       
+#&gt; [26] "stringi"     "bit64"       "blob"        "memoise"     "pkgconfig"  
+#&gt; [31] "BH"          "plogr"       "bit"         "prettyunits" "rlang"      
+#&gt; [36] "vctrs"       "assertthat"  "backports"   "ellipsis"    "zeallot"    
+#&gt; 
+#&gt; $googledrive
+#&gt;  [1] "uuid"       "curl"       "glue"       "httr"       "jsonlite"  
+#&gt;  [6] "purrr"      "rlang"      "tibble"     "utils"      "methods"   
+#&gt; [11] "stats"      "graphics"   "grDevices"  "mime"       "openssl"   
+#&gt; [16] "R6"         "tools"      "askpass"    "sys"        "magrittr"  
+#&gt; [21] "cli"        "fansi"      "pillar"     "assertthat" "crayon"    
+#&gt; [26] "utf8"       "vctrs"      "backports"  "ellipsis"   "zeallot"   
+#&gt; [31] "digest"     "pkgconfig" 
+#&gt; 
+#&gt; $dplyr
+#&gt;  [1] "tibble"     "tidyselect" "cli"        "fansi"      "pillar"    
+#&gt;  [6] "assertthat" "crayon"     "methods"    "utils"      "tools"     
+#&gt; [11] "grDevices"  "stats"      "graphics"   "utf8"       "rlang"     
+#&gt; [16] "vctrs"      "backports"  "ellipsis"   "zeallot"    "digest"    
+#&gt; [21] "glue"       "pkgconfig"  "purrr"      "magrittr"   "Rcpp"      
+#&gt; [26] "R6"         "BH"         "plogr"     
+#&gt; 
+#&gt; $gdalUtils
+#&gt;  [1] "foreach"     "R.utils"     "rgdal"       "codetools"   "iterators"  
+#&gt;  [6] "utils"       "R.methodsS3" "R.oo"        "methods"     "stats"      
+#&gt; [11] "graphics"    "grDevices"   "tools"       "sp"          "lattice"    
+#&gt; [16] "grid"        "raster"      "Rcpp"       
+#&gt; 
+#&gt; $sf
+#&gt;  [1] "classInt"   "units"      "e1071"      "class"      "KernSmooth"
+#&gt;  [6] "graphics"   "grDevices"  "stats"      "methods"    "utils"     
+#&gt; [11] "MASS"       "Rcpp"       "DBI"        "grid"       "magrittr"  
+#&gt; [16] "tools"     
+#&gt; 
+#&gt; $testthat
+#&gt;  [1] "evaluate"   "praise"     "methods"    "stats"      "graphics"  
+#&gt;  [6] "grDevices"  "utils"      "cli"        "crayon"     "digest"    
+#&gt; [11] "magrittr"   "R6"         "rlang"      "withr"      "assertthat"
+#&gt; [16] "tools"     
+#&gt; 
+#&gt; $httr
+#&gt;  [1] "curl"      "jsonlite"  "mime"      "openssl"   "R6"        "methods"  
+#&gt;  [7] "stats"     "graphics"  "grDevices" "utils"     "tools"     "askpass"  
+#&gt; [13] "sys"      
+#&gt; 
+#&gt; $fasterize
+#&gt;  [1] "raster"        "sp"            "RcppArmadillo" "Rcpp"         
+#&gt;  [5] "methods"       "utils"         "stats"         "graphics"     
+#&gt;  [9] "grDevices"     "lattice"       "grid"         
+#&gt; 
+#&gt; $R.utils
+#&gt; [1] "R.methodsS3" "R.oo"        "utils"       "methods"     "stats"      
+#&gt; [6] "graphics"    "grDevices"   "tools"      
+#&gt; 
+#&gt; $rgdal
+#&gt; [1] "grDevices" "graphics"  "stats"     "utils"     "methods"   "sp"       
+#&gt; [7] "lattice"   "grid"     
+#&gt; 
+#&gt; $rgeos
+#&gt; [1] "utils"     "stats"     "graphics"  "methods"   "sp"        "grDevices"
+#&gt; [7] "lattice"   "grid"     
+#&gt; 
+#&gt; $raster
+#&gt; [1] "Rcpp"      "methods"   "sp"        "utils"     "stats"     "graphics" 
+#&gt; [7] "grDevices"
+#&gt; 
+#&gt; $sp
+#&gt; [1] "lattice"   "grid"      "grDevices" "graphics"  "stats"     "utils"    
+#&gt; [7] "methods"  
+#&gt; 
+#&gt; $RCurl
+#&gt; [1] "bitops"    "methods"   "stats"     "graphics"  "grDevices" "utils"    
+#&gt; 
+#&gt; $remotes
+#&gt; [1] "methods"   "stats"     "tools"     "utils"     "graphics"  "grDevices"
+#&gt; 
+#&gt; $crayon
+#&gt; [1] "grDevices" "methods"   "utils"     "stats"     "graphics" 
+#&gt; 
+#&gt; $data.table
+#&gt; [1] "methods"   "stats"     "graphics"  "grDevices" "utils"    
+#&gt; 
+#&gt; $methods
+#&gt; [1] "stats"     "graphics"  "grDevices" "utils"    
+#&gt; 
+#&gt; $git2r
+#&gt; [1] "graphics"  "utils"     "grDevices"
+#&gt; 
+#&gt; $parallel
+#&gt; [1] "compiler" "tools"   
+#&gt; 
+#&gt; $backports
+#&gt; [1] "utils"
+#&gt; 
+#&gt; $memoise
+#&gt; [1] "digest"
+#&gt; 
+#&gt; $digest
+#&gt; character(0)
+#&gt; 
+#&gt; $fastdigest
+#&gt; character(0)
+#&gt; 
+#&gt; $fpCompare
+#&gt; character(0)
+#&gt; 
+#&gt; $magrittr
+#&gt; character(0)
+#&gt; 
+#&gt; $rlang
+#&gt; character(0)
+#&gt; 
+#&gt; $tools
+#&gt; character(0)
+#&gt; 
+#&gt; $utils
+#&gt; character(0)
+#&gt; 
+#&gt; $versions
+#&gt; character(0)
 #&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -219,19 +385,23 @@ circumstances:</p><ol>
   </div>
 </div>
 
+
       <footer>
       <div class="copyright">
   <p>Developed by Eliot J B McIntire, Alex M Chubaty.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.0.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

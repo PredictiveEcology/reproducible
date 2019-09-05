@@ -30,8 +30,7 @@ be concatenated tagKey:tagValue}
 \code{artifact} column of \code{showCache}}
 }
 \value{
-\code{getCacheId} returns the \code{cacheId} values for 1 or more
-artifacts in the cache.
+\code{getCacheId} returns the \code{cacheId} values for 1 or more artifacts in the cache.
 
 \code{getArtifact} returns the \code{artifact} value for 1 or more
 entries in the cache, by \code{cacheId}.

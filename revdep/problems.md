@@ -1,41 +1,28 @@
-# SpaDES.addins
-
-Version: 0.1.2
-
-## In both
-
-*   checking dependencies in R code ... NOTE
-    ```
-    Namespaces in Imports field not imported from:
-      ‘devtools’ ‘rstudioapi’
-      All declared Imports should be used.
-    ```
-
 # SpaDES.core
 
-Version: 0.2.4
+<details>
 
-## In both
+* Version: 0.2.5
+* Source code: https://github.com/cran/SpaDES.core
+* URL: http://spades-core.predictiveecology.org/, https://github.com/PredictiveEcology/SpaDES.core
+* BugReports: https://github.com/PredictiveEcology/SpaDES.core/issues
+* Date/Publication: 2019-03-19 05:43:37 UTC
+* Number of recursive dependencies: 156
 
-*   checking tests ...
+Run `revdep_details(,"SpaDES.core")` for more info
+
+</details>
+
+## Newly broken
+
+*   checking S3 generic/method consistency ... WARNING
     ```
-     ERROR
-    Running the tests in ‘tests/test-all.R’ failed.
-    Last 13 lines of output:
-      [9]  -6.33 -  -8.17 ==  1.831
-      ...
-      
-      [34m  Using cached copy of .inputObjects event in child6 module.   
-      [39m[34m  Using memoised copy of .inputObjects event in child6 module
-      [39m[34m  Using memoised copy of .inputObjects event in child6 module
-      [39m══ testthat results  ═════════════════════════════════════════════
-      OK: 458 SKIPPED: 32 FAILED: 2
-      1. Failure: simulation runs with simInit and spades (@test-simulation.R#86) 
-      2. Failure: simulation runs with simInit and spades (@test-simulation.R#87) 
-      
-      Error: testthat unit tests failed
-      In addition: Warning message:
-      In fun(libname, pkgname) : couldn't connect to display ":99"
-      Execution halted
+    objSize:
+      function(x, quick, ...)
+    objSize.simList:
+      function(x, quick)
+    
+    See section ‘Generic functions and methods’ in the ‘Writing R
+    Extensions’ manual.
     ```
 

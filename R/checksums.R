@@ -263,6 +263,7 @@ setMethod(
               files = files, ...)
 })
 
+#' @keywords internal
 writeChecksumsTable <- function(out, checksumFile, dots) {
   out <- out[.orderDotsUnderscoreFirst(out$file), ] ## sort by filename alphabetically
   do.call(write.table,

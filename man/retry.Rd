@@ -4,21 +4,19 @@
 \alias{retry}
 \title{A wrapper around \code{try} that retries on failure}
 \usage{
-retry(..., sleep = 0.5, retries = 5)
+retry(expr, retries = 5, silent = FALSE)
 }
 \arguments{
-\item{...}{Passed to \code{try}}
-
-\item{sleep}{Passed to \code{Sys.sleep}, the default
-delay in seconds bewteen repeated tries}
+\item{expr}{Expression to run.}
 
 \item{retries}{Numeric. The maximum number of retries.}
+
+\item{silent}{Logical indicating whether to \code{try} silently.}
 }
 \description{
-This is useful for functions that are "flaky", such as
-\code{curl}, which may fail for unknown reasons that do not
-persist.
+This is useful for functions that are "flaky", such as \code{curl}, which may fail for unknown
+reasons that do not persist.
 }
 \details{
-The same as \code{try}
+Based on \url{https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525}.
 }

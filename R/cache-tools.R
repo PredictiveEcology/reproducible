@@ -220,15 +220,17 @@ setMethod(
     return(invisible(objsDT))
 })
 
-#' @rdname viewCache
-#' @export
+#' @details
+#' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
+#' i.e., to remove any cache entries touched in the last \code{secs} seconds.
+#'
 #' @param secs Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
 #'     a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,
 #'             the default, then it will delete the most recent entry in the Cache.
 #'
-#' @details
-#' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
-#' i.e., to remove any cache entries touched in the last \code{secs} seconds.
+#' @export
+#' @rdname viewCache
+#'
 #' @examples
 #' tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 #' try(clearCache(tmpDir, ask = FALSE), silent = TRUE) # just to make sure it is clear
@@ -486,7 +488,7 @@ setMethod(
   message(preMessage, format(fs, "auto"))
 }
 
-
+#' @keywords internal
 checkFutures <- function() {
   # This takes a long time -- can't use it if
   resol1 <- FALSE
@@ -496,7 +498,6 @@ checkFutures <- function() {
   anyFutureWrite <- length(lsFutureEnv)
 
   if (anyFutureWrite > 0) {
-
     #objsInReproEnv <- ls(.reproEnv)
     #objsInReproEnv <- grep("^future|cloudCheckSums", objsInReproEnv, value = TRUE)
     while (any(!resol1)) {
@@ -536,7 +537,9 @@ getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
       cacheRepos <- .checkCacheRepo(create = TRUE)
       cacheRepo <- cacheRepos[[1]]
     }
-    suppressMessages(shownCache <- showCache(cacheRepo))
+    suppressMessages({
+      shownCache <- showCache(cacheRepo)
+    })
   }
   arts <- getArtifact(shownCache = shownCache, cacheId = cacheId)
   if (!missing(cacheId)) {
@@ -551,21 +554,22 @@ getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
 }
 
 
-#' @rdname cache-helpers
 #' @param artifact Character vector of artifact values in the
 #'   \code{artifact} column of \code{showCache}
 #'
+#' @return \code{getCacheId} returns the \code{cacheId} values for 1 or more artifacts in the cache.
+#'
 #' @export
-#' @return
-#' \code{getCacheId} returns the \code{cacheId} values for 1 or more
-#' artifacts in the cache.
+#' @rdname cache-helpers
 getCacheId <- function(cacheRepo, shownCache, artifact) {
   if (missing(shownCache)) {
     if (missing(cacheRepo)) {
       cacheRepos <- .checkCacheRepo(create = TRUE)
       cacheRepo <- cacheRepos[[1]]
     }
-    suppressMessages(shownCache <- showCache(cacheRepo))
+    suppressMessages({
+      shownCache <- showCache(cacheRepo)
+    })
   }
   if (!missing(artifact)) {
     artifacts <- artifact
@@ -574,23 +578,24 @@ getCacheId <- function(cacheRepo, shownCache, artifact) {
   shownCache[tagKey == "cacheId"]$tagValue
 }
 
-#' @rdname cache-helpers
-#'
-#' @export
 #' @return
 #' \code{getArtifact} returns the \code{artifact} value for 1 or more
 #' entries in the cache, by \code{cacheId}.
+#'
+#' @export
+#' @rdname cache-helpers
 getArtifact <- function(cacheRepo, shownCache, cacheId) {
   if (missing(shownCache)) {
     if (missing(cacheRepo)) {
       cacheRepos <- .checkCacheRepo(create = TRUE)
       cacheRepo <- cacheRepos[[1]]
     }
-    suppressMessages(shownCache <- showCache(cacheRepo))
+    suppressMessages({
+      shownCache <- showCache(cacheRepo)
+    })
   }
   if (!missing(cacheId)) {
     shownCache <- shownCache[tagValue %in% cacheId]
   }
   shownCache[tagKey == "cacheId", artifact]
 }
-
