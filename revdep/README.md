@@ -2,30 +2,30 @@
 
 |field    |value                        |
 |:--------|:----------------------------|
-|version  |R version 3.6.0 (2019-04-26) |
-|os       |Ubuntu 18.04.2 LTS           |
+|version  |R version 3.6.1 (2019-07-05) |
+|os       |Ubuntu 18.04.3 LTS           |
 |system   |x86_64, linux-gnu            |
 |ui       |RStudio                      |
-|language |en_CA:en                     |
+|language |en_CA                        |
 |collate  |en_CA.UTF-8                  |
 |ctype    |en_CA.UTF-8                  |
-|tz       |America/Los_Angeles          |
-|date     |2019-07-08                   |
+|tz       |America/Edmonton             |
+|date     |2019-09-05                   |
 
 # Dependencies
 
-|package      |old   |new   |Δ  |
-|:------------|:-----|:-----|:--|
-|reproducible |0.2.8 |0.2.8 |NA |
+|package       |old   |new         |Δ  |
+|:-------------|:-----|:-----------|:--|
+|reproducible  |0.2.9 |0.2.10      |*  |
+|archivist     |NA    |2.3.4       |*  |
+|googledrive   |NA    |1.0.0       |*  |
+|RcppArmadillo |NA    |0.9.700.2.0 |*  |
 
 # Revdeps
 
-## Failed to check (4)
+## New problems (1)
 
-|package       |version |error |warning |note |
-|:-------------|:-------|:-----|:-------|:----|
-|SpaDES        |?       |      |        |     |
-|SpaDES.addins |?       |      |        |     |
-|SpaDES.core   |?       |      |        |     |
-|SpaDES.tools  |?       |      |        |     |
+|package                               |version |error |warning |note |
+|:-------------------------------------|:-------|:-----|:-------|:----|
+|[SpaDES.core](problems.md#spadescore) |0.2.5   |      |__+1__  |     |
 
