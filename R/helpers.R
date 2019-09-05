@@ -136,6 +136,7 @@ retry <- function(expr, retries = 5, silent = FALSE) {
     results <- try(expr = expr, silent = silent)
     if (inherits(results, "try-error")) {
       backoff <- runif(n = 1, min = 0, max = 2^i - 1)
+      if (backoff > 3) message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
       Sys.sleep(backoff)
     } else {
       break
