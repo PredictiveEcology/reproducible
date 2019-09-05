@@ -352,8 +352,8 @@ setMethod(
 #'
 #' @importFrom data.table setattr
 #' @param x Any arbitrary R object that could have attributes
-#' @param passByReference Logical. If \code{TRUE}, the default, this uses data.table::setattr to
-#'   remove several attributes that are unnecessary for digesting, specifically \code{tags},
+#' @param passByReference Logical. If \code{TRUE}, the default, this uses \code{data.table::setattr}
+#'   to remove several attributes that are unnecessary for digesting, specifically \code{tags},
 #'   \code{.Cache} and \code{call}
 .removeCacheAtts <- function(x, passByReference = TRUE) {
   if (passByReference) {

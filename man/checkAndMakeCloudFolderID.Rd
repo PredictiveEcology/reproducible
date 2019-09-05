@@ -2,7 +2,7 @@
 % Please edit documentation in R/cloud.R
 \name{checkAndMakeCloudFolderID}
 \alias{checkAndMakeCloudFolderID}
-\title{Check for presence of checkFolderID (for \code{Cache(useCloud)})}
+\title{Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})}
 \usage{
 checkAndMakeCloudFolderID(cloudFolderID)
 }

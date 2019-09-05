@@ -68,14 +68,15 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE), ...)
 #' @details
 #' For functions, a user can include the enclosing environment as described
 #' \url{https://www.r-bloggers.com/using-closures-as-objects-in-r/} and
-#' \url{http://adv-r.had.co.nz/memory.html}. It is not entirely clear which estimate
-#' is better. However, if the enclosing environment is the .GlobalEnv, it will
+#' \url{http://adv-r.had.co.nz/memory.html}.
+#' It is not entirely clear which estimate is better.
+#' However, if the enclosing environment is the \code{.GlobalEnv}, it will
 #' not be included even though \code{enclosingEnvs = TRUE}.
 objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
                              enclosingEnvs = TRUE, ...) {
   varName <- deparse(substitute(x))
   if (isTRUE(enclosingEnvs) && (!identical(.GlobalEnv, environment(x)))) {
-    x <- mget(ls(envir=environment(x)), envir = environment(x))
+    x <- mget(ls(envir = environment(x)), envir = environment(x))
     x <- lapply(x, functionToChar)
     x <- list(list("fnEnclosingEnv" = x))
     names(x) <- varName

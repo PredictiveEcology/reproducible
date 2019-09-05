@@ -259,13 +259,14 @@ if (getRversion() >= "3.1.0") {
 #'   cloud folder gets large. If a user wishes to keep "high-level" control, set this to
 #'   \code{getOption("reproducible.useCloud", FALSE)} or
 #'   \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
-#'   be FALSE or TRUE, respectively) so it can be turned on and off with
+#'   be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
 #'   this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
 #'
-#' @param cloudFolderID A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
-#'   left as \code{NULL}, the function will create a cloud folder with a warning. The warning
-#'   will have the cloudFolderID that should be used in subsequent calls. It will also be
-#'   added to options("reproducible.cloudFolderID"), but this will not persist across sessions.
+#' @param cloudFolderID A googledrive id of a folder, e.g., using \code{drive_mkdir()}.
+#'   If left as \code{NULL}, the function will create a cloud folder with a warning.
+#'   The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
+#'   It will also be added to \code{options("reproducible.cloudFolderID")},
+#'   but this will not persist across sessions.
 #'
 #' @param showSimilar A logical or numeric. Useful for debugging.
 #'        If \code{TRUE} or \code{1}, then if the Cache

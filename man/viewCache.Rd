@@ -61,10 +61,11 @@ Objects cached before this time will be shown or deleted.}
 \item{useCloud}{Logical. If \code{TRUE}, then every object that is deleted locally will
 also be deleted in the \code{cloudFolderID}, if it is non-\code{NULL}}
 
-\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
-left as \code{NULL}, the function will create a cloud folder with a warning. The warning
-will have the cloudFolderID that should be used in subsequent calls. It will also be
-added to options("reproducible.cloudFolderID"), but this will not persist across sessions.}
+\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}.
+If left as \code{NULL}, the function will create a cloud folder with a warning.
+The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
+It will also be added to \code{options("reproducible.cloudFolderID")},
+but this will not persist across sessions.}
 
 \item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
 This must be \code{TRUE} if the use is passing a regular expression.
@@ -138,7 +139,7 @@ showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
 
 # Fine control of cache elements -- pick out only the large runif object, and remove it
 cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
-toRemove <- cache1[tagKey=="object.size"][as.numeric(tagValue) > 700]$artifact
+toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$artifact
 clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 
