@@ -89,7 +89,8 @@ will be taken from \code{rasterToMatch} or none at all.
 If \code{TRUE}, it will be taken from \code{studyArea}. See table
 in details below.}
 
-\item{useCache}{Passed to Cache in various places. Defaults to \code{getOption("reproducible.useCache")}}
+\item{useCache}{Passed to \code{Cache} in various places.
+Defaults to \code{getOption("reproducible.useCache")}.}
 }
 \description{
 The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will

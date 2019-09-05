@@ -11,6 +11,7 @@ Appveyor
 aren
 arg
 args
+backoff
 Bugfix
 bugfixes
 CacheDigest
@@ -31,7 +32,6 @@ crs
 CRS
 csv
 dbf
-de
 devMode
 doesn
 evalutating
@@ -50,6 +50,7 @@ hardlink
 Hardlink
 hardlinks
 http
+HTTP2
 HTTPS
 keepCache
 libPath
@@ -67,7 +68,6 @@ modularity
 MRAN
 neededFile
 notOlderThan
-novo
 OSs
 packageName
 packrat
@@ -81,18 +81,20 @@ preProcessed
 prj
 projectRaster
 quickCheck
+R6
 RasterLayer
 rasters
 Rasters
 RasterStack
-readLines
 refered
+reimplemented
 repo
 reproducibility
 Reproducibility
 reproject
 reprojected
 reprojecting
+reprojects
 robocopy
 Rstudio
 rsync
@@ -110,7 +112,6 @@ Stochasticity
 subattributes
 subdir
 symlink
-sys
 tif
 uncommented
 unevaluated

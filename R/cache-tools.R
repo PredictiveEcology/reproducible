@@ -81,7 +81,7 @@
 #'
 #' # Fine control of cache elements -- pick out only the large runif object, and remove it
 #' cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
-#' toRemove <- cache1[tagKey=="object.size"][as.numeric(tagValue) > 700]$artifact
+#' toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$artifact
 #' clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
@@ -176,7 +176,8 @@ setMethod(
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
-        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact & tagKey == "object.size"]$tagValue)
+        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact &
+                                              tagKey == "object.size"]$tagValue)
         fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
         filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
           r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
@@ -247,12 +248,12 @@ setMethod(
 #' showCache(x = tmpDir) # all those after thisTime gone, i.e., only 1 left
 #' cc(ask = FALSE, x = tmpDir) # Cache is
 #' cc(ask = FALSE, x = tmpDir) # Cache is already empty
-cc <- function (secs, ...) {
+cc <- function(secs, ...) {
   if (missing(secs)) {
     message("No time provided; removing the most recent entry to the Cache")
-    suppressMessages(theCache <- reproducible::showCache(...))
+    suppressMessages({theCache <- reproducible::showCache(...)})
     if (NROW(theCache) > 0) {
-      accessed <- data.table::setkey(theCache[ tagKey == "accessed"], tagValue)
+      accessed <- data.table::setkey(theCache[tagKey == "accessed"], tagValue)
       clearCache(userTags = tail(accessed, 1)$artifact, ...)
     } else {
       message("Cache already empty")
@@ -266,7 +267,6 @@ cc <- function (secs, ...) {
   }
 
 }
-
 
 #' Examining and modifying the cache
 #'
@@ -529,8 +529,8 @@ checkFutures <- function() {
 #'   If this and \code{cacheRepo} are missing, then it will default to
 #'   \code{getOption('reproducible.cachePath')}
 #' @param cacheId A character vector of cacheId values to use in the cache
-#' @param concatenated Logical. If \code{TRUE}, the returned userTags will
-#'   be concatenated tagKey:tagValue
+#' @param concatenated Logical. If \code{TRUE}, the returned \code{userTags} will
+#'   be concatenated \code{tagKey:tagValue}.
 getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
   if (missing(shownCache)) {
     if (missing(cacheRepo)) {

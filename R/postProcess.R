@@ -500,7 +500,7 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @param useGDAL Logical, defaults to getOption("reproducible.useGDAL" = TRUE).
+#' @param useGDAL Logical, defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
 #'     If \code{TRUE}, then this function will use \code{gdalwarp} only when not
 #'     small enough to fit in memory (i.e., \emph{if the operation fails} the
 #'     \code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will

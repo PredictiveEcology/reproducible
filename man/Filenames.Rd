@@ -8,7 +8,7 @@
 \alias{Filenames,RasterStack-method}
 \alias{Filenames,environment-method}
 \alias{Filenames,list-method}
-\title{Return the filename or filenames from a Raster* object}
+\title{Return the filename(s) from a \code{Raster*} object}
 \usage{
 Filenames(obj)
 
@@ -23,13 +23,12 @@ Filenames(obj)
 \S4method{Filenames}{list}(obj)
 }
 \arguments{
-\item{obj}{A Raster* object (i.e., RasterLayer, RasterStack, RasterBrick)}
+\item{obj}{A \code{Raster*} object (i.e., \code{RasterLayer}, \code{RasterStack}, \code{RasterBrick})}
 }
 \description{
-The \code{filename} in \code{Raster} packages returns an empty string for
-a \code{RasterStack}. This function will return a vector of length 1 (RasterLayer or
-RasterBrick) or length >1 for RasterStack. This is mostly just a wrapper aroung
-\code{filename}
+This is mostly just a wrapper around \code{filename} from the \pkg{raster} package, except that
+instead of returning an empty string for a \code{RasterStack} object, it will return a vector of
+length >1 for \code{RasterStack}.
 }
 \author{
 Eliot McIntire

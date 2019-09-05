@@ -18,7 +18,7 @@ triggered. \code{'AUTO'*} will calculate 90% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 
-\item{useGDAL}{Logical, defaults to getOption("reproducible.useGDAL" = TRUE).
+\item{useGDAL}{Logical, defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
 If \code{TRUE}, then this function will use \code{gdalwarp} only when not
 small enough to fit in memory (i.e., \emph{if the operation fails} the
 \code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will

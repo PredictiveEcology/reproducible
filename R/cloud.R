@@ -2,7 +2,7 @@ if (getRversion() >= "3.1.0") {
   utils::globalVariables(c("cacheId", "checksumsFilename", "checksumsID", "id"))
 }
 
-#' Check for presence of checkFolderID (for \code{Cache(useCloud)})
+#' Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})
 #'
 #' Will check for presence of a \code{cloudFolderID} and make a new one
 #' if one not present on googledrive, with a warning.
@@ -73,17 +73,21 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   output
 }
 
-#' Upload a file to cloud directly from local cacheRepo
+#' Upload a file to cloud directly from local \code{cacheRepo}
 #'
 #' Meant for internal use, as there are internal objects as arguments.
 #'
-#' @param isInCloud A logical indicating whether an outputHash is in the cloud already
-#' @param saved The character string of the saved file's archivist digest value
-#' @param outputToSave Only required if \code{any(rasters) == TRUE}. This is the Raster* object.
-#' @param rasters A logical vector of length >= 1 indicating which elements in outputToSave are Raster* objects
+#' @param isInCloud A logical indicating whether an \code{outputHash} is in the cloud already.
+#' @param saved The character string of the saved file's archivist digest value.
+#' @param outputToSave Only required if \code{any(rasters) == TRUE}. This is the \code{Raster*} object.
+#' @param rasters A logical vector of length >= 1 indicating which elements in \code{outputToSave}
+#'                are \code{Raster*} objects.
 #' @inheritParams cloudUpload
+#'
 #' @importFrom googledrive drive_download
-cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudFolderID, outputToSave, rasters) {
+#' @keywords internal
+cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudFolderID,
+                                 outputToSave, rasters) {
   if (!any(isInCloud)) {
     cacheIdFileName <- paste0(outputHash,".rda")
     newFileName <- paste0(saved, ".rda")

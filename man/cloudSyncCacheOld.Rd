@@ -15,10 +15,11 @@ cloudSyncCacheOld(cacheRepo = getOption("reproducible.cachePath"),
 \item{checksumsFileID}{A google file ID where the checksums data.table is located,
 provided as a character string.}
 
-\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
-left as \code{NULL}, the function will create a cloud folder with a warning. The warning
-will have the cloudFolderID that should be used in subsequent calls. It will also be
-added to options("reproducible.cloudFolderID"), but this will not persist across sessions.}
+\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}.
+If left as \code{NULL}, the function will create a cloud folder with a warning.
+The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
+It will also be added to \code{options("reproducible.cloudFolderID")},
+but this will not persist across sessions.}
 
 \item{delete}{Logical. If \code{TRUE}, the default, it will delete any objects
 that are in \code{cloudFolderID} that are absent from local \code{cacheRepo}.

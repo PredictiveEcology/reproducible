@@ -2,30 +2,33 @@
 % Please edit documentation in R/cloud.R
 \name{cloudUploadFromCache}
 \alias{cloudUploadFromCache}
-\title{Upload a file to cloud directly from local cacheRepo}
+\title{Upload a file to cloud directly from local \code{cacheRepo}}
 \usage{
 cloudUploadFromCache(isInCloud, outputHash, saved, cacheRepo,
   cloudFolderID, outputToSave, rasters)
 }
 \arguments{
-\item{isInCloud}{A logical indicating whether an outputHash is in the cloud already}
+\item{isInCloud}{A logical indicating whether an \code{outputHash} is in the cloud already.}
 
 \item{outputHash}{The \code{cacheId} of the object to upload}
 
-\item{saved}{The character string of the saved file's archivist digest value}
+\item{saved}{The character string of the saved file's archivist digest value.}
 
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
-\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}. If
-left as \code{NULL}, the function will create a cloud folder with a warning. The warning
-will have the cloudFolderID that should be used in subsequent calls. It will also be
-added to options("reproducible.cloudFolderID"), but this will not persist across sessions.}
+\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}.
+If left as \code{NULL}, the function will create a cloud folder with a warning.
+The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
+It will also be added to \code{options("reproducible.cloudFolderID")},
+but this will not persist across sessions.}
 
-\item{outputToSave}{Only required if \code{any(rasters) == TRUE}. This is the Raster* object.}
+\item{outputToSave}{Only required if \code{any(rasters) == TRUE}. This is the \code{Raster*} object.}
 
-\item{rasters}{A logical vector of length >= 1 indicating which elements in outputToSave are Raster* objects}
+\item{rasters}{A logical vector of length >= 1 indicating which elements in \code{outputToSave}
+are \code{Raster*} objects.}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.
 }
+\keyword{internal}
