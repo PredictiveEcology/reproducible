@@ -133,7 +133,7 @@ basename2 <- function(x) {
 #' @export
 retry <- function(expr, retries = 5, silent = FALSE) {
   for (i in seq_len(retries)) {
-    results <- try(expr = expr, silent = silent)
+    result <- try(expr = expr, silent = silent)
     if (inherits(results, "try-error")) {
       backoff <- runif(n = 1, min = 0, max = 2^i - 1)
       if (backoff > 3)
@@ -144,7 +144,7 @@ retry <- function(expr, retries = 5, silent = FALSE) {
     }
   }
 
-  if (inherits(results, "try-error")) {
+  if (inherits(result, "try-error")) {
     stop("Failed after ", retries, " attempts.")
   } else {
     return(result)
