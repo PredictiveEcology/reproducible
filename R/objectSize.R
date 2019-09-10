@@ -136,7 +136,7 @@ objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
 #'   the only option other than Inf is 1: \code{objSizeSession(1)},
 #'   which gives the size of each package.
 #' @export
-#' @details \code{objSizeSession} will give the size of the whole environment, including loaded packages.
+#' @details \code{objSizeSession} will give the size of the whole session, including loaded packages.
 #' Because of the difficulties in calculating the object size of \code{base}
 #' and \code{methods} packages and \code{Autoloads}, these are
 #' omitted.

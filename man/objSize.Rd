@@ -60,7 +60,7 @@ It is not entirely clear which estimate is better.
 However, if the enclosing environment is the \code{.GlobalEnv}, it will
 not be included even though \code{enclosingEnvs = TRUE}.
 
-\code{objSizeSession} will give the size of the whole environment, including loaded packages.
+\code{objSizeSession} will give the size of the whole session, including loaded packages.
 Because of the difficulties in calculating the object size of \code{base}
 and \code{methods} packages and \code{Autoloads}, these are
 omitted.
