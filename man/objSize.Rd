@@ -77,8 +77,10 @@ object.size(prepInputs) # only the function, without its enclosing environment
 objSize(prepInputs)     # the function, plus its enclosing environment
 
 # Size of all packages; includes their imported functions
-a <- objSizeSession(1)
-print(a, units = "auto")
+\dontrun{
+  a <- objSizeSession(1)
+  print(a, units = "auto")
+}
 
 os1 <- object.size(as.environment("package:reproducible"))
 os2 <- objSize(as.environment("package:reproducible"))

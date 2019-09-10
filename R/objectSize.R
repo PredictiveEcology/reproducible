@@ -29,8 +29,10 @@
 #' objSize(prepInputs)     # the function, plus its enclosing environment
 #'
 #' # Size of all packages; includes their imported functions
-#' a <- objSizeSession(1)
-#' print(a, units = "auto")
+#' \dontrun{
+#'   a <- objSizeSession(1)
+#'   print(a, units = "auto")
+#' }
 #'
 #' os1 <- object.size(as.environment("package:reproducible"))
 #' os2 <- objSize(as.environment("package:reproducible"))
@@ -145,7 +147,9 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
   srch <- setdiff(srch, c("package:base", "package:methods", "Autoloads"))
   names(srch) <- srch
   os <- lapply(srch, function(x) {
-    doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, as.environment(x)))
+    doneAlready <- lapply(.prevEnvirs, function(pe)
+      tryCatch(identical(pe, as.environment(x)), error = function(e) FALSE))
+    # Update the object in the function so next lapply has access to the updated version
     .prevEnvirs <<- unique(append(.prevEnvirs, as.environment(x)))
     out <- if (!any(unlist(doneAlready))) {
       try(objSize(as.environment(x), enclosingEnvs = enclosingEnvs,
