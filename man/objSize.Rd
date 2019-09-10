@@ -10,24 +10,25 @@
 \alias{objSizeSession}
 \title{Recursive object.size}
 \usage{
-objSize(x, quick, .prevEnvirs, ...)
+objSize(x, quick, enclosingEnvs, .prevEnvirs)
 
 \method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE),
-  .prevEnvirs = list(), ...)
+  enclosingEnvs = TRUE, .prevEnvirs = list())
 
 \method{objSize}{environment}(x, quick = getOption("reproducible.quick",
-  FALSE), .prevEnvirs = list(), ...)
+  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list())
 
 \method{objSize}{default}(x, quick = getOption("reproducible.quick",
-  FALSE), ...)
+  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list())
 
 \method{objSize}{Path}(x, quick = getOption("reproducible.quick", FALSE),
-  ...)
+  enclosingEnvs = TRUE, .prevEnvirs = list())
 
 \method{objSize}{function}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list())
 
-objSizeSession(sumLevel = Inf, .prevEnvirs = list(), ...)
+objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE,
+  .prevEnvirs = list())
 }
 \arguments{
 \item{x}{An object}
@@ -38,9 +39,6 @@ used instead of \code{object.size}.}
 
 \item{.prevEnvirs}{For internal account keeping to identify and prevent duplicate counting}
 
-\item{...}{Other arguments passed to methods, e.g., \code{objSize.function}
-has \code{enclosingEnvs}}
-
 \item{sumLevel}{Numeric, indicating at which depth in the list of objects should the
 object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
 the only option other than Inf is 1: \code{objSizeSession(1)},
@@ -49,7 +47,10 @@ which gives the size of each package.}
 \description{
 This has methods for various types of things that may not correctly report
 their object.size using \code{object\.size}. Also, for lists and environments,
-it will return the object.size separately for each element.
+it will return the object.size separately for each element. These are estimates
+only, and could be inaccurate. Alternative, similar functions include
+\code{object.size} and \code{pryr::object_size}. See Details for the special case of
+functions and their enclosing environments.
 }
 \details{
 For functions, a user can include the enclosing environment as described
@@ -72,7 +73,17 @@ a$d <- 1:10
 objSize(a) # all the elements in the environment
 object.size(a) # different - only measuring the environment as an object
 
+object.size(prepInputs) # only the function, without its enclosing environment
+objSize(prepInputs)     # the function, plus its enclosing environment
+
+# Size of all packages; includes their imported functions
 a <- objSizeSession(1)
 print(a, units = "auto")
+
+os1 <- object.size(as.environment("package:reproducible"))
+os2 <- objSize(as.environment("package:reproducible"))
+(os1) # very small -- just the environment container
+sum(unlist(os2)) # around 31 MB, with all functions, objects
+                 # and imported functions
 }
 \keyword{internal}
