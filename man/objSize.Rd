@@ -9,13 +9,13 @@
 \alias{objSize.function}
 \title{Recursive object.size}
 \usage{
-objSize(x, quick, ...)
+objSize(x, quick, prevEnvirs, ...)
 
 \method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE),
-  ...)
+  prevEnvirs = list(), ...)
 
 \method{objSize}{environment}(x, quick = getOption("reproducible.quick",
-  FALSE), ...)
+  FALSE), prevEnvirs = list(), ...)
 
 \method{objSize}{default}(x, quick = getOption("reproducible.quick",
   FALSE), ...)
@@ -24,7 +24,7 @@ objSize(x, quick, ...)
   ...)
 
 \method{objSize}{function}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, ...)
+  FALSE), enclosingEnvs = TRUE, prevEnvirs = list(), ...)
 }
 \arguments{
 \item{x}{An object}

@@ -22,23 +22,35 @@
 #'
 #' objSize(a) # all the elements in the environment
 #' object.size(a) # different - only measuring the environment as an object
-objSize <- function(x, quick, ...) {
+objSize <- function(x, quick, prevEnvirs, ...) {
   UseMethod("objSize", x)
 }
 
 #' @export
 #' @rdname objSize
 objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
-                         ...) {
-  lapply(x, function(y) objSize(y, ...))
+                         prevEnvirs = list(), ...) {
+  lapply(x, function(y) {
+    doneAlready <- lapply(prevEnvirs, function(pe) identical(pe, environment(y)))
+    browser()
+    prevEnvirs <- unique(append(prevEnvirs, environment(y)))
+    if (!any(unlist(doneAlready))) {
+      os <- objSize(y, quick = quick, prevEnvirs = prevEnvirs, ...)
+    } else {
+      os <- NULL
+    }
+    return(os)
+  })
 }
 
 #' @export
 #' @rdname objSize
 #' @importFrom utils object.size
-objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE), ...) {
+objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE),
+                                prevEnvirs = list(), ...) {
   xName <- deparse(substitute(x))
-  os <- objSize(as.list(x, all.names = TRUE), ...)
+  print(format(x))
+  os <- objSize(as.list(x, all.names = TRUE), prevEnvirs = prevEnvirs, ...)
   if (length(os) > 0)
     names(os) <- paste0(xName, "$", names(os))
   osCur <- list(object.size(x))
@@ -73,7 +85,7 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE), ...)
 #' However, if the enclosing environment is the \code{.GlobalEnv}, it will
 #' not be included even though \code{enclosingEnvs = TRUE}.
 objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
-                             enclosingEnvs = TRUE, ...) {
+                             enclosingEnvs = TRUE, prevEnvirs = list(), ...) {
   varName <- deparse(substitute(x))
   if (isTRUE(enclosingEnvs) && (!identical(.GlobalEnv, environment(x)))) {
     x <- mget(ls(envir = environment(x)), envir = environment(x))
@@ -83,7 +95,9 @@ objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
   } else {
     x <- functionToChar(x)
   }
-  objSize(x)
+  os <- objSize(x, prevEnvirs = prevEnvirs) # it is definitely a list of character strings here
+  return(os)
+
 }
 
 functionToChar <- function(x) {
