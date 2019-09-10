@@ -7,15 +7,16 @@
 \alias{objSize.default}
 \alias{objSize.Path}
 \alias{objSize.function}
+\alias{objSizeSession}
 \title{Recursive object.size}
 \usage{
-objSize(x, quick, prevEnvirs, ...)
+objSize(x, quick, .prevEnvirs, ...)
 
 \method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE),
-  prevEnvirs = list(), ...)
+  .prevEnvirs = list(), ...)
 
 \method{objSize}{environment}(x, quick = getOption("reproducible.quick",
-  FALSE), prevEnvirs = list(), ...)
+  FALSE), .prevEnvirs = list(), ...)
 
 \method{objSize}{default}(x, quick = getOption("reproducible.quick",
   FALSE), ...)
@@ -24,7 +25,9 @@ objSize(x, quick, prevEnvirs, ...)
   ...)
 
 \method{objSize}{function}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, prevEnvirs = list(), ...)
+  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+
+objSizeSession(sumLevel = Inf, .prevEnvirs = list(), ...)
 }
 \arguments{
 \item{x}{An object}
@@ -33,8 +36,15 @@ objSize(x, quick, prevEnvirs, ...)
 \code{Path} class objects. In which case, \code{file.size} will be
 used instead of \code{object.size}.}
 
+\item{.prevEnvirs}{For internal account keeping to identify and prevent duplicate counting}
+
 \item{...}{Other arguments passed to methods, e.g., \code{objSize.function}
 has \code{enclosingEnvs}}
+
+\item{sumLevel}{Numeric, indicating at which depth in the list of objects should the
+object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
+the only option other than Inf is 1: \code{objSizeSession(1)},
+which gives the size of each package.}
 }
 \description{
 This has methods for various types of things that may not correctly report
@@ -48,6 +58,11 @@ For functions, a user can include the enclosing environment as described
 It is not entirely clear which estimate is better.
 However, if the enclosing environment is the \code{.GlobalEnv}, it will
 not be included even though \code{enclosingEnvs = TRUE}.
+
+\code{objSizeSession} will give the size of the whole environment, including loaded packages.
+Because of the difficulties in calculating the object size of \code{base}
+and \code{methods} packages and \code{Autoloads}, these are
+omitted.
 }
 \examples{
 a <- new.env()
@@ -56,5 +71,8 @@ a$d <- 1:10
 
 objSize(a) # all the elements in the environment
 object.size(a) # different - only measuring the environment as an object
+
+a <- objSizeSession(1)
+print(a, units = "auto")
 }
 \keyword{internal}

@@ -9,6 +9,7 @@
 #' @param quick Logical. Only some methods use this. e.g.,
 #'              \code{Path} class objects. In which case, \code{file.size} will be
 #'              used instead of \code{object.size}.
+#' @param .prevEnvirs For internal account keeping to identify and prevent duplicate counting
 #' @param ... Other arguments passed to methods, e.g., \code{objSize.function}
 #'   has \code{enclosingEnvs}
 #'
@@ -22,35 +23,47 @@
 #'
 #' objSize(a) # all the elements in the environment
 #' object.size(a) # different - only measuring the environment as an object
-objSize <- function(x, quick, prevEnvirs, ...) {
+#'
+#' a <- objSizeSession(1)
+#' print(a, units = "auto")
+objSize <- function(x, quick, .prevEnvirs, ...) {
   UseMethod("objSize", x)
 }
 
 #' @export
 #' @rdname objSize
 objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
-                         prevEnvirs = list(), ...) {
-  lapply(x, function(y) {
-    doneAlready <- lapply(prevEnvirs, function(pe) identical(pe, environment(y)))
-    browser()
-    prevEnvirs <- unique(append(prevEnvirs, environment(y)))
-    if (!any(unlist(doneAlready))) {
-      os <- objSize(y, quick = quick, prevEnvirs = prevEnvirs, ...)
+                         .prevEnvirs = list(), ...) {
+  TandC <- grepl(".__[TC]__", names(x))
+  if (sum(TandC) > 0)
+    x <- x[!TandC]
+  osList <- lapply(x, function(y) {
+    if (!is.function(y)) {
+      os <- objSize(y, quick = quick, .prevEnvirs = .prevEnvirs, ...)
     } else {
-      os <- NULL
+      doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, environment(y)))
+      .prevEnvirs <<- unique(append(.prevEnvirs, environment(y)))
+      if (!any(unlist(doneAlready))) {
+        os <- objSize(y, quick = quick, .prevEnvirs = .prevEnvirs, ...)
+      } else {
+        os <- NULL
+      }
     }
     return(os)
   })
+  if (length(osList) > 0)
+    osList <- osList[!unlist(lapply(osList, function(x) is.null(x) || length(x) == 0))]
+  osList
 }
 
 #' @export
 #' @rdname objSize
 #' @importFrom utils object.size
 objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE),
-                                prevEnvirs = list(), ...) {
+                                .prevEnvirs = list(), ...) {
   xName <- deparse(substitute(x))
   print(format(x))
-  os <- objSize(as.list(x, all.names = TRUE), prevEnvirs = prevEnvirs, ...)
+  os <- objSize(as.list(x, all.names = TRUE), .prevEnvirs = .prevEnvirs, ...)
   if (length(os) > 0)
     names(os) <- paste0(xName, "$", names(os))
   osCur <- list(object.size(x))
@@ -85,28 +98,58 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE), ...)
 #' However, if the enclosing environment is the \code{.GlobalEnv}, it will
 #' not be included even though \code{enclosingEnvs = TRUE}.
 objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
-                             enclosingEnvs = TRUE, prevEnvirs = list(), ...) {
+                             enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   varName <- deparse(substitute(x))
   if (isTRUE(enclosingEnvs) && (!identical(.GlobalEnv, environment(x)))) {
-    x <- mget(ls(envir = environment(x)), envir = environment(x))
-    x <- lapply(x, functionToChar)
-    x <- list(list("fnEnclosingEnv" = x))
-    names(x) <- varName
+    if (is.primitive(x)) {
+      os <- list(object.size(x))
+    } else {
+      x <- mget(ls(envir = environment(x)), envir = environment(x))
+      os <- lapply(x, function(xx) object.size(xx))
+    }
   } else {
-    x <- functionToChar(x)
+    os <- object.size(x)
   }
-  os <- objSize(x, prevEnvirs = prevEnvirs) # it is definitely a list of character strings here
   return(os)
 
 }
 
-functionToChar <- function(x) {
-  if (is.list(x) || is.environment(x)) {
-    x <- lapply(x, functionToChar)
-  } else {
-    isFun <- is.function(x)
-    if (isTRUE(isFun))
-      x <- format(x)
+#' @rdname objSize
+#' @param sumLevel Numeric, indicating at which depth in the list of objects should the
+#'   object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
+#'   the only option other than Inf is 1: \code{objSizeSession(1)},
+#'   which gives the size of each package.
+#' @export
+#' @details \code{objSizeSession} will give the size of the whole environment, including loaded packages.
+#' Because of the difficulties in calculating the object size of \code{base}
+#' and \code{methods} packages and \code{Autoloads}, these are
+#' omitted.
+objSizeSession <- function(sumLevel = Inf, .prevEnvirs = list(), ...) {
+  srch <- search()
+  srch <- setdiff(srch, c("package:base", "package:methods", "Autoloads"))
+  names(srch) <- srch
+  os <- lapply(srch, function(x) {
+    doneAlready <- lapply(.prevEnvirs, function(pe) identical(pe, as.environment(x)))
+    .prevEnvirs <<- unique(append(.prevEnvirs, as.environment(x)))
+    out <- if (!any(unlist(doneAlready))) {
+      try(objSize(as.environment(x), .prevEnvirs = .prevEnvirs, ...))
+    } else {
+      NULL
+    }
+    return(out)
+  })
+  if (sumLevel == 1) {
+    os <- lapply(os, function(x) {
+      osIn <- sum(unlist(x))
+      class(osIn) <- "object_size"
+      osIn
+    })
+  } else if (sumLevel == 0) {
+    os <- sum(unlist(os))
+    class(os) <- "object_size"
+    os
   }
-  x
+
+  return(os)
 }
+
