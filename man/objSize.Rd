@@ -37,6 +37,9 @@ objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE,
 \code{Path} class objects. In which case, \code{file.size} will be
 used instead of \code{object.size}.}
 
+\item{enclosingEnvs}{Logical indicating whether to include enclosing environments.
+Default \code{TRUE}.}
+
 \item{.prevEnvirs}{For internal account keeping to identify and prevent duplicate counting}
 
 \item{sumLevel}{Numeric, indicating at which depth in the list of objects should the
@@ -90,4 +93,3 @@ sum(unlist(os2)) # around 31 MB, with all functions, objects
                  # and imported functions
 
 }
-\keyword{internal}
