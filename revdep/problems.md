@@ -7,7 +7,7 @@
 * URL: http://spades-core.predictiveecology.org/, https://github.com/PredictiveEcology/SpaDES.core
 * BugReports: https://github.com/PredictiveEcology/SpaDES.core/issues
 * Date/Publication: 2019-03-19 05:43:37 UTC
-* Number of recursive dependencies: 156
+* Number of recursive dependencies: 165
 
 Run `revdep_details(,"SpaDES.core")` for more info
 
@@ -18,7 +18,7 @@ Run `revdep_details(,"SpaDES.core")` for more info
 *   checking S3 generic/method consistency ... WARNING
     ```
     objSize:
-      function(x, quick, ...)
+      function(x, quick, enclosingEnvs, .prevEnvirs, ...)
     objSize.simList:
       function(x, quick)
     

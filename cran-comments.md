@@ -1,6 +1,6 @@
 ## Updated release
 
-This is a release which adds several new features and fixes some minor bugs. See `NEWS.md`.
+This is a maintenance release which adds several new features and fixes some bugs. See `NEWS.md`.
 
 ## Test environments
 
