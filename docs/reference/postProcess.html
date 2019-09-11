@@ -8,10 +8,12 @@
 
 <title>Generic function to post process objects — postProcess • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,8 +34,8 @@
 
 
 
-<meta property="og:title" content="Generic function to post process objects — postProcess" />
 
+<meta property="og:title" content="Generic function to post process objects — postProcess" />
 <meta property="og:description" content="The method for spatialObjects (Raster* and Spatial*) will
 crop, reproject, and mask, in that order.  This function is a wrapper for
 cropInputs, fixErrors, projectInputs,
@@ -41,6 +43,7 @@ maskInputs and
 writeOutputs, with a decent amount of data manipulating
 between these calls so that the crs match." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -112,7 +115,6 @@ between these calls so that the crs match." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -139,14 +141,12 @@ between these calls so that the crs match." />
     </div>
 
     <div class="ref-description">
-    
     <p>The method for spatialObjects (<code>Raster*</code> and <code>Spatial*</code>) will
 crop, reproject, and mask, in that order.  This function is a wrapper for
 <code><a href='cropInputs.html'>cropInputs</a></code>, <code><a href='fixErrors.html'>fixErrors</a></code>, <code><a href='projectInputs.html'>projectInputs</a></code>,
 <code><a href='maskInputs.html'>maskInputs</a></code> and
 <code><a href='writeOutputs.html'>writeOutputs</a></code>, with a decent amount of data manipulating
 between these calls so that the crs match.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='no'>...</span>)
@@ -170,7 +170,7 @@ between these calls so that the crs match.</p>
   <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>TRUE</span>),
   <span class='kw'>useSAcrs</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>,
   <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -252,7 +252,7 @@ in details below.</p></td>
 Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.useCache")</a></code>.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="post-processing-sequence"><a class="anchor" href="#post-processing-sequence"></a>Post processing sequence</h2>
 
     
@@ -274,7 +274,6 @@ Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("repro
   there are no file downloads. To achieve fast results, wrap
   <code>prepInputs</code> with <code>Cache</code></p>
 <p>NOTE: <code>sf</code> objects are still very experimental.</p>
-    
     <h2 class="hasAnchor" id="passing-rastertomatch-and-or-studyarea"><a class="anchor" href="#passing-rastertomatch-and-or-studyarea"></a>Passing <code>rasterToMatch</code> and/or <code>studyArea</code></h2>
 
     
@@ -305,11 +304,9 @@ Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("repro
 </table>
 <p>* Can be overridden with <code>useSAcrs</code></p>
 
-    
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code>prepInputs</code></p></div>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Add a study area to Crop and Mask to</span>
@@ -320,7 +317,7 @@ Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("repro
 
 <span class='co'># make a SpatialPolygon</span>
 <span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
+                     <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
 <span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords1</span>)
 <span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
 <span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
@@ -336,7 +333,7 @@ Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("repro
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile3b2a225f6020. Specify filename1 or filename2 for more control</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfiled2df6181ed58. Specify filename1 or filename2 for more control</span>
 #&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
@@ -350,7 +347,7 @@ Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("repro
 
 <span class='co'># make a SpatialPolygon</span>
 <span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
+                     <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
 <span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords1</span>)
 <span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
 <span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
@@ -366,7 +363,7 @@ Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("repro
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile3b2a51a406f8. Specify filename1 or filename2 for more control</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfiled2df43659397. Specify filename1 or filename2 for more control</span>
 #&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
@@ -377,13 +374,9 @@ Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("repro
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#post-processing-sequence">Post processing sequence</a></li>
-
       <li><a href="#passing-rastertomatch-and-or-studyarea">Passing <code>rasterToMatch</code> and/or <code>studyArea</code></a></li>
-
       <li><a href="#see-also">See also</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

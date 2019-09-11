@@ -8,10 +8,12 @@
 
 <title>Write module inputs on disk — writeOutputs • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,10 +34,11 @@
 
 
 
-<meta property="og:title" content="Write module inputs on disk — writeOutputs" />
 
+<meta property="og:title" content="Write module inputs on disk — writeOutputs" />
 <meta property="og:description" content="Can be used to write prepared inputs on disk." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -107,7 +110,6 @@
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -134,9 +136,7 @@
     </div>
 
     <div class="ref-description">
-    
     <p>Can be used to write prepared inputs on disk.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>writeOutputs</span>(<span class='no'>x</span>, <span class='no'>filename2</span>,
@@ -156,7 +156,7 @@
 
 <span class='co'># S3 method for default</span>
 <span class='fu'>writeOutputs</span>(<span class='no'>x</span>, <span class='no'>filename2</span>, <span class='no'>...</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -181,7 +181,7 @@ exists.</p></td>
 <code><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></code> or <code><a href='https://rdrr.io/pkg/sf/man/st_write.html'>st_write</a></code></p></td>
     </tr>
     </table>
-    
+
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Add a study area to Crop and Mask to</span>
@@ -192,7 +192,7 @@ exists.</p></td>
 
 <span class='co'># make a SpatialPolygon</span>
 <span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
+                     <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
 <span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords1</span>)
 <span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
 <span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
@@ -208,7 +208,7 @@ exists.</p></td>
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile3b2a86891aa. Specify filename1 or filename2 for more control</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading cached result from previous cropInputs call, adding to memoised copy</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading cached result from previous projectInputs call, adding to memoised copy</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading cached result from previous maskInputs call, adding to memoised copy</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfiled2df786b41d. Specify filename1 or filename2 for more control</span>
 #&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
@@ -219,7 +219,6 @@ exists.</p></td>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-            
       <li><a href="#examples">Examples</a></li>
     </ul>
 

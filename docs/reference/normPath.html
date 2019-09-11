@@ -8,10 +8,12 @@
 
 <title>Normalize filepath — normPath • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,13 +34,14 @@
 
 
 
-<meta property="og:title" content="Normalize filepath — normPath" />
 
+<meta property="og:title" content="Normalize filepath — normPath" />
 <meta property="og:description" content="Checks the specified filepath for formatting consistencies:
  1) use slash instead of backslash;
  2) do tilde etc. expansion;
  3) remove trailing slash." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -110,7 +113,6 @@
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -137,12 +139,10 @@
     </div>
 
     <div class="ref-description">
-    
     <p>Checks the specified filepath for formatting consistencies:
  1) use slash instead of backslash;
  2) do tilde etc. expansion;
  3) remove trailing slash.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>normPath</span>(<span class='no'>path</span>)
@@ -158,7 +158,7 @@
 
 <span class='co'># S4 method for missing</span>
 <span class='fu'>normPath</span>()</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -167,11 +167,10 @@
       <td><p>A character vector of filepaths.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>Character vector of cleaned up filepaths.</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'>## normalize file paths</span>
@@ -189,16 +188,14 @@
 <span class='no'>tmpdir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"example_checkPath"</span>)
 
 <span class='fu'><a href='https://rdrr.io/r/base/files2.html'>dir.exists</a></span>(<span class='no'>tmpdir</span>) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/conditions.html'>tryCatch</a></span>(<span class='fu'><a href='checkPath.html'>checkPath</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>), <span class='kw'>error</span> <span class='kw'>=</span> <span class='kw'>function</span>(<span class='no'>e</span>) <span class='fl'>FALSE</span>) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'>
-<span class='fu'><a href='checkPath.html'>checkPath</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "/tmp/Rtmpfj8Tng/example_checkPath"</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files2.html'>dir.exists</a></span>(<span class='no'>tmpdir</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
+<span class='fu'><a href='checkPath.html'>checkPath</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "/tmp/RtmpncGPrE/example_checkPath"</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files2.html'>dir.exists</a></span>(<span class='no'>tmpdir</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

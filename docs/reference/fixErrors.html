@@ -8,10 +8,12 @@
 
 <title>Do some minor error fixing — fixErrors • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,14 +34,15 @@
 
 
 
-<meta property="og:title" content="Do some minor error fixing — fixErrors" />
 
+<meta property="og:title" content="Do some minor error fixing — fixErrors" />
 <meta property="og:description" content="These must be very common for this function to be useful. Currently, the only
 meaningful method is on SpatialPolygons, and it runs rgeos::gIsValid. If
 FALSE, then it runs a buffer of width 0.
 This uses raster::buffer(..., width = 0) internally, which fixes some
 failures to rgeos::gIsValid" />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -111,7 +114,6 @@ failures to rgeos::gIsValid" />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -138,13 +140,11 @@ failures to rgeos::gIsValid" />
     </div>
 
     <div class="ref-description">
-    
     <p>These must be very common for this function to be useful. Currently, the only
 meaningful method is on SpatialPolygons, and it runs <code><a href='https://rdrr.io/pkg/rgeos/man/pred-unary-gIsValid.html'>rgeos::gIsValid</a></code>. If
 <code>FALSE</code>, then it runs a buffer of width 0.</p>
 <p>This uses <code><a href='https://rdrr.io/pkg/raster/man/buffer.html'>raster::buffer(..., width = 0)</a></code> internally, which fixes some
 failures to <code><a href='https://rdrr.io/pkg/rgeos/man/pred-unary-gIsValid.html'>rgeos::gIsValid</a></code></p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='no'>objectName</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
@@ -162,7 +162,7 @@ failures to <code><a href='https://rdrr.io/pkg/rgeos/man/pred-unary-gIsValid.htm
 <span class='co'># S3 method for sf</span>
 <span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='kw'>objectName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -200,7 +200,7 @@ Cache is used on the internal <code><a href='https://rdrr.io/pkg/raster/man/buff
       <td><p>A <code>SpatialPolygons</code> object</p></td>
     </tr>
     </table>
-    
+
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Add a study area to Crop and Mask to</span>
@@ -211,7 +211,7 @@ Cache is used on the internal <code><a href='https://rdrr.io/pkg/raster/man/buff
 
 <span class='co'># make a SpatialPolygon</span>
 <span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
+                     <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
 <span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords1</span>)
 <span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
 <span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
@@ -227,7 +227,7 @@ Cache is used on the internal <code><a href='https://rdrr.io/pkg/raster/man/buff
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BB00;'>useCache is FALSE, skipping Cache. To turn Caching on, use options(reproducible.useCache = TRUE)</span><span></span></div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile3b2a54c5d423. Specify filename1 or filename2 for more control</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfiled2df318fd658. Specify filename1 or filename2 for more control</span>
 #&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
@@ -238,7 +238,6 @@ Cache is used on the internal <code><a href='https://rdrr.io/pkg/raster/man/buff
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-            
       <li><a href="#examples">Examples</a></li>
     </ul>
 

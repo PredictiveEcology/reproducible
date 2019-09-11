@@ -8,10 +8,12 @@
 
 <title>Clear erroneous archivist artifacts — clearStubArtifacts • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,14 +34,15 @@
 
 
 
-<meta property="og:title" content="Clear erroneous archivist artifacts — clearStubArtifacts" />
 
+<meta property="og:title" content="Clear erroneous archivist artifacts — clearStubArtifacts" />
 <meta property="og:description" content="Stub artifacts can result from several causes. The most common being
 erroneous removal of a file in the SQLite database. This can be caused
 sometimes if an archive object is being saved multiple times by multiple
 threads. This function will clear entries in the SQLite database which
 have no actual file with data." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -111,7 +114,6 @@ have no actual file with data." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -138,20 +140,18 @@ have no actual file with data." />
     </div>
 
     <div class="ref-description">
-    
     <p>Stub artifacts can result from several causes. The most common being
 erroneous removal of a file in the SQLite database. This can be caused
 sometimes if an archive object is being saved multiple times by multiple
 threads. This function will clear entries in the SQLite database which
 have no actual file with data.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>clearStubArtifacts</span>(<span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
 
 <span class='co'># S4 method for ANY</span>
 <span class='fu'>clearStubArtifacts</span>(<span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -162,11 +162,10 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 <code>repoDir</code> specified in <code><a href='https://rdrr.io/pkg/archivist/man/setRepo.html'>archivist::setLocalRepo</a></code>.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>Invoked for its side effect on the <code>repoDir</code>.</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"clearStubArtifacts"</span>)
@@ -245,50 +244,50 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; 44: e9948b817a9112811207223241bc5b18      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2019-09-05 12:26:11
-#&gt;  2: e373b2db531b957b8cc786565e9c3c4c 2019-09-05 12:26:11
-#&gt;  3:                          numeric 2019-09-05 12:26:11
-#&gt;  4:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt;  5:                 88dabbb6fbb67941 2019-09-05 12:26:11
-#&gt;  6:                                f 2019-09-05 12:26:11
-#&gt;  7:                             1104 2019-09-05 12:26:11
-#&gt;  8:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt;  9:                          saveRDS 2019-09-05 12:26:11
-#&gt; 10:                          do.call 2019-09-05 12:26:11
-#&gt; 11:                 build_site_local 2019-09-05 12:26:11
-#&gt; 12:                  build_reference 2019-09-05 12:26:11
-#&gt; 13:             data_reference_topic 2019-09-05 12:26:11
-#&gt; 14:                     run_examples 2019-09-05 12:26:11
-#&gt; 15:               highlight_examples 2019-09-05 12:26:11
-#&gt; 16:                        timing_fn 2019-09-05 12:26:11
-#&gt; 17:                           handle 2019-09-05 12:26:11
-#&gt; 18:                              try 2019-09-05 12:26:11
-#&gt; 19:                      withVisible 2019-09-05 12:26:11
-#&gt; 20:                           lapply 2019-09-05 12:26:11
-#&gt; 21:               n:c5775c3b366fb719 2019-09-05 12:26:11
-#&gt; 22:            .FUN:881ec847b7161f3c 2019-09-05 12:26:11
-#&gt; 23:                              rda 2019-09-05 12:26:11
-#&gt; 24: e9948b817a9112811207223241bc5b18 2019-09-05 12:26:11
-#&gt; 25:                          numeric 2019-09-05 12:26:11
-#&gt; 26:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt; 27:                 87eee6212ba1ae0a 2019-09-05 12:26:11
-#&gt; 28:                                f 2019-09-05 12:26:11
-#&gt; 29:                             1104 2019-09-05 12:26:11
-#&gt; 30:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt; 31:                          saveRDS 2019-09-05 12:26:11
-#&gt; 32:                          do.call 2019-09-05 12:26:11
-#&gt; 33:                 build_site_local 2019-09-05 12:26:11
-#&gt; 34:                  build_reference 2019-09-05 12:26:11
-#&gt; 35:             data_reference_topic 2019-09-05 12:26:11
-#&gt; 36:                     run_examples 2019-09-05 12:26:11
-#&gt; 37:               highlight_examples 2019-09-05 12:26:11
-#&gt; 38:                        timing_fn 2019-09-05 12:26:11
-#&gt; 39:                           handle 2019-09-05 12:26:11
-#&gt; 40:                              try 2019-09-05 12:26:11
-#&gt; 41:                      withVisible 2019-09-05 12:26:11
-#&gt; 42:                           lapply 2019-09-05 12:26:11
-#&gt; 43:               n:c5775c3b366fb719 2019-09-05 12:26:11
-#&gt; 44:            .FUN:4f604aa46882b368 2019-09-05 12:26:11
+#&gt;  1:                              rda 2019-09-11 11:36:08
+#&gt;  2: e373b2db531b957b8cc786565e9c3c4c 2019-09-11 11:36:08
+#&gt;  3:                          numeric 2019-09-11 11:36:08
+#&gt;  4:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt;  5:                 88dabbb6fbb67941 2019-09-11 11:36:08
+#&gt;  6:                                f 2019-09-11 11:36:08
+#&gt;  7:                             1104 2019-09-11 11:36:08
+#&gt;  8:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt;  9:                          saveRDS 2019-09-11 11:36:08
+#&gt; 10:                          do.call 2019-09-11 11:36:08
+#&gt; 11:                 build_site_local 2019-09-11 11:36:08
+#&gt; 12:                  build_reference 2019-09-11 11:36:08
+#&gt; 13:             data_reference_topic 2019-09-11 11:36:08
+#&gt; 14:                     run_examples 2019-09-11 11:36:08
+#&gt; 15:               highlight_examples 2019-09-11 11:36:08
+#&gt; 16:                        timing_fn 2019-09-11 11:36:08
+#&gt; 17:                           handle 2019-09-11 11:36:08
+#&gt; 18:                              try 2019-09-11 11:36:08
+#&gt; 19:                      withVisible 2019-09-11 11:36:08
+#&gt; 20:                           lapply 2019-09-11 11:36:08
+#&gt; 21:               n:c5775c3b366fb719 2019-09-11 11:36:08
+#&gt; 22:            .FUN:881ec847b7161f3c 2019-09-11 11:36:08
+#&gt; 23:                              rda 2019-09-11 11:36:08
+#&gt; 24: e9948b817a9112811207223241bc5b18 2019-09-11 11:36:08
+#&gt; 25:                          numeric 2019-09-11 11:36:08
+#&gt; 26:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt; 27:                 87eee6212ba1ae0a 2019-09-11 11:36:08
+#&gt; 28:                                f 2019-09-11 11:36:08
+#&gt; 29:                             1104 2019-09-11 11:36:08
+#&gt; 30:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt; 31:                          saveRDS 2019-09-11 11:36:08
+#&gt; 32:                          do.call 2019-09-11 11:36:08
+#&gt; 33:                 build_site_local 2019-09-11 11:36:08
+#&gt; 34:                  build_reference 2019-09-11 11:36:08
+#&gt; 35:             data_reference_topic 2019-09-11 11:36:08
+#&gt; 36:                     run_examples 2019-09-11 11:36:08
+#&gt; 37:               highlight_examples 2019-09-11 11:36:08
+#&gt; 38:                        timing_fn 2019-09-11 11:36:08
+#&gt; 39:                           handle 2019-09-11 11:36:08
+#&gt; 40:                              try 2019-09-11 11:36:08
+#&gt; 41:                      withVisible 2019-09-11 11:36:08
+#&gt; 42:                           lapply 2019-09-11 11:36:08
+#&gt; 43:               n:c5775c3b366fb719 2019-09-11 11:36:08
+#&gt; 44:            .FUN:4f604aa46882b368 2019-09-11 11:36:08
 #&gt;                             tagValue         createdDate</div><div class='input'>
 <span class='no'>file2Remove</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.files.html'>dir</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>tmpDir</span>, <span class='st'>"gallery"</span>), <span class='kw'>full.name</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>]
 <span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.remove</a></span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 552 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
@@ -338,50 +337,50 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; 44: e9948b817a9112811207223241bc5b18      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2019-09-05 12:26:11
-#&gt;  2: e373b2db531b957b8cc786565e9c3c4c 2019-09-05 12:26:11
-#&gt;  3:                          numeric 2019-09-05 12:26:11
-#&gt;  4:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt;  5:                 88dabbb6fbb67941 2019-09-05 12:26:11
-#&gt;  6:                                f 2019-09-05 12:26:11
-#&gt;  7:                             1104 2019-09-05 12:26:11
-#&gt;  8:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt;  9:                          saveRDS 2019-09-05 12:26:11
-#&gt; 10:                          do.call 2019-09-05 12:26:11
-#&gt; 11:                 build_site_local 2019-09-05 12:26:11
-#&gt; 12:                  build_reference 2019-09-05 12:26:11
-#&gt; 13:             data_reference_topic 2019-09-05 12:26:11
-#&gt; 14:                     run_examples 2019-09-05 12:26:11
-#&gt; 15:               highlight_examples 2019-09-05 12:26:11
-#&gt; 16:                        timing_fn 2019-09-05 12:26:11
-#&gt; 17:                           handle 2019-09-05 12:26:11
-#&gt; 18:                              try 2019-09-05 12:26:11
-#&gt; 19:                      withVisible 2019-09-05 12:26:11
-#&gt; 20:                           lapply 2019-09-05 12:26:11
-#&gt; 21:               n:c5775c3b366fb719 2019-09-05 12:26:11
-#&gt; 22:            .FUN:881ec847b7161f3c 2019-09-05 12:26:11
-#&gt; 23:                              rda 2019-09-05 12:26:11
-#&gt; 24: e9948b817a9112811207223241bc5b18 2019-09-05 12:26:11
-#&gt; 25:                          numeric 2019-09-05 12:26:11
-#&gt; 26:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt; 27:                 87eee6212ba1ae0a 2019-09-05 12:26:11
-#&gt; 28:                                f 2019-09-05 12:26:11
-#&gt; 29:                             1104 2019-09-05 12:26:11
-#&gt; 30:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt; 31:                          saveRDS 2019-09-05 12:26:11
-#&gt; 32:                          do.call 2019-09-05 12:26:11
-#&gt; 33:                 build_site_local 2019-09-05 12:26:11
-#&gt; 34:                  build_reference 2019-09-05 12:26:11
-#&gt; 35:             data_reference_topic 2019-09-05 12:26:11
-#&gt; 36:                     run_examples 2019-09-05 12:26:11
-#&gt; 37:               highlight_examples 2019-09-05 12:26:11
-#&gt; 38:                        timing_fn 2019-09-05 12:26:11
-#&gt; 39:                           handle 2019-09-05 12:26:11
-#&gt; 40:                              try 2019-09-05 12:26:11
-#&gt; 41:                      withVisible 2019-09-05 12:26:11
-#&gt; 42:                           lapply 2019-09-05 12:26:11
-#&gt; 43:               n:c5775c3b366fb719 2019-09-05 12:26:11
-#&gt; 44:            .FUN:4f604aa46882b368 2019-09-05 12:26:11
+#&gt;  1:                              rda 2019-09-11 11:36:08
+#&gt;  2: e373b2db531b957b8cc786565e9c3c4c 2019-09-11 11:36:08
+#&gt;  3:                          numeric 2019-09-11 11:36:08
+#&gt;  4:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt;  5:                 88dabbb6fbb67941 2019-09-11 11:36:08
+#&gt;  6:                                f 2019-09-11 11:36:08
+#&gt;  7:                             1104 2019-09-11 11:36:08
+#&gt;  8:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt;  9:                          saveRDS 2019-09-11 11:36:08
+#&gt; 10:                          do.call 2019-09-11 11:36:08
+#&gt; 11:                 build_site_local 2019-09-11 11:36:08
+#&gt; 12:                  build_reference 2019-09-11 11:36:08
+#&gt; 13:             data_reference_topic 2019-09-11 11:36:08
+#&gt; 14:                     run_examples 2019-09-11 11:36:08
+#&gt; 15:               highlight_examples 2019-09-11 11:36:08
+#&gt; 16:                        timing_fn 2019-09-11 11:36:08
+#&gt; 17:                           handle 2019-09-11 11:36:08
+#&gt; 18:                              try 2019-09-11 11:36:08
+#&gt; 19:                      withVisible 2019-09-11 11:36:08
+#&gt; 20:                           lapply 2019-09-11 11:36:08
+#&gt; 21:               n:c5775c3b366fb719 2019-09-11 11:36:08
+#&gt; 22:            .FUN:881ec847b7161f3c 2019-09-11 11:36:08
+#&gt; 23:                              rda 2019-09-11 11:36:08
+#&gt; 24: e9948b817a9112811207223241bc5b18 2019-09-11 11:36:08
+#&gt; 25:                          numeric 2019-09-11 11:36:08
+#&gt; 26:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt; 27:                 87eee6212ba1ae0a 2019-09-11 11:36:08
+#&gt; 28:                                f 2019-09-11 11:36:08
+#&gt; 29:                             1104 2019-09-11 11:36:08
+#&gt; 30:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt; 31:                          saveRDS 2019-09-11 11:36:08
+#&gt; 32:                          do.call 2019-09-11 11:36:08
+#&gt; 33:                 build_site_local 2019-09-11 11:36:08
+#&gt; 34:                  build_reference 2019-09-11 11:36:08
+#&gt; 35:             data_reference_topic 2019-09-11 11:36:08
+#&gt; 36:                     run_examples 2019-09-11 11:36:08
+#&gt; 37:               highlight_examples 2019-09-11 11:36:08
+#&gt; 38:                        timing_fn 2019-09-11 11:36:08
+#&gt; 39:                           handle 2019-09-11 11:36:08
+#&gt; 40:                              try 2019-09-11 11:36:08
+#&gt; 41:                      withVisible 2019-09-11 11:36:08
+#&gt; 42:                           lapply 2019-09-11 11:36:08
+#&gt; 43:               n:c5775c3b366fb719 2019-09-11 11:36:08
+#&gt; 44:            .FUN:4f604aa46882b368 2019-09-11 11:36:08
 #&gt;                             tagValue         createdDate</div><div class='input'>
 <span class='co'># run clearStubArtifacts</span>
 <span class='fu'><a href='https://rdrr.io/r/base/warning.html'>suppressWarnings</a></span>(<span class='fu'>clearStubArtifacts</span>(<span class='no'>tmpDir</span>))
@@ -410,28 +409,28 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; 22: e9948b817a9112811207223241bc5b18      preDigest
 #&gt;                             artifact         tagKey
 #&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2019-09-05 12:26:11
-#&gt;  2: e9948b817a9112811207223241bc5b18 2019-09-05 12:26:11
-#&gt;  3:                          numeric 2019-09-05 12:26:11
-#&gt;  4:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt;  5:                 87eee6212ba1ae0a 2019-09-05 12:26:11
-#&gt;  6:                                f 2019-09-05 12:26:11
-#&gt;  7:                             1104 2019-09-05 12:26:11
-#&gt;  8:              2019-09-05 12:26:11 2019-09-05 12:26:11
-#&gt;  9:                          saveRDS 2019-09-05 12:26:11
-#&gt; 10:                          do.call 2019-09-05 12:26:11
-#&gt; 11:                 build_site_local 2019-09-05 12:26:11
-#&gt; 12:                  build_reference 2019-09-05 12:26:11
-#&gt; 13:             data_reference_topic 2019-09-05 12:26:11
-#&gt; 14:                     run_examples 2019-09-05 12:26:11
-#&gt; 15:               highlight_examples 2019-09-05 12:26:11
-#&gt; 16:                        timing_fn 2019-09-05 12:26:11
-#&gt; 17:                           handle 2019-09-05 12:26:11
-#&gt; 18:                              try 2019-09-05 12:26:11
-#&gt; 19:                      withVisible 2019-09-05 12:26:11
-#&gt; 20:                           lapply 2019-09-05 12:26:11
-#&gt; 21:               n:c5775c3b366fb719 2019-09-05 12:26:11
-#&gt; 22:            .FUN:4f604aa46882b368 2019-09-05 12:26:11
+#&gt;  1:                              rda 2019-09-11 11:36:08
+#&gt;  2: e9948b817a9112811207223241bc5b18 2019-09-11 11:36:08
+#&gt;  3:                          numeric 2019-09-11 11:36:08
+#&gt;  4:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt;  5:                 87eee6212ba1ae0a 2019-09-11 11:36:08
+#&gt;  6:                                f 2019-09-11 11:36:08
+#&gt;  7:                             1104 2019-09-11 11:36:08
+#&gt;  8:              2019-09-11 11:36:08 2019-09-11 11:36:08
+#&gt;  9:                          saveRDS 2019-09-11 11:36:08
+#&gt; 10:                          do.call 2019-09-11 11:36:08
+#&gt; 11:                 build_site_local 2019-09-11 11:36:08
+#&gt; 12:                  build_reference 2019-09-11 11:36:08
+#&gt; 13:             data_reference_topic 2019-09-11 11:36:08
+#&gt; 14:                     run_examples 2019-09-11 11:36:08
+#&gt; 15:               highlight_examples 2019-09-11 11:36:08
+#&gt; 16:                        timing_fn 2019-09-11 11:36:08
+#&gt; 17:                           handle 2019-09-11 11:36:08
+#&gt; 18:                              try 2019-09-11 11:36:08
+#&gt; 19:                      withVisible 2019-09-11 11:36:08
+#&gt; 20:                           lapply 2019-09-11 11:36:08
+#&gt; 21:               n:c5775c3b366fb719 2019-09-11 11:36:08
+#&gt; 22:            .FUN:4f604aa46882b368 2019-09-11 11:36:08
 #&gt;                             tagValue         createdDate</div><div class='input'>
 <span class='co'># cleanup</span>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
@@ -441,9 +440,7 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

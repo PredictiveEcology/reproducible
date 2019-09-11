@@ -8,10 +8,12 @@
 
 <title>Coerce a character string to a class "Path" — Path-class • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,11 +34,12 @@
 
 
 
-<meta property="og:title" content="Coerce a character string to a class "Path" — Path-class" />
 
+<meta property="og:title" content="Coerce a character string to a class "Path" — Path-class" />
 <meta property="og:description" content="Allows a user to specify that their character string is indeed a filepath.
 Thus, methods that require only a filepath can be dispatched correctly." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -108,7 +111,6 @@ Thus, methods that require only a filepath can be dispatched correctly." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -135,10 +137,8 @@ Thus, methods that require only a filepath can be dispatched correctly." />
     </div>
 
     <div class="ref-description">
-    
     <p>Allows a user to specify that their character string is indeed a filepath.
 Thus, methods that require only a filepath can be dispatched correctly.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>asPath</span>(<span class='no'>obj</span>, <span class='kw'>nParentDirs</span> <span class='kw'>=</span> <span class='fl'>0</span>)
@@ -148,7 +148,7 @@ Thus, methods that require only a filepath can be dispatched correctly.</p>
 
 <span class='co'># S3 method for null</span>
 <span class='fu'>asPath</span>(<span class='no'>obj</span>, <span class='kw'>nParentDirs</span> <span class='kw'>=</span> <span class='fl'>0</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -162,7 +162,7 @@ Thus, methods that require only a filepath can be dispatched correctly.</p>
 from basename(obj) = 0 to keep for the digest</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>It is often difficult or impossible to know algorithmically whether a
@@ -183,7 +183,6 @@ All of these should be assessed for their actual file or directory location,
 NOT their character string. By converting all character string that are actual
 file or directory paths with this function, then <code>Cache</code> will correctly assess
 the location, NOT the character string representation.</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>tmpf</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span>(<span class='kw'>fileext</span> <span class='kw'>=</span> <span class='st'>".csv"</span>)
@@ -195,9 +194,7 @@ the location, NOT the character string representation.</p>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#details">Details</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

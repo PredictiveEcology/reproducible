@@ -8,10 +8,12 @@
 
 <title>Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS — copySingleFile • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,8 +34,8 @@
 
 
 
-<meta property="og:title" content="Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS — copySingleFile" />
 
+<meta property="og:title" content="Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS — copySingleFile" />
 <meta property="og:description" content="This is replacement for file.copy, but for one file at a time.
 The additional feature is that it will use robocopy (on Windows) or
 rsync on Linux or Mac, if they exist.
@@ -41,6 +43,7 @@ It will default back to file.copy if none of these exists.
 If there is a possibility that the file already exists, then this function
 should be very fast as it will do &quot;update only&quot;, i.e., nothing." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -112,7 +115,6 @@ should be very fast as it will do &quot;update only&quot;, i.e., nothing." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -139,14 +141,12 @@ should be very fast as it will do &quot;update only&quot;, i.e., nothing." />
     </div>
 
     <div class="ref-description">
-    
     <p>This is replacement for <code>file.copy</code>, but for one file at a time.
 The additional feature is that it will use <code>robocopy</code> (on Windows) or
 <code>rsync</code> on Linux or Mac, if they exist.
 It will default back to <code>file.copy</code> if none of these exists.
 If there is a possibility that the file already exists, then this function
 should be very fast as it will do "update only", i.e., nothing.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>copySingleFile</span>(<span class='kw'>from</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>to</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>useRobocopy</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
@@ -156,7 +156,7 @@ should be very fast as it will do "update only", i.e., nothing.</p>
 <span class='fu'>copyFile</span>(<span class='kw'>from</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>to</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>useRobocopy</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>delDestination</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -193,7 +193,7 @@ rsync.</p></td>
       <td><p>Should a progress be printed.</p></td>
     </tr>
     </table>
-    
+
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>tmpDirFrom</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"example_fileCopy_from"</span>)
@@ -208,10 +208,10 @@ rsync.</p></td>
 
 <span class='fu'><a href='https://rdrr.io/r/utils/write.table.html'>write.csv</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>a</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>10</span>, <span class='kw'>b</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span>(<span class='fl'>10</span>), <span class='kw'>c</span> <span class='kw'>=</span> <span class='no'>letters</span>[<span class='fl'>1</span>:<span class='fl'>10</span>]), <span class='no'>f1</span>)
 <span class='fu'><a href='https://rdrr.io/r/utils/write.table.html'>write.csv</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>c</span> <span class='kw'>=</span> <span class='fl'>11</span>:<span class='fl'>20</span>, <span class='kw'>d</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/Uniform.html'>runif</a></span>(<span class='fl'>10</span>), <span class='kw'>e</span> <span class='kw'>=</span> <span class='no'>letters</span>[<span class='fl'>11</span>:<span class='fl'>20</span>]), <span class='no'>f2</span>)
-<span class='fu'>copyFile</span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='no'>f1</span>, <span class='no'>f2</span>), <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='no'>t1</span>, <span class='no'>t2</span>))</div><div class='output co'>#&gt; /tmp/Rtmpfj8Tng/example_fileCopy_from/file13b2a309acc77.csv 
-#&gt; "/tmp/Rtmpfj8Tng/example_fileCopy_to/file13b2a309acc77.csv" 
-#&gt; /tmp/Rtmpfj8Tng/example_fileCopy_from/file23b2a7835ef14.csv 
-#&gt; "/tmp/Rtmpfj8Tng/example_fileCopy_to/file23b2a7835ef14.csv" </div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span>(<span class='no'>t1</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span>(<span class='no'>t2</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span>(<span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>f1</span>), <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>f2</span>)) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span>(<span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>f1</span>), <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>t1</span>)) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span>(<span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>f2</span>), <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>t2</span>)) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
+<span class='fu'>copyFile</span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='no'>f1</span>, <span class='no'>f2</span>), <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='no'>t1</span>, <span class='no'>t2</span>))</div><div class='output co'>#&gt; /tmp/RtmpncGPrE/example_fileCopy_from/file1d2df5e6b8a3e.csv 
+#&gt; "/tmp/RtmpncGPrE/example_fileCopy_to/file1d2df5e6b8a3e.csv" 
+#&gt; /tmp/RtmpncGPrE/example_fileCopy_from/file2d2df43c77ee1.csv 
+#&gt; "/tmp/RtmpncGPrE/example_fileCopy_to/file2d2df43c77ee1.csv" </div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span>(<span class='no'>t1</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span>(<span class='no'>t2</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span>(<span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>f1</span>), <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>f2</span>)) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span>(<span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>f1</span>), <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>t1</span>)) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span>(<span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>f2</span>), <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.csv</a></span>(<span class='no'>t2</span>)) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>tmpDirFrom</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>tmpDirTo</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>
   </div>
@@ -219,7 +219,6 @@ rsync.</p></td>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-            
       <li><a href="#examples">Examples</a></li>
     </ul>
 

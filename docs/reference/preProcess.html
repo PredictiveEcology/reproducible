@@ -8,10 +8,12 @@
 
 <title>Download, Checksum, Extract files — preProcess • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,13 +34,14 @@
 
 
 
-<meta property="og:title" content="Download, Checksum, Extract files — preProcess" />
 
+<meta property="og:title" content="Download, Checksum, Extract files — preProcess" />
 <meta property="og:description" content="This does downloading (via downloadFile), checksumming (Checksums),
 and extracting from archives (extractFromArchive), plus cleaning up of input
 arguments (e.g., paths, function names).
 This is the first stage of three used in prepInputs." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -110,7 +113,6 @@ This is the first stage of three used in prepInputs." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -137,12 +139,10 @@ This is the first stage of three used in prepInputs." />
     </div>
 
     <div class="ref-description">
-    
     <p>This does downloading (via <code>downloadFile</code>), checksumming (<code>Checksums</code>),
 and extracting from archives (<code>extractFromArchive</code>), plus cleaning up of input
 arguments (e.g., paths, function names).
 This is the first stage of three used in <code>prepInputs</code>.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>preProcess</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -152,7 +152,7 @@ This is the first stage of three used in <code>prepInputs</code>.</p>
   <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
   <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
   <span class='no'>...</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -248,14 +248,13 @@ Since <code>...</code> is passed to <code><a href='postProcess.html'>postProcess
 functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See details and examples.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A list with 5 elements, <code>checkSums</code> (the result of a <code>Checksums</code>
 after downloading), <code>dots</code> (cleaned up ..., including deprecated argument checks),
 <code>fun</code> (the function to be used to load the preProcessed object from disk),
 and <code>targetFilePath</code> (the fully qualified path to the <code>targetFile</code>).</p>
-    
     <h2 class="hasAnchor" id="combinations-of-targetfile-url-archive-alsoextract"><a class="anchor" href="#combinations-of-targetfile-url-archive-alsoextract"></a>Combinations of <code>targetFile</code>, <code>url</code>, <code>archive</code>, <code>alsoExtract</code></h2>
 
     
@@ -291,18 +290,15 @@ and <code>targetFilePath</code> (the fully qualified path to the <code>targetFil
  even without a <code>targetFile</code> specified because there is an initial attempt
  to get the remove file information (e.g., file name). With that, the connection
  between the <code>url</code> and the filename used in the CHECKSUMS.txt file can be made.</p>
-    
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-
       <li><a href="#combinations-of-targetfile-url-archive-alsoextract">Combinations of <code>targetFile</code>, <code>url</code>, <code>archive</code>, <code>alsoExtract</code></a></li>
-          </ul>
+    </ul>
 
     <h2>Author</h2>
     <p>Eliot McIntire</p>

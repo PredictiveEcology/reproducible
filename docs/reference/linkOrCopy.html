@@ -8,10 +8,12 @@
 
 <title>Hardlink, symlink, or copy a file — linkOrCopy • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,12 +34,13 @@
 
 
 
-<meta property="og:title" content="Hardlink, symlink, or copy a file — linkOrCopy" />
 
+<meta property="og:title" content="Hardlink, symlink, or copy a file — linkOrCopy" />
 <meta property="og:description" content="Attempt first to make a hardlink. If that fails, try to make
 a symlink (on non-windows systems and symlink = TRUE).
 If that fails, copy the file." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -109,7 +112,6 @@ If that fails, copy the file." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -136,15 +138,13 @@ If that fails, copy the file." />
     </div>
 
     <div class="ref-description">
-    
     <p>Attempt first to make a hardlink. If that fails, try to make
 a symlink (on non-windows systems and <code>symlink = TRUE</code>).
 If that fails, copy the file.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>linkOrCopy</span>(<span class='no'>from</span>, <span class='no'>to</span>, <span class='kw'>symlink</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -159,15 +159,13 @@ If that fails, copy the file.</p>
 Default <code>FALSE</code>.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
     <p>Use caution with files-backed objects (e.g., rasters). See examples.</p>
-    
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='https://rdrr.io/r/base/files.html'>file.link</a></code>, <code><a href='https://rdrr.io/r/base/files.html'>file.symlink</a></code>, <code><a href='https://rdrr.io/r/base/files.html'>file.copy</a></code>.</p></div>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>datasets</span>)
@@ -192,7 +190,7 @@ Default <code>FALSE</code>.</p></td>
 <span class='no'>f2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>tmpDir</span>, <span class='st'>"file2.csv"</span>)
 
 <span class='co'>## create link to a file</span>
-<span class='fu'>linkOrCopy</span>(<span class='no'>f0</span>, <span class='no'>f2</span>)</div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/Rtmpfj8Tng/symlink-test/file2.csv, which points to /tmp/Rtmpfj8Tng/symlink-test/file0.csv; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span>(<span class='no'>f2</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span>(<span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.table</a></span>(<span class='no'>f0</span>), <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.table</a></span>(<span class='no'>f2</span>)) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
+<span class='fu'>linkOrCopy</span>(<span class='no'>f0</span>, <span class='no'>f2</span>)</div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/RtmpncGPrE/symlink-test/file2.csv, which points to /tmp/RtmpncGPrE/symlink-test/file0.csv; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span>(<span class='no'>f2</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/identical.html'>identical</a></span>(<span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.table</a></span>(<span class='no'>f0</span>), <span class='fu'><a href='https://rdrr.io/r/utils/read.table.html'>read.table</a></span>(<span class='no'>f2</span>)) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='co'>## deleting the link shouldn't delete the original file</span>
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>f0</span>)
 <span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span>(<span class='no'>f0</span>) <span class='co'>## FALSE</span></div><div class='output co'>#&gt; [1] FALSE</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.exists</a></span>(<span class='no'>f2</span>) <span class='co'>## TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
@@ -202,7 +200,7 @@ Default <code>FALSE</code>.</p></td>
 <span class='no'>r3a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='no'>f3a</span>)
 <span class='no'>f4a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>tmpDir</span>, <span class='st'>"raster4.grd"</span>)
 <span class='no'>f4b</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>tmpDir</span>, <span class='st'>"raster4.gri"</span>)
-<span class='fu'>linkOrCopy</span>(<span class='no'>f3a</span>, <span class='no'>f4a</span>) <span class='co'>## hardlink</span></div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/Rtmpfj8Tng/symlink-test/raster4.grd, which points to /usr/local/lib/R/site-library/raster/external/test.grd; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>linkOrCopy</span>(<span class='no'>f3b</span>, <span class='no'>f4b</span>) <span class='co'>## hardlink</span></div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/Rtmpfj8Tng/symlink-test/raster4.gri, which points to /usr/local/lib/R/site-library/raster/external/test.gri; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='no'>r4a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='no'>f4a</span>)
+<span class='fu'>linkOrCopy</span>(<span class='no'>f3a</span>, <span class='no'>f4a</span>) <span class='co'>## hardlink</span></div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/RtmpncGPrE/symlink-test/raster4.grd, which points to /usr/local/lib/R/site-library/raster/external/test.grd; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>linkOrCopy</span>(<span class='no'>f3b</span>, <span class='no'>f4b</span>) <span class='co'>## hardlink</span></div><div class='output co'>#&gt; <span class='message'>Hardlinked version of file created at: /tmp/RtmpncGPrE/symlink-test/raster4.gri, which points to /usr/local/lib/R/site-library/raster/external/test.gri; no copy was made.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='no'>r4a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='no'>f4a</span>)
 
 <span class='fu'><a href='https://rdrr.io/r/base/Logic.html'>isTRUE</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>r3a</span>, <span class='no'>r4a</span>)) <span class='co'># TRUE</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='co'>## cleanup</span>
@@ -212,11 +210,8 @@ Default <code>FALSE</code>.</p></td>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#note">Note</a></li>
-
       <li><a href="#see-also">See also</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

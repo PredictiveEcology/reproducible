@@ -8,10 +8,12 @@
 
 <title>The exact digest function that <code>Cache</code> uses — CacheDigest • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,11 +34,12 @@
 
 
 
-<meta property="og:title" content="The exact digest function that <code>Cache</code> uses — CacheDigest" />
 
+<meta property="og:title" content="The exact digest function that <code>Cache</code> uses — CacheDigest" />
 <meta property="og:description" content="This can be used by a user to pre-test their arguments before running
 Cache, for example to determine whether there is a cached copy." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -108,7 +111,6 @@ Cache, for example to determine whether there is a cached copy." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -135,14 +137,12 @@ Cache, for example to determine whether there is a cached copy." />
     </div>
 
     <div class="ref-description">
-    
     <p>This can be used by a user to pre-test their arguments before running
 <code>Cache</code>, for example to determine whether there is a cached copy.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>CacheDigest</span>(<span class='no'>objsToDigest</span>, <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>calledFrom</span> <span class='kw'>=</span> <span class='st'>"Cache"</span>, <span class='no'>...</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -169,13 +169,12 @@ robust CacheDigest results.</p></td>
 for advanced use.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A list of length 2 with the <code>outputHash</code>, which is the digest
 that Cache uses for <code>cacheId</code> and also <code>preDigest</code>, which is
 the digest of each sub-element in <code>objsToDigest</code>.</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
@@ -188,9 +187,7 @@ the digest of each sub-element in <code>objsToDigest</code>.</p>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

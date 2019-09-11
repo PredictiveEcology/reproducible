@@ -8,10 +8,12 @@
 
 <title>Make any modifications to object recovered from cacheRepo — .prepareOutput • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,10 +34,11 @@
 
 
 
-<meta property="og:title" content="Make any modifications to object recovered from cacheRepo — .prepareOutput" />
 
+<meta property="og:title" content="Make any modifications to object recovered from cacheRepo — .prepareOutput" />
 <meta property="og:description" content="This is a generic definition that can be extended according to class." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -107,7 +110,6 @@
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -134,9 +136,7 @@
     </div>
 
     <div class="ref-description">
-    
     <p>This is a generic definition that can be extended according to class.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>.prepareOutput</span>(<span class='no'>object</span>, <span class='no'>cacheRepo</span>, <span class='no'>...</span>)
@@ -146,7 +146,7 @@
 
 <span class='co'># S4 method for ANY</span>
 <span class='fu'>.prepareOutput</span>(<span class='no'>object</span>, <span class='no'>cacheRepo</span>, <span class='no'>...</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -164,11 +164,10 @@ This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
       <td><p>Arguments of <code>FUN</code> function .</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>The object, modified</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>
@@ -176,7 +175,7 @@ This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
 <span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='st'>"Null"</span>
 <span class='fu'>.prepareOutput</span>(<span class='no'>b</span>) <span class='co'># converts to NULL</span></div><div class='output co'>#&gt; NULL</div><div class='input'>
 <span class='co'># For rasters, it is same as .prepareFileBackedRaster</span>
-<span class='fu'><a href='https://rdrr.io/r/base/try.html'>try</a></span>(<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/archivist/man/createEmptyRepo.html'>createLocalRepo</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>()))</div><div class='output co'>#&gt; <span class='message'>Directory /tmp/Rtmpfj8Tng does exist and contain the backpack.db file. Use force=TRUE to reinitialize.</span></div><div class='input'>
+<span class='fu'><a href='https://rdrr.io/r/base/try.html'>try</a></span>(<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/archivist/man/createEmptyRepo.html'>createLocalRepo</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>()))</div><div class='output co'>#&gt; <span class='message'>Directory /tmp/RtmpncGPrE does exist and contain the backpack.db file. Use force=TRUE to reinitialize.</span></div><div class='input'>
 <span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
 <span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='fu'><a href='https://rdrr.io/pkg/raster/man/extent.html'>extent</a></span>(<span class='fl'>0</span>,<span class='fl'>10</span>,<span class='fl'>0</span>,<span class='fl'>10</span>), <span class='kw'>vals</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>100</span>)
 
@@ -190,9 +189,7 @@ This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

@@ -8,10 +8,12 @@
 
 <title>Cache helpers — getUserTags • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,10 +34,11 @@
 
 
 
-<meta property="og:title" content="Cache helpers — getUserTags" />
 
+<meta property="og:title" content="Cache helpers — getUserTags" />
 <meta property="og:description" content="A few helpers to get specific things from the cache repository" />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -107,7 +110,6 @@
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -134,9 +136,7 @@
     </div>
 
     <div class="ref-description">
-    
     <p>A few helpers to get specific things from the cache repository</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>getUserTags</span>(<span class='no'>cacheRepo</span>, <span class='no'>shownCache</span>, <span class='no'>cacheId</span>, <span class='kw'>concatenated</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
@@ -144,7 +144,7 @@
 <span class='fu'>getCacheId</span>(<span class='no'>cacheRepo</span>, <span class='no'>shownCache</span>, <span class='no'>artifact</span>)
 
 <span class='fu'>getArtifact</span>(<span class='no'>cacheRepo</span>, <span class='no'>shownCache</span>, <span class='no'>cacheId</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -175,22 +175,20 @@ be concatenated <code>tagKey:tagValue</code>.</p></td>
 <code>artifact</code> column of <code>showCache</code></p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p><code>getCacheId</code> returns the <code>cacheId</code> values for 1 or more artifacts in the cache.</p>
 <p><code>getArtifact</code> returns the <code>artifact</code> value for 1 or more
 entries in the cache, by <code>cacheId</code>.</p>
-    
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>

@@ -8,10 +8,12 @@
 
 <title>Change the absolute path of a file — convertPaths • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
@@ -32,13 +34,14 @@
 
 
 
-<meta property="og:title" content="Change the absolute path of a file — convertPaths" />
 
+<meta property="og:title" content="Change the absolute path of a file — convertPaths" />
 <meta property="og:description" content="convertPaths is simply a wrapper around gsub for changing the
 first part of a path.
 convertRasterPaths is useful for changing the path to a file-backed
 raster (e.g., after copying the file to a new location)." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -110,7 +113,6 @@ raster (e.g., after copying the file to a new location)." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
@@ -137,18 +139,16 @@ raster (e.g., after copying the file to a new location)." />
     </div>
 
     <div class="ref-description">
-    
     <p><code>convertPaths</code> is simply a wrapper around <code>gsub</code> for changing the
 first part of a path.
 <code>convertRasterPaths</code> is useful for changing the path to a file-backed
 raster (e.g., after copying the file to a new location).</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>convertPaths</span>(<span class='no'>x</span>, <span class='no'>patterns</span>, <span class='no'>replacements</span>)
 
 <span class='fu'>convertRasterPaths</span>(<span class='no'>x</span>, <span class='no'>patterns</span>, <span class='no'>replacements</span>)</pre>
-    
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -168,7 +168,7 @@ object, or a list of such rasters.</p></td>
 containing replacement text (see <code><a href='https://rdrr.io/r/base/grep.html'>?gsub</a></code>).</p></td>
     </tr>
     </table>
-    
+
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>filenames</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"/home/user1/Documents/file.txt"</span>, <span class='st'>"/Users/user1/Documents/file.txt"</span>)
@@ -193,7 +193,6 @@ containing replacement text (see <code><a href='https://rdrr.io/r/base/grep.html
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-            
       <li><a href="#examples">Examples</a></li>
     </ul>
 
