@@ -8,6 +8,8 @@
 #' See Details for the special case of functions and their enclosing environments.
 #'
 #' @param x An object
+#' @param enclosingEnvs Logical indicating whether to include enclosing environments.
+#'                      Default \code{TRUE}.
 #' @param quick Logical. Only some methods use this. e.g.,
 #'              \code{Path} class objects. In which case, \code{file.size} will be
 #'              used instead of \code{object.size}.
@@ -48,7 +50,7 @@ objSize <- function(x, quick, enclosingEnvs, .prevEnvirs) {
 #' @export
 #' @rdname objSize
 objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
-                        enclosingEnvs = TRUE, .prevEnvirs = list()) {
+                         enclosingEnvs = TRUE, .prevEnvirs = list()) {
   TandC <- grepl(".__[TC]__", names(x))
   if (sum(TandC) > 0)
     x <- x[!TandC]
