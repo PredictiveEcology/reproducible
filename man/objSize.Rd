@@ -90,4 +90,3 @@ sum(unlist(os2)) # around 31 MB, with all functions, objects
                  # and imported functions
 
 }
-\keyword{internal}
