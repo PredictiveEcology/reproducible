@@ -21,7 +21,7 @@ This is a release which adds several new features and fixes some minor bugs. See
 
 ### Development R version
 * Ubuntu 16.04       (travis-ci), R 3.7.0 (2019-09-05 r77152)
-* Debian 18.04           (local), R 3.7.0 (2019-09-05 r77152)
+* Ubuntu 18.04           (local), R 3.7.0 (2019-09-05 r77152)
 * Windows             (appveyor), R 3.7.0 (2019-09-04 r77145)
 * Windows          (win-builder), R 3.7.0 (2019-09-02 r77130)
 
