@@ -42,6 +42,8 @@ Default \code{TRUE}.}
 
 \item{.prevEnvirs}{For internal account keeping to identify and prevent duplicate counting}
 
+\item{...}{Additional arguments (currently unused)}
+
 \item{sumLevel}{Numeric, indicating at which depth in the list of objects should the
 object sizes be summed (summarized). Default is \code{Inf}, meaning no sums. Currently,
 the only option other than Inf is 1: \code{objSizeSession(1)},

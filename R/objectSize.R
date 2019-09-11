@@ -14,6 +14,7 @@
 #'              \code{Path} class objects. In which case, \code{file.size} will be
 #'              used instead of \code{object.size}.
 #' @param .prevEnvirs For internal account keeping to identify and prevent duplicate counting
+#' @param ...  Additional arguments (currently unused)
 #'
 #' @export
 #' @rdname objSize
