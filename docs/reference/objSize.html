@@ -149,27 +149,27 @@ Alternative, similar functions include <code>object.size</code> and <code><a hre
 See Details for the special case of functions and their enclosing environments.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='no'>quick</span>, <span class='no'>enclosingEnvs</span>, <span class='no'>.prevEnvirs</span>)
-
-<span class='co'># S3 method for list</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>())
-
-<span class='co'># S3 method for environment</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
-  <span class='fl'>FALSE</span>), <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>())
+    <pre class="usage"><span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='no'>quick</span>, <span class='no'>enclosingEnvs</span>, <span class='no'>.prevEnvirs</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for default</span>
 <span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
-  <span class='fl'>FALSE</span>), <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>())
+  <span class='fl'>FALSE</span>), <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
+
+<span class='co'># S3 method for list</span>
+<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
+
+<span class='co'># S3 method for environment</span>
+<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
+  <span class='fl'>FALSE</span>), <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
 
 <span class='co'># S3 method for Path</span>
 <span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>())
+  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
 
 <span class='co'># S3 method for function</span>
 <span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
-  <span class='fl'>FALSE</span>), <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>())
+  <span class='fl'>FALSE</span>), <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
 
 <span class='fu'>objSizeSession</span>(<span class='kw'>sumLevel</span> <span class='kw'>=</span> <span class='fl'>Inf</span>, <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>())</pre>
@@ -186,6 +186,11 @@ See Details for the special case of functions and their enclosing environments.<
       <td><p>Logical. Only some methods use this. e.g.,
 <code>Path</code> class objects. In which case, <code>file.size</code> will be
 used instead of <code>object.size</code>.</p></td>
+    </tr>
+    <tr>
+      <th>enclosingEnvs</th>
+      <td><p>Logical indicating whether to include enclosing environments.
+Default <code>TRUE</code>.</p></td>
     </tr>
     <tr>
       <th>.prevEnvirs</th>
@@ -219,7 +224,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 <span class='no'>foo</span>$<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
 <span class='no'>foo</span>$<span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
 
-<span class='fu'>objSize</span>(<span class='no'>foo</span>) <span class='co'># all the elements in the environment</span></div><div class='output co'>#&gt; [1] "&lt;environment: 0x5580f427eec0&gt;"</div><div class='output co'>#&gt; $`foo$b`
+<span class='fu'>objSize</span>(<span class='no'>foo</span>) <span class='co'># all the elements in the environment</span></div><div class='output co'>#&gt; [1] "&lt;environment: 0x5635668649e8&gt;"</div><div class='output co'>#&gt; $`foo$b`
 #&gt; 96 bytes
 #&gt; 
 #&gt; $`foo$d`
@@ -499,22 +504,22 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 4744 bytes
 #&gt; 
 #&gt; $objSize
-#&gt; 2264 bytes
+#&gt; 2432 bytes
 #&gt; 
 #&gt; $objSize.default
-#&gt; 3328 bytes
+#&gt; 3496 bytes
 #&gt; 
 #&gt; $objSize.environment
-#&gt; 37760 bytes
+#&gt; 37928 bytes
 #&gt; 
 #&gt; $objSize.function
-#&gt; 47888 bytes
+#&gt; 48056 bytes
 #&gt; 
 #&gt; $objSize.list
-#&gt; 127712 bytes
+#&gt; 127880 bytes
 #&gt; 
 #&gt; $objSize.Path
-#&gt; 6816 bytes
+#&gt; 6984 bytes
 #&gt; 
 #&gt; $objSizeSession
 #&gt; 128576 bytes
@@ -667,7 +672,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 }
 
 <span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
-<span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))</div><div class='output co'>#&gt; [1] "&lt;environment: package:reproducible&gt;"</div><div class='input'>(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 584 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 31 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 14753856</div><div class='input'>                 # and imported functions
+<span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))</div><div class='output co'>#&gt; [1] "&lt;environment: package:reproducible&gt;"</div><div class='input'>(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 584 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 31 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 14754864</div><div class='input'>                 # and imported functions
 
 </div></pre>
   </div>
