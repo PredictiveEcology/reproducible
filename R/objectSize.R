@@ -43,14 +43,22 @@
 #' sum(unlist(os2)) # around 31 MB, with all functions, objects
 #'                  # and imported functions
 #'
-objSize <- function(x, quick, enclosingEnvs, .prevEnvirs) {
+objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
   UseMethod("objSize", x)
+}
+
+#' @export
+#' @importFrom utils object.size
+#' @rdname objSize
+objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
+                            enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
+  object.size(x)
 }
 
 #' @export
 #' @rdname objSize
 objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
-                         enclosingEnvs = TRUE, .prevEnvirs = list()) {
+                         enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   TandC <- grepl(".__[TC]__", names(x))
   if (sum(TandC) > 0)
     x <- x[!TandC]
@@ -77,7 +85,7 @@ objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
 #' @importFrom utils object.size
 #' @rdname objSize
 objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE),
-                                enclosingEnvs = TRUE, .prevEnvirs = list()) {
+                                enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   xName <- deparse(substitute(x))
   print(format(x))
   os <- objSize(as.list(x, all.names = TRUE), enclosingEnvs = enclosingEnvs,
@@ -93,16 +101,8 @@ objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE
 #' @export
 #' @importFrom utils object.size
 #' @rdname objSize
-objSize.default <- function(x, quick = getOption("reproducible.quick", FALSE),
-                            enclosingEnvs = TRUE, .prevEnvirs = list()) {
-  object.size(x)
-}
-
-#' @export
-#' @importFrom utils object.size
-#' @rdname objSize
 objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE),
-                         enclosingEnvs = TRUE, .prevEnvirs = list()) {
+                         enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   if (quick) {
     object.size(x)
   } else {
@@ -121,7 +121,7 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE),
 #' @export
 #' @rdname objSize
 objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
-                             enclosingEnvs = TRUE, .prevEnvirs = list()) {
+                             enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   varName <- deparse(substitute(x))
   if (isTRUE(enclosingEnvs) && (!identical(.GlobalEnv, environment(x)))) {
     if (is.primitive(x)) {
