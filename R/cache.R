@@ -507,6 +507,7 @@ setMethod(
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
+        message("Retrieving file list in cloud folder")
         gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
       }
       while (tries <= length(cacheRepos)) {
