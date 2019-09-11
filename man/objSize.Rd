@@ -2,30 +2,30 @@
 % Please edit documentation in R/objectSize.R
 \name{objSize}
 \alias{objSize}
+\alias{objSize.default}
 \alias{objSize.list}
 \alias{objSize.environment}
-\alias{objSize.default}
 \alias{objSize.Path}
 \alias{objSize.function}
 \alias{objSizeSession}
 \title{Recursive \code{object.size}}
 \usage{
-objSize(x, quick, enclosingEnvs, .prevEnvirs)
-
-\method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE, .prevEnvirs = list())
-
-\method{objSize}{environment}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list())
+objSize(x, quick, enclosingEnvs, .prevEnvirs, ...)
 
 \method{objSize}{default}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list())
+  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+
+\method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE),
+  enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+
+\method{objSize}{environment}(x, quick = getOption("reproducible.quick",
+  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
 
 \method{objSize}{Path}(x, quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE, .prevEnvirs = list())
+  enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
 
 \method{objSize}{function}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list())
+  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
 
 objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE,
   .prevEnvirs = list())
