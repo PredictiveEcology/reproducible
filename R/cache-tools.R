@@ -136,7 +136,6 @@ setMethod(
       }
     }
 
-
     if (clearWholeCache) {
       if (isInteractive()) {
         cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
