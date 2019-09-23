@@ -650,7 +650,6 @@ setMethod(
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
-  browser(expr = exists("bbb"))
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
 
@@ -925,6 +924,8 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
         rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
         opts <- if (silent) " -a " else " -avP "
+        # rsync command can't handle spaces in dirnames -- must protect them
+        toDir <- gsub("\ ", "\\ ", toDir, fixed = TRUE)
         rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
                         normalizePath(from, mustWork = TRUE), " ",
                         normalizePath(toDir, mustWork = FALSE), "/")
@@ -999,6 +1000,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @param filebackedDir A directory to copy any files that are backing R objects,
 #'                      currently only valid for \code{Raster} classes. Defaults
 #'                      to \code{tempdir()}, which is unlikely to be very useful.
+#'                      Can be \code{NULL}, which means that the file will not be
+#'                      copied and could therefore cause a collision as the
+#'                      pre-copied object and post-copied object would have the same
+#'                      file backing them.
 #'
 #' @param ... Only used for custom Methods
 #'
@@ -1056,8 +1061,14 @@ setMethod("Copy",
 setMethod("Copy",
           signature(object = "environment"),
           definition = function(object,  filebackedDir, ...) {
-            listVersion <- Copy(as.list(object, all.names = TRUE),  filebackedDir, ...)
-            as.environment(listVersion)
+            listVersion <- Copy(as.list(object, all.names = TRUE),
+                                filebackedDir = filebackedDir, ...)
+            #as.environment(listVersion)
+            parentEnv <- parent.env(object)
+            newEnv <- new.env(parent = parentEnv)
+            list2env(listVersion, envir = newEnv)
+            attr(newEnv, "name") <- attr(object, "name")
+            newEnv
 })
 
 #' @rdname Copy
@@ -1078,7 +1089,9 @@ setMethod("Copy",
 setMethod("Copy",
           signature(object = "Raster"),
           definition = function(object, filebackedDir, ...) {
-            object <- .prepareFileBackedRaster(object, repoDir = filebackedDir)
+            if (!is.null(filebackedDir))
+              object <- .prepareFileBackedRaster(object, repoDir = filebackedDir)
+            object
 })
 
 ################################################################################
