@@ -54,5 +54,5 @@ This is still experimental, see examples.
 }
 \seealso{
 \code{\link{cloudCache}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
-  \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
+  \code{\link{cloudCheckOld}}
 }

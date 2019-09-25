@@ -37,7 +37,7 @@ cloudCheckOld <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL
 #' @export
 #' @importFrom data.table data.table rbindlist
 #' @importFrom googledrive as_id drive_update drive_upload
-#' @seealso \code{\link{cloudSyncCacheOld}}, \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
+#' @seealso \code{\link{cloudSyncCacheOld}}, \code{\link{cloudCheckOld}}
 cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID,
                        futurePlan = getOption("reproducible.futurePlan")) {
   .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
@@ -57,7 +57,7 @@ cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, check
 #' @importFrom data.table setattr
 #' @rdname Deprcated
 #' @seealso \code{\link{cloudSyncCacheOld}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
-#'   \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
+#'   \code{\link{cloudCheckOld}}
 cloudCache <- function(...) {
   .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
   return(invisible())
@@ -100,7 +100,7 @@ cloudCache <- function(...) {
 #' @importFrom data.table data.table rbindlist
 #' @importFrom googledrive as_id drive_rm drive_upload
 #' @seealso \code{\link{cloudCache}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
-#'   \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
+#'   \code{\link{cloudCheckOld}}
 #' @examples
 cloudSyncCacheOld <- function(cacheRepo = getOption("reproducible.cachePath"),
                               checksumsFileID = NULL, cloudFolderID = NULL,
