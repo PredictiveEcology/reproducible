@@ -18,6 +18,24 @@ test_that("test miscellaneous fns", {
   expect_is(objSize(asPath(b)), "numeric")
   expect_is(objSize(asPath(b), quick = TRUE), "object_size")
 
+  # objSizeSession
+  mess <- capture.output(d <- objSizeSession())
+  expect_true(is.list(d))
+  g <- unlist(d)
+  expect_true(any(grepl("package", names(g))))
+
+  mess <- capture.output(d <- objSizeSession(1))
+  expect_true(is.list(d))
+  g <- unlist(d)
+  expect_true(any(grepl("package", names(g))))
+  expect_true(all(names(g) %in% search() ))
+
+  mess <- capture.output(d1 <- objSizeSession(enclosingEnvs = FALSE))
+  expect_true(is.list(d1))
+  g <- unlist(d1)
+  expect_true(any(grepl("package", names(g))))
+  expect_true(sum(unlist(d1)) < sum(unlist(d)))
+
   # convertRasterPaths
   filenames <- normalizePath(c("/home/user1/Documents/file.txt", "/Users/user1/Documents/file.txt"),
                               winslash = "/", mustWork = FALSE)
