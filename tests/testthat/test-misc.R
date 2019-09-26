@@ -22,19 +22,26 @@ test_that("test miscellaneous fns", {
   mess <- capture.output(d <- objSizeSession())
   expect_true(is.list(d))
   g <- unlist(d)
+  expect_true(is.numeric(g))
   expect_true(any(grepl("package", names(g))))
 
   mess <- capture.output(d <- objSizeSession(1))
   expect_true(is.list(d))
   g <- unlist(d)
+  expect_true(is.numeric(g))
   expect_true(any(grepl("package", names(g))))
   expect_true(all(names(g) %in% search() ))
 
   mess <- capture.output(d1 <- objSizeSession(enclosingEnvs = FALSE))
   expect_true(is.list(d1))
   g <- unlist(d1)
+  expect_true(is.numeric(g))
   expect_true(any(grepl("package", names(g))))
   expect_true(sum(unlist(d1)) < sum(unlist(d)))
+
+  mess <- capture.output(d <- objSizeSession(0))
+  expect_true(!is.list(d))
+  expect_true(is.numeric(d))
 
   # convertRasterPaths
   filenames <- normalizePath(c("/home/user1/Documents/file.txt", "/Users/user1/Documents/file.txt"),
