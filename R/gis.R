@@ -111,17 +111,20 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     message("fastMask is using sf and fasterize")
 
     if (!identical(crs(y), crs(x))) {
-      y <- spTransform(x = y, CRSobj = crs(x))
+      if (!is(y, "sf")) {
+        y <- spTransform(x = y, CRSobj = crs(x))
+      } else {
+        y <- st_transform(x = y, crs = crs(x))
+      }
     }
 
-    if (!is(y, "SpatialPolygonsDataFrame")) {
-      y <- SpatialPolygonsDataFrame(Sr = y, data = data.frame(ID = seq(length(y))),
-                                    match.ID = FALSE)
+    if (is(y, "SpatialPolygons")) {
+      if (!is(y, "SpatialPolygonsDataFrame")) {
+        y <- SpatialPolygonsDataFrame(Sr = y, data = data.frame(ID = seq(length(y))),
+                                      match.ID = FALSE)
+      }
     }
 
-    #numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
-    #  is.numeric(y[[x]])
-    #})))[1]]
     if (!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)) {
      #call gdal
       message("fastMask is using gdalwarp")
@@ -199,13 +202,16 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       x <- raster(tempDstRaster)
     } else {
       extentY <- extent(y)
-      if (xmin(x) < xmin(extentY) && xmax(x) > xmax(extentY) &&
-          ymin(x) < ymin(extentY) && ymax(x) > ymax(extentY) )
+      resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
+      if ( (xmin(x) + resX[1]) < xmin(extentY) && (xmax(x) - resX[1]) > xmax(extentY) &&
+           (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
         x <- cropInputs(x, y)
-      a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+      if (!is(y, "sf")) {
+        y <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+      }
       if (canProcessInMemory(x, 3) && fromDisk(x))
         x[] <- x[]
-      m <- is.na(a[])
+      m <- is.na(y[])
       x[m] <- NA
 
       if (nlayers(x) > 1) {
