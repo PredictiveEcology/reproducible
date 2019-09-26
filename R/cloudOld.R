@@ -101,7 +101,6 @@ cloudCache <- function(...) {
 #' @importFrom googledrive as_id drive_rm drive_upload
 #' @seealso \code{\link{cloudCache}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
 #'   \code{\link{cloudCheckOld}}
-#' @examples
 cloudSyncCacheOld <- function(cacheRepo = getOption("reproducible.cachePath"),
                               checksumsFileID = NULL, cloudFolderID = NULL,
                               delete = TRUE, upload = TRUE, download = !delete,
