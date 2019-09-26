@@ -1,7 +1,4 @@
 test_that("prepInputs doesn't work (part 1)", {
-  testthat::skip_on_cran()
-  testthat::skip_on_travis()
-  testthat::skip_on_appveyor()
 
   testInitOut <- testInit(c("raster", "sf"), opts = list(
     "rasterTmpDir" = file.path(tempdir(), "raster"),
