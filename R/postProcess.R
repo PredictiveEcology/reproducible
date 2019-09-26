@@ -213,7 +213,7 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
 #' @importFrom rgeos gIsValid
-#' @importFrom sp SpatialPolygonsDataFrame spTransform CRS
+#' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
 #' @rdname cropInputs
 cropInputs <- function(x, studyArea, rasterToMatch, ...) {
   UseMethod("cropInputs")
@@ -249,17 +249,25 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
     # have to project the extent to the x projection so crop will work -- this is temporary
     #   once cropped, then cropExtent should be rm
-    cropExtent <- if (identical(crs(x), crs(cropTo))) {
+    crsX <- crs(x)
+    crsCropTo <- crs(cropTo)
+    if (is(crsX, "CRS")) crsX <- proj4string(x)
+    if (is(crsCropTo, "CRS")) crsCropTo <- proj4string(cropTo)
+    cropExtent <- if (identical(crsX, crsCropTo)) {
       extent(cropTo)
     } else {
       if (!is.null(rasterToMatch)) {
-        projectExtent(cropTo, crs(x))
+        projectExtent(cropTo, crsX)
       } else {
         if (is(studyArea, "Spatial")) {
           #theExtent <- as(extent(cropTo), "SpatialPolygons")
-          #crs(theExtent) <- crs(cropTo)
-          raster::extent(spTransform(x = cropTo, CRSobj = crs(x)))
+          #crs(theExtent) <- crsCropTo
+          raster::extent(spTransform(x = cropTo, CRSobj = crsX))
+        } else if (is(studyArea, "sf")) {
+          extent(st_transform(cropTo, crs = crsX))
         } else {
+          message("cropInputs must have a rasterToMatch raster, or studyArea Spatial or sf object. ",
+                  "Returning result with no cropping.")
           NULL
         }
       }
@@ -324,9 +332,9 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
       }
     }
 
-    if (!identical(crs(x), crs(cropExtent))) {
-      crs(cropExtent) <- crs(x)
-    }
+    # if (!identical(crs(x), crs(cropExtent))) {
+    #   crs(cropExtent) <- crs(x)
+    # }
 
     if (!is.null(cropExtent)) {
       # crop it
@@ -1343,7 +1351,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     useBuffer <- FALSE
     bufferSA <- FALSE
 
-    if (class(x) == "RasterLayer") {
+    if (is(x, "RasterLayer")) {
       #if all CRS are projected, then check if buffer is necessary
       projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
       projections <- na.omit(projections)
@@ -1368,8 +1376,13 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       } else {
         bufferSA <- TRUE
         origStudyArea <- studyArea
-        studyArea <- sp::spTransform(studyArea, CRSobj = crs(x))
-        studyArea <- raster::buffer(studyArea, width = max(res(x)) * 1.5)
+        if (!is(studyArea, "sf")) {
+          studyArea <- sp::spTransform(studyArea, CRSobj = crs(x))
+          studyArea <- raster::buffer(studyArea, width = max(res(x)) * 1.5)
+        } else {
+          studyArea <- st_transform(studyArea, crs = crs(x))
+          studyArea <- st_buffer(studyArea, dist = max(res(x)) * 1.5)
+        }
         #confirm you could only pass study area, because buffering will require reprojecting first.
         #buffer studyArea
       }
