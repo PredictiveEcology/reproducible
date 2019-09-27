@@ -969,6 +969,15 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     dig <- fastdigest(append(list(dim(object), res(object), crs(object),
                               extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
 
+  sn <- slotNames(object@file)
+  sn <- sn[!(sn %in% c("name"))]
+  fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    digFile <- digest(fileSlotsToDigest, algo = algo) # don't include object@file -- these are volatile
+  else
+    digFile <- fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
+
+  dig <- c(dig, digFile)
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
     filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
@@ -978,7 +987,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     }
     # there is no good reason to use depth = 0, 1, or 2 or more -- but I think 2 is *more* reliable
     dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
-    dig <- c(dig, dig2)
+    dig <- c(dig, unname(dig2))
   }
 
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
