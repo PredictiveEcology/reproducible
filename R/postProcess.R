@@ -1062,16 +1062,27 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         filename2 <- filename3
       }
     }
-    xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
-    #Before changing to do.call, dots were not being added.
-    # This is a bug in writeRaster was spotted with crs of xTmp became
-    # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
-    # should have stayed at
-    # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
-    if (!identical(crs(xTmp), crs(x)))
-      crs(xTmp) <- crs(x)
+    # There is a weird thing that doing a writeRaster changes the digest of the file, even
+    #   when the object is identical, confirmed by loading each into R, and comparing everything
+    # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
+    if (fromDisk(x)) {
+      file.copy(filename(x), filename2, overwrite = overwrite)
+      x@file@name <- filename2
+      if (dots$datatype != dataType(x)) {
+        dataType(x) <- dots$datatype
+      }
+    } else {
+      xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
+      #Before changing to do.call, dots were not being added.
+      # This is a bug in writeRaster was spotted with crs of xTmp became
+      # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+      # should have stayed at
+      # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
+      if (!identical(crs(xTmp), crs(x)))
+        crs(xTmp) <- crs(x)
 
-    x <- xTmp
+      x <- xTmp
+    }
   }
   x
 }
