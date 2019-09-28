@@ -74,8 +74,30 @@ test_that("test miscellaneous fns", {
 
   # helpers.R
   a <- getCRANrepos(NULL)
-  is.character(a)
+  expect_true(is.character(a))
 
+  a <- getCRANrepos("")
+  expect_true(grepl("https://cloud.r-project.org", a))
+
+  expect_silent(b <- retry(rnorm(1), retries = 1, silent = TRUE))
+  expect_error(b <- retry(stop(), retries = 1, silent = TRUE))
+
+  expect_true(identical(NULL, basename2(NULL)))
+  a <- .formalsNotInCurrentDots(rnorm, n = 1, b = 2)
+  b <- .formalsNotInCurrentDots(rnorm, dots = list(n = 1, b = 2))
+  expect_identical(a,b)
+
+  a <- reproducibleOptions()
+  a1 <- a[sapply(a, function(x) !is.null(x))]
+  b <- options()
+  saveRDS(b, file = "/home/emcintir/tmp/out1.rds")
+  saveRDS(a1, file = "/home/emcintir/tmp/out2.rds")
+  expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(match(names(b),names(a1)))]))))
+  omit <- c("reproducible.ask", "reproducible.overwrite", "reproducible.cachePath")
+  b1 <- b[names(a1)]
+  b1 <- b1[!names(b1) %in% omit]
+  a2 <- a1[!names(a1) %in% omit]
+  expect_true(identical(b1, a2))
   # opt <- getOption("repos")
   # on.exit(options("repos" = opt),
   #         add = TRUE)
@@ -93,3 +115,4 @@ test_that("test miscellaneous fns", {
 
 
 })
+

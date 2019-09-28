@@ -27,7 +27,7 @@ getCRANrepos <- function(repos = NULL) {
         chooseCRANmirror() ## sets repo option
         getOption("repos")["CRAN"]
       } else {
-        "https://cloud.R-project.org"
+        "https://cloud.r-project.org"
       }
     }
   }
