@@ -161,3 +161,21 @@ test_that("test cache-helpers with stacks", {
   file.remove(tmpfile2)
   expect_error(b <- .prepareFileBackedRaster(s, tmpCache), "The following file-backed rasters")
 })
+
+##########################
+test_that("test miscellaneous unit tests cache-helpers", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  mess <- capture_messages(clearCache(cacheRepo = tmpCache))
+  expect_true(grepl("x not specified, but cacheRepo is", mess))
+  expect_error(clearCache(x = tmpCache, useCloud = TRUE,
+                          cloudFolderID = NULL))
+
+  skip(message = "not ready yet")
+  browser()
+  cc(10)
+
+})
