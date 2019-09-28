@@ -303,7 +303,7 @@ setMethod(
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
-    if (is(x, "simList")) x <- x@paths$cachePath
+    # if (is(x, "simList")) x <- x@paths$cachePath
 
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
@@ -370,7 +370,7 @@ setMethod(
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
-    if (is(x, "simList")) x <- x@paths$cachePath
+    # if (is(x, "simList")) x <- x@paths$cachePath
 
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    list(...))

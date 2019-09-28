@@ -803,7 +803,7 @@ if (any(saveFilename != curFilename)) {
     }
   if (any(!notSameButBacked)) {
       ## deal with files that haven't been backed
-      checkPath(dirname(saveFilename[!notSameButBacked]), create = TRUE) #SpaDES dependency
+      checkPath(unique(dirname(saveFilename[!notSameButBacked])), create = TRUE) #SpaDES dependency
       if (any(!whichInMemory[!notSameButBacked])) {
         if (!isStack) {
           obj <- writeRaster(obj, filename = saveFilename[!notSameButBacked], datatype = dataType(obj))

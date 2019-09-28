@@ -113,11 +113,12 @@ setMethod(
 
         dirsThatExist <- dir.exists(path)
         if (any(!dirsThatExist)) {
-          if (file.exists(path)) {
-            message("That path is an existing file")
+          isExistingFile <- file.exists(path)
+          if (all(isExistingFile)) {
+            message("That path is an existing file(s)")
           } else {
             if (create == TRUE) {
-              lapply(path[!dirsThatExist], function(pth) {
+              lapply(path[!dirsThatExist[!isExistingFile]], function(pth) {
                 dir.create(file.path(pth), recursive = TRUE, showWarnings = FALSE)
               })
             } else {
