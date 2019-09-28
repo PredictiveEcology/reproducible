@@ -109,7 +109,7 @@ setMethod(
         x <- getOption("reproducible.cachePath")[1]
       }
     }
-    if (is(x, "simList")) x <- x@paths$cachePath
+    #if (is(x, "simList")) x <- x@paths$cachePath
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
     clearWholeCache <- all(missing(userTags), missing(after), missing(before))
@@ -137,22 +137,21 @@ setMethod(
     }
 
     if (clearWholeCache) {
-      if (isInteractive()) {
-        cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
-        class(cacheSize) <- "object_size"
-        formattedCacheSize <- format(cacheSize, "auto")
 
-        if (isTRUE(ask)) {
-          if (isInteractive()) {
-            message("Your current cache size is ", formattedCacheSize, ".\n",
-                    " Are you sure you would like to delete it all? Y or N")
-            rl <- readline()
-            if (!identical(toupper(rl), "Y")) {
-              message("Aborting clearCache")
-              return(invisible())
-            }
+      if (isTRUE(ask)) {
+        if (isInteractive()) {
+          cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
+          class(cacheSize) <- "object_size"
+          formattedCacheSize <- format(cacheSize, "auto")
+          message("Your current cache size is ", formattedCacheSize, ".\n",
+                  " Are you sure you would like to delete it all? Y or N")
+          rl <- readline()
+          if (!identical(toupper(rl), "Y")) {
+            message("Aborting clearCache")
+            return(invisible())
           }
         }
+
       }
       unlink(file.path(x, "gallery"), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
@@ -194,10 +193,10 @@ setMethod(
       }
 
       if (isInteractive()) {
-        class(cacheSize) <- "object_size"
-        formattedCacheSize <- format(cacheSize, "auto")
         if (isTRUE(ask)) {
           if (isInteractive()) {
+            class(cacheSize) <- "object_size"
+            formattedCacheSize <- format(cacheSize, "auto")
             message("Your size of your selected objects is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")
             rl <- readline()
