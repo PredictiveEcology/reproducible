@@ -90,8 +90,6 @@ test_that("test miscellaneous fns", {
   a <- reproducibleOptions()
   a1 <- a[sapply(a, function(x) !is.null(x))]
   b <- options()
-  saveRDS(b, file = "/home/emcintir/tmp/out1.rds")
-  saveRDS(a1, file = "/home/emcintir/tmp/out2.rds")
   expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(match(names(b),names(a1)))]))))
   omit <- c("reproducible.ask", "reproducible.overwrite", "reproducible.cachePath")
   b1 <- b[names(a1)]
