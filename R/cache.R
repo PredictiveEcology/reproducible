@@ -1173,18 +1173,6 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   list(outputHash = res, preDigest = preDigest)
 }
 
-#' @keywords internal
-warnonce <- function(id, ...) {
-  if (!isTRUE(get0(flag <- paste0("warned.", as.character(id)[1L]),
-                   .reproEnv, ifnotfound = FALSE))) {
-    assign(flag, TRUE, envir = .reproEnv)
-    cl <- match.call()
-    cl$id <- NULL
-    cl[[1L]] <- as.name("warning")
-    eval.parent(cl)
-  }
-}
-
 #' @importFrom data.table setDT setkeyv
 #' @keywords internal
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
