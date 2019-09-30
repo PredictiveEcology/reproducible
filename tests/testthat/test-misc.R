@@ -112,18 +112,16 @@ test_that("test miscellaneous fns", {
   # expect_true(identical(unrar$fun, "unrar"))
   # expect_error( .unzipOrUnTar(unrar$fun, files = "", args = list(exdir = tmpCache)))
 
-  skip(message = "whatever")
-  browser()
   testthat::with_mock(
-    `isInteractive` = function() TRUE,
-    `chooseCRANmirror2` = function() {
+    "reproducible::isInteractive" = function() TRUE,
+    "reproducible::chooseCRANmirror2" = function() {
       repos <- NULL
       repos2 <- "https://cloud.r-project.org"
       repos["CRAN"] <- repos2
       options("repos" = repos)},
     {
       out <- getCRANrepos()
-      out
+      expect_true(identical("https://cloud.r-project.org", unname(out)))
     }
   )
 

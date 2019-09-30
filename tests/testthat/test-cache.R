@@ -20,6 +20,8 @@ test_that("test file-backed raster caching", {
 
   # Using mock interactive function
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
+  # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
+  #   solves the error about not being in the testthat package
   with_mock(
     "reproducible::isInteractive" = function() TRUE,
     {
