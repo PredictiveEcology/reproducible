@@ -1,124 +1,124 @@
-# test_that("preProcess works for .tar files", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tar"
-#   ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-#   testthat::expect_is(object = ras, class = "list")
-#   testthat::expect_true(file.exists(ras$targetFilePath))
-# })
-#
-# test_that("preProcess works for .zip when provided only url and destinationPath", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-#   ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-#   testthat::expect_is(object = ras, class = "list")
-#   testthat::expect_true(file.exists(ras$targetFilePath))
-# })
-#
-# test_that("preProcess works with only url", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-#   ras <- reproducible::preProcess(url = url)
-#   testthat::expect_is(object = ras, class = "list")
-#   testthat::expect_true(file.exists(ras$targetFilePath))
-# })
-#
-# test_that("preProcess works when provides only archive", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-#   pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-#   testthat::expect_is(object = pre, class = "list")
-#   ras <- reproducible::preProcess(archive = file.path(pre$destinationPath,
-#                                                       list.files(pre$destinationPath)[
-#                                                         grepl(x = list.files(pre$destinationPath),
-#                                                               pattern = ".zip|.tar")]))
-#   testthat::expect_is(object = ras, class = "list")
-# })
-#
-# test_that("preProcess works when provides archive and destinationPath", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-#   pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-#   testthat::expect_is(object = pre, class = "list")
-#   ras <- reproducible::preProcess(archive = file.path(pre$destinationPath,
-#                                                       list.files(pre$destinationPath)[
-#                                                         grepl(x = list.files(pre$destinationPath),
-#                                                               pattern = ".zip|.tar")]),
-#                                   destinationPath = tmpdir)
-#   testthat::expect_is(object = ras, class = "list")
-# })
-#
-# test_that("preProcess works when provides only targetFile", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-#   pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-#   testthat::expect_is(object = pre, class = "list")
-#   ras <- reproducible::preProcess(targetFile = pre$targetFilePath)
-#   testthat::expect_is(object = ras, class = "list")
-# })
-#
-# test_that("preProcess works when provides targetfile and destinationPath", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-#   pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-#   testthat::expect_is(object = pre, class = "list")
-#   ras <- reproducible::preProcess(targetFile = pre$targetFilePath,
-#                                   destinationPath = tmpdir)
-#   testthat::expect_is(object = ras, class = "list")
-# })
-#
-# test_that("preProcess works when provides url, archive, targetfile and destinationPath", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-#   ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
-#                                   archive = "rasterTest.zip", destinationPath = tmpdir)
-#   testthat::expect_is(object = ras, class = "list")
-#   testthat::expect_true(file.exists(ras$targetFilePath))
-# })
-#
-# test_that("preProcess works when provides url, targetfile and destinationPath", {
-#   skip_on_cran()
-#   testInitOut <- testInit("raster", needGoogle = FALSE)
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-#   ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
-#                                   destinationPath = tmpdir)
-#   testthat::expect_is(object = ras, class = "list")
-#   testthat::expect_true(file.exists(ras$targetFilePath))
-# })
+test_that("preProcess works for .tar files", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tar"
+  ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works for .zip when provided only url and destinationPath", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works with only url", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  ras <- reproducible::preProcess(url = url)
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works when provides only archive", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  testthat::expect_is(object = pre, class = "list")
+  ras <- reproducible::preProcess(archive = file.path(pre$destinationPath,
+                                                      list.files(pre$destinationPath)[
+                                                        grepl(x = list.files(pre$destinationPath),
+                                                              pattern = ".zip|.tar")]))
+  testthat::expect_is(object = ras, class = "list")
+})
+
+test_that("preProcess works when provides archive and destinationPath", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  testthat::expect_is(object = pre, class = "list")
+  ras <- reproducible::preProcess(archive = file.path(pre$destinationPath,
+                                                      list.files(pre$destinationPath)[
+                                                        grepl(x = list.files(pre$destinationPath),
+                                                              pattern = ".zip|.tar")]),
+                                  destinationPath = tmpdir)
+  testthat::expect_is(object = ras, class = "list")
+})
+
+test_that("preProcess works when provides only targetFile", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  testthat::expect_is(object = pre, class = "list")
+  ras <- reproducible::preProcess(targetFile = pre$targetFilePath)
+  testthat::expect_is(object = ras, class = "list")
+})
+
+test_that("preProcess works when provides targetfile and destinationPath", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  testthat::expect_is(object = pre, class = "list")
+  ras <- reproducible::preProcess(targetFile = pre$targetFilePath,
+                                  destinationPath = tmpdir)
+  testthat::expect_is(object = ras, class = "list")
+})
+
+test_that("preProcess works when provides url, archive, targetfile and destinationPath", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
+                                  archive = "rasterTest.zip", destinationPath = tmpdir)
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
+
+test_that("preProcess works when provides url, targetfile and destinationPath", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
+                                  destinationPath = tmpdir)
+  testthat::expect_is(object = ras, class = "list")
+  testthat::expect_true(file.exists(ras$targetFilePath))
+})
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
