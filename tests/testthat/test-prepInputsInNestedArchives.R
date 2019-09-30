@@ -96,12 +96,13 @@ test_that(paste("prepInputs in a two files double nested rar file,",
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  err <- capture_error(hasUnrar <- .unrarExists())
+  suppressWarnings(err <- capture_error(hasUnrar <- .unrarExists()))
   if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
+  if (!nzchar(hasUnrar)) hasUnrar <- NULL
   if (is.null(hasUnrar)) {
-    expect_error(testRar <- reproducible::prepInputs(
+    warn <- capture_warnings(expect_error(testRar <- reproducible::prepInputs(
       url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
-      destinationPath = tmpdir))
+      destinationPath = tmpdir)))
   } else {
     testRar <- reproducible::prepInputs(
       url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
@@ -121,8 +122,9 @@ test_that(
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  err <- capture_error(hasUnrar <- .unrarExists())
+  suppressWarnings(err <- capture_error(hasUnrar <- .unrarExists()))
   if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
+  if (!nzchar(hasUnrar)) hasUnrar <- NULL
   url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
   if (is.null(hasUnrar)) {
     expect_error(testRar2 <- reproducible::prepInputs(url = url,
@@ -145,8 +147,9 @@ test_that(paste0("prepInputs in a two files double nested rar file, with the wan
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  err <- capture_error(hasUnrar <- .unrarExists())
+  suppressWarnings(err <- capture_error(hasUnrar <- .unrarExists()))
   if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
+  if (!nzchar(hasUnrar)) hasUnrar <- NULL
   url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
   if (is.null(hasUnrar)) {
     expect_error(testRar3 <- reproducible::prepInputs(url = url,
@@ -172,8 +175,9 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  err <- capture_error(hasUnrar <- .unrarExists())
+  suppressWarnings(err <- capture_error(hasUnrar <- .unrarExists()))
   if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
+  if (!nzchar(hasUnrar)) hasUnrar <- NULL
   url <- "https://github.com/tati-micheletti/host/raw/master/data/testRasterNested.rar"
   if (is.null(hasUnrar)) {
     expect_error(testRar4 <- reproducible::prepInputs(url = url,

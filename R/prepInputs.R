@@ -880,6 +880,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           })
         } else {
           # On Linux/MacOS
+          unRarExists <- .unrarExists()
+          if (isTRUE(!nzchar(unRarExists)))
+            stop("unrar is not on this system; please install it")
           filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
         }
         if (exists("warn") && isTRUE(any(grepl("had status 2", warn))))
