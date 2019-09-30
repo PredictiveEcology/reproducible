@@ -881,7 +881,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         } else {
           # On Linux/MacOS
           unRarExists <- .unrarExists()
-          if (isTRUE(!nzchar(unRarExists)))
+          if (is.null(unRarExists))
             stop("unrar is not on this system; please install it")
           filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
         }
@@ -939,7 +939,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
         SevenZrarExists <- SevenZrarExists[grepl("installed", SevenZrarExists)]
         if (length(SevenZrarExists) == 0)
-          stop("It looks like you are using a non-Windows system; to extract .rar files, ",
+          message("It looks like you are using a non-Windows system; to extract .rar files, ",
                "you will need p7zip-rar, not just p7zip-full. Try: \n",
                "--------------------------\n",
                "sudo apt install p7zip-rar\n",
@@ -964,9 +964,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                                    full.names = TRUE)
             if (hasUnrar == "" || length(hasUnrar) == 0) {
               hasUnrar <- NULL
-              warning(missingUnrarMess)
+              message(missingUnrarMess)
             } else {
-              warning("The extracting software was found in an unusual location: ", hasUnrar, ".",
+              message("The extracting software was found in an unusual location: ", hasUnrar, ".",
                       "If you receive an error when extracting the archive, please install '7zip' or 'unrar'",
                       " in 'Program Files' folder")
             }
@@ -974,7 +974,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           hasUnrar <- hasUnrar[1]
         }
       } else {
-        warning(missingUnrarMess,
+        message(missingUnrarMess,
              "Try installing with, say: \n",
              "--------------------------\n",
              "sudo apt-get install p7zip p7zip-rar p7zip-full -y\n",
@@ -984,6 +984,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 
       }
     }
+    if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
+    if (!nzchar(hasUnrar)) hasUnrar <- NULL
+
   return(hasUnrar)
 }
 

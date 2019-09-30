@@ -96,9 +96,7 @@ test_that(paste("prepInputs in a two files double nested rar file,",
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  suppressWarnings(err <- capture_error(hasUnrar <- .unrarExists()))
-  if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
-  if (!nzchar(hasUnrar)) hasUnrar <- NULL
+  hasUnrar <- .unrarExists()
   if (is.null(hasUnrar)) {
     warn <- capture_warnings(expect_error(testRar <- reproducible::prepInputs(
       url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
@@ -122,9 +120,7 @@ test_that(
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  suppressWarnings(err <- capture_error(hasUnrar <- .unrarExists()))
-  if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
-  if (!nzchar(hasUnrar)) hasUnrar <- NULL
+  hasUnrar <- .unrarExists()
   url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
   if (is.null(hasUnrar)) {
     expect_error(testRar2 <- reproducible::prepInputs(url = url,
@@ -147,9 +143,7 @@ test_that(paste0("prepInputs in a two files double nested rar file, with the wan
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  suppressWarnings(err <- capture_error(hasUnrar <- .unrarExists()))
-  if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
-  if (!nzchar(hasUnrar)) hasUnrar <- NULL
+  hasUnrar <- .unrarExists()
   url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
   if (is.null(hasUnrar)) {
     expect_error(testRar3 <- reproducible::prepInputs(url = url,
@@ -175,9 +169,7 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  suppressWarnings(err <- capture_error(hasUnrar <- .unrarExists()))
-  if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
-  if (!nzchar(hasUnrar)) hasUnrar <- NULL
+  hasUnrar <- .unrarExists()
   url <- "https://github.com/tati-micheletti/host/raw/master/data/testRasterNested.rar"
   if (is.null(hasUnrar)) {
     expect_error(testRar4 <- reproducible::prepInputs(url = url,
