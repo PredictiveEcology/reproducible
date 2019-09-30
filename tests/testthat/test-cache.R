@@ -20,14 +20,13 @@ test_that("test file-backed raster caching", {
 
   # Using mock interactive function
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
-  testthat::with_mock(
-    `isInteractive` = function() TRUE,
+  with_mock(
+    "reproducible::isInteractive" = function() TRUE,
     {
       aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2")
       # Test clearCache by tags
       expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
       clearCache(tmpdir, userTags = "something$", ask = FALSE)
-    })
       expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
       clearCache(tmpdir, userTags = "something2", ask = FALSE)
       expect_equal(NROW(showCache(tmpdir)), 0)
@@ -138,6 +137,8 @@ test_that("test file-backed raster caching", {
       expect_true(NROW(raster::levels(bb)[[1]]) == 30)
 
       clearCache(tmpdir, ask = FALSE)
+   })
+
 
 })
 

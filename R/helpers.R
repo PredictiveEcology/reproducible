@@ -24,7 +24,7 @@ getCRANrepos <- function(repos = NULL) {
       cranRepo
     } else {
       if (isInteractive()) {
-        chooseCRANmirror() ## sets repo option
+        chooseCRANmirror2() ## sets repo option
         getOption("repos")["CRAN"]
       } else {
         "https://cloud.r-project.org"
@@ -35,6 +35,11 @@ getCRANrepos <- function(repos = NULL) {
   return(repos)
 }
 
+#' @importFrom utils chooseCRANmirror
+#' @keywords internal
+chooseCRANmirror2 <- function() {
+  chooseCRANmirror()
+}
 #' Add a prefix or suffix to the basename part of a file path
 #'
 #' Prepend (or postpend) a filename with a prefix (or suffix).
@@ -104,7 +109,7 @@ rndstr <- function(n = 1, len = 8) {
 #' This is a suggestion from
 #' \url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}
 #' as a way to test interactive code in unit tests. Basically, in the unit tests,
-#' we use \code{testthat::use_mock}, and inside that we redefine \code{isInteractive}
+#' we use \code{testthat::with_mock}, and inside that we redefine \code{isInteractive}
 #' just for the test. In all other times, this returns the same things as
 #' \code{interactive()}.
 #' @examples

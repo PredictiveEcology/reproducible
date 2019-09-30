@@ -26,7 +26,7 @@ testthat::with_mock(
 \keyword{This}
 \keyword{\code{interactive()}.}
 \keyword{\code{isInteractive}}
-\keyword{\code{testthat::use_mock},}
+\keyword{\code{testthat::with_mock},}
 \keyword{\url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}}
 \keyword{a}
 \keyword{all}
