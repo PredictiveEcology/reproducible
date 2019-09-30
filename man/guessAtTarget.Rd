@@ -7,7 +7,7 @@
 \usage{
 .guessAtTargetAndFun(targetFilePath,
   destinationPath = getOption("reproducible.destinationPath", "."),
-  filesExtracted, fun)
+  filesExtracted, fun = NULL)
 }
 \arguments{
 \item{destinationPath}{Full path of the directory where the target file should be}

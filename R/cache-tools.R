@@ -137,9 +137,8 @@ setMethod(
     }
 
     if (clearWholeCache) {
-
-      if (isTRUE(ask)) {
-        if (isInteractive()) {
+      if (isInteractive()) {
+        if (isTRUE(ask)) {
           cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
           class(cacheSize) <- "object_size"
           formattedCacheSize <- format(cacheSize, "auto")
@@ -193,10 +192,9 @@ setMethod(
       }
 
       if (isInteractive()) {
-        if (isTRUE(ask)) {
-          if (isInteractive()) {
-            class(cacheSize) <- "object_size"
-            formattedCacheSize <- format(cacheSize, "auto")
+          class(cacheSize) <- "object_size"
+          formattedCacheSize <- format(cacheSize, "auto")
+          if (isTRUE(ask)) {
             message("Your size of your selected objects is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")
             rl <- readline()
@@ -205,7 +203,6 @@ setMethod(
               return(invisible())
             }
           }
-        }
       }
 
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {

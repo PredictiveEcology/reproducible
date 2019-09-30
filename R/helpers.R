@@ -99,7 +99,25 @@ rndstr <- function(n = 1, len = 8) {
   }))
 }
 
+#' Alternative to \code{interactive()} for unit testing
 #' @keywords internal
+#' This is a suggestion from
+#' \url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}
+#' as a way to test interactive code in unit tests. Basically, in the unit tests,
+#' we use \code{testthat::use_mock}, and inside that we redefine \code{isInteractive}
+#' just for the test. In all other times, this returns the same things as
+#' \code{interactive()}.
+#' @examples
+#' \dontrun{
+#' testthat::with_mock(
+#' `isInteractive` = function() {browser(); TRUE},
+#' {
+#'   tmpdir <- tempdir()
+#'   aa <- Cache(rnorm, 1, cacheRepo = tmpdir, userTags = "something2")
+#'   # Test clearCache -- has an internal isInteractive() call
+#'   clearCache(tmpdir, ask = FALSE)
+#'   })
+#'   }
 isInteractive <- function() interactive()
 
 #' A version of \code{base::basename} that is \code{NULL} resistant
