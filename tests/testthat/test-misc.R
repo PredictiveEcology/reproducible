@@ -96,20 +96,35 @@ test_that("test miscellaneous fns", {
   b1 <- b1[!names(b1) %in% omit]
   a2 <- a1[!names(a1) %in% omit]
   expect_true(identical(b1, a2))
-  # opt <- getOption("repos")
-  # on.exit(options("repos" = opt),
-  #         add = TRUE)
-  # namedSite <- c(CRAN = "https://cloud.R-project.org")
-  #
-  # with_mock(
-  #   `isInteractive` = function() TRUE,
-  #   `chooseCRANmirror` = function () options("repos" = namedSite),
-  #   a <- getCRANrepos(""),
-  #   print(a),
-  #   expect_true(identical(tolower(unname(a)) , tolower(unname(getOption("repos")["CRAN"])))),
-  #   a <- getCRANrepos("@CRAN@"),
-  #   expect_true(identical(tolower(unname(a)) , tolower(unname(getOption("repos")["CRAN"]))))
-  # )
+
+  expect_error(.guessAtTargetAndFun(fun = rnorm), "fun must be a")
+  expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "", fun = "load"),
+                 "Don't know which file to load")
+  expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "hi.rds", fun = "readRDS"),
+                 "targetFile was not specified.  Trying readRDS")
+  expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = c("hi.rds", "hello.rds"), fun = "readRDS"),
+                 "More than one possible files to load")
+
+  # unrar
+  rarPath <- file.path(tmpdir, "tmp.rar")
+  zip(zipfile = rarPath, files = tmpfile)
+  unrar <- .whichExtractFn(archive = rarPath, args = "")
+  expect_true(identical(unrar$fun, "unrar"))
+  expect_error( .unzipOrUnTar(unrar$fun, files = "", args = list(exdir = tmpCache)))
+
+  testthat::with_mock(
+    "reproducible::isInteractive" = function() TRUE,
+    "reproducible::chooseCRANmirror2" = function() {
+      repos <- NULL
+      repos2 <- "https://cloud.r-project.org"
+      repos["CRAN"] <- repos2
+      options("repos" = repos)},
+    {
+      out <- getCRANrepos()
+      expect_true(identical("https://cloud.r-project.org", unname(out)))
+    }
+  )
+
 
 
 })

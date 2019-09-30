@@ -511,7 +511,7 @@ extractFromArchive <- function(archive,
 #' @keywords internal
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
-                                 filesExtracted, fun) {
+                                 filesExtracted, fun = NULL) {
   if (!is.null(fun) && !is.character(fun)) {
     stop("fun must be a character string, not the function")
   }
@@ -596,20 +596,33 @@ extractFromArchive <- function(archive,
 #' @importFrom utils capture.output
 .unzipOrUnTar <- function(fun, args, files, overwrite = TRUE) {
   argList <- list(files = files)
+  if (is.character(fun))
+    if (!fun %in% c("unrar"))
+      fun <- eval(fun)
+
   if (is.character(fun)) {
     message(paste0("The archive is a .rar file. preProcess will try a system call of 'unrar'."))
     hasUnrar <- .testForUnrar()
     tempDir <- file.path(args$exdir, "extractedFiles") %>%
       checkPath(create = TRUE)
     if (grepl(x = hasUnrar, pattern = "7z")) {
-      system(
-        paste0("\"", hasUnrar, "\"", " e -o",
+      prependPath <- if (identical("windows", .Platform$OS.type)) {
+        paste0("\"", hasUnrar, "\"")
+      } else {
+        hasUnrar
+      }
+      # This spits out a message on non-Windows about arguments that are ignored
+      suppressMessages(output <- system(
+        paste0(prependPath, " e -aoa -o",
                tempDir, " ",
                args[[1]]),
         wait = TRUE,
+        ignore.stdout = FALSE,
+        ignore.stderr = FALSE,
         invisible = TRUE,
-        show.output.on.console = FALSE
-      )
+        show.output.on.console = FALSE, intern = TRUE
+      ))
+
     } else {
       system(paste0("unrar x ",
                     args[[1]], " ",
@@ -638,7 +651,8 @@ extractFromArchive <- function(archive,
       extractedFiles <- basename(extractedFiles)
     }
   } else {
-    isUnzip <- ("overwrite" %in% names(formals(fun)))
+    # Try the direct, then indirect
+    isUnzip <- if ( identical(unzip, fun)) TRUE else ("overwrite" %in% names(formals(fun)))
     argList <- if (isUnzip) {
       c(argList, overwrite = overwrite)
     } else {
@@ -866,6 +880,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           })
         } else {
           # On Linux/MacOS
+          unRarExists <- .unrarExists()
+          if (is.null(unRarExists))
+            stop("unrar is not on this system; please install it")
           filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
         }
         if (exists("warn") && isTRUE(any(grepl("had status 2", warn))))
@@ -910,32 +927,66 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @rdname unrarExists
 #' @name unrarExists
 .unrarExists <- function() {
-    hasUnrar <- ""
-    hasUnrar <- Sys.which("unrar")
-    if (hasUnrar == "") {
-      hasUnrar <- Sys.which("7z.exe")
-      if (hasUnrar == "") {
-        message("prepInputs is looking for 'unrar' or '7z' in your system...")
-        hasUnrar <- list.files("C:/Program Files",
-                               pattern = "unrar.exe|7z.exe",
-                               recursive = TRUE,
-                               full.names = TRUE)
-        if (hasUnrar == "" || length(hasUnrar) == 0) {
-          hasUnrar <- list.files(dirname(Sys.getenv("SystemRoot")),
+    possPrograms <- c("7z", "unrar")
+    possPrograms <- unique(unlist(lapply(possPrograms, Sys.which)))
+    hasUnrar <- if (!all(possPrograms == "")) {
+      possPrograms[nzchar(possPrograms)][1] # take first one if there are more than one
+    } else {
+      ""
+    }
+    if (!(identical(.Platform$OS.type, "windows"))) {
+      if (grepl("7z", hasUnrar)) {
+        SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
+        SevenZrarExists <- SevenZrarExists[grepl("installed", SevenZrarExists)]
+        if (length(SevenZrarExists) == 0)
+          message("It looks like you are using a non-Windows system; to extract .rar files, ",
+               "you will need p7zip-rar, not just p7zip-full. Try: \n",
+               "--------------------------\n",
+               "sudo apt install p7zip-rar\n",
+               "--------------------------\n"
+          )
+      }
+    }
+
+    if (identical(hasUnrar, "")) {
+      if (identical("windows", tolower(.Platform$OS.type))) {
+        hasUnrar <- Sys.which("7z.exe")
+        if (hasUnrar == "") {
+          message("prepInputs is looking for 'unrar' or '7z' in your system...")
+          hasUnrar <- list.files("C:/Program Files",
                                  pattern = "unrar.exe|7z.exe",
                                  recursive = TRUE,
                                  full.names = TRUE)
           if (hasUnrar == "" || length(hasUnrar) == 0) {
-            hasUnrar <- NULL
-          } else {
-            warning("The extracting software was found in an unusual location: ", hasUnrar, ".",
-                    "If you receive an error when extracting the archive, please install '7zip' or 'unrar'",
-                    " in 'Program Files' folder")
+            hasUnrar <- list.files(dirname(Sys.getenv("SystemRoot")),
+                                   pattern = "unrar.exe|7z.exe",
+                                   recursive = TRUE,
+                                   full.names = TRUE)
+            if (hasUnrar == "" || length(hasUnrar) == 0) {
+              hasUnrar <- NULL
+              message(missingUnrarMess)
+            } else {
+              message("The extracting software was found in an unusual location: ", hasUnrar, ".",
+                      "If you receive an error when extracting the archive, please install '7zip' or 'unrar'",
+                      " in 'Program Files' folder")
+            }
           }
+          hasUnrar <- hasUnrar[1]
         }
-        hasUnrar <- hasUnrar[1]
+      } else {
+        message(missingUnrarMess,
+             "Try installing with, say: \n",
+             "--------------------------\n",
+             "sudo apt-get install p7zip p7zip-rar p7zip-full -y\n",
+             "yum install p7zip p7zip-plugins -y\n",
+             "--------------------------"
+        )
+
       }
     }
+    if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
+    if (!nzchar(hasUnrar)) hasUnrar <- NULL
+
   return(hasUnrar)
 }
 
@@ -975,3 +1026,5 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @rdname unrarPath
 #' @name unrarPath
 .unrarPath <- NULL
+
+missingUnrarMess <- "The archive is a 'rar' archive; your system does not have unrar or 7zip;\n"

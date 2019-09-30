@@ -24,7 +24,7 @@ getCRANrepos <- function(repos = NULL) {
       cranRepo
     } else {
       if (isInteractive()) {
-        chooseCRANmirror() ## sets repo option
+        chooseCRANmirror2() ## sets repo option
         getOption("repos")["CRAN"]
       } else {
         "https://cloud.r-project.org"
@@ -35,6 +35,11 @@ getCRANrepos <- function(repos = NULL) {
   return(repos)
 }
 
+#' @importFrom utils chooseCRANmirror
+#' @keywords internal
+chooseCRANmirror2 <- function() {
+  chooseCRANmirror()
+}
 #' Add a prefix or suffix to the basename part of a file path
 #'
 #' Prepend (or postpend) a filename with a prefix (or suffix).
@@ -99,7 +104,25 @@ rndstr <- function(n = 1, len = 8) {
   }))
 }
 
+#' Alternative to \code{interactive()} for unit testing
 #' @keywords internal
+#' This is a suggestion from
+#' \url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}
+#' as a way to test interactive code in unit tests. Basically, in the unit tests,
+#' we use \code{testthat::with_mock}, and inside that we redefine \code{isInteractive}
+#' just for the test. In all other times, this returns the same things as
+#' \code{interactive()}.
+#' @examples
+#' \dontrun{
+#' testthat::with_mock(
+#' `isInteractive` = function() {browser(); TRUE},
+#' {
+#'   tmpdir <- tempdir()
+#'   aa <- Cache(rnorm, 1, cacheRepo = tmpdir, userTags = "something2")
+#'   # Test clearCache -- has an internal isInteractive() call
+#'   clearCache(tmpdir, ask = FALSE)
+#'   })
+#'   }
 isInteractive <- function() interactive()
 
 #' A version of \code{base::basename} that is \code{NULL} resistant
