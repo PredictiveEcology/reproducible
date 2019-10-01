@@ -442,8 +442,9 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     on.exit(options(opts))
   }
 
-  if (is.null(googledrive::drive_token()))
-    googledrive::drive_auth() ## needed for use on e.g., rstudio-server
+  if (isInteractive())
+    if (is.null(googledrive::drive_token()))
+      googledrive::drive_auth() ## needed for use on e.g., rstudio-server
 
   if (is.null(archive)) {
     fileAttr <- retry(googledrive::drive_get(googledrive::as_id(url)))
