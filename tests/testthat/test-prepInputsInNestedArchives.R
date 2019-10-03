@@ -96,8 +96,8 @@ test_that(paste("prepInputs in a two files double nested rar file,",
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  hasUnrar <- .unrarExists()
-  if (is.null(hasUnrar)) {
+  extractSystemCallPath <- .archiveExtractBinary()
+  if (is.null(extractSystemCallPath)) {
     warn <- capture_warnings(expect_error(testRar <- reproducible::prepInputs(
       url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
       destinationPath = tmpdir)))
@@ -120,9 +120,9 @@ test_that(
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  hasUnrar <- .unrarExists()
+  extractSystemCallPath <- .archiveExtractBinary()
   url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
-  if (is.null(hasUnrar)) {
+  if (is.null(extractSystemCallPath)) {
     expect_error(testRar2 <- reproducible::prepInputs(url = url,
                                                       targetFile = "rasterTOtestRAR.tif",
                                                       destinationPath = tmpdir))
@@ -143,9 +143,9 @@ test_that(paste0("prepInputs in a two files double nested rar file, with the wan
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  hasUnrar <- .unrarExists()
+  extractSystemCallPath <- .archiveExtractBinary()
   url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
-  if (is.null(hasUnrar)) {
+  if (is.null(extractSystemCallPath)) {
     expect_error(testRar3 <- reproducible::prepInputs(url = url,
                                                       archive = "nestedRarTxtFiles.rar",
                                                       targetFile = "rasterTOtestRAR.tif",
@@ -169,9 +169,9 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  hasUnrar <- .unrarExists()
+  extractSystemCallPath <- .archiveExtractBinary()
   url <- "https://github.com/tati-micheletti/host/raw/master/data/testRasterNested.rar"
-  if (is.null(hasUnrar)) {
+  if (is.null(extractSystemCallPath)) {
     expect_error(testRar4 <- reproducible::prepInputs(url = url,
                                                       targetFile = "rasterTest.tif",
                                                       destinationPath = tmpdir,

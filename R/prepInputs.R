@@ -371,7 +371,7 @@ extractFromArchive <- function(archive,
                                needChecksums = 0, filesExtracted = character(),
                                checkSumFilePath = character(), quick = FALSE) {
   if (!is.null(archive)) {
-    if (!(any(c("zip", "tar", "tar.gz", "gz", "rar") %in% file_ext(archive)))) {
+    if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
            "Try extracting manually then placing extracted files in ", destinationPath)
     }
@@ -425,7 +425,7 @@ extractFromArchive <- function(archive,
         if (needChecksums == 0) needChecksums <- 2
         if (length(archive) > 1) {
           filesExtracted <- c(filesExtracted,
-                              .unzipOrUnTar(funWArgs$fun, funWArgs$args,
+                              .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
                                             files = basename(archive[2])))
           # recursion, removing one archive
           extractedObjs <- extractFromArchive(
@@ -453,17 +453,18 @@ extractFromArchive <- function(archive,
           message("From:", basename(archive[1]), "  \nExtracting\n ",
                   paste(collapse = "\n ", extractingTheseFiles))
             filesExtracted <- c(filesExtracted,
-                                .unzipOrUnTar(funWArgs$fun, funWArgs$args,
+                                .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
                                               files = filesInArchive[basename(filesInArchive) %in%
                                                                        neededFiles]))
         } else {
           # don't have a 2nd archive, and don't have our neededFiles file
-          isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
+          #isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
+          isArchive <- grepl(file_ext(filesInArchive), pattern = paste0("(",paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE)
 
           if (any(isArchive)) {
             arch <- .basename(filesInArchive[isArchive])
             filesExtracted <- c(filesExtracted,
-                                .unzipOrUnTar(funWArgs$fun, funWArgs$args, files = arch))
+                                .callArchiveExtractFn(funWArgs$fun, funWArgs$args, files = arch))
 
             prevExtract <- lapply(file.path(destinationPath, arch), function(ap)
               extractFromArchive(archive = ap, destinationPath = destinationPath,
@@ -576,16 +577,20 @@ extractFromArchive <- function(archive,
 #' @importFrom utils untar unzip
 .whichExtractFn <- function(archive, args) {
   if (!(is.null(archive))) {
-  ext <- tolower(file_ext(archive))
-  if (ext == "zip") {
-    fun <- unzip
-    args <- c(args, list(junkpaths = TRUE))
-  } else if (ext == "tar") {
-    fun <- untar
-  } else if (ext == "rar") {
-    fun <- "unrar"
-  }
-  out <- list(fun = fun, args = args)
+    ext <- tolower(file_ext(archive))
+    if (!ext %in% knownArchiveExtensions)
+      stop("preProcess can only deal with archives with following extensions:\n", paste(knownArchiveExtensions, collapse = ", "))
+    if (ext == "zip") {
+      fun <- unzip
+      args <- c(args, list(junkpaths = TRUE))
+    } else if (ext %in% c("tar", "tar.gz", "gz")) {
+      fun <- untar
+    } else if (ext == "rar") {
+      fun <- "unrar"
+    } else if (ext == "7z") {
+      fun <- "7z"
+    }
+    out <- list(fun = fun, args = args)
   } else {
     out <- NULL
   }
@@ -594,22 +599,22 @@ extractFromArchive <- function(archive,
 
 #' @keywords internal
 #' @importFrom utils capture.output
-.unzipOrUnTar <- function(fun, args, files, overwrite = TRUE) {
+.callArchiveExtractFn <- function(fun, args, files, overwrite = TRUE) {
   argList <- list(files = files)
   if (is.character(fun))
-    if (!fun %in% c("unrar"))
+    if (!fun %in% knownSystemArchiveExtensions)
       fun <- eval(fun)
 
   if (is.character(fun)) {
-    message(paste0("The archive is a .rar file. preProcess will try a system call of 'unrar'."))
-    hasUnrar <- .testForUnrar()
+    message(paste0("The archive appears to be not a .zip. Trying a system call to ", fun))
+    extractSystemCallPath <- .testForArchiveExtract()
     tempDir <- file.path(args$exdir, "extractedFiles") %>%
       checkPath(create = TRUE)
-    if (grepl(x = hasUnrar, pattern = "7z")) {
+    if (grepl(x = extractSystemCallPath, pattern = "7z")) {
       prependPath <- if (identical("windows", .Platform$OS.type)) {
-        paste0("\"", hasUnrar, "\"")
+        paste0("\"", extractSystemCallPath, "\"")
       } else {
-        hasUnrar
+        extractSystemCallPath
       }
       # This spits out a message on non-Windows about arguments that are ignored
       suppressMessages(output <- system(
@@ -737,7 +742,7 @@ extractFromArchive <- function(archive,
 .isArchive <- function(filename) {
   if (!is.null(filename)) {
     filename <- if (length(filename)) {
-      isArchive <- file_ext(filename) %in% c("zip", "tar", "rar")
+      isArchive <- file_ext(filename) %in% knownArchiveExtensions
       if (any(isArchive)) {
         filename[isArchive]
       } else {
@@ -855,14 +860,14 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
-  if (length(archive) > 0 && tools::file_ext(archive[1]) == "rar") {
-    hasUnrar <- .testForUnrar()
+  if (length(archive) > 0 && tools::file_ext(archive[1]) %in% knownSystemArchiveExtensions) {
+    extractSystemCallPath <- .testForArchiveExtract()
   }
   funWArgs <- .whichExtractFn(archive[1], NULL)
   filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
-      if (!file_ext(archive[1]) == "rar") {
+      if (!file_ext(archive[1]) %in% knownSystemArchiveExtensions) {
         filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
         if ("Name" %in% names(filesInArchive)) {
           # for zips, rm directories (length = 0)
@@ -872,23 +877,24 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           filesInArchive
         }
       } else {
-        # On Windows
-        if (grepl(x = hasUnrar, pattern = "7z")) {
-          warn <- testthat::capture_warnings({
-            filesOutput <- system(paste0("\"", hasUnrar, "\"", " l ", archive[1]),
+        if (grepl(x = extractSystemCallPath, pattern = "7z")) {
+          extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l ", archive[1])
+          if (isWindows())
+            filesOutput <- system(extractSystemCall,
                                   show.output.on.console = FALSE, intern = TRUE)
-          })
+          else
+            filesOutput <- system(extractSystemCall, intern = TRUE)
         } else {
           # On Linux/MacOS
-          unRarExists <- .unrarExists()
-          if (is.null(unRarExists))
+          archiveExtractBinary <- .archiveExtractBinary()
+          if (is.null(archiveExtractBinary))
             stop("unrar is not on this system; please install it")
           filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
         }
-        if (exists("warn") && isTRUE(any(grepl("had status 2", warn))))
-          stop(warn)
+        #if (exists("warn") && isTRUE(any(grepl("had status 2", warn))))
+        #  stop(warn)
         if (isTRUE(any(grepl("Can not open the file as archive", filesOutput))))
-          stop("rar is defective")
+          stop("archive is defective")
         filesInBetween <- grep(pattern = "----", filesOutput)
         filesLines <- filesOutput[(min(filesInBetween)+1):(max(filesInBetween)-1)]
         filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line){
@@ -924,18 +930,18 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @author Tati Micheletti
 #'
 #' @keywords internal
-#' @rdname unrarExists
-#' @name unrarExists
-.unrarExists <- function() {
+#' @rdname archiveExtractBinary
+#' @name archiveExtractBinary
+.archiveExtractBinary <- function() {
     possPrograms <- c("7z", "unrar")
     possPrograms <- unique(unlist(lapply(possPrograms, Sys.which)))
-    hasUnrar <- if (!all(possPrograms == "")) {
+    extractSystemCallPath <- if (!all(possPrograms == "")) {
       possPrograms[nzchar(possPrograms)][1] # take first one if there are more than one
     } else {
       ""
     }
     if (!(identical(.Platform$OS.type, "windows"))) {
-      if (grepl("7z", hasUnrar)) {
+      if (grepl("7z", extractSystemCallPath)) {
         SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
         SevenZrarExists <- SevenZrarExists[grepl("installed", SevenZrarExists)]
         if (length(SevenZrarExists) == 0)
@@ -948,30 +954,30 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       }
     }
 
-    if (identical(hasUnrar, "")) {
+    if (identical(extractSystemCallPath, "")) {
       if (identical("windows", tolower(.Platform$OS.type))) {
-        hasUnrar <- Sys.which("7z.exe")
-        if (hasUnrar == "") {
+        extractSystemCallPath <- Sys.which("7z.exe")
+        if (extractSystemCallPath == "") {
           message("prepInputs is looking for 'unrar' or '7z' in your system...")
-          hasUnrar <- list.files("C:/Program Files",
+          extractSystemCallPath <- list.files("C:/Program Files",
                                  pattern = "unrar.exe|7z.exe",
                                  recursive = TRUE,
                                  full.names = TRUE)
-          if (hasUnrar == "" || length(hasUnrar) == 0) {
-            hasUnrar <- list.files(dirname(Sys.getenv("SystemRoot")),
+          if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
+            extractSystemCallPath <- list.files(dirname(Sys.getenv("SystemRoot")),
                                    pattern = "unrar.exe|7z.exe",
                                    recursive = TRUE,
                                    full.names = TRUE)
-            if (hasUnrar == "" || length(hasUnrar) == 0) {
-              hasUnrar <- NULL
+            if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
+              extractSystemCallPath <- NULL
               message(missingUnrarMess)
             } else {
-              message("The extracting software was found in an unusual location: ", hasUnrar, ".",
+              message("The extracting software was found in an unusual location: ", extractSystemCallPath, ".",
                       "If you receive an error when extracting the archive, please install '7zip' or 'unrar'",
                       " in 'Program Files' folder")
             }
           }
-          hasUnrar <- hasUnrar[1]
+          extractSystemCallPath <- extractSystemCallPath[1]
         }
       } else {
         message(missingUnrarMess,
@@ -984,10 +990,10 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 
       }
     }
-    if (!exists("hasUnrar", inherits = FALSE)) hasUnrar <- NULL
-    if (!nzchar(hasUnrar)) hasUnrar <- NULL
+    if (!exists("extractSystemCallPath", inherits = FALSE)) extractSystemCallPath <- NULL
+    if (!nzchar(extractSystemCallPath)) extractSystemCallPath <- NULL
 
-  return(hasUnrar)
+  return(extractSystemCallPath)
 }
 
 #' Returns unrar path and creates a shortcut as .unrarPath
@@ -1001,25 +1007,25 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @author Tati Micheletti
 #'
 #' @keywords internal
-#' @rdname testForUnrar
-#' @name testForUnrar
-.testForUnrar <- function(){
+#' @rdname testForArchiveExtract
+#' @name testForArchiveExtract
+.testForArchiveExtract <- function(){
   if (!is.null(.unrarPath)) {
-    hasUnrar  <- .unrarPath
+    extractSystemCallPath  <- .unrarPath
   } else {
     # Find the path to unrar and assign to a package-stored object
     usrTg <- paste(sample(x = LETTERS, size = 15), collapse = "")
-    hasUnrar <- Cache(.unrarExists, userTags = usrTg) # Cache for project-level persistence
-    utils::assignInMyNamespace(".unrarPath", hasUnrar) # assign in namespace for package
+    extractSystemCallPath <- Cache(.archiveExtractBinary, userTags = usrTg) # Cache for project-level persistence
+    utils::assignInMyNamespace(".unrarPath", extractSystemCallPath) # assign in namespace for package
   }
-  if (is.null(hasUnrar)) {
+  if (is.null(extractSystemCallPath)) {
     clearCache(userTags = usrTg, ask = FALSE)
     stop(
       "prepInputs did not find '7-Zip' nor 'unrar' installed.",
       " Please install it before running prepInputs for a '.rar' archive"
     )
   }
-  return(hasUnrar)
+  return(extractSystemCallPath)
 }
 
 #' The known path for unrar or 7z
@@ -1028,3 +1034,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 .unrarPath <- NULL
 
 missingUnrarMess <- "The archive is a 'rar' archive; your system does not have unrar or 7zip;\n"
+
+knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
+knownSystemArchiveExtensions <- c("rar", "7z")
+knownArchiveExtensions <- c(knownInternalArchiveExtensions, knownSystemArchiveExtensions)

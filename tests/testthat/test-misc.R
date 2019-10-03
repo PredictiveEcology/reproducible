@@ -110,7 +110,7 @@ test_that("test miscellaneous fns", {
   zip(zipfile = rarPath, files = tmpfile)
   unrar <- .whichExtractFn(archive = rarPath, args = "")
   expect_true(identical(unrar$fun, "unrar"))
-  expect_error( .unzipOrUnTar(unrar$fun, files = "", args = list(exdir = tmpCache)))
+  expect_error( .callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
 
   testthat::with_mock(
     "reproducible::isInteractive" = function() TRUE,

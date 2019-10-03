@@ -125,8 +125,8 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  hasUnrar <- .unrarExists()
-  if (is.null(hasUnrar)) {
+  extractSystemCallPath <- .archiveExtractBinary()
+  if (is.null(extractSystemCallPath)) {
     url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
     expect_error(ras <- reproducible::preProcess(url = url, destinationPath = tmpdir))
   } else {
@@ -143,8 +143,8 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  hasUnrar <- .unrarExists()
-  if (is.null(hasUnrar)) {
+  extractSystemCallPath <- .archiveExtractBinary()
+  if (is.null(extractSystemCallPath)) {
     url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
     expect_error( ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
                                                    destinationPath = tmpdir))
@@ -165,8 +165,8 @@ test_that("preProcess works when provides url, archive and destinationPath for a
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  hasUnrar <- .unrarExists()
-  if (is.null(hasUnrar)) {
+  extractSystemCallPath <- .archiveExtractBinary()
+  if (is.null(extractSystemCallPath)) {
     url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
     expect_error(ras <- reproducible::preProcess(url = url, archive = "rasterTest.rar",
                                                  destinationPath = tmpdir))
