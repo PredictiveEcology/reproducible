@@ -279,6 +279,13 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
+
+        if (is(x, "SpatialPolygonsDataFrame")) {
+          if (ncol(x) == 0) {
+            x <- as(x, "SpatialPolygons")
+            message("x was a SpatialPolygonsDataFrame with no data; converting to SpatialPolygons object")
+          }
+        }
         if (canProcessInMemory(x, 3)) {
           x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
         } else {
