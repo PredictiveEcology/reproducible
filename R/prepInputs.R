@@ -611,7 +611,7 @@ extractFromArchive <- function(archive,
     tempDir <- file.path(args$exdir, "extractedFiles") %>%
       checkPath(create = TRUE)
     if (grepl(x = extractSystemCallPath, pattern = "7z")) {
-      prependPath <- if (identical("windows", .Platform$OS.type)) {
+      prependPath <- if (isWindows()) {
         paste0("\"", extractSystemCallPath, "\"")
       } else {
         extractSystemCallPath
@@ -940,7 +940,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     } else {
       ""
     }
-    if (!(identical(.Platform$OS.type, "windows"))) {
+    if (!(isWindows())) {
       if (grepl("7z", extractSystemCallPath)) {
         SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
         SevenZrarExists <- SevenZrarExists[grepl("installed", SevenZrarExists)]
@@ -955,7 +955,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     }
 
     if (identical(extractSystemCallPath, "")) {
-      if (identical("windows", tolower(.Platform$OS.type))) {
+      if (isWindows()) {
         extractSystemCallPath <- Sys.which("7z.exe")
         if (extractSystemCallPath == "") {
           message("prepInputs is looking for 'unrar' or '7z' in your system...")

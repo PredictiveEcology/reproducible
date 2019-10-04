@@ -238,7 +238,3 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     }
   }
 }
-
-#' @keyword internal
-isWindows <- function() identical(.Platform$OS.type, "windows")
-

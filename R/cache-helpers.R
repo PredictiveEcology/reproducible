@@ -887,7 +887,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   os <- tolower(Sys.info()[["sysname"]])
   .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
   if (!useFileCopy) {
-    if (os == "windows") {
+    if (isWindows()) {
       if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
       robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 

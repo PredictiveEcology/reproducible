@@ -887,7 +887,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           if (internetExists) {
 
             message("Trying MRAN install of ", paste(failed$instPkgs, collapse = ", "))
-            type <- if (.Platform$OS.type == "windows") "win.binary" else "source"
+            type <- if (isWindows()) "win.binary" else "source"
 
             multiSource <- paste0(rpath, " --quiet --vanilla -e \"versions::install.versions('",
                                   failed$instPkgs, "','", failed$instVers,

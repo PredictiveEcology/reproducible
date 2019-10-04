@@ -857,7 +857,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
 
     # On *nix types -- try symlink
     if (isFALSE(all(result)) && isTRUE(symlink)) {
-      if (!identical(.Platform$OS.type, "windows")) {
+      if (!isWindows()) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
           message("Symlinked version of file created at: ", toCollapsed, ", which points to ",
@@ -963,7 +963,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
 #' @importFrom testthat capture_warnings
 #' @keywords internal
 .guessFileExtension <- function(file) {
-  if (identical(.Platform$OS.type, "windows")) {
+  if (isWindows()) {
     tryCatch({
       possLocs <- c("C:/cygwin/bin/file.exe",
                     "C:\\cygwin64/bin/file.exe")
