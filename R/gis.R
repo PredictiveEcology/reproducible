@@ -137,8 +137,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
         dType <- assessDataType(raster(x), type = "writeRaster")
-        writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
-        rm(x)
+        x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
         gc()
       } else {
         tempSrcRaster <- x@file@name #Keep original raster.
@@ -151,8 +150,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       tr <- res(x)
 
       gdalPath <- NULL
-      if (identical(.Platform$OS.type, "windows")) {
-        message("Searching for gdal installation")
+      if (isWindows()) {
         possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
                                   "C:/GuidosToolbox/QGIS/bin",
                                   "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
@@ -161,12 +159,13 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                                   "C:/Program Files/GDAL",
                                   "C:/Program Files (x86)/GDAL",
                                   "C:/Program Files (x86)/QGIS 2.18/bin")
+        message("Searching for gdal installation")
         gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
         if (any(gdalInfoExists))
           gdalPath <- possibleWindowsPaths[gdalInfoExists]
       }
       gdalUtils::gdal_setInstallation(gdalPath)
-      if (identical(.Platform$OS.type, "windows")) {
+      if (isWindows()) {
         message("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
         exe <- ".exe"
       } else {
@@ -198,7 +197,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                "-tr ", paste(tr, collapse = " "), " ",
                "\"", tempSrcRaster, "\"", " ",
                "\"", tempDstRaster, "\""),
-        wait = TRUE)
+        wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
       x <- raster(tempDstRaster)
     } else {
       extentY <- extent(y)
@@ -239,3 +238,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     }
   }
 }
+
+#' @keyword internal
+isWindows <- function() identical(.Platform$OS.type, "windows")
+

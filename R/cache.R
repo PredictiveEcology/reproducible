@@ -1343,24 +1343,24 @@ verboseDF3 <- function(verbose, functionName, startCacheTime) {
 #' @keywords internal
 determineNestedTags <- function(envir, mc, userTags) {
   argsNoNesting <- "useCloud"
-  if (R.version[['minor']] <= "4.0") {
-    # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
-    lsCurEnv <- ls(all.names = TRUE, envir = envir)
-    objs <- lsCurEnv[lsCurEnv %in% .namesCacheFormals]
-    objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
-    args <- mget(objs, envir = envir)
-    forms <- lapply(.formalsCache, function(x) eval(x))
-    objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
-    userCacheArgs <- objs[!objOverride]
-    namesUserCacheArgs <- userCacheArgs
-  } else {
+  # if (R.version[['minor']] <= "4.0") {
+  #   # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
+  #   lsCurEnv <- ls(all.names = TRUE, envir = envir)
+  #   objs <- lsCurEnv[lsCurEnv %in% .namesCacheFormals]
+  #   objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
+  #   args <- mget(objs, envir = envir)
+  #   forms <- lapply(.formalsCache, function(x) eval(x))
+  #   objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
+  #   userCacheArgs <- objs[!objOverride]
+  #   namesUserCacheArgs <- userCacheArgs
+  # } else {
     mc <- as.list(mc[-1])
     namesMatchCall <- names(mc)
     namesMatchCall <- namesMatchCall[!namesMatchCall %in% argsNoNesting]
     userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
     namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
     objOverride <- is.na(userCacheArgs)
-  }
+  #}
 
   oldUserTags <- NULL
   prevUserTags <- FALSE

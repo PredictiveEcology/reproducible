@@ -125,6 +125,13 @@ test_that("test miscellaneous fns", {
     }
   )
 
+  testthat::with_mock(
+    "reproducible::getGDALVersion" = function() NA,
+    {
+      expect_false(checkGDALVersion("3.0"))
+    }
+  )
+
 
 
 })

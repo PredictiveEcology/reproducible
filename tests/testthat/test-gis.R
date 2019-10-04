@@ -19,12 +19,40 @@ test_that("fastMask produces correct results", {
   ## mask
   newStack1 <- raster::stack(raster::mask(origStack, mask = shpDF))
   newStack2 <- fastMask(x = origStack, y = shpDF)
+
   if (utils::packageVersion("raster") <= "2.6.7") # change coming in package that will cause this to fail in next version
     expect_equal(newStack1, newStack2)
 
   newStack1 <- raster::mask(origStack[[2]], mask = shpDF)
   newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
   expect_equivalent(newStack1, newStack2)
+
+  # Run same as above but with different internal pathway
+  testthat::with_mock(
+    "raster::canProcessInMemory" = function(x, n) {
+      FALSE
+    },
+    suppressWarnings(newStack3 <- fastMask(x = origStack[[2]], y = shpDF))
+  )
+  newStack3[] <- newStack3[]
+  names(newStack3) <- names(newStack1)
+  expect_equivalent(newStack1, newStack3)
+
+  # Run same as above but with different internal pathway
+  testthat::with_mock(
+    "raster::canProcessInMemory" = function(x, n) {
+      FALSE
+    },
+    "reproducible::isWindows" = function() {
+      TRUE
+    },
+    # The warning is "data type "LOG" is not available in GDAL -- not relevant here
+    {
+    warn <- capture_warnings(expect_error(newStack3 <- fastMask(x = origStack[[2]], y = shpDF)))
+    warn <- capture_warnings(expect_error(fastMask(x = origStack[[2]], y = shpDF, cores = "none"), "needs to be passed"))
+    }
+  )
+
 
   crs(shpDF) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
   crs(shp) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
@@ -49,18 +77,26 @@ test_that("fastMask produces correct results", {
 
 })
 
-test_that("testing prepInputs with sf class objects", {
-  if (interactive()) {
-    testInitOut <- testInit(needGoogle = TRUE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
-    BCR6_VT <- prepInputs(
+test_that("testing prepInputs with deauthorized googledrive", {
+  testInitOut <- testInit(needGoogle = FALSE, "googledrive")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  drive_deauth()
+  testthat::with_mock(
+    "reproducible::isInteractive" = function() {
+      FALSE
+    },
+    warn <- capture_warnings(BCR6_VT <- prepInputs(
       url = "https://drive.google.com/open?id=1sEiXKnAOCi-f1BF7b4kTg-6zFlGr0YOH",
       targetFile = "BCR6.shp",
       overwrite = TRUE
-    )
+    ))
+  )
+  expect_true(is(BCR6_VT, "Spatial"))
 
+  if (interactive()) {
     NFDB_PT <- Cache(
       prepInputs,
       url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
