@@ -174,10 +174,8 @@ retry <- function(expr, retries = 5, silent = FALSE) {
   }
 }
 
-
 #' Test whether system is Windows
 #'
 #' This is used so that unit tests can override this using \code{testthat::with_mock}.
 #' @keywords internal
 isWindows <- function() identical(.Platform$OS.type, "windows")
-
