@@ -237,6 +237,11 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #' @rdname cropInputs
 cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL, ...) {
+  useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
+  if (useExtentToMatch) {
+    extentToMatch <- NULL
+    extentCRS <- NULL
+  }
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
     if (!is.null(extentToMatch)) {
       rasterToMatch <- raster(extentToMatch, crs = extentCRS)
@@ -309,6 +314,11 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' @rdname cropInputs
 cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           extentToMatch = NULL, extentCRS = NULL, ...) {
+  useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
+  if (useExtentToMatch) {
+    extentToMatch <- NULL
+    extentCRS <- NULL
+  }
   message("cropInputs with sf class objects is still experimental")
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
     if (!is.null(extentToMatch)) {
@@ -326,7 +336,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
       extent(cropTo)
     } else {
       if (!is.null(rasterToMatch)) {
-        stop("Can't work with rasterToMatch and sf objects yet in cropInputs")
+        # stop("Can't work with rasterToMatch and sf objects yet in cropInputs")
         projectExtent(cropTo, crs(x))
       } else {
         if (is(studyArea, "sf")) {
@@ -350,7 +360,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
         x <- do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots))
-        if (is.null(x)) {
+        if (all(sapply(extent(x), function(xx) is.na(xx)))) {
           message("    polygons do not intersect.")
         }
       }
@@ -448,7 +458,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE), ...) {
   if (attemptErrorFixes) {
     if (is.null(objectName)) objectName = "SimpleFeature"
-    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY")) {
+    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY") || is(st_geometry(x), "sfc")) {
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
@@ -466,7 +476,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 
         if (is(x1, "try-error")) {
           message("There are errors with ", objectName,
-                  ". Couldn't fix them with raster::buffer(..., width = 0)")
+                  ". Couldn't fix them with sf::st_buffer(..., width = 0)")
         } else {
           x <- x1
           message("  Some or all of the errors fixed.")
@@ -963,24 +973,16 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
     dots <- list(...)
 
     if (!is.null(dots$inputFilePath))  {
-      message("inputFilePath is being deprecated; use filename1")
-      filename1 <- dots$inputFilePath
-      dots$inputFilePath <- NULL
+      stop("inputFilePath is being deprecated; use filename1")
     }
 
     if (!is.null(dots$postProcessedFilename))  {
-      message("postProcessedFilename is being deprecated; use filename2")
-      filename2 <- dots$postProcessedFilename
-      dots$postProcessedFilename <- NULL
+      stop("postProcessedFilename is being deprecated; use filename2")
     }
 
     if (!is.null(dots$targetFilePath))  {
-      message("targetFilePath is being deprecated from determineFilename:\n",
+      stop("targetFilePath is being deprecated from determineFilename:\n",
               "  use filename2 and filename1.")
-      if (is.null(filename1)) {
-        filename1 <- dots$targetFilePath
-        dots$targetFilePath <- NULL
-      }
     }
 
     if (!(is.logical(filename2) || is.character(filename2) || is.null(filename2))) {
@@ -1457,4 +1459,14 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     }
   }
   x
+}
+
+useETM <- function(extentToMatch, extentCRS) {
+  passingExtents <- sum(!is.null(extentToMatch), !is.null(extentCRS))
+  if (passingExtents == 1) {
+    message("When passing extentToMatch, you must also pass extentCRS; using rasterToMatch or studyArea instead")
+  } else if (passingExtents == 2) {
+    return(TRUE)
+  }
+  return(FALSE)
 }
