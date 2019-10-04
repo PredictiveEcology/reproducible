@@ -40,7 +40,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     ## instead, uses ~/.R/gargle/gargle-oauth/long_random_token_name_with_email
     if (interactive()) {
       if (utils::packageVersion("googledrive") >= "1.0.0") {
-        googledrive::drive_auth()
+        googledrive::drive_deauth()
       } else {
         if (file.exists("~/.httr-oauth")) {
           linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
@@ -153,7 +153,8 @@ urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmd
 urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 
 ### Raster package function getData is failing for GADM objects because that site seems to have changed its url
-targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
+#targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
+targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
 .GADMtmp <- function(country, level, download, path, version) {
   country <- raster:::.getCountry(country)
