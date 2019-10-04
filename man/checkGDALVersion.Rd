@@ -18,7 +18,7 @@ Check whether the system has a minimum version of GDAL available
 \examples{
 
 \dontrun{
-  checkGDALVersion(2.0)
+  checkGDALVersion("2.0")
 }
 }
 \author{

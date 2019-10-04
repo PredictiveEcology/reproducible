@@ -14,7 +14,7 @@ fastMask(x, y, cores = NULL,
 as \code{x}, it will be reprojected on the fly to that of \code{x}}
 
 \item{cores}{An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
-triggered. \code{'AUTO'*} will calculate 90% of the total
+triggered. \code{'AUTO'} will calculate 90% of the total
 number of cores in the system, while an integer or rounded
 float will be passed as the exact number of cores to be used.}
 

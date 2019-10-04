@@ -30,7 +30,7 @@ getGDALVersion <-  function() {
 #' @examples
 #'
 #' \dontrun{
-#'   checkGDALVersion(2.0)
+#'   checkGDALVersion("2.0")
 #' }
 checkGDALVersion <- function(version) {
   if (missing(version)) stop("Minimum version not specified.")
@@ -56,7 +56,7 @@ checkGDALVersion <- function(version) {
 #'           as \code{x}, it will be reprojected on the fly to that of \code{x}
 #'
 #' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
-#'           triggered. \code{'AUTO'*} will calculate 90% of the total
+#'           triggered. \code{'AUTO'} will calculate 90% of the total
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
 #'
@@ -126,7 +126,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     }
 
     if (!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)) {
-     #call gdal
+     # call gdal
       message("fastMask is using gdalwarp")
 
       # rasters need to go to same directory that can be unlinked at end without losing other temp files
@@ -178,7 +178,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       } else {
         if (!is.integer(cores)) {
           if (is.character(cores) | is.logical(cores)) {
-            stop ("'cores' needs to be passed as numeric or 'AUTO'")
+            stop("'cores' needs to be passed as numeric or 'AUTO'")
           } else {
             prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
           }
