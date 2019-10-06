@@ -278,8 +278,21 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   checkPath(dirname(destFile), create = TRUE)
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     message("  Downloading from Google Drive.")
-    retry(googledrive::drive_download(googledrive::as_id(url), path = destFile,
-                                      overwrite = overwrite, verbose = TRUE))
+    isLargeFile <- attr(archive, "fileSize")
+    isLargeFile <- if (is.null(isLargeFile)) FALSE else isLargeFile > 1e6
+    if (!isWindows() && requireNamespace("future") && isLargeFile) {
+      future::`%<-%`(a, googledrive::drive_download(googledrive::as_id(url), path = destFile,
+                                                            overwrite = overwrite, verbose = TRUE))
+      cat(file.size(destFile), "\n")
+      while(!future::resolved(a)) {
+        cat(file.size(destFile), "\n")
+        Sys.sleep(0.05)
+      }
+    } else {
+      a <- retry(googledrive::drive_download(googledrive::as_id(url), path = destFile,
+                                             overwrite = overwrite, verbose = TRUE))
+    }
+
   } else {
     message(skipDownloadMsg)
     needChecksums <- 0
@@ -443,8 +456,8 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   }
 
   if (isInteractive())
-    if (is.null(googledrive::drive_token()))
-      googledrive::drive_auth() ## needed for use on e.g., rstudio-server
+   if (is.null(googledrive::drive_token()))
+     googledrive::drive_auth() ## needed for use on e.g., rstudio-server
 
   if (is.null(archive)) {
     fileAttr <- retry(googledrive::drive_get(googledrive::as_id(url)))
@@ -468,4 +481,8 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   } else {
     downloadFilename <- archive
   }
+  if (exists("fileSize", inherits = FALSE)) {
+    setattr(downloadFilename, name = "fileSize", value = fileSize)
+  }
+  return(downloadFilename)
 }

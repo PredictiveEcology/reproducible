@@ -515,6 +515,7 @@ setMethod(
         tries <- tries + 1
         localTags <- getLocalTags(repo)
         isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+        if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
           cacheRepo <- repo
           break

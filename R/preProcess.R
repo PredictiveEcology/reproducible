@@ -108,6 +108,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                               destinationPath = destinationPath)
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
+    archive <- moveAttributes(fileGuess, archive)
     if (is.null(archive) && !is.null(fileGuess)) {
       message("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile")
@@ -155,8 +156,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   filesToCheck <- c(targetFilePath, alsoExtract)
   if (!is.null(archive)) {
+    tmpArchive <- archive
     archive <- file.path(destinationPath, .basename(archive))
     filesToCheck <- unique(c(filesToCheck, archive))
+    archive <- moveAttributes(tmpArchive, archive)
   }
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
@@ -198,6 +201,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         fileGuess <- .guessAtFile(url = url, archive = archive,
                                   targetFile = targetFile, destinationPath = destinationPath)
         archive <- .isArchive(fileGuess)
+        # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
+        archive <- moveAttributes(fileGuess, receiving = archive)
+        sourceAttributes <- attributes(fileGuess)
+        if (length(sourceAttributes) > 0 && !is.null(archive)) {
+          for (i in length(sourceAttributes))
+            setattr(archive, names(sourceAttributes)[i], sourceAttributes[[i]])
+        }
+
         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                       newFilesToCheck = archive,
                                       checkSums = checkSums)
@@ -1063,4 +1074,18 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
     }
   }
   downloadFileResult
+}
+
+
+moveAttributes <- function(source, receiving, attrs = NULL) {
+  sourceAttributes <- attributes(source)
+  if (length(sourceAttributes) > 0) {
+    if (!is.null(attrs)) {
+      sourceAttributes <- attrs
+    }
+
+    for (i in length(sourceAttributes))
+      setattr(receiving, names(sourceAttributes)[i], sourceAttributes[[i]])
+  }
+  receiving
 }
