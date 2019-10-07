@@ -84,6 +84,7 @@ matrix:
       homebrew:
         packages:
         - libgit2
+        - libomp
         - llvm
         - udunits
         update: true
