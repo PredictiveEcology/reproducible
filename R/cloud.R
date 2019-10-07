@@ -12,7 +12,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom googledrive drive_mkdir
 checkAndMakeCloudFolderID <- function(cloudFolderID = NULL) {
   if (is.null(cloudFolderID)) {
-    retry({newDir <- drive_mkdir("testFolder")})
+    newDir <- retry({drive_mkdir("testFolder")})
     cloudFolderID = newDir$id
     warning("No cloudFolderID supplied; if this is the first time using 'useCloud',",
             " this cloudFolderID, ", cloudFolderID,

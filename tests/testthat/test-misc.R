@@ -143,20 +143,26 @@ test_that("test miscellaneous fns", {
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)
   ras <- writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
   testthat::with_mock(
-    "reproducible::retry" = function(...) retry(..., retries = 0),
+    "reproducible::retry" = function(...) {
+      return(invisible())
+    },
     {
       gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
-      expect_error(checkAndMakeCloudFolderID())
+      expect_warning(checkAndMakeCloudFolderID(), "No cloudFolderID supplied")
       expect_is(checkAndMakeCloudFolderID("test"), "character")
       mess1 <- capture_messages(expect_error(cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
                   gdriveLs = gdriveLs1)))
       expect_true(grepl("Uploading local copy of sdfsdf\\.rda, with cacheId\\: sdfsiodfja to cloud folder", mess1))
 
-      expect_error(a <- cloudUploadRasterBackends(ras, cloudFolderID = "testy"))
-      mess1 <- capture_messages(expect_error(a <- cloudDownload(outputHash = "sdfsd", newFileName = "test.tif",
-                                                                gdriveLs = gdriveLs1, cloudFolderID = "testy")))
+      a <- cloudUploadRasterBackends(ras, cloudFolderID = "testy")
+      mess1 <- capture_messages(expect_error(expect_warning(a <- cloudDownload(outputHash = "sdfsd", newFileName = "test.tif",
+                                                                gdriveLs = gdriveLs1, cloudFolderID = "testy"))))
       expect_true(grepl("Downloading cloud copy of test\\.tif", mess1))
       expect_error(cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character"))
+
+      mess1 <- capture_messages(expect_error(cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life")))
+      expect_true(grepl("Uploading new cached object life\\.rda", mess1))
+
     }
   )
 
