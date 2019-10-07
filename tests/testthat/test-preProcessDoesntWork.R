@@ -42,6 +42,6 @@ test_that("preProcess fails if the .rar file is defective", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  testthat::expect_error(ras <- reproducible::preProcess(url = "https://github.com/tati-micheletti/host/blob/master/data/rasterTest.rar",
+  testthat::expect_error(ras <- preProcess(url = "https://github.com/tati-micheletti/host/blob/master/data/rasterTest.rar",
                                   destinationPath = tmpdir))
 })

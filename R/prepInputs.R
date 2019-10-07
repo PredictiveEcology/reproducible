@@ -880,21 +880,22 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         if (grepl(x = extractSystemCallPath, pattern = "7z")) {
           extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l ", archive[1])
           if (isWindows())
-            filesOutput <- system(extractSystemCall,
-                                  show.output.on.console = FALSE, intern = TRUE)
+            warn <- capture_warnings(filesOutput <- system(extractSystemCall,
+                                                           show.output.on.console = FALSE, intern = TRUE))
           else
-            filesOutput <- system(extractSystemCall, intern = TRUE)
+            # On Linux/MacOS
+            warn <- capture_warnings(
+              filesOutput <- system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE))
         } else {
-          # On Linux/MacOS
           archiveExtractBinary <- .archiveExtractBinary()
           if (is.null(archiveExtractBinary))
             stop("unrar is not on this system; please install it")
           filesOutput <- system(paste0("unrar l ", archive[1]), intern = TRUE)
         }
-        #if (exists("warn") && isTRUE(any(grepl("had status 2", warn))))
-        #  stop(warn)
-        if (isTRUE(any(grepl("Can not open the file as archive", filesOutput))))
-          stop("archive is defective")
+        if (exists("warn", inherits = FALSE) && isTRUE(any(grepl("had status 2", warn))))
+          stop(warn)
+        if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput))))
+          stop("archive appears defective")
         filesInBetween <- grep(pattern = "----", filesOutput)
         filesLines <- filesOutput[(min(filesInBetween)+1):(max(filesInBetween)-1)]
         filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line){
