@@ -1078,14 +1078,16 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
 
 
 moveAttributes <- function(source, receiving, attrs = NULL) {
-  sourceAttributes <- attributes(source)
-  if (length(sourceAttributes) > 0) {
-    if (!is.null(attrs)) {
-      sourceAttributes <- attrs
-    }
+  if (!is.null(receiving)) {
+    sourceAttributes <- attributes(source)
+    if (length(sourceAttributes) > 0) {
+      if (!is.null(attrs)) {
+        sourceAttributes <- attrs
+      }
 
-    for (i in length(sourceAttributes))
-      setattr(receiving, names(sourceAttributes)[i], sourceAttributes[[i]])
+      for (i in length(sourceAttributes))
+        setattr(receiving, names(sourceAttributes)[i], sourceAttributes[[i]])
+    }
   }
   receiving
 }

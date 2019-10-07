@@ -110,7 +110,7 @@ testOnExit <- function(testInitOut) {
       googledrive::drive_auth_config(active = FALSE)
   }
   lapply(testInitOut$libs, function(lib) {
-    detach(paste0("package:", lib), character.only = TRUE)}
+    try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
   )
 }
 
