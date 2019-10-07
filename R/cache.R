@@ -660,7 +660,8 @@ setMethod(
       if (isS4(FUN)) {
         setattr(output, "function", FUN@generic)
         #attr(output, "function") <- FUN@generic
-        if (!identical(attr(output, "function"), FUN@generic)) browser()
+        if (!identical(attr(output, "function"), FUN@generic))
+          stop("There is an unknown error 03")
       }
       # Can make new methods by class to add tags to outputs
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
@@ -703,7 +704,8 @@ setMethod(
 
         if (isS4(FUN)) {
           setattr(outputToSave, "function", attr(output, "function"))
-          if (!identical(attr(outputToSave, "function"), attr(output, "function"))) browser()
+          if (!identical(attr(outputToSave, "function"), attr(output, "function")))
+            stop("There is an unknown error 04")
         }
         # attr(outputToSave, "function") <- attr(output, "function")
 

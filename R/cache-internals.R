@@ -222,7 +222,8 @@
     cacheName <- file.path(basename(sideEffect), basename(dwdFlst), fsep = "/")
     setattr(output, "chcksumFiles", paste0(cacheName, ":", cachecurFlst))
     #attr(output, "chcksumFiles") <- paste0(cacheName, ":", cachecurFlst)
-    if (!identical(attr(output, "chcksumFiles"), paste0(cacheName, ":", cachecurFlst))) browser()
+    if (!identical(attr(output, "chcksumFiles"), paste0(cacheName, ":", cachecurFlst)))
+      stop("There is an unknown error 01")
 
     if (makeCopy) {
       repoTo <- file.path(cacheRepo, "gallery")
