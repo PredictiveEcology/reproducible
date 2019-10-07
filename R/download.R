@@ -278,16 +278,45 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   checkPath(dirname(destFile), create = TRUE)
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     message("  Downloading from Google Drive.")
-    isLargeFile <- attr(archive, "fileSize")
-    isLargeFile <- if (is.null(isLargeFile)) FALSE else isLargeFile > 1e6
-    if (!isWindows() && requireNamespace("future") && isLargeFile) {
-      future::`%<-%`(a, googledrive::drive_download(googledrive::as_id(url), path = destFile,
-                                                            overwrite = overwrite, verbose = TRUE))
-      cat(file.size(destFile), "\n")
-      while(!future::resolved(a)) {
-        cat(file.size(destFile), "\n")
-        Sys.sleep(0.05)
+    fs <- attr(archive, "fileSize")
+    if (is.null(fs))
+      fs <- attr(assessGoogle(url),"fileSize")
+    class(fs) <- "object_size"
+    isLargeFile <- if (is.null(fs)) FALSE else fs > 1e6
+    if (!isWindows() && requireNamespace("future") && isLargeFile &&
+        !isFALSE(getOption("reproducible.futurePlan"))) {
+      message("Downloading a large file")
+      fp <- future::plan()
+      if (!is(fp, getOption("reproducible.futurePlan"))) {
+        fpNew <- getOption("reproducible.futurePlan")
+        future::plan(fpNew)
+        on.exit({
+          browser()
+          future::plan(fp)
+        })
       }
+      a <- future::future({
+        drive_deauth()
+        retry(drive_download(as_id(url), path = destFile, overwrite = overwrite, verbose = TRUE))},
+        globals = list(drive_download = googledrive::drive_download,
+                       as_id = googledrive::as_id,
+                       retry = retry,
+                       drive_deauth = googledrive::drive_deauth,
+                       url = url,
+                       overwrite = overwrite,
+                       destFile = destFile))
+      cat("\n")
+      notResolved <- TRUE
+      while(notResolved) {
+        Sys.sleep(0.05)
+        notResolved <- !future::resolved(a)
+        fsActual <- file.size(destFile)
+        class(fsActual) <- "object_size"
+        if (!is.na(fsActual))
+          cat(format(fsActual, units = "auto"), "of", format(fs, units = "auto"), "downloaded         \r")
+      }
+      cat("\nDone!\n")
+
     } else {
       a <- retry(googledrive::drive_download(googledrive::as_id(url), path = destFile,
                                              overwrite = overwrite, verbose = TRUE))
