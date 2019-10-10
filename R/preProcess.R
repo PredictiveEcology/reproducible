@@ -108,6 +108,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                               destinationPath = destinationPath)
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
+    archive <- moveAttributes(fileGuess, archive)
     if (is.null(archive) && !is.null(fileGuess)) {
       message("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile")
@@ -155,8 +156,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   filesToCheck <- c(targetFilePath, alsoExtract)
   if (!is.null(archive)) {
+    tmpArchive <- archive
     archive <- file.path(destinationPath, .basename(archive))
     filesToCheck <- unique(c(filesToCheck, archive))
+    archive <- moveAttributes(tmpArchive, archive)
   }
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
@@ -165,7 +168,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (!is.null(reproducible.inputPaths))
     reproducible.inputPaths <- path.expand(reproducible.inputPaths)
 
-  for (dp in c(destinationPath, reproducible.inputPaths)) {
+  for (dp in unique(c(destinationPath, reproducible.inputPaths))) {
     checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
                                files = basename2(filesToCheck)), silent = TRUE)
     if (!is(checkSumsTmp1, "try-error")) {
@@ -198,6 +201,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         fileGuess <- .guessAtFile(url = url, archive = archive,
                                   targetFile = targetFile, destinationPath = destinationPath)
         archive <- .isArchive(fileGuess)
+        # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
+        archive <- moveAttributes(fileGuess, receiving = archive)
+        sourceAttributes <- attributes(fileGuess)
+        if (length(sourceAttributes) > 0 && !is.null(archive)) {
+          for (i in length(sourceAttributes))
+            setattr(archive, names(sourceAttributes)[i], sourceAttributes[[i]])
+        }
+
         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                       newFilesToCheck = archive,
                                       checkSums = checkSums)
@@ -280,11 +291,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   #   download happens there. Later it will be linked to the user destinationPath
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
+    destinationPathUser <- destinationPath
+    on.exit({
+      destinationPath <- destinationPathUser
+    }, add = TRUE)
     if (!identical(destinationPath, reproducible.inputPaths)) {
-      destinationPathUser <- destinationPath
-      on.exit({
-        destinationPath <- destinationPathUser
-      }, add = TRUE)
       destinationPath <- reproducible.inputPaths[1]
     }
 
@@ -1063,4 +1074,20 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
     }
   }
   downloadFileResult
+}
+
+
+moveAttributes <- function(source, receiving, attrs = NULL) {
+  if (!is.null(receiving)) {
+    sourceAttributes <- attributes(source)
+    if (length(sourceAttributes) > 0) {
+      if (!is.null(attrs)) {
+        sourceAttributes <- attrs
+      }
+
+      for (i in length(sourceAttributes))
+        setattr(receiving, names(sourceAttributes)[i], sourceAttributes[[i]])
+    }
+  }
+  receiving
 }

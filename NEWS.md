@@ -9,11 +9,11 @@ version 0.2.10.9000
 
 ## New features
 
-* ?
+* for downloading large files from GoogleDrive (currently only implemented), if user has set `options("reproducible.futurePlan")` to something other than `FALSE`, then it will show download progress if the file is "large".
 
 ## bug fixes
 
-* ?
+* Several minor, edge cases were detected and fixed.
 
 version 0.2.10
 ==============

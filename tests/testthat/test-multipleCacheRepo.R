@@ -53,7 +53,6 @@ test_that("test multiple cacheRepo with 1 of them a cloudCache", {
 
   clearCache(ask = FALSE, cacheRepo = tmpCache)
   cloudSyncCache(cloudFolderID = newDir$id, cacheRepo = tmpCache)
-  browser()
   cloudCache(rnorm, 1, cloudFolderID = newDir$id, cacheRepo = tmpCache)
   mess <- capture_messages(cloudCache(rnorm, 1, cloudFolderID = newDir$id,
                                       cacheRepo = tmpCache))

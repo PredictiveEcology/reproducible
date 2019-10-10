@@ -10,9 +10,9 @@ if (getRversion() >= "3.1.0") {
 #' @param cloudFolderID The google folder ID where cloud caching will occur.
 #' @export
 #' @importFrom googledrive drive_mkdir
-checkAndMakeCloudFolderID <- function(cloudFolderID) {
+checkAndMakeCloudFolderID <- function(cloudFolderID = NULL) {
   if (is.null(cloudFolderID)) {
-    retry({newDir <- drive_mkdir("testFolder")})
+    newDir <- retry({drive_mkdir("testFolder")})
     cloudFolderID = newDir$id
     warning("No cloudFolderID supplied; if this is the first time using 'useCloud',",
             " this cloudFolderID, ", cloudFolderID,
@@ -151,9 +151,9 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID) {
 
 isOrHasRaster <- function(obj) {
   rasters <- if (is(obj, "environment")) {
-    sapply(mget(ls(obj), envir = obj), is, "Raster")
+    unlist(lapply(mget(ls(obj), envir = obj), function(x) isOrHasRaster(x)))
   } else if (is.list(obj)) {
-    unlist(lapply(obj, is, "Raster"))
+    unlist(lapply(obj, function(x) isOrHasRaster(x)))
   } else {
     is(obj, "Raster")
   }

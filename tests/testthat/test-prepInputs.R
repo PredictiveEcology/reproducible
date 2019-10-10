@@ -276,12 +276,14 @@ test_that("prepInputs doesn't work (part 1)", {
 })
 
 test_that("interactive prepInputs", {
-  testInitOut <- testInit("raster", opts = list(
-    "rasterTmpDir" = file.path(tempdir(), "raster"),
-    "reproducible.overwrite" = TRUE,
-    "reproducible.inputPaths" = NULL
-  ),
-  needGoogle = TRUE)
+  testInitOut <- testInit("raster",
+                          opts = list(
+                            "rasterTmpDir" = file.path(tempdir(), "raster"),
+                            "reproducible.overwrite" = TRUE,
+                            "reproducible.inputPaths" = NULL
+                          ),
+                          needGoogle = TRUE)
+
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1095,7 +1097,7 @@ test_that("prepInputs doesn't work (part 2)", {
   skip_on_cran()
 
   if (getRversion() > "3.3.0") {
-    testInitOut <- testInit("raster", opts = list(
+    testInitOut <- testInit(c("RCurl", "raster"), opts = list(
       "rasterTmpDir" = file.path(tempdir(), "raster"),
       "reproducible.overwrite" = TRUE,
       "reproducible.inputPaths" = NULL
@@ -1103,24 +1105,63 @@ test_that("prepInputs doesn't work (part 2)", {
     on.exit({
       testOnExit(testInitOut)
     }, add = TRUE)
-    mess1 <- capture_messages({
-      test1 <- prepInputs(
-        #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-        targetFile = targetFileLuxRDS,
-        #destinationPath = ".",
-        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-        #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-        path = tmpdir)
-    })
-    mess2 <- capture_messages({
-      test2 <- prepInputs(targetFile = targetFileLuxRDS,
-                          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                          path = tmpdir)
-    })
-    runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
-            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-    runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+
+    if (url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
+                   timeout = 1)) {
+      mess1 <- capture_messages({
+        test1 <- prepInputs(
+          #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
+          targetFile = targetFileLuxRDS,
+          #destinationPath = ".",
+          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+          path = tmpdir)
+      })
+      mess2 <- capture_messages({
+        test2 <- prepInputs(targetFile = targetFileLuxRDS,
+                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+                            path = tmpdir)
+      })
+      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+
+      mess2 <- capture_messages({
+        warn <- capture_warnings({
+          test3 <- prepInputs(targetFile = targetFileLuxRDS,
+                              dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+                              path = tmpdir, studyArea = StudyArea)
+        })
+      })
+      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+              test = test3)
+
+      testOnExit(testInitOut)
+      testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                    "reproducible.overwrite" = TRUE),
+                              needGoogle = TRUE)
+      mess2 <- capture_messages({
+        warn <- capture_warnings({
+          test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
+                              country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
+        })
+      })
+      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+              test = test3)
+
+      runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+              expectedMess = expectedMessagePostProcess,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
+
+      testOnExit(testInitOut)
+      testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                    "reproducible.inputPaths" = NULL),
+                              needGoogle = TRUE)
+    } else {
+    }
 
     # Add a study area to Crop and Mask to
     # Create a "study area"
@@ -1130,39 +1171,6 @@ test_that("prepInputs doesn't work (part 2)", {
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
     crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-    mess2 <- capture_messages({
-      warn <- capture_warnings({
-        test3 <- prepInputs(targetFile = targetFileLuxRDS,
-                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                            path = tmpdir, studyArea = StudyArea)
-      })
-    })
-    runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-            filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-            test = test3)
-
-    testOnExit(testInitOut)
-    testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                  "reproducible.overwrite" = TRUE),
-                            needGoogle = TRUE)
-    mess2 <- capture_messages({
-      warn <- capture_warnings({
-        test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
-                            country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
-      })
-    })
-    runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-            filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-            test = test3)
-
-    runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
-            expectedMess = expectedMessagePostProcess,
-            filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
-
-    testOnExit(testInitOut)
-    testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-                                                  "reproducible.inputPaths" = NULL),
-                            needGoogle = TRUE)
     mess1 <- capture_messages({
       test <- prepInputs(
         targetFile = "DEM.tif",
@@ -1175,13 +1183,13 @@ test_that("prepInputs doesn't work (part 2)", {
             filePattern = "DEM", tmpdir = tmpdir, test = test)
 
     if (interactive()) {
+      testOnExit(testInitOut)
       testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
                                                     "reproducible.overwrite" = TRUE),
                               needGoogle = TRUE)
       opts <- options("reproducible.cachePath" = tmpCache)
       on.exit({
         options(opts)
-        testOnExit(testInitOut)
       }, add = TRUE)
 
       mess2 <- capture_messages({
@@ -1545,106 +1553,169 @@ test_that("lightweight tests 2 for code coverage", {
 test_that("options inputPaths", {
   skip_on_cran()
 
-  testInitOut <- testInit("raster",
+  testInitOut <- testInit(c("raster", "RCurl"),
                           opts = list("reproducible.inputPaths" = NULL,
                                       "reproducible.inputPathsRecursive" = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  theFile <- targetFileLuxRDS
+  useGADM <- url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds", timeout = 1)
+  theFile <- if (useGADM) {
+    targetFileLuxRDS
+  } else {
+    "rasterTest.tif"
+  }
+  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+
+  f <- formals(prepInputs);
 
   if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
   options("reproducible.inputPaths" = NULL)
   options("reproducible.inputPathsRecursive" = FALSE)
 
-  mess1 <- capture_messages({
-    test1 <- prepInputs(targetFile = theFile,
-                        destinationPath = tmpdir,
-                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                        path = tmpdir)
-  })
+    mess1 <- capture_messages({
+      test1 <- prepInputs(destinationPath = tmpdir,
+                          url = if (!useGADM) url2 else f$url,
+                          targetFile = if (useGADM) theFile else f$targetFile,
+                          dlFun = if (useGADM) getDataFn else NULL,
+                          name = if (useGADM) "GADM" else NULL,
+                          country = if (useGADM) "LUX" else NULL,
+                          level = if (useGADM) 0 else NULL,
+                          path = if (useGADM) tmpdir else NULL)
+    })
 
-  # Use inputPaths -- should do a link to tmpCache (the destinationPath)
-  options("reproducible.inputPaths" = tmpdir)
-  options("reproducible.inputPathsRecursive" = FALSE)
-  mess1 <- capture_messages({
-    test1 <- prepInputs(targetFile = theFile,
-                        destinationPath = tmpCache,
-                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                        path = tmpCache)
-  })
-  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1)) == 1)
+    # Use inputPaths -- should do a link to tmpCache (the destinationPath)
+    options("reproducible.inputPaths" = tmpdir)
+    options("reproducible.inputPathsRecursive" = FALSE)
+    mess1 <- capture_messages({
+      test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
+                          targetFile = if (useGADM) theFile else f$targetFile,
+                          dlFun = if (useGADM) getDataFn else NULL,
+                          name = if (useGADM) "GADM" else NULL,
+                          country = if (useGADM) "LUX" else NULL,
+                          level = if (useGADM) 0 else NULL,
+                          path = if (useGADM) tmpdir else NULL,
+                          destinationPath = tmpCache)
+    })
+    expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1)) == 1)
 
-  # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
-  #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
-  options("reproducible.inputPaths" = c(tmpdir, tmpCache))
-  file.remove(file.path(tmpdir, theFile))
-  tmpdir3 <- file.path(tmpCache, "test")
-  mess1 <- capture_messages({
-    test1 <- prepInputs(targetFile = theFile,
-                        destinationPath = tmpdir3,
-                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                        path = tmpdir3)
-  })
-  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1)) == 1)
+    # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
+    #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
+    options("reproducible.inputPaths" = c(tmpdir, tmpCache))
+    file.remove(file.path(tmpdir, theFile))
+    tmpdir3 <- file.path(tmpCache, "test")
+    mess1 <- capture_messages({
+      test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
+                          targetFile = if (useGADM) theFile else f$targetFile,
+                          dlFun = if (useGADM) getDataFn else NULL,
+                          name = if (useGADM) "GADM" else NULL,
+                          country = if (useGADM) "LUX" else NULL,
+                          level = if (useGADM) 0 else NULL,
+                          path = if (useGADM) tmpdir else NULL,
+                          destinationPath = tmpdir3
+      )
 
-  #  should copy from 2nd directory (tmpCache) because it is removed in the lower
-  #  tmpdir directory & has a CHECKSUMS.txt
-  options("reproducible.inputPaths" = tmpdir)
-  options("reproducible.inputPathsRecursive" = TRUE)
-  file.remove(file.path(tmpCache, theFile))
-  tmpdir1 <- file.path(tmpCache, "test1")
-  mess1 <- capture_messages({
-    test1 <- prepInputs(targetFile = theFile,
-                        destinationPath = tmpdir1,
-                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                        path = tmpdir1)
-  })
-  expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", file.path(tmpdir1, theFile)), mess1)) == 1)
-  expect_true(sum(grepl(paste0("which points to ", file.path(tmpdir3, theFile)), mess1)) == 1)
-  expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
+    })
+    expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1)) == 1)
 
-  ## Try download to inputPath, intercepting the destination, creating a link
-  testOnExit(testInitOut)
-  testInitOut <- testInit("raster",
-                          opts = list("reproducible.inputPaths" = NULL,
-                                      "reproducible.inputPathsRecursive" = FALSE))
-  options("reproducible.inputPaths" = tmpdir)
-  tmpdir2 <- file.path(tmpdir, rndstr(1,5))
-  mess1 <- capture_messages({
-    test1 <- prepInputs(targetFile = theFile,
-                        destinationPath = tmpdir2,
-                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                        path = tmpCache)
-  })
-  expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1)
+    #  should copy from 2nd directory (tmpCache) because it is removed in the lower
+    #  tmpdir directory & has a CHECKSUMS.txt
+    options("reproducible.inputPaths" = tmpdir)
+    options("reproducible.inputPathsRecursive" = TRUE)
+    file.remove(file.path(tmpCache, theFile))
+    tmpdir1 <- file.path(tmpCache, "test1")
+    mess1 <- capture_messages({
+      test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
+                          targetFile = if (useGADM) theFile else f$targetFile,
+                          dlFun = if (useGADM) getDataFn else NULL,
+                          name = if (useGADM) "GADM" else NULL,
+                          country = if (useGADM) "LUX" else NULL,
+                          level = if (useGADM) 0 else NULL,
+                          path = if (useGADM) tmpdir else NULL,
+                          destinationPath = tmpdir1
+      )
+    })
+    expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", file.path(tmpdir1, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0("which points to ", file.path(tmpdir3, theFile)), mess1)) == 1)
+    expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
 
-  # Have file in inputPath, not in destinationPath
-  unlink(file.path(tmpdir2, theFile))
-  expect_false(file.exists(file.path(tmpdir2, theFile))) # FALSE -- confirm previous line
-  expect_true(file.exists(file.path(tmpdir, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
-  tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
-  mess1 <- capture_messages({
-    test1 <- prepInputs(targetFile = theFile,
-                        destinationPath = tmpdir2,
-                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                        path = tmpCache)
-  })
-  expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
-  expect_true(sum(grepl(basename(tmpdir2), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
+    ## Try download to inputPath, intercepting the destination, creating a link
+    testOnExit(testInitOut)
+    testInitOut <- testInit("raster",
+                            opts = list("reproducible.inputPaths" = NULL,
+                                        "reproducible.inputPathsRecursive" = FALSE))
+    options("reproducible.inputPaths" = tmpdir)
+    tmpdir2 <- file.path(tmpdir, rndstr(1,5))
+    mess1 <- capture_messages({
+      test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
+                          targetFile = if (useGADM) theFile else f$targetFile,
+                          dlFun = if (useGADM) getDataFn else NULL,
+                          name = if (useGADM) "GADM" else NULL,
+                          country = if (useGADM) "LUX" else NULL,
+                          level = if (useGADM) 0 else NULL,
+                          path = if (useGADM) tmpdir else NULL,
+                          destinationPath = tmpdir2
+      )
+    })
+    expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1)
 
-  # Have file in destinationPath, not in inputPath
-  unlink(file.path(tmpdir, theFile))
-  expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
-  expect_true(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
-  mess1 <- capture_messages({
-    test1 <- prepInputs(targetFile = theFile,
-                        destinationPath = tmpdir2,
-                        dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                        path = tmpCache)
-  })
-  expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
-  expect_true(sum(grepl(basename(tmpdir2), mess1)) == 1) # it's now in tmpdir2, i.e. destinationPath
+    # Have file in inputPath, not in destinationPath
+    unlink(file.path(tmpdir2, theFile))
+    expect_false(file.exists(file.path(tmpdir2, theFile))) # FALSE -- confirm previous line
+    expect_true(file.exists(file.path(tmpdir, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
+    tmpdir2 <- file.path(tmpdir, rndstr(1, 5))
+    mess1 <- capture_messages({
+      test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
+                          targetFile = if (useGADM) theFile else f$targetFile,
+                          dlFun = if (useGADM) getDataFn else NULL,
+                          name = if (useGADM) "GADM" else NULL,
+                          country = if (useGADM) "LUX" else NULL,
+                          level = if (useGADM) 0 else NULL,
+                          path = if (useGADM) tmpdir else NULL,
+                          destinationPath = tmpdir2
+      )
+    })
+    expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
+    expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
+
+    # Have file in destinationPath, not in inputPath
+    unlink(file.path(tmpdir, theFile))
+    expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
+    expect_true(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
+    mess1 <- capture_messages({
+      test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
+                          targetFile = if (useGADM) theFile else f$targetFile,
+                          dlFun = if (useGADM) getDataFn else NULL,
+                          name = if (useGADM) "GADM" else NULL,
+                          country = if (useGADM) "LUX" else NULL,
+                          level = if (useGADM) 0 else NULL,
+                          path = if (useGADM) tmpdir else NULL,
+                          destinationPath = tmpdir2
+      )
+    })
+    expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
+    expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
+
+    ## Try with inputPaths == destinationPath
+    unlink(file.path(tmpdir, theFile))
+    unlink(file.path(tmpdir2, theFile))
+    expect_false(file.exists(file.path(tmpdir, theFile))) # FALSE -- confirm previous line
+    expect_false(file.exists(file.path(tmpdir2, theFile))) # TRUE b/c is in getOption('reproducible.inputPaths')
+    options("reproducible.inputPaths" = tmpdir)
+    mess1 <- capture_messages({
+      test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
+                          targetFile = if (useGADM) theFile else f$targetFile,
+                          dlFun = if (useGADM) getDataFn else NULL,
+                          name = if (useGADM) "GADM" else NULL,
+                          country = if (useGADM) "LUX" else NULL,
+                          level = if (useGADM) 0 else NULL,
+                          path = if (useGADM) tmpdir else NULL,
+                          destinationPath = tmpdir
+      )
+    })
+    expect_is(test1, "spatialObjects")
+    expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 0) # no link made b/c identical dir
+    expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 0) # no link made b/c identical dir
 })
 
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
@@ -1967,5 +2038,19 @@ test_that("Test to fix issue #101 prepInputs on raster from disk", {
     crs(test) <- crs(smallRT)
     a <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
     expect_true(is(a, "RasterLayer"))
+  }
+})
+
+test_that("Test of using future and progress indicator for lrg files on Google Drive", {
+  if (interactive()) {
+    if (requireNamespace("future")) {
+      testInitOut <- testInit(c("raster", "future"), needGoogle = TRUE, opts = list("reproducible.futurePlan" = "multiprocess"))
+      on.exit({
+        testOnExit(testInitOut)
+      }, add = TRUE)
+      #future::plan("multiprocess")
+      smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
+      expect_true(is(smallRT, "list"))
+    }
   }
 })

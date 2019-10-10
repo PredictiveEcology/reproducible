@@ -175,7 +175,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
                           cloudFolderID = NULL))
 
   skip(message = "not ready yet")
-  browser()
   cc(10)
 
 })
