@@ -179,7 +179,7 @@ shpEcozone <- prepInputs(destinationPath = dPath,
 # Robust to partial file deletions:
 unlink(dir(dPath, full.names = TRUE)[1:3])
 shpEcozone <- prepInputs(destinationPath = dPath,
-                     url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+                         url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
 unlink(dPath, recursive = TRUE)
 
 # Once this is done, can be more precise in operational code:
@@ -188,9 +188,9 @@ ecozoneFilename <- file.path(dPath, "ecozones.shp")
 ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
                   "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
 shpEcozone <- prepInputs(targetFile = ecozoneFilename,
-                    url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-                    alsoExtract = ecozoneFiles,
-                    fun = "shapefile", destinationPath = dPath)
+                         url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+                         alsoExtract = ecozoneFiles,
+                         fun = "shapefile", destinationPath = dPath)
 unlink(dPath, recursive = TRUE)
 
 #' # Add a study area to Crop and Mask to
@@ -211,12 +211,12 @@ ecozoneFilename <- file.path(dPath, "ecozones.shp")
 ecozoneFiles <- c("ecozones.dbf", "ecozones.prj",
                   "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx")
 shpEcozoneSm <- Cache(prepInputs,
-                         url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-                         targetFile = reproducible::asPath(ecozoneFilename),
-                         alsoExtract = reproducible::asPath(ecozoneFiles),
-                         studyArea = StudyArea,
-                         fun = "shapefile", destinationPath = dPath,
-                         filename2 = "EcozoneFile.shp") # passed to determineFilename
+                      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+                      targetFile = reproducible::asPath(ecozoneFilename),
+                      alsoExtract = reproducible::asPath(ecozoneFiles),
+                      studyArea = StudyArea,
+                      fun = "shapefile", destinationPath = dPath,
+                      filename2 = "EcozoneFile.shp") # passed to determineFilename
 
 plot(shpEcozone)
 plot(shpEcozoneSm, add = TRUE, col = "red")
@@ -231,28 +231,27 @@ url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
 
 # messages received below may help for filling in more arguments in the subsequent call
 LCC2005 <- prepInputs(url = url,
-                     destinationPath = asPath(dPath),
-                     studyArea = StudyArea)
+                      destinationPath = asPath(dPath),
+                      studyArea = StudyArea)
 
 plot(LCC2005)
 
 # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
 LCC2005 <- Cache(prepInputs, url = url,
-                     targetFile = lcc2005Filename,
-                     archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-                     destinationPath = asPath(dPath),
-                     studyArea = StudyArea)
+                 targetFile = lcc2005Filename,
+                 archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+                 destinationPath = asPath(dPath),
+                 studyArea = StudyArea)
 # Using dlFun -- a custom download function -- passed to preProcess
 test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                     path = dPath)
 }
 
-
 }
 \seealso{
 \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
-         \code{\link{downloadFile}}, \code{\link{postProcess}}.
+         \code{\link{postProcess}}.
 }
 \author{
 Eliot McIntire, Jean Marchal, and Tati Micheletti
