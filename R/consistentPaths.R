@@ -25,22 +25,26 @@ setGeneric("normPath", function(path) {
 setMethod("normPath",
           signature(path = "character"),
           definition = function(path) {
-            path <- lapply(path, function(x) {
-              if (is.na(x)) {
-                NA_character_
-              } else {
-                normalizePath(x, winslash = "/", mustWork = FALSE)
+            if (length(path) > 0) {
+              path <- lapply(path, function(x) {
+                if (is.na(x)) {
+                  NA_character_
+                } else {
+                  normalizePath(x, winslash = "/", mustWork = FALSE)
+                }
+              })
+              # Eliot changed this Sept 24, 2019 because weird failures with getwd() in non-interactive testing
+              path <- unlist(path)
+              if (!is.null(path)) {
+                hasDotStart <- startsWith(path, ".")
+                if (isTRUE(any(hasDotStart)))
+                  path[hasDotStart] <- gsub("^[.]", paste0(getwd()), path[hasDotStart])
+                path <- gsub("\\\\", "//", path)# %>%
+                path <- gsub("//", "/", path)
+                path <- gsub("/$", "", path) # nolint
               }
-            })
-            # Eliot changed this Sept 24, 2019 because weird failures with getwd() in non-interactive testing
-            path <- unlist(path)
-            hasDotStart <- startsWith(path, ".")
-            if (isTRUE(any(hasDotStart)))
-              path[hasDotStart] <- gsub("^[.]", paste0(getwd()), path[hasDotStart])
-            path <- gsub("\\\\", "//", path)# %>%
-            path <- gsub("//", "/", path)
-            path <- gsub("/$", "", path) # nolint
-
+            }
+            return(path)
 })
 
 #' @export
