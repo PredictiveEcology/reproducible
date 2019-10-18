@@ -296,7 +296,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
         })
       }
       a <- future::future({
-        drive_deauth()
+        googledrive::drive_deauth()
         retry(drive_download(as_id(url), path = destFile, overwrite = overwrite, verbose = TRUE))},
         globals = list(drive_download = googledrive::drive_download,
                        as_id = googledrive::as_id,

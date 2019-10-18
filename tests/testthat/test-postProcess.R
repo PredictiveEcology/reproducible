@@ -1,4 +1,4 @@
-test_that("prepInputs doesn't work (part 1)", {
+test_that("prepInputs doesn't work (part 3)", {
 
   testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
     "rasterTmpDir" = file.path(tempdir(), "raster"),
