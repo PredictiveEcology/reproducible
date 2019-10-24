@@ -113,7 +113,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       message("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile")
       targetFile <- .basename(fileGuess)
-      targetFilePath <- fileGuess
+      targetFilePath <- file.path(destinationPath, fileGuess)
     } else {
       targetFilePath <- NULL
     }
@@ -285,7 +285,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   needChecksums <- localChecks$needChecksums
   successfulCheckSumFilePath <- localChecks$successfulCheckSumFilePath
   successfulDir <- localChecks$successfulDir
-
 
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
