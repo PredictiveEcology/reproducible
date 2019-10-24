@@ -673,7 +673,7 @@ setMethod(
       if (isTRUE(any(alreadyIn)))
         otherFns <- otherFns[!alreadyIn]
 
-      outputToSaveIsList <- is.list(outputToSave)
+      outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
       if (outputToSaveIsList) {
         rasters <- unlist(lapply(outputToSave, is, "Raster"))
       } else {
