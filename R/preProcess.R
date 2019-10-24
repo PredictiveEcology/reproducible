@@ -291,7 +291,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   #   download happens there. Later it will be linked to the user destinationPath
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
-    destinationPathUser <- destinationPath
+    if (!exists("destinationPathUser", inherits = FALSE))
+      destinationPathUser <- destinationPath
     on.exit({
       destinationPath <- destinationPathUser
     }, add = TRUE)
@@ -518,6 +519,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
     on.exit() # remove on.exit because it is done here
   }
+
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
