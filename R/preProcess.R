@@ -486,7 +486,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   failStop <- if (is.null(targetFilePath)) {
     TRUE
-  } else if (!isTRUE(file.exists(targetFilePath))) {
+  } else if (!isTRUE(file.exists(targetFilePath)) &&
+             !isTRUE(file.exists(.basename(targetFilePath)))) {
     TRUE
   } else { FALSE }
   if (isTRUE(failStop))
