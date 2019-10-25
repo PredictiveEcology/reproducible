@@ -1106,6 +1106,12 @@ test_that("prepInputs doesn't work (part 2)", {
       testOnExit(testInitOut)
     }, add = TRUE)
 
+    coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
+    Sr1 <- Polygon(coords)
+    Srs1 <- Polygons(list(Sr1), "s1")
+    StudyArea <- SpatialPolygons(list(Srs1), 1L)
+    crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
     if (url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
                    timeout = 1)) {
       mess1 <- capture_messages({
