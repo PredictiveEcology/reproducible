@@ -5,7 +5,7 @@ version 0.2.10.9000
 
 ## Dependency changes
 
-* ?
+* remove `dplyr` as a direct dependency. It is still an indirect dependency through `DiagrammeR`
 
 ## New features
 
