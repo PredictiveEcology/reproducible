@@ -1,5 +1,7 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("checksum.x", "checksum.y", "filesize.x", "filesize.y", "result" ))
+  utils::globalVariables(c("checksum.x", "checksum.y", "filesize.x", "filesize.y", "result",
+                           "i.checksum", "checksum", "i.filesize", "filesize", "actualFile",
+                           "algorithm", "i.algorithm"))
 }
 
 
@@ -121,7 +123,8 @@ setMethod(
                  stringsAsFactors = FALSE)
     }
     #if (dim(txt)[1] == 0) { # if there are no rows
-    txt <- dplyr::mutate_all(txt, as.character)
+    txt <- as.data.table(lapply(txt, as.character))
+    # txt <- dplyr::mutate_all(txt, as.character)
     #}
     if (is.null(txt$filesize)) txt$filesize <- rep("", NROW(txt))
     txtRead <- txt # keep a copy even if writing
@@ -153,7 +156,7 @@ setMethod(
 
     if (!is.null(txt$algorithm)) {
       if (!write) {
-        dots$algo <- unique(txt[txt$file %in% basename(filesToCheck),"algorithm"])
+        dots$algo <- unique(txt[txt$file %in% basename(filesToCheck),][["algorithm"]])
         dots$algo <- na.omit(dots$algo)[1]
         if (is.na(dots$algo)) dots$algo <- defaultWriteHashAlgo
       }
@@ -190,17 +193,20 @@ setMethod(
     message(crayon::magenta("Finished checking local files.", sep = ""))
 
     out <- if (length(filesToCheck)) {
-      data.frame(file = basename(filesToCheck), checksum = checksums[[1]],
+      data.table(file = basename(filesToCheck), checksum = checksums[[1]],
                  filesize = checksums[[2]], algorithm = dots$algo, stringsAsFactors = FALSE)
     } else {
-      data.frame(file = character(0), checksum = character(0), filesize = character(0),
+      data.table(file = character(0), checksum = character(0), filesize = character(0),
                  algorithm = character(0), stringsAsFactors = FALSE)
     }
 
+    out1 <- data.table::copy(out)
     if (write) {
-      writeChecksumsTable(out, checksumFile, dotsWriteTable)
+      writeChecksumsTable(out1, checksumFile, dotsWriteTable)
       txt <- txtRead
-      txt <- dplyr::right_join(txt, out)
+      txt1 <- data.table::copy(txt)
+      txt <- txt[out, on = colnames(out)]
+      txt1 <- dplyr::right_join(txt1, out)
       # wh <- match(txt$file, basename(filesToCheck))
       # wh <- na.omit(wh)
       # if (length(wh) > 0) {
@@ -209,7 +215,35 @@ setMethod(
       # }
       # txt <- txt[wh,]
     }
-    results.df <- out %>%
+    txt1 <- data.table::copy(txt)
+
+    out[, actualFile := file]
+    if (write) {
+      out <- txt[out, on = "file"]
+    } else {
+      out <- out[txt, on = "file"]
+    }
+    setnames(out, "file", "expectedFile")
+    if (quickCheck) {
+      out[, result := ifelse(filesize != i.filesize, "FAIL", "OK")]
+    } else {
+      out[, result := ifelse(checksum != i.checksum, "FAIL", "OK")]
+    }
+    data.table::setorderv(out, "result", order = -1L, na.last = TRUE)
+    out <- out[, .SD[1,], by = "expectedFile"]
+    results.df <- out[, list(
+      "result" = result,
+      "expectedFile" = expectedFile,
+      "actualFile" = actualFile,
+      "checksum.x" = i.checksum,
+      "checksum.y" = checksum,
+      "algorithm.x" = i.algorithm,
+      "algorithm.y" = algorithm,
+      "filesize.x" = i.filesize,
+      "filesize.y" = filesize
+    )]
+
+    results.df1 <- out1 %>%
       dplyr::mutate(actualFile = file) %>%
       {
         if (write) {
@@ -249,6 +283,8 @@ setMethod(
       } %>%
       dplyr::filter(row_number() == 1L)
 
+    if (!isTRUE(all.equal(as.data.frame(results.df1), as.data.frame(results.df))))
+      browser()
       return(invisible(results.df))
     #}
   })
