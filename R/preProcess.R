@@ -60,43 +60,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
   dots <- list(...)
 
-  if (!is.null(dots$cacheTags))  {
-    message("cacheTags is being deprecated;",
-            " use userTags which will pass directly to Cache.")
-    dots$userTags <- dots$cacheTags
-    dots$cacheTags <- NULL
-  }
-  if (!is.null(dots$postProcessedFilename))  {
-    message("postProcessedFilename is being deprecated;",
-            " use filename2, used in determineFilename.")
-    dots$filename2 <- dots$postProcessedFilename
-    dots$postProcessedFilename <- NULL
-  }
-  if (!is.null(dots$writeCropped))  {
-    message("writeCropped is being deprecated;",
-            " use filename2, used in determineFilename.")
-    dots$filename2 <- dots$writeCropped
-    dots$writeCropped <- NULL
-  }
-  if (!is.null(dots$rasterInterpMethod))  {
-    message("rasterInterpMethod is being deprecated;",
-            " use method which will pass directly to projectRaster.")
-    dots$method <- dots$rasterInterpMethod
-    dots$rasterInterpMethod <- NULL
-  }
-  if (!is.null(dots$rasterDatatype))  {
-    message("rasterDatatype is being deprecated;",
-            " use datatype which will pass directly to writeRaster.")
-    dots$datatype <- dots$rasterDatatype
-    dots$rasterDatatype <- NULL
-  }
-  if (!is.null(dots$pkg))  {
-    message("pkg is being deprecated;",
-            "name the package and function directly, if needed,\n",
-            "  e.g., 'pkg::fun'.")
-    fun <- paste0(dots$pkg, "::", fun)
-    dots$pkg <- NULL
-  }
+  fun <- .checkFunInDots(fun = fun, dots = dots)
+  dots <- .checkDeprecated(dots)
 
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
@@ -113,7 +78,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       message("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile")
       targetFile <- .basename(fileGuess)
-      targetFilePath <- fileGuess
+      targetFilePath <- file.path(destinationPath, targetFile)
     } else {
       targetFilePath <- NULL
     }
@@ -286,12 +251,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   successfulCheckSumFilePath <- localChecks$successfulCheckSumFilePath
   successfulDir <- localChecks$successfulDir
 
-
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
-    destinationPathUser <- destinationPath
+    if (!exists("destinationPathUser", inherits = FALSE))
+      destinationPathUser <- destinationPath
     on.exit({
       destinationPath <- destinationPathUser
     }, add = TRUE)
@@ -518,6 +483,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
     on.exit() # remove on.exit because it is done here
   }
+
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
@@ -1090,4 +1056,55 @@ moveAttributes <- function(source, receiving, attrs = NULL) {
     }
   }
   receiving
+}
+
+.checkDeprecated <- function(dots) {
+  if (!is.null(dots$cacheTags))  {
+    message("cacheTags is being deprecated;",
+            " use userTags which will pass directly to Cache.")
+    dots$userTags <- dots$cacheTags
+    dots$cacheTags <- NULL
+  }
+  if (!is.null(dots$postProcessedFilename))  {
+    message("postProcessedFilename is being deprecated;",
+            " use filename2, used in determineFilename.")
+    dots$filename2 <- dots$postProcessedFilename
+    dots$postProcessedFilename <- NULL
+  }
+  if (!is.null(dots$writeCropped))  {
+    message("writeCropped is being deprecated;",
+            " use filename2, used in determineFilename.")
+    dots$filename2 <- dots$writeCropped
+    dots$writeCropped <- NULL
+  }
+  if (!is.null(dots$rasterInterpMethod))  {
+    message("rasterInterpMethod is being deprecated;",
+            " use method which will pass directly to projectRaster.")
+    dots$method <- dots$rasterInterpMethod
+    dots$rasterInterpMethod <- NULL
+  }
+  if (!is.null(dots$rasterDatatype))  {
+    message("rasterDatatype is being deprecated;",
+            " use datatype which will pass directly to writeRaster.")
+    dots$datatype <- dots$rasterDatatype
+    dots$rasterDatatype <- NULL
+  }
+  if (!is.null(dots$pkg))  {
+    message("pkg is being deprecated;",
+            "name the package and function directly, if needed,\n",
+            "  e.g., 'pkg::fun'.")
+    dots$pkg <- NULL
+  }
+
+  dots
+
+}
+
+.checkFunInDots <- function(fun = NULL, dots) {
+  if (is.null(fun)) {
+    if (!is.null(dots$pkg))  {
+      fun <- paste0(dots$pkg, "::", fun)
+    }
+  }
+  fun
 }
