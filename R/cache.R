@@ -471,7 +471,9 @@ setMethod(
       preDigest <- cacheDigest$preDigest
       outputHash <- cacheDigest$outputHash
 
-      preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
+      # This does to depth 3
+      preDigestUnlistTrunc <- unlist(
+        .unlistToCharacter(preDigest, getOption("reproducible.showSimilarDepth", 3)))
 
       if (verbose > 1) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
