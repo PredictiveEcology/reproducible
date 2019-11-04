@@ -74,8 +74,28 @@ test_that("test miscellaneous unit tests cache-helpers", {
   ## showSimilar
   try(clearCache(ask = FALSE, x = tmpCache), silent = TRUE)
   aMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
-  bMess <- capture_messages(b <- Cache(rnorm, 2, showSimilar = TRUE, cacheRepo = tmpCache))
+  bMess <- capture_messages(b <- Cache(rnorm, 2, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache))
   expect_true(any(grepl("different n", bMess)))
+  expect_true(any(grepl("new argument.*sd", bMess)))
+  expect_true(any(grepl("artifact with cacheId", bMess)))
+  cMess <- capture_messages(b <- Cache(rnorm, 3, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache))
+  expect_true(any(grepl("different n", cMess)))
+  expect_false(any(grepl("new argument.*sd", cMess)))
+  cMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", cMess, value = TRUE))
+  bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
+  expect_false(identical(cMessCacheId, bMessCacheId))
+
+  dMess <- capture_messages(b <- Cache(rnorm, 4, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
+  expect_true(any(grepl("different n, sd", dMess)))
+  expect_false(any(grepl("new argument.*sd", dMess)))
+  dMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", dMess, value = TRUE))
+  bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
+  expect_false(identical(dMessCacheId, bMessCacheId))
+
+  eMess <- capture_messages(b <- Cache(rlnorm, 4, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
+  expect_true(any(grepl("different .FUN", eMess)))
+  expect_false(grepl(" n[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
+  expect_false(grepl("[ ,]sd[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
 
   ## debugCache -- "complete"
   thing <- 1

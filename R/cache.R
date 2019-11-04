@@ -1203,31 +1203,47 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     similar2[, `:=`(fun = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
                     hash = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
     similar2[, differs := !(hash %in% preDigestUnlistTrunc), by = artifact]
+
+    a <- setDT(as.list(preDigestUnlistTrunc))
+    a <- melt(a, measure.vars = seq_along(names(a)), variable.name = "fun", value.name = "hash")
+    similar2 <- similar2[a, on = "fun", nomatch = NA]
     similar2[!(fun %in% names(preDigestUnlistTrunc)), differs := NA]
     similar2[(hash %in% "other"), deeperThan3 := TRUE]
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
-    message("This call to cache differs from the next closest due to:")
+    message(crayon::cyan(" ------ showSimilar -------"))
+    message(crayon::cyan("This call to cache differs from the next closest:"))
+    message(crayon::cyan(paste0("... artifact with cacheId ", cacheIdOfSimilar)))
+
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
-      message("... different ", paste(similar2[differs %in% TRUE]$fun, collapse = ", "))
+      message(crayon::cyan("... different", paste(similar2[differs %in% TRUE]$fun, collapse = ", ")))
     }
 
-    if (length(similar2[is.na(differs)]$differs)) {
+    if (length(similar2[is.na(differs) && deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
-      message("... possible, unknown, differences in a nested list that is deeper than 3 in ",
-              paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)))
+      message(crayon::cyan("... possible, unknown, differences in a nested list",
+                           "that is deeper than",getOption("reproducible.showSimilarDepth",3),"in ",
+              paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun))))
     }
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
-      message("... because of an ",
-              "argument currently not specified: ",
-              paste(as.character(missingArgs), collapse = ", "))
+      message(crayon::cyan("... because of (a) new argument(s): ",
+              #"argument currently specified that was not in similar cache: ",
+              paste(as.character(missingArgs), collapse = ", ")))
 
     }
-    print(paste0("artifact with cacheId ", cacheIdOfSimilar))
-    print(similar2[,c("fun", "differs")])
+    # message(crayon::cyan("Only the following elements differ (dots are replacements for $ or @)"))
+    # oldColsToKeep <- c("fun", "differs")
+    # cleanDT <- similar2[, ..oldColsToKeep]
+    # data.table::setnames(cleanDT, old = oldColsToKeep, new = c("element", "different"))
+    # message(crayon::cyan(
+    #   paste0(capture.output(
+    #     cleanDT)
+    # , collapse = "\n")))
+    message(crayon::cyan(" ------ end showSimilar -------"))
+
   } else {
     if (!identical("devMode", useCache))
       message("There is no similar item in the cacheRepo")
