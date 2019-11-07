@@ -86,11 +86,11 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(identical(cMessCacheId, bMessCacheId))
 
   dMess <- capture_messages(b <- Cache(rnorm, 4, mean = 1, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
-  expect_true(any(grepl("different n, sd", dMess)))
+  if (!Sys.info()["sysname"] == "Darwin") expect_true(any(grepl("different n, sd", dMess)))
   expect_true(any(grepl("new argument.*mean", dMess))) # because for some reason,
   dMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", dMess, value = TRUE))
   bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
-  expect_false(identical(dMessCacheId, bMessCacheId))
+  if (!Sys.info()["sysname"] == "Darwin")expect_false(identical(dMessCacheId, bMessCacheId))
 
   eMess <- capture_messages(b <- Cache(rlnorm, 4, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
   expect_true(any(grepl("different .FUN", eMess)))
