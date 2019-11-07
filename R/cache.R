@@ -588,9 +588,10 @@ setMethod(
       } else {
         # find similar -- in progress
         if (!is.null(showSimilar)) { # TODO: Needs testing
-          if (!isFALSE(showSimilar))
+          if (!isFALSE(showSimilar)) {
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
                          userTags, useCache = useCache)
+          }
         }
       }
 
@@ -1183,8 +1184,10 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
                          useCache = getOption("reproducible.useCache", TRUE)) {
   setDT(localTags)
-  if (identical("devMode", useCache))
+  isDevMode <- identical("devMode", useCache)
+  if (isDevMode) {
     showSimilar <- 1
+  }
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")) #nolint
   userTags3 <- c(userTags, userTags2)
@@ -1211,8 +1214,13 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     similar2[(hash %in% "other"), deeperThan3 := TRUE]
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
-    message(crayon::cyan(" ------ showSimilar -------"))
-    message(crayon::cyan("This call to cache differs from the next closest:"))
+    if (isDevMode) {
+      message(crayon::cyan(" ------ devMode -------"))
+      message(crayon::cyan("This call to cache will replace"))
+    } else {
+      message(crayon::cyan(" ------ showSimilar -------"))
+      message(crayon::cyan("This call to cache differs from the next closest:"))
+    }
     message(crayon::cyan(paste0("... artifact with cacheId ", cacheIdOfSimilar)))
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
@@ -1220,7 +1228,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
       message(crayon::cyan("... different", paste(similar2[differs %in% TRUE]$fun, collapse = ", ")))
     }
 
-    if (length(similar2[is.na(differs) && deeperThan3 == TRUE]$differs)) {
+    if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
       message(crayon::cyan("... possible, unknown, differences in a nested list",
                            "that is deeper than",getOption("reproducible.showSimilarDepth",3),"in ",
@@ -1242,7 +1250,11 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     #   paste0(capture.output(
     #     cleanDT)
     # , collapse = "\n")))
-    message(crayon::cyan(" ------ end showSimilar -------"))
+    if (isDevMode) {
+      message(crayon::cyan(" ------ end devMode -------"))
+    } else {
+      message(crayon::cyan(" ------ end showSimilar -------"))
+    }
 
   } else {
     if (!identical("devMode", useCache))

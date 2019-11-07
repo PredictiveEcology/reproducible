@@ -291,7 +291,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
         fpNew <- getOption("reproducible.futurePlan")
         future::plan(fpNew)
         on.exit({
-          browser()
           future::plan(fp)
         })
       }
