@@ -1178,7 +1178,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   list(outputHash = res, preDigest = preDigest)
 }
 
-#' @importFrom data.table setDT setkeyv
+#' @importFrom data.table setDT setkeyv melt
 #' @keywords internal
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
                          useCache = getOption("reproducible.useCache", TRUE)) {
