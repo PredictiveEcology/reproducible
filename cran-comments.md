@@ -20,10 +20,10 @@ This is a release which adds several new features and fixes some minor bugs. See
 * Windows           (win-builder), R 3.6.1
 
 ### Development R version
-* Ubuntu 16.04       (travis-ci), R 3.7.0 (2019-09-05 r77152)
-* Ubuntu 18.04           (local), R 3.7.0 (2019-09-05 r77152)
-* Windows             (appveyor), R 3.7.0 (2019-09-04 r77145)
-* Windows          (win-builder), R 3.7.0 (2019-09-02 r77130)
+* Ubuntu 16.04       (travis-ci), R 4.0.0 (2019-11-11 r77395)
+* Ubuntu 18.04           (local), R 4.0.0 (2019-11-12 r77405)
+* Windows             (appveyor), R 4.0.0 (2019-11-07 r77386)
+* Windows          (win-builder), R 4.0.0 (2019-11-07 r77386)
 
 ## R CMD check results
 
