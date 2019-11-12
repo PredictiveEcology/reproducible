@@ -10,22 +10,21 @@
 |collate  |en_CA.UTF-8                  |
 |ctype    |en_CA.UTF-8                  |
 |tz       |America/Edmonton             |
-|date     |2019-09-05                   |
+|date     |2019-11-12                   |
 
 # Dependencies
 
-|package       |old   |new         |Δ  |
-|:-------------|:-----|:-----------|:--|
-|reproducible  |0.2.9 |0.2.10      |*  |
-|archivist     |NA    |2.3.4       |*  |
-|googledrive   |NA    |1.0.0       |*  |
-|RcppArmadillo |NA    |0.9.700.2.0 |*  |
+|package      |old    |new         |Δ  |
+|:------------|:------|:-----------|:--|
+|reproducible |0.2.10 |0.2.10.9007 |*  |
+|quickPlot    |NA     |0.1.6.9000  |*  |
+|Rcpp         |NA     |1.0.3       |*  |
 
 # Revdeps
 
 ## New problems (1)
 
-|package                               |version |error |warning |note |
-|:-------------------------------------|:-------|:-----|:-------|:----|
-|[SpaDES.core](problems.md#spadescore) |0.2.5   |      |__+1__  |     |
+|package                               |version |error  |warning |note |
+|:-------------------------------------|:-------|:------|:-------|:----|
+|[SpaDES.core](problems.md#spadescore) |0.2.6   |__+1__ |        |     |
 
