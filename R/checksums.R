@@ -285,7 +285,8 @@ setMethod(
 
     if (!isTRUE(all.equal(as.data.frame(results.df1), as.data.frame(results.df))))
       browser()
-      return(invisible(results.df))
+
+    return(invisible(results.df))
     #}
   })
 
