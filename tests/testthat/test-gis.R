@@ -1,4 +1,8 @@
 test_that("fastMask produces correct results", {
+  testInitOut <- testInit(needGoogle = FALSE, c("sp", "raster"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
   Sr1 <- sp::Polygon(cbind(c(2, 4, 4, 1, 2), c(2, 3, 5, 4, 2))) # nolint
   Sr2 <- sp::Polygon(cbind(c(5, 4, 2, 5), c(2, 3, 2, 2))) # nolint
   Sr3 <- sp::Polygon(cbind(c(4, 4, 5, 7.4, 4), c(5, 3, 2, 5, 5))) # nolint
@@ -37,8 +41,12 @@ test_that("fastMask produces correct results", {
   newStack3[] <- newStack3[]
   names(newStack3) <- names(newStack1)
   expect_equivalent(newStack1, newStack3)
-
   # Run same as above but with different internal pathway
+  gdalUtils::gdal_setInstallation()
+
+  # if it doesn't find gdal installed
+  hasGDALInstalled <- !is.null(getOption("gdalUtils_gdalPath"))
+
   testthat::with_mock(
     "raster::canProcessInMemory" = function(x, n) {
       FALSE
@@ -48,8 +56,15 @@ test_that("fastMask produces correct results", {
     },
     # The warning is "data type "LOG" is not available in GDAL -- not relevant here
     {
-    warn <- capture_warnings(expect_error(newStack3 <- fastMask(x = origStack[[2]], y = shpDF)))
-    warn <- capture_warnings(expect_error(fastMask(x = origStack[[2]], y = shpDF, cores = "none"), "needs to be passed"))
+      if (hasGDALInstalled) {
+        warn <- capture_warnings(expect_error(
+          newStack3 <- fastMask(x = origStack[[2]], y = shpDF))
+        )
+        warn <- capture_warnings(
+          expect_error(
+            out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"), "needs to be passed")
+        )
+      }
     }
   )
 

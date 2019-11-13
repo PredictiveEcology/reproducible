@@ -10,7 +10,7 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
     Some features are still under active development.
 SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.rar' files.
 URL: 
-    http://reproducible.predictiveecology.org,
+    https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
 Date: 2019-11-14
 Version: 0.2.11

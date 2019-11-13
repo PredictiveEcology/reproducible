@@ -57,7 +57,7 @@ See \code{\link{reproducibleOptions}} for a complete description of package
 \seealso{
 Useful links:
 \itemize{
-  \item \url{http://reproducible.predictiveecology.org}
+  \item \url{https://reproducible.predictiveecology.org}
   \item \url{https://github.com/PredictiveEcology/reproducible}
   \item Report bugs at \url{https://github.com/PredictiveEcology/reproducible/issues}
 }

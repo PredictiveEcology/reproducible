@@ -1,6 +1,7 @@
 if (getRversion() >= "3.1.0") {
   utils::globalVariables(c(".", "artifact", "createdDate", "deeperThan3", "differs",
-                           "fun", "hash", "iden", "N", "tag", "tagKey", "tagValue"))
+                           "fun", "hash", "i.hash", "iden", "N", "tag",
+                           "tagKey", "tagValue"))
 }
 
 .reproEnv <- new.env(parent = asNamespace("reproducible"))
