@@ -1205,11 +1205,14 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
 
     similar2[, `:=`(fun = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
                     hash = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
-    similar2[, differs := !(hash %in% preDigestUnlistTrunc), by = artifact]
 
     a <- setDT(as.list(preDigestUnlistTrunc))
     a <- melt(a, measure.vars = seq_along(names(a)), variable.name = "fun", value.name = "hash")
+
+
     similar2 <- similar2[a, on = "fun", nomatch = NA]
+    similar2[, differs := (i.hash != hash)]
+
     similar2[!(fun %in% names(preDigestUnlistTrunc)), differs := NA]
     similar2[(hash %in% "other"), deeperThan3 := TRUE]
     similar2[(hash %in% "other"), differs := NA]
