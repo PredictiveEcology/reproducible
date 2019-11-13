@@ -5,7 +5,7 @@ all.equalWONewCache <- function(a, b) {
 }
 
 skip_if_no_token <- function() {
-  testthat::skip_if_not(drive_has_token(), "No Drive token")
+  testthat::skip_if_not(googledrive::drive_has_token(), "No Drive token")
 }
 
 # puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
