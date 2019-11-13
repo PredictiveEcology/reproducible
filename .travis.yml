@@ -1,6 +1,8 @@
 sudo: required
 language: r
-cache: packages
+cache:
+  - $HOME/.ccache
+  - packages
 cran: https://cloud.r-project.org
 env:
   global:
@@ -15,6 +17,7 @@ matrix:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
+          - ccache
           - gdal-bin
           - libgdal-dev
           - libgeos-dev
@@ -28,6 +31,9 @@ matrix:
     r_packages:
       - rgdal
       - rgeos
+    before_install:
+      - mkdir $HOME/.R && echo -e 'CXX_STD = CXX14\n\nVER=\nCCACHE=ccache\nCC=$(CCACHE) gcc$(VER) -std=gnu99\nCXX=$(CCACHE) g++$(VER)\nC11=$(CCACHE) g++$(VER)\nC14=$(CCACHE) g++$(VER)\nFC=$(CCACHE) gfortran$(VER)\nF77=$(CCACHE) gfortran$(VER)' > $HOME/.R/Makevars
+      - echo -e 'max_size = 5.0G\nsloppiness = include_file_ctime\nhash_dir=false' > $HOME/.ccache/ccache.conf
   - os: linux
     dist: xenial
     r: release
@@ -36,6 +42,7 @@ matrix:
         sources:
         - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
+          - ccache
           - gdal-bin
           - libgdal-dev
           - libgeos-dev
@@ -53,6 +60,9 @@ matrix:
       - rgeos
     r_github_packages:
       - jimhester/lintr
+    before_install:
+      - mkdir $HOME/.R && echo -e 'CXX_STD = CXX14\n\nVER=\nCCACHE=ccache\nCC=$(CCACHE) gcc$(VER) -std=gnu99\nCXX=$(CCACHE) g++$(VER)\nC11=$(CCACHE) g++$(VER)\nC14=$(CCACHE) g++$(VER)\nFC=$(CCACHE) gfortran$(VER)\nF77=$(CCACHE) gfortran$(VER)' > $HOME/.R/Makevars
+      - echo -e 'max_size = 5.0G\nsloppiness = include_file_ctime\nhash_dir=false' > $HOME/.ccache/ccache.conf
     after_success:
     - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
     - Rscript -e 'lintr::lint_package()'
@@ -64,6 +74,7 @@ matrix:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
+          - ccache
           - gdal-bin
           - libgdal-dev
           - libgeos-dev
@@ -90,6 +101,9 @@ matrix:
     latex: false
     r_build_args: '--no-build-vignettes'
     r_check_args: '--as-cran --ignore-vignettes --no-examples'
+    before_install:
+      - mkdir $HOME/.R && echo -e 'CXX_STD = CXX14\n\nVER=\nCCACHE=ccache\nCC=$(CCACHE) gcc$(VER) -std=gnu99\nCXX=$(CCACHE) g++$(VER)\nC11=$(CCACHE) g++$(VER)\nC14=$(CCACHE) g++$(VER)\nFC=$(CCACHE) gfortran$(VER)\nF77=$(CCACHE) gfortran$(VER)' > $HOME/.R/Makevars
+      - echo -e 'max_size = 5.0G\nsloppiness = include_file_ctime\nhash_dir=false' > $HOME/.ccache/ccache.conf
     before_script:
       - Rscript -e "install.packages(c('rgdal', 'rgeos'), type = 'source')"
 r_build_args: " "
