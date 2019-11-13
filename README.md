@@ -42,3 +42,7 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE)
 library("devtools")
 install_github("PredictiveEcology/reproducible", ref = "development", dependencies = TRUE) 
 ```
+
+## Contributions
+
+Please see `CONTRIBUTING.md` for information on how to contribute to this project.
