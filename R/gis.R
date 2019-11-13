@@ -125,7 +125,31 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       }
     }
 
-    if (!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)) {
+    attemptGDAL <- !raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+
+    if (attemptGDAL) { # need to double check that gdal executable exists before going down this path
+      gdalPath <- NULL
+      if (isWindows()) {
+        possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
+                                  "C:/GuidosToolbox/QGIS/bin",
+                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
+                                  "C:/Program Files (x86)/QGIS 3.6/bin",
+                                  "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
+                                  "C:/Program Files/GDAL",
+                                  "C:/Program Files (x86)/GDAL",
+                                  "C:/Program Files (x86)/QGIS 2.18/bin")
+        message("Searching for gdal installation")
+        gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
+        if (any(gdalInfoExists))
+          gdalPath <- possibleWindowsPaths[gdalInfoExists]
+      }
+      gdalUtils::gdal_setInstallation(gdalPath)
+
+      if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
+        attemptGDAL <- FALSE
+    }
+
+    if (attemptGDAL) {
      # call gdal
       message("fastMask is using gdalwarp")
 
@@ -149,22 +173,6 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
 
-      gdalPath <- NULL
-      if (isWindows()) {
-        possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
-                                  "C:/GuidosToolbox/QGIS/bin",
-                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
-                                  "C:/Program Files (x86)/QGIS 3.6/bin",
-                                  "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
-                                  "C:/Program Files/GDAL",
-                                  "C:/Program Files (x86)/GDAL",
-                                  "C:/Program Files (x86)/QGIS 2.18/bin")
-        message("Searching for gdal installation")
-        gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
-        if (any(gdalInfoExists))
-          gdalPath <- possibleWindowsPaths[gdalInfoExists]
-      }
-      gdalUtils::gdal_setInstallation(gdalPath)
       if (isWindows()) {
         message("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
         exe <- ".exe"
@@ -223,7 +231,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     message("This function is using raster::mask")
     if (is(x, "RasterStack") || is(x, "RasterBrick")) {
       message(" because fastMask doesn't have a specific method ",
-              "for these classes yet")
+              "for these RasterStack or RasterBrick yet")
     } else {
       message("This may be slow in large cases. ",
               "To use sf and GDAL instead, see ",

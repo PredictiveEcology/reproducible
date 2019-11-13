@@ -85,11 +85,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
   expect_false(identical(cMessCacheId, bMessCacheId))
 
-  aaaa <<- 1
-  #browser()
-  ss <- sample(1e6,1)
-  set.seed(ss)
-  cat(ss, sep = "\n")
   dMess <- capture_messages(b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
   rm(aaaa, envir = .GlobalEnv)
   #browser(expr = !any(grepl("different n, sd", dMess)))
