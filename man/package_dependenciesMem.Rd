@@ -16,12 +16,7 @@ package_dependenciesMem(
 \arguments{
 \item{packages}{a character vector of package names.}
 
-\item{db}{character matrix as from \code{\link[tools]{available.packages}()}
-    (with the default \code{NULL} the results of this call)
-    or data frame variants thereof.  Alternatively, a package database
-    like the one available from
-    \url{https://cran.r-project.org/web/packages/packages.rds}.
-  }
+\item{db}{character matrix as from \code{\link[utils]{available.packages}}}
 
 \item{which}{a character vector listing the types of
     dependencies, a subset of

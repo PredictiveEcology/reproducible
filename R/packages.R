@@ -630,6 +630,7 @@ pkgDep2 <- function(packages, recursive = TRUE, depends = TRUE,
 #' This has a 6 minute memory time window.
 #'
 #' @inheritParams tools::package_dependencies
+#' @param db character matrix as from \code{\link[utils]{available.packages}}
 #'
 #' @importFrom memoise memoise timeout
 #' @importFrom tools package_dependencies
