@@ -44,7 +44,7 @@ paths <- list("./aaa/zzz",
               ".//aaa//zzz",
               ".//aaa//zzz/",
               ".\\\\aaa\\\\zzz",
-              ".\\\\aaa\\\\zzz\\\",
+              #".\\\\aaa\\\\zzz\\\",
               file.path(".", "aaa", "zzz"))
 
 checked <- normPath(paths)
