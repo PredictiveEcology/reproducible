@@ -625,13 +625,14 @@ pkgDep2 <- function(packages, recursive = TRUE, depends = TRUE,
   return(a)
 }
 
-#' Memoised version of package_dependencies
+#' Memoised version of \code{package_dependencies}
 #'
-#' This have a 6 minute memory time window.
+#' This has a 6 minute memory time window.
+#'
+#' @inheritParams tools::package_dependencies
 #'
 #' @importFrom memoise memoise timeout
 #' @importFrom tools package_dependencies
-#' @inheritParams tools::package_dependencies
 #' @rdname package_dependenciesMem
 package_dependenciesMem <- memoise::memoise(tools::package_dependencies, ~timeout(360)) # nolint
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{package_dependenciesMem}
 \alias{package_dependenciesMem}
-\title{Memoised version of package_dependencies}
+\title{Memoised version of \code{package_dependencies}}
 \usage{
 package_dependenciesMem(
   packages = NULL,
@@ -41,5 +41,5 @@ package_dependenciesMem(
     search cycles.}
 }
 \description{
-This have a 6 minute memory time window.
+This has a 6 minute memory time window.
 }
