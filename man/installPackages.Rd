@@ -4,11 +4,18 @@
 \alias{.installPackages}
 \title{Internal function to install packages}
 \usage{
-.installPackages(packages, repos = getOption("repos"),
-  githubPkgs = character(0), githubPkgNames,
-  nonLibPathPkgs = character(0), install_githubArgs,
-  install.packagesArgs = list(), libPath = .libPaths()[1],
-  standAlone = standAlone, forget = FALSE)
+.installPackages(
+  packages,
+  repos = getOption("repos"),
+  githubPkgs = character(0),
+  githubPkgNames,
+  nonLibPathPkgs = character(0),
+  install_githubArgs,
+  install.packagesArgs = list(),
+  libPath = .libPaths()[1],
+  standAlone = standAlone,
+  forget = FALSE
+)
 }
 \arguments{
 \item{packages}{Character vector of packages to install via

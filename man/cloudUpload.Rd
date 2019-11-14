@@ -4,8 +4,7 @@
 \alias{cloudUpload}
 \title{Upload to cloud, if necessary}
 \usage{
-cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID,
-  output)
+cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output)
 }
 \arguments{
 \item{isInRepo}{A data.table with the information about an object that is in the local cacheRepo}

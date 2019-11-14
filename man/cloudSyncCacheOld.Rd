@@ -4,10 +4,17 @@
 \alias{cloudSyncCacheOld}
 \title{Sync cloud with local Cache}
 \usage{
-cloudSyncCacheOld(cacheRepo = getOption("reproducible.cachePath"),
-  checksumsFileID = NULL, cloudFolderID = NULL, delete = TRUE,
-  upload = TRUE, download = !delete,
-  ask = getOption("reproducible.ask"), cacheIds = NULL, ...)
+cloudSyncCacheOld(
+  cacheRepo = getOption("reproducible.cachePath"),
+  checksumsFileID = NULL,
+  cloudFolderID = NULL,
+  delete = TRUE,
+  upload = TRUE,
+  download = !delete,
+  ask = getOption("reproducible.ask"),
+  cacheIds = NULL,
+  ...
+)
 }
 \arguments{
 \item{cacheRepo}{See \code{x} in \code{\link{showCache}}}

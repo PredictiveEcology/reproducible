@@ -14,7 +14,7 @@ available.packagesMem(contriburl, method, fields, type, filters, repos)
   }
 
 \item{method}{
-    download method, see \code{\link{download.file}}.
+    download method, see \code{\link[utils]{download.file}}.
   }
 
 \item{fields}{
@@ -26,7 +26,7 @@ available.packagesMem(contriburl, method, fields, type, filters, repos)
 
 \item{type}{
     character string, indicate which type of packages: see
-    \code{\link{install.packages}}.
+    \code{\link[utils]{install.packages}}.
   
     If \code{type = "both"} this will use the source repository.
   }

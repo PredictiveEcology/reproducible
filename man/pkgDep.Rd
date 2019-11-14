@@ -5,15 +5,31 @@
 \alias{pkgDep2}
 \title{Determine package dependencies, first looking at local filesystem}
 \usage{
-pkgDep(packages, libPath, recursive = TRUE, depends = TRUE,
-  imports = TRUE, suggests = FALSE, linkingTo = TRUE,
-  repos = getOption("repos"), refresh = FALSE,
-  verbose = getOption("reproducible.verbose"))
+pkgDep(
+  packages,
+  libPath,
+  recursive = TRUE,
+  depends = TRUE,
+  imports = TRUE,
+  suggests = FALSE,
+  linkingTo = TRUE,
+  repos = getOption("repos"),
+  refresh = FALSE,
+  verbose = getOption("reproducible.verbose")
+)
 
-pkgDep2(packages, recursive = TRUE, depends = TRUE, imports = TRUE,
-  suggests = FALSE, linkingTo = TRUE, repos = getOption("repos"),
-  refresh = FALSE, verbose = getOption("reproducible.verbose"),
-  sorted = TRUE)
+pkgDep2(
+  packages,
+  recursive = TRUE,
+  depends = TRUE,
+  imports = TRUE,
+  suggests = FALSE,
+  linkingTo = TRUE,
+  repos = getOption("repos"),
+  refresh = FALSE,
+  verbose = getOption("reproducible.verbose"),
+  sorted = TRUE
+)
 }
 \arguments{
 \item{packages}{a character vector of package names.}

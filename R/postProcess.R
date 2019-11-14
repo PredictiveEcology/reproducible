@@ -374,19 +374,23 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' These must be very common for this function to be useful. Currently, the only
 #' meaningful method is on SpatialPolygons, and it runs \code{rgeos::gIsValid}. If
 #' \code{FALSE}, then it runs a buffer of width 0.
-#' @inheritParams prepInputs
-#' @param x Any object that could be fixed for errors.
-#'          See \code{\link{fixErrors.SpatialPolygons}}
-#' @export
-#' @keywords internal
+#'
+#' @param x A \code{SpatialPolygons*} or \code{sf} object.
+#'
 #' @param objectName Optional. This is only for messaging; if provided, then messages relayed
 #'                   to user will mention this.
+#'
 #' @param attemptErrorFixes Will attempt to fix known errors. Currently only some failures
-#'        for SpatialPolygons* are attempted. Notably with \code{raster::buffer(..., width = 0)}.
+#'        for \code{SpatialPolygons*} are attempted.
+#'        Notably with \code{raster::buffer(..., width = 0)}.
 #'        Default \code{TRUE}, though this may not be the right action for all cases.
 #' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 #'                 Cache is used on the internal \code{raster::buffer} command.
 #' @param ... Passed to methods. None currently implemented.
+#'
+#' @export
+#' @keywords internal
+#'
 #' @example inst/examples/example_postProcess.R
 fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
                       useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -407,8 +411,6 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #' failures to \code{rgeos::gIsValid}
 #'
 #' @export
-#' @param x A \code{SpatialPolygons} object
-#' @inheritParams fixErrors
 #' @importFrom testthat capture_warnings
 #' @rdname fixErrors
 fixErrors.SpatialPolygons <- function(x, objectName = NULL,
@@ -447,9 +449,6 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
   return(x)
 }
 
-#' @inheritParams fixErrors
-#' @param x A \code{SpatialPolygons} object
-#'
 #' @export
 #' @importFrom sf st_buffer st_geometry st_is_valid
 #' @importFrom testthat capture_warnings
@@ -494,12 +493,16 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #' A simple wrapper around the various different tools for these GIS types.
 #'
 #' @param x A \code{Raster*}, \code{Spatial*} or \code{sf} object
+#'
 #' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
+#'
 #' @param ... Passed to \code{\link[raster]{projectRaster}}.
+#'
 #' @param rasterToMatch Template \code{Raster*} object passed to the \code{to} argument of
 #'                      \code{\link[raster]{projectRaster}}, thus will changing the
 #'                      resolution and projection of \code{x}.
 #'                      See details in \code{\link{postProcess}}.
+#'
 #' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
 #'                      triggered. \code{'AUTO'*} will calculate 90% of the total
 #'                      number of cores in the system, while an integer or rounded
@@ -1022,13 +1025,14 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 #'
 #' Can be used to write prepared inputs on disk.
 #'
-#' @inheritParams postProcess
 #' @param x  The object save to disk i.e., write outputs
-#' @param overwrite Logical. Should file being written overwrite an existing file if it
-#'                  exists.
+#'
+#' @param overwrite Logical. Should file being written overwrite an existing file if it exists.
+#'
 #' @param filename2 File name passed to \code{\link[raster]{writeRaster}}, or
 #'                  \code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
 #'                  (\code{dsn} argument).
+#'
 #' @param ... Passed into \code{\link[raster]{shapefile}} or
 #'             \code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}
 #'
@@ -1037,8 +1041,8 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 #' @importFrom methods is
 #' @importFrom raster shapefile writeRaster
 #' @rdname writeOutputs
-#' @example inst/examples/example_postProcess.R
 #'
+#' @example inst/examples/example_postProcess.R
 writeOutputs <- function(x, filename2,
                          overwrite = getOption("reproducible.overwrite", NULL),
                          ...) {

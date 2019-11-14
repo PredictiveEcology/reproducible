@@ -7,38 +7,53 @@
 \alias{fixErrors.sf}
 \title{Do some minor error fixing}
 \usage{
-fixErrors(x, objectName, attemptErrorFixes = TRUE,
-  useCache = getOption("reproducible.useCache", FALSE), ...)
-
-\method{fixErrors}{default}(x, objectName, attemptErrorFixes = TRUE,
-  useCache = getOption("reproducible.useCache", FALSE), ...)
-
-\method{fixErrors}{SpatialPolygons}(x, objectName = NULL,
+fixErrors(
+  x,
+  objectName,
   attemptErrorFixes = TRUE,
-  useCache = getOption("reproducible.useCache", FALSE), ...)
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
 
-\method{fixErrors}{sf}(x, objectName = NULL, attemptErrorFixes = TRUE,
-  useCache = getOption("reproducible.useCache", FALSE), ...)
+\method{fixErrors}{default}(
+  x,
+  objectName,
+  attemptErrorFixes = TRUE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
+
+\method{fixErrors}{SpatialPolygons}(
+  x,
+  objectName = NULL,
+  attemptErrorFixes = TRUE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
+
+\method{fixErrors}{sf}(
+  x,
+  objectName = NULL,
+  attemptErrorFixes = TRUE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
 }
 \arguments{
-\item{x}{Any object that could be fixed for errors.
-See \code{\link{fixErrors.SpatialPolygons}}}
+\item{x}{A \code{SpatialPolygons*} or \code{sf} object.}
 
 \item{objectName}{Optional. This is only for messaging; if provided, then messages relayed
 to user will mention this.}
 
 \item{attemptErrorFixes}{Will attempt to fix known errors. Currently only some failures
-for SpatialPolygons* are attempted. Notably with \code{raster::buffer(..., width = 0)}.
+for \code{SpatialPolygons*} are attempted.
+Notably with \code{raster::buffer(..., width = 0)}.
 Default \code{TRUE}, though this may not be the right action for all cases.}
 
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 Cache is used on the internal \code{raster::buffer} command.}
 
 \item{...}{Passed to methods. None currently implemented.}
-
-\item{x}{A \code{SpatialPolygons} object}
-
-\item{x}{A \code{SpatialPolygons} object}
 }
 \description{
 These must be very common for this function to be useful. Currently, the only

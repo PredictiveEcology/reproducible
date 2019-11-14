@@ -148,8 +148,6 @@ setMethod(
 #' The default method for \code{preDigestByClass} and simply returns \code{NULL}.
 #' There may be methods in other packages.
 #'
-#' @inheritParams Cache
-#'
 #' @param object Any R object.
 #'
 #' @return A list with elements that will likely be used in \code{.postProcessing}
@@ -172,8 +170,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) { # nolint
     NULL
-  })
-
+})
 
 ################################################################################
 #' Check for cache repository info in ...
@@ -614,8 +611,6 @@ setMethod(
 #'
 #' @param obj The raster object to save to the repository.
 #'
-#' @inheritParams Cache
-#'
 #' @param repoDir Character denoting an existing directory in which an artifact will be saved.
 #'
 #' @param overwrite Logical. Should the raster be saved to disk, overwriting existing file.
@@ -630,8 +625,8 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom raster filename dataType inMemory nlayers writeRaster hasValues
 #' @importFrom methods is selectMethod slot slot<-
+#' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
 #' @rdname prepareFileBackedRaster
 #' @examples
 #' library(raster)
@@ -680,7 +675,7 @@ setMethod(
     tempName <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
     curFilename[!isFilebacked] <- tempName[!isFilebacked]
   }
-  if (any(isFilebacked)){
+  if (any(isFilebacked)) {
     if (is(obj, "RasterLayer") || is(obj, "RasterBrick")) {
       curFilename <- normalizePath(filename(obj), winslash = "/", mustWork = FALSE)
     } else  {
@@ -818,7 +813,6 @@ if (any(saveFilename != curFilename)) {
   return(obj)
 }
 
-
 #' Copy a file using \code{robocopy} on Windows and \code{rsync} on Linux/macOS
 #'
 #' This is replacement for \code{file.copy}, but for one file at a time.
@@ -845,8 +839,6 @@ if (any(saveFilename != curFilename)) {
 #' @param create Passed to \code{checkPath}.
 #'
 #' @param silent Should a progress be printed.
-#'
-#' @inheritParams base::file.copy
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @rdname copyFile

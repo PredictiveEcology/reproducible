@@ -12,9 +12,14 @@ projectInputs(x, targetCRS, ...)
 
 \method{projectInputs}{default}(x, targetCRS, ...)
 
-\method{projectInputs}{Raster}(x, targetCRS = NULL,
-  rasterToMatch = NULL, cores = NULL,
-  useGDAL = getOption("reproducible.useGDAL", TRUE), ...)
+\method{projectInputs}{Raster}(
+  x,
+  targetCRS = NULL,
+  rasterToMatch = NULL,
+  cores = NULL,
+  useGDAL = getOption("reproducible.useGDAL", TRUE),
+  ...
+)
 
 \method{projectInputs}{sf}(x, targetCRS, ...)
 

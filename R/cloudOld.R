@@ -48,8 +48,6 @@ cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, check
 #'
 #' Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 #'
-#' @inheritParams cloudCheckOld
-#' @inheritParams cloudWriteOld
 #' @param ... Passed to \code{\link{Cache}}
 #'
 #' @export
@@ -62,7 +60,6 @@ cloudCache <- function(...) {
   .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
   return(invisible())
 }
-
 
 #' Sync cloud with local Cache
 #'

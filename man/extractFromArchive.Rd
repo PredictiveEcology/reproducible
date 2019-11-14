@@ -4,11 +4,17 @@
 \alias{extractFromArchive}
 \title{Extract files from archive}
 \usage{
-extractFromArchive(archive,
-  destinationPath = getOption("reproducible.destinationPath",
-  dirname(archive)), neededFiles = NULL, extractedArchives = NULL,
-  checkSums = NULL, needChecksums = 0, filesExtracted = character(),
-  checkSumFilePath = character(), quick = FALSE)
+extractFromArchive(
+  archive,
+  destinationPath = getOption("reproducible.destinationPath", dirname(archive)),
+  neededFiles = NULL,
+  extractedArchives = NULL,
+  checkSums = NULL,
+  needChecksums = 0,
+  filesExtracted = character(),
+  checkSumFilePath = character(),
+  quick = FALSE
+)
 }
 \arguments{
 \item{archive}{Character string giving the path of the archive

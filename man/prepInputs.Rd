@@ -4,13 +4,19 @@
 \alias{prepInputs}
 \title{Download and optionally post process files}
 \usage{
-prepInputs(targetFile = NULL, url = NULL, archive = NULL,
+prepInputs(
+  targetFile = NULL,
+  url = NULL,
+  archive = NULL,
   alsoExtract = NULL,
   destinationPath = getOption("reproducible.destinationPath", "."),
-  fun = NULL, quick = getOption("reproducible.quick"),
+  fun = NULL,
+  quick = getOption("reproducible.quick"),
   overwrite = getOption("reproducible.overwrite", FALSE),
-  purge = FALSE, useCache = getOption("reproducible.useCache", FALSE),
-  ...)
+  purge = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
 }
 \arguments{
 \item{targetFile}{Character string giving the path to the eventual file

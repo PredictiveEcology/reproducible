@@ -12,6 +12,5 @@ tempdir2(sub)
 directories.}
 }
 \description{
-This function creates a temporary subdirectory in
-\code{tempdir()}.
+Create a temporary subdirectory in \code{tempdir()}.
 }

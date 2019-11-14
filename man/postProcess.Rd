@@ -14,17 +14,29 @@ postProcess(x, ...)
 
 \method{postProcess}{list}(x, ...)
 
-\method{postProcess}{spatialObjects}(x, filename1 = NULL,
-  filename2 = TRUE, studyArea = NULL, rasterToMatch = NULL,
+\method{postProcess}{spatialObjects}(
+  x,
+  filename1 = NULL,
+  filename2 = TRUE,
+  studyArea = NULL,
+  rasterToMatch = NULL,
   overwrite = getOption("reproducible.overwrite", TRUE),
-  useSAcrs = FALSE, useCache = getOption("reproducible.useCache",
-  FALSE), ...)
+  useSAcrs = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
 
-\method{postProcess}{sf}(x, filename1 = NULL, filename2 = TRUE,
-  studyArea = NULL, rasterToMatch = NULL,
+\method{postProcess}{sf}(
+  x,
+  filename1 = NULL,
+  filename2 = TRUE,
+  studyArea = NULL,
+  rasterToMatch = NULL,
   overwrite = getOption("reproducible.overwrite", TRUE),
-  useSAcrs = FALSE, useCache = getOption("reproducible.useCache",
-  FALSE), ...)
+  useSAcrs = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
 }
 \arguments{
 \item{x}{An object of postProcessing, e.g., \code{spatialObjects}.

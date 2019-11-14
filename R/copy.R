@@ -1,11 +1,11 @@
 #' Make a temporary sub-directory
 #'
-#' This function creates a temporary subdirectory in
-#' \code{tempdir()}.
+#' Create a temporary subdirectory in \code{tempdir()}.
 #'
 #' @param sub Character string, length 1. Can be a result of
 #'   \code{file.path("smth", "smth2")} for nested temporary sub
 #'   directories.
+#'
 #' @export
 tempdir2 <- function(sub) {
   checkPath(file.path(tempdir(), sub), create = TRUE)

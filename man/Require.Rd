@@ -4,9 +4,16 @@
 \alias{Require}
 \title{Repeatability-safe install and load packages, optionally with specific versions}
 \usage{
-Require(packages, packageVersionFile, libPath = .libPaths()[1],
-  install_githubArgs = list(), install.packagesArgs = list(),
-  standAlone = FALSE, repos = getOption("repos"), forget = FALSE)
+Require(
+  packages,
+  packageVersionFile,
+  libPath = .libPaths()[1],
+  install_githubArgs = list(),
+  install.packagesArgs = list(),
+  standAlone = FALSE,
+  repos = getOption("repos"),
+  forget = FALSE
+)
 }
 \arguments{
 \item{packages}{Character vector of packages to install via

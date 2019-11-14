@@ -5,13 +5,25 @@
 \alias{copyFile}
 \title{Copy a file using \code{robocopy} on Windows and \code{rsync} on Linux/macOS}
 \usage{
-copySingleFile(from = NULL, to = NULL, useRobocopy = TRUE,
-  overwrite = TRUE, delDestination = FALSE, create = TRUE,
-  silent = FALSE)
+copySingleFile(
+  from = NULL,
+  to = NULL,
+  useRobocopy = TRUE,
+  overwrite = TRUE,
+  delDestination = FALSE,
+  create = TRUE,
+  silent = FALSE
+)
 
-copyFile(from = NULL, to = NULL, useRobocopy = TRUE,
-  overwrite = TRUE, delDestination = FALSE, create = TRUE,
-  silent = FALSE)
+copyFile(
+  from = NULL,
+  to = NULL,
+  useRobocopy = TRUE,
+  overwrite = TRUE,
+  delDestination = FALSE,
+  create = TRUE,
+  silent = FALSE
+)
 }
 \arguments{
 \item{from}{The source file.}
