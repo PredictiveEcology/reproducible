@@ -25,7 +25,7 @@ one package, it can be unquoted (as in \code{require})}
 \item{repos}{The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},}
 
 \item{githubPkgs}{Character vector of github repositories and packages, in the
-form \code{repository/package@branch}, with branch being optional.}
+form \code{username/package@branch}, with branch being optional.}
 
 \item{githubPkgNames}{Character vector of the package names, i.e., just the R package name.}
 

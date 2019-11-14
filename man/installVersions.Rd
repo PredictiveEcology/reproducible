@@ -65,6 +65,5 @@ packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
 pkgSnapshot(libPath=tempPkgFolder, packageVersionFile, standAlone = FALSE)
 
 installVersions("crayon", packageVersionFile = packageVersionFile)
-
 }
 }
