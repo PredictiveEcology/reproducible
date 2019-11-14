@@ -74,7 +74,6 @@ matrix:
         sources:
           - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
         packages:
-          - ccache
           - gdal-bin
           - libgdal-dev
           - libgeos-dev
