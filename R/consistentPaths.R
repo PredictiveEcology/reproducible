@@ -33,7 +33,8 @@ setMethod("normPath",
                   normalizePath(x, winslash = "/", mustWork = FALSE)
                 }
               })
-              # Eliot changed this Sept 24, 2019 because weird failures with getwd() in non-interactive testing
+              # Eliot changed this Sept 24, 2019 because weird failures with getwd()
+              # in non-interactive testing
               path <- unlist(path)
               if (!is.null(path)) {
                 hasDotStart <- startsWith(path, ".")
