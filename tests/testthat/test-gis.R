@@ -57,9 +57,15 @@ test_that("fastMask produces correct results", {
     # The warning is "data type "LOG" is not available in GDAL -- not relevant here
     {
       if (hasGDALInstalled) {
-        warn <- capture_warnings(
-          newStack3 <- fastMask(x = origStack[[2]], y = shpDF)
-        )
+        if (identical(.Platform$OS.type, "windows")) {
+          warn <- capture_warnings(
+            newStack3 <- fastMask(x = origStack[[2]], y = shpDF)
+          )
+        } else {
+          warn <- capture_warnings(expect_error(
+            newStack3 <- fastMask(x = origStack[[2]], y = shpDF))
+          )
+        }
         warn <- capture_warnings(
           expect_error(
             out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"), "needs to be passed")
