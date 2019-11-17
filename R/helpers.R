@@ -105,13 +105,14 @@ rndstr <- function(n = 1, len = 8) {
 }
 
 #' Alternative to \code{interactive()} for unit testing
-#' @keywords internal
+#'
 #' This is a suggestion from
 #' \url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}
 #' as a way to test interactive code in unit tests. Basically, in the unit tests,
 #' we use \code{testthat::with_mock}, and inside that we redefine \code{isInteractive}
 #' just for the test. In all other times, this returns the same things as
 #' \code{interactive()}.
+#' @keywords internal
 #' @examples
 #' \dontrun{
 #' testthat::with_mock(
