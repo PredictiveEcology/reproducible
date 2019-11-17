@@ -7,7 +7,12 @@
 isInteractive()
 }
 \description{
-Alternative to \code{interactive()} for unit testing
+This is a suggestion from
+\url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}
+as a way to test interactive code in unit tests. Basically, in the unit tests,
+we use \code{testthat::with_mock}, and inside that we redefine \code{isInteractive}
+just for the test. In all other times, this returns the same things as
+\code{interactive()}.
 }
 \examples{
 \dontrun{
@@ -21,42 +26,4 @@ testthat::with_mock(
   })
   }
 }
-\keyword{Basically,}
-\keyword{In}
-\keyword{This}
-\keyword{\code{interactive()}.}
-\keyword{\code{isInteractive}}
-\keyword{\code{testthat::with_mock},}
-\keyword{\url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}}
-\keyword{a}
-\keyword{all}
-\keyword{and}
-\keyword{as}
-\keyword{code}
-\keyword{for}
-\keyword{from}
-\keyword{in}
-\keyword{inside}
-\keyword{interactive}
 \keyword{internal}
-\keyword{is}
-\keyword{just}
-\keyword{other}
-\keyword{redefine}
-\keyword{returns}
-\keyword{same}
-\keyword{suggestion}
-\keyword{test}
-\keyword{test.}
-\keyword{tests,}
-\keyword{tests.}
-\keyword{that}
-\keyword{the}
-\keyword{things}
-\keyword{this}
-\keyword{times,}
-\keyword{to}
-\keyword{unit}
-\keyword{use}
-\keyword{way}
-\keyword{we}
