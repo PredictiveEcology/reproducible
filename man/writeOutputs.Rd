@@ -8,17 +8,33 @@
 \alias{writeOutputs.default}
 \title{Write module inputs on disk}
 \usage{
-writeOutputs(x, filename2,
-  overwrite = getOption("reproducible.overwrite", NULL), ...)
+writeOutputs(
+  x,
+  filename2,
+  overwrite = getOption("reproducible.overwrite", NULL),
+  ...
+)
 
-\method{writeOutputs}{Raster}(x, filename2 = NULL,
-  overwrite = getOption("reproducible.overwrite", FALSE), ...)
+\method{writeOutputs}{Raster}(
+  x,
+  filename2 = NULL,
+  overwrite = getOption("reproducible.overwrite", FALSE),
+  ...
+)
 
-\method{writeOutputs}{Spatial}(x, filename2 = NULL,
-  overwrite = getOption("reproducible.overwrite", TRUE), ...)
+\method{writeOutputs}{Spatial}(
+  x,
+  filename2 = NULL,
+  overwrite = getOption("reproducible.overwrite", TRUE),
+  ...
+)
 
-\method{writeOutputs}{sf}(x, filename2 = NULL,
-  overwrite = getOption("reproducible.overwrite", FALSE), ...)
+\method{writeOutputs}{sf}(
+  x,
+  filename2 = NULL,
+  overwrite = getOption("reproducible.overwrite", FALSE),
+  ...
+)
 
 \method{writeOutputs}{default}(x, filename2, ...)
 }
@@ -29,8 +45,7 @@ writeOutputs(x, filename2,
 \code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
 (\code{dsn} argument).}
 
-\item{overwrite}{Logical. Should file being written overwrite an existing file if it
-exists.}
+\item{overwrite}{Logical. Should file being written overwrite an existing file if it exists.}
 
 \item{...}{Passed into \code{\link[raster]{shapefile}} or
 \code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}}

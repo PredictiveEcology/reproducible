@@ -12,23 +12,47 @@
 \usage{
 objSize(x, quick, enclosingEnvs, .prevEnvirs, ...)
 
-\method{objSize}{default}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+\method{objSize}{default}(
+  x,
+  quick = getOption("reproducible.quick", FALSE),
+  enclosingEnvs = TRUE,
+  .prevEnvirs = list(),
+  ...
+)
 
-\method{objSize}{list}(x, quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+\method{objSize}{list}(
+  x,
+  quick = getOption("reproducible.quick", FALSE),
+  enclosingEnvs = TRUE,
+  .prevEnvirs = list(),
+  ...
+)
 
-\method{objSize}{environment}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+\method{objSize}{environment}(
+  x,
+  quick = getOption("reproducible.quick", FALSE),
+  enclosingEnvs = TRUE,
+  .prevEnvirs = list(),
+  ...
+)
 
-\method{objSize}{Path}(x, quick = getOption("reproducible.quick", FALSE),
-  enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+\method{objSize}{Path}(
+  x,
+  quick = getOption("reproducible.quick", FALSE),
+  enclosingEnvs = TRUE,
+  .prevEnvirs = list(),
+  ...
+)
 
-\method{objSize}{function}(x, quick = getOption("reproducible.quick",
-  FALSE), enclosingEnvs = TRUE, .prevEnvirs = list(), ...)
+\method{objSize}{`function`}(
+  x,
+  quick = getOption("reproducible.quick", FALSE),
+  enclosingEnvs = TRUE,
+  .prevEnvirs = list(),
+  ...
+)
 
-objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE,
-  .prevEnvirs = list())
+objSizeSession(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = list())
 }
 \arguments{
 \item{x}{An object}

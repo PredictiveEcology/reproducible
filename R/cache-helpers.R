@@ -148,8 +148,6 @@ setMethod(
 #' The default method for \code{preDigestByClass} and simply returns \code{NULL}.
 #' There may be methods in other packages.
 #'
-#' @inheritParams Cache
-#'
 #' @param object Any R object.
 #'
 #' @return A list with elements that will likely be used in \code{.postProcessing}
@@ -172,8 +170,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) { # nolint
     NULL
-  })
-
+})
 
 ################################################################################
 #' Check for cache repository info in ...
@@ -614,8 +611,6 @@ setMethod(
 #'
 #' @param obj The raster object to save to the repository.
 #'
-#' @inheritParams Cache
-#'
 #' @param repoDir Character denoting an existing directory in which an artifact will be saved.
 #'
 #' @param overwrite Logical. Should the raster be saved to disk, overwriting existing file.
@@ -630,8 +625,8 @@ setMethod(
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom raster filename dataType inMemory nlayers writeRaster hasValues
 #' @importFrom methods is selectMethod slot slot<-
+#' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
 #' @rdname prepareFileBackedRaster
 #' @examples
 #' library(raster)
@@ -650,7 +645,6 @@ setMethod(
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE, ...) {
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
-  browser(expr = exists("bbb"))
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
 
@@ -681,7 +675,7 @@ setMethod(
     tempName <- basename(tempfile(pattern = "raster", fileext = fileExt, tmpdir = ""))
     curFilename[!isFilebacked] <- tempName[!isFilebacked]
   }
-  if (any(isFilebacked)){
+  if (any(isFilebacked)) {
     if (is(obj, "RasterLayer") || is(obj, "RasterBrick")) {
       curFilename <- normalizePath(filename(obj), winslash = "/", mustWork = FALSE)
     } else  {
@@ -804,7 +798,7 @@ if (any(saveFilename != curFilename)) {
     }
   if (any(!notSameButBacked)) {
       ## deal with files that haven't been backed
-      checkPath(dirname(saveFilename[!notSameButBacked]), create = TRUE) #SpaDES dependency
+      checkPath(unique(dirname(saveFilename[!notSameButBacked])), create = TRUE) #SpaDES dependency
       if (any(!whichInMemory[!notSameButBacked])) {
         if (!isStack) {
           obj <- writeRaster(obj, filename = saveFilename[!notSameButBacked], datatype = dataType(obj))
@@ -818,7 +812,6 @@ if (any(saveFilename != curFilename)) {
   }
   return(obj)
 }
-
 
 #' Copy a file using \code{robocopy} on Windows and \code{rsync} on Linux/macOS
 #'
@@ -846,8 +839,6 @@ if (any(saveFilename != curFilename)) {
 #' @param create Passed to \code{checkPath}.
 #'
 #' @param silent Should a progress be printed.
-#'
-#' @inheritParams base::file.copy
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @rdname copyFile
@@ -888,7 +879,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   os <- tolower(Sys.info()[["sysname"]])
   .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
   if (!useFileCopy) {
-    if (os == "windows") {
+    if (isWindows()) {
       if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
       robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
@@ -925,6 +916,8 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
         rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
         opts <- if (silent) " -a " else " -avP "
+        # rsync command can't handle spaces in dirnames -- must protect them
+        toDir <- gsub("\ ", "\\ ", toDir, fixed = TRUE)
         rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
                         normalizePath(from, mustWork = TRUE), " ",
                         normalizePath(toDir, mustWork = FALSE), "/")
@@ -968,6 +961,15 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     dig <- fastdigest(append(list(dim(object), res(object), crs(object),
                               extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
 
+  sn <- slotNames(object@file)
+  sn <- sn[!(sn %in% c("name"))]
+  fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    digFile <- digest(fileSlotsToDigest, algo = algo) # don't include object@file -- these are volatile
+  else
+    digFile <- fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
+
+  dig <- c(dig, digFile)
   if (nzchar(object@file@name)) {
     # if the Raster is on disk, has the first length characters;
     filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
@@ -977,7 +979,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     }
     # there is no good reason to use depth = 0, 1, or 2 or more -- but I think 2 is *more* reliable
     dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
-    dig <- c(dig, dig2)
+    dig <- c(dig, unname(dig2))
   }
 
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
@@ -987,99 +989,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   dig
 }
 
-#' Recursive copying of nested environments, and other "hard to copy" objects
-#'
-#' When copying environments and all the objects contained within them, there are
-#' no copies made: it is a pass-by-reference operation. Sometimes, a deep copy is
-#' needed, and sometimes, this must be recursive (i.e., environments inside
-#' environments).
-#'
-#' @param object  An R object (likely containing environments) or an environment.
-#'
-#' @param filebackedDir A directory to copy any files that are backing R objects,
-#'                      currently only valid for \code{Raster} classes. Defaults
-#'                      to \code{tempdir()}, which is unlikely to be very useful.
-#'
-#' @param ... Only used for custom Methods
-#'
-#' @author Eliot McIntire
-#' @export
-#' @importFrom data.table copy
-#' @rdname Copy
-#' @seealso \code{\link{.robustDigest}}
-#'
-#' @examples
-#' e <- new.env()
-#' e$abc <- letters
-#' e$one <- 1L
-#' e$lst <- list(W = 1:10, X = runif(10), Y = rnorm(10), Z = LETTERS[1:10])
-#' ls(e)
-#'
-#' # 'normal' copy
-#' f <- e
-#' ls(f)
-#' f$one
-#' f$one <- 2L
-#' f$one
-#' e$one ## uh oh, e has changed!
-#'
-#' # deep copy
-#' e$one <- 1L
-#' g <- Copy(e)
-#' ls(g)
-#' g$one
-#' g$one <- 3L
-#' g$one
-#' f$one
-#' e$one
-#'
-setGeneric("Copy", function(object, filebackedDir = tempdir(), ...) {
-  standardGeneric("Copy")
-})
-
-#' @rdname Copy
-setMethod(
-  "Copy",
-  signature(object = "ANY"),
-  definition = function(object, filebackedDir, ...) {
-    return(object)
-})
-
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "data.table"),
-          definition = function(object, ...) {
-            data.table::copy(object)
-})
-
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "environment"),
-          definition = function(object,  filebackedDir, ...) {
-            listVersion <- Copy(as.list(object, all.names = TRUE),  filebackedDir, ...)
-            as.environment(listVersion)
-})
-
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "list"),
-          definition = function(object,  filebackedDir, ...) {
-            lapply(object, function(x) Copy(x, filebackedDir, ...))
-})
-
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "data.frame"),
-          definition = function(object,  filebackedDir, ...) {
-            object
-})
-
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "Raster"),
-          definition = function(object, filebackedDir, ...) {
-            object <- .prepareFileBackedRaster(object, repoDir = filebackedDir)
-})
 
 ################################################################################
 #' Sort or order any named object with dotted names and underscores first
@@ -1236,3 +1145,4 @@ nextNumericName <- function(string) {
   scallsFirstElement <- lapply(sysCalls, function(x) x[1])
   grep(scallsFirstElement, pattern = pattern)
 }
+

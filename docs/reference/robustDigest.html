@@ -88,7 +88,11 @@ work correctly." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
+<<<<<<< HEAD
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.10</span>
+=======
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+>>>>>>> development
       </span>
     </div>
 
@@ -157,53 +161,59 @@ conditions and object types, there are bound to be others that don't
 work correctly.</p>
     </div>
 
+<<<<<<< HEAD
     <pre class="usage"><span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.length"</span>,
   <span class='fl'>Inf</span>), <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
   <span class='fl'>FALSE</span>), <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(), <span class='no'>...</span>)
+=======
+    <pre class="usage"><span class='fu'>.robustDigest</span>(
+  <span class='no'>object</span>,
+  <span class='no'>.objects</span>,
+  <span class='kw'>length</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.length"</span>, <span class='fl'>Inf</span>),
+  <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>classOptions</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='no'>...</span>
+)
+>>>>>>> development
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for cluster</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for `function`</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for expression</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for character</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for Path</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for environment</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>,
-  <span class='no'>quick</span>, <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for list</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for data.frame</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for Raster</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
-  <span class='no'>classOptions</span>)
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for Spatial</span>
+<<<<<<< HEAD
 <span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>,
   <span class='no'>classOptions</span>)</pre>
+=======
+<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)</pre>
+>>>>>>> development
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -316,12 +326,20 @@ using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
 <span class='fu'><a href='https://rdrr.io/r/base/save.html'>save</a></span>(<span class='no'>a</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
 <span class='co'># treats as character string, so 2 filenames are different</span>
+<<<<<<< HEAD
 <span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "c854b1d4b72af6384f5b05d15925e499"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "ef6aee014cb44b1b26d0ed6a13f83c2d"</div><div class='input'>
+=======
+<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "70c5bf911b8634216aed5f44b6ed7e7c"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "66d7b43b4aeba60b22e9052a4ec9a9f5"</div><div class='input'>
+>>>>>>> development
 <span class='co'># tests to see whether character string is representing a file</span>
 <span class='fu'>.robustDigest</span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "80b781f5b1bf87c9"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>tmpfile2</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [1] "80b781f5b1bf87c9"</div><div class='input'>
 <span class='co'># if you tell it that it is a path, then you can decide if you want it to be</span>
 <span class='co'>#  treated as a character string or as a file path</span>
+<<<<<<< HEAD
 <span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "8cb320f278c30c39"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "4d519c66fa716996"</div><div class='input'>
+=======
+<span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "6eac52f164492860"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "7babd18f8ab4a023"</div><div class='input'>
+>>>>>>> development
 <span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; [[1]]
 #&gt; [1] "80b781f5b1bf87c9"
 #&gt; </div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>) <span class='co'># same because using file content</span></div><div class='output co'>#&gt; [[1]]
@@ -336,9 +354,13 @@ using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
 <span class='no'>r1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile1</span>)
 <span class='no'>r2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
+<<<<<<< HEAD
 <span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "600c69388d896918a6be6c84f13d6e9c"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "1776338aaa44bff9f917b57228fe3464"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "600c69388d896918a6be6c84f13d6e9c"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "1776338aaa44bff9f917b57228fe3464"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "e83ff53a773811b5"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "e83ff53a773811b5"</div><div class='input'>
+=======
+<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "6a1d3e63f60a7de03084bac3e2867381"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "e63933aa7500cf881853268cbdb5f70e"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "6a1d3e63f60a7de03084bac3e2867381"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "e63933aa7500cf881853268cbdb5f70e"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'>
+>>>>>>> development
 <span class='co'># note, this is not true for comparing memory and file-backed rasters</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>r</span>)</div><div class='output co'>#&gt; [1] "ce0a4c9227d2dc2d"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "e83ff53a773811b5"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='no'>r</span>)</div><div class='output co'>#&gt; [1] "e4c91c4fbea055a8"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
@@ -363,7 +385,11 @@ using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
 </div>
 
 <div class="pkgdown">
+<<<<<<< HEAD
   <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.0.</p>
+=======
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+>>>>>>> development
 </div>
 
       </footer>

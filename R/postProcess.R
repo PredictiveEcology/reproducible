@@ -213,7 +213,7 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
 #' @importFrom rgeos gIsValid
-#' @importFrom sp SpatialPolygonsDataFrame spTransform CRS
+#' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
 #' @rdname cropInputs
 cropInputs <- function(x, studyArea, rasterToMatch, ...) {
   UseMethod("cropInputs")
@@ -237,6 +237,11 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #' @rdname cropInputs
 cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL, ...) {
+  useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
+  if (useExtentToMatch) {
+    extentToMatch <- NULL
+    extentCRS <- NULL
+  }
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
     if (!is.null(extentToMatch)) {
       rasterToMatch <- raster(extentToMatch, crs = extentCRS)
@@ -249,17 +254,25 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
     # have to project the extent to the x projection so crop will work -- this is temporary
     #   once cropped, then cropExtent should be rm
-    cropExtent <- if (identical(crs(x), crs(cropTo))) {
+    crsX <- crs(x)
+    crsCropTo <- crs(cropTo)
+    if (is(crsX, "CRS")) crsX <- proj4string(x)
+    if (is(crsCropTo, "CRS")) crsCropTo <- proj4string(cropTo)
+    cropExtent <- if (identical(crsX, crsCropTo)) {
       extent(cropTo)
     } else {
       if (!is.null(rasterToMatch)) {
-        projectExtent(cropTo, crs(x))
+        projectExtent(cropTo, crsX)
       } else {
         if (is(studyArea, "Spatial")) {
           #theExtent <- as(extent(cropTo), "SpatialPolygons")
-          #crs(theExtent) <- crs(cropTo)
-          raster::extent(spTransform(x = cropTo, CRSobj = crs(x)))
+          #crs(theExtent) <- crsCropTo
+          raster::extent(spTransform(x = cropTo, CRSobj = crsX))
+        } else if (is(studyArea, "sf")) {
+          extent(st_transform(cropTo, crs = crsX))
         } else {
+          message("cropInputs must have a rasterToMatch raster, or studyArea Spatial or sf object. ",
+                  "Returning result with no cropping.")
           NULL
         }
       }
@@ -271,6 +284,13 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
+
+        if (is(x, "SpatialPolygonsDataFrame")) {
+          if (ncol(x) == 0) {
+            x <- as(x, "SpatialPolygons")
+            message("x was a SpatialPolygonsDataFrame with no data; converting to SpatialPolygons object")
+          }
+        }
         if (canProcessInMemory(x, 3)) {
           x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
         } else {
@@ -294,6 +314,11 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' @rdname cropInputs
 cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           extentToMatch = NULL, extentCRS = NULL, ...) {
+  useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
+  if (useExtentToMatch) {
+    extentToMatch <- NULL
+    extentCRS <- NULL
+  }
   message("cropInputs with sf class objects is still experimental")
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
     if (!is.null(extentToMatch)) {
@@ -311,7 +336,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
       extent(cropTo)
     } else {
       if (!is.null(rasterToMatch)) {
-        stop("Can't work with rasterToMatch and sf objects yet in cropInputs")
+        # stop("Can't work with rasterToMatch and sf objects yet in cropInputs")
         projectExtent(cropTo, crs(x))
       } else {
         if (is(studyArea, "sf")) {
@@ -324,9 +349,9 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
       }
     }
 
-    if (!identical(crs(x), crs(cropExtent))) {
-      crs(cropExtent) <- crs(x)
-    }
+    # if (!identical(crs(x), crs(cropExtent))) {
+    #   crs(cropExtent) <- crs(x)
+    # }
 
     if (!is.null(cropExtent)) {
       # crop it
@@ -335,7 +360,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
         x <- do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots))
-        if (is.null(x)) {
+        if (all(sapply(extent(x), function(xx) is.na(xx)))) {
           message("    polygons do not intersect.")
         }
       }
@@ -349,19 +374,23 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' These must be very common for this function to be useful. Currently, the only
 #' meaningful method is on SpatialPolygons, and it runs \code{rgeos::gIsValid}. If
 #' \code{FALSE}, then it runs a buffer of width 0.
-#' @inheritParams prepInputs
-#' @param x Any object that could be fixed for errors.
-#'          See \code{\link{fixErrors.SpatialPolygons}}
-#' @export
-#' @keywords internal
+#'
+#' @param x A \code{SpatialPolygons*} or \code{sf} object.
+#'
 #' @param objectName Optional. This is only for messaging; if provided, then messages relayed
 #'                   to user will mention this.
+#'
 #' @param attemptErrorFixes Will attempt to fix known errors. Currently only some failures
-#'        for SpatialPolygons* are attempted. Notably with \code{raster::buffer(..., width = 0)}.
+#'        for \code{SpatialPolygons*} are attempted.
+#'        Notably with \code{raster::buffer(..., width = 0)}.
 #'        Default \code{TRUE}, though this may not be the right action for all cases.
 #' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 #'                 Cache is used on the internal \code{raster::buffer} command.
 #' @param ... Passed to methods. None currently implemented.
+#'
+#' @export
+#' @keywords internal
+#'
 #' @example inst/examples/example_postProcess.R
 fixErrors <- function(x, objectName, attemptErrorFixes = TRUE,
                       useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -382,8 +411,6 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #' failures to \code{rgeos::gIsValid}
 #'
 #' @export
-#' @param x A \code{SpatialPolygons} object
-#' @inheritParams fixErrors
 #' @importFrom testthat capture_warnings
 #' @rdname fixErrors
 fixErrors.SpatialPolygons <- function(x, objectName = NULL,
@@ -422,9 +449,6 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
   return(x)
 }
 
-#' @inheritParams fixErrors
-#' @param x A \code{SpatialPolygons} object
-#'
 #' @export
 #' @importFrom sf st_buffer st_geometry st_is_valid
 #' @importFrom testthat capture_warnings
@@ -433,7 +457,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE), ...) {
   if (attemptErrorFixes) {
     if (is.null(objectName)) objectName = "SimpleFeature"
-    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY")) {
+    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY") || is(st_geometry(x), "sfc")) {
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
@@ -451,7 +475,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 
         if (is(x1, "try-error")) {
           message("There are errors with ", objectName,
-                  ". Couldn't fix them with raster::buffer(..., width = 0)")
+                  ". Couldn't fix them with sf::st_buffer(..., width = 0)")
         } else {
           x <- x1
           message("  Some or all of the errors fixed.")
@@ -469,12 +493,16 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 #' A simple wrapper around the various different tools for these GIS types.
 #'
 #' @param x A \code{Raster*}, \code{Spatial*} or \code{sf} object
+#'
 #' @param targetCRS The CRS of x at the end  of this function (i.e., the goal)
+#'
 #' @param ... Passed to \code{\link[raster]{projectRaster}}.
+#'
 #' @param rasterToMatch Template \code{Raster*} object passed to the \code{to} argument of
 #'                      \code{\link[raster]{projectRaster}}, thus will changing the
 #'                      resolution and projection of \code{x}.
 #'                      See details in \code{\link{postProcess}}.
+#'
 #' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
 #'                      triggered. \code{'AUTO'*} will calculate 90% of the total
 #'                      number of cores in the system, while an integer or rounded
@@ -556,7 +584,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
 
         gdalUtils::gdal_setInstallation()
-        if (.Platform$OS.type == "windows") {
+        if (isWindows()) {
           exe <- ".exe"
         } else {
           exe <- ""
@@ -948,24 +976,16 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
     dots <- list(...)
 
     if (!is.null(dots$inputFilePath))  {
-      message("inputFilePath is being deprecated; use filename1")
-      filename1 <- dots$inputFilePath
-      dots$inputFilePath <- NULL
+      stop("inputFilePath is being deprecated; use filename1")
     }
 
     if (!is.null(dots$postProcessedFilename))  {
-      message("postProcessedFilename is being deprecated; use filename2")
-      filename2 <- dots$postProcessedFilename
-      dots$postProcessedFilename <- NULL
+      stop("postProcessedFilename is being deprecated; use filename2")
     }
 
     if (!is.null(dots$targetFilePath))  {
-      message("targetFilePath is being deprecated from determineFilename:\n",
+      stop("targetFilePath is being deprecated from determineFilename:\n",
               "  use filename2 and filename1.")
-      if (is.null(filename1)) {
-        filename1 <- dots$targetFilePath
-        dots$targetFilePath <- NULL
-      }
     }
 
     if (!(is.logical(filename2) || is.character(filename2) || is.null(filename2))) {
@@ -1005,13 +1025,14 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 #'
 #' Can be used to write prepared inputs on disk.
 #'
-#' @inheritParams postProcess
 #' @param x  The object save to disk i.e., write outputs
-#' @param overwrite Logical. Should file being written overwrite an existing file if it
-#'                  exists.
+#'
+#' @param overwrite Logical. Should file being written overwrite an existing file if it exists.
+#'
 #' @param filename2 File name passed to \code{\link[raster]{writeRaster}}, or
 #'                  \code{\link[raster]{shapefile}} or \code{\link[sf]{st_write}}
 #'                  (\code{dsn} argument).
+#'
 #' @param ... Passed into \code{\link[raster]{shapefile}} or
 #'             \code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}
 #'
@@ -1020,8 +1041,8 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 #' @importFrom methods is
 #' @importFrom raster shapefile writeRaster
 #' @rdname writeOutputs
-#' @example inst/examples/example_postProcess.R
 #'
+#' @example inst/examples/example_postProcess.R
 writeOutputs <- function(x, filename2,
                          overwrite = getOption("reproducible.overwrite", NULL),
                          ...) {
@@ -1054,16 +1075,27 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         filename2 <- filename3
       }
     }
-    xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
-    #Before changing to do.call, dots were not being added.
-    # This is a bug in writeRaster was spotted with crs of xTmp became
-    # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
-    # should have stayed at
-    # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
-    if (!identical(crs(xTmp), crs(x)))
-      crs(xTmp) <- crs(x)
+    # There is a weird thing that doing a writeRaster changes the digest of the file, even
+    #   when the object is identical, confirmed by loading each into R, and comparing everything
+    # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
+    if (fromDisk(x)) {
+      file.copy(filename(x), filename2, overwrite = overwrite)
+      x@file@name <- filename2
+      if (dots$datatype != dataType(x)) {
+        dataType(x) <- dots$datatype
+      }
+    } else {
+      xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
+      #Before changing to do.call, dots were not being added.
+      # This is a bug in writeRaster was spotted with crs of xTmp became
+      # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
+      # should have stayed at
+      # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
+      if (!identical(crs(xTmp), crs(x)))
+        crs(xTmp) <- crs(x)
 
-    x <- xTmp
+      x <- xTmp
+    }
   }
   x
 }
@@ -1343,7 +1375,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     useBuffer <- FALSE
     bufferSA <- FALSE
 
-    if (class(x) == "RasterLayer") {
+    if (is(x, "RasterLayer")) {
       #if all CRS are projected, then check if buffer is necessary
       projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
       projections <- na.omit(projections)
@@ -1368,8 +1400,13 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       } else {
         bufferSA <- TRUE
         origStudyArea <- studyArea
-        studyArea <- sp::spTransform(studyArea, CRSobj = crs(x))
-        studyArea <- raster::buffer(studyArea, width = max(res(x)) * 1.5)
+        if (!is(studyArea, "sf")) {
+          studyArea <- sp::spTransform(studyArea, CRSobj = crs(x))
+          studyArea <- raster::buffer(studyArea, width = max(res(x)) * 1.5)
+        } else {
+          studyArea <- st_transform(studyArea, crs = crs(x))
+          studyArea <- st_buffer(studyArea, dist = max(res(x)) * 1.5)
+        }
         #confirm you could only pass study area, because buffering will require reprojecting first.
         #buffer studyArea
       }
@@ -1426,4 +1463,14 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     }
   }
   x
+}
+
+useETM <- function(extentToMatch, extentCRS) {
+  passingExtents <- sum(!is.null(extentToMatch), !is.null(extentCRS))
+  if (passingExtents == 1) {
+    message("When passing extentToMatch, you must also pass extentCRS; using rasterToMatch or studyArea instead")
+  } else if (passingExtents == 2) {
+    return(TRUE)
+  }
+  return(FALSE)
 }

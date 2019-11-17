@@ -5,9 +5,12 @@
 \alias{.guessAtTargetAndFun}
 \title{Try to pick a file to load}
 \usage{
-.guessAtTargetAndFun(targetFilePath,
+.guessAtTargetAndFun(
+  targetFilePath,
   destinationPath = getOption("reproducible.destinationPath", "."),
-  filesExtracted, fun)
+  filesExtracted,
+  fun = NULL
+)
 }
 \arguments{
 \item{destinationPath}{Full path of the directory where the target file should be}

@@ -4,9 +4,13 @@
 \alias{determineFilename}
 \title{Determine filename, either automatically or manually}
 \usage{
-determineFilename(filename2 = TRUE, filename1 = NULL,
+determineFilename(
+  filename2 = TRUE,
+  filename1 = NULL,
   destinationPath = getOption("reproducible.destinationPath"),
-  prefix = "Small", ...)
+  prefix = "Small",
+  ...
+)
 }
 \arguments{
 \item{filename2}{\code{filename2} is optional, and is either

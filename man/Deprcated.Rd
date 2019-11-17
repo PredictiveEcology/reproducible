@@ -14,5 +14,5 @@ Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 }
 \seealso{
 \code{\link{cloudSyncCacheOld}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
-  \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
+  \code{\link{cloudCheckOld}}
 }

@@ -4,8 +4,15 @@
 \alias{cloudUploadFromCache}
 \title{Upload a file to cloud directly from local \code{cacheRepo}}
 \usage{
-cloudUploadFromCache(isInCloud, outputHash, saved, cacheRepo,
-  cloudFolderID, outputToSave, rasters)
+cloudUploadFromCache(
+  isInCloud,
+  outputHash,
+  saved,
+  cacheRepo,
+  cloudFolderID,
+  outputToSave,
+  rasters
+)
 }
 \arguments{
 \item{isInCloud}{A logical indicating whether an \code{outputHash} is in the cloud already.}

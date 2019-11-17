@@ -1,6 +1,7 @@
 if (getRversion() >= "3.1.0") {
   utils::globalVariables(c(".", "artifact", "createdDate", "deeperThan3", "differs",
-                           "fun", "hash", "iden", "N", "tag", "tagKey", "tagValue"))
+                           "fun", "hash", "i.hash", "iden", "N", "tag",
+                           "tagKey", "tagValue"))
 }
 
 .reproEnv <- new.env(parent = asNamespace("reproducible"))
@@ -471,7 +472,9 @@ setMethod(
       preDigest <- cacheDigest$preDigest
       outputHash <- cacheDigest$outputHash
 
-      preDigestUnlistTrunc <- unlist(.unlistToCharacter(preDigest, 3))
+      # This does to depth 3
+      preDigestUnlistTrunc <- unlist(
+        .unlistToCharacter(preDigest, getOption("reproducible.showSimilarDepth", 3)))
 
       if (verbose > 1) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
@@ -507,6 +510,7 @@ setMethod(
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
+        message("Retrieving file list in cloud folder")
         gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
       }
       while (tries <= length(cacheRepos)) {
@@ -514,6 +518,7 @@ setMethod(
         tries <- tries + 1
         localTags <- getLocalTags(repo)
         isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+        if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
           cacheRepo <- repo
           break
@@ -584,9 +589,10 @@ setMethod(
       } else {
         # find similar -- in progress
         if (!is.null(showSimilar)) { # TODO: Needs testing
-          if (!isFALSE(showSimilar))
+          if (!isFALSE(showSimilar)) {
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
                          userTags, useCache = useCache)
+          }
         }
       }
 
@@ -658,7 +664,8 @@ setMethod(
       if (isS4(FUN)) {
         setattr(output, "function", FUN@generic)
         #attr(output, "function") <- FUN@generic
-        if (!identical(attr(output, "function"), FUN@generic)) browser()
+        if (!identical(attr(output, "function"), FUN@generic))
+          stop("There is an unknown error 03")
       }
       # Can make new methods by class to add tags to outputs
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
@@ -670,7 +677,7 @@ setMethod(
       if (isTRUE(any(alreadyIn)))
         otherFns <- otherFns[!alreadyIn]
 
-      outputToSaveIsList <- is.list(outputToSave)
+      outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
       if (outputToSaveIsList) {
         rasters <- unlist(lapply(outputToSave, is, "Raster"))
       } else {
@@ -701,7 +708,8 @@ setMethod(
 
         if (isS4(FUN)) {
           setattr(outputToSave, "function", attr(output, "function"))
-          if (!identical(attr(outputToSave, "function"), attr(output, "function"))) browser()
+          if (!identical(attr(outputToSave, "function"), attr(output, "function")))
+            stop("There is an unknown error 04")
         }
         # attr(outputToSave, "function") <- attr(output, "function")
 
@@ -1172,25 +1180,15 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   list(outputHash = res, preDigest = preDigest)
 }
 
-#' @keywords internal
-warnonce <- function(id, ...) {
-  if (!isTRUE(get0(flag <- paste0("warned.", as.character(id)[1L]),
-                   .reproEnv, ifnotfound = FALSE))) {
-    assign(flag, TRUE, envir = .reproEnv)
-    cl <- match.call()
-    cl$id <- NULL
-    cl[[1L]] <- as.name("warning")
-    eval.parent(cl)
-  }
-}
-
-#' @importFrom data.table setDT setkeyv
+#' @importFrom data.table setDT setkeyv melt
 #' @keywords internal
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
                          useCache = getOption("reproducible.useCache", TRUE)) {
   setDT(localTags)
-  if (identical("devMode", useCache))
+  isDevMode <- identical("devMode", useCache)
+  if (isDevMode) {
     showSimilar <- 1
+  }
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")) #nolint
   userTags3 <- c(userTags, userTags2)
@@ -1208,32 +1206,60 @@ warnonce <- function(id, ...) {
 
     similar2[, `:=`(fun = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
                     hash = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
-    similar2[, differs := !(hash %in% preDigestUnlistTrunc), by = artifact]
+
+    a <- setDT(as.list(preDigestUnlistTrunc))
+    a <- melt(a, measure.vars = seq_along(names(a)), variable.name = "fun", value.name = "hash")
+
+
+    similar2 <- similar2[a, on = "fun", nomatch = NA]
+    similar2[, differs := (i.hash != hash)]
+
     similar2[!(fun %in% names(preDigestUnlistTrunc)), differs := NA]
     similar2[(hash %in% "other"), deeperThan3 := TRUE]
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
-    message("This call to cache differs from the next closest due to:")
+    if (isDevMode) {
+      message(crayon::cyan(" ------ devMode -------"))
+      message(crayon::cyan("This call to cache will replace"))
+    } else {
+      message(crayon::cyan(" ------ showSimilar -------"))
+      message(crayon::cyan("This call to cache differs from the next closest:"))
+    }
+    message(crayon::cyan(paste0("... artifact with cacheId ", cacheIdOfSimilar)))
+
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
-      message("... different ", paste(similar2[differs %in% TRUE]$fun, collapse = ", "))
+      message(crayon::cyan("... different", paste(similar2[differs %in% TRUE]$fun, collapse = ", ")))
     }
 
-    if (length(similar2[is.na(differs)]$differs)) {
+    if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
-      message("... possible, unknown, differences in a nested list that is deeper than 3 in ",
-              paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)))
+      message(crayon::cyan("... possible, unknown, differences in a nested list",
+                           "that is deeper than",getOption("reproducible.showSimilarDepth",3),"in ",
+              paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun))))
     }
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
-      message("... because of an ",
-              "argument currently not specified: ",
-              paste(as.character(missingArgs), collapse = ", "))
+      message(crayon::cyan("... because of (a) new argument(s): ",
+              #"argument currently specified that was not in similar cache: ",
+              paste(as.character(missingArgs), collapse = ", ")))
 
     }
-    print(paste0("artifact with cacheId ", cacheIdOfSimilar))
-    print(similar2[,c("fun", "differs")])
+    # message(crayon::cyan("Only the following elements differ (dots are replacements for $ or @)"))
+    # oldColsToKeep <- c("fun", "differs")
+    # cleanDT <- similar2[, ..oldColsToKeep]
+    # data.table::setnames(cleanDT, old = oldColsToKeep, new = c("element", "different"))
+    # message(crayon::cyan(
+    #   paste0(capture.output(
+    #     cleanDT)
+    # , collapse = "\n")))
+    if (isDevMode) {
+      message(crayon::cyan(" ------ end devMode -------"))
+    } else {
+      message(crayon::cyan(" ------ end showSimilar -------"))
+    }
+
   } else {
     if (!identical("devMode", useCache))
       message("There is no similar item in the cacheRepo")
@@ -1354,24 +1380,24 @@ verboseDF3 <- function(verbose, functionName, startCacheTime) {
 #' @keywords internal
 determineNestedTags <- function(envir, mc, userTags) {
   argsNoNesting <- "useCloud"
-  if (R.version[['minor']] <= "4.0") {
-    # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
-    lsCurEnv <- ls(all.names = TRUE, envir = envir)
-    objs <- lsCurEnv[lsCurEnv %in% .namesCacheFormals]
-    objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
-    args <- mget(objs, envir = envir)
-    forms <- lapply(.formalsCache, function(x) eval(x))
-    objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
-    userCacheArgs <- objs[!objOverride]
-    namesUserCacheArgs <- userCacheArgs
-  } else {
+  # if (R.version[['minor']] <= "4.0") {
+  #   # match.call changed how it worked between 3.3.2 and 3.4.x MUCH SLOWER
+  #   lsCurEnv <- ls(all.names = TRUE, envir = envir)
+  #   objs <- lsCurEnv[lsCurEnv %in% .namesCacheFormals]
+  #   objs <- objs[match(.namesCacheFormals, objs)]# sort so same order as R > 3.4
+  #   args <- mget(objs, envir = envir)
+  #   forms <- lapply(.formalsCache, function(x) eval(x))
+  #   objOverride <- unlist(lapply(objs, function(obj) identical(args[[obj]], forms[[obj]])))
+  #   userCacheArgs <- objs[!objOverride]
+  #   namesUserCacheArgs <- userCacheArgs
+  # } else {
     mc <- as.list(mc[-1])
     namesMatchCall <- names(mc)
     namesMatchCall <- namesMatchCall[!namesMatchCall %in% argsNoNesting]
     userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
     namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
     objOverride <- is.na(userCacheArgs)
-  }
+  #}
 
   oldUserTags <- NULL
   prevUserTags <- FALSE

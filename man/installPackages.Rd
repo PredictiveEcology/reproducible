@@ -4,11 +4,18 @@
 \alias{.installPackages}
 \title{Internal function to install packages}
 \usage{
-.installPackages(packages, repos = getOption("repos"),
-  githubPkgs = character(0), githubPkgNames,
-  nonLibPathPkgs = character(0), install_githubArgs,
-  install.packagesArgs = list(), libPath = .libPaths()[1],
-  standAlone = standAlone, forget = FALSE)
+.installPackages(
+  packages,
+  repos = getOption("repos"),
+  githubPkgs = character(0),
+  githubPkgNames,
+  nonLibPathPkgs = character(0),
+  install_githubArgs,
+  install.packagesArgs = list(),
+  libPath = .libPaths()[1],
+  standAlone = standAlone,
+  forget = FALSE
+)
 }
 \arguments{
 \item{packages}{Character vector of packages to install via
@@ -18,7 +25,7 @@ one package, it can be unquoted (as in \code{require})}
 \item{repos}{The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},}
 
 \item{githubPkgs}{Character vector of github repositories and packages, in the
-form \code{repository/package@branch}, with branch being optional.}
+form \code{username/package@branch}, with branch being optional.}
 
 \item{githubPkgNames}{Character vector of the package names, i.e., just the R package name.}
 

@@ -65,4 +65,12 @@ test_that("checkPath: checkPath consistency", {
   expect_error(checkPath(), "Invalid path: no path specified.")
   expect_error(checkPath(NULL), "Invalid path: cannot be NULL.")
   expect_error(checkPath(NA_character_), "Invalid path: cannot be NA.")
+
+  # Case where it is an existing fle
+  f1 <- tempfile()
+  expect_true(file.create(f1)) ## TRUE
+  expect_true(file.exists(f1)) ## TRUE
+
+  expect_message(a <- checkPath(f1), "is an existing file")
+
 })

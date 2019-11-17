@@ -4,10 +4,13 @@
 \alias{installVersions}
 \title{Install exact package versions from a package version text file & GitHub}
 \usage{
-installVersions(gitHubPackages,
+installVersions(
+  gitHubPackages,
   packageVersionFile = ".packageVersions.txt",
-  libPath = .libPaths()[1], standAlone = FALSE,
-  repos = getOption("repos")["CRAN"])
+  libPath = .libPaths()[1],
+  standAlone = FALSE,
+  repos = getOption("repos")["CRAN"]
+)
 }
 \arguments{
 \item{gitHubPackages}{Character vectors indicating repository/packageName@branch}
@@ -62,6 +65,5 @@ packageVersionFile <- file.path(tempPkgFolder, ".packageVersion.txt")
 pkgSnapshot(libPath=tempPkgFolder, packageVersionFile, standAlone = FALSE)
 
 installVersions("crayon", packageVersionFile = packageVersionFile)
-
 }
 }

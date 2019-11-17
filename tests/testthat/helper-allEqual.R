@@ -4,6 +4,10 @@ all.equalWONewCache <- function(a, b) {
   all.equal(a,b)
 }
 
+skip_if_no_token <- function() {
+  testthat::skip_if_not(googledrive::drive_has_token(), "No Drive token")
+}
+
 # puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
 #   optsAsk in this environment,
 # loads and libraries indicated plus testthat,
@@ -40,7 +44,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     ## instead, uses ~/.R/gargle/gargle-oauth/long_random_token_name_with_email
     if (interactive()) {
       if (utils::packageVersion("googledrive") >= "1.0.0") {
-        googledrive::drive_auth()
+        googledrive::drive_deauth()
       } else {
         if (file.exists("~/.httr-oauth")) {
           linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
@@ -67,8 +71,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (!is.null(opts)) {
     if (needGoogle) {
       optsGoogle <- if (utils::packageVersion("googledrive") >= "1.0.0") {
-        list(httr_oob_default = quickPlot::isRstudioServer(),
-             httr_oauth_cache = "~/.httr-oauth")
+        # list(httr_oob_default = quickPlot::isRstudioServer(),
+        #      httr_oauth_cache = "~/.httr-oauth")
       } else {
         list(httr_oob_default = quickPlot::isRstudioServer())
       }
@@ -110,7 +114,7 @@ testOnExit <- function(testInitOut) {
       googledrive::drive_auth_config(active = FALSE)
   }
   lapply(testInitOut$libs, function(lib) {
-    detach(paste0("package:", lib), character.only = TRUE)}
+    try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
   )
 }
 
@@ -153,7 +157,8 @@ urlShapefiles1Zip <- "https://drive.google.com/file/d/1Bk4SPz8rx8zziIlg2Yp9ELZmd
 urlShapefilesZip <- "https://drive.google.com/file/d/1z1x0oI5jUDJQosOXacI8xbzbR15HFi0W/view?usp=sharing"
 
 ### Raster package function getData is failing for GADM objects because that site seems to have changed its url
-targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
+#targetFileLuxRDS <- "GADM_3.6_LUX_adm0.rds"
+targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
 
 .GADMtmp <- function(country, level, download, path, version) {
   country <- raster:::.getCountry(country)

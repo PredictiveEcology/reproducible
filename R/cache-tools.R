@@ -109,7 +109,7 @@ setMethod(
         x <- getOption("reproducible.cachePath")[1]
       }
     }
-    if (is(x, "simList")) x <- x@paths$cachePath
+    #if (is(x, "simList")) x <- x@paths$cachePath
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
     clearWholeCache <- all(missing(userTags), missing(after), missing(before))
@@ -136,24 +136,21 @@ setMethod(
       }
     }
 
-
     if (clearWholeCache) {
       if (isInteractive()) {
-        cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
-        class(cacheSize) <- "object_size"
-        formattedCacheSize <- format(cacheSize, "auto")
-
         if (isTRUE(ask)) {
-          if (isInteractive()) {
-            message("Your current cache size is ", formattedCacheSize, ".\n",
-                    " Are you sure you would like to delete it all? Y or N")
-            rl <- readline()
-            if (!identical(toupper(rl), "Y")) {
-              message("Aborting clearCache")
-              return(invisible())
-            }
+          cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
+          class(cacheSize) <- "object_size"
+          formattedCacheSize <- format(cacheSize, "auto")
+          message("Your current cache size is ", formattedCacheSize, ".\n",
+                  " Are you sure you would like to delete it all? Y or N")
+          rl <- readline()
+          if (!identical(toupper(rl), "Y")) {
+            message("Aborting clearCache")
+            return(invisible())
           }
         }
+
       }
       unlink(file.path(x, "gallery"), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
@@ -195,10 +192,9 @@ setMethod(
       }
 
       if (isInteractive()) {
-        class(cacheSize) <- "object_size"
-        formattedCacheSize <- format(cacheSize, "auto")
-        if (isTRUE(ask)) {
-          if (isInteractive()) {
+          class(cacheSize) <- "object_size"
+          formattedCacheSize <- format(cacheSize, "auto")
+          if (isTRUE(ask)) {
             message("Your size of your selected objects is ", formattedCacheSize, ".\n",
                     " Are you sure you would like to delete it all? Y or N")
             rl <- readline()
@@ -207,7 +203,6 @@ setMethod(
               return(invisible())
             }
           }
-        }
       }
 
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
@@ -305,7 +300,7 @@ setMethod(
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
-    if (is(x, "simList")) x <- x@paths$cachePath
+    # if (is(x, "simList")) x <- x@paths$cachePath
 
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
@@ -372,7 +367,7 @@ setMethod(
     }
     if (missing(after)) after <- "1970-01-01"
     if (missing(before)) before <- Sys.time() + 1e5
-    if (is(x, "simList")) x <- x@paths$cachePath
+    # if (is(x, "simList")) x <- x@paths$cachePath
 
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    list(...))

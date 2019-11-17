@@ -625,14 +625,16 @@ pkgDep2 <- function(packages, recursive = TRUE, depends = TRUE,
   return(a)
 }
 
-#' Memoised version of package_dependencies
+#' Memoised version of \code{package_dependencies}
 #'
-#' This have a 6 minute memory time window.
+#' This has a 6 minute memory time window.
+#'
+#' @inheritParams tools::package_dependencies
+#'
+#' @param db character matrix as from \code{\link[utils]{available.packages}}
 #'
 #' @importFrom memoise memoise timeout
 #' @importFrom tools package_dependencies
-#' @inheritParams tools::package_dependencies
-#' @rdname package_dependenciesMem
 package_dependenciesMem <- memoise::memoise(tools::package_dependencies, ~timeout(360)) # nolint
 
 #' Memoised version of \code{available.packages}
@@ -642,6 +644,7 @@ package_dependenciesMem <- memoise::memoise(tools::package_dependencies, ~timeou
 #'
 #' @inheritParams utils::available.packages
 #'
+#' @importFrom utils available.packages
 #' @keywords internal
 available.packagesMem <- function(contriburl, method, fields, type, filters, repos) {
   stop("This function is for internal use only.")
@@ -690,7 +693,6 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' pkgSnapshot(libPath=tempPkgFolder, packageVersionFile, standAlone = FALSE)
 #'
 #' installVersions("crayon", packageVersionFile = packageVersionFile)
-#'
 #' }
 installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersions.txt",
                             libPath = .libPaths()[1], standAlone = FALSE,
@@ -887,7 +889,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           if (internetExists) {
 
             message("Trying MRAN install of ", paste(failed$instPkgs, collapse = ", "))
-            type <- if (.Platform$OS.type == "windows") "win.binary" else "source"
+            type <- if (isWindows()) "win.binary" else "source"
 
             multiSource <- paste0(rpath, " --quiet --vanilla -e \"versions::install.versions('",
                                   failed$instPkgs, "','", failed$instVers,
@@ -943,7 +945,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #' @inheritParams Require
 #' @param repos The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},
 #' @param githubPkgs Character vector of github repositories and packages, in the
-#'                   form \code{repository/package@branch}, with branch being optional.
+#'                   form \code{username/package@branch}, with branch being optional.
 #' @param githubPkgNames Character vector of the package names, i.e., just the R package name.
 #' @param nonLibPathPkgs Character vector of all installed packages that are in \code{.libPaths},
 #'                       but not in \code{libPath}. This would normally include a listing of
@@ -951,9 +953,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'                       \code{standAlone} if \code{FALSE}
 #' @importFrom data.table data.table setDT setnames
 #' @importFrom memoise forget is.memoised memoise
-#' @importFrom utils assignInMyNamespace available.packages install.packages installed.packages read.table
+#' @importFrom utils assignInMyNamespace available.packages install.packages installed.packages
+#' @importFrom utils read.table
 #' @importFrom versions install.versions
 #' @rdname installPackages
+#'
 #' @examples
 #' \dontrun{
 #'   .installPackages("crayon")
@@ -971,10 +975,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
   #forget(pkgDep)
   #if (forget) forget(pkgDep2)
-  deps <- unlist(pkgDep(packages, unique(c(libPath, .libPaths())),
-                         recursive = TRUE))
-  #deps <- unlist(pkgDep2(packages, unique(c(libPath, .libPaths())),
-  #                                            recursive = TRUE))
+  deps <- unlist(pkgDep(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
+  #deps <- unlist(pkgDep2(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
 

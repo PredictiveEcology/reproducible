@@ -82,7 +82,11 @@ environments)." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
+<<<<<<< HEAD
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.10</span>
+=======
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+>>>>>>> development
       </span>
     </div>
 
@@ -134,7 +138,7 @@ environments)." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Recursive copying of nested environments, and other "hard to copy" objects</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R'><code>R/cache-helpers.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/copy.R'><code>R/copy.R</code></a></small>
     <div class="hidden name"><code>Copy.Rd</code></div>
     </div>
 
@@ -145,6 +149,7 @@ needed, and sometimes, this must be recursive (i.e., environments inside
 environments).</p>
     </div>
 
+<<<<<<< HEAD
     <pre class="usage"><span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='kw'>filebackedDir</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='no'>...</span>)
 
 <span class='co'># S4 method for ANY</span>
@@ -164,6 +169,27 @@ environments).</p>
 
 <span class='co'># S4 method for Raster</span>
 <span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='kw'>filebackedDir</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='no'>...</span>)</pre>
+=======
+    <pre class="usage"><span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)
+
+<span class='co'># S4 method for ANY</span>
+<span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)
+
+<span class='co'># S4 method for data.table</span>
+<span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)
+
+<span class='co'># S4 method for environment</span>
+<span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)
+
+<span class='co'># S4 method for list</span>
+<span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)
+
+<span class='co'># S4 method for data.frame</span>
+<span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)
+
+<span class='co'># S4 method for Raster</span>
+<span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)</pre>
+>>>>>>> development
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -176,7 +202,15 @@ environments).</p>
       <th>filebackedDir</th>
       <td><p>A directory to copy any files that are backing R objects,
 currently only valid for <code>Raster</code> classes. Defaults
+<<<<<<< HEAD
 to <code><a href='https://rdrr.io/r/base/tempfile.html'>tempdir()</a></code>, which is unlikely to be very useful.</p></td>
+=======
+to <code><a href='https://rdrr.io/r/base/tempfile.html'>tempdir()</a></code>, which is unlikely to be very useful.
+Can be <code>NULL</code>, which means that the file will not be
+copied and could therefore cause a collision as the
+pre-copied object and post-copied object would have the same
+file backing them.</p></td>
+>>>>>>> development
     </tr>
     <tr>
       <th>...</th>
@@ -225,7 +259,11 @@ to <code><a href='https://rdrr.io/r/base/tempfile.html'>tempdir()</a></code>, wh
 </div>
 
 <div class="pkgdown">
+<<<<<<< HEAD
   <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.0.</p>
+=======
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+>>>>>>> development
 </div>
 
       </footer>

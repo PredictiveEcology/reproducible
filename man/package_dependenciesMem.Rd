@@ -2,21 +2,21 @@
 % Please edit documentation in R/packages.R
 \name{package_dependenciesMem}
 \alias{package_dependenciesMem}
-\title{Memoised version of package_dependencies}
+\title{Memoised version of \code{package_dependencies}}
 \usage{
-package_dependenciesMem(packages = NULL, db = NULL,
-  which = c("Depends", "Imports", "LinkingTo"), recursive = FALSE,
-  reverse = FALSE, verbose = getOption("verbose"))
+package_dependenciesMem(
+  packages = NULL,
+  db = NULL,
+  which = c("Depends", "Imports", "LinkingTo"),
+  recursive = FALSE,
+  reverse = FALSE,
+  verbose = getOption("verbose")
+)
 }
 \arguments{
 \item{packages}{a character vector of package names.}
 
-\item{db}{character matrix as from \code{\link{available.packages}()}
-    (with the default \code{NULL} the results of this call)
-    or data frame variants thereof.  Alternatively, a package database
-    like the one available from
-    \url{https://cran.r-project.org/web/packages/packages.rds}.
-  }
+\item{db}{character matrix as from \code{\link[utils]{available.packages}}}
 
 \item{which}{a character vector listing the types of
     dependencies, a subset of
@@ -36,5 +36,5 @@ package_dependenciesMem(packages = NULL, db = NULL,
     search cycles.}
 }
 \description{
-This have a 6 minute memory time window.
+This has a 6 minute memory time window.
 }

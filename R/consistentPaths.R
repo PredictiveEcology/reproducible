@@ -25,18 +25,27 @@ setGeneric("normPath", function(path) {
 setMethod("normPath",
           signature(path = "character"),
           definition = function(path) {
-            lapply(path, function(x) {
-              if (is.na(x)) {
-                NA_character_
-              } else {
-                normalizePath(x, winslash = "/", mustWork = FALSE)
+            if (length(path) > 0) {
+              path <- lapply(path, function(x) {
+                if (is.na(x)) {
+                  NA_character_
+                } else {
+                  normalizePath(x, winslash = "/", mustWork = FALSE)
+                }
+              })
+              # Eliot changed this Sept 24, 2019 because weird failures with getwd()
+              # in non-interactive testing
+              path <- unlist(path)
+              if (!is.null(path)) {
+                hasDotStart <- startsWith(path, ".")
+                if (isTRUE(any(hasDotStart)))
+                  path[hasDotStart] <- gsub("^[.]", paste0(getwd()), path[hasDotStart])
+                path <- gsub("\\\\", "//", path)# %>%
+                path <- gsub("//", "/", path)
+                path <- gsub("/$", "", path) # nolint
               }
-            }) %>%
-              unlist() %>%
-              gsub("^[.]", paste0(getwd()), .) %>%
-              gsub("\\\\", "//", .) %>%
-              gsub("//", "/", .) %>%
-              gsub("/$", "", .) # nolint
+            }
+            return(path)
 })
 
 #' @export
@@ -109,13 +118,18 @@ setMethod(
 
         dirsThatExist <- dir.exists(path)
         if (any(!dirsThatExist)) {
-          if (create == TRUE) {
-            lapply(path[!dirsThatExist], function(pth) {
-              dir.create(file.path(pth), recursive = TRUE, showWarnings = FALSE)
-            })
+          isExistingFile <- file.exists(path)
+          if (all(isExistingFile)) {
+            message("That path is an existing file(s)")
           } else {
-            stop(paste("Specified path", path, "doesn't exist.",
-                       "Create it and try again."))
+            if (create == TRUE) {
+              lapply(path[!dirsThatExist[!isExistingFile]], function(pth) {
+                dir.create(file.path(pth), recursive = TRUE, showWarnings = FALSE)
+              })
+            } else {
+              stop(paste("Specified path", path, "doesn't exist.",
+                         "Create it and try again."))
+            }
           }
         }
         return(normPath(path)) # ensure path re-normalized after creation (see #267)

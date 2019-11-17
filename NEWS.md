@@ -1,5 +1,21 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.2.11
+==============
+
+## Dependency changes
+
+* remove `dplyr` as a direct dependency. It is still an indirect dependency through `DiagrammeR`
+
+## New features
+
+* new option: `reproducible.showSimilarDepth` allows for a deeper assessment of nested lists for differences between the nearest cached object and the present object. This greater depth may allow more fine tuned understanding of why an object is not correctly caching
+* for downloading large files from GoogleDrive (currently only implemented), if user has set `options("reproducible.futurePlan")` to something other than `FALSE`, then it will show download progress if the file is "large".
+
+## bug fixes
+
+* Several minor, edge cases were detected and fixed.
+
 version 0.2.10
 ==============
 

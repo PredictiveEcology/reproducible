@@ -1,6 +1,8 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
+  skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+                            needGoogle = TRUE,
                             opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                                         "reproducible.ask" = FALSE))
     on.exit({
@@ -100,6 +102,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd", {
+  skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
                             opts = list("reproducible.ask" = FALSE))
@@ -130,6 +133,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
 })
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
+  skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
                             opts = list("reproducible.ask" = FALSE))
@@ -152,6 +156,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
 })
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
+  skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
                             opts = list("reproducible.ask" = FALSE))
@@ -175,7 +180,8 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
 
 
 test_that("Filenames for environment", {
-    testInitOut <- testInit(c("raster"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
+  skip_if_no_token()
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
                             opts = list("reproducible.ask" = FALSE))
 
     on.exit({

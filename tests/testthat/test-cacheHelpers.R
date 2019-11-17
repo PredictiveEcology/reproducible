@@ -73,9 +73,38 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   ## showSimilar
   try(clearCache(ask = FALSE, x = tmpCache), silent = TRUE)
-  aMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
-  #bMess <- capture_messages(b <- Cache(rnorm, 2, showSimilar = TRUE, cacheRepo = tmpCache))
-  #expect_true(any(grepl("different n", bMess)))
+  aMess <- capture_messages(a <- Cache(rnorm, n = 1, mean = 1, cacheRepo = tmpCache))
+  bMess <- capture_messages(b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache))
+  expect_true(any(grepl("different n", bMess)))
+  expect_true(any(grepl("new argument.*sd", bMess)))
+  expect_true(any(grepl("artifact with cacheId", bMess)))
+  cMess <- capture_messages(b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache))
+  expect_true(any(grepl("different n", cMess)))
+  expect_false(any(grepl("new argument.*sd", cMess)))
+  cMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", cMess, value = TRUE))
+  bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
+  expect_false(identical(cMessCacheId, bMessCacheId))
+
+  dMess <- capture_messages(b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
+  rm(aaaa, envir = .GlobalEnv)
+  #browser(expr = !any(grepl("different n, sd", dMess)))
+
+  # There are 2 ways this may come out -- similarity to 1 of 2 alternatives above
+  expect1 <- any(grepl("different n, sd", dMess))
+  expect2 <- any(grepl("different n", dMess)) && any(grepl("new argument.*sd", dMess))
+  expect_true(expect1 ||  (expect2))
+  dMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", dMess, value = TRUE))
+  bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
+    if (expect1) {
+      expect_false(identical(dMessCacheId, bMessCacheId))
+    } else {
+      expect_true(identical(dMessCacheId, bMessCacheId))
+    }
+
+  eMess <- capture_messages(b <- Cache(rlnorm, 4, sd = 5, showSimilar = TRUE, cacheRepo = tmpCache))
+  expect_true(any(grepl("different .FUN", eMess)))
+  expect_false(grepl(" n[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
+  expect_false(grepl("[ ,]sd[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
 
   ## debugCache -- "complete"
   thing <- 1
@@ -160,4 +189,18 @@ test_that("test cache-helpers with stacks", {
   # Test deleted raster backed file
   file.remove(tmpfile2)
   expect_error(b <- .prepareFileBackedRaster(s, tmpCache), "The following file-backed rasters")
+})
+
+##########################
+test_that("test miscellaneous unit tests cache-helpers", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  mess <- capture_messages(clearCache(cacheRepo = tmpCache))
+  expect_true(grepl("x not specified, but cacheRepo is", mess))
+  expect_error(clearCache(x = tmpCache, useCloud = TRUE,
+                          cloudFolderID = NULL))
+
 })

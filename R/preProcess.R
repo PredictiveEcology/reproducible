@@ -60,43 +60,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
   dots <- list(...)
 
-  if (!is.null(dots$cacheTags))  {
-    message("cacheTags is being deprecated;",
-            " use userTags which will pass directly to Cache.")
-    dots$userTags <- dots$cacheTags
-    dots$cacheTags <- NULL
-  }
-  if (!is.null(dots$postProcessedFilename))  {
-    message("postProcessedFilename is being deprecated;",
-            " use filename2, used in determineFilename.")
-    dots$filename2 <- dots$postProcessedFilename
-    dots$postProcessedFilename <- NULL
-  }
-  if (!is.null(dots$writeCropped))  {
-    message("writeCropped is being deprecated;",
-            " use filename2, used in determineFilename.")
-    dots$filename2 <- dots$writeCropped
-    dots$writeCropped <- NULL
-  }
-  if (!is.null(dots$rasterInterpMethod))  {
-    message("rasterInterpMethod is being deprecated;",
-            " use method which will pass directly to projectRaster.")
-    dots$method <- dots$rasterInterpMethod
-    dots$rasterInterpMethod <- NULL
-  }
-  if (!is.null(dots$rasterDatatype))  {
-    message("rasterDatatype is being deprecated;",
-            " use datatype which will pass directly to writeRaster.")
-    dots$datatype <- dots$rasterDatatype
-    dots$rasterDatatype <- NULL
-  }
-  if (!is.null(dots$pkg))  {
-    message("pkg is being deprecated;",
-            "name the package and function directly, if needed,\n",
-            "  e.g., 'pkg::fun'.")
-    fun <- paste0(dots$pkg, "::", fun)
-    dots$pkg <- NULL
-  }
+  fun <- .checkFunInDots(fun = fun, dots = dots)
+  dots <- .checkDeprecated(dots)
 
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
@@ -108,11 +73,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                               destinationPath = destinationPath)
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
+    archive <- moveAttributes(fileGuess, archive)
     if (is.null(archive) && !is.null(fileGuess)) {
       message("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile")
       targetFile <- .basename(fileGuess)
-      targetFilePath <- fileGuess
+      targetFilePath <- file.path(destinationPath, targetFile)
     } else {
       targetFilePath <- NULL
     }
@@ -155,8 +121,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   filesToCheck <- c(targetFilePath, alsoExtract)
   if (!is.null(archive)) {
+    tmpArchive <- archive
     archive <- file.path(destinationPath, .basename(archive))
     filesToCheck <- unique(c(filesToCheck, archive))
+    archive <- moveAttributes(tmpArchive, archive)
   }
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
@@ -165,7 +133,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (!is.null(reproducible.inputPaths))
     reproducible.inputPaths <- path.expand(reproducible.inputPaths)
 
-  for (dp in c(destinationPath, reproducible.inputPaths)) {
+  for (dp in unique(c(destinationPath, reproducible.inputPaths))) {
     checkSumsTmp1 <- try(Checksums(path = dp, write = FALSE, checksumFile = checkSumFilePath,
                                files = basename2(filesToCheck)), silent = TRUE)
     if (!is(checkSumsTmp1, "try-error")) {
@@ -198,6 +166,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         fileGuess <- .guessAtFile(url = url, archive = archive,
                                   targetFile = targetFile, destinationPath = destinationPath)
         archive <- .isArchive(fileGuess)
+        # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
+        archive <- moveAttributes(fileGuess, receiving = archive)
+        sourceAttributes <- attributes(fileGuess)
+        if (length(sourceAttributes) > 0 && !is.null(archive)) {
+          for (i in length(sourceAttributes))
+            setattr(archive, names(sourceAttributes)[i], sourceAttributes[[i]])
+        }
+
         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                       newFilesToCheck = archive,
                                       checkSums = checkSums)
@@ -275,16 +251,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   successfulCheckSumFilePath <- localChecks$successfulCheckSumFilePath
   successfulDir <- localChecks$successfulDir
 
-
   # Change the destinationPath to the reproducible.inputPaths temporarily, so
   #   download happens there. Later it will be linked to the user destinationPath
   if (!is.null(reproducible.inputPaths)) {
     # may already have been changed above
-    if (!identical(destinationPath, reproducible.inputPaths)) {
+    if (!exists("destinationPathUser", inherits = FALSE))
       destinationPathUser <- destinationPath
-      on.exit({
-        destinationPath <- destinationPathUser
-      }, add = TRUE)
+    on.exit({
+      destinationPath <- destinationPathUser
+    }, add = TRUE)
+    if (!identical(destinationPath, reproducible.inputPaths)) {
       destinationPath <- reproducible.inputPaths[1]
     }
 
@@ -507,6 +483,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
     on.exit() # remove on.exit because it is done here
   }
+
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
@@ -857,7 +834,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
 
     # On *nix types -- try symlink
     if (isFALSE(all(result)) && isTRUE(symlink)) {
-      if (!identical(.Platform$OS.type, "windows")) {
+      if (!isWindows()) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
           message("Symlinked version of file created at: ", toCollapsed, ", which points to ",
@@ -963,7 +940,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
 #' @importFrom testthat capture_warnings
 #' @keywords internal
 .guessFileExtension <- function(file) {
-  if (identical(.Platform$OS.type, "windows")) {
+  if (isWindows()) {
     tryCatch({
       possLocs <- c("C:/cygwin/bin/file.exe",
                     "C:\\cygwin64/bin/file.exe")
@@ -1063,4 +1040,71 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
     }
   }
   downloadFileResult
+}
+
+
+moveAttributes <- function(source, receiving, attrs = NULL) {
+  if (!is.null(receiving)) {
+    sourceAttributes <- attributes(source)
+    if (length(sourceAttributes) > 0) {
+      if (!is.null(attrs)) {
+        sourceAttributes <- attrs
+      }
+
+      for (i in length(sourceAttributes))
+        setattr(receiving, names(sourceAttributes)[i], sourceAttributes[[i]])
+    }
+  }
+  receiving
+}
+
+.checkDeprecated <- function(dots) {
+  if (!is.null(dots$cacheTags))  {
+    message("cacheTags is being deprecated;",
+            " use userTags which will pass directly to Cache.")
+    dots$userTags <- dots$cacheTags
+    dots$cacheTags <- NULL
+  }
+  if (!is.null(dots$postProcessedFilename))  {
+    message("postProcessedFilename is being deprecated;",
+            " use filename2, used in determineFilename.")
+    dots$filename2 <- dots$postProcessedFilename
+    dots$postProcessedFilename <- NULL
+  }
+  if (!is.null(dots$writeCropped))  {
+    message("writeCropped is being deprecated;",
+            " use filename2, used in determineFilename.")
+    dots$filename2 <- dots$writeCropped
+    dots$writeCropped <- NULL
+  }
+  if (!is.null(dots$rasterInterpMethod))  {
+    message("rasterInterpMethod is being deprecated;",
+            " use method which will pass directly to projectRaster.")
+    dots$method <- dots$rasterInterpMethod
+    dots$rasterInterpMethod <- NULL
+  }
+  if (!is.null(dots$rasterDatatype))  {
+    message("rasterDatatype is being deprecated;",
+            " use datatype which will pass directly to writeRaster.")
+    dots$datatype <- dots$rasterDatatype
+    dots$rasterDatatype <- NULL
+  }
+  if (!is.null(dots$pkg))  {
+    message("pkg is being deprecated;",
+            "name the package and function directly, if needed,\n",
+            "  e.g., 'pkg::fun'.")
+    dots$pkg <- NULL
+  }
+
+  dots
+
+}
+
+.checkFunInDots <- function(fun = NULL, dots) {
+  if (is.null(fun)) {
+    if (!is.null(dots$pkg))  {
+      fun <- paste0(dots$pkg, "::", fun)
+    }
+  }
+  fun
 }

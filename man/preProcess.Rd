@@ -4,13 +4,20 @@
 \alias{preProcess}
 \title{Download, Checksum, Extract files}
 \usage{
-preProcess(targetFile = NULL, url = NULL, archive = NULL,
+preProcess(
+  targetFile = NULL,
+  url = NULL,
+  archive = NULL,
   alsoExtract = NULL,
   destinationPath = getOption("reproducible.destinationPath", "."),
-  fun = NULL, dlFun = NULL, quick = getOption("reproducible.quick"),
+  fun = NULL,
+  dlFun = NULL,
+  quick = getOption("reproducible.quick"),
   overwrite = getOption("reproducible.overwrite", FALSE),
-  purge = FALSE, useCache = getOption("reproducible.useCache", FALSE),
-  ...)
+  purge = FALSE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
 }
 \arguments{
 \item{targetFile}{Character string giving the path to the eventual file

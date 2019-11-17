@@ -122,6 +122,7 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
     reproducible.showSimilar = FALSE,
+    reproducible.showSimilarDepth = 3,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useGDAL = TRUE, #

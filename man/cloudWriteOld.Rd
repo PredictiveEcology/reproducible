@@ -4,8 +4,14 @@
 \alias{cloudWriteOld}
 \title{Basic tool for using cloud-based caching}
 \usage{
-cloudWriteOld(object, digest, cloudFolderID = NULL, checksums,
-  checksumsFileID, futurePlan = getOption("reproducible.futurePlan"))
+cloudWriteOld(
+  object,
+  digest,
+  cloudFolderID = NULL,
+  checksums,
+  checksumsFileID,
+  futurePlan = getOption("reproducible.futurePlan")
+)
 }
 \arguments{
 \item{object}{The R object to write to cloud}
@@ -27,5 +33,5 @@ provided as a character string.}
 Very experimental
 }
 \seealso{
-\code{\link{cloudSyncCacheOld}}, \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
+\code{\link{cloudSyncCacheOld}}, \code{\link{cloudCheckOld}}
 }

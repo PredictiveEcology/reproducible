@@ -10,10 +10,10 @@ Description: Collection of high-level, robust, machine- and OS-independent tools
     Some features are still under active development.
 SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.rar' files.
 URL: 
-    http://reproducible.predictiveecology.org,
+    https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2019-09-11
-Version: 0.2.10
+Date: 2019-11-14
+Version: 0.2.11
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -74,7 +74,7 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.0
 Collate: 
     'cache-helpers.R'
     'cache-internals.R'
@@ -86,6 +86,7 @@ Collate:
     'cloudOld.R'
     'consistentPaths.R'
     'convertPaths.R'
+    'copy.R'
     'download.R'
     'gis.R'
     'git.R'

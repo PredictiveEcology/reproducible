@@ -30,7 +30,7 @@ getGDALVersion <-  function() {
 #' @examples
 #'
 #' \dontrun{
-#'   checkGDALVersion(2.0)
+#'   checkGDALVersion("2.0")
 #' }
 checkGDALVersion <- function(version) {
   if (missing(version)) stop("Minimum version not specified.")
@@ -56,7 +56,7 @@ checkGDALVersion <- function(version) {
 #'           as \code{x}, it will be reprojected on the fly to that of \code{x}
 #'
 #' @param cores An \code{integer*} or \code{'AUTO'}. This will be used if gdalwarp is
-#'           triggered. \code{'AUTO'*} will calculate 90% of the total
+#'           triggered. \code{'AUTO'} will calculate 90% of the total
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
 #'
@@ -111,19 +111,46 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     message("fastMask is using sf and fasterize")
 
     if (!identical(crs(y), crs(x))) {
-      y <- spTransform(x = y, CRSobj = crs(x))
+      if (!is(y, "sf")) {
+        y <- spTransform(x = y, CRSobj = crs(x))
+      } else {
+        y <- st_transform(x = y, crs = crs(x))
+      }
     }
 
-    if (!is(y, "SpatialPolygonsDataFrame")) {
-      y <- SpatialPolygonsDataFrame(Sr = y, data = data.frame(ID = seq(length(y))),
-                                    match.ID = FALSE)
+    if (is(y, "SpatialPolygons")) {
+      if (!is(y, "SpatialPolygonsDataFrame")) {
+        y <- SpatialPolygonsDataFrame(Sr = y, data = data.frame(ID = seq(length(y))),
+                                      match.ID = FALSE)
+      }
     }
 
-    #numericfield <- names(y)[which(unlist(lapply(names(y), function(x) {
-    #  is.numeric(y[[x]])
-    #})))[1]]
-    if (!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)) {
-     #call gdal
+    attemptGDAL <- !raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+
+    if (attemptGDAL) { # need to double check that gdal executable exists before going down this path
+      gdalPath <- NULL
+      if (isWindows()) {
+        possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
+                                  "C:/GuidosToolbox/QGIS/bin",
+                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
+                                  "C:/Program Files (x86)/QGIS 3.6/bin",
+                                  "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
+                                  "C:/Program Files/GDAL",
+                                  "C:/Program Files (x86)/GDAL",
+                                  "C:/Program Files (x86)/QGIS 2.18/bin")
+        message("Searching for gdal installation")
+        gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
+        if (any(gdalInfoExists))
+          gdalPath <- possibleWindowsPaths[gdalInfoExists]
+      }
+      gdalUtils::gdal_setInstallation(gdalPath)
+
+      if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
+        attemptGDAL <- FALSE
+    }
+
+    if (attemptGDAL) {
+     # call gdal
       message("fastMask is using gdalwarp")
 
       # rasters need to go to same directory that can be unlinked at end without losing other temp files
@@ -134,8 +161,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
         dType <- assessDataType(raster(x), type = "writeRaster")
-        writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
-        rm(x)
+        x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
         gc()
       } else {
         tempSrcRaster <- x@file@name #Keep original raster.
@@ -147,23 +173,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
 
-      gdalPath <- NULL
-      if (identical(.Platform$OS.type, "windows")) {
-        message("Searching for gdal installation")
-        possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
-                                  "C:/GuidosToolbox/QGIS/bin",
-                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
-                                  "C:/Program Files (x86)/QGIS 3.6/bin",
-                                  "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
-                                  "C:/Program Files/GDAL",
-                                  "C:/Program Files (x86)/GDAL",
-                                  "C:/Program Files (x86)/QGIS 2.18/bin")
-        gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
-        if (any(gdalInfoExists))
-          gdalPath <- possibleWindowsPaths[gdalInfoExists]
-      }
-      gdalUtils::gdal_setInstallation(gdalPath)
-      if (identical(.Platform$OS.type, "windows")) {
+      if (isWindows()) {
         message("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
         exe <- ".exe"
       } else {
@@ -176,7 +186,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       } else {
         if (!is.integer(cores)) {
           if (is.character(cores) | is.logical(cores)) {
-            stop ("'cores' needs to be passed as numeric or 'AUTO'")
+            stop("'cores' needs to be passed as numeric or 'AUTO'")
           } else {
             prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
           }
@@ -195,17 +205,20 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                "-tr ", paste(tr, collapse = " "), " ",
                "\"", tempSrcRaster, "\"", " ",
                "\"", tempDstRaster, "\""),
-        wait = TRUE)
+        wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
       x <- raster(tempDstRaster)
     } else {
       extentY <- extent(y)
-      if (xmin(x) < xmin(extentY) && xmax(x) > xmax(extentY) &&
-          ymin(x) < ymin(extentY) && ymax(x) > ymax(extentY) )
+      resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
+      if ( (xmin(x) + resX[1]) < xmin(extentY) && (xmax(x) - resX[1]) > xmax(extentY) &&
+           (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
         x <- cropInputs(x, y)
-      a <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+      if (!is(y, "sf")) {
+        y <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+      }
       if (canProcessInMemory(x, 3) && fromDisk(x))
         x[] <- x[]
-      m <- is.na(a[])
+      m <- is.na(y[])
       x[m] <- NA
 
       if (nlayers(x) > 1) {
@@ -218,7 +231,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     message("This function is using raster::mask")
     if (is(x, "RasterStack") || is(x, "RasterBrick")) {
       message(" because fastMask doesn't have a specific method ",
-              "for these classes yet")
+              "for these RasterStack or RasterBrick yet")
     } else {
       message("This may be slow in large cases. ",
               "To use sf and GDAL instead, see ",

@@ -57,25 +57,25 @@ See \code{\link{reproducibleOptions}} for a complete description of package
 \seealso{
 Useful links:
 \itemize{
-  \item \url{http://reproducible.predictiveecology.org}
+  \item \url{https://reproducible.predictiveecology.org}
   \item \url{https://github.com/PredictiveEcology/reproducible}
   \item Report bugs at \url{https://github.com/PredictiveEcology/reproducible/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Eliot J B McIntire \email{eliot.mcintire@canada.ca} (0000-0002-6914-8316)
+\strong{Maintainer}: Eliot J B McIntire \email{eliot.mcintire@canada.ca} (\href{https://orcid.org/0000-0002-6914-8316}{ORCID})
 
 Authors:
 \itemize{
-  \item Alex M Chubaty \email{alex.chubaty@gmail.com} (0000-0001-7146-8135)
+  \item Alex M Chubaty \email{alex.chubaty@gmail.com} (\href{https://orcid.org/0000-0001-7146-8135}{ORCID})
 }
 
 Other contributors:
 \itemize{
-  \item Tati Micheletti \email{tati.micheletti@gmail.com} (0000-0003-4838-8342) [contributor]
-  \item Ceres Barros \email{cbarros@mail.ubc.ca} (0000-0003-4036-977X) [contributor]
-  \item Ian Eddy \email{ian.eddy@canada.com} (0000-0001-7397-2116) [contributor]
+  \item Tati Micheletti \email{tati.micheletti@gmail.com} (\href{https://orcid.org/0000-0003-4838-8342}{ORCID}) [contributor]
+  \item Ceres Barros \email{cbarros@mail.ubc.ca} (\href{https://orcid.org/0000-0003-4036-977X}{ORCID}) [contributor]
+  \item Ian Eddy \email{ian.eddy@canada.com} (\href{https://orcid.org/0000-0001-7397-2116}{ORCID}) [contributor]
   \item Her Majesty the Queen in Right of Canada, as represented by the Minister of Natural Resources Canada [copyright holder]
 }
 

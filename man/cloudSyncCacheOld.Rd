@@ -4,10 +4,17 @@
 \alias{cloudSyncCacheOld}
 \title{Sync cloud with local Cache}
 \usage{
-cloudSyncCacheOld(cacheRepo = getOption("reproducible.cachePath"),
-  checksumsFileID = NULL, cloudFolderID = NULL, delete = TRUE,
-  upload = TRUE, download = !delete,
-  ask = getOption("reproducible.ask"), cacheIds = NULL, ...)
+cloudSyncCacheOld(
+  cacheRepo = getOption("reproducible.cachePath"),
+  checksumsFileID = NULL,
+  cloudFolderID = NULL,
+  delete = TRUE,
+  upload = TRUE,
+  download = !delete,
+  ask = getOption("reproducible.ask"),
+  cacheIds = NULL,
+  ...
+)
 }
 \arguments{
 \item{cacheRepo}{See \code{x} in \code{\link{showCache}}}
@@ -52,93 +59,7 @@ This is still experimental, see examples.
 \details{
 \code{cloudSyncCacheOld} will remove any entries in a cloudCache that are not in a
 }
-\examples{
-\dontrun{
-  #make a google drive folder
-  #   Can use >1 cacheRepo
-  opts <- options("reproducible.cachePath" = c(tempdir()),
-                  "reproducible.ask" = FALSE)
-  cachePaths <- getOption("reproducible.cachePath")
-  library(googledrive)
-  newDir <- drive_mkdir("testFolder")
-  #a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3])
-  a <- Cache(rnorm, 1)
-  b <- Cache(rnorm, 2)
-
-  # Will copy the 2 to the cloud
-  cloudSyncCacheOld(cloudFolderID = newDir$id)
-
-  # remove a local one
-  clearCache(userTags = CacheDigest(list(rnorm, 2))$outputHash)
-
-  # Now will delete the object in the cloud that was just deleted locally
-  cloudSyncCacheOld(cloudFolderID = newDir$id)
-
-  # clean up
-  lapply(cachePaths, clearCache, ask = FALSE)
-  # clearCache(ask = FALSE) # if there were only 1 cacheRepo
-  cloudSyncCacheOld(cloudFolderID = newDir$id)
-
-  #######################################################################
-  # use showCache args to have control ... on upload & delete NOTE difference!
-  #######################################################################
-  # a <- Cache(rnorm, 1, cacheRepo = getOption("reproducible.cachePath")[3]) # multiple cacheRepos!
-  a <- Cache(rnorm, 1)
-  b <- Cache(rnorm, 2)
-  # only sync the one with rnorm, 2 as arguments
-  #   This CacheDigest is the same algorithm used by Cache
-  tag <- CacheDigest(list(rnorm, 2))$outputHash
-  cloudSyncCacheOld(cloudFolderID = newDir$id, userTags = tag) # only syncs the one
-                                                            # that is identified
-                                                            # with userTags
-
-  cloudSyncCacheOld(cloudFolderID = newDir$id) # sync any other ones
-
-  # Now clear an object locally -- next how to propagate this deletion to cloud
-  clearCache(userTags = tag)
-
-  # Add one more to local, so now local has 2 (a and d), cloud has 2 (a and b)
-  d <- Cache(rnorm, 4)
-
-  # DELETING IS DIFFERENT
-  # Doesn't quite work same way for deleting -- this tag is not in local Cache,
-  # so can't find it this way.
-  # This next line DOES THE WRONG THING -- IT DELETES EVERYTHING because there is
-  #         no entry in the local cache -- use cacheId arg instead -- see below
-  #    showCache(userTags = tags) shows empty
-  #    cloudSyncCacheOld(cloudFolderID = newDir$id, userTags = tag)
-
-  # Only delete the one that was removed from local cache, set upload = FALSE,
-  #    leaving only 1 in cloud: a  -- this is still a sync, so, it will only
-  #    delete 1 file because local has 1 few files -- see next for just deleting 1 artifact
-  cloudSyncCacheOld(cloudFolderID = newDir$id, upload = FALSE)
-  # Upload the d, because it is the only one in the localCache not in the cloudCache
-  cloudSyncCacheOld(cloudFolderID = newDir$id)
-
-  f <- Cache(rnorm, 5)
-  g <- Cache(rnorm, 6)
-  # upload both
-  cloudSyncCacheOld(cloudFolderID = newDir$id) # only syncs the one
-  tag5 <- CacheDigest(list(rnorm, 5))$outputHash # this is the same algorithm used by Cache
-  tag6 <- CacheDigest(list(rnorm, 6))$outputHash
-  clearCache(userTags = tag5)
-  clearCache(userTags = tag6)
-  # delete only one by tag
-  cloudSyncCacheOld(cloudFolderID = newDir$id, cacheIds = tag5) # will delete only this obj in cloud
-  # delete another one by tag
-  cloudSyncCacheOld(cloudFolderID = newDir$id, cacheIds = tag6)
-
-  # clean up
-  # clearCache(ask = FALSE) # if only one cacheRepo
-  lapply(cachePaths, clearCache, ask = FALSE)
-  cloudSyncCacheOld(cloudFolderID = newDir$id)
-
-  # To remove whole folder:
-  drive_rm(as_id(newDir$id))
-  options(opts)
-}
-}
 \seealso{
 \code{\link{cloudCache}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
-  \code{\link{cloudCheckOld}}, \code{\link{cloudExtras}}
+  \code{\link{cloudCheckOld}}
 }

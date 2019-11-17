@@ -4,7 +4,7 @@
 \alias{checkAndMakeCloudFolderID}
 \title{Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})}
 \usage{
-checkAndMakeCloudFolderID(cloudFolderID)
+checkAndMakeCloudFolderID(cloudFolderID = NULL)
 }
 \arguments{
 \item{cloudFolderID}{The google folder ID where cloud caching will occur.}
