@@ -87,11 +87,7 @@ See examples." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-<<<<<<< HEAD
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.10</span>
-=======
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
->>>>>>> development
       </span>
     </div>
 
@@ -165,12 +161,6 @@ See examples.</p>
   <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span>),
-<<<<<<< HEAD
-  <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>),
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
-  <span class='no'>...</span>)</pre>
-=======
   <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>),
   <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
@@ -178,7 +168,6 @@ See examples.</p>
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
   <span class='no'>...</span>
 )</pre>
->>>>>>> development
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -347,11 +336,7 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='downloadFile.html'>downloadFile</a></code>, <code><a href='extractFromArchive.html'>extractFromArchive</a></code>,
-<<<<<<< HEAD
-         <code><a href='downloadFile.html'>downloadFile</a></code>, <code><a href='postProcess.html'>postProcess</a></code>.</p></div>
-=======
          <code><a href='postProcess.html'>postProcess</a></code>.</p></div>
->>>>>>> development
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># This function works within a module; however, currently,</span>
@@ -367,11 +352,7 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
 <span class='co'># Robust to partial file deletions:</span>
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.files.html'>dir</a></span>(<span class='no'>dPath</span>, <span class='kw'>full.names</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>:<span class='fl'>3</span>])
 <span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>,
-<<<<<<< HEAD
-                     <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>)
-=======
                          <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>)
->>>>>>> development
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>dPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
 <span class='co'># Once this is done, can be more precise in operational code:</span>
@@ -380,15 +361,9 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
 <span class='no'>ecozoneFiles</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"ecozones.dbf"</span>, <span class='st'>"ecozones.prj"</span>,
                   <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span>)
 <span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='no'>ecozoneFilename</span>,
-<<<<<<< HEAD
-                    <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
-                    <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='no'>ecozoneFiles</span>,
-                    <span class='kw'>fun</span> <span class='kw'>=</span> <span class='st'>"shapefile"</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>)
-=======
                          <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
                          <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='no'>ecozoneFiles</span>,
                          <span class='kw'>fun</span> <span class='kw'>=</span> <span class='st'>"shapefile"</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>)
->>>>>>> development
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>dPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
 <span class='co'>#' # Add a study area to Crop and Mask to</span>
@@ -410,8 +385,8 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
                   <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span>)
 <span class='no'>shpEcozoneSm</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>,
                       <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
-                      <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFilename</span>),
-                      <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFiles</span>),
+                      <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/reproducible/man/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFilename</span>),
+                      <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/reproducible/man/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFiles</span>),
                       <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>,
                       <span class='kw'>fun</span> <span class='kw'>=</span> <span class='st'>"shapefile"</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>,
                       <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='st'>"EcozoneFile.shp"</span>) <span class='co'># passed to determineFilename</span>
@@ -470,11 +445,7 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
 </div>
 
 <div class="pkgdown">
-<<<<<<< HEAD
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.0.</p>
-=======
   <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
->>>>>>> development
 </div>
 
       </footer>

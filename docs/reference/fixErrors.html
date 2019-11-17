@@ -83,11 +83,7 @@ failures to rgeos::gIsValid" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-<<<<<<< HEAD
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.10</span>
-=======
         <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
->>>>>>> development
       </span>
     </div>
 
@@ -151,14 +147,6 @@ meaningful method is on SpatialPolygons, and it runs <code><a href='https://rdrr
 failures to <code><a href='https://rdrr.io/pkg/rgeos/man/pred-unary-gIsValid.html'>rgeos::gIsValid</a></code></p>
     </div>
 
-<<<<<<< HEAD
-    <pre class="usage"><span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='no'>objectName</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)
-
-<span class='co'># S3 method for default</span>
-<span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='no'>objectName</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)
-=======
     <pre class="usage"><span class='fu'>fixErrors</span>(
   <span class='no'>x</span>,
   <span class='no'>objectName</span>,
@@ -175,20 +163,12 @@ failures to <code><a href='https://rdrr.io/pkg/rgeos/man/pred-unary-gIsValid.htm
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
   <span class='no'>...</span>
 )
->>>>>>> development
 
 <span class='co'># S3 method for SpatialPolygons</span>
 <span class='fu'>fixErrors</span>(
   <span class='no'>x</span>,
   <span class='kw'>objectName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-<<<<<<< HEAD
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)
-
-<span class='co'># S3 method for sf</span>
-<span class='fu'>fixErrors</span>(<span class='no'>x</span>, <span class='kw'>objectName</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>attemptErrorFixes</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
-=======
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
   <span class='no'>...</span>
 )
@@ -201,7 +181,6 @@ failures to <code><a href='https://rdrr.io/pkg/rgeos/man/pred-unary-gIsValid.htm
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
   <span class='no'>...</span>
 )</pre>
->>>>>>> development
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -218,12 +197,8 @@ to user will mention this.</p></td>
     <tr>
       <th>attemptErrorFixes</th>
       <td><p>Will attempt to fix known errors. Currently only some failures
-<<<<<<< HEAD
-for SpatialPolygons* are attempted. Notably with <code><a href='https://rdrr.io/pkg/raster/man/buffer.html'>raster::buffer(..., width = 0)</a></code>.
-=======
 for <code>SpatialPolygons*</code> are attempted.
 Notably with <code><a href='https://rdrr.io/pkg/raster/man/buffer.html'>raster::buffer(..., width = 0)</a></code>.
->>>>>>> development
 Default <code>TRUE</code>, though this may not be the right action for all cases.</p></td>
     </tr>
     <tr>
@@ -263,11 +238,7 @@ Cache is used on the internal <code><a href='https://rdrr.io/pkg/raster/man/buff
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<<<<<<< HEAD
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile12a4348132cc3. Specify filename1 or filename2 for more control</span>
-=======
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile55d5bb74d16. Specify filename1 or filename2 for more control</span>
->>>>>>> development
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile45db3002bcef. Specify filename1 or filename2 for more control</span>
 #&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
@@ -291,11 +262,7 @@ Cache is used on the internal <code><a href='https://rdrr.io/pkg/raster/man/buff
 </div>
 
 <div class="pkgdown">
-<<<<<<< HEAD
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.0.</p>
-=======
   <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
->>>>>>> development
 </div>
 
       </footer>
