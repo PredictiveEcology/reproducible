@@ -8,21 +8,25 @@
 
 <title>Download, Checksum, Extract files — preProcess • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,13 +34,14 @@
 
 
 
-<meta property="og:title" content="Download, Checksum, Extract files — preProcess" />
 
+<meta property="og:title" content="Download, Checksum, Extract files — preProcess" />
 <meta property="og:description" content="This does downloading (via downloadFile), checksumming (Checksums),
 and extracting from archives (extractFromArchive), plus cleaning up of input
 arguments (e.g., paths, function names).
 This is the first stage of three used in prepInputs." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -60,6 +65,7 @@ This is the first stage of three used in prepInputs." />
   gtag('config', 'UA-58633549-5');
 </script>
 
+
   </head>
 
   <body>
@@ -76,7 +82,7 @@ This is the first stage of three used in prepInputs." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
       </span>
     </div>
 
@@ -84,7 +90,7 @@ This is the first stage of three used in prepInputs." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -107,11 +113,10 @@ This is the first stage of three used in prepInputs." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -122,6 +127,7 @@ This is the first stage of three used in prepInputs." />
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -133,22 +139,27 @@ This is the first stage of three used in prepInputs." />
     </div>
 
     <div class="ref-description">
-    
     <p>This does downloading (via <code>downloadFile</code>), checksumming (<code>Checksums</code>),
 and extracting from archives (<code>extractFromArchive</code>), plus cleaning up of input
 arguments (e.g., paths, function names).
 This is the first stage of three used in <code>prepInputs</code>.</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>preProcess</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+    <pre class="usage"><span class='fu'>preProcess</span>(
+  <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span>),
-  <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>),
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
-  <span class='no'>...</span>)</pre>
-    
+  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span>),
+  <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>),
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
+  <span class='no'>...</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -176,7 +187,7 @@ in subsequent calls to
       <th>archive</th>
       <td><p>Optional character string giving the path of an archive
 containing <code>targetFile</code>, or a vector giving a set of nested archives
-(e.g., <code><a href='https://www.rdocumentation.org/packages/base/topics/c'>c("xxx.tar", "inner.zip", "inner.rar")</a></code>). If there is/are (an) inner
+(e.g., <code><a href='https://rdrr.io/r/base/c.html'>c("xxx.tar", "inner.zip", "inner.rar")</a></code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
 the <code>targetFile</code>. See table in <code>preProcess</code>.</p></td>
     </tr>
@@ -196,7 +207,7 @@ only those to be extracted. See table in <code>preProcess</code>.</p></td>
 and save the file that comes from <code>url</code> and is also where the function
 will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
 To prevent repeated downloads in different locations, the user can also set
-<code><a href='https://www.rdocumentation.org/packages/base/topics/options'>options("reproducible.inputPaths")</a></code> to one or more local file paths to
+<code><a href='https://rdrr.io/r/base/options.html'>options("reproducible.inputPaths")</a></code> to one or more local file paths to
 search for the file before attempting to download. Default for that option is
 <code>NULL</code> meaning do not search locally.</p></td>
     </tr>
@@ -232,7 +243,8 @@ even if they pass the checksums or the files are all there.</p></td>
     </tr>
     <tr>
       <th>useCache</th>
-      <td><p>Passed to Cache in various places. Defaults to <code><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption("reproducible.useCache")</a></code></p></td>
+      <td><p>Passed to <code>Cache</code> in various places.
+Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.useCache")</a></code>.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -243,79 +255,63 @@ Since <code>...</code> is passed to <code><a href='postProcess.html'>postProcess
 functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See details and examples.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A list with 5 elements, <code>checkSums</code> (the result of a <code>Checksums</code>
 after downloading), <code>dots</code> (cleaned up ..., including deprecated argument checks),
 <code>fun</code> (the function to be used to load the preProcessed object from disk),
 and <code>targetFilePath</code> (the fully qualified path to the <code>targetFile</code>).</p>
-    
     <h2 class="hasAnchor" id="combinations-of-targetfile-url-archive-alsoextract"><a class="anchor" href="#combinations-of-targetfile-url-archive-alsoextract"></a>Combinations of <code>targetFile</code>, <code>url</code>, <code>archive</code>, <code>alsoExtract</code></h2>
 
     
-    <p></p><table class='table'>
-<tr><td></td><td># Params</td><td></td><td><code>url</code></td><td></td><td></td><td><code>targetFile</code></td><td></td></tr>
-<tr><td></td><td><code>archive</code></td><td></td><td></td><td><code>alsoExtract</code></td><td></td><td>Result</td><td>Checksum 1st time</td></tr>
-<tr><td>Checksum 2nd time</td><td></td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
-<tr><td>------</td><td>------</td><td></td><td><b>1</b></td><td></td><td>char</td><td>NULL</td><td>NULL</td></tr>
-<tr><td>NULL</td><td>Download, extract all files if an archive, guess at</td><td><code>targetFile</code></td><td>, load into R</td><td>write or append all new files</td><td>same as 1st -- no</td><td><code>targetFile</code></td><td>*</td></tr>
-<tr><td></td><td></td><td>NULL</td><td>char</td><td>NULL</td><td>NULL</td><td>load</td><td><code>targetFile</code></td></tr>
-<tr><td>into R</td><td>write or append</td><td><code>targetFile</code></td><td></td><td>no downloading, so no checksums use</td><td></td><td></td><td>NULL</td></tr>
-<tr><td>NULL</td><td>char</td><td>NULL</td><td>extract all files, guess at</td><td><code>targetFile</code></td><td>, load into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
-<tr><td></td><td></td><td>NULL</td><td>NULL</td><td>NULL</td><td>char</td><td>guess at</td><td><code>targetFile</code></td></tr>
-<tr><td>from files in</td><td><code>alsoExtract</code></td><td>, load into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td><td></td><td>------</td><td>------</td></tr>
-<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td></td><td><b>2</b></td></tr>
-<tr><td></td><td>char</td><td>char</td><td>NULL</td><td>NULL</td><td>Download, extract all files if an archive, load</td><td><code>targetFile</code></td><td>into R</td></tr>
-<tr><td>write or append all new files</td><td>use Checksums, skip downloading</td><td></td><td></td><td>char</td><td>NULL</td><td>char</td><td>NULL</td></tr>
-<tr><td>Download, extract all files, guess at</td><td><code>targetFile</code></td><td>, load into R</td><td>write or append all new files</td><td>same as 1st -- no</td><td><code>targetFile</code></td><td>*</td><td></td></tr>
-<tr><td></td><td>char</td><td>NULL</td><td>NULL</td><td>char</td><td>Download, extract only named files in</td><td><code>alsoExtract</code></td><td>, guess at</td></tr>
-<tr><td><code>targetFile</code></td><td>, load into R</td><td>write or append all new files</td><td>same as 1st -- no</td><td><code>targetFile</code></td><td>*</td><td></td><td></td></tr>
-<tr><td>NULL</td><td>char</td><td>NULL</td><td>char</td><td>load</td><td><code>targetFile</code></td><td>into R</td><td>write or append all new files</td></tr>
-<tr><td>no downloading, so no checksums use</td><td></td><td></td><td>NULL</td><td>char</td><td>char</td><td>NULL</td><td>Extract all files, load</td></tr>
-<tr><td><code>targetFile</code></td><td>into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td><td></td><td></td><td>NULL</td><td>NULL</td></tr>
-<tr><td>char</td><td>char</td><td>Extract only named files in</td><td><code>alsoExtract</code></td><td>, guess at</td><td><code>targetFile</code></td><td>, load into R</td><td>write or append all new files</td></tr>
-<tr><td>no downloading, so no checksums use</td><td></td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
-<tr><td>------</td><td>------</td><td></td><td><b>3</b></td><td></td><td>char</td><td>char</td><td>char</td></tr>
-<tr><td>NULL</td><td>Download, extract all files, load</td><td><code>targetFile</code></td><td>into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td><td></td><td></td></tr>
-<tr><td>char</td><td>NULL</td><td>char</td><td>char</td><td>Download, extract files named in</td><td><code>alsoExtract</code></td><td>, guess at</td><td><code>targetFile</code></td></tr>
-<tr><td>, load into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td><td></td><td></td><td>char</td><td>NULL</td><td>char</td></tr>
-<tr><td></td><td><code>"similar"</code></td><td></td><td>Download, extract all files (can't understand "similar"), guess at</td><td><code>targetFile</code></td><td>, load into R</td><td>write or append all new files</td><td>same as 1st -- no</td></tr>
-<tr><td><code>targetFile</code></td><td>*</td><td></td><td></td><td>char</td><td>char</td><td>NULL</td><td>char</td></tr>
-<tr><td>Download, if an archive, extract files named in</td><td><code>targetFile</code></td><td>and</td><td><code>alsoExtract</code></td><td>, load</td><td><code>targetFile</code></td><td>into R</td><td>write or append all new files</td></tr>
-<tr><td>use Checksums, skip downloading</td><td></td><td></td><td>char</td><td>char</td><td>NULL</td><td></td><td><code>"similar"</code></td></tr>
-<tr><td></td><td>Download, if an archive, extract files with same base as</td><td><code>targetFile</code></td><td>, load</td><td><code>targetFile</code></td><td>into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td></td><td>char</td><td>char</td><td>char</td><td>NULL</td><td>Download, extract all files from archive, load</td><td><code>targetFile</code></td></tr>
-<tr><td>into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td><td></td><td></td><td>NULL</td><td>char</td><td>char</td></tr>
-<tr><td>char</td><td>Extract  files named in</td><td><code>alsoExtract</code></td><td>from archive, load</td><td><code>targetFile</code></td><td>into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
-<tr><td></td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
-<tr><td>------</td><td></td><td><b>4</b></td><td></td><td>char</td><td>char</td><td>char</td><td>char</td></tr>
-<tr><td>Download, extract files named in</td><td><code>targetFile</code></td><td>and</td><td><code>alsoExtract</code></td><td>, load</td><td><code>targetFile</code></td><td>into R</td><td>write or append all new files</td></tr>
-<tr><td>use Checksums, skip downloading</td><td></td><td></td><td>char</td><td>char</td><td>char</td><td></td><td><code>"similar"</code></td></tr>
-<tr><td></td><td>Download, extract all files with same base as</td><td><code>targetFile</code></td><td>, load</td><td><code>targetFile</code></td><td>into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td></td><td></td><td># Params</td><td></td><td><code>url</code></td><td></td><td></td></tr>
+
+
+<p></p><table class='table'>
+<tr><td># Params</td><td><code>url</code></td><td><code>targetFile</code></td><td><code>archive</code></td><td><code>alsoExtract</code></td><td>Result</td><td>Checksum 1st time</td><td>Checksum 2nd time</td></tr>
+<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
+<tr><td><b>1</b></td><td>char</td><td>NULL</td><td>NULL</td><td>NULL</td><td>Download, extract all files if an archive, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>same as 1st -- no <code>targetFile</code>*</td></tr>
+<tr><td></td><td>NULL</td><td>char</td><td>NULL</td><td>NULL</td><td>load <code>targetFile</code> into R</td><td>write or append <code>targetFile</code></td><td>no downloading, so no checksums use</td></tr>
+<tr><td></td><td>NULL</td><td>NULL</td><td>char</td><td>NULL</td><td>extract all files, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
+<tr><td></td><td>NULL</td><td>NULL</td><td>NULL</td><td>char</td><td>guess at <code>targetFile</code> from files in <code>alsoExtract</code>, load into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
+<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
+<tr><td><b>2</b></td><td>char</td><td>char</td><td>NULL</td><td>NULL</td><td>Download, extract all files if an archive, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
+<tr><td></td><td>char</td><td>NULL</td><td>char</td><td>NULL</td><td>Download, extract all files, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>same as 1st -- no <code>targetFile</code>*</td></tr>
+<tr><td></td><td>char</td><td>NULL</td><td>NULL</td><td>char</td><td>Download, extract only named files in <code>alsoExtract</code>, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>same as 1st -- no <code>targetFile</code>*</td></tr>
+<tr><td></td><td>NULL</td><td>char</td><td>NULL</td><td>char</td><td>load <code>targetFile</code> into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
+<tr><td></td><td>NULL</td><td>char</td><td>char</td><td>NULL</td><td>Extract all files, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
+<tr><td></td><td>NULL</td><td>NULL</td><td>char</td><td>char</td><td>Extract only named files in <code>alsoExtract</code>, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
+<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
+<tr><td><b>3</b></td><td>char</td><td>char</td><td>char</td><td>NULL</td><td>Download, extract all files, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
+<tr><td></td><td>char</td><td>NULL</td><td>char</td><td>char</td><td>Download, extract files named in <code>alsoExtract</code>, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
+<tr><td></td><td>char</td><td>NULL</td><td>char</td><td><code>"similar"</code></td><td>Download, extract all files (can't understand "similar"), guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>same as 1st -- no <code>targetFile</code>*</td></tr>
+<tr><td></td><td>char</td><td>char</td><td>NULL</td><td>char</td><td>Download, if an archive, extract files named in <code>targetFile</code> and <code>alsoExtract</code>, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
+<tr><td></td><td>char</td><td>char</td><td>NULL</td><td><code>"similar"</code></td><td>Download, if an archive, extract files with same base as <code>targetFile</code>, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
+<tr><td></td><td>char</td><td>char</td><td>char</td><td>NULL</td><td>Download, extract all files from archive, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
+<tr><td></td><td>NULL</td><td>char</td><td>char</td><td>char</td><td>Extract  files named in <code>alsoExtract</code> from archive, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
+<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
+<tr><td><b>4</b></td><td>char</td><td>char</td><td>char</td><td>char</td><td>Download, extract files named in <code>targetFile</code> and <code>alsoExtract</code>, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
+<tr><td></td><td>char</td><td>char</td><td>char</td><td><code>"similar"</code></td><td>Download, extract all files with same base as <code>targetFile</code>, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
 </table>
 <p><code>*</code> If the <code>url</code> is a file on Google Drive, checksumming will work
  even without a <code>targetFile</code> specified because there is an initial attempt
  to get the remove file information (e.g., file name). With that, the connection
  between the <code>url</code> and the filename used in the CHECKSUMS.txt file can be made.</p>
-    
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#value">Value</a></li>
-
       <li><a href="#combinations-of-targetfile-url-archive-alsoextract">Combinations of <code>targetFile</code>, <code>url</code>, <code>archive</code>, <code>alsoExtract</code></a></li>
-          </ul>
+    </ul>
 
     <h2>Author</h2>
     <p>Eliot McIntire</p>
   </div>
 </div>
+
 
       <footer>
       <div class="copyright">
@@ -323,13 +319,16 @@ and <code>targetFilePath</code> (the fully qualified path to the <code>targetFil
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

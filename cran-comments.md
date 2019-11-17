@@ -40,3 +40,10 @@ We have run R CMD check on downstream dependencies, and have no ERRORs and 1 WAR
 ```
 
 As a co-developer of the `SpaDES.core` package, we have already fixed this issue and will be submitting and updated version to CRAN shortly.
+
+## revdepcheck results
+
+We checked 4 reverse dependencies (0 from CRAN + 4 from BioConductor), comparing R CMD check results across CRAN and dev versions of this package.
+
+ * We saw 0 new problems
+ * We failed to check 0 packages

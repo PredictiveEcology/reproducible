@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Hierarchically get crs from <code>Raster*</code>, <code>Spatial*</code> — .getTargetCRS • reproducible</title>
+<title>Make a temporary sub-directory — tempdir2 • reproducible</title>
 
 
 <!-- jquery -->
@@ -35,9 +35,8 @@
 
 
 
-<meta property="og:title" content="Hierarchically get crs from <code>Raster*</code>, <code>Spatial*</code> — .getTargetCRS" />
-<meta property="og:description" content="This is the function that follows the table of order of
-preference for determining CRS. See postProcess" />
+<meta property="og:title" content="Make a temporary sub-directory — tempdir2" />
+<meta property="og:description" content="Create a temporary subdirectory in tempdir()." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -131,42 +130,25 @@ preference for determining CRS. See postProcess" />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Hierarchically get crs from <code>Raster*</code>, <code>Spatial*</code></h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/postProcess.R'><code>R/postProcess.R</code></a></small>
-    <div class="hidden name"><code>postProcessHelpers.Rd</code></div>
+    <h1>Make a temporary sub-directory</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/copy.R'><code>R/copy.R</code></a></small>
+    <div class="hidden name"><code>tempdir2.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This is the function that follows the table of order of
-preference for determining CRS. See <code><a href='postProcess.html'>postProcess</a></code></p>
+    <p>Create a temporary subdirectory in <code><a href='https://rdrr.io/r/base/tempfile.html'>tempdir()</a></code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.getTargetCRS</span>(<span class='no'>useSAcrs</span>, <span class='no'>studyArea</span>, <span class='no'>rasterToMatch</span>, <span class='kw'>targetCRS</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+    <pre class="usage"><span class='fu'>tempdir2</span>(<span class='no'>sub</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>useSAcrs</th>
-      <td><p>Logical. If <code>FALSE</code>, the default, then the desired projection
-will be taken from <code>rasterToMatch</code> or none at all.
-If <code>TRUE</code>, it will be taken from <code>studyArea</code>. See table
-in details below.</p></td>
-    </tr>
-    <tr>
-      <th>studyArea</th>
-      <td><p><code>SpatialPolygons*</code> object used for masking and possibly cropping
-if no <code>rasterToMatch</code> is provided.
-If not in same CRS, then it will be <code>spTransform</code>ed to
-CRS of <code>x</code> before masking. Currently, this function will not reproject the
-<code>x</code>. Optional in <code>postProcess</code>.</p></td>
-    </tr>
-    <tr>
-      <th>rasterToMatch</th>
-      <td><p>Template <code>Raster*</code> object used for cropping (so extent should be
-the extent of desired outcome) and reprojecting (including changing the
-resolution and projection).
-See details in <code><a href='postProcess.html'>postProcess</a></code>.</p></td>
+      <th>sub</th>
+      <td><p>Character string, length 1. Can be a result of
+<code><a href='https://rdrr.io/r/base/file.path.html'>file.path("smth", "smth2")</a></code> for nested temporary sub
+directories.</p></td>
     </tr>
     </table>
 

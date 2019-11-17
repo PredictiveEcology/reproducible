@@ -8,21 +8,25 @@
 
 <title>Generic function to post process objects — postProcess • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,8 +34,8 @@
 
 
 
-<meta property="og:title" content="Generic function to post process objects — postProcess" />
 
+<meta property="og:title" content="Generic function to post process objects — postProcess" />
 <meta property="og:description" content="The method for spatialObjects (Raster* and Spatial*) will
 crop, reproject, and mask, in that order.  This function is a wrapper for
 cropInputs, fixErrors, projectInputs,
@@ -39,6 +43,7 @@ maskInputs and
 writeOutputs, with a decent amount of data manipulating
 between these calls so that the crs match." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -62,6 +67,7 @@ between these calls so that the crs match." />
   gtag('config', 'UA-58633549-5');
 </script>
 
+
   </head>
 
   <body>
@@ -78,7 +84,7 @@ between these calls so that the crs match." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
       </span>
     </div>
 
@@ -86,7 +92,7 @@ between these calls so that the crs match." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -109,11 +115,10 @@ between these calls so that the crs match." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -124,6 +129,7 @@ between these calls so that the crs match." />
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -135,14 +141,12 @@ between these calls so that the crs match." />
     </div>
 
     <div class="ref-description">
-    
     <p>The method for spatialObjects (<code>Raster*</code> and <code>Spatial*</code>) will
 crop, reproject, and mask, in that order.  This function is a wrapper for
 <code><a href='cropInputs.html'>cropInputs</a></code>, <code><a href='fixErrors.html'>fixErrors</a></code>, <code><a href='projectInputs.html'>projectInputs</a></code>,
 <code><a href='maskInputs.html'>maskInputs</a></code> and
 <code><a href='writeOutputs.html'>writeOutputs</a></code>, with a decent amount of data manipulating
 between these calls so that the crs match.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='no'>...</span>)
@@ -154,19 +158,31 @@ between these calls so that the crs match.</p>
 <span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for spatialObjects</span>
-<span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='kw'>filename1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>TRUE</span>),
-  <span class='kw'>useSAcrs</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>,
-  <span class='fl'>FALSE</span>), <span class='no'>...</span>)
+<span class='fu'>postProcess</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>filename1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>TRUE</span>),
+  <span class='kw'>useSAcrs</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
+  <span class='no'>...</span>
+)
 
 <span class='co'># S3 method for sf</span>
-<span class='fu'>postProcess</span>(<span class='no'>x</span>, <span class='kw'>filename1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>TRUE</span>),
-  <span class='kw'>useSAcrs</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>,
-  <span class='fl'>FALSE</span>), <span class='no'>...</span>)</pre>
-    
+<span class='fu'>postProcess</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>filename1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>rasterToMatch</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>TRUE</span>),
+  <span class='kw'>useSAcrs</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
+  <span class='no'>...</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -183,32 +199,19 @@ See individual methods.</p></td>
            <code><a href='projectInputs.html'>projectInputs</a></code>, <code><a href='maskInputs.html'>maskInputs</a></code>,
            <code><a href='determineFilename.html'>determineFilename</a></code>, and <code><a href='writeOutputs.html'>writeOutputs</a></code>.
            Each of these may also pass <code>...</code> into other functions, like
-           <code><a href='https://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></code>, or <code><a href='https://www.rdocumentation.org/packages/sf/topics/st_write'>sf::st_write</a></code>.
+           <code><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></code>, or <code><a href='https://rdrr.io/pkg/sf/man/st_write.html'>sf::st_write</a></code>.
            This might include potentially important arguments like <code>datatype</code>,
            <code>format</code>. Also passed to <code>projectRaster</code>,
            with likely important arguments such as <code>method = "bilinear"</code>.
            See details.</p>
 <h3>... passed to:</h3>
-
-  <table class='table'>
-<tr><td></td><td>Function</td><td>Arguments</td><td></td></tr>
-<tr><td></td><td><code>cropInputs</code></td><td></td><td></td></tr>
-<tr><td><code><a href='https://www.rdocumentation.org/packages/raster/topics/crop'>crop</a></code></td><td></td><td></td><td></td></tr>
-<tr><td><code>projectInputs</code></td><td></td><td></td><td><code><a href='https://www.rdocumentation.org/packages/raster/topics/projectRaster'>projectRaster</a></code></td></tr>
-<tr><td></td><td></td><td></td><td><code>maskInputs</code></td></tr>
-<tr><td></td><td></td><td><code><a href='fastMask.html'>fastMask</a></code></td><td>or</td></tr>
-<tr><td><code><a href='https://www.rdocumentation.org/packages/raster/topics/intersect'>intersect</a></code></td><td></td><td></td><td></td></tr>
-<tr><td><code>fixErrors</code></td><td></td><td></td><td><code><a href='https://www.rdocumentation.org/packages/raster/topics/buffer'>buffer</a></code></td></tr>
-<tr><td></td><td></td><td></td><td><code>writeOutputs</code></td></tr>
-<tr><td></td><td></td><td><code><a href='https://www.rdocumentation.org/packages/raster/topics/writeRaster'>writeRaster</a></code></td><td>or</td></tr>
-<tr><td><code><a href='https://www.rdocumentation.org/packages/raster/topics/shapefile'>shapefile</a></code></td><td></td><td></td><td></td></tr>
-<tr><td><code>determineFilename</code></td><td></td><td></td><td></td></tr>
-<tr><td></td><td></td><td>Function</td><td>Arguments</td></tr>
+<p></p><table class='table'>
+<tr><td>Function</td><td>Arguments</td><td><code>cropInputs</code></td><td><code><a href='https://rdrr.io/pkg/raster/man/crop.html'>crop</a></code></td></tr>
+<tr><td><code>projectInputs</code></td><td><code><a href='https://rdrr.io/pkg/raster/man/projectRaster.html'>projectRaster</a></code></td><td><code>maskInputs</code></td><td><code><a href='fastMask.html'>fastMask</a></code> or <code><a href='https://rdrr.io/pkg/raster/man/intersect.html'>intersect</a></code></td></tr>
+<tr><td><code>fixErrors</code></td><td><code><a href='https://rdrr.io/pkg/raster/man/buffer.html'>buffer</a></code></td><td><code>writeOutputs</code></td><td><code><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></code> or <code><a href='https://rdrr.io/pkg/raster/man/shapefile.html'>shapefile</a></code></td></tr>
 </table>
-
-  * Can be overridden with <code>useSAcrs</code>
-  ** Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code>
-</td>
+<p>* Can be overridden with <code>useSAcrs</code>
+  ** Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code></p></td>
     </tr>
     <tr>
       <th>filename1</th>
@@ -257,154 +260,141 @@ in details below.</p></td>
     </tr>
     <tr>
       <th>useCache</th>
-      <td><p>Passed to Cache in various places. Defaults to <code><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption("reproducible.useCache")</a></code></p></td>
+      <td><p>Passed to <code>Cache</code> in various places.
+Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.useCache")</a></code>.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="post-processing-sequence"><a class="anchor" href="#post-processing-sequence"></a>Post processing sequence</h2>
 
     
-    <p>If the <code>rasterToMatch</code> or <code>studyArea</code> are passed, then
+
+
+<p>If the <code>rasterToMatch</code> or <code>studyArea</code> are passed, then
   the following sequence will occur:</p>
 <p></p><ol>
 <li><p>Fix errors <code><a href='fixErrors.html'>fixErrors</a></code>. Currently only errors fixed are for
-           <code>SpatialPolygons</code> using <code><a href='https://www.rdocumentation.org/packages/raster/topics/buffer'>buffer(..., width = 0)</a></code>.</p></li>
+           <code>SpatialPolygons</code> using <code><a href='https://rdrr.io/pkg/raster/man/buffer.html'>buffer(..., width = 0)</a></code>.</p></li>
 <li><p>Crop using <code><a href='cropInputs.html'>cropInputs</a></code></p></li>
 <li><p>Project using <code><a href='projectInputs.html'>projectInputs</a></code></p></li>
 <li><p>Mask using <code><a href='maskInputs.html'>maskInputs</a></code></p></li>
 <li><p>Determine file name <code><a href='determineFilename.html'>determineFilename</a></code></p></li>
 <li><p>Write that file name to disk, optionally <code><a href='writeOutputs.html'>writeOutputs</a></code></p></li>
 </ol>
-    <p>NOTE: checksumming does not occur during the post-processing stage, as
+
+<p>NOTE: checksumming does not occur during the post-processing stage, as
   there are no file downloads. To achieve fast results, wrap
   <code>prepInputs</code> with <code>Cache</code></p>
 <p>NOTE: <code>sf</code> objects are still very experimental.</p>
-    
     <h2 class="hasAnchor" id="passing-rastertomatch-and-or-studyarea"><a class="anchor" href="#passing-rastertomatch-and-or-studyarea"></a>Passing <code>rasterToMatch</code> and/or <code>studyArea</code></h2>
 
     
-    <p>Depending on which of these were passed, different things will happen to the
+
+
+<p>Depending on which of these were passed, different things will happen to the
 <code>targetFile</code> located at <code>filename1</code>.</p>
 <h3>If <code>targetFile</code> is a <code>Raster*</code> object:</h3>
-    <table class='table'>
-<tr><td></td><td></td><td></td><td><code>rasterToMatch</code></td></tr>
-<tr><td></td><td></td><td><code>studyArea</code></td><td></td></tr>
-<tr><td>Both</td><td></td><td></td><td><code>extent</code></td></tr>
-<tr><td></td><td>Yes</td><td>Yes</td><td></td></tr>
-<tr><td><code>rasterToMatch</code></td><td></td><td></td><td></td></tr>
-<tr><td><code>resolution</code></td><td></td><td>Yes</td><td>No</td></tr>
-<tr><td></td><td><code>rasterToMatch</code></td><td></td><td></td></tr>
-<tr><td></td><td><code>projection</code></td><td></td><td>Yes</td></tr>
-<tr><td>No*</td><td></td><td><code>rasterToMatch</code></td><td>*</td></tr>
-<tr><td></td><td></td><td><code>alignment</code></td><td></td></tr>
-<tr><td>Yes</td><td>No</td><td></td><td><code>rasterToMatch</code></td></tr>
-<tr><td></td><td></td><td></td><td><code>mask</code></td></tr>
-<tr><td></td><td>No**</td><td>Yes</td><td></td></tr>
-<tr><td><code>studyArea</code></td><td>**</td><td></td><td></td></tr>
+<p></p><table class='table'>
+<tr><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td><td>Both</td></tr>
+<tr><td><code>extent</code></td><td>Yes</td><td>Yes</td><td><code>rasterToMatch</code></td></tr>
+<tr><td><code>resolution</code></td><td>Yes</td><td>No</td><td><code>rasterToMatch</code></td></tr>
+<tr><td><code>projection</code></td><td>Yes</td><td>No*</td><td><code>rasterToMatch</code>*</td></tr>
+<tr><td><code>alignment</code></td><td>Yes</td><td>No</td><td><code>rasterToMatch</code></td></tr>
+<tr><td><code>mask</code></td><td>No**</td><td>Yes</td><td><code>studyArea</code>**</td></tr>
 </table>
-    * Can be overridden with <code>useSAcrs</code>
-  ** Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code>
-    <h3>If <code>targetFile</code> is a <code>Spatial*</code> object:</h3>
-    <table class='table'>
-<tr><td></td><td></td><td></td><td><code>rasterToMatch</code></td></tr>
-<tr><td></td><td></td><td><code>studyArea</code></td><td></td></tr>
-<tr><td>Both</td><td></td><td></td><td><code>extent</code></td></tr>
-<tr><td></td><td>Yes</td><td>Yes</td><td></td></tr>
-<tr><td><code>rasterToMatch</code></td><td></td><td></td><td></td></tr>
-<tr><td><code>resolution</code></td><td></td><td>NA</td><td>NA</td></tr>
-<tr><td>NA</td><td></td><td></td><td><code>projection</code></td></tr>
-<tr><td></td><td>Yes</td><td>No*</td><td></td></tr>
-<tr><td><code>rasterToMatch</code></td><td>*</td><td></td><td></td></tr>
-<tr><td><code>alignment</code></td><td></td><td>NA</td><td>NA</td></tr>
-<tr><td>NA</td><td></td><td></td><td><code>mask</code></td></tr>
-<tr><td></td><td>No</td><td>Yes</td><td></td></tr>
-<tr><td><code>studyArea</code></td><td></td><td></td><td></td></tr>
+<p>* Can be overridden with <code>useSAcrs</code>
+  ** Will mask with <code>NA</code>s from <code>rasterToMatch</code> if <code>maskWithRTM</code></p>
+
+<h3>If <code>targetFile</code> is a <code>Spatial*</code> object:</h3>
+<p></p><table class='table'>
+<tr><td></td><td><code>rasterToMatch</code></td><td><code>studyArea</code></td><td>Both</td></tr>
+<tr><td><code>extent</code></td><td>Yes</td><td>Yes</td><td><code>rasterToMatch</code></td></tr>
+<tr><td><code>resolution</code></td><td>NA</td><td>NA</td><td>NA</td></tr>
+<tr><td><code>projection</code></td><td>Yes</td><td>No*</td><td><code>rasterToMatch</code>*</td></tr>
+<tr><td><code>alignment</code></td><td>NA</td><td>NA</td><td>NA</td></tr>
+<tr><td><code>mask</code></td><td>No</td><td>Yes</td><td><code>studyArea</code></td></tr>
 </table>
-    * Can be overridden with <code>useSAcrs</code>
-    
+<p>* Can be overridden with <code>useSAcrs</code></p>
+
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code>prepInputs</code></p></div>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Add a study area to Crop and Mask to</span>
 <span class='co'># Create a "study area"</span>
-<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>sp</span>)
-<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>raster</span>)
-<span class='no'>ow</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/getwd'>setwd</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/tempfile'>tempdir</a></span>())
+<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>sp</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
+<span class='no'>ow</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>setwd</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>())
 
 <span class='co'># make a SpatialPolygon</span>
-<span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/structure'>structure</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
-<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>Polygon</a></span>(<span class='no'>coords1</span>)
-<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>Polygons</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
-<span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>SpatialPolygons</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
-<span class='fu'><a href='https://www.rdocumentation.org/packages/raster/topics/projection'>crs</a></span>(<span class='no'>shpEcozone</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
+<span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
+                     <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
+<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords1</span>)
+<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
+<span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>shpEcozone</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
 
 <span class='co'># make a "study area" that is subset of larger dataset</span>
-<span class='no'>coords</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/structure'>structure</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(-<span class='fl'>118.98</span>, -<span class='fl'>116.1</span>, -<span class='fl'>99.2</span>, -<span class='fl'>106</span>, -<span class='fl'>118.98</span>, <span class='fl'>59.9</span>, <span class='fl'>65.73</span>, <span class='fl'>63.58</span>, <span class='fl'>54.79</span>, <span class='fl'>59.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
-<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>Polygon</a></span>(<span class='no'>coords</span>)
-<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>Polygons</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
-<span class='no'>StudyArea</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>SpatialPolygons</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
-<span class='fu'><a href='https://www.rdocumentation.org/packages/raster/topics/projection'>crs</a></span>(<span class='no'>StudyArea</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
+<span class='no'>coords</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>118.98</span>, -<span class='fl'>116.1</span>, -<span class='fl'>99.2</span>, -<span class='fl'>106</span>, -<span class='fl'>118.98</span>, <span class='fl'>59.9</span>, <span class='fl'>65.73</span>, <span class='fl'>63.58</span>, <span class='fl'>54.79</span>, <span class='fl'>59.9</span>),
+                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
+<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords</span>)
+<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
+<span class='no'>StudyArea</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>StudyArea</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile1bc9258ec919. Specify filename1 or filename2 for more control</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile55d69a3beb2. Specify filename1 or filename2 for more control</span>
 #&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
 <span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='fixErrors.html'>fixErrors</a></span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'>
-<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/getwd'>setwd</a></span>(<span class='no'>ow</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>setwd</a></span>(<span class='no'>ow</span>)
 <span class='co'># Add a study area to Crop and Mask to</span>
 <span class='co'># Create a "study area"</span>
-<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>sp</span>)
-<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>raster</span>)
-<span class='no'>ow</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/getwd'>setwd</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/tempfile'>tempdir</a></span>())
+<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>sp</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
+<span class='no'>ow</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>setwd</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>())
 
 <span class='co'># make a SpatialPolygon</span>
-<span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/structure'>structure</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
-<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>Polygon</a></span>(<span class='no'>coords1</span>)
-<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>Polygons</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
-<span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>SpatialPolygons</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
-<span class='fu'><a href='https://www.rdocumentation.org/packages/raster/topics/projection'>crs</a></span>(<span class='no'>shpEcozone</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
+<span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
+                     <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
+<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords1</span>)
+<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
+<span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>shpEcozone</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
 
 <span class='co'># make a "study area" that is subset of larger dataset</span>
-<span class='no'>coords</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/structure'>structure</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(-<span class='fl'>118.98</span>, -<span class='fl'>116.1</span>, -<span class='fl'>99.2</span>, -<span class='fl'>106</span>, -<span class='fl'>118.98</span>, <span class='fl'>59.9</span>, <span class='fl'>65.73</span>, <span class='fl'>63.58</span>, <span class='fl'>54.79</span>, <span class='fl'>59.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
-<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>Polygon</a></span>(<span class='no'>coords</span>)
-<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>Polygons</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
-<span class='no'>StudyArea</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/sp/topics/SpatialPolygons'>SpatialPolygons</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
-<span class='fu'><a href='https://www.rdocumentation.org/packages/raster/topics/projection'>crs</a></span>(<span class='no'>StudyArea</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
+<span class='no'>coords</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>118.98</span>, -<span class='fl'>116.1</span>, -<span class='fl'>99.2</span>, -<span class='fl'>106</span>, -<span class='fl'>118.98</span>, <span class='fl'>59.9</span>, <span class='fl'>65.73</span>, <span class='fl'>63.58</span>, <span class='fl'>54.79</span>, <span class='fl'>59.9</span>),
+                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
+<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords</span>)
+<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
+<span class='no'>StudyArea</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>StudyArea</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
 <span class='co'>#'</span>
 <span class='co'>#'</span>
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile1bc92bd7b332. Specify filename1 or filename2 for more control</span>
+<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'>postProcess</span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous cropInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous projectInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading memoised result from previous maskInputs call.</span><span></span></div><div class='output co'>#&gt; <span class='message'>Saving output to ./Smallfile55d18f7b86c. Specify filename1 or filename2 for more control</span>
 #&gt; <span class='message'>  or set filename2 to NULL to prevent saving to disk</span></div><div class='input'><span class='co'>#'</span>
 <span class='co'># Try manually, individual pieces</span>
 <span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)
 <span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    cropping ...</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='fixErrors.html'>fixErrors</a></span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'>Checking for errors in SpatialPolygon</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'>    intersecting ...</span></div><div class='output co'>#&gt; <span class='message'>Checking for errors in studyArea</span></div><div class='output co'>#&gt; <span class='message'>  Found no errors.</span></div><div class='input'>
-<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/getwd'>setwd</a></span>(<span class='no'>ow</span>)</div></span></pre>
+<span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>setwd</a></span>(<span class='no'>ow</span>)</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#post-processing-sequence">Post processing sequence</a></li>
-
       <li><a href="#passing-rastertomatch-and-or-studyarea">Passing <code>rasterToMatch</code> and/or <code>studyArea</code></a></li>
-
       <li><a href="#see-also">See also</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 
   </div>
 </div>
+
 
       <footer>
       <div class="copyright">
@@ -412,13 +402,16 @@ in details below.</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

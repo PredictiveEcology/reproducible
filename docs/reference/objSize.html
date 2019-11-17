@@ -6,23 +6,27 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Recursive object.size — objSize • reproducible</title>
+<title>Recursive <code>object.size</code> — objSize • reproducible</title>
+
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,12 +34,16 @@
 
 
 
-<meta property="og:title" content="Recursive object.size — objSize" />
 
+<meta property="og:title" content="Recursive <code>object.size</code> — objSize" />
 <meta property="og:description" content="This has methods for various types of things that may not correctly report
-their object.size using object\.size. Also, for lists and environments,
-it will return the object.size separately for each element." />
+their object size using object.size.
+Also, for lists and environments, it will return the object size separately for each element.
+These are estimates only, and could be inaccurate.
+Alternative, similar functions include object.size and pryr::object_size.
+See Details for the special case of functions and their enclosing environments." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -59,6 +67,7 @@ it will return the object.size separately for each element." />
   gtag('config', 'UA-58633549-5');
 </script>
 
+
   </head>
 
   <body>
@@ -75,7 +84,7 @@ it will return the object.size separately for each element." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
       </span>
     </div>
 
@@ -83,7 +92,7 @@ it will return the object.size separately for each element." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -106,11 +115,10 @@ it will return the object.size separately for each element." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -121,40 +129,75 @@ it will return the object.size separately for each element." />
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Recursive object.size</h1>
+    <h1>Recursive <code>object.size</code></h1>
     <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/objectSize.R'><code>R/objectSize.R</code></a></small>
     <div class="hidden name"><code>objSize.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    
     <p>This has methods for various types of things that may not correctly report
-their object.size using <code>object\.size</code>. Also, for lists and environments,
-it will return the object.size separately for each element.</p>
-    
+their object size using <code>object.size</code>.
+Also, for lists and environments, it will return the object size separately for each element.
+These are estimates only, and could be inaccurate.
+Alternative, similar functions include <code>object.size</code> and <code><a href='https://rdrr.io/pkg/pryr/man/object_size.html'>pryr::object_size</a></code>.
+See Details for the special case of functions and their enclosing environments.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='no'>quick</span>)
-
-<span class='co'># S3 method for list</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>))
-
-<span class='co'># S3 method for environment</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
-  <span class='fl'>FALSE</span>))
+    <pre class="usage"><span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='no'>quick</span>, <span class='no'>enclosingEnvs</span>, <span class='no'>.prevEnvirs</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for default</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>,
-  <span class='fl'>FALSE</span>))
+<span class='fu'>objSize</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='no'>...</span>
+)
+
+<span class='co'># S3 method for list</span>
+<span class='fu'>objSize</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='no'>...</span>
+)
+
+<span class='co'># S3 method for environment</span>
+<span class='fu'>objSize</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='no'>...</span>
+)
 
 <span class='co'># S3 method for Path</span>
-<span class='fu'>objSize</span>(<span class='no'>x</span>, <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>))</pre>
-    
+<span class='fu'>objSize</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='no'>...</span>
+)
+
+<span class='co'># S3 method for `function`</span>
+<span class='fu'>objSize</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='no'>...</span>
+)
+
+<span class='fu'>objSizeSession</span>(<span class='kw'>sumLevel</span> <span class='kw'>=</span> <span class='fl'>Inf</span>, <span class='kw'>enclosingEnvs</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>.prevEnvirs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>())</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -168,34 +211,519 @@ it will return the object.size separately for each element.</p>
 <code>Path</code> class objects. In which case, <code>file.size</code> will be
 used instead of <code>object.size</code>.</p></td>
     </tr>
+    <tr>
+      <th>enclosingEnvs</th>
+      <td><p>Logical indicating whether to include enclosing environments.
+Default <code>TRUE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>.prevEnvirs</th>
+      <td><p>For internal account keeping to identify and prevent duplicate counting</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional arguments (currently unused)</p></td>
+    </tr>
+    <tr>
+      <th>sumLevel</th>
+      <td><p>Numeric, indicating at which depth in the list of objects should the
+object sizes be summed (summarized). Default is <code>Inf</code>, meaning no sums. Currently,
+the only option other than Inf is 1: <code>objSizeSession(1)</code>,
+which gives the size of each package.</p></td>
+    </tr>
     </table>
-    
+
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>For functions, a user can include the enclosing environment as described
+<a href='https://www.r-bloggers.com/using-closures-as-objects-in-r/'>https://www.r-bloggers.com/using-closures-as-objects-in-r/</a> and
+<a href='http://adv-r.had.co.nz/memory.html'>http://adv-r.had.co.nz/memory.html</a>.
+It is not entirely clear which estimate is better.
+However, if the enclosing environment is the <code>.GlobalEnv</code>, it will
+not be included even though <code>enclosingEnvs = TRUE</code>.</p>
+<p><code>objSizeSession</code> will give the size of the whole session, including loaded packages.
+Because of the difficulties in calculating the object size of <code>base</code>
+and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/environment'>new.env</a></span>()
-<span class='no'>a</span>$<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
-<span class='no'>a</span>$<span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>utils</span>)
 
-<span class='fu'>objSize</span>(<span class='no'>a</span>) <span class='co'># all the elements in the environment</span></div><div class='output co'>#&gt; $`a$b`
+<span class='no'>foo</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/environment.html'>new.env</a></span>()
+<span class='no'>foo</span>$<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
+<span class='no'>foo</span>$<span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
+
+<span class='fu'>objSize</span>(<span class='no'>foo</span>) <span class='co'># all the elements in the environment</span></div><div class='output co'>#&gt; [1] "&lt;environment: 0x5607ed75cd90&gt;"</div><div class='output co'>#&gt; $`foo$b`
 #&gt; 96 bytes
 #&gt; 
-#&gt; $`a$d`
+#&gt; $`foo$d`
 #&gt; 96 bytes
 #&gt; 
-#&gt; $a
+#&gt; $foo
 #&gt; 56 bytes
-#&gt; </div><div class='input'><span class='fu'><a href='https://www.rdocumentation.org/packages/utils/topics/object.size'>object.size</a></span>(<span class='no'>a</span>) <span class='co'># different - only measuring the environment as an object</span></div><div class='output co'>#&gt; 56 bytes</div></pre>
+#&gt; </div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='no'>foo</span>) <span class='co'># different - only measuring the environment as an object</span></div><div class='output co'>#&gt; 56 bytes</div><div class='input'>
+<span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='no'>prepInputs</span>) <span class='co'># only the function, without its enclosing environment</span></div><div class='output co'>#&gt; 341416 bytes</div><div class='input'><span class='fu'>objSize</span>(<span class='no'>prepInputs</span>)     <span class='co'># the function, plus its enclosing environment</span></div><div class='output co'>#&gt; $`%&lt;%`
+#&gt; 24120 bytes
+#&gt; 
+#&gt; $`%C%`
+#&gt; 292504 bytes
+#&gt; 
+#&gt; $appendChecksumsTable
+#&gt; 134552 bytes
+#&gt; 
+#&gt; $argsToRemove
+#&gt; 1896 bytes
+#&gt; 
+#&gt; $asPath
+#&gt; 1928 bytes
+#&gt; 
+#&gt; $asPath.character
+#&gt; 10824 bytes
+#&gt; 
+#&gt; $asPath.null
+#&gt; 1480 bytes
+#&gt; 
+#&gt; $assessDataType
+#&gt; 1784 bytes
+#&gt; 
+#&gt; $assessDataType.default
+#&gt; 3808 bytes
+#&gt; 
+#&gt; $assessDataType.Raster
+#&gt; 175000 bytes
+#&gt; 
+#&gt; $assessDataType.RasterStack
+#&gt; 21832 bytes
+#&gt; 
+#&gt; $assessDataTypeGDAL
+#&gt; 109368 bytes
+#&gt; 
+#&gt; $assessGoogle
+#&gt; 73320 bytes
+#&gt; 
+#&gt; $available.packagesMem
+#&gt; 3792 bytes
+#&gt; 
+#&gt; $basename2
+#&gt; 4768 bytes
+#&gt; 
+#&gt; $Cache
+#&gt; 33504 bytes
+#&gt; 
+#&gt; $CacheDigest
+#&gt; 112568 bytes
+#&gt; 
+#&gt; $cc
+#&gt; 53296 bytes
+#&gt; 
+#&gt; $checkAndMakeCloudFolderID
+#&gt; 21104 bytes
+#&gt; 
+#&gt; $checkFutures
+#&gt; 54168 bytes
+#&gt; 
+#&gt; $checkGDALVersion
+#&gt; 12808 bytes
+#&gt; 
+#&gt; $checkoutVersion
+#&gt; 179968 bytes
+#&gt; 
+#&gt; $checkPath
+#&gt; 5256 bytes
+#&gt; 
+#&gt; $Checksums
+#&gt; 7840 bytes
+#&gt; 
+#&gt; $chooseCRANmirror2
+#&gt; 1120 bytes
+#&gt; 
+#&gt; $clearCache
+#&gt; 8792 bytes
+#&gt; 
+#&gt; $clearStubArtifacts
+#&gt; 4696 bytes
+#&gt; 
+#&gt; $cloudCache
+#&gt; 3776 bytes
+#&gt; 
+#&gt; $cloudCheckOld
+#&gt; 4000 bytes
+#&gt; 
+#&gt; $cloudDownload
+#&gt; 47272 bytes
+#&gt; 
+#&gt; $cloudDownloadRasterBackend
+#&gt; 139056 bytes
+#&gt; 
+#&gt; $cloudSyncCacheOld
+#&gt; 5616 bytes
+#&gt; 
+#&gt; $cloudUpload
+#&gt; 47696 bytes
+#&gt; 
+#&gt; $cloudUploadFromCache
+#&gt; 36080 bytes
+#&gt; 
+#&gt; $cloudUploadRasterBackends
+#&gt; 65544 bytes
+#&gt; 
+#&gt; $cloudWriteOld
+#&gt; 4808 bytes
+#&gt; 
+#&gt; $compareNA
+#&gt; 12544 bytes
+#&gt; 
+#&gt; $convertPaths
+#&gt; 28456 bytes
+#&gt; 
+#&gt; $convertRasterPaths
+#&gt; 49840 bytes
+#&gt; 
+#&gt; $Copy
+#&gt; 5616 bytes
+#&gt; 
+#&gt; $copyFile
+#&gt; 33328 bytes
+#&gt; 
+#&gt; $copySingleFile
+#&gt; 276680 bytes
+#&gt; 
+#&gt; $cropInputs
+#&gt; 2056 bytes
+#&gt; 
+#&gt; $cropInputs.default
+#&gt; 1592 bytes
+#&gt; 
+#&gt; $cropInputs.sf
+#&gt; 154696 bytes
+#&gt; 
+#&gt; $cropInputs.spatialObjects
+#&gt; 212696 bytes
+#&gt; 
+#&gt; $determineFilename
+#&gt; 102848 bytes
+#&gt; 
+#&gt; $determineNestedTags
+#&gt; 104896 bytes
+#&gt; 
+#&gt; $devModeFn1
+#&gt; 170568 bytes
+#&gt; 
+#&gt; $dlGeneric
+#&gt; 46688 bytes
+#&gt; 
+#&gt; $dlGoogle
+#&gt; 208280 bytes
+#&gt; 
+#&gt; $downloadFile
+#&gt; 677272 bytes
+#&gt; 
+#&gt; $downloadRemote
+#&gt; 342592 bytes
+#&gt; 
+#&gt; $extractFromArchive
+#&gt; 538640 bytes
+#&gt; 
+#&gt; $fastMask
+#&gt; 532416 bytes
+#&gt; 
+#&gt; $Filenames
+#&gt; 4744 bytes
+#&gt; 
+#&gt; $fixErrors
+#&gt; 2584 bytes
+#&gt; 
+#&gt; $fixErrors.default
+#&gt; 2120 bytes
+#&gt; 
+#&gt; $fixErrors.sf
+#&gt; 109720 bytes
+#&gt; 
+#&gt; $fixErrors.SpatialPolygons
+#&gt; 98616 bytes
+#&gt; 
+#&gt; $getArtifact
+#&gt; 27864 bytes
+#&gt; 
+#&gt; $getCacheId
+#&gt; 30208 bytes
+#&gt; 
+#&gt; $getCacheRepos
+#&gt; 23040 bytes
+#&gt; 
+#&gt; $getCRANrepos
+#&gt; 34016 bytes
+#&gt; 
+#&gt; $getFunctionName
+#&gt; 552952 bytes
+#&gt; 
+#&gt; $getGDALVersion
+#&gt; 43216 bytes
+#&gt; 
+#&gt; $getLocalTags
+#&gt; 40808 bytes
+#&gt; 
+#&gt; $getUserTags
+#&gt; 56040 bytes
+#&gt; 
+#&gt; $installedVersions
+#&gt; 110480 bytes
+#&gt; 
+#&gt; $installedVersionsQuick
+#&gt; 116976 bytes
+#&gt; 
+#&gt; $installVersions
+#&gt; 926920 bytes
+#&gt; 
+#&gt; $isInteractive
+#&gt; 840 bytes
+#&gt; 
+#&gt; $isOrHasRaster
+#&gt; 42432 bytes
+#&gt; 
+#&gt; $isWindows
+#&gt; 3544 bytes
+#&gt; 
+#&gt; $keepCache
+#&gt; 7864 bytes
+#&gt; 
+#&gt; $knownArchiveExtensions
+#&gt; 432 bytes
+#&gt; 
+#&gt; $knownInternalArchiveExtensions
+#&gt; 304 bytes
+#&gt; 
+#&gt; $knownSystemArchiveExtensions
+#&gt; 176 bytes
+#&gt; 
+#&gt; $linkOrCopy
+#&gt; 121392 bytes
+#&gt; 
+#&gt; $makeMemoisable
+#&gt; 1552 bytes
+#&gt; 
+#&gt; $makeMemoisable.default
+#&gt; 1088 bytes
+#&gt; 
+#&gt; $maskInputs
+#&gt; 1888 bytes
+#&gt; 
+#&gt; $maskInputs.Raster
+#&gt; 28704 bytes
+#&gt; 
+#&gt; $maskInputs.sf
+#&gt; 107768 bytes
+#&gt; 
+#&gt; $maskInputs.Spatial
+#&gt; 107640 bytes
+#&gt; 
+#&gt; $mergeCache
+#&gt; 5264 bytes
+#&gt; 
+#&gt; $missingFiles
+#&gt; 38056 bytes
+#&gt; 
+#&gt; $missingUnrarMess
+#&gt; 232 bytes
+#&gt; 
+#&gt; $moveAttributes
+#&gt; 28808 bytes
+#&gt; 
+#&gt; $newLibPaths
+#&gt; 9816 bytes
+#&gt; 
+#&gt; $nextNumericName
+#&gt; 97200 bytes
+#&gt; 
+#&gt; $normPath
+#&gt; 4744 bytes
+#&gt; 
+#&gt; $objSize
+#&gt; 2432 bytes
+#&gt; 
+#&gt; $objSize.default
+#&gt; 3496 bytes
+#&gt; 
+#&gt; $objSize.environment
+#&gt; 37928 bytes
+#&gt; 
+#&gt; $objSize.function
+#&gt; 48056 bytes
+#&gt; 
+#&gt; $objSize.list
+#&gt; 127880 bytes
+#&gt; 
+#&gt; $objSize.Path
+#&gt; 6984 bytes
+#&gt; 
+#&gt; $objSizeSession
+#&gt; 128576 bytes
+#&gt; 
+#&gt; $package_dependenciesMem
+#&gt; 102240 bytes
+#&gt; 
+#&gt; $pickFirstVersion
+#&gt; 17000 bytes
+#&gt; 
+#&gt; $pkgDep
+#&gt; 1066856 bytes
+#&gt; 
+#&gt; $pkgDep2
+#&gt; 62152 bytes
+#&gt; 
+#&gt; $pkgSnapshot
+#&gt; 164016 bytes
+#&gt; 
+#&gt; $postProcess
+#&gt; 1720 bytes
+#&gt; 
+#&gt; $postProcess.default
+#&gt; 1256 bytes
+#&gt; 
+#&gt; $postProcess.list
+#&gt; 8872 bytes
+#&gt; 
+#&gt; $postProcess.quosure
+#&gt; 5944 bytes
+#&gt; 
+#&gt; $postProcess.sf
+#&gt; 38704 bytes
+#&gt; 
+#&gt; $postProcess.spatialObjects
+#&gt; 27496 bytes
+#&gt; 
+#&gt; $postProcessAllSpatial
+#&gt; 327088 bytes
+#&gt; 
+#&gt; $postProcessChecks
+#&gt; 49936 bytes
+#&gt; 
+#&gt; $prepInputs
+#&gt; 341416 bytes
+#&gt; 
+#&gt; $preProcess
+#&gt; 1024000 bytes
+#&gt; 
+#&gt; $projectInputs
+#&gt; 1888 bytes
+#&gt; 
+#&gt; $projectInputs.default
+#&gt; 1424 bytes
+#&gt; 
+#&gt; $projectInputs.Raster
+#&gt; 702992 bytes
+#&gt; 
+#&gt; $projectInputs.sf
+#&gt; 91944 bytes
+#&gt; 
+#&gt; $projectInputs.Spatial
+#&gt; 43432 bytes
+#&gt; 
+#&gt; $reproducibleOptions
+#&gt; 16400 bytes
+#&gt; 
+#&gt; $Require
+#&gt; 354824 bytes
+#&gt; 
+#&gt; $retry
+#&gt; 40288 bytes
+#&gt; 
+#&gt; $rndstr
+#&gt; 29240 bytes
+#&gt; 
+#&gt; $searchFull
+#&gt; 37224 bytes
+#&gt; 
+#&gt; $searchFullEx
+#&gt; 1120 bytes
+#&gt; 
+#&gt; $showCache
+#&gt; 6848 bytes
+#&gt; 
+#&gt; $showLocalRepo2
+#&gt; 11400 bytes
+#&gt; 
+#&gt; $showLocalRepo3
+#&gt; 3272 bytes
+#&gt; 
+#&gt; $showLocalRepo3Mem
+#&gt; 88680 bytes
+#&gt; 
+#&gt; $tempdir2
+#&gt; 5680 bytes
+#&gt; 
+#&gt; $unmakeMemoisable
+#&gt; 1584 bytes
+#&gt; 
+#&gt; $unmakeMemoisable.default
+#&gt; 1088 bytes
+#&gt; 
+#&gt; $useETM
+#&gt; 14544 bytes
+#&gt; 
+#&gt; $verboseDF1
+#&gt; 39560 bytes
+#&gt; 
+#&gt; $verboseDF2
+#&gt; 36000 bytes
+#&gt; 
+#&gt; $verboseDF3
+#&gt; 36096 bytes
+#&gt; 
+#&gt; $verboseMessage1
+#&gt; 8792 bytes
+#&gt; 
+#&gt; $verboseMessage2
+#&gt; 5464 bytes
+#&gt; 
+#&gt; $verboseMessage3
+#&gt; 10160 bytes
+#&gt; 
+#&gt; $verboseTime
+#&gt; 4208 bytes
+#&gt; 
+#&gt; $writeChecksumsTable
+#&gt; 24960 bytes
+#&gt; 
+#&gt; $writeFuture
+#&gt; 64408 bytes
+#&gt; 
+#&gt; $writeOutputs
+#&gt; 2360 bytes
+#&gt; 
+#&gt; $writeOutputs.default
+#&gt; 4400 bytes
+#&gt; 
+#&gt; $writeOutputs.Raster
+#&gt; 132056 bytes
+#&gt; 
+#&gt; $writeOutputs.sf
+#&gt; 42088 bytes
+#&gt; 
+#&gt; $writeOutputs.Spatial
+#&gt; 61776 bytes
+#&gt; </div><div class='input'>
+<span class='co'># Size of all packages; includes their imported functions</span>
+<span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+  <span class='no'>bar</span> <span class='kw'>&lt;-</span> <span class='fu'>objSizeSession</span>(<span class='fl'>1</span>)
+  <span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>bar</span>, <span class='kw'>units</span> <span class='kw'>=</span> <span class='st'>"auto"</span>)
+}
+
+<span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
+<span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))</div><div class='output co'>#&gt; [1] "&lt;environment: package:reproducible&gt;"</div><div class='input'>(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 584 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 31 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 13881104</div><div class='input'>                 # and imported functions
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-            
+      <li><a href="#details">Details</a></li>
       <li><a href="#examples">Examples</a></li>
     </ul>
 
   </div>
 </div>
+
 
       <footer>
       <div class="copyright">
@@ -203,13 +731,16 @@ used instead of <code>object.size</code>.</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

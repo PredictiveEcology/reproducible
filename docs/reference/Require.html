@@ -8,21 +8,25 @@
 
 <title>Repeatability-safe install and load packages, optionally with specific versions — Require • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,8 +34,8 @@
 
 
 
-<meta property="og:title" content="Repeatability-safe install and load packages, optionally with specific versions — Require" />
 
+<meta property="og:title" content="Repeatability-safe install and load packages, optionally with specific versions — Require" />
 <meta property="og:description" content="This is an &quot;all in one&quot; function that will run install.packages for
 CRAN packages, remotes::install_github for https://github.com/ packages and
 will install specific versions of each package if there is a
@@ -44,6 +48,7 @@ called on the packages. If packages are already installed
 packageVersionFile is supplied), then the &quot;install&quot; component will be
 skipped very quickly with a message." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -67,6 +72,7 @@ skipped very quickly with a message." />
   gtag('config', 'UA-58633549-5');
 </script>
 
+
   </head>
 
   <body>
@@ -83,7 +89,7 @@ skipped very quickly with a message." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
       </span>
     </div>
 
@@ -91,7 +97,7 @@ skipped very quickly with a message." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -114,11 +120,10 @@ skipped very quickly with a message." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -129,6 +134,7 @@ skipped very quickly with a message." />
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -140,25 +146,30 @@ skipped very quickly with a message." />
     </div>
 
     <div class="ref-description">
-    
     <p>This is an "all in one" function that will run <code>install.packages</code> for
-CRAN packages, <code><a href='https://www.rdocumentation.org/packages/remotes/topics/install_github'>remotes::install_github</a></code> for <a href='https://github.com/'>https://github.com/</a> packages and
+CRAN packages, <code><a href='https://rdrr.io/pkg/remotes/man/install_github.html'>remotes::install_github</a></code> for <a href='https://github.com/'>https://github.com/</a> packages and
 will install specific versions of each package if there is a
 <code>packageVersionFile</code> supplied. Plus, when <code>packages</code> is provided as
 a character vector, or a <code>packageVersionFile</code> is supplied, all package
-dependencies will be first assessed for <code><a href='https://www.rdocumentation.org/packages/base/topics/unique'>unique(dependencies)</a></code> so the
+dependencies will be first assessed for <code><a href='https://rdrr.io/r/base/unique.html'>unique(dependencies)</a></code> so the
 same package is not installed multiple times. Finally <code>library</code> is
 called on the <code>packages</code>. If packages are already installed
 (<code>packages</code> supplied), and their version numbers are exact (when
 <code>packageVersionFile</code> is supplied), then the "install" component will be
 skipped very quickly with a message.</p>
-    
     </div>
 
-    <pre class="usage"><span class='fu'>Require</span>(<span class='no'>packages</span>, <span class='no'>packageVersionFile</span>, <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/libPaths'>.libPaths</a></span>()[<span class='fl'>1</span>],
-  <span class='kw'>install_githubArgs</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(), <span class='kw'>install.packagesArgs</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(),
-  <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/options'>getOption</a></span>(<span class='st'>"repos"</span>), <span class='kw'>forget</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
-    
+    <pre class="usage"><span class='fu'>Require</span>(
+  <span class='no'>packages</span>,
+  <span class='no'>packageVersionFile</span>,
+  <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/libPaths.html'>.libPaths</a></span>()[<span class='fl'>1</span>],
+  <span class='kw'>install_githubArgs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='kw'>install.packagesArgs</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(),
+  <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"repos"</span>),
+  <span class='kw'>forget</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
+)</pre>
+
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
@@ -171,7 +182,7 @@ one package, it can be unquoted (as in <code>require</code>)</p></td>
     <tr>
       <th>packageVersionFile</th>
       <td><p>If provided, then this will override all <code>install.package</code>
-calls with <code><a href='https://www.rdocumentation.org/packages/versions/topics/install.versions'>versions::install.versions</a></code></p></td>
+calls with <code><a href='https://rdrr.io/pkg/versions/man/install.versions.html'>versions::install.versions</a></code></p></td>
     </tr>
     <tr>
       <th>libPath</th>
@@ -210,18 +221,18 @@ if packages were installed manually by a user. Set this to <code>TRUE</code> to
 refresh that dependency calculation.</p></td>
     </tr>
     </table>
-    
+
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p><code>standAlone</code> will either put the <code>Require</code>d packages and their
 dependencies <em>all</em> within the libPath (if <code>TRUE</code>) or if
 <code>FALSE</code> will only install packages and their dependencies that are
-otherwise not installed in <code><a href='https://www.rdocumentation.org/packages/base/topics/libPaths'>.libPaths()</a></code>, i.e., the personal or base
+otherwise not installed in <code><a href='https://rdrr.io/r/base/libPaths.html'>.libPaths()</a></code>, i.e., the personal or base
 library paths. Any packages or dependencies that are not yet installed will
 be installed in <code>libPath</code>. Importantly, a small hidden file (named
 <code>._packageVersionsAuto.txt</code>) will be saved in <code>libPath</code> that will
 store the <em>information</em> about the packages and their dependencies, even
-if the version used is located in <code><a href='https://www.rdocumentation.org/packages/base/topics/libPaths'>.libPaths()</a></code>, i.e., not the
+if the version used is located in <code><a href='https://rdrr.io/r/base/libPaths.html'>.libPaths()</a></code>, i.e., not the
 <code>libPath</code> provided. This hidden file will be used if a user runs
 <code>pkgSnapshot</code>, enabling a new user to rebuild the entire dependency
 chain, without having to install all packages in an isolated directory (as
@@ -237,7 +248,6 @@ of the most recent call to <code>Require</code>.</p>
 package versions will be saved automatically (with <code>standAlone = TRUE</code>
 or <code>standAlone = FALSE</code>), allowing a call to <code>pkgSnapshot</code> when a
 more permanent record of versions can be made.</p>
-    
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
     <p>This function will use <code>memoise</code> internally to determine the
@@ -246,21 +256,20 @@ more permanent record of versions can be made.</p>
   numbers for this memoised step. If package versions are updated manually by
   the user, then this cached element should be wiped, using <code>forget =
   TRUE</code>.</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><span class='co'># NOT RUN {</span>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
 <span class='co'># simple usage, like conditional install.packages then library</span>
 <span class='fu'>Require</span>(<span class='st'>"stats"</span>) <span class='co'># analogous to require(stats), but slower because it checks for</span>
                  <span class='co'>#   pkg dependencies, and installs them, if missing</span>
-<span class='no'>tempPkgFolder</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/file.path'>file.path</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/tempfile'>tempdir</a></span>(), <span class='st'>"Packages"</span>)
+<span class='no'>tempPkgFolder</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"Packages"</span>)
 
 <span class='co'># use standAlone, means it will put it in libPath, even if it already exists</span>
 <span class='co'>#   in another local library (e.g., personal library)</span>
 <span class='fu'>Require</span>(<span class='st'>"crayon"</span>, <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='no'>tempPkgFolder</span>, <span class='kw'>standAlone</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
 <span class='co'># make a package version snapshot</span>
-<span class='no'>packageVersionFile</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/file.path'>file.path</a></span>(<span class='no'>tempPkgFolder</span>, <span class='st'>".packageVersion.txt"</span>)
+<span class='no'>packageVersionFile</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>tempPkgFolder</span>, <span class='st'>".packageVersion.txt"</span>)
 <span class='fu'><a href='pkgSnapshot.html'>pkgSnapshot</a></span>(<span class='kw'>libPath</span><span class='kw'>=</span><span class='no'>tempPkgFolder</span>, <span class='no'>packageVersionFile</span>)
 
 <span class='co'># confirms that correct version is installed</span>
@@ -268,36 +277,33 @@ more permanent record of versions can be made.</p>
 
 <span class='co'># Create mismatching versions -- desired version is older than current installed</span>
 <span class='co'># This will try to install the older version, overwriting the newer version</span>
-<span class='no'>desiredVersion</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/data.frame'>data.frame</a></span>(<span class='kw'>instPkgs</span><span class='kw'>=</span><span class='st'>"crayon"</span>, <span class='kw'>instVers</span> <span class='kw'>=</span> <span class='st'>"1.3.2"</span>, <span class='kw'>stringsAsFactors</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
-<span class='fu'><a href='https://www.rdocumentation.org/packages/utils/topics/write.table'>write.table</a></span>(<span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>packageVersionFile</span>, <span class='no'>desiredVersion</span>, <span class='kw'>row.names</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='no'>desiredVersion</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>instPkgs</span><span class='kw'>=</span><span class='st'>"crayon"</span>, <span class='kw'>instVers</span> <span class='kw'>=</span> <span class='st'>"1.3.2"</span>, <span class='kw'>stringsAsFactors</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
+<span class='fu'><a href='https://rdrr.io/r/utils/write.table.html'>write.table</a></span>(<span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>packageVersionFile</span>, <span class='no'>desiredVersion</span>, <span class='kw'>row.names</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 <span class='co'># won't work because newer crayon is loaded</span>
 <span class='fu'>Require</span>(<span class='st'>"crayon"</span>, <span class='kw'>packageVersionFile</span> <span class='kw'>=</span> <span class='no'>packageVersionFile</span>)
 
 <span class='co'># unload it first</span>
-<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/detach'>detach</a></span>(<span class='st'>"package:crayon"</span>, <span class='kw'>unload</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/detach.html'>detach</a></span>(<span class='st'>"package:crayon"</span>, <span class='kw'>unload</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
 
 <span class='co'># run again, this time, correct "older" version installs in place of newer one</span>
 <span class='fu'>Require</span>(<span class='st'>"crayon"</span>, <span class='kw'>packageVersionFile</span> <span class='kw'>=</span> <span class='no'>packageVersionFile</span>)
 
 <span class='co'># Mutual dependencies, only installs once -- e.g., httr</span>
-<span class='fu'>Require</span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='st'>"cranlogs"</span>, <span class='st'>"covr"</span>), <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='no'>tempPkgFolder</span>)
-<span class='co'># }</span><div class='input'>
-</div></pre>
+<span class='fu'>Require</span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"cranlogs"</span>, <span class='st'>"covr"</span>), <span class='kw'>libPath</span> <span class='kw'>=</span> <span class='no'>tempPkgFolder</span>)
+}</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-      
       <li><a href="#details">Details</a></li>
-
       <li><a href="#note">Note</a></li>
-      
       <li><a href="#examples">Examples</a></li>
     </ul>
 
   </div>
 </div>
+
 
       <footer>
       <div class="copyright">
@@ -305,13 +311,16 @@ more permanent record of versions can be made.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

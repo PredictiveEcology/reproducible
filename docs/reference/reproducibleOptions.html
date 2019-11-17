@@ -8,21 +8,25 @@
 
 <title><code>reproducible</code> options — reproducibleOptions • reproducible</title>
 
+
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,12 +34,13 @@
 
 
 
-<meta property="og:title" content="<code>reproducible</code> options — reproducibleOptions" />
 
+<meta property="og:title" content="<code>reproducible</code> options — reproducibleOptions" />
 <meta property="og:description" content="These provide top-level, powerful settings for a comprehensive
 reproducible workflow. To see defaults, run reproducibleOptions().
 See Details below." />
 <meta name="twitter:card" content="summary" />
+
 
 
 
@@ -59,6 +64,7 @@ See Details below." />
   gtag('config', 'UA-58633549-5');
 </script>
 
+
   </head>
 
   <body>
@@ -75,7 +81,7 @@ See Details below." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
       </span>
     </div>
 
@@ -83,7 +89,7 @@ See Details below." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <span class="fas fa fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -106,11 +112,10 @@ See Details below." />
   <a href="../news/index.html">Changelog</a>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible">
-    <span class="fa fa-github fa-lg"></span>
+    <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -121,6 +126,7 @@ See Details below." />
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -132,154 +138,128 @@ See Details below." />
     </div>
 
     <div class="ref-description">
-    
     <p>These provide top-level, powerful settings for a comprehensive
 reproducible workflow. To see defaults, run <code>reproducibleOptions()</code>.
 See Details below.</p>
-    
     </div>
 
     <pre class="usage"><span class='fu'>reproducibleOptions</span>()</pre>
-        
+
+
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Below are options that can be set with <code><a href='https://www.rdocumentation.org/packages/base/topics/options'>options("reproducible.xxx" = newValue)</a></code>,
+    <p>Below are options that can be set with <code><a href='https://rdrr.io/r/base/options.html'>options("reproducible.xxx" = newValue)</a></code>,
 where <code>xxx</code> is one of the values below, and <code>newValue</code> is a new value to
 give the option. Sometimes these options can be placed in the user's <code>.Rprofile</code>
 file so they persist between sessions.</p>
 <p>The following options are likely of interest to most users</p><table class='table'>
-<tr><td></td><td></td><td><em>OPTION</em></td></tr>
-<tr><td></td><td></td><td><em>DEFAULT VALUE</em></td></tr>
-<tr><td></td><td></td><td><em>DESCRIPTION</em></td></tr>
-<tr><td></td><td></td><td></td></tr>
-<tr><td><code>ask</code></td><td></td><td></td></tr>
-<tr><td><code>TRUE</code></td><td></td><td>Used in</td></tr>
-<tr><td><code><a href='viewCache.html'>clearCache</a></code></td><td>and</td><td></td></tr>
-<tr><td><code><a href='viewCache.html'>keepCache</a></code></td><td></td><td></td></tr>
-<tr><td></td><td><code>cachePath</code></td><td></td></tr>
-<tr><td></td><td><code>.reproducibleTempCacheDir</code></td><td></td></tr>
-<tr><td></td><td>Used in</td><td><code><a href='cache.html'>Cache</a></code></td></tr>
-<tr><td>and many others.</td><td>The default path for repositories if not passed as an argument.</td><td></td></tr>
-<tr><td></td><td><code>destinationPath</code></td><td></td></tr>
-<tr><td></td><td><code>NULL</code></td><td></td></tr>
-<tr><td>Used in</td><td><code><a href='prepInputs.html'>prepInputs</a></code></td><td>,</td></tr>
-<tr><td></td><td><code><a href='preProcess.html'>preProcess</a></code></td><td>. Can be set globally here.</td></tr>
-<tr><td></td><td></td><td><code>futurePlan</code></td></tr>
-<tr><td></td><td></td><td><code>FALSE</code></td></tr>
-<tr><td></td><td>On Linux OSs,</td><td><code>Cache</code></td></tr>
-<tr><td>and</td><td><code>cloudCache</code></td><td></td></tr>
-<tr><td>have some functionality that uses the</td><td><code>future</code></td><td>package.</td></tr>
-<tr><td>Default is to not use these, as they are experimental. They may,</td><td>however, be very effective in speeding up some things, specifically,</td><td>uploading cached elements via googledrive in</td></tr>
-<tr><td><code>cloudCache</code></td><td></td><td></td></tr>
-<tr><td></td><td><code>inputPaths</code></td><td></td></tr>
-<tr><td></td><td><code>NULL</code></td><td></td></tr>
-<tr><td>Used in</td><td><code><a href='prepInputs.html'>prepInputs</a></code></td><td>,</td></tr>
-<tr><td></td><td><code><a href='preProcess.html'>preProcess</a></code></td><td>. If set to a path, this</td></tr>
-<tr><td>will cause these functions to save their downloaded</td><td>and preprocessed file to this location, with a hardlink</td><td>(via</td></tr>
-<tr><td><code>file.link</code></td><td>) to the file</td><td>created in the</td></tr>
-<tr><td><code>destinationPath</code></td><td>. This can be used</td><td>so that individual projects that use common data sets</td></tr>
-<tr><td>can maintain modularity (by placing downloaded objects</td><td>in their</td><td><code>destinationPath</code></td></tr>
-<tr><td>, but also minimize</td><td>re-downloading the same (perhaps large) file over and over</td><td>for each project. Because the files are hardlinks, there</td></tr>
-<tr><td>is no extra space taken up by the apparently duplicated files</td><td></td><td></td></tr>
-<tr><td><code>inputPathsRecursive</code></td><td></td><td></td></tr>
-<tr><td><code>FALSE</code></td><td></td><td>Used in</td></tr>
-<tr><td><code><a href='prepInputs.html'>prepInputs</a></code></td><td>,</td><td></td></tr>
-<tr><td><code><a href='preProcess.html'>preProcess</a></code></td><td>. Should the</td><td><code>reproducible.inputPaths</code></td></tr>
-<tr><td></td><td>be searched recursively for existence of a file</td><td></td></tr>
-<tr><td></td><td><code>overwrite</code></td><td></td></tr>
-<tr><td></td><td><code>FALSE</code></td><td></td></tr>
-<tr><td>Used in</td><td><code><a href='prepInputs.html'>prepInputs</a></code></td><td>,</td></tr>
-<tr><td><code><a href='preProcess.html'>preProcess</a></code></td><td>,</td><td></td></tr>
-<tr><td><code><a href='downloadFile.html'>downloadFile</a></code></td><td>, and</td><td><code><a href='postProcess.html'>postProcess</a></code></td></tr>
-<tr><td>.</td><td></td><td></td></tr>
-<tr><td><code>quick</code></td><td></td><td></td></tr>
-<tr><td><code>FALSE</code></td><td></td><td>Used in</td></tr>
-<tr><td><code><a href='cache.html'>Cache</a></code></td><td>. This will cause</td><td></td></tr>
-<tr><td><code>Cache</code></td><td>to use</td><td><code><a href='https://www.rdocumentation.org/packages/base/topics/file.info'>file.size(file)</a></code></td></tr>
-<tr><td></td><td>instead of the</td><td><code><a href='https://www.rdocumentation.org/packages/digest/topics/digest'>digest::digest(file)</a></code></td></tr>
-<tr><td>.</td><td>Less robust to changes, but faster. NOTE: this will only affect objects</td><td>on disk.</td></tr>
-<tr><td></td><td></td><td><code>showSimilar</code></td></tr>
-<tr><td></td><td>Passed to</td><td><code>Cache</code></td></tr>
-<tr><td>. Default</td><td><code>FALSE</code></td><td>.</td></tr>
-<tr><td></td><td></td><td><code>useCache</code></td></tr>
-<tr><td></td><td></td><td><code>TRUE</code></td></tr>
-<tr><td></td><td>Used in</td><td><code><a href='cache.html'>Cache</a></code></td></tr>
-<tr><td>. If</td><td><code>FALSE</code></td><td>, then</td></tr>
-<tr><td>the entire</td><td><code>Cache</code></td><td>machinery is skipped and the functions</td></tr>
-<tr><td>are run as if there was no Cache occurring. Can also take 2 other values:</td><td></td><td><code>'overwrite'</code></td></tr>
-<tr><td>and</td><td><code>'devMode'</code></td><td>.</td></tr>
-<tr><td><code>'overwrite'</code></td><td>will</td><td>cause no recovery of objects from the cache repository, only new</td></tr>
-<tr><td>ones will be created. If the hash is identical to a previous one,</td><td>then this will overwrite the previous one.</td><td><code>'devMode'</code></td></tr>
-<tr><td>will</td><td>function as normally</td><td><code>Cache</code></td></tr>
-<tr><td>except it will use the</td><td><code>userTags</code></td><td></td></tr>
-<tr><td>to determine if a previous function has been run. If the</td><td><code>userTags</code></td><td></td></tr>
-<tr><td>are identical, but the digest value is different, the old value will</td><td>be deleted from the cache repository and this new value will be added.</td><td>This addresses a common situation during the development stage: functions</td></tr>
-<tr><td>are changing frequently, so any entry in the cache repository will</td><td>be stale following changes to functions, i.e., they will likely never</td><td>be relevant again. This will therefore keep the cache repository</td></tr>
-<tr><td>clean of stale objects. If there is ambiguity in the</td><td><code>userTags</code></td><td>, i.e</td></tr>
-<tr><td>they do not uniquely identify a single entry in the cacheRepo, then</td><td>this option will default back to the non devMode behaviour to avoid</td><td>deleting objects. This, therefore, is most useful if the user is</td></tr>
-<tr><td>using unique values for</td><td><code>userTags</code></td><td></td></tr>
-<tr><td></td><td></td><td><code>useCloud</code></td></tr>
-<tr><td></td><td>Passed to</td><td><code>Cache</code></td></tr>
-<tr><td>. Default</td><td><code>FALSE</code></td><td>.</td></tr>
-<tr><td></td><td></td><td><code>useGDAL</code></td></tr>
-<tr><td></td><td>Passed to</td><td><code>useGDAL</code></td></tr>
-<tr><td>in</td><td><code>projectInputs.Raster</code></td><td>.</td></tr>
-<tr><td>Default</td><td><code>TRUE</code></td><td>.</td></tr>
-<tr><td></td><td></td><td><code>useMemoise</code></td></tr>
-<tr><td></td><td></td><td><code>TRUE</code></td></tr>
-<tr><td></td><td>Used in</td><td><code><a href='cache.html'>Cache</a></code></td></tr>
-<tr><td>. If</td><td><code>TRUE</code></td><td>,</td></tr>
-<tr><td>recovery of cached elements from the cacheRepo will use</td><td></td><td><code><a href='https://www.rdocumentation.org/packages/memoise/topics/memoise'>memoise::memoise</a></code></td></tr>
-<tr><td>. This means that the 3rd time running a function</td><td>will be much faster than the 1st (create cache entry) or 2nd (recover</td><td>from the SQLite database on dist). NOTE: memoised values are removed</td></tr>
-<tr><td>when the R session is restarted.</td><td><b>This option will use more RAM</b></td><td>and</td></tr>
-<tr><td>so may need to be turned off if RAM is limiting.</td><td><code>clearCache</code></td><td></td></tr>
-<tr><td>of any sort will cause all memoising to be 'forgotten'</td><td>(</td><td><code><a href='https://www.rdocumentation.org/packages/memoise/topics/forget'>memoise::forget</a></code></td></tr>
-<tr><td>)</td><td></td><td></td></tr>
-<tr><td><code>useNewDigestAlgorithm</code></td><td></td><td></td></tr>
-<tr><td><code>TRUE</code></td><td></td><td>This will mean that previous</td></tr>
-<tr><td>cache repositories</td><td>will be defunct. This new algorithm will make</td><td><code>Cache</code></td></tr>
-<tr><td>less</td><td>sensitive to minor but irrelevant changes (like changing the</td><td>order of arguments) and will work successfully across operating</td></tr>
-<tr><td>systems (especially relevant for the new 'cloudCache' function</td><td></td><td></td></tr>
-<tr><td><code>verbose</code></td><td></td><td></td></tr>
-<tr><td><code>FALSE</code></td><td></td><td>If set to</td></tr>
-<tr><td><code>TRUE</code></td><td>then every Cache</td><td>call will show a summary of the objects being cached, their</td></tr>
-<tr><td><code>object.size</code></td><td></td><td>and the time it took to digest them and also the time it took to run</td></tr>
-<tr><td>the call and save the call to the cache repository or load the cached</td><td>copy from the repository. This may help diagnosing some problems that may occur.</td><td></td></tr>
+<tr><td><em>OPTION</em></td><td><em>DEFAULT VALUE</em></td><td><em>DESCRIPTION</em></td></tr>
+<tr><td><code>ask</code></td><td><code>TRUE</code></td><td>Used in <code><a href='viewCache.html'>clearCache</a></code> and
+                                   <code><a href='viewCache.html'>keepCache</a></code></td></tr>
+<tr><td><code>cachePath</code></td><td><code>.reproducibleTempCacheDir</code></td><td>Used in <code><a href='cache.html'>Cache</a></code> and many others.
+                   The default path for repositories if not passed as an argument.</td></tr>
+<tr><td><code>destinationPath</code></td><td><code>NULL</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>,
+                              <code><a href='preProcess.html'>preProcess</a></code>. Can be set globally here.</td></tr>
+<tr><td><code>futurePlan</code></td><td><code>FALSE</code></td><td>On Linux OSs, <code>Cache</code> and <code>cloudCache</code>
+                         have some functionality that uses the <code>future</code> package.
+                         Default is to not use these, as they are experimental. They may,
+                         however, be very effective in speeding up some things, specifically,
+                         uploading cached elements via googledrive in <code>cloudCache</code></td></tr>
+<tr><td><code>inputPaths</code></td><td><code>NULL</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>,
+                              <code><a href='preProcess.html'>preProcess</a></code>. If set to a path, this
+                              will cause these functions to save their downloaded
+                              and preprocessed file to this location, with a hardlink
+                              (via <code>file.link</code>) to the file
+                              created in the <code>destinationPath</code>. This can be used
+                              so that individual projects that use common data sets
+                              can maintain modularity (by placing downloaded objects
+                              in their <code>destinationPath</code>, but also minimize
+                              re-downloading the same (perhaps large) file over and over
+                              for each project. Because the files are hardlinks, there
+                              is no extra space taken up by the apparently duplicated files</td></tr>
+<tr><td><code>inputPathsRecursive</code></td><td><code>FALSE</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>,
+                              <code><a href='preProcess.html'>preProcess</a></code>. Should the <code>reproducible.inputPaths</code>
+                              be searched recursively for existence of a file</td></tr>
+<tr><td><code>overwrite</code></td><td><code>FALSE</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>, <code><a href='preProcess.html'>preProcess</a></code>,
+                        <code><a href='downloadFile.html'>downloadFile</a></code>, and <code><a href='postProcess.html'>postProcess</a></code>.</td></tr>
+<tr><td><code>quick</code></td><td><code>FALSE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. This will cause
+                <code>Cache</code> to use <code><a href='https://rdrr.io/r/base/file.info.html'>file.size(file)</a></code>
+                instead of the <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest(file)</a></code>.
+                Less robust to changes, but faster. NOTE: this will only affect objects
+                on disk.</td></tr>
+<tr><td><code>showSimilar</code></td><td>Passed to <code>Cache</code>. Default <code>FALSE</code>.</td><td><code>useCache</code></td></tr>
+<tr><td><code>TRUE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. If <code>FALSE</code>, then
+                        the entire <code>Cache</code> machinery is skipped and the functions
+                        are run as if there was no Cache occurring. Can also take 2 other values:
+                        <code>'overwrite'</code> and <code>'devMode'</code>. <code>'overwrite'</code> will
+                        cause no recovery of objects from the cache repository, only new
+                        ones will be created. If the hash is identical to a previous one,
+                        then this will overwrite the previous one. <code>'devMode'</code> will
+                        function as normally <code>Cache</code> except it will use the <code>userTags</code>
+                        to determine if a previous function has been run. If the <code>userTags</code>
+                        are identical, but the digest value is different, the old value will
+                        be deleted from the cache repository and this new value will be added.
+                        This addresses a common situation during the development stage: functions
+                        are changing frequently, so any entry in the cache repository will
+                        be stale following changes to functions, i.e., they will likely never
+                        be relevant again. This will therefore keep the cache repository
+                        clean of stale objects. If there is ambiguity in the <code>userTags</code>, i.e
+                        they do not uniquely identify a single entry in the cacheRepo, then
+                        this option will default back to the non devMode behaviour to avoid
+                        deleting objects. This, therefore, is most useful if the user is
+                        using unique values for <code>userTags</code></td><td><code>useCloud</code></td></tr>
+<tr><td>Passed to <code>Cache</code>. Default <code>FALSE</code>.</td><td><code>useGDAL</code></td><td>Passed to <code>useGDAL</code> in <code>projectInputs.Raster</code>.
+                  Default <code>TRUE</code>.</td></tr>
+<tr><td><code>useMemoise</code></td><td><code>TRUE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. If <code>TRUE</code>,
+                  recovery of cached elements from the cacheRepo will use
+                  <code><a href='https://rdrr.io/pkg/memoise/man/memoise.html'>memoise::memoise</a></code>. This means that the 3rd time running a function
+                  will be much faster than the 1st (create cache entry) or 2nd (recover
+                  from the SQLite database on dist). NOTE: memoised values are removed
+                  when the R session is restarted. <b>This option will use more RAM</b> and
+                  so may need to be turned off if RAM is limiting.  <code>clearCache</code>
+                  of any sort will cause all memoising to be 'forgotten'
+                  (<code><a href='https://rdrr.io/pkg/memoise/man/forget.html'>memoise::forget</a></code>)</td></tr>
+<tr><td><code>useNewDigestAlgorithm</code></td><td><code>TRUE</code></td><td>This will mean that previous
+                   cache repositories
+                   will be defunct. This new algorithm will make <code>Cache</code> less
+                   sensitive to minor but irrelevant changes (like changing the
+                   order of arguments) and will work successfully across operating
+                   systems (especially relevant for the new 'cloudCache' function</td></tr>
+<tr><td><code>verbose</code></td><td><code>FALSE</code></td><td>If set to <code>TRUE</code> then every Cache
+     call will show a summary of the objects being cached, their <code>object.size</code>
+     and the time it took to digest them and also the time it took to run
+     the call and save the call to the cache repository or load the cached
+     copy from the repository. This may help diagnosing some problems that may occur.</td></tr>
 </table>
-    
+
+
     <h2 class="hasAnchor" id="advanced"><a class="anchor" href="#advanced"></a>Advanced</h2>
 
     
-    <p>The following options are likely not needed by a user.</p><table class='table'>
-<tr><td></td><td></td><td><code>cloudChecksumsFilename</code></td></tr>
-<tr><td></td><td></td><td><code><a href='https://www.rdocumentation.org/packages/base/topics/file.path'>file.path(dirname(.reproducibleTempCacheDir), "checksums.rds")</a></code></td></tr>
-<tr><td></td><td></td><td>Used in</td></tr>
-<tr><td><code><a href='Deprcated.html'>cloudCache</a></code></td><td></td><td></td></tr>
-<tr><td></td><td><code>length</code></td><td></td></tr>
-<tr><td></td><td><code>Inf</code></td><td></td></tr>
-<tr><td>Used in</td><td><code><a href='cache.html'>Cache</a></code></td><td>, specifically to the internal</td></tr>
-<tr><td>calls to</td><td><code><a href='CacheDigest.html'>CacheDigest</a></code></td><td>. This is passed to</td></tr>
-<tr><td><code><a href='https://www.rdocumentation.org/packages/digest/topics/digest'>digest::digest</a></code></td><td>.</td><td>Mostly this would be changed from default</td></tr>
-<tr><td><code>Inf</code></td><td>if the digesting is</td><td>taking too long. Use this with caution, as some objects will have MANY</td></tr>
-<tr><td>NA values in their first MANY elements</td><td></td><td></td></tr>
-<tr><td><code>useragent</code></td><td></td><td></td></tr>
-<tr><td><code>"http://github.com/PredictiveEcology/reproducible"</code></td><td></td><td></td></tr>
-<tr><td>User agent for downloads using this package.</td><td></td><td></td></tr>
+
+<p>The following options are likely not needed by a user.</p><table class='table'>
+<tr><td><code>cloudChecksumsFilename</code></td><td><code><a href='https://rdrr.io/r/base/file.path.html'>file.path(dirname(.reproducibleTempCacheDir), "checksums.rds")</a></code></td><td>Used in <code><a href='Deprcated.html'>cloudCache</a></code></td></tr>
+<tr><td><code>length</code></td><td><code>Inf</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>, specifically to the internal
+                     calls to <code><a href='CacheDigest.html'>CacheDigest</a></code>. This is passed to <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>.
+                     Mostly this would be changed from default <code>Inf</code> if the digesting is
+                     taking too long. Use this with caution, as some objects will have MANY
+                     NA values in their first MANY elements</td></tr>
+<tr><td><code>useragent</code></td><td><code>"http://github.com/PredictiveEcology/reproducible"</code></td><td>User agent for downloads using this package.</td></tr>
 </table>
-    
+
+
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      
       <li><a href="#details">Details</a></li>
-
       <li><a href="#advanced">Advanced</a></li>
-          </ul>
+    </ul>
 
   </div>
 </div>
+
 
       <footer>
       <div class="copyright">
@@ -287,13 +267,16 @@ file so they persist between sessions.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 
