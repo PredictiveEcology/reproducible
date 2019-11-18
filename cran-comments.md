@@ -5,6 +5,8 @@ See `NEWS.md`.
 
 ## Test environments
 
+Tested and passed using winbuilder all three versions, and rhub with no errors, warnings, or notes.
+
 ### Previous R versions
 * Ubuntu 16.04        (travis-ci), R 3.5.3
 * Windows 7            (appveyor), R 3.5.3
