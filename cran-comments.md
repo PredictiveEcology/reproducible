@@ -24,7 +24,7 @@ See `NEWS.md`.
 * Ubuntu 16.04       (travis-ci), R 4.0.0 (2019-11-11 r77395)
 * Ubuntu 18.04           (local), R 4.0.0 (2019-11-12 r77405)
 * Windows             (appveyor), R 4.0.0 (2019-11-07 r77386)
-* Windows          (win-builder), R 4.0.0 (2019-11-07 r77386)
+* Windows          (win-builder), R 4.0.0 (2019-11-12 r77405)
 
 ## R CMD check results
 
@@ -32,14 +32,8 @@ There were no ERRORs, nor WARNINGs, nor NOTEs.
 
 ## Downstream dependencies
 
-We have run R CMD check on downstream dependencies, and have no ERRORs and 1 WARNING:
+We have run R CMD check on downstream dependencies, and have no ERRORs and WARNINGs or NOTEs:
 
-```
-* SpaDES.core
-  checking S3 generic/method consistency ... WARNING
-```
-
-As a co-developer of the `SpaDES.core` package, we have already fixed this issue and will be submitting and updated version to CRAN shortly.
 
 ## revdepcheck results
 
