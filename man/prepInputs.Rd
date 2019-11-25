@@ -173,7 +173,7 @@ will only remove entries in the \code{CHECKSUMS.txt} that are associated with
 
 \examples{
 # This function works within a module; however, currently,
-#   \\cde{sourceURL} is not yet working as desired. Use \\code{url}.
+#   \cde{sourceURL} is not yet working as desired. Use \code{url}.
 \dontrun{
 # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 # First time: don't know all files - prepInputs will guess, if download file is an archive,
