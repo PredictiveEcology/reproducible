@@ -17,10 +17,35 @@ createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   checkPath(file.path(cacheDir, "cacheObjects"), create = TRUE)
   con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
   on.exit(dbDisconnect(con))
-  dt <- data.table("cacheId", "tagKey", "tagValue", "createdDate")
+  dt <- data.table(cacheId = character(), tagKey = character(),
+                   tagValue = character(), createdDate = numeric())
   dbWriteTable(con, "dt", dt, overwrite = TRUE)
 }
 
+saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
+                        outputToSave, userTags, cacheId) {
+  con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
+  browser()
+
+  if (missing(userTags)) userTags = "otherFunctions"
+  dt <- data.table("cacheId" = digest::digest(a), "tagKey" = "userTags",
+                   "tagValue" = userTags, "createdDate" = Sys.time())
+  dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE)
+
+}
+
+
+# saveToLocalRepo(
+#   outputToSave,
+#   repoDir = cacheRepo,
+#   artifactName = NULL,
+#   archiveData = FALSE,
+#   archiveSessionInfo = FALSE,
+#   archiveMiniature = FALSE,
+#   rememberName = FALSE,
+#   silent = TRUE,
+#   userTags = userTags
+# )
 #
 # unction (repoDir, force = FALSE, default = FALSE)
 # {
