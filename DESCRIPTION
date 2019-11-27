@@ -76,6 +76,7 @@ BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 7.0.1
 Collate: 
+    'DBI.R'
     'cache-helpers.R'
     'cache-internals.R'
     'cache-tools.R'
