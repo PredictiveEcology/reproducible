@@ -1,3 +1,13 @@
+# importFrom(archivist,addTagsRepo)
+# importFrom(archivist,cache)
+# importFrom(archivist,createLocalRepo)
+# importFrom(archivist,loadFromLocalRepo)
+# importFrom(archivist,rmFromLocalRepo)
+# importFrom(archivist,saveToLocalRepo)
+# importFrom(archivist,searchInLocalRepo)
+# importFrom(archivist,showLocalRepo)
+# importFrom(archivist,splitTagsLocal)
+
 #' Create a new cache
 #'
 #' @param cacheDir A path describing the directory in which to create
@@ -5,6 +15,8 @@
 #' @param drv A driver, passed to \code{dbConnect}
 #' @param force If
 #' # replaces archivist::createLocalRepo
+#' @importFrom DBI dbConnect dbDisconnect dbWriteTable
+#' @importFrom data.table data.table
 createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   dbPath <- file.path(cacheDir, "cache.db")
   alreadyExists <- dir.exists(cacheDir) && file.exists(dbPath)
@@ -18,17 +30,18 @@ createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
   on.exit(dbDisconnect(con))
   dt <- data.table(cacheId = character(), tagKey = character(),
-                   tagValue = character(), createdDate = numeric())
-  dbWriteTable(con, "dt", dt, overwrite = TRUE)
+                   tagValue = character(), createdDate = .POSIXct(integer()))
+  dbWriteTable(con, "dt", dt, overwrite = TRUE, field.types = c(createdDate = "timestamp"))
 }
 
 saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
                         outputToSave, userTags, cacheId) {
   con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
+  on.exit(dbDisconnect(con))
   browser()
 
   if (missing(userTags)) userTags = "otherFunctions"
-  dt <- data.table("cacheId" = digest::digest(a), "tagKey" = "userTags",
+  dt <- data.table("cacheId" = cacheId, "tagKey" = "userTags",
                    "tagValue" = userTags, "createdDate" = Sys.time())
   dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE)
 

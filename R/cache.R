@@ -434,6 +434,7 @@ setMethod(
       }))
       if (any(!isIntactRepo))
         ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
+          browser()
           archivist::createLocalRepo(cacheRepos[[cacheRepoInd]],
                                      force = isIntactRepo[cacheRepoInd])
         })
@@ -759,6 +760,7 @@ setMethod(
             future::plan(thePlan)
           }
         }
+        browser()
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
           #saved <-
           future::futureCall(
@@ -782,9 +784,11 @@ setMethod(
                              pattern = "object.size:", replacement = "")
           otsObjSize <- as.numeric(otsObjSize)
           class(otsObjSize) <- "object_size"
-
+          browser()
           if (otsObjSize > 1e7)
             message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
+          saved <- saveToCache(cacheDir = cacheRepo, drv = drv, userTags = userTags,
+                               outputToSave = outputToSave, cacheId = outputHash)
           saved <- suppressWarnings(try(silent = TRUE,
                                         saveToLocalRepo(
                                           outputToSave,
