@@ -30,7 +30,7 @@ createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
   on.exit(dbDisconnect(con))
   dt <- data.table(cacheId = character(), tagKey = character(),
-                   tagValue = character(), createdDate = .POSIXct(integer()))
+                   tagValue = character(), createdDate = character())
   dbWriteTable(con, "dt", dt, overwrite = TRUE, field.types = c(createdDate = "timestamp"))
 }
 
@@ -41,9 +41,21 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
   browser()
 
   if (missing(userTags)) userTags = "otherFunctions"
-  dt <- data.table("cacheId" = cacheId, "tagKey" = "userTags",
-                   "tagValue" = userTags, "createdDate" = Sys.time())
+  repl <- "asdfjklqwer"
+  strg <- sub(userTags, pattern = "^(.*):(.+)$", replacement = paste0("\\1", repl, "\\2"))
+  strg <- strsplit(strg, split = repl)
+  lens <- sapply(strg, length)
+  strg[lens = 1] <- lapply(strg[lens == 1], function(x) c("userTag", x))
+  strg <- purrr::transpose(strg)
+
+  dt <- data.table("cacheId" = cacheId, "tagKey" = unlist(strg[[1]]),
+                   "tagValue" = unlist(strg[[2]]), "createdDate" = as.character(Sys.time()))
   dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE)
+  saveRDS(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".rds")),
+          outputToSave)
+  if (is(outputToSave, "Raster")) {
+
+  }
 
 }
 

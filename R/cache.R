@@ -331,7 +331,8 @@ setGeneric(
            useCache = getOption("reproducible.useCache", TRUE),
            useCloud = FALSE,
            cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-           showSimilar = getOption("reproducible.showSimilar", FALSE)) {
+           showSimilar = getOption("reproducible.showSimilar", FALSE),
+           drv = RSQLite::SQLite()) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
   })
 
@@ -384,8 +385,8 @@ setMethod(
       }
 
       nestedTags <- determineNestedTags(envir = environment(),
-                                                  mc = match.call(expand.dots = TRUE),
-                                                  userTags = userTags)
+                                        mc = match.call(expand.dots = TRUE),
+                                        userTags = userTags)
       userTags <- unique(c(userTags, .reproEnv$userTags))
       if (any(!nestedTags$objOverride)) {
         on.exit({
@@ -429,16 +430,29 @@ setMethod(
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
-      isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-        all(file.exists(file.path(cacheRepo,  c("gallery", "backpack.db"))))
-      }))
-      if (any(!isIntactRepo))
-        ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
-          browser()
-          archivist::createLocalRepo(cacheRepos[[cacheRepoInd]],
-                                     force = isIntactRepo[cacheRepoInd])
-        })
+      if (getOption("reproducible.newAlgo", TRUE))
+        isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
+          all(file.exists(file.path(cacheRepo,  c("cacheObjects", "cache.db"))))
+        }))
+      else
+        isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
+          all(file.exists(file.path(cacheRepo,  c("gallery", "backpack.db"))))
+        }))
 
+      browser()
+      if (any(!isIntactRepo)) {
+        if (getOption("reproducible.newAlgo", TRUE))
+          ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
+            createCache(cacheRepos[[cacheRepoInd]],
+                        force = isIntactRepo[cacheRepoInd])
+          })
+        else
+          ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
+            archivist::createLocalRepo(cacheRepos[[cacheRepoInd]],
+                                       force = isIntactRepo[cacheRepoInd])
+          })
+
+      }
 
       # List file prior to cache
       if (sideEffect != FALSE) {
@@ -566,13 +580,13 @@ setMethod(
           if (objSize > 1e6)
             message(crayon::blue(paste0("  ...(Object to retrieve is large: ", format(objSize, units = "auto"), ")")))
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
-                                 lastOne = lastOne, cacheRepo = cacheRepo,
-                                 fnDetails = fnDetails,
-                                 modifiedDots = modifiedDots, debugCache = debugCache,
-                                 verbose = verbose, sideEffect = sideEffect,
-                                 quick = quick, algo = algo,
-                                 preDigest = preDigest, startCacheTime = startCacheTime,
-                                 ...))
+                                     lastOne = lastOne, cacheRepo = cacheRepo,
+                                     fnDetails = fnDetails,
+                                     modifiedDots = modifiedDots, debugCache = debugCache,
+                                     verbose = verbose, sideEffect = sideEffect,
+                                     quick = quick, algo = algo,
+                                     preDigest = preDigest, startCacheTime = startCacheTime,
+                                     ...))
           if (is(output, "try-error")) {
             cID <- gsub("cacheId:", "", isInRepo$tag)
             stop("Error in trying to recover cacheID: ", cID,
@@ -734,7 +748,7 @@ setMethod(
                     paste0(otherFns),
                     paste("preDigest", names(preDigestUnlistTrunc),
                           preDigestUnlistTrunc, sep = ":")
-                    )
+      )
 
       written <- 0
 
@@ -825,7 +839,7 @@ setMethod(
 
       if (isNullOutput) return(NULL) else return(output)
     }
-})
+  })
 
 #' @keywords internal
 .formalsCache <- formals(Cache)[-(1:2)]
@@ -1240,14 +1254,14 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
       differed <- TRUE
       message(crayon::cyan("... possible, unknown, differences in a nested list",
                            "that is deeper than",getOption("reproducible.showSimilarDepth",3),"in ",
-              paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun))))
+                           paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun))))
     }
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
       message(crayon::cyan("... because of (a) new argument(s): ",
-              #"argument currently specified that was not in similar cache: ",
-              paste(as.character(missingArgs), collapse = ", ")))
+                           #"argument currently specified that was not in similar cache: ",
+                           paste(as.character(missingArgs), collapse = ", ")))
 
     }
     # message(crayon::cyan("Only the following elements differ (dots are replacements for $ or @)"))
@@ -1395,12 +1409,12 @@ determineNestedTags <- function(envir, mc, userTags) {
   #   userCacheArgs <- objs[!objOverride]
   #   namesUserCacheArgs <- userCacheArgs
   # } else {
-    mc <- as.list(mc[-1])
-    namesMatchCall <- names(mc)
-    namesMatchCall <- namesMatchCall[!namesMatchCall %in% argsNoNesting]
-    userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
-    namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
-    objOverride <- is.na(userCacheArgs)
+  mc <- as.list(mc[-1])
+  namesMatchCall <- names(mc)
+  namesMatchCall <- namesMatchCall[!namesMatchCall %in% argsNoNesting]
+  userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
+  namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
+  objOverride <- is.na(userCacheArgs)
   #}
 
   oldUserTags <- NULL
