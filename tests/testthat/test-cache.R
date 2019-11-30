@@ -383,7 +383,7 @@ test_that("test asPath", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  obj <- 1:10
+  obj <- sample(1e5,10)
   origDir <- getwd()
   on.exit(setwd(origDir))
   setwd(tmpdir)
@@ -851,3 +851,4 @@ test_that("test cc", {
   mess <- capture_messages(cc(ask = FALSE, x = tmpCache)) # Cache is already empty
   expect_true(any(grepl("Cache already empty", mess)))
 })
+
