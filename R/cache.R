@@ -439,7 +439,7 @@ setMethod(
           all(file.exists(file.path(cacheRepo,  c("gallery", "backpack.db"))))
         }))
 
-      browser()
+      # browser()
       if (any(!isIntactRepo)) {
         if (getOption("reproducible.newAlgo", TRUE))
           ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
@@ -698,6 +698,7 @@ setMethod(
       } else {
         rasters <- is(outputToSave, "Raster")
       }
+      # browser()
       if (any(rasters)) {
         if (outputToSaveIsList) {
           outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
@@ -774,7 +775,7 @@ setMethod(
             future::plan(thePlan)
           }
         }
-        browser()
+        # browser()
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
           #saved <-
           future::futureCall(
@@ -798,7 +799,7 @@ setMethod(
                              pattern = "object.size:", replacement = "")
           otsObjSize <- as.numeric(otsObjSize)
           class(otsObjSize) <- "object_size"
-          browser()
+          # browser()
           if (otsObjSize > 1e7)
             message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
           saved <- saveToCache(cacheDir = cacheRepo, drv = drv, userTags = userTags,
