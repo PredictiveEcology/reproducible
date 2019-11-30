@@ -692,6 +692,7 @@ setMethod(
                                                    overwrite = FALSE)
         }
 
+        # have to reset all these attributes on the rasters as they were undone in prev steps
         setattr(outputToSave, "tags", attr(output, "tags"))
         .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
         setattr(outputToSave, "call", attr(output, "call"))
