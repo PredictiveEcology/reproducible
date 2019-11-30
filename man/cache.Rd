@@ -29,7 +29,8 @@ Cache(
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  showSimilar = getOption("reproducible.showSimilar", FALSE)
+  showSimilar = getOption("reproducible.showSimilar", FALSE),
+  drv = RSQLite::SQLite()
 )
 
 \S4method{Cache}{ANY}(
@@ -55,7 +56,8 @@ Cache(
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  showSimilar = getOption("reproducible.showSimilar", FALSE)
+  showSimilar = getOption("reproducible.showSimilar", FALSE),
+  drv = RSQLite::SQLite()
 )
 
 lhs \%<\% rhs

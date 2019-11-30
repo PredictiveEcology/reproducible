@@ -99,7 +99,7 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        ...) {
+                        drv = RSQLite::SQLite(), ...) {
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
         message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
@@ -134,6 +134,11 @@ setMethod(
         message("From Cloud:")
         drive_rm(as_id(gdriveLs$id[isInCloud]))
       }
+    }
+
+    if (getOption("reproducible.newAlgo", TRUE)) {
+      con <- dbConnect(drv, dbname = file.path(x, "cache.db"))
+      on.exit(dbDisconnect(con))
     }
 
     if (clearWholeCache) {
@@ -173,11 +178,21 @@ setMethod(
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
       if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
-        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact &
-                                              tagKey == "object.size"]$tagValue)
-        fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
+        if (getOption("reproducible.newAlgo", TRUE)) {
+          rasterObjSizes <- as.numeric(objsDT[cacheId %in% rastersInRepo$cacheId &
+                                                tagKey == "object.size"]$tagValue)
+          fileBackedRastersInRepo <- rastersInRepo$cacheId[rasterObjSizes < 1e5]
+        } else {
+          rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact &
+                                                tagKey == "object.size"]$tagValue)
+          fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
+        }
         filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
-          r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
+          if (getOption("reproducible.newAlgo", TRUE)) {
+            r <- loadFromCache(x, ras)
+          } else {
+            r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
+          }
           tryCatch(filename(r), error = function(e) NULL)
         })
 
@@ -209,7 +224,12 @@ setMethod(
         unlink(filesToRemove)
       }
 
-      suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
+      if (getOption("reproducible.newAlgo", TRUE)) {
+        rmFromCache(x, unique(objsDT$cacheId), con, drv)# many = TRUE)
+      } else {
+        suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
+      }
+
     }
     memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
@@ -279,6 +299,7 @@ cc <- function(secs, ...) {
 #' @inheritParams clearCache
 #'
 #' @export
+#' @importFrom DBI dbReadTable
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
@@ -293,7 +314,7 @@ setGeneric("showCache", function(x, userTags = character(), after, before, ...) 
 #' @rdname viewCache
 setMethod(
   "showCache",
-  definition = function(x, userTags, after, before, ...) {
+  definition = function(x, userTags, after, before, drv = RSQLite::SQLite(), ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
@@ -312,30 +333,74 @@ setMethod(
         }
     }
 
-    objsDT <- showLocalRepo(x) %>% data.table()
-    setkeyv(objsDT, "md5hash")
+
+    # res <- DBI::dbSendQuery(con, "SELECT cacheId FROM dt WHERE tagValue = 'randomPolyToDisk'")
+    # res1 <- DBI::dbFetch(res)
+    # DBI::dbClearResult(res)
+    # res <- DBI::dbSendQuery(con, paste0("SELECT * FROM dt WHERE cacheId = '", res1$cacheId, "'"))
+    # res1 <- DBI::dbFetch(res)
+
+    if (getOption("reproducible.newAlgo", TRUE)) {
+      con <- dbConnect(drv, dbname = file.path(x, "cache.db"))
+      on.exit(dbDisconnect(con))
+      tab <- try(dbReadTable(con, "dt"), silent = TRUE)
+      if (is(tab, "try-error"))
+        objsDT <- .emptyCacheTable
+      else
+        objsDT <- setDT(tab)
+      setkeyv(objsDT, "cacheId")
+    } else {
+      objsDT <- showLocalRepo(x) %>% data.table()
+      setkeyv(objsDT, "md5hash")
+    }
+
     if (NROW(objsDT) > 0) {
-      objsDT <- data.table(splitTagsLocal(x), key = "artifact")
-      objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
-                                                (tagValue >= after)][!duplicated(artifact)]
-      objsDT <- objsDT[artifact %in% objsDT3$artifact]
+      if (getOption("reproducible.newAlgo", TRUE)) {
+        # objsDT <- data.table(splitTagsLocal(x), key = "artifact")
+        objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
+                                                  (tagValue >= after)][!duplicated(cacheId)]
+        objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
+      } else {
+        objsDT <- data.table(splitTagsLocal(x), key = "artifact")
+        objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
+                                                  (tagValue >= after)][!duplicated(artifact)]
+        objsDT <- objsDT[artifact %in% objsDT3$artifact]
+      }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           for (ut in userTags) {
             #objsDT$artifact %in% ut
-            objsDT2 <- objsDT[
-              grepl(tagValue, pattern = ut) |
-                grepl(tagKey, pattern = ut) |
-                grepl(artifact, pattern = ut)]
-            setkeyv(objsDT2, "artifact")
-            shortDT <- unique(objsDT2, by = "artifact")[, artifact]
+            if (getOption("reproducible.newAlgo", TRUE)) {
+              objsDT2 <- objsDT[
+                grepl(tagValue, pattern = ut) |
+                  grepl(tagKey, pattern = ut) |
+                  grepl(cacheId, pattern = ut)]
+              setkeyv(objsDT2, "cacheId")
+              shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
+
+            } else {
+              objsDT2 <- objsDT[
+                grepl(tagValue, pattern = ut) |
+                  grepl(tagKey, pattern = ut) |
+                  grepl(artifact, pattern = ut)]
+              setkeyv(objsDT2, "artifact")
+              shortDT <- unique(objsDT2, by = "artifact")[, artifact]
+            }
             objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
           }
         } else {
-          objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
-          setkeyv(objsDT2, "artifact")
-          shortDT <- unique(objsDT2, by = "artifact")[, artifact]
-          objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+          if (getOption("reproducible.newAlgo", TRUE)) {
+            objsDT2 <- objsDT[cacheId %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
+            setkeyv(objsDT2, "cacheId")
+            shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+          } else {
+            objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
+            setkeyv(objsDT2, "artifact")
+            shortDT <- unique(objsDT2, by = "artifact")[, artifact]
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+
+          }
         }
       }
     }
@@ -346,7 +411,11 @@ setMethod(
       }
     }
     if (verboseMessaging)
-      .messageCacheSize(x, artifacts = unique(objsDT$artifact))
+      if (getOption("reproducible.newAlgo", TRUE)) {
+        .messageCacheSize(x, artifacts = unique(objsDT$cacheId), cacheTable = objsDT)
+      } else {
+        .messageCacheSize(x, artifacts = unique(objsDT$artifact))
+      }
     objsDT
 })
 
@@ -463,17 +532,30 @@ setMethod(
 })
 
 #' @keywords internal
-.messageCacheSize <- function(x, artifacts = NULL) {
-  a <- showLocalRepo2(x);
-  b <- a[startsWith(a$tag, "object.size"),]
-  fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+.messageCacheSize <- function(x, artifacts = NULL, cacheTable) {
+  if (missing(cacheTable))
+    a <- showLocalRepo2(x)
+  else
+    a <- cacheTable
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    b <- a[tagKey == "object.size",]
+    fsTotal <- sum(as.numeric(b$tagValue)) / 4
+  } else {
+    b <- a[startsWith(a$tag, "object.size"),]
+    fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+  }
   fsTotalRasters <- sum(file.size(dir(file.path(x, "rasters"), full.names = TRUE, recursive = TRUE)))
   fsTotal <- fsTotal + fsTotalRasters
   class(fsTotal) <- "object_size"
   preMessage1 <- "  Total (including Rasters): "
 
-  b <- a[a$artifact %in% artifacts & startsWith(a$tag, "object.size"),]
-  fs <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    b <- a[a$cacheId %in% artifacts & a$tagVale %in% "object.size",]
+    fs<- sum(as.numeric(b$tagValue)) / 4
+  } else {
+    b <- a[a$artifact %in% artifacts & startsWith(a$tag, "object.size"),]
+    fs <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+  }
 
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "

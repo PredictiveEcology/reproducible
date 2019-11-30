@@ -439,7 +439,6 @@ setMethod(
           all(file.exists(file.path(cacheRepo,  c("gallery", "backpack.db"))))
         }))
 
-      # browser()
       if (any(!isIntactRepo)) {
         if (getOption("reproducible.newAlgo", TRUE))
           ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
@@ -531,8 +530,13 @@ setMethod(
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         tries <- tries + 1
-        localTags <- getLocalTags(repo)
-        isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+        if (getOption("reproducible.newAlgo", TRUE)) {
+          localTags <- showCache(repo)
+          isInRepo <- localTags[cacheId %in% outputHash,]
+        } else {
+          localTags <- getLocalTags(repo)
+          isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+        }
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
           cacheRepo <- repo
@@ -692,45 +696,48 @@ setMethod(
       if (isTRUE(any(alreadyIn)))
         otherFns <- otherFns[!alreadyIn]
 
-      outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
-      if (outputToSaveIsList) {
-        rasters <- unlist(lapply(outputToSave, is, "Raster"))
-      } else {
-        rasters <- is(outputToSave, "Raster")
-      }
-      # browser()
-      if (any(rasters)) {
+
+      if (!getOption("reproducible.newAlgo", TRUE)) {
+        outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
         if (outputToSaveIsList) {
-          outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-            .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE))
+          rasters <- unlist(lapply(outputToSave, is, "Raster"))
         } else {
-          outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
-                                                   overwrite = FALSE)
+          rasters <- is(outputToSave, "Raster")
         }
+        # browser()
+        if (any(rasters)) {
+          if (outputToSaveIsList) {
+            outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
+              .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE))
+          } else {
+            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
+                                                     overwrite = FALSE)
+          }
 
-        # have to reset all these attributes on the rasters as they were undone in prev steps
-        setattr(outputToSave, "tags", attr(output, "tags"))
-        .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
-        setattr(outputToSave, "call", attr(output, "call"))
+          # have to reset all these attributes on the rasters as they were undone in prev steps
+          setattr(outputToSave, "tags", attr(output, "tags"))
+          .setSubAttrInList(outputToSave, ".Cache", "newCache", attr(output, ".Cache")$newCache)
+          setattr(outputToSave, "call", attr(output, "call"))
 
-        # attr(outputToSave, "tags") <- attr(output, "tags")
-        # attr(outputToSave, "call") <- attr(output, "call")
-        # attr(outputToSave, ".Cache")$newCache <- attr(output, ".Cache")$newCache
-        if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache))
-          stop("attributes are not correct 6")
-        if (!identical(attr(outputToSave, "call"), attr(output, "call")))
-          stop("attributes are not correct 7")
-        if (!identical(attr(outputToSave, "tags"), attr(output, "tags")))
-          stop("attributes are not correct 8")
+          # attr(outputToSave, "tags") <- attr(output, "tags")
+          # attr(outputToSave, "call") <- attr(output, "call")
+          # attr(outputToSave, ".Cache")$newCache <- attr(output, ".Cache")$newCache
+          if (!identical(attr(outputToSave, ".Cache")$newCache, attr(output, ".Cache")$newCache))
+            stop("attributes are not correct 6")
+          if (!identical(attr(outputToSave, "call"), attr(output, "call")))
+            stop("attributes are not correct 7")
+          if (!identical(attr(outputToSave, "tags"), attr(output, "tags")))
+            stop("attributes are not correct 8")
 
-        if (isS4(FUN)) {
-          setattr(outputToSave, "function", attr(output, "function"))
-          if (!identical(attr(outputToSave, "function"), attr(output, "function")))
-            stop("There is an unknown error 04")
+          if (isS4(FUN)) {
+            setattr(outputToSave, "function", attr(output, "function"))
+            if (!identical(attr(outputToSave, "function"), attr(output, "function")))
+              stop("There is an unknown error 04")
+          }
+          # attr(outputToSave, "function") <- attr(output, "function")
+
+          output <- outputToSave
         }
-        # attr(outputToSave, "function") <- attr(output, "function")
-
-        output <- outputToSave
       }
       if (length(debugCache)) {
         if (!is.na(pmatch(debugCache, "complete"))) {
@@ -745,6 +752,7 @@ setMethod(
 
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
+                    paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0(otherFns),
@@ -795,36 +803,39 @@ setMethod(
           .reproEnv$alreadyMsgFuture <- TRUE
         }
       } else {
-        while (written >= 0) {
-          otsObjSize <- gsub(grep("object.size", userTags, value = TRUE),
-                             pattern = "object.size:", replacement = "")
-          otsObjSize <- as.numeric(otsObjSize)
-          class(otsObjSize) <- "object_size"
-          # browser()
-          if (otsObjSize > 1e7)
-            message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
+        otsObjSize <- gsub(grep("object.size", userTags, value = TRUE),
+                           pattern = "object.size:", replacement = "")
+        otsObjSize <- as.numeric(otsObjSize)
+        class(otsObjSize) <- "object_size"
+        if (otsObjSize > 1e7)
+          message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
+        if (getOption("reproducible.newAlgo", TRUE)) {
           saved <- saveToCache(cacheDir = cacheRepo, drv = drv, userTags = userTags,
                                outputToSave = outputToSave, cacheId = outputHash)
-          saved <- suppressWarnings(try(silent = TRUE,
-                                        saveToLocalRepo(
-                                          outputToSave,
-                                          repoDir = cacheRepo,
-                                          artifactName = NULL,
-                                          archiveData = FALSE,
-                                          archiveSessionInfo = FALSE,
-                                          archiveMiniature = FALSE,
-                                          rememberName = FALSE,
-                                          silent = TRUE,
-                                          userTags = userTags
-                                        )
-          ))
+        } else {
+          while (written >= 0) {
 
-          # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-          written <- if (is(saved, "try-error")) {
-            Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-            written + 1
-          } else {
-            -1
+            saved <- suppressWarnings(try(silent = TRUE,
+                                          saveToLocalRepo(
+                                            outputToSave,
+                                            repoDir = cacheRepo,
+                                            artifactName = NULL,
+                                            archiveData = FALSE,
+                                            archiveSessionInfo = FALSE,
+                                            archiveMiniature = FALSE,
+                                            rememberName = FALSE,
+                                            silent = TRUE,
+                                            userTags = userTags
+                                          )
+            ))
+
+            # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+            written <- if (is(saved, "try-error")) {
+              Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+              written + 1
+            } else {
+              -1
+            }
           }
         }
 

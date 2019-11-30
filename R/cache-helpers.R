@@ -1075,10 +1075,12 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     scalls <- sys.calls()
   }
 
-  otherFns <- .grepSysCalls(scalls, pattern = paste0("(test_)|(with_reporter)|(force)|",
-                                             "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
-                                             "(Cache)|(tryCatch)|(doTryCatch)|(withCallingHandlers)|",
-                                             "(FUN)"))
+  otherFns <- .grepSysCalls(
+    scalls,
+    pattern = paste0("(test_)|(with_reporter)|(force)|(Restart)|(with_mock)|",
+                     "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
+                     "(Cache)|(tryCatch)|(doTryCatch)|(withCallingHandlers)|",
+                     "(FUN)"))
   if (length(otherFns)) {
     otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
       tryCatch(as.character(x[[1]]), error = function(y) "")

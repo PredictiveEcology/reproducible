@@ -19,7 +19,7 @@
 #' @importFrom data.table data.table
 createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   dbPath <- file.path(cacheDir, "cache.db")
-  alreadyExists <- dir.exists(cacheDir) && file.exists(dbPath)
+  alreadyExists <- dir.exists(cacheDir) && file.exists(dbPath) && dir.exists(file.path(cacheDir, "cacheObjects"))
   if (alreadyExists && force == FALSE) {
     message("Cache already exists at ", cacheDir, " and force = FALSE. Not creating new cache.")
     return(invisible(cacheDir))
@@ -29,8 +29,7 @@ createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   checkPath(file.path(cacheDir, "cacheObjects"), create = TRUE)
   con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
   on.exit(dbDisconnect(con))
-  dt <- data.table(cacheId = character(), tagKey = character(),
-                   tagValue = character(), createdDate = character())
+  dt <- .emptyCacheTable
   dbWriteTable(con, "dt", dt, overwrite = TRUE, field.types = c(createdDate = "timestamp"))
 }
 
@@ -38,28 +37,85 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
                         outputToSave, userTags, cacheId) {
   con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
   on.exit(dbDisconnect(con))
-  browser()
 
   if (missing(userTags)) userTags = "otherFunctions"
-  repl <- "asdfjklqwer"
-  strg <- sub(userTags, pattern = "^(.*):(.+)$", replacement = paste0("\\1", repl, "\\2"))
-  strg <- strsplit(strg, split = repl)
-  lens <- sapply(strg, length)
-  strg[lens = 1] <- lapply(strg[lens == 1], function(x) c("userTag", x))
-  strg <- purrr::transpose(strg)
+  tagKey <- sub(userTags, pattern = ":.*$", replacement = "")
+  tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
 
-  dt <- data.table("cacheId" = cacheId, "tagKey" = unlist(strg[[1]]),
-                   "tagValue" = unlist(strg[[2]]), "createdDate" = as.character(Sys.time()))
-  dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE)
+  dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
+                   "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
+
+  written <- 0
+  while (written >= 0) {
+    saved <- try(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE))
+    # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+    written <- if (is(saved, "try-error")) {
+      Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+      written + 1
+    } else {
+      -1
+    }
+  }
   saveRDS(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".rds")),
           outputToSave)
-  if (is(outputToSave, "Raster")) {
 
+  outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
+  if (outputToSaveIsList) {
+    rasters <- unlist(lapply(outputToSave, is, "Raster"))
+  } else {
+    rasters <- is(outputToSave, "Raster")
   }
+  if (any(rasters)) {
+    atts <- attributes(outputToSave)
+    if (outputToSaveIsList) {
+      outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
+        .prepareFileBackedRaster(x, repoDir = cacheDir, overwrite = FALSE))
+    } else {
+      outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheDir,
+                                               overwrite = FALSE)
+    }
+
+    # have to reset all these attributes on the rasters as they were undone in prev steps
+    setattr(outputToSave, "tags", atts$tags)
+    .setSubAttrInList(outputToSave, ".Cache", "newCache", atts$.Cache$newCache)
+    setattr(outputToSave, "call", atts$call)
+
+    if (!identical(attr(outputToSave, ".Cache")$newCache, atts$.Cache$newCache))
+      stop("attributes are not correct 6")
+    if (!identical(attr(outputToSave, "call"), atts$call))
+      stop("attributes are not correct 7")
+    if (!identical(attr(outputToSave, "tags"), atts$tags))
+      stop("attributes are not correct 8")
+
+    if (!is.null(atts[["function"]])) {
+      setattr(outputToSave, "function", atts[["function"]])
+      if (!identical(attr(outputToSave, "function"), atts[["function"]]))
+        stop("There is an unknown error 04")
+    }
+    # attr(outputToSave, "function") <- attr(output, "function")
+
+   #output <- outputToSave
+  }
+
+  return(cacheId)
 
 }
 
 
+loadFromCache <- function(cachePath, cacheId) {
+  readRDS(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
+}
+
+rmFromCache <- function(cachePath, cacheId, con, drv) {
+  if (missing(con)) {
+    con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
+    on.exit(dbDisconnect(con))
+  }
+  DBI::dbSendQuery(con, paste0("DELETE FROM dt WHERE cacheId = '", cacheId, "'"))
+  unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
+
+
+}
 # saveToLocalRepo(
 #   outputToSave,
 #   repoDir = cacheRepo,
@@ -115,3 +171,7 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
 #   
 #
 # 
+
+.emptyCacheTable <- data.table(cacheId = character(), tagKey = character(),
+                               tagValue = character(), createdDate = character())
+

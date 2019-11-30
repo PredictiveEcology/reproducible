@@ -36,7 +36,7 @@ cc(secs, ...)
 
 showCache(x, userTags = character(), after, before, ...)
 
-\S4method{showCache}{ANY}(x, userTags = character(), after, before, ...)
+\S4method{showCache}{ANY}(x, userTags, after, before, drv = RSQLite::SQLite(), ...)
 
 keepCache(
   x,
