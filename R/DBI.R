@@ -45,20 +45,11 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
-  written <- 0
-  while (written >= 0) {
-    saved <- try(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE))
-    # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-    written <- if (is(saved, "try-error")) {
-      Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-      written + 1
-    } else {
-      -1
-    }
-  }
+  retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
   saveRDS(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".rds")),
           outputToSave)
 
+  browser(expr = exists("aaaa"))
   outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
   if (outputToSaveIsList) {
     rasters <- unlist(lapply(outputToSave, is, "Raster"))
