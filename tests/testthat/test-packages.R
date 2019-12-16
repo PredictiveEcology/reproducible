@@ -40,7 +40,7 @@ test_that("package-related functions work", {
   expect_true(startsWith(prefix = "Can't install", aa))
 
   # Load a different package
-  versionlatdiag <- "0.2-2"
+  versionlatdiag <- "0.2-4"
   aa <- data.frame(instPkgs = "latdiag", instVers = versionlatdiag, stringsAsFactors = FALSE)
   write.table(file = packageVersionFile, aa, row.names = FALSE)
 
