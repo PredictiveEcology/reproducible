@@ -94,6 +94,7 @@ matrix:
     addons:
       homebrew:
         packages:
+        - gdal
         - libgit2
         - llvm
         - udunits
