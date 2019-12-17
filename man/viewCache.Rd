@@ -23,12 +23,13 @@ clearCache(
 
 \S4method{clearCache}{ANY}(
   x,
-  userTags = character(),
+  userTags,
   after,
   before,
-  ask = getOption("reproducible.ask"),
+  ask,
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  drv = RSQLite::SQLite(),
   ...
 )
 

@@ -42,12 +42,8 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
   tagKey <- sub(userTags, pattern = ":.*$", replacement = "")
   tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
 
-  dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
-                   "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
-
-  retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
-  saveRDS(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".rds")),
-          outputToSave)
+  #saveRDS(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".rds")),
+  #        outputToSave)
 
   browser(expr = exists("aaaa"))
   outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
@@ -56,6 +52,7 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
   } else {
     rasters <- is(outputToSave, "Raster")
   }
+  browser(expr = exists("aaaa"))
   if (any(rasters)) {
     atts <- attributes(outputToSave)
     if (outputToSaveIsList) {
@@ -87,14 +84,21 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
 
    #output <- outputToSave
   }
+  dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
+                   "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
-  return(cacheId)
+  retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
+  qs::qsave(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".qs")),
+            outputToSave)
+
+  return(outputToSave)
 
 }
 
 
 loadFromCache <- function(cachePath, cacheId) {
-  readRDS(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
+  qs::qread(file = file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
+  #readRDS(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
 }
 
 rmFromCache <- function(cachePath, cacheId, con, drv) {
@@ -102,8 +106,9 @@ rmFromCache <- function(cachePath, cacheId, con, drv) {
     con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
     on.exit(dbDisconnect(con))
   }
-  DBI::dbSendQuery(con, paste0("DELETE FROM dt WHERE cacheId = '", cacheId, "'"))
-  unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
+  res <- DBI::dbSendQuery(con, paste0("DELETE FROM dt WHERE cacheId = '", cacheId, "'"))
+  dbClearResult(res)
+  unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
 
 
 }

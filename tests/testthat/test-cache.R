@@ -24,35 +24,37 @@ test_that("test file-backed raster caching", {
   #   solves the error about not being in the testthat package
   val1 <- if (getOption("reproducible.newAlgo", TRUE)) 7 else 11
 
-  with_mock(
-    "reproducible::isInteractive" = function() TRUE,
-    {
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2")
+#  with_mock(
+#    "reproducible::isInteractive" = function() TRUE,
+#    {
+  #aaaa <<- 1
+  aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
       # Test clearCache by tags
 
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpdir, userTags = "something$", ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpdir, userTags = "something2", ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)), 0)
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      clearCache(tmpCache, userTags = "something$", ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      clearCache(tmpCache, userTags = "something2", ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)), 0)
 
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2")
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpdir, userTags = c("something$", "testing$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpdir, userTags = c("something2$", "testing$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)), 0)
+      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      clearCache(tmpCache, userTags = c("something$", "testing$"), ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      clearCache(tmpCache, userTags = c("something2$", "testing$"), ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
 
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2")
+      clearCache(tmpCache, userTags = c("something2$", "randomPolyToDisk$"), ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)), 0)
+
+      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
 
       # confirm that the raster has the new filename in the cachePath
       expect_false(identical(strsplit(tmpfile[1], split = "[\\/]"),
-                             strsplit(file.path(tmpdir, "rasters",
+                             strsplit(file.path(tmpCache, "rasters",
                                                 basename(tmpfile[1])), split = "[\\/]")))
       expect_true(any(grepl(pattern = basename(tmpfile[1]),
-                            dir(file.path(tmpdir, "rasters")))))
+                            dir(file.path(tmpCache, "rasters")))))
 
       ### Test for 2 caching events with same file-backing name
       randomPolyToDisk2 <- function(tmpfile, rand) {
@@ -142,7 +144,7 @@ test_that("test file-backed raster caching", {
       expect_true(NROW(raster::levels(bb)[[1]]) == 30)
 
       clearCache(tmpdir, ask = FALSE)
-   })
+#   })
 
 
 })

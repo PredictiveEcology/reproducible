@@ -646,7 +646,11 @@ setMethod(
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
+  isRepo <- if (getOption("reproducible.newAlgo", TRUE)) {
+    all(c("cache.db", "cacheObjects") %in% list.files(repoDir))
+  } else {
+    all(c("backpack.db", "gallery") %in% list.files(repoDir))
+  }
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {
@@ -702,6 +706,7 @@ setMethod(
 
       normalizePath(file.path(repoDir, splittedFilenames2), winslash = "/", mustWork = FALSE)
     }
+    browser(expr = exists("aaaa"))
     if (any(!file.exists(trySaveFilename))) {
       stop("The following file-backed rasters are supposed to be on disk ",
            "but appear to have been deleted:\n",

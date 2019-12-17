@@ -100,6 +100,8 @@ setMethod(
   definition = function(x, userTags, after, before, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                         drv = RSQLite::SQLite(), ...) {
+    browser(expr = exists("aaaa"))
+    # isn't clearing the raster bacekd file
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
         message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
@@ -138,7 +140,11 @@ setMethod(
 
     if (getOption("reproducible.newAlgo", TRUE)) {
       con <- dbConnect(drv, dbname = file.path(x, "cache.db"))
-      on.exit(dbDisconnect(con))
+      on.exit({
+        browser(expr = exists("aaaa"))
+        #dbClearResult(con)
+        dbDisconnect(con)
+        })
     }
 
     if (clearWholeCache) {
@@ -157,9 +163,16 @@ setMethod(
         }
 
       }
-      unlink(file.path(x, "gallery"), recursive = TRUE)
-      unlink(file.path(x, "rasters"), recursive = TRUE)
-      unlink(file.path(x, "backpack.db"))
+      if (getOption("reproducible.newAlgo", TRUE)) {
+        unlink(file.path(x, "cacheObjects"), recursive = TRUE)
+        unlink(file.path(x, "rasters"), recursive = TRUE)
+        unlink(file.path(x, "cache.db"))
+
+      } else {
+        unlink(file.path(x, "gallery"), recursive = TRUE)
+        unlink(file.path(x, "rasters"), recursive = TRUE)
+        unlink(file.path(x, "backpack.db"))
+      }
 
       checkPath(x, create = TRUE)
       createLocalRepo(x)
@@ -174,10 +187,16 @@ setMethod(
       #cacheSize <- sum(file.size(rdaFiles))
     }
 
+    browser(expr = exists("aaaa"))
     if (NROW(objsDT)) {
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
-      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
+      hasARaster <- if (getOption("reproducible.newAlgo", TRUE)) {
+        (all(!is.na(rastersInRepo$cacheId)) && NROW(rastersInRepo) > 0)
+      } else {
+        all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0
+      }
+      if (hasARaster) {
         if (getOption("reproducible.newAlgo", TRUE)) {
           rasterObjSizes <- as.numeric(objsDT[cacheId %in% rastersInRepo$cacheId &
                                                 tagKey == "object.size"]$tagValue)
@@ -197,7 +216,8 @@ setMethod(
         })
 
         if (length(filesToRemove)) {
-          filesToRemove <- gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
+          filesToRemove <- unlist(filesToRemove)
+          #filesToRemove <- file_path_sans_ext(filesToRemove)#gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
           if (isInteractive()) {
             dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
@@ -220,7 +240,7 @@ setMethod(
           }
       }
 
-      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
+      if (all(!is.na(rastersInRepo$cacheId)) && NROW(rastersInRepo) > 0) {
         unlink(filesToRemove)
       }
 
@@ -323,6 +343,8 @@ setMethod(
     if (missing(before)) before <- Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
+    browser(expr = exists("aaaa"))
+    # not seeing userTags
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
       !isFALSE(getOption("reproducible.futurePlan"))
@@ -342,7 +364,10 @@ setMethod(
 
     if (getOption("reproducible.newAlgo", TRUE)) {
       con <- dbConnect(drv, dbname = file.path(x, "cache.db"))
-      on.exit(dbDisconnect(con))
+      on.exit({
+        browser(expr = exists("aaaa"))
+                dbDisconnect(con)
+                })
       tab <- try(dbReadTable(con, "dt"), silent = TRUE)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable

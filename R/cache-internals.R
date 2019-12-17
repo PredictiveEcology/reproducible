@@ -236,18 +236,29 @@
   return(output)
 }
 
-.addTagsRepo <- function(isInRepo, cacheRepo, lastOne) {
-  written <- 0
-  while (written >= 0) {
-    saved <- suppressWarnings(try(silent = TRUE,
-                                  addTagsRepo(isInRepo$artifact[lastOne],
-                                              repoDir = cacheRepo,
-                                              tags = paste0("accessed:", Sys.time()))))
-    written <- if (is(saved, "try-error")) {
-      Sys.sleep(sum(runif(written + 1,0.05, 0.1)))
-      written + 1
-    } else {
-      -1
+.addTagsRepo <- function(isInRepo, cacheDir, lastOne, drv) {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
+    on.exit(dbDisconnect(con))
+    dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
+                     "tagValue" = Sys.time(), "createdDate" = as.character(Sys.time()))
+
+    retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
+
+  } else {
+
+    written <- 0
+    while (written >= 0) {
+      saved <- suppressWarnings(try(silent = TRUE,
+                                    addTagsRepo(isInRepo$artifact[lastOne],
+                                                repoDir = cacheRepo,
+                                                tags = paste0("accessed:", Sys.time()))))
+      written <- if (is(saved, "try-error")) {
+        Sys.sleep(sum(runif(written + 1,0.05, 0.1)))
+        written + 1
+      } else {
+        -1
+      }
     }
   }
 
@@ -255,8 +266,9 @@
 
 .getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
-                         algo, preDigest, startCacheTime, ...) {
+                         algo, preDigest, startCacheTime, drv, ...) {
 
+  browser(expr = exists("bbbb"))
   if (verbose > 1) {
     startLoadTime <- Sys.time()
   }
@@ -277,8 +289,13 @@
     #if (is(output, "simList_")) output <- as(output, "simList")
   } else {
     loadFromMgs <- "Loading from repo"
-    output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
-                                repoDir = cacheRepo, value = TRUE)
+    if (getOption("reproducible.newAlgo", TRUE)) {
+      output <- loadFromCache(cacheRepo, isInRepo$cacheId[lastOne])
+
+    } else {
+      output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+                                  repoDir = cacheRepo, value = TRUE)
+    }
   }
 
   if (verbose > 1) {
@@ -301,7 +318,7 @@
                 fromMemoise = fromMemoise)
 
   # This is protected from multiple-write to SQL collisions
-  .addTagsRepo(isInRepo, cacheRepo, lastOne)
+  .addTagsRepo(isInRepo, cacheRepo, lastOne, drv)
 
   if (sideEffect != FALSE) {
     #if(isTRUE(sideEffect)) {

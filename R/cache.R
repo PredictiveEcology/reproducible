@@ -347,7 +347,7 @@ setMethod(
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick, verbose,
                         cacheId, useCache,
-                        showSimilar) {
+                        showSimilar, drv) {
 
     if (!is.null(list(...)$objects)) {
       message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
@@ -579,7 +579,11 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          objSize <- file.size(file.path(cacheRepo, "gallery", paste0(isInRepo$artifact, ".rda")))
+          objSize <- if (getOption("reproducible.newAlgo", TRUE)) {
+            file.size(file.path(cacheRepo, "cacheObjects", paste0(isInRepo$cacheId, ".qs")))
+          } else {
+            file.size(file.path(cacheRepo, "gallery", paste0(isInRepo$artifact, ".rda")))
+          }
           class(objSize) <- "object_size"
           if (objSize > 1e6)
             message(crayon::blue(paste0("  ...(Object to retrieve is large: ", format(objSize, units = "auto"), ")")))
@@ -590,7 +594,9 @@ setMethod(
                                      verbose = verbose, sideEffect = sideEffect,
                                      quick = quick, algo = algo,
                                      preDigest = preDigest, startCacheTime = startCacheTime,
+                                     drv = drv,
                                      ...))
+          browser(expr = exists("bbbb"))
           if (is(output, "try-error")) {
             cID <- gsub("cacheId:", "", isInRepo$tag)
             stop("Error in trying to recover cacheID: ", cID,
@@ -696,7 +702,6 @@ setMethod(
       if (isTRUE(any(alreadyIn)))
         otherFns <- otherFns[!alreadyIn]
 
-
       if (!getOption("reproducible.newAlgo", TRUE)) {
         outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
         if (outputToSaveIsList) {
@@ -704,7 +709,6 @@ setMethod(
         } else {
           rasters <- is(outputToSave, "Raster")
         }
-        # browser()
         if (any(rasters)) {
           if (outputToSaveIsList) {
             outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
@@ -809,8 +813,9 @@ setMethod(
         class(otsObjSize) <- "object_size"
         if (otsObjSize > 1e7)
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
+        browser(expr = exists("aaaa"))
         if (getOption("reproducible.newAlgo", TRUE)) {
-          saved <- saveToCache(cacheDir = cacheRepo, drv = drv, userTags = userTags,
+          output <- saveToCache(cacheDir = cacheRepo, drv = drv, userTags = userTags,
                                outputToSave = outputToSave, cacheId = outputHash)
         } else {
           while (written >= 0) {
