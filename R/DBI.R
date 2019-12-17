@@ -17,6 +17,7 @@
 #' # replaces archivist::createLocalRepo
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #' @importFrom data.table data.table
+#' @rdname cacheTools
 createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   dbPath <- file.path(cacheDir, "cache.db")
   alreadyExists <- dir.exists(cacheDir) && file.exists(dbPath) && dir.exists(file.path(cacheDir, "cacheObjects"))
@@ -33,6 +34,7 @@ createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   dbWriteTable(con, "dt", dt, overwrite = TRUE, field.types = c(createdDate = "timestamp"))
 }
 
+#' @rdname cacheTools
 saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
                         outputToSave, userTags, cacheId) {
   con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
@@ -101,6 +103,11 @@ loadFromCache <- function(cachePath, cacheId) {
   #readRDS(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
 }
 
+#' Low level tools to work with Cache
+#'
+#' @importFrom DBI dbClearResult
+#' @export
+#' @rdname cacheTools
 rmFromCache <- function(cachePath, cacheId, con, drv) {
   if (missing(con)) {
     con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))

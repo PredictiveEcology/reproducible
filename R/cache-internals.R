@@ -241,7 +241,7 @@
     con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
     on.exit(dbDisconnect(con))
     dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
-                     "tagValue" = Sys.time(), "createdDate" = as.character(Sys.time()))
+                     "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
 
     retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
 

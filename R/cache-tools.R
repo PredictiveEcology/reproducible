@@ -100,7 +100,6 @@ setMethod(
   definition = function(x, userTags, after, before, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                         drv = RSQLite::SQLite(), ...) {
-    browser(expr = exists("aaaa"))
     # isn't clearing the raster bacekd file
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
@@ -141,7 +140,6 @@ setMethod(
     if (getOption("reproducible.newAlgo", TRUE)) {
       con <- dbConnect(drv, dbname = file.path(x, "cache.db"))
       on.exit({
-        browser(expr = exists("aaaa"))
         #dbClearResult(con)
         dbDisconnect(con)
         })
@@ -187,7 +185,6 @@ setMethod(
       #cacheSize <- sum(file.size(rdaFiles))
     }
 
-    browser(expr = exists("aaaa"))
     if (NROW(objsDT)) {
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
                                 grepl(pattern = "Raster", tagValue)] # only Rasters* class
@@ -364,10 +361,7 @@ setMethod(
 
     if (getOption("reproducible.newAlgo", TRUE)) {
       con <- dbConnect(drv, dbname = file.path(x, "cache.db"))
-      on.exit({
-        browser(expr = exists("aaaa"))
-                dbDisconnect(con)
-                })
+      on.exit({ dbDisconnect(con) })
       tab <- try(dbReadTable(con, "dt"), silent = TRUE)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
@@ -382,6 +376,8 @@ setMethod(
     if (NROW(objsDT) > 0) {
       if (getOption("reproducible.newAlgo", TRUE)) {
         # objsDT <- data.table(splitTagsLocal(x), key = "artifact")
+        browser(expr = exists("aaaa"))
+
         objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
                                                   (tagValue >= after)][!duplicated(cacheId)]
         objsDT <- objsDT[cacheId %in% objsDT3$cacheId]

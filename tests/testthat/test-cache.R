@@ -74,9 +74,10 @@ test_that("test file-backed raster caching", {
         ceiling(raster[] / (mean(raster[]) + 1))
       }
       nOT <- Sys.time()
+      opt <- options("reproducible.useMemoise" = FALSE)
       for (i in 1:2) {
         assign(paste0("b", i), system.time(
-          assign(paste0("a", i), Cache(rasterTobinary, aa, cacheRepo = tmpdir, notOlderThan = nOT))
+          assign(paste0("a", i), Cache(rasterTobinary, aa, cacheRepo = tmpCache, notOlderThan = nOT))
         ))
         nOT <- Sys.time() - 100
       }
@@ -89,7 +90,9 @@ test_that("test file-backed raster caching", {
       # confirm that the second one was obtained through reading from Cache... much faster than writing
       expect_true(b1[1] > b2[1])
 
-      clearCache(tmpdir, ask = FALSE)
+      browser()
+      aaaa <<- 1;
+      clearCache(tmpCache, ask = FALSE)
 
       # Check that Caching of rasters saves them to tif file instead of rdata
       randomPolyToMemory <- function() {
