@@ -109,11 +109,15 @@ loadFromCache <- function(cachePath, cacheId) {
 #' @export
 #' @rdname cacheTools
 rmFromCache <- function(cachePath, cacheId, con, drv) {
+  browser(expr = exists("cccc"))
   if (missing(con)) {
     con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
     on.exit(dbDisconnect(con))
   }
-  res <- DBI::dbSendQuery(con, paste0("DELETE FROM dt WHERE cacheId = '", cacheId, "'"))
+  # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
+  query <- paste0("DELETE FROM dt WHERE [cacheId] = $cacheIds")
+  res <- dbSendStatement(con, query)
+  dbBind(res, list(cacheIds = cacheId))
   dbClearResult(res)
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
 

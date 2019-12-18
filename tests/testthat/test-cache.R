@@ -1,157 +1,154 @@
-test_that("test file-backed raster caching", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  nOT <- Sys.time()
-
-  randomPolyToDisk <- function(tmpfile) {
-    r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-    writeRaster(r, tmpfile[1], overwrite = TRUE)
-    r <- raster(tmpfile[1])
-    r
-  }
-
-  a <- randomPolyToDisk(tmpfile[1])
-  # confirm that the raster has the given tmp filename
-  expect_identical(strsplit(tmpfile[1], split = "[\\/]"),
-                   strsplit(a@file@name, split = "[\\/]"))
-
-  # Using mock interactive function
-  # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
-  # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
-  #   solves the error about not being in the testthat package
-  val1 <- if (getOption("reproducible.newAlgo", TRUE)) 7 else 11
-
-#  with_mock(
-#    "reproducible::isInteractive" = function() TRUE,
-#    {
-  #aaaa <<- 1
-  aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
-      # Test clearCache by tags
-
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpCache, userTags = "something$", ask = FALSE)
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpCache, userTags = "something2", ask = FALSE)
-      expect_equal(NROW(showCache(tmpCache)), 0)
-
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpCache, userTags = c("something$", "testing$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
-      clearCache(tmpCache, userTags = c("something2$", "testing$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
-
-      clearCache(tmpCache, userTags = c("something2$", "randomPolyToDisk$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpCache)), 0)
-
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
-
-      # confirm that the raster has the new filename in the cachePath
-      expect_false(identical(strsplit(tmpfile[1], split = "[\\/]"),
-                             strsplit(file.path(tmpCache, "rasters",
-                                                basename(tmpfile[1])), split = "[\\/]")))
-      expect_true(any(grepl(pattern = basename(tmpfile[1]),
-                            dir(file.path(tmpCache, "rasters")))))
-
-      ### Test for 2 caching events with same file-backing name
-      randomPolyToDisk2 <- function(tmpfile, rand) {
-        r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-        writeRaster(r, tmpfile[1], overwrite = TRUE)
-        r <- raster(tmpfile[1])
-        r
-      }
-
-      a <- Cache(randomPolyToDisk2, tmpfile[1], runif(1))
-      b <- Cache(randomPolyToDisk2, tmpfile[1], runif(1))
-
-      expect_false(identical(filename(a), filename(b)))
-
-      # Caching a raster as an input works
-      rasterTobinary <- function(raster) {
-        ceiling(raster[] / (mean(raster[]) + 1))
-      }
-      nOT <- Sys.time()
-      opt <- options("reproducible.useMemoise" = FALSE)
-      for (i in 1:2) {
-        assign(paste0("b", i), system.time(
-          assign(paste0("a", i), Cache(rasterTobinary, aa, cacheRepo = tmpCache, notOlderThan = nOT))
-        ))
-        nOT <- Sys.time() - 100
-      }
-
-      attr(a1, ".Cache")$newCache <- NULL
-      attr(a2, ".Cache")$newCache <- NULL
-      # test that they are identical
-      expect_equal(a1, a2)
-
-      # confirm that the second one was obtained through reading from Cache... much faster than writing
-      expect_true(b1[1] > b2[1])
-
-      browser()
-      aaaa <<- 1;
-      clearCache(tmpCache, ask = FALSE)
-
-      # Check that Caching of rasters saves them to tif file instead of rdata
-      randomPolyToMemory <- function() {
-        r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-        dataType(r) <- "INT1U"
-        r
-      }
-
-      bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
-      expect_true(filename(bb) == "")
-      expect_true(inMemory(bb))
-
-      bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
-      expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 10)
-
-      # Test that factors are saved correctly
-      randomPolyToFactorInMemory <- function() {
-        r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-        levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
-                                vals2 <- sample(1:7, size = 30, replace = TRUE))
-        dataType(r) <- "INT1U"
-        r
-      }
-      bb <- Cache(randomPolyToFactorInMemory, cacheRepo = tmpdir)
-      expect_equal(dataType(bb), "INT1U")
-      expect_true(raster::is.factor(bb))
-      expect_true(is(raster::levels(bb)[[1]], "data.frame"))
-      expect_true(NCOL(raster::levels(bb)[[1]]) == 3)
-      expect_true(NROW(raster::levels(bb)[[1]]) == 30)
-
-      randomPolyToFactorOnDisk <- function(tmpfile) {
-        r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-        levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
-                                vals2 = sample(1:7, size = 30, replace = TRUE))
-        r <- writeRaster(r, tmpfile, overwrite = TRUE, datatype = "INT1U")
-        r
-      }
-
-      # bb1 has original tmp filename
-      bb1 <- randomPolyToFactorOnDisk(tmpfile[2])
-      # bb has new one, inside of cache repository, with same basename
-      bb <- Cache(randomPolyToFactorOnDisk, tmpfile = tmpfile[2], cacheRepo = tmpdir)
-      expect_true(dirname(normPath(filename(bb))) == normPath(file.path(tmpdir, "rasters")))
-      expect_true(basename(filename(bb)) == basename(tmpfile[2]))
-      expect_false(filename(bb) == tmpfile[2])
-      expect_true(dirname(filename(bb1)) == dirname(tmpfile[2]))
-      expect_true(basename(filename(bb1)) == basename(tmpfile[2]))
-      expect_true(dataType(bb) == "INT1U")
-      expect_true(raster::is.factor(bb))
-      expect_true(is(raster::levels(bb)[[1]], "data.frame"))
-      expect_true(NCOL(raster::levels(bb)[[1]]) == 3)
-      expect_true(NROW(raster::levels(bb)[[1]]) == 30)
-
-      clearCache(tmpdir, ask = FALSE)
-#   })
-
-
-})
-
+# test_that("test file-backed raster caching", {
+#   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#
+#   nOT <- Sys.time()
+#
+#   randomPolyToDisk <- function(tmpfile) {
+#     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+#     writeRaster(r, tmpfile[1], overwrite = TRUE)
+#     r <- raster(tmpfile[1])
+#     r
+#   }
+#
+#   a <- randomPolyToDisk(tmpfile[1])
+#   # confirm that the raster has the given tmp filename
+#   expect_identical(strsplit(tmpfile[1], split = "[\\/]"),
+#                    strsplit(a@file@name, split = "[\\/]"))
+#
+#   # Using mock interactive function
+#   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
+#   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
+#   #   solves the error about not being in the testthat package
+#   val1 <- if (getOption("reproducible.newAlgo", TRUE)) 7 else 11
+#
+#   with_mock(
+#     "reproducible::isInteractive" = function() TRUE,
+#     {
+#       aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
+#       # Test clearCache by tags
+#
+#       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+#       clearCache(tmpCache, userTags = "something$", ask = FALSE)
+#       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+#       clearCache(tmpCache, userTags = "something2", ask = FALSE)
+#       expect_equal(NROW(showCache(tmpCache)), 0)
+#
+#       aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
+#       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+#       clearCache(tmpCache, userTags = c("something$", "testing$"), ask = FALSE)
+#       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+#       clearCache(tmpCache, userTags = c("something2$", "testing$"), ask = FALSE)
+#       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+#
+#       clearCache(tmpCache, userTags = c("something2$", "randomPolyToDisk$"), ask = FALSE)
+#       expect_equal(NROW(showCache(tmpCache)), 0)
+#
+#       aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
+#
+#       # confirm that the raster has the new filename in the cachePath
+#       expect_false(identical(strsplit(tmpfile[1], split = "[\\/]"),
+#                              strsplit(file.path(tmpCache, "rasters",
+#                                                 basename(tmpfile[1])), split = "[\\/]")))
+#       expect_true(any(grepl(pattern = basename(tmpfile[1]),
+#                             dir(file.path(tmpCache, "rasters")))))
+#
+#       ### Test for 2 caching events with same file-backing name
+#       randomPolyToDisk2 <- function(tmpfile, rand) {
+#         r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+#         writeRaster(r, tmpfile[1], overwrite = TRUE)
+#         r <- raster(tmpfile[1])
+#         r
+#       }
+#
+#       a <- Cache(randomPolyToDisk2, tmpfile[1], runif(1))
+#       b <- Cache(randomPolyToDisk2, tmpfile[1], runif(1))
+#
+#       expect_false(identical(filename(a), filename(b)))
+#
+#       # Caching a raster as an input works
+#       rasterTobinary <- function(raster) {
+#         ceiling(raster[] / (mean(raster[]) + 1))
+#       }
+#       nOT <- Sys.time()
+#       opt <- options("reproducible.useMemoise" = FALSE)
+#       for (i in 1:2) {
+#         assign(paste0("b", i), system.time(
+#           assign(paste0("a", i), Cache(rasterTobinary, aa, cacheRepo = tmpCache, notOlderThan = nOT))
+#         ))
+#         nOT <- Sys.time() - 100
+#       }
+#
+#       attr(a1, ".Cache")$newCache <- NULL
+#       attr(a2, ".Cache")$newCache <- NULL
+#       # test that they are identical
+#       expect_equal(a1, a2)
+#
+#       # confirm that the second one was obtained through reading from Cache... much faster than writing
+#       expect_true(b1[1] > b2[1])
+#
+#       clearCache(tmpCache, ask = FALSE)
+#
+#       # Check that Caching of rasters saves them to tif file instead of rdata
+#       randomPolyToMemory <- function() {
+#         r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+#         dataType(r) <- "INT1U"
+#         r
+#       }
+#
+#       bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
+#       expect_true(filename(bb) == "")
+#       expect_true(inMemory(bb))
+#
+#       bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
+#       expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 6)
+#
+#       # Test that factors are saved correctly
+#       randomPolyToFactorInMemory <- function() {
+#         r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+#         levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
+#                                 vals2 <- sample(1:7, size = 30, replace = TRUE))
+#         dataType(r) <- "INT1U"
+#         r
+#       }
+#       bb <- Cache(randomPolyToFactorInMemory, cacheRepo = tmpdir)
+#       expect_equal(dataType(bb), "INT1U")
+#       expect_true(raster::is.factor(bb))
+#       expect_true(is(raster::levels(bb)[[1]], "data.frame"))
+#       expect_true(NCOL(raster::levels(bb)[[1]]) == 3)
+#       expect_true(NROW(raster::levels(bb)[[1]]) == 30)
+#
+#       randomPolyToFactorOnDisk <- function(tmpfile) {
+#         r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+#         levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
+#                                 vals2 = sample(1:7, size = 30, replace = TRUE))
+#         r <- writeRaster(r, tmpfile, overwrite = TRUE, datatype = "INT1U")
+#         r
+#       }
+#
+#       # bb1 has original tmp filename
+#       bb1 <- randomPolyToFactorOnDisk(tmpfile[2])
+#       # bb has new one, inside of cache repository, with same basename
+#       bb <- Cache(randomPolyToFactorOnDisk, tmpfile = tmpfile[2], cacheRepo = tmpdir)
+#       expect_true(dirname(normPath(filename(bb))) == normPath(file.path(tmpdir, "rasters")))
+#       expect_true(basename(filename(bb)) == basename(tmpfile[2]))
+#       expect_false(filename(bb) == tmpfile[2])
+#       expect_true(dirname(filename(bb1)) == dirname(tmpfile[2]))
+#       expect_true(basename(filename(bb1)) == basename(tmpfile[2]))
+#       expect_true(dataType(bb) == "INT1U")
+#       expect_true(raster::is.factor(bb))
+#       expect_true(is(raster::levels(bb)[[1]], "data.frame"))
+#       expect_true(NCOL(raster::levels(bb)[[1]]) == 3)
+#       expect_true(NROW(raster::levels(bb)[[1]]) == 30)
+#
+#       clearCache(tmpdir, ask = FALSE)
+#    })
+#
+#
+# })
+#
 # test_that("test memory backed raster robustDigest", {
 #   testInitOut <- testInit("raster", tmpFileExt = c("",""))
 #   on.exit({
@@ -223,62 +220,63 @@ test_that("test file-backed raster caching", {
 #
 #   expect_identical(dig, dig1)
 # })
-#
-# test_that("test 'quick' argument", {
-#   testInitOut <- testInit("raster", tmpFileExt = ".tif")
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#
-#   ### Make raster using Cache
-#   set.seed(123)
-#   r1 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-#   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
-#   quickFun <- function(rasFile) {
-#     ras <- raster(rasFile)
-#     ras[sample(ncell(ras), size = 1)]
-#   }
-#   fn <- filename(r1)
-#   out1a <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir)
-#   out1b <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
-#   r1[4] <- r1[4] + 1
-#   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
-#   mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
-#                                           cacheRepo = tmpdir, quick = TRUE))
-#   expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
-#   expect_silent(out1c <- Cache(quickFun, asPath(filename(r1)),
-#                                 cacheRepo = tmpdir, quick = FALSE))
-#
-#   # Using Raster directly -- not file
-#   quickFun <- function(ras) {
-#     ras[sample(ncell(ras), size = 1)]
-#   }
-#   out1a <- Cache(quickFun, r1, cacheRepo = tmpdir)
-#   out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
-#   r1[4] <- r1[4] + 1
-#   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
-#   mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE))
-#   expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
-#   expect_silent(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE))
-# })
-#
-# test_that("test date-based cache removal", {
-#   testInitOut <- testInit("raster", tmpFileExt = ".pdf")
-#   on.exit({
-#     testOnExit(testInitOut)
-#   }, add = TRUE)
-#
-#   a <- Cache(runif, 1, cacheRepo = tmpdir)
-#   a1 <- showCache(tmpdir)
-#   expect_true(NROW(a1) > 0)
-#   b <- clearCache(tmpdir, before = Sys.Date() - 1, ask = FALSE)
-#   expect_true(NROW(b) == 0)
-#   expect_identical(a1, showCache(tmpdir))
-#
-#   b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
-#   expect_identical(data.table::setindex(b, NULL), a1)
-# })
-#
+
+test_that("test 'quick' argument", {
+  testInitOut <- testInit("raster", tmpFileExt = ".tif")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  ### Make raster using Cache
+  set.seed(123)
+  r1 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
+  r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  quickFun <- function(rasFile) {
+    ras <- raster(rasFile)
+    ras[sample(ncell(ras), size = 1)]
+  }
+  fn <- filename(r1)
+  out1a <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir)
+  out1b <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
+  r1[4] <- r1[4] + 1
+  r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
+                                          cacheRepo = tmpdir, quick = TRUE))
+  browser()
+  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
+  expect_silent(out1c <- Cache(quickFun, asPath(filename(r1)),
+                                cacheRepo = tmpdir, quick = FALSE))
+
+  # Using Raster directly -- not file
+  quickFun <- function(ras) {
+    ras[sample(ncell(ras), size = 1)]
+  }
+  out1a <- Cache(quickFun, r1, cacheRepo = tmpdir)
+  out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
+  r1[4] <- r1[4] + 1
+  r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE))
+  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
+  expect_silent(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE))
+})
+
+test_that("test date-based cache removal", {
+  testInitOut <- testInit("raster", tmpFileExt = ".pdf")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  a <- Cache(runif, 1, cacheRepo = tmpdir)
+  a1 <- showCache(tmpdir)
+  expect_true(NROW(a1) > 0)
+  b <- clearCache(tmpdir, before = Sys.Date() - 1, ask = FALSE)
+  expect_true(NROW(b) == 0)
+  expect_identical(a1, showCache(tmpdir))
+
+  b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
+  expect_identical(data.table::setindex(b, NULL), a1)
+})
+
 # test_that("test keepCache", {
 #   testInitOut <- testInit("raster")
 #   on.exit({

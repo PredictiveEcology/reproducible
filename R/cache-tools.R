@@ -112,6 +112,7 @@ setMethod(
     }
     #if (is(x, "simList")) x <- x@paths$cachePath
 
+    browser(expr = exists("aaaa"))
     # Check if no args -- faster to delete all then make new empty repo for large repos
     clearWholeCache <- all(missing(userTags), missing(after), missing(before))
 
@@ -237,6 +238,7 @@ setMethod(
           }
       }
 
+      # remove file-backed files
       if (all(!is.na(rastersInRepo$cacheId)) && NROW(rastersInRepo) > 0) {
         unlink(filesToRemove)
       }
