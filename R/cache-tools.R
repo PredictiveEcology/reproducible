@@ -162,16 +162,9 @@ setMethod(
         }
 
       }
-      if (getOption("reproducible.newAlgo", TRUE)) {
-        unlink(file.path(x, "cacheObjects"), recursive = TRUE)
-        unlink(file.path(x, "rasters"), recursive = TRUE)
-        unlink(file.path(x, "cache.db"))
-
-      } else {
-        unlink(file.path(x, "gallery"), recursive = TRUE)
-        unlink(file.path(x, "rasters"), recursive = TRUE)
-        unlink(file.path(x, "backpack.db"))
-      }
+      unlink(.sqliteStorageDir(x), recursive = TRUE)
+      unlink(file.path(x, "rasters"), recursive = TRUE)
+      unlink(.sqliteFile(x))
 
       checkPath(x, create = TRUE)
       createLocalRepo(x)
@@ -180,7 +173,8 @@ setMethod(
     }
 
     if (isInteractive()) {
-      objSizes <- as.numeric(objsDT[tagKey == "object.size"]$tagValue)
+      # objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
+      objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
       cacheSize <- sum(objSizes) / 4
       #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT[[.cacheTableHashColName()]]), ".rda"))
       #cacheSize <- sum(file.size(rdaFiles))
@@ -188,12 +182,11 @@ setMethod(
 
     if (NROW(objsDT)) {
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
-                                grepl(pattern = "Raster", tagValue)] # only Rasters* class
-      hasARaster <- if (getOption("reproducible.newAlgo", TRUE)) {
-        (all(!is.na(rastersInRepo$cacheId)) && NROW(rastersInRepo) > 0)
-      } else {
+                                grepl(pattern = "Raster", get(.cacheTableTagColName()))] # only Rasters* class
+      hasARaster <-
         all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0
-      }
+
+      browser(expr = exists("hhhh"))
       if (hasARaster) {
         rasterObjSizes <- as.numeric(objsDT[get(.cacheTableHashColName()) %in%
                                               rastersInRepo[[.cacheTableHashColName()]] &
@@ -357,6 +350,7 @@ setMethod(
     # res <- DBI::dbSendQuery(con, paste0("SELECT * FROM dt WHERE cacheId = '", res1$cacheId, "'"))
     # res1 <- DBI::dbFetch(res)
 
+    browser(expr = exists("ffff"))
     if (getOption("reproducible.newAlgo", TRUE)) {
       con <- dbConnectAll(drv, dir = x, create = FALSE)
       on.exit({ dbDisconnect(con) })
@@ -389,22 +383,22 @@ setMethod(
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           for (ut in userTags) {
             #objsDT[[.cacheTableHashColName()]] %in% ut
-            if (getOption("reproducible.newAlgo", TRUE)) {
+            # if (getOption("reproducible.newAlgo", TRUE)) {
+            #   objsDT2 <- objsDT[
+            #     grepl(tagValue, pattern = ut) |
+            #       grepl(tagKey, pattern = ut) |
+            #       grepl(cacheId, pattern = ut)]
+            #   setkeyv(objsDT2, "cacheId")
+            #   shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
+            #
+            # } else {
               objsDT2 <- objsDT[
-                grepl(tagValue, pattern = ut) |
+                grepl(get(.cacheTableTagColName()), pattern = ut) |
                   grepl(tagKey, pattern = ut) |
-                  grepl(cacheId, pattern = ut)]
-              setkeyv(objsDT2, "cacheId")
-              shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
-
-            } else {
-              objsDT2 <- objsDT[
-                grepl(tagValue, pattern = ut) |
-                  grepl(tagKey, pattern = ut) |
-                  grepl(artifact, pattern = ut)]
-              setkeyv(objsDT2, "artifact")
-              shortDT <- unique(objsDT2, by = "artifact")[, artifact]
-            }
+                  grepl(get(.cacheTableHashColName()), pattern = ut)]
+              setkeyv(objsDT2, .cacheTableHashColName())
+              shortDT <- unique(objsDT2, by = .cacheTableHashColName())[, get(.cacheTableHashColName())]
+            #}
             objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
           }
         } else {
@@ -423,7 +417,6 @@ setMethod(
         }
       }
     }
-    browser(expr = exists("ffff"))
     verboseMessaging <- TRUE
     if (!is.null(list(...)$verboseMessaging)) {
       if (!isTRUE(list(...)$verboseMessaging)) {

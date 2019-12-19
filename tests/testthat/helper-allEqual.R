@@ -113,6 +113,8 @@ testOnExit <- function(testInitOut) {
     if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
   }
+  unlink(testInitOut$tmpCache, recursive = TRUE, force = TRUE)
+  unlink(testInitOut$tmpdir, recursive = TRUE, force = TRUE)
   lapply(testInitOut$libs, function(lib) {
     try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
   )

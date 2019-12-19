@@ -430,14 +430,9 @@ setMethod(
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
-      if (getOption("reproducible.newAlgo", TRUE))
-        isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-          all(file.exists(file.path(cacheRepo,  c("cacheObjects", "cache.db"))))
-        }))
-      else
-        isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-          all(file.exists(file.path(cacheRepo,  c("gallery", "backpack.db"))))
-        }))
+      isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
+        all(file.exists(c(.sqliteFile(cacheRepo),
+                                    .sqliteStorageDir(cacheRepo))))}))
 
       if (any(!isIntactRepo)) {
         if (getOption("reproducible.newAlgo", TRUE))
@@ -527,9 +522,11 @@ setMethod(
         message("Retrieving file list in cloud folder")
         gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
       }
+      browser(expr = exists("ffff"))
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         tries <- tries + 1
+        browser(expr = exists("ffff"))
         if (getOption("reproducible.newAlgo", TRUE)) {
           localTags <- showCache(repo, verboseMessaging = FALSE) # This is noisy
           isInRepo <- localTags[cacheId %in% outputHash,]
@@ -561,6 +558,7 @@ setMethod(
         needFindByTags <- devModeOut$needFindByTags
       }
 
+      browser(expr = exists("ffff"))
       if (identical("overwrite", useCache)  && NROW(isInRepo) > 0 || needFindByTags) {
         suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE))
         if (identical("devMode", useCache)) {
@@ -579,11 +577,7 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          objSize <- if (getOption("reproducible.newAlgo", TRUE)) {
-            file.size(file.path(cacheRepo, "cacheObjects", paste0(isInRepo$cacheId, ".qs")))
-          } else {
-            file.size(file.path(cacheRepo, "gallery", paste0(isInRepo[[.cacheTableHashColName()]], ".rda")))
-          }
+          objSize <- file.size(.sqliteStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
           class(objSize) <- "object_size"
           if (objSize > 1e6)
             message(crayon::blue(paste0("  ...(Object to retrieve is large: ", format(objSize, units = "auto"), ")")))
@@ -788,17 +782,18 @@ setMethod(
             future::plan(thePlan)
           }
         }
-        # browser()
+        browser()
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
           #saved <-
           future::futureCall(
             FUN = writeFuture,
-            args = list(written, outputToSave, cacheRepo, userTags),
+            args = list(written, outputToSave, cacheRepo, userTags, drv),
             globals = list(written = written,
                            saveToLocalRepo = archivist::saveToLocalRepo,
                            outputToSave = outputToSave,
                            cacheRepo = cacheRepo,
-                           userTags = userTags)
+                           userTags = userTags,
+                           drv = drv)
           )
         if (is.null(.reproEnv$alreadyMsgFuture)) {
           message("  Cache saved in a separate 'future' process. ",
@@ -969,40 +964,50 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #' @export
 #' @importFrom archivist saveToLocalRepo
 #' @importFrom stats runif
-writeFuture <- function(written, outputToSave, cacheRepo, userTags) {
+writeFuture <- function(written, outputToSave, cacheRepo, userTags, drv, cacheId) {
   counter <- 0
-  if (!file.exists(file.path(cacheRepo, "backpack.db"))) {
+  if (!file.exists(.sqliteFile(cacheRepo))) {
     stop("That cacheRepo does not exist")
   }
-  while (written >= 0) {
-    #future::plan(multiprocess)
-    saved <- #suppressWarnings(
-      try(#silent = TRUE,
-        saveToLocalRepo(
-          outputToSave,
-          repoDir = cacheRepo,
-          artifactName = NULL,
-          archiveData = FALSE,
-          archiveSessionInfo = FALSE,
-          archiveMiniature = FALSE,
-          rememberName = FALSE,
-          silent = TRUE,
-          userTags = userTags
-        )
-        #)
-      )
 
-    # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-    written <- if (is(saved, "try-error")) {
-      Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-      written + 1
-    } else {
-      -1
+  if (getOption('reproducible.newAlgo', TRUE)) {
+    if (missing(cacheId)) {
+      cacheId <- .robustDigest(outputToSave)
     }
-    counter <- counter + 1
-    if (isTRUE(startsWith(saved[1], "Error in checkDirectory")))
-      stop(saved)
-    if (counter > 10) stop("Can't write to cacheRepo")
+    output <- saveToCache(cacheDir = cacheRepo, drv = drv, userTags = userTags,
+                        outputToSave = outputToSave, cacheId = cacheId)
+    saved <- cacheId
+  } else {
+    while (written >= 0) {
+      #future::plan(multiprocess)
+      saved <- #suppressWarnings(
+        try(#silent = TRUE,
+          saveToLocalRepo(
+            outputToSave,
+            repoDir = cacheRepo,
+            artifactName = NULL,
+            archiveData = FALSE,
+            archiveSessionInfo = FALSE,
+            archiveMiniature = FALSE,
+            rememberName = FALSE,
+            silent = TRUE,
+            userTags = userTags
+          )
+          #)
+        )
+
+      # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+      written <- if (is(saved, "try-error")) {
+        Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+        written + 1
+      } else {
+        -1
+      }
+      counter <- counter + 1
+      if (isTRUE(startsWith(saved[1], "Error in checkDirectory")))
+        stop(saved)
+      if (counter > 10) stop("Can't write to cacheRepo")
+    }
   }
   return(saved)
 }
@@ -1233,22 +1238,35 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")) #nolint
   userTags3 <- c(userTags, userTags2)
-  browser()
-  aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
+  hashName <- .cacheTableHashColName()
+  if (getOption('reproducible.newAlgo', TRUE)) {
+    Tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":")][[hashName]]
+  } else {
+    Tag <- localTags[tag %in% userTags3][[hashName]]
+  }
+  aa <- localTags[Tag %in% userTags3][
+    ,.N, keyby = hashName]
   setkeyv(aa, "N")
   similar <- if (NROW(localTags) > 0) {
-    localTags[tail(aa, as.numeric(showSimilar)), on = "artifact"][N == max(N)]
+    localTags[tail(aa, as.numeric(showSimilar)), on = hashName][N == max(N)]
   } else {
     localTags
   }
   if (NROW(similar)) {
-    browser() # deal with tag
-    similar2 <- similar[grepl("preDigest", tag)]
-    cacheIdOfSimilar <- similar[grepl("cacheId", tag)][[.cacheTableTagColName()]]
-    cacheIdOfSimilar <- unlist(strsplit(cacheIdOfSimilar, split = ":"))[2]
+    browser(expr = exists("aaaa")) # deal with tag
+    Tag <- similar[paste(tagKey , get(.cacheTableTagColName()), sep = ":")][[hashName]]
+    similar2 <- similar[grepl("preDigest", Tag)]
+    if (getOption("reproducible.newAlgo", TRUE)) {
+      cacheIdOfSimilar <- unique(similar[[.cacheTableHashColName()]])
+    } else {
+      cacheIdOfSimilar <- similar[grepl("cacheId", Tag)][[.cacheTableTagColName()]]
+      cacheIdOfSimilar <- unlist(strsplit(cacheIdOfSimilar, split = ":"))[2]
+    }
+    similar2[, `:=`(fun = unlist(lapply(strsplit(get(.cacheTableTagColName()), split = ":"),
+                                        function(xx) xx[[1]])),
+                    hash = unlist(lapply(strsplit(get(.cacheTableTagColName()), split = ":"),
+                                         function(xx) xx[[2]])))]
 
-    similar2[, `:=`(fun = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
-                    hash = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[3]])))]
 
     a <- setDT(as.list(preDigestUnlistTrunc))
     a <- melt(a, measure.vars = seq_along(names(a)), variable.name = "fun", value.name = "hash")
@@ -1576,4 +1594,17 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   } else {
     file.path(dir, "gallery")
   }
+}
+
+.sqliteStoredFile <- function(dir, hash) {
+  csf <- getOption("reproducible.cacheSaveFormat", "qs")
+  csExtension <- if (csf == "qs") {
+    "qs"
+  } else if (cfs == "rds") {
+    "rds"
+  } else {
+    "rda"
+  }
+  filename <- paste(hash, csExtension, sep = ".")
+  file.path(.sqliteStorageDir(dir), filename)
 }

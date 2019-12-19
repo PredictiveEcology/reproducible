@@ -169,7 +169,9 @@ setMethod(
 
     if (!quick) {
         if (any(unlist(lapply(object, file.exists)))) {
+          browser(expr = exists("hhhh"))
           unlist(lapply(object, function(x) {
+            browser(expr = exists("hhhh"))
             if (dir.exists(x)) {
               if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
                 digest(basename(x), algo = algo)

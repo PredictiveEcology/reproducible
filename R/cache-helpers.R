@@ -593,7 +593,7 @@ setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
     md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
-    listFiles <- dir(file.path(repoDir, "gallery")) %>%
+    listFiles <- dir(.sqliteStorageDir(repoDir)) %>%
       strsplit(".rda") %>%
       unlist()
     toRemove <- !(md5hashInBackpack %in% listFiles)
@@ -648,11 +648,9 @@ setMethod(
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- if (getOption("reproducible.newAlgo", TRUE)) {
-    all(c(basename(sqliteFile(repoDir)), "cacheObjects") %in% list.files(repoDir))
-  } else {
-    all(c("backpack.db", "gallery") %in% list.files(repoDir))
-  }
+  isRepo <-
+    all(basename2(c(.sqliteFile(repoDir), .sqliteStorageDir(repoDir))) %in%
+          list.files(repoDir))
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {
@@ -756,6 +754,7 @@ if (any(saveFilename != curFilename)) {
   notSameButBacked <- saveFilename != curFilename & isFilebacked
 
   if (any(notSameButBacked)) {
+    browser(expr = exists("ffff"))
     ## deal only with files that have been backed
       saveFilename2 <- saveFilename[notSameButBacked]
       curFilename2 <- curFilename[notSameButBacked]

@@ -96,9 +96,8 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
   retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
-  browser()
-  qs::qsave(file = file.path(.sqliteStorageDir(cacheDir), paste0(cacheId, ".qs")),
-            outputToSave)
+  browser(expr = exists("gggg"))
+  qs::qsave(file = .sqliteStoredFile(cacheDir, cacheId), outputToSave)
 
   return(outputToSave)
 
@@ -107,13 +106,13 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
 
 loadFromCache <- function(cachePath, cacheId) {
   browser(expr = exists("bbbb"))
-  qs::qread(file = file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
+  qs::qread(file = .sqliteStoredFile(cachePath, cacheId))
   #readRDS(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
 }
 
 #' Low level tools to work with Cache
 #'
-#' @importFrom DBI dbClearResult
+#' @importFrom DBI dbClearResult dbSendStatement dbBind
 #' @export
 #' @rdname cacheTools
 rmFromCache <- function(cachePath, cacheId, con, drv) {

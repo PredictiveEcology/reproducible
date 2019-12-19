@@ -132,6 +132,7 @@
 
 .CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN, ...) {
   message("sideEffect argument is poorly tested. It may not function as desired")
+  browser(expr = exists("sideE"))
   needDwd <- logical(0)
   fromCopy <- character(0)
   cachedChcksum <- attributes(output)$chcksumFiles
@@ -144,7 +145,7 @@
       if (file.exists(chcksumPath)) {
         checkDigest <- TRUE
       } else {
-        checkCopy <- file.path(cacheRepo, "gallery", basename(chcksumName))
+        checkCopy <- file.path(.sqliteStorageDir(cacheRepo), basename(chcksumName))
         if (file.exists(checkCopy)) {
           chcksumPath <- checkCopy
           checkDigest <- TRUE
@@ -189,7 +190,7 @@
   }
 
   if (NROW(fromCopy)) {
-    repoTo <- file.path(cacheRepo, "gallery")
+    repoTo <- .sqliteStorageDir(cacheRepo)
     lapply(fromCopy, function(x) {
       file.copy(from = file.path(repoTo, basename(x)),
                 to = file.path(cacheRepo), recursive = TRUE)
@@ -199,6 +200,7 @@
 
 .CacheSideEffectFn2 <- function(sideEffect, cacheRepo, priorRepo, algo, output,
                                 makeCopy, quick) {
+  browser(expr = exists("sideE"))
   if (isTRUE(sideEffect)) {
     postRepo <- list.files(cacheRepo, full.names = TRUE)
   } else {
@@ -226,7 +228,7 @@
       stop("There is an unknown error 01")
 
     if (makeCopy) {
-      repoTo <- file.path(cacheRepo, "gallery")
+      repoTo <- .sqliteStorageDir(cacheRepo)
       checkPath(repoTo, create = TRUE)
       lapply(dwdFlst, function(x) {
         file.copy(from = x, to = file.path(repoTo), recursive = TRUE)

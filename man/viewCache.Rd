@@ -165,7 +165,7 @@ showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
 
 # Fine control of cache elements -- pick out only the large runif object, and remove it
 cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
-toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$artifact
+toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700][[.cacheTableHashColName()]]
 clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 

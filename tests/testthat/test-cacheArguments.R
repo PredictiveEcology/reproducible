@@ -19,7 +19,7 @@ test_that("test cached downloads", {
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
 
   out <- createCache(outdir)
-  browser()
+  # sideE <<- gggg <<- 1
   storageDir <- .sqliteStorageDir(outdir)
   # Cache download first run. File is downloaded. checksum is logged in backpack.
   out <- Cache(utils::download.file, url = urlTif1,
@@ -60,7 +60,6 @@ test_that("test cached downloads", {
 
   # check if copy was created
   copyFolder <- storageDir
-  browser()
   expect_true(file.exists(file.path(copyFolder, basename(urlTif1))))
 
   # Remove downloaded file and check if it is brought back using the copy

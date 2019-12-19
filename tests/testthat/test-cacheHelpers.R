@@ -78,6 +78,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl("different n", bMess)))
   expect_true(any(grepl("new argument.*sd", bMess)))
   expect_true(any(grepl("artifact with cacheId", bMess)))
+  # aaaa <<- bbbb <<- cccc <<- 1
   cMess <- capture_messages(b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache))
   expect_true(any(grepl("different n", cMess)))
   expect_false(any(grepl("new argument.*sd", cMess)))
@@ -86,7 +87,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(identical(cMessCacheId, bMessCacheId))
 
   dMess <- capture_messages(b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
-  rm(aaaa, envir = .GlobalEnv)
   #browser(expr = !any(grepl("different n, sd", dMess)))
 
   # There are 2 ways this may come out -- similarity to 1 of 2 alternatives above
@@ -123,8 +123,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
 
   ## writeFuture
-  expect_true(identical("dda1fbb70d256e6b3b696ef0176c63de",
-                        writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "")))
+  expect_true(identical(.robustDigest("sdf"),
+                        writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "",
+                                    drv = RSQLite::SQLite())))
   expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
 
   ## verbose -- need 2 nested levels to run all lin
