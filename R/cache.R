@@ -535,7 +535,7 @@ setMethod(
           isInRepo <- localTags[cacheId %in% outputHash,]
         } else {
           localTags <- getLocalTags(repo)
-          isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
+          isInRepo <- localTags[localTags[[.cacheTableTagColName()]] == paste0("cacheId:", outputHash), , drop = FALSE]
         }
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
@@ -564,11 +564,11 @@ setMethod(
       if (identical("overwrite", useCache)  && NROW(isInRepo) > 0 || needFindByTags) {
         suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE))
         if (identical("devMode", useCache)) {
-          isInRepo <- isInRepo[!isInRepo$tag %in% userTags, , drop = FALSE]
+          isInRepo <- isInRepo[!isInRepo[[.cacheTableTagColName()]] %in% userTags, , drop = FALSE]
           outputHash <- outputHashNew
           message("Overwriting Cache entry with userTags: '",paste(userTags, collapse = ", ") ,"'")
         } else {
-          isInRepo <- isInRepo[isInRepo$tag != paste0("cacheId:", outputHash), , drop = FALSE]
+          isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
           message("Overwriting Cache entry with function '",fnDetails$functionName ,"'")
         }
       }
@@ -582,7 +582,7 @@ setMethod(
           objSize <- if (getOption("reproducible.newAlgo", TRUE)) {
             file.size(file.path(cacheRepo, "cacheObjects", paste0(isInRepo$cacheId, ".qs")))
           } else {
-            file.size(file.path(cacheRepo, "gallery", paste0(isInRepo$artifact, ".rda")))
+            file.size(file.path(cacheRepo, "gallery", paste0(isInRepo[[.cacheTableHashColName()]], ".rda")))
           }
           class(objSize) <- "object_size"
           if (objSize > 1e6)
@@ -598,7 +598,7 @@ setMethod(
                                      ...))
           browser(expr = exists("bbbb"))
           if (is(output, "try-error")) {
-            cID <- gsub("cacheId:", "", isInRepo$tag)
+            cID <- gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
             stop("Error in trying to recover cacheID: ", cID,
                  "\nYou will likely need to remove that item from Cache, e.g., ",
                  "\nclearCache(userTags = '", cID, "')")
@@ -662,7 +662,7 @@ setMethod(
       if (nrow(isInRepo) > 0) {
         # flush it if notOlderThan is violated
         if (notOlderThan >= lastEntry) {
-          suppressMessages(clearCache(userTags = isInRepo$artifact[lastOne], x = cacheRepo,
+          suppressMessages(clearCache(userTags = isInRepo[[.cacheTableHashColName()]][lastOne], x = cacheRepo,
                                       ask = FALSE))
         }
       }
@@ -1233,6 +1233,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")) #nolint
   userTags3 <- c(userTags, userTags2)
+  browser()
   aa <- localTags[tag %in% userTags3][,.N, keyby = artifact]
   setkeyv(aa, "N")
   similar <- if (NROW(localTags) > 0) {
@@ -1241,8 +1242,9 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     localTags
   }
   if (NROW(similar)) {
+    browser() # deal with tag
     similar2 <- similar[grepl("preDigest", tag)]
-    cacheIdOfSimilar <- similar[grepl("cacheId", tag)]$tag
+    cacheIdOfSimilar <- similar[grepl("cacheId", tag)][[.cacheTableTagColName()]]
     cacheIdOfSimilar <- unlist(strsplit(cacheIdOfSimilar, split = ":"))[2]
 
     similar2[, `:=`(fun = unlist(lapply(strsplit(tag, split = ":"), function(xx) xx[[2]])),
@@ -1500,20 +1502,21 @@ getCacheRepos <- function(cacheRepo, modifiedDots) {
 
 devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose,
                        isInRepo, outputHash) {
-  isInRepoAlt <- localTags[localTags$tag %in% userTags, , drop = FALSE]
+  isInRepoAlt <- localTags[localTags[[.cacheTableTagColName()]] %in% userTags, , drop = FALSE]
   data.table::setDT(isInRepoAlt)
-  isInRepoAlt <- isInRepoAlt[, iden := identical(sum(tag %in% userTags), length(userTags)),
-                             by = "artifact"][iden == TRUE]
-  if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt$artifact)) == 1) {
-    newLocalTags <- localTags[localTags$artifact %in% isInRepoAlt$artifact,]
+  if (NROW(isInRepoAlt) > 0)
+    isInRepoAlt <- isInRepoAlt[, iden := identical(sum(.cacheTableTagColName() %in% userTags), length(userTags)),
+                               by = list(.cacheTableHashColName())][iden == TRUE]
+  if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt[[.cacheTableHashColName()]])) == 1) {
+    newLocalTags <- localTags[localTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]],]
     tags1 <- grepl(paste0("(",
                           paste("accessed", "cacheId", "class", "date", "format", "function",
                                 "name", "object.size", "otherFunctions", "preDigest",
                                 sep = "|"),
                           ")"),
-                   newLocalTags$tag)
+                   newLocalTags[[.cacheTableTagColName()]])
     localTagsAlt <- newLocalTags[!tags1,]
-    if (all(localTagsAlt$tag %in% userTags)) {
+    if (all(localTagsAlt[[.cacheTableTagColName()]] %in% userTags)) {
       mess <- capture.output(type = "output", {
         similars <- .findSimilar(newLocalTags, scalls = scalls,
                                  preDigestUnlistTrunc = preDigestUnlistTrunc,
@@ -1526,8 +1529,8 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 
       if (similarsHaveNA < 2) {
         verboseMessage1(verbose, userTags)
-        outputHash <- gsub("cacheId:", "", newLocalTags[newLocalTags$artifact %in% isInRepoAlt$artifact & #nolint
-                                                          startsWith(newLocalTags$tag, "cacheId"), ]$tag) #nolint
+        outputHash <- gsub("cacheId:", "", newLocalTags[newLocalTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]] & #nolint
+                                                          startsWith(newLocalTags[[.cacheTableTagColName()]], "cacheId"), ][[.cacheTableTagColName()]]) #nolint
         isInRepo <- isInRepoAlt
       } else {
         verboseMessage2(verbose)
@@ -1535,7 +1538,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
     }
     needFindByTags <- TRUE # it isn't there
   } else {
-    verboseMessage3(verbose, isInRepoAlt$artifact)
+    verboseMessage3(verbose, isInRepoAlt[[.cacheTableHashColName()]])
     needFindByTags <- FALSE # it isn't there
   }
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
@@ -1555,5 +1558,22 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
     "tagValue"
   } else {
     "tag"
+  }
+}
+
+.sqliteFile <- function(dir) {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    file.path(dir, "cache.db")
+  } else {
+    file.path(dir, "backpack.db")
+  }
+
+}
+
+.sqliteStorageDir <- function(dir) {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    file.path(dir, "cacheOutputs")
+  } else {
+    file.path(dir, "gallery")
   }
 }

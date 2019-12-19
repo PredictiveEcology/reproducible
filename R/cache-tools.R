@@ -139,7 +139,7 @@ setMethod(
     }
 
     if (getOption("reproducible.newAlgo", TRUE)) {
-      con <- dbConnect(drv, dbname = file.path(x, "cache.db"))
+      con <- dbConnectAll(drv, dir = x, create = FALSE)
       on.exit({
         #dbClearResult(con)
         dbDisconnect(con)
@@ -358,7 +358,7 @@ setMethod(
     # res1 <- DBI::dbFetch(res)
 
     if (getOption("reproducible.newAlgo", TRUE)) {
-      con <- dbConnect(drv, dbname = file.path(x, "cache.db"))
+      con <- dbConnectAll(drv, dir = x, create = FALSE)
       on.exit({ dbDisconnect(con) })
       tab <- try(dbReadTable(con, "dt"), silent = TRUE)
       if (is(tab, "try-error"))
@@ -713,4 +713,18 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
     shownCache <- shownCache[tagValue %in% cacheId]
   }
   shownCache[tagKey == "cacheId", artifact]
+}
+
+
+
+dbConnectAll <- function(drv, dir, create = TRUE) {
+  args <- list(drv = drv)
+  if (is(drv, "SQLiteDriver")) {
+    if (!file.exists(.sqliteFile(dir)))
+      if (isFALSE(create)) {
+        return(invisible())
+      }
+    args <- append(args, list(dbname = .sqliteFile(dir)))
+  } # other types of drv, e.g., Postgres can be done via env vars
+  do.call(dbConnect, args)
 }

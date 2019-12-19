@@ -19,7 +19,7 @@
 #' @importFrom data.table data.table
 #' @rdname cacheTools
 createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
-  dbPath <- file.path(cacheDir, "cache.db")
+  dbPath <- .sqliteFile(cacheDir) # file.path(cacheDir, "cache.db")
   alreadyExists <- dir.exists(cacheDir) && file.exists(dbPath) && dir.exists(file.path(cacheDir, "cacheObjects"))
   if (alreadyExists && force == FALSE) {
     message("Cache already exists at ", cacheDir, " and force = FALSE. Not creating new cache.")
@@ -27,8 +27,8 @@ createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
   }
 
   checkPath(cacheDir, create = TRUE)
-  checkPath(file.path(cacheDir, "cacheObjects"), create = TRUE)
-  con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
+  checkPath(.sqliteStorageDir(cacheDir), create = TRUE)
+  con <- dbConnectAll(drv, dir = cacheDir)
   on.exit(dbDisconnect(con))
   dt <- .emptyCacheTable
   dbWriteTable(con, "dt", dt, overwrite = TRUE, field.types = c(createdDate = "timestamp"))
@@ -37,7 +37,7 @@ createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
 #' @rdname cacheTools
 saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
                         outputToSave, userTags, cacheId) {
-  con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
+  con <- dbConnectAll(drv, dir = cacheDir)
   on.exit(dbDisconnect(con))
 
   if (missing(userTags)) userTags = "otherFunctions"
@@ -96,8 +96,8 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
   retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
-  browser(expr = exists("bbbb"))
-  qs::qsave(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".qs")),
+  browser()
+  qs::qsave(file = file.path(.sqliteStorageDir(cacheDir), paste0(cacheId, ".qs")),
             outputToSave)
 
   return(outputToSave)
@@ -119,7 +119,7 @@ loadFromCache <- function(cachePath, cacheId) {
 rmFromCache <- function(cachePath, cacheId, con, drv) {
   browser(expr = exists("cccc"))
   if (missing(con)) {
-    con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
+    con <- dbConnectAll(drv, dir = cacheDir, create = FALSE)
     on.exit(dbDisconnect(con))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html

@@ -238,7 +238,7 @@
 
 .addTagsRepo <- function(isInRepo, cacheDir, lastOne, drv) {
   if (getOption("reproducible.newAlgo", TRUE)) {
-    con <- dbConnect(drv, dbname = file.path(cacheDir, "cache.db"))
+    con <- dbConnectAll(drv, dir = cacheDir, create = FALSE)
     on.exit(dbDisconnect(con))
     dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
                      "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))

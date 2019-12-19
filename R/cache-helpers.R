@@ -649,7 +649,7 @@ setMethod(
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- if (getOption("reproducible.newAlgo", TRUE)) {
-    all(c("cache.db", "cacheObjects") %in% list.files(repoDir))
+    all(c(basename(sqliteFile(repoDir)), "cacheObjects") %in% list.files(repoDir))
   } else {
     all(c("backpack.db", "gallery") %in% list.files(repoDir))
   }
