@@ -250,7 +250,7 @@
     written <- 0
     while (written >= 0) {
       saved <- suppressWarnings(try(silent = TRUE,
-                                    addTagsRepo(isInRepo$artifact[lastOne],
+                                    addTagsRepo(isInRepo[[.cacheTableHashColName()]][lastOne],
                                                 repoDir = cacheRepo,
                                                 tags = paste0("accessed:", Sys.time()))))
       written <- if (is(saved, "try-error")) {
@@ -268,22 +268,24 @@
                          modifiedDots, debugCache, verbose, sideEffect, quick,
                          algo, preDigest, startCacheTime, drv, ...) {
 
-  browser(expr = exists("bbbb"))
   if (verbose > 1) {
     startLoadTime <- Sys.time()
   }
 
+  cacheObj <- isInRepo[[.cacheTableHashColName()]][lastOne]
+
   fromMemoise <- NA
   if (getOption("reproducible.useMemoise")) {
     fromMemoise <-
-      if (memoise::has_cache(.loadFromLocalRepoMem)(isInRepo$artifact[lastOne],
+      if (memoise::has_cache(.loadFromLocalRepoMem)(cacheObj,
                                                     repoDir = cacheRepo, value = TRUE)) {
         TRUE
       } else {
         FALSE
       }
-    loadFromMgs <- "Loading from memoise version of repo"
-    output <- .loadFromLocalRepoMem(isInRepo$artifact[lastOne],
+    loadFromMgs <- "Loading from memoised version of repo"
+    browser(expr = exists("eeee"))
+    output <- .loadFromLocalRepoMem(md5hash = cacheObj,
                                     repoDir = cacheRepo, value = TRUE)
     output <- unmakeMemoisable(output)
     #if (is(output, "simList_")) output <- as(output, "simList")
@@ -293,7 +295,7 @@
       output <- loadFromCache(cacheRepo, isInRepo$cacheId[lastOne])
 
     } else {
-      output <- loadFromLocalRepo(isInRepo$artifact[lastOne],
+      output <- loadFromLocalRepo(cacheObj,
                                   repoDir = cacheRepo, value = TRUE)
     }
   }
@@ -314,6 +316,7 @@
   }
 
   # Class-specific message
+  browser(expr = exists("dddd"))
   .cacheMessage(output, fnDetails$functionName,
                 fromMemoise = fromMemoise)
 

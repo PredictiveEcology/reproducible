@@ -15,6 +15,7 @@ skip_if_no_token <- function() {
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
                      opts = NULL, needGoogle = FALSE) {
 
+  browser()
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else

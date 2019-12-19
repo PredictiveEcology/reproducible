@@ -41,8 +41,14 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
   on.exit(dbDisconnect(con))
 
   if (missing(userTags)) userTags = "otherFunctions"
-  tagKey <- sub(userTags, pattern = ":.*$", replacement = "")
-  tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
+  if (length(userTags) == 0) userTags = "otherFunctions"
+  if (NCOL(userTags) > 1) {
+    tagKey <- userTags$tagKey
+    tagValue <- userTags$tagValue
+  } else {
+    tagKey <- sub(userTags, pattern = ":.*$", replacement = "")
+    tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
+  }
 
   #saveRDS(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".rds")),
   #        outputToSave)
@@ -90,6 +96,7 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
   retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
+  browser(expr = exists("bbbb"))
   qs::qsave(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".qs")),
             outputToSave)
 
@@ -99,6 +106,7 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
 
 
 loadFromCache <- function(cachePath, cacheId) {
+  browser(expr = exists("bbbb"))
   qs::qread(file = file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
   #readRDS(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
 }

@@ -531,7 +531,7 @@ setMethod(
         repo <- cacheRepos[[tries]]
         tries <- tries + 1
         if (getOption("reproducible.newAlgo", TRUE)) {
-          localTags <- showCache(repo)
+          localTags <- showCache(repo, verboseMessaging = FALSE) # This is noisy
           isInRepo <- localTags[cacheId %in% outputHash,]
         } else {
           localTags <- getLocalTags(repo)
@@ -869,8 +869,13 @@ setMethod(
 .namesCacheFormals <- names(.formalsCache)[]
 
 #' @keywords internal
-.loadFromLocalRepoMem2 <- function(md5hash, ...) {
-  out <- loadFromLocalRepo(md5hash, ...)
+.loadFromLocalRepoMem2 <- function(md5hash, repoDir, ...) {
+  browser(expr = exists("eeee"))
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
+  } else {
+    out <- loadFromLocalRepo(md5hash, repoDir = repoDir, ...)
+  }
   out <- makeMemoisable(out)
   return(out)
 }
@@ -1534,4 +1539,21 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
     needFindByTags <- FALSE # it isn't there
   }
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
+}
+
+.cacheNumDefaultTags <- 6
+.cacheTableHashColName <- function() {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    "cacheId"
+  } else {
+    "artifact"
+  }
+}
+
+.cacheTableTagColName <- function() {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    "tagValue"
+  } else {
+    "tag"
+  }
 }

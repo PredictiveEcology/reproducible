@@ -57,6 +57,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName,
                         fromMemoise) {
+    browser(expr = exists("dddd"))
     if (isTRUE(fromMemoise)) {
       message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
                            sep = ""))
@@ -643,6 +644,7 @@ setMethod(
 #' r # now in "rasters" subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE, ...) {
+  browser(expr = exists("gggg"))
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)

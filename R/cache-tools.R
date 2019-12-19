@@ -81,7 +81,7 @@
 #'
 #' # Fine control of cache elements -- pick out only the large runif object, and remove it
 #' cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
-#' toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$artifact
+#' toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700][[.cacheTableHashColName()]]
 #' clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
@@ -182,7 +182,7 @@ setMethod(
     if (isInteractive()) {
       objSizes <- as.numeric(objsDT[tagKey == "object.size"]$tagValue)
       cacheSize <- sum(objSizes) / 4
-      #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
+      #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT[[.cacheTableHashColName()]]), ".rda"))
       #cacheSize <- sum(file.size(rdaFiles))
     }
 
@@ -192,19 +192,14 @@ setMethod(
       hasARaster <- if (getOption("reproducible.newAlgo", TRUE)) {
         (all(!is.na(rastersInRepo$cacheId)) && NROW(rastersInRepo) > 0)
       } else {
-        all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0
+        all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0
       }
       if (hasARaster) {
-        if (getOption("reproducible.newAlgo", TRUE)) {
-          rasterObjSizes <- as.numeric(objsDT[cacheId %in% rastersInRepo$cacheId &
-                                                tagKey == "object.size"]$tagValue)
-          fileBackedRastersInRepo <- rastersInRepo$cacheId[rasterObjSizes < 1e5]
-        } else {
-          rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact &
-                                                tagKey == "object.size"]$tagValue)
-          fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
-        }
-        filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
+        rasterObjSizes <- as.numeric(objsDT[get(.cacheTableHashColName()) %in%
+                                              rastersInRepo[[.cacheTableHashColName()]] &
+                                              tagKey == "object.size"]$tagValue)
+        fileBackedRastersInRepo <- rastersInRepo[[.cacheTableHashColName()]][rasterObjSizes < 1e5]
+      filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
           if (getOption("reproducible.newAlgo", TRUE)) {
             r <- loadFromCache(x, ras)
           } else {
@@ -243,10 +238,11 @@ setMethod(
         unlink(filesToRemove)
       }
 
+      objToGet <- unique(objsDT[[.cacheTableHashColName()]])
       if (getOption("reproducible.newAlgo", TRUE)) {
-        rmFromCache(x, unique(objsDT$cacheId), con, drv)# many = TRUE)
+        rmFromCache(x, objToGet, con, drv)# many = TRUE)
       } else {
-        suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
+        suppressWarnings(rmFromLocalRepo(objToGet, x, many = TRUE))
       }
 
     }
@@ -288,7 +284,7 @@ cc <- function(secs, ...) {
     suppressMessages({theCache <- reproducible::showCache(...)})
     if (NROW(theCache) > 0) {
       accessed <- data.table::setkey(theCache[tagKey == "accessed"], tagValue)
-      clearCache(userTags = tail(accessed, 1)$artifact, ...)
+      clearCache(userTags = tail(accessed, 1)[[.cacheTableHashColName()]], ...)
     } else {
       message("Cache already empty")
     }
@@ -334,6 +330,7 @@ setGeneric("showCache", function(x, userTags = character(), after, before, ...) 
 setMethod(
   "showCache",
   definition = function(x, userTags, after, before, drv = RSQLite::SQLite(), ...) {
+    browser(expr = exists("aaaa"))
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
@@ -342,7 +339,6 @@ setMethod(
     if (missing(before)) before <- Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
-    browser(expr = exists("aaaa"))
     # not seeing userTags
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
@@ -387,12 +383,12 @@ setMethod(
         objsDT <- data.table(splitTagsLocal(x), key = "artifact")
         objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
                                                   (tagValue >= after)][!duplicated(artifact)]
-        objsDT <- objsDT[artifact %in% objsDT3$artifact]
+        objsDT <- objsDT[artifact %in% objsDT3[[.cacheTableHashColName()]]]
       }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           for (ut in userTags) {
-            #objsDT$artifact %in% ut
+            #objsDT[[.cacheTableHashColName()]] %in% ut
             if (getOption("reproducible.newAlgo", TRUE)) {
               objsDT2 <- objsDT[
                 grepl(tagValue, pattern = ut) |
@@ -427,6 +423,7 @@ setMethod(
         }
       }
     }
+    browser(expr = exists("ffff"))
     verboseMessaging <- TRUE
     if (!is.null(list(...)$verboseMessaging)) {
       if (!isTRUE(list(...)$verboseMessaging)) {
@@ -434,11 +431,8 @@ setMethod(
       }
     }
     if (verboseMessaging)
-      if (getOption("reproducible.newAlgo", TRUE)) {
-        .messageCacheSize(x, artifacts = unique(objsDT$cacheId), cacheTable = objsDT)
-      } else {
-        .messageCacheSize(x, artifacts = unique(objsDT$artifact))
-      }
+      .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
+                        cacheTable = objsDT)
     objsDT
 })
 
@@ -464,10 +458,11 @@ setMethod(
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    list(...))
 
-    objsDTAll <- suppressMessages(showCache(x))
+    objsDTAll <- suppressMessages(showCache(x, verboseMessaging = FALSE))
     objsDT <- do.call(showCache, args = args)
-    keep <- unique(objsDT$artifact)
-    eliminate <- unique(objsDTAll$artifact[!(objsDTAll$artifact %in% keep)])
+    keep <- unique(objsDT[[.cacheTableHashColName()]])
+    eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][!(objsDTAll[[.cacheTableHashColName()]] %in% keep)])
+
 
     if (length(eliminate)) {
       #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
@@ -509,38 +504,50 @@ setMethod(
     suppressMessages(cacheFromList <- showCache(cacheFrom))
     suppressMessages(cacheToList <- showCache(cacheTo))
 
-    artifacts <- unique(cacheFromList$artifact)
+    artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
-      if (!(artifact %in% cacheToList$artifact)) {
-        outputToSave <- try(loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
+      browser(expr = exists("gggg"))
+      if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
+        browser(expr = exists("gggg"))
+        outputToSave <- if (getOption("reproducible.newAlgo", TRUE)) {
+          try(loadFromCache(cacheFrom, artifact))
+        } else {
+          try(loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
+        }
         if (is(outputToSave, "try-error")) {
           message("Continuing to load others")
           outputToSave <- NULL
         }
 
         ## Save it
-        written <- FALSE
-        if (is(outputToSave, "Raster")) {
-          outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
-        }
-        userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "class", "date", "cacheId"),
+        userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "date", "cacheId"),
                                             list(tagKey, tagValue)]
-        userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
-        while (!written) {
-          saved <- suppressWarnings(try(
-            saveToLocalRepo(outputToSave, repoDir = cacheTo,
-                            artifactName = NULL,
-                            archiveData = FALSE, archiveSessionInfo = FALSE,
-                            archiveMiniature = FALSE, rememberName = FALSE,
-                            silent = TRUE, userTags = userTags),
-            silent = TRUE
-          ))
-          # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-          written <- if (is(saved, "try-error")) {
-            Sys.sleep(0.05)
-            FALSE
-          } else {
-            TRUE
+        if (getOption("reproducible.newAlgo", TRUE)) {
+          output <- saveToCache(cacheTo, userTags = userTags, outputToSave = outputToSave,
+                                cacheId = artifact)
+        } else {
+
+          written <- FALSE
+          if (is(outputToSave, "Raster")) {
+            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
+          }
+          userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
+          while (!written) {
+            saved <- suppressWarnings(try(
+              saveToLocalRepo(outputToSave, repoDir = cacheTo,
+                              artifactName = NULL,
+                              archiveData = FALSE, archiveSessionInfo = FALSE,
+                              archiveMiniature = FALSE, rememberName = FALSE,
+                              silent = TRUE, userTags = userTags),
+              silent = TRUE
+            ))
+            # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+            written <- if (is(saved, "try-error")) {
+              Sys.sleep(0.05)
+              FALSE
+            } else {
+              TRUE
+            }
           }
         }
         message(artifact, " copied")
@@ -549,40 +556,48 @@ setMethod(
         message("Skipping ", artifact, "; already in ", cacheTo)
       }
     })
-    .messageCacheSize(cacheTo)
+    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo))
 
     return(invisible(cacheTo))
 })
 
 #' @keywords internal
 .messageCacheSize <- function(x, artifacts = NULL, cacheTable) {
-  if (missing(cacheTable))
-    a <- showLocalRepo2(x)
-  else
+  if (missing(cacheTable)) {
+    if (getOption("reproducible.newAlgo", TRUE)) {
+      a <- showCache(x, verboseMessaging = FALSE)
+    } else {
+      a <- showLocalRepo2(x)
+    }
+
+  } else {
     a <- cacheTable
+  }
   if (getOption("reproducible.newAlgo", TRUE)) {
     b <- a[tagKey == "object.size",]
-    fsTotal <- sum(as.numeric(b$tagValue)) / 4
+    fsTotal <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
   } else {
-    b <- a[startsWith(a$tag, "object.size"),]
-    fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+    b <- a[startsWith(a[[.cacheTableTagColName()]], "object.size"),]
+    fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b[[.cacheTableTagColName()]], split = ":"), function(x) x[[2]])))) / 4
   }
   fsTotalRasters <- sum(file.size(dir(file.path(x, "rasters"), full.names = TRUE, recursive = TRUE)))
   fsTotal <- fsTotal + fsTotalRasters
   class(fsTotal) <- "object_size"
   preMessage1 <- "  Total (including Rasters): "
 
+  browser(expr = exists("ffff"))
+  b <- a[a[[.cacheTableHashColName()]] %in% artifacts &
+           startsWith(a$tagKey, "object.size"),]
   if (getOption("reproducible.newAlgo", TRUE)) {
-    b <- a[a$cacheId %in% artifacts & a$tagVale %in% "object.size",]
-    fs<- sum(as.numeric(b$tagValue)) / 4
+    fs<- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
   } else {
-    b <- a[a$artifact %in% artifacts & startsWith(a$tag, "object.size"),]
-    fs <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+    fs <- sum(as.numeric(unlist(lapply(strsplit(b[[.cacheTableTagColName()]], split = ":"), function(x) x[[2]])))) / 4
   }
 
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
+  browser(expr = exists("dddd"))
   message("Cache size: ")
   message(preMessage1, format(fsTotal, "auto"))
   message(preMessage, format(fs, "auto"))
