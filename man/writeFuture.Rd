@@ -4,7 +4,7 @@
 \alias{writeFuture}
 \title{Write to archivist repository, using \code{future::future}}
 \usage{
-writeFuture(written, outputToSave, cacheRepo, userTags)
+writeFuture(written, outputToSave, cacheRepo, userTags, drv, cacheId)
 }
 \arguments{
 \item{written}{Integer. If zero or positive then it needs to be written still.
