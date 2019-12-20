@@ -238,7 +238,7 @@
   return(output)
 }
 
-.addTagsRepo <- function(isInRepo, cacheDir, lastOne, drv) {
+.addTagsRepo <- function(isInRepo, cacheDir, lastOne, drv = RSQLite::SQLite()) {
   if (getOption("reproducible.newAlgo", TRUE)) {
     con <- dbConnectAll(drv, dir = cacheDir, create = FALSE)
     on.exit(dbDisconnect(con))
@@ -268,7 +268,7 @@
 
 .getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
-                         algo, preDigest, startCacheTime, drv, ...) {
+                         algo, preDigest, startCacheTime, drv = RSQLite::SQLite(), ...) {
 
   if (verbose > 1) {
     startLoadTime <- Sys.time()

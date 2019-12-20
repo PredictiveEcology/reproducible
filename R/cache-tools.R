@@ -140,8 +140,12 @@ setMethod(
 
     if (getOption("reproducible.newAlgo", TRUE)) {
       con <- dbConnectAll(drv, dir = x, create = FALSE)
+      if (is.null(con)) {
+        return(invisible(.emptyCacheTable))
+      }
       on.exit({
         #dbClearResult(con)
+        browser(expr = exists("onexit"))
         dbDisconnect(con)
         })
     }
@@ -353,7 +357,13 @@ setMethod(
     browser(expr = exists("ffff"))
     if (getOption("reproducible.newAlgo", TRUE)) {
       con <- dbConnectAll(drv, dir = x, create = FALSE)
-      on.exit({ dbDisconnect(con) })
+      if (is.null(con)) {
+        return(invisible(.emptyCacheTable))
+        }
+      on.exit({
+        browser(expr = exists("onexit"))
+        dbDisconnect(con)
+        })
       tab <- try(dbReadTable(con, "dt"), silent = TRUE)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
@@ -485,7 +495,7 @@ setMethod(
 #' objects themselves.
 #'
 #' @rdname mergeCache
-setGeneric("mergeCache", function(cacheTo, cacheFrom) {
+setGeneric("mergeCache", function(cacheTo, cacheFrom, drv) {
   standardGeneric("mergeCache")
 })
 
@@ -493,7 +503,7 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom) {
 #' @rdname mergeCache
 setMethod(
   "mergeCache",
-  definition = function(cacheTo, cacheFrom) {
+  definition = function(cacheTo, cacheFrom, drv = RSQLite::SQLite()) {
     suppressMessages(cacheFromList <- showCache(cacheFrom))
     suppressMessages(cacheToList <- showCache(cacheTo))
 
@@ -522,7 +532,7 @@ setMethod(
 
           written <- FALSE
           if (is(outputToSave, "Raster")) {
-            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
+            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo, drv = drv)
           }
           userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
           while (!written) {

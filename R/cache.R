@@ -541,6 +541,7 @@ setMethod(
         }
       }
 
+      browser(expr = exists("nnnn"))
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
       )
@@ -558,13 +559,13 @@ setMethod(
         needFindByTags <- devModeOut$needFindByTags
       }
 
-      browser(expr = exists("ffff"))
       if (identical("overwrite", useCache)  && NROW(isInRepo) > 0 || needFindByTags) {
         suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE))
         if (identical("devMode", useCache)) {
-          isInRepo <- isInRepo[!isInRepo[[.cacheTableTagColName()]] %in% userTags, , drop = FALSE]
+          userTagsSimple <- gsub(".*:(.*)", "\\1", userTags)
+          isInRepo <- isInRepo[!isInRepo[[.cacheTableTagColName()]] %in% userTagsSimple, , drop = FALSE]
           outputHash <- outputHashNew
-          message("Overwriting Cache entry with userTags: '",paste(userTags, collapse = ", ") ,"'")
+          message("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'")
         } else {
           isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
           message("Overwriting Cache entry with function '",fnDetails$functionName ,"'")
@@ -623,7 +624,8 @@ setMethod(
         newFileName <- paste0(outputHash,".rda")
         isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
         if (any(isInCloud)) {
-          output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID)
+          output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
+                                  drv = drv)
           if (is.null(output)) {
             retry(drive_rm(as_id(gdriveLs$id[isInCloud])))
             isInCloud[isInCloud] <- FALSE
@@ -706,10 +708,10 @@ setMethod(
         if (any(rasters)) {
           if (outputToSaveIsList) {
             outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-              .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE))
+              .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE, drv = drv))
           } else {
             outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
-                                                     overwrite = FALSE)
+                                                     overwrite = FALSE, drv = drv)
           }
 
           # have to reset all these attributes on the rasters as they were undone in prev steps
@@ -964,7 +966,8 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #' @export
 #' @importFrom archivist saveToLocalRepo
 #' @importFrom stats runif
-writeFuture <- function(written, outputToSave, cacheRepo, userTags, drv, cacheId) {
+writeFuture <- function(written, outputToSave, cacheRepo, userTags, drv = RSQLite::SQLite(),
+                        cacheId) {
   counter <- 0
   if (!file.exists(.sqliteFile(cacheRepo))) {
     stop("That cacheRepo does not exist")
@@ -1520,11 +1523,13 @@ getCacheRepos <- function(cacheRepo, modifiedDots) {
 
 devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose,
                        isInRepo, outputHash) {
+  browser(expr = exists("devMode"))
+  userTags <- gsub(".*:(.*)", "\\1", userTags)
   isInRepoAlt <- localTags[localTags[[.cacheTableTagColName()]] %in% userTags, , drop = FALSE]
   data.table::setDT(isInRepoAlt)
   if (NROW(isInRepoAlt) > 0)
-    isInRepoAlt <- isInRepoAlt[, iden := identical(sum(.cacheTableTagColName() %in% userTags), length(userTags)),
-                               by = list(.cacheTableHashColName())][iden == TRUE]
+    isInRepoAlt <- isInRepoAlt[, iden := identical(sum(get(.cacheTableTagColName()) %in% userTags), length(userTags)),
+                               by = eval(.cacheTableHashColName())][iden == TRUE]
   if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt[[.cacheTableHashColName()]])) == 1) {
     newLocalTags <- localTags[localTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]],]
     tags1 <- grepl(paste0("(",
@@ -1532,7 +1537,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
                                 "name", "object.size", "otherFunctions", "preDigest",
                                 sep = "|"),
                           ")"),
-                   newLocalTags[[.cacheTableTagColName()]])
+                   newLocalTags[["tagKey"]])
     localTagsAlt <- newLocalTags[!tags1,]
     if (all(localTagsAlt[[.cacheTableTagColName()]] %in% userTags)) {
       mess <- capture.output(type = "output", {
@@ -1547,8 +1552,14 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 
       if (similarsHaveNA < 2) {
         verboseMessage1(verbose, userTags)
-        outputHash <- gsub("cacheId:", "", newLocalTags[newLocalTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]] & #nolint
-                                                          startsWith(newLocalTags[[.cacheTableTagColName()]], "cacheId"), ][[.cacheTableTagColName()]]) #nolint
+        if (getOption("reproducible.newAlgo", TRUE)) {
+          uniqueCacheId <- unique(isInRepoAlt[[.cacheTableHashColName()]])
+          outputHash <- uniqueCacheId[uniqueCacheId %in% newLocalTags[[.cacheTableHashColName()]]]
+        } else {
+          outputHash <- gsub("cacheId:", "", newLocalTags[newLocalTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]] & #nolint
+                                                            startsWith(newLocalTags[[.cacheTableTagColName()]], "cacheId"), ][[.cacheTableTagColName()]]) #nolint
+
+        }
         isInRepo <- isInRepoAlt
       } else {
         verboseMessage2(verbose)
@@ -1607,4 +1618,14 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   }
   filename <- paste(hash, csExtension, sep = ".")
   file.path(.sqliteStorageDir(dir), filename)
+}
+
+.cacheIsACache <- function(drv, dir) {
+  ret <- FALSE
+  if (is(drv, "SQLiteDriver")) {
+    ret <- all(basename2(c(.sqliteFile(dir), .sqliteStorageDir(dir))) %in%
+                 list.files(dir))
+  } # other types of drv, e.g., Postgres can be done via env vars
+
+  return(ret)
 }

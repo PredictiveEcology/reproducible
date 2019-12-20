@@ -118,12 +118,12 @@ setMethod("Copy",
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "Raster"),
-          definition = function(object, filebackedDir, ...) {
+          definition = function(object, filebackedDir, drv = RSQLite::SQLite(), ...) {
             if (missing(filebackedDir)) {
               filebackedDir <- tempdir2(rndstr(1, 8))
             }
             if (!is.null(filebackedDir))
-              object <- .prepareFileBackedRaster(object, repoDir = filebackedDir)
+              object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv)
             object
           })
 

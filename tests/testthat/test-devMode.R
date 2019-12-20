@@ -6,9 +6,6 @@ test_that("test devMode", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  browser()
-  aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
-
   clearCache(tmpdir, ask = FALSE)
   theTags <- "hiTest"
   centralTendency <- function(x)
@@ -18,7 +15,7 @@ test_that("test devMode", {
   ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpdir,
                     userTags = uniqueUserTags) # sets new value to Cache
   a <- showCache(tmpdir) # 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474
-  expect_true(NROW(unique(a$artifact)) == 1)
+  expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 1)
 
   # During development, we often redefine function internals
   centralTendency <- function(x)
@@ -27,14 +24,16 @@ test_that("test devMode", {
   #   never again be defined that way. Here, because of userTags being the same,
   #   it will replace the entry in the Cache, effetively overwriting it, even though
   #   it has a different cacheId
+  # onexit <<- ffff <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
+  llll <<- 1 #devMode <<- nnnn <<- 1
   ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpdir, userTags = uniqueUserTags)
   a <- showCache(tmpdir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
-  expect_true(NROW(unique(a$artifact)) == 1)
+  expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 1)
 
   # If it finds it by cacheID, doesn't matter what the userTags are
   ranNumsD <- Cache(centralTendency, funnyData, cacheRepo = tmpdir, userTags = "thisIsUnique")
   a <- showCache(tmpdir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
-  expect_true(NROW(unique(a$artifact)) == 1)
+  expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 1)
 
   ###### If you don't use userTags -- it acts like normal
   ranNumsE <- Cache(centralTendency, 1:10, cacheRepo = tmpdir)
@@ -43,20 +42,20 @@ test_that("test devMode", {
   ranNumsF <- Cache(centralTendency, 1:10, cacheRepo = tmpdir)
 
   a <- showCache(tmpdir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
-  expect_true(NROW(unique(a$artifact)) == 3)
+  expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 3)
 
   centralTendency <- function(x)
     median(x)
   ranNumsG <- Cache(centralTendency, 1:11, cacheRepo = tmpdir, userTags = theTags)
   a <- showCache(tmpdir) # 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b
-  expect_true(NROW(unique(a$artifact)) == 4)
+  expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 4)
 
   centralTendency <- function(x)
     sort(table(x))[1]
   ranNumsH <- Cache(centralTendency, 1:11, cacheRepo = tmpdir, userTags = theTags)
 
   a <- showCache(tmpdir) #
-  expect_true(NROW(unique(a$artifact)) == 4)
+  expect_true(NROW(unique(a[[.cacheTableHashColName()]])) == 4)
 
   # Test multiple with same userTags, ie, not unambiguous
   opt <- options("reproducible.useCache" = TRUE)
@@ -75,6 +74,6 @@ test_that("test devMode", {
   ranNumsH <- Cache(centralTendency, 1:11, cacheRepo = tmpdir, userTags = theTags)
   ranNumsI <- Cache(rnorm, 15, cacheRepo = tmpdir, userTags = theTags)
   a <- showCache(tmpdir) # 2 unique artifacts because VERY different
-  expect_true(length(unique(a$artifact)) == 2)
+  expect_true(length(unique(a[[.cacheTableHashColName()]])) == 2)
 
 })

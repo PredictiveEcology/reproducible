@@ -65,10 +65,10 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
     atts <- attributes(outputToSave)
     if (outputToSaveIsList) {
       outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-        .prepareFileBackedRaster(x, repoDir = cacheDir, overwrite = FALSE))
+        .prepareFileBackedRaster(x, repoDir = cacheDir, overwrite = FALSE, drv = drv))
     } else {
       outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheDir,
-                                               overwrite = FALSE)
+                                               overwrite = FALSE, drv = drv)
     }
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
@@ -96,7 +96,6 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
   retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
-  browser(expr = exists("gggg"))
   qs::qsave(file = .sqliteStoredFile(cacheDir, cacheId), outputToSave)
 
   return(outputToSave)
@@ -115,7 +114,7 @@ loadFromCache <- function(cachePath, cacheId) {
 #' @importFrom DBI dbClearResult dbSendStatement dbBind
 #' @export
 #' @rdname cacheTools
-rmFromCache <- function(cachePath, cacheId, con, drv) {
+rmFromCache <- function(cachePath, cacheId, con, drv = RSQLite::SQLite()) {
   browser(expr = exists("cccc"))
   if (missing(con)) {
     con <- dbConnectAll(drv, dir = cacheDir, create = FALSE)
