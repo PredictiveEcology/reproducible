@@ -6,6 +6,9 @@ test_that("test devMode", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
+  browser()
+  aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
+
   clearCache(tmpdir, ask = FALSE)
   theTags <- "hiTest"
   centralTendency <- function(x)
