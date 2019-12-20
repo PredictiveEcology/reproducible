@@ -200,7 +200,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }, add = TRUE)
   a <- Cache(rnorm, 1, cacheRepo = tmpCache)
   mess <- capture_messages(clearCache(cacheRepo = tmpCache))
-  expect_true(grepl("x not specified, but cacheRepo is", mess))
+  expect_true(any(grepl("x not specified, but cacheRepo is", mess)))
   expect_error(clearCache(x = tmpCache, useCloud = TRUE,
                           cloudFolderID = NULL))
 
