@@ -18,7 +18,7 @@ test_that("test cached downloads", {
 
   out <- createCache(outdir)
   # sideE <<- gggg <<- 1
-  storageDir <- .sqliteStorageDir(outdir)
+  storageDir <- .cacheStorageDir(outdir)
   # Cache download first run. File is downloaded. checksum is logged in backpack.
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),

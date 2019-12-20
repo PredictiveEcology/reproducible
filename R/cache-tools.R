@@ -99,7 +99,7 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        drv = RSQLite::SQLite(), ...) {
+                        drv = RSQLite::SQLite(), conn = NULL, ...) {
     # isn't clearing the raster bacekd file
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
@@ -139,15 +139,13 @@ setMethod(
     }
 
     if (getOption("reproducible.newAlgo", TRUE)) {
-      con <- dbConnectAll(drv, dir = x, create = FALSE)
-      if (is.null(con)) {
+      if (is.null(conn)) {
+        conn <- dbConnectAll(drv, dir = cachePath, create = FALSE)
+      }
+      if (is.null(conn)) {
         return(invisible(.emptyCacheTable))
       }
-      on.exit({
-        #dbClearResult(con)
-        browser(expr = exists("onexit"))
-        dbDisconnect(con)
-        })
+      on.exit(dbDisconnect(conn))
     }
 
     if (clearWholeCache) {
@@ -166,7 +164,7 @@ setMethod(
         }
 
       }
-      unlink(.sqliteStorageDir(x), recursive = TRUE)
+      unlink(.cacheStorageDir(x), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
       unlink(.sqliteFile(x))
 
@@ -237,7 +235,7 @@ setMethod(
 
       objToGet <- unique(objsDT[[.cacheTableHashColName()]])
       if (getOption("reproducible.newAlgo", TRUE)) {
-        rmFromCache(x, objToGet, con, drv)# many = TRUE)
+        rmFromCache(x, objToGet, conn, drv)# many = TRUE)
       } else {
         suppressWarnings(rmFromLocalRepo(objToGet, x, many = TRUE))
       }
@@ -348,23 +346,25 @@ setMethod(
     }
 
 
-    # res <- DBI::dbSendQuery(con, "SELECT cacheId FROM dt WHERE tagValue = 'randomPolyToDisk'")
+    # res <- DBI::dbSendQuery(conn, "SELECT cacheId FROM dt WHERE tagValue = 'randomPolyToDisk'")
     # res1 <- DBI::dbFetch(res)
     # DBI::dbClearResult(res)
-    # res <- DBI::dbSendQuery(con, paste0("SELECT * FROM dt WHERE cacheId = '", res1$cacheId, "'"))
+    # res <- DBI::dbSendQuery(conn, paste0("SELECT * FROM dt WHERE cacheId = '", res1$cacheId, "'"))
     # res1 <- DBI::dbFetch(res)
 
     browser(expr = exists("ffff"))
     if (getOption("reproducible.newAlgo", TRUE)) {
-      con <- dbConnectAll(drv, dir = x, create = FALSE)
-      if (is.null(con)) {
+      if (is.null(conn)) {
+        conn <- dbConnectAll(drv, dir = x, create = FALSE)
+      }
+
+      if (is.null(conn)) {
         return(invisible(.emptyCacheTable))
         }
       on.exit({
-        browser(expr = exists("onexit"))
-        dbDisconnect(con)
+        dbDisconnect(conn)
         })
-      tab <- try(dbReadTable(con, "dt"), silent = TRUE)
+      tab <- try(dbReadTable(conn, "dt"), silent = TRUE)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
       else
@@ -487,6 +487,8 @@ setMethod(
 #'                that will become larger, i.e., merge into this
 #' @param cacheFrom The cache repository (character string of the file path)
 #'                  from which all objects will be taken and copied from
+#' @param drvTo The database driver for the \code{cacheTo}.
+#' @param drvFrom The database driver for the \code{cacheFrom}
 #'
 #' @details
 #' This is still experimental
@@ -495,7 +497,7 @@ setMethod(
 #' objects themselves.
 #'
 #' @rdname mergeCache
-setGeneric("mergeCache", function(cacheTo, cacheFrom, drv) {
+setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo, drvFrom) {
   standardGeneric("mergeCache")
 })
 
@@ -503,9 +505,10 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom, drv) {
 #' @rdname mergeCache
 setMethod(
   "mergeCache",
-  definition = function(cacheTo, cacheFrom, drv = RSQLite::SQLite()) {
-    suppressMessages(cacheFromList <- showCache(cacheFrom))
-    suppressMessages(cacheToList <- showCache(cacheTo))
+  definition = function(cacheTo, cacheFrom, drvTo = RSQLite::SQLite(),
+                        drvFrom = RSQLite::SQLite()) {
+    suppressMessages(cacheFromList <- showCache(cacheFrom, drv = drvFrom))
+    suppressMessages(cacheToList <- showCache(cacheTo, drv = drvTo))
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
@@ -532,7 +535,7 @@ setMethod(
 
           written <- FALSE
           if (is(outputToSave, "Raster")) {
-            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo, drv = drv)
+            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
           }
           userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
           while (!written) {
@@ -720,14 +723,3 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
 
 
 
-dbConnectAll <- function(drv, dir, create = TRUE) {
-  args <- list(drv = drv)
-  if (is(drv, "SQLiteDriver")) {
-    if (!file.exists(.sqliteFile(dir)))
-      if (isFALSE(create)) {
-        return(invisible())
-      }
-    args <- append(args, list(dbname = .sqliteFile(dir)))
-  } # other types of drv, e.g., Postgres can be done via env vars
-  do.call(dbConnect, args)
-}

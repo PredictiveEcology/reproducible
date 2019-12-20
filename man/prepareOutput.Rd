@@ -19,6 +19,10 @@
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{...}{Arguments of \code{FUN} function .}
+
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
 }
 \value{
 The object, modified

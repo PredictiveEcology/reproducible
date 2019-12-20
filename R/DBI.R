@@ -10,35 +10,47 @@
 
 #' Create a new cache
 #'
-#' @param cacheDir A path describing the directory in which to create
+#' @param cachePath A path describing the directory in which to create
 #'   the database file(s)
 #' @param drv A driver, passed to \code{dbConnect}
-#' @param force If
+#' @param force Logical. Should it create a cache in the \code{cachePath},
+#'   even if it already exists, overwriting.
 #' # replaces archivist::createLocalRepo
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #' @importFrom data.table data.table
+#' @inheritParams DBI::dbConnect
+#' @inheritParams DBI::dbWriteTable
 #' @rdname cacheTools
-createCache <- function(cacheDir, drv = RSQLite::SQLite(), force = FALSE) {
-  dbPath <- .sqliteFile(cacheDir) # file.path(cacheDir, "cache.db")
-  alreadyExists <- dir.exists(cacheDir) && file.exists(dbPath) && dir.exists(file.path(cacheDir, "cacheObjects"))
+createCache <- function(cachePath, drv = RSQLite::SQLite(), conn = NULL, force = FALSE) {
+  dbPath <- .sqliteFile(cachePath) # file.path(cachePath, "cache.db")
+  browser()
+  alreadyExists <- .cacheIsACache(cachePath)
   if (alreadyExists && force == FALSE) {
-    message("Cache already exists at ", cacheDir, " and force = FALSE. Not creating new cache.")
-    return(invisible(cacheDir))
+    message("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
+    return(invisible(cachePath))
   }
 
-  checkPath(cacheDir, create = TRUE)
-  checkPath(.sqliteStorageDir(cacheDir), create = TRUE)
-  con <- dbConnectAll(drv, dir = cacheDir)
-  on.exit(dbDisconnect(con))
+  checkPath(cachePath, create = TRUE)
+  checkPath(.cacheStorageDir(cachePath), create = TRUE)
+  if (is.null(conn)) {
+    conn <- dbConnectAll(drv, dir = cachePath)
+    on.exit(dbDisconnect(conn))
+  }
   dt <- .emptyCacheTable
-  dbWriteTable(con, "dt", dt, overwrite = TRUE, field.types = c(createdDate = "timestamp"))
+  dbWriteTable(conn, "dt", dt, overwrite = TRUE,
+               field.types = c(cacheId = "text", tagKey = "text",
+                               tagValue = "text", createdDate = "text"))
 }
 
 #' @rdname cacheTools
-saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
+#' @importFrom qs qsave
+saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
+                        conn = NULL,
                         outputToSave, userTags, cacheId) {
-  con <- dbConnectAll(drv, dir = cacheDir)
-  on.exit(dbDisconnect(con))
+  if (is.null(conn)) {
+    conn <- dbConnectAll(drv, dir = cachePath)
+    on.exit(dbDisconnect(conn))
+  }
 
   if (missing(userTags)) userTags = "otherFunctions"
   if (length(userTags) == 0) userTags = "otherFunctions"
@@ -50,10 +62,6 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
     tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
   }
 
-  #saveRDS(file = file.path(cacheDir, "cacheObjects", paste0(cacheId, ".rds")),
-  #        outputToSave)
-
-  browser(expr = exists("aaaa"))
   outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
   if (outputToSaveIsList) {
     rasters <- unlist(lapply(outputToSave, is, "Raster"))
@@ -65,9 +73,9 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
     atts <- attributes(outputToSave)
     if (outputToSaveIsList) {
       outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-        .prepareFileBackedRaster(x, repoDir = cacheDir, overwrite = FALSE, drv = drv))
+        .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv))
     } else {
-      outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheDir,
+      outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cachePath,
                                                overwrite = FALSE, drv = drv)
     }
 
@@ -95,8 +103,9 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
-  retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
-  qs::qsave(file = .sqliteStoredFile(cacheDir, cacheId), outputToSave)
+  retry(dbWriteTable(conn, "dt", dt, append=TRUE, row.names = FALSE),
+        retries = 15)
+  qs::qsave(file = .cacheStoredFile(cachePath, cacheId), outputToSave)
 
   return(outputToSave)
 
@@ -105,10 +114,9 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
 
 #' @export
 #' @rdname cacheTools
+#' @importFrom qs qread
 loadFromCache <- function(cachePath, cacheId) {
-  browser(expr = exists("bbbb"))
-  qs::qread(file = .sqliteStoredFile(cachePath, cacheId))
-  #readRDS(file.path(cachePath, "cacheObjects", paste0(cacheId, ".rds")))
+  qs::qread(file = .cacheStoredFile(cachePath, cacheId))
 }
 
 #' Low level tools to work with Cache
@@ -116,76 +124,33 @@ loadFromCache <- function(cachePath, cacheId) {
 #' @importFrom DBI dbClearResult dbSendStatement dbBind
 #' @export
 #' @rdname cacheTools
-rmFromCache <- function(cachePath, cacheId, con, drv = RSQLite::SQLite()) {
-  browser(expr = exists("cccc"))
-  if (missing(con)) {
-    con <- dbConnectAll(drv, dir = cacheDir, create = FALSE)
-    on.exit(dbDisconnect(con))
+rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
+                        conn = NULL) {
+  if (is.null(conn)) {
+    conn <- dbConnectAll(drv, dir = cachePath, create = FALSE)
+    on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  query <- paste0("DELETE FROM dt WHERE [cacheId] = $cacheIds")
-  res <- dbSendStatement(con, query)
-  dbBind(res, list(cacheIds = cacheId))
+  query <- paste0("DELETE FROM dt WHERE \"cacheId\" = $1")
+  res <- dbSendStatement(conn, query)
+  dbBind(res, list(cacheId))
+
   dbClearResult(res)
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
 
-
 }
-# saveToLocalRepo(
-#   outputToSave,
-#   repoDir = cacheRepo,
-#   artifactName = NULL,
-#   archiveData = FALSE,
-#   archiveSessionInfo = FALSE,
-#   archiveMiniature = FALSE,
-#   rememberName = FALSE,
-#   silent = TRUE,
-#   userTags = userTags
-# )
-#
-# unction (repoDir, force = FALSE, default = FALSE)
-# {
-#   stopifnot(is.character(repoDir), length(repoDir) == 1)
-#   stopifnot(is.logical(default), length(default) == 1)
-#   if (file.exists(repoDir) & file.exists(paste0(repoDir, "/backpack.db")) &
-#       !force) {
-#     message(paste0("Directory ", repoDir, " does exist and contain the backpack.db file. Use force=TRUE to reinitialize."))
-#     return(invisible(repoDir))
-#   }
-#   if (file.exists(repoDir) & file.exists(paste0(repoDir, "/backpack.db")) &
-#       force) {
-#     message(paste0("Directory ", repoDir, " does exist and contain the backpack.db file. Reinitialized due to force=TRUE."))
-#   }
-#   if (!file.exists(repoDir)) {
-#     dir.create(repoDir)
-#   }
-#   backpack <- getConnectionToDB(repoDir)
-#   artifact <- data.frame(md5hash = "", name = "",
-#                          createdDate = as.character(now()), stringsAsFactors = FALSE)
-#   tag <- data.frame(artifact = "", tag = "", createdDate = as.character(now()),
-#                     stringsAsFactors = FALSE)
-#   dbWriteTable(backpack, "artifact", artifact, overwrite = TRUE,
-#                row.names = FALSE)
-#   dbWriteTable(backpack, "tag", tag, overwrite = TRUE,
-#                row.names = FALSE)
-#   dbExecute(backpack, "delete from artifact")
-#   dbExecute(backpack, "delete from tag")
-#   dbDisconnect(backpack)
-#   if (!file.exists(file.path(repoDir, "gallery"))) {
-#     dir.create(file.path(repoDir, "gallery"), showWarnings = FALSE)
-#   }
-#   if (default) {
-#     setLocalRepo(repoDir)
-#   }
-#   return(invisible(repoDir))
-# }
-# <bytecode: 0x000001a4f35f1750>
-#   <environment: namespace:archivist>
-#   >
-#
-#   
-#
-# 
+
+dbConnectAll <- function(drv, dir, create = TRUE) {
+  args <- list(drv = drv)
+  if (is(drv, "SQLiteDriver")) {
+    if (.cacheIsACache(drv = drv, dir = dir))
+      if (isFALSE(create)) {
+        return(invisible())
+      }
+    args <- append(args, list(dbname = .sqliteFile(dir)))
+  } # other types of drv, e.g., Postgres can be done via env vars
+  do.call(dbConnect, args)
+}
 
 .emptyCacheTable <- data.table(cacheId = character(), tagKey = character(),
                                tagValue = character(), createdDate = character())

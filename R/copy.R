@@ -116,6 +116,7 @@ setMethod("Copy",
           })
 
 #' @rdname Copy
+#' @inheritParams DBI::dbConnect
 setMethod("Copy",
           signature(object = "Raster"),
           definition = function(object, filebackedDir, drv = RSQLite::SQLite(), ...) {

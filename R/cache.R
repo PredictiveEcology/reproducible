@@ -277,6 +277,7 @@ if (getRversion() >= "3.1.0") {
 #'        objects.
 #'
 #' @inheritParams digest::digest
+#' @inheritParams DBI::dbConnect
 #'
 #' @param digestPathContent Being deprecated. Use \code{quick}.
 #'
@@ -431,8 +432,8 @@ setMethod(
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-        all(file.exists(c(.sqliteFile(cacheRepo),
-                                    .sqliteStorageDir(cacheRepo))))}))
+        .cacheIsACache(drv = drv, dir = cacheRepo)
+      }))
 
       if (any(!isIntactRepo)) {
         if (getOption("reproducible.newAlgo", TRUE))
@@ -522,13 +523,12 @@ setMethod(
         message("Retrieving file list in cloud folder")
         gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
       }
-      browser(expr = exists("ffff"))
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         tries <- tries + 1
         browser(expr = exists("ffff"))
         if (getOption("reproducible.newAlgo", TRUE)) {
-          localTags <- showCache(repo, verboseMessaging = FALSE) # This is noisy
+          localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
           isInRepo <- localTags[cacheId %in% outputHash,]
         } else {
           localTags <- getLocalTags(repo)
@@ -578,7 +578,7 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          objSize <- file.size(.sqliteStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
+          objSize <- file.size(.cacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
           class(objSize) <- "object_size"
           if (objSize > 1e6)
             message(crayon::blue(paste0("  ...(Object to retrieve is large: ", format(objSize, units = "auto"), ")")))
@@ -810,9 +810,8 @@ setMethod(
         class(otsObjSize) <- "object_size"
         if (otsObjSize > 1e7)
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
-        browser(expr = exists("aaaa"))
         if (getOption("reproducible.newAlgo", TRUE)) {
-          output <- saveToCache(cacheDir = cacheRepo, drv = drv, userTags = userTags,
+          output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                                outputToSave = outputToSave, cacheId = outputHash)
         } else {
           while (written >= 0) {
@@ -969,7 +968,7 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 writeFuture <- function(written, outputToSave, cacheRepo, userTags, drv = RSQLite::SQLite(),
                         cacheId) {
   counter <- 0
-  if (!file.exists(.sqliteFile(cacheRepo))) {
+  if (.cacheIsACache(drv = drv, dir = cacheRepo)) {
     stop("That cacheRepo does not exist")
   }
 
@@ -977,7 +976,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags, drv = RSQLit
     if (missing(cacheId)) {
       cacheId <- .robustDigest(outputToSave)
     }
-    output <- saveToCache(cacheDir = cacheRepo, drv = drv, userTags = userTags,
+    output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                         outputToSave = outputToSave, cacheId = cacheId)
     saved <- cacheId
   } else {
@@ -1599,7 +1598,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 
 }
 
-.sqliteStorageDir <- function(dir) {
+.cacheStorageDir <- function(dir) {
   if (getOption("reproducible.newAlgo", TRUE)) {
     file.path(dir, "cacheOutputs")
   } else {
@@ -1607,23 +1606,23 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   }
 }
 
-.sqliteStoredFile <- function(dir, hash) {
+.cacheStoredFile <- function(dir, hash) {
   csf <- getOption("reproducible.cacheSaveFormat", "qs")
   csExtension <- if (csf == "qs") {
     "qs"
-  } else if (cfs == "rds") {
+  } else if (csf == "rds") {
     "rds"
   } else {
     "rda"
   }
   filename <- paste(hash, csExtension, sep = ".")
-  file.path(.sqliteStorageDir(dir), filename)
+  file.path(.cacheStorageDir(dir), filename)
 }
 
 .cacheIsACache <- function(drv, dir) {
   ret <- FALSE
   if (is(drv, "SQLiteDriver")) {
-    ret <- all(basename2(c(.sqliteFile(dir), .sqliteStorageDir(dir))) %in%
+    ret <- all(basename2(c(.sqliteFile(dir), .cacheStorageDir(dir))) %in%
                  list.files(dir))
   } # other types of drv, e.g., Postgres can be done via env vars
 

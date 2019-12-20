@@ -36,6 +36,10 @@ pre-copied object and post-copied object would have the same
 file backing them.}
 
 \item{...}{Only used for custom Methods}
+
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
 }
 \description{
 When copying environments and all the objects contained within them, there are

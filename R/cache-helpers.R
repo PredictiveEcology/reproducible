@@ -257,6 +257,7 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
 
 #' @export
 #' @rdname prepareOutput
+#' @importFrom RSQLite SQLite
 setMethod(
   ".prepareOutput",
   signature = "RasterLayer",
@@ -592,11 +593,11 @@ setGeneric("clearStubArtifacts", function(repoDir = NULL) {
 setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
-    if (getOption("reproducible.newAlgo")) {
+    if (getOption("reproducible.newAlgo", TRUE)) {
       ret <- NULL
     } else {
       md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
-      listFiles <- dir(.sqliteStorageDir(repoDir)) %>%
+      listFiles <- dir(.cacheStorageDir(repoDir)) %>%
         strsplit(".rda") %>%
         unlist()
       toRemove <- !(md5hashInBackpack %in% listFiles)

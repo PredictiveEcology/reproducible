@@ -145,7 +145,7 @@
       if (file.exists(chcksumPath)) {
         checkDigest <- TRUE
       } else {
-        checkCopy <- file.path(.sqliteStorageDir(cacheRepo), basename(chcksumName))
+        checkCopy <- file.path(.cacheStorageDir(cacheRepo), basename(chcksumName))
         if (file.exists(checkCopy)) {
           chcksumPath <- checkCopy
           checkDigest <- TRUE
@@ -190,7 +190,7 @@
   }
 
   if (NROW(fromCopy)) {
-    repoTo <- .sqliteStorageDir(cacheRepo)
+    repoTo <- .cacheStorageDir(cacheRepo)
     lapply(fromCopy, function(x) {
       file.copy(from = file.path(repoTo, basename(x)),
                 to = file.path(cacheRepo), recursive = TRUE)
@@ -228,7 +228,7 @@
       stop("There is an unknown error 01")
 
     if (makeCopy) {
-      repoTo <- .sqliteStorageDir(cacheRepo)
+      repoTo <- .cacheStorageDir(cacheRepo)
       checkPath(repoTo, create = TRUE)
       lapply(dwdFlst, function(x) {
         file.copy(from = x, to = file.path(repoTo), recursive = TRUE)
@@ -238,14 +238,18 @@
   return(output)
 }
 
-.addTagsRepo <- function(isInRepo, cacheDir, lastOne, drv = RSQLite::SQLite()) {
+.addTagsRepo <- function(isInRepo, cachePath, lastOne,
+                         drv = RSQLite::SQLite(), conn = NULL) {
   if (getOption("reproducible.newAlgo", TRUE)) {
-    con <- dbConnectAll(drv, dir = cacheDir, create = FALSE)
-    on.exit(dbDisconnect(con))
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, dir = cachePath, create = FALSE)
+      on.exit(dbDisconnect(conn))
+    }
     dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
                      "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
 
-    retry(dbWriteTable(con, "dt", dt, append=TRUE, row.names = FALSE), retries = 15)
+    retry(dbWriteTable(conn, "dt", dt, append=TRUE, row.names = FALSE),
+          retries = 15)
 
   } else {
 
@@ -253,7 +257,7 @@
     while (written >= 0) {
       saved <- suppressWarnings(try(silent = TRUE,
                                     addTagsRepo(isInRepo[[.cacheTableHashColName()]][lastOne],
-                                                repoDir = cacheRepo,
+                                                repoDir = cachePath,
                                                 tags = paste0("accessed:", Sys.time()))))
       written <- if (is(saved, "try-error")) {
         Sys.sleep(sum(runif(written + 1,0.05, 0.1)))

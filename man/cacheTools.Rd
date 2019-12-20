@@ -3,22 +3,36 @@
 \name{createCache}
 \alias{createCache}
 \alias{saveToCache}
+\alias{loadFromCache}
 \alias{rmFromCache}
 \title{Create a new cache}
 \usage{
-createCache(cacheDir, drv = RSQLite::SQLite(), force = FALSE)
+createCache(cachePath, drv = RSQLite::SQLite(), conn = NULL, force = FALSE)
 
-saveToCache(cacheDir, drv = RSQLite::SQLite(), outputToSave, userTags, cacheId)
+saveToCache(
+  cachePath,
+  drv = RSQLite::SQLite(),
+  conn = NULL,
+  outputToSave,
+  userTags,
+  cacheId
+)
 
-rmFromCache(cachePath, cacheId, con, drv = RSQLite::SQLite())
+loadFromCache(cachePath, cacheId)
+
+rmFromCache(cachePath, cacheId, drv = RSQLite::SQLite(), conn = NULL)
 }
 \arguments{
-\item{cacheDir}{A path describing the directory in which to create
+\item{cachePath}{A path describing the directory in which to create
 the database file(s)}
 
 \item{drv}{A driver, passed to \code{dbConnect}}
 
-\item{force}{If
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
+
+\item{force}{Logical. Should it create a cache in the \code{cachePath},
+  even if it already exists, overwriting.
 # replaces archivist::createLocalRepo}
 }
 \description{

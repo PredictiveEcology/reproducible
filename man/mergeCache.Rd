@@ -5,9 +5,14 @@
 \alias{mergeCache,ANY-method}
 \title{Merge two cache repositories together}
 \usage{
-mergeCache(cacheTo, cacheFrom, drv)
+mergeCache(cacheTo, cacheFrom, drvTo, drvFrom)
 
-\S4method{mergeCache}{ANY}(cacheTo, cacheFrom, drv = RSQLite::SQLite())
+\S4method{mergeCache}{ANY}(
+  cacheTo,
+  cacheFrom,
+  drvTo = RSQLite::SQLite(),
+  drvFrom = RSQLite::SQLite()
+)
 }
 \arguments{
 \item{cacheTo}{The cache repository (character string of the file path)
@@ -15,6 +20,10 @@ that will become larger, i.e., merge into this}
 
 \item{cacheFrom}{The cache repository (character string of the file path)
 from which all objects will be taken and copied from}
+
+\item{drvTo}{The database driver for the \code{cacheTo}.}
+
+\item{drvFrom}{The database driver for the \code{cacheFrom}}
 }
 \value{
 The character string of the path of \code{cacheTo}, i.e., not the
