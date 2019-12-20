@@ -1,6 +1,7 @@
 test_that("test cached downloads", {
   skip_on_cran()
 
+  set.seed(4321)
   outdir <- file.path(tempdir(), paste0(sample(LETTERS), collapse = ""))
   expect_true(dir.create(outdir))
 
