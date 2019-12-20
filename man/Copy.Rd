@@ -22,7 +22,7 @@ Copy(object, filebackedDir, ...)
 
 \S4method{Copy}{data.frame}(object, filebackedDir, ...)
 
-\S4method{Copy}{Raster}(object, filebackedDir, ...)
+\S4method{Copy}{Raster}(object, filebackedDir, drv = RSQLite::SQLite(), ...)
 }
 \arguments{
 \item{object}{An R object (likely containing environments) or an environment.}

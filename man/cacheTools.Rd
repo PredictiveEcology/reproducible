@@ -10,7 +10,7 @@ createCache(cacheDir, drv = RSQLite::SQLite(), force = FALSE)
 
 saveToCache(cacheDir, drv = RSQLite::SQLite(), outputToSave, userTags, cacheId)
 
-rmFromCache(cachePath, cacheId, con, drv)
+rmFromCache(cachePath, cacheId, con, drv = RSQLite::SQLite())
 }
 \arguments{
 \item{cacheDir}{A path describing the directory in which to create

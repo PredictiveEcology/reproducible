@@ -1,14 +1,11 @@
 test_that("test cached downloads", {
   skip_on_cran()
 
-  set.seed(4321)
-  outdir <- file.path(tempdir(), paste0(sample(LETTERS), collapse = ""))
-  expect_true(dir.create(outdir))
-
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
-    unlink(outdir, recursive = TRUE)
+    testOnExit(testInitOut)
   }, add = TRUE)
-  setwd(outdir)
+  outdir <- tmpdir
   ## https://open.canada.ca/data/en/dataset/9e1efe92-e5a3-4f70-b313-68fb1283eadf
   ## (Record ID: 9e1efe92-e5a3-4f70-b313-68fb1283eadf)
   #url <- "http://www.agr.gc.ca/atlas/data_donnees/lcv/aafcLand_Use/tif/2010/IMG_AAFC_LANDUSE_Z07_2010.zip" # nolint

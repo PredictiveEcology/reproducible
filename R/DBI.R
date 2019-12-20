@@ -103,6 +103,8 @@ saveToCache <- function(cacheDir, drv = RSQLite::SQLite(),
 }
 
 
+#' @export
+#' @rdname cacheTools
 loadFromCache <- function(cachePath, cacheId) {
   browser(expr = exists("bbbb"))
   qs::qread(file = .sqliteStoredFile(cachePath, cacheId))

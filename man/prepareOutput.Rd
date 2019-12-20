@@ -8,7 +8,7 @@
 \usage{
 .prepareOutput(object, cacheRepo, ...)
 
-\S4method{.prepareOutput}{RasterLayer}(object, cacheRepo, ...)
+\S4method{.prepareOutput}{RasterLayer}(object, cacheRepo, drv = RSQLite::SQLite(), ...)
 
 \S4method{.prepareOutput}{ANY}(object, cacheRepo, ...)
 }

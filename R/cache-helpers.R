@@ -592,15 +592,20 @@ setGeneric("clearStubArtifacts", function(repoDir = NULL) {
 setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
-    md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
-    listFiles <- dir(.sqliteStorageDir(repoDir)) %>%
-      strsplit(".rda") %>%
-      unlist()
-    toRemove <- !(md5hashInBackpack %in% listFiles)
-    md5hashInBackpack[toRemove] %>%
-      sapply(., rmFromLocalRepo, repoDir = repoDir)
-    return(invisible(md5hashInBackpack[toRemove]))
-})
+    if (getOption("reproducible.newAlgo")) {
+      ret <- NULL
+    } else {
+      md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
+      listFiles <- dir(.sqliteStorageDir(repoDir)) %>%
+        strsplit(".rda") %>%
+        unlist()
+      toRemove <- !(md5hashInBackpack %in% listFiles)
+      md5hashInBackpack[toRemove] %>%
+        sapply(., rmFromLocalRepo, repoDir = repoDir)
+      ret <- md5hashInBackpack[toRemove]
+    }
+    return(invisible(ret))
+  })
 
 #' Copy the file-backing of a file-backed Raster* object
 #'

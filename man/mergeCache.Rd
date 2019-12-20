@@ -5,9 +5,9 @@
 \alias{mergeCache,ANY-method}
 \title{Merge two cache repositories together}
 \usage{
-mergeCache(cacheTo, cacheFrom)
+mergeCache(cacheTo, cacheFrom, drv)
 
-\S4method{mergeCache}{ANY}(cacheTo, cacheFrom)
+\S4method{mergeCache}{ANY}(cacheTo, cacheFrom, drv = RSQLite::SQLite())
 }
 \arguments{
 \item{cacheTo}{The cache repository (character string of the file path)

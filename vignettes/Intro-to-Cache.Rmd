@@ -282,13 +282,20 @@ In addition, there are several helpers in the `reproducible` package, including 
 Also, one can access cached items manually (rather than simply rerunning the same `Cache` function again).
 
 ```{r manual-cache}
-if (requireNamespace("archivist")) {
-  # get the RasterLayer that was produced with the gaussMap function:
-  mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$artifact)
-  map <- archivist::loadFromLocalRepo(md5hash = mapHash[1], repoDir = tmpDir, value = TRUE)
+# As of reproducible version 0.3.0, there is a new backend directly using DBI, not archivist
+if (getOption("reproducible.newAlgo", TRUE)) {
+  mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$cacheId)
+  map <- loadFromCache(mapHash[1], cachePath = tmpDir)
   
-  plot(map)
+} else {
+  if (requireNamespace("archivist")) {
+    # get the RasterLayer that was produced with the gaussMap function:
+    mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$artifact)
+    map <- archivist::loadFromLocalRepo(md5hash = mapHash[1], repoDir = tmpDir, value = TRUE)
+    
+  }
 }
+plot(map)
 ```
 
 ```{r cleanup}

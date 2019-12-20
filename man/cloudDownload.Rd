@@ -4,7 +4,14 @@
 \alias{cloudDownload}
 \title{Download from cloud, if necessary}
 \usage{
-cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID)
+cloudDownload(
+  outputHash,
+  newFileName,
+  gdriveLs,
+  cacheRepo,
+  cloudFolderID,
+  drv = RSQLite::SQLite()
+)
 }
 \arguments{
 \item{outputHash}{The \code{cacheId} of the object to upload}

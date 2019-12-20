@@ -4,7 +4,13 @@
 \alias{.prepareFileBackedRaster}
 \title{Copy the file-backing of a file-backed Raster* object}
 \usage{
-.prepareFileBackedRaster(obj, repoDir = NULL, overwrite = FALSE, ...)
+.prepareFileBackedRaster(
+  obj,
+  repoDir = NULL,
+  overwrite = FALSE,
+  drv = RSQLite::SQLite(),
+  ...
+)
 }
 \arguments{
 \item{obj}{The raster object to save to the repository.}
