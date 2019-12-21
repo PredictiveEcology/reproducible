@@ -21,7 +21,7 @@
 #'                    \tab Used in \code{\link{Cache}} and many others.
 #'                    The default path for repositories if not passed as an argument.\cr
 #'   \code{cacheSaveFormat} \tab "qs" \tab What save format to use; currently,
-#'                          "qs", "rds" or "rda"
+#'                          "qs", "rds" or "rda" \cr
 #'   \code{destinationPath} \tab \code{NULL} \tab Used in \code{\link{prepInputs}},
 #'                               \code{\link{preProcess}}. Can be set globally here. \cr
 #'   \code{futurePlan} \tab \code{FALSE} \tab On Linux OSs, \code{Cache} and \code{cloudCache}
