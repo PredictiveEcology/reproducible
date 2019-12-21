@@ -655,7 +655,7 @@ setMethod(
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- CacheIsACache(drv = drv, cachePath = repoDir)
+  isRepo <- CacheIsACache(cachePath = repoDir, drv = drv)
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {

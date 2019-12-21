@@ -48,7 +48,7 @@ test_that("test cached downloads", {
     if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
   })
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
-  expect_false(file.exists(CacheDBFile(drv = NULL, outdir)))
+  expect_false(file.exists(CacheDBFile(outdir, drv = NULL)))
 
   # Test MakeCopy = TRUE
   out <- Cache(utils::download.file, url = urlTif1,

@@ -164,7 +164,7 @@ setMethod(
       }
       unlink(CacheStorageDir(x), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
-      unlink(CacheDBFile(drv = drv, x))
+      unlink(CacheDBFile(x, drv = drv))
 
       checkPath(x, create = TRUE)
       createLocalRepo(x)
@@ -352,7 +352,7 @@ setMethod(
       on.exit({
         dbDisconnect(conn)
         })
-      tab <- try(dbReadTable(conn, CacheDBTableName(drv, x)), silent = TRUE)
+      tab <- try(dbReadTable(conn, CacheDBTableName(x, drv = drv)), silent = TRUE)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
       else

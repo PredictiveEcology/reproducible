@@ -8,15 +8,15 @@
 \alias{CacheIsACache}
 \title{A collection of low level tools for Cache}
 \usage{
-CacheDBFile(drv = RSQLite::SQLite(), cachePath)
+CacheDBFile(cachePath, drv = RSQLite::SQLite())
 
 CacheStorageDir(cachePath)
 
 CacheStoredFile(cachePath, hash)
 
-CacheDBTableName(drv = RSQLite::SQLite(), cachePath)
+CacheDBTableName(cachePath, drv = RSQLite::SQLite())
 
-CacheIsACache(drv, cachePath)
+CacheIsACache(cachePath, drv = RSQLite::SQLite())
 }
 \arguments{
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},

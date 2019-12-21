@@ -433,7 +433,7 @@ setMethod(
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-        CacheIsACache(drv = drv, cachePath = cacheRepo)
+        CacheIsACache(cachePath = cacheRepo, drv = drv)
       }))
 
       if (any(!isIntactRepo)) {
@@ -971,7 +971,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = RSQLite::SQLite(), conn = NULL,
                         cacheId) {
   counter <- 0
-  if (!CacheIsACache(drv = drv, cachePath = cacheRepo)) {
+  if (!CacheIsACache(cachePath = cacheRepo, drv = drv)) {
     stop("That cacheRepo does not exist")
   }
 
@@ -1602,7 +1602,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 #' @export
 #' @details
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
-CacheDBFile <- function(drv = RSQLite::SQLite(), cachePath) {
+CacheDBFile <- function(cachePath, drv = RSQLite::SQLite()) {
   if (is(drv, "SQLiteDriver")) {
 
     if (getOption("reproducible.newAlgo", TRUE)) {
@@ -1647,7 +1647,7 @@ CacheStoredFile <- function(cachePath, hash) {
 
 #' @rdname CacheHelpers
 #' @export
-CacheDBTableName <- function(drv = RSQLite::SQLite(), cachePath) {
+CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
   if (!is(cachePath, "Path")) {
     cachePath <- asPath(cachePath, nParentDirs = 2)
   }
@@ -1671,10 +1671,10 @@ CacheDBTableName <- function(drv = RSQLite::SQLite(), cachePath) {
 #' @details
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
-CacheIsACache <- function(drv, cachePath) {
+CacheIsACache <- function(cachePath, drv = RSQLite::SQLite()) {
   ret <- FALSE
   if (is(drv, "SQLiteDriver")) {
-    ret <- all(basename2(c(CacheDBFile(drv, cachePath), CacheStorageDir(cachePath))) %in%
+    ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
                  list.files(cachePath))
   } # other types of drv, e.g., Postgres can be done via env vars
 

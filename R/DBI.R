@@ -36,7 +36,7 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
     on.exit(dbDisconnect(conn))
   }
   dt <- .emptyCacheTable
-  dbWriteTable(conn, CacheDBTableName(drv, cachePath), dt, overwrite = TRUE,
+  dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
                field.types = c(cacheId = "text", tagKey = "text",
                                tagValue = "text", createdDate = "text"))
 }
@@ -105,7 +105,7 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
-  retry(dbWriteTable(conn, CacheDBTableName(drv, cachePath), dt, append=TRUE, row.names = FALSE),
+  retry(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, append=TRUE, row.names = FALSE),
         retries = 15)
   qs::qsave(file = CacheStoredFile(cachePath, cacheId), obj)
 
@@ -133,7 +133,7 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
     on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  query <- paste0("DELETE FROM ",CacheDBTableName(drv, cachePath),
+  query <- paste0("DELETE FROM ",CacheDBTableName(cachePath, drv),
                   " WHERE \"cacheId\" = $1")
   res <- dbSendStatement(conn, query)
   dbBind(res, list(cacheId))
@@ -146,11 +146,11 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
 dbConnectAll <- function(drv, cachePath, create = TRUE) {
   args <- list(drv = drv)
   if (is(drv, "SQLiteDriver")) {
-    if (!CacheIsACache(drv = drv, cachePath = cachePath))
+    if (!CacheIsACache(cachePath = cachePath, drv = drv))
       if (isFALSE(create)) {
         return(invisible())
       }
-    args <- append(args, list(dbname = CacheDBFile(drv, cachePath)))
+    args <- append(args, list(dbname = CacheDBFile(cachePath, drv)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }
@@ -169,7 +169,7 @@ dbConnectAll <- function(drv, cachePath, create = TRUE) {
     dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
                      "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
 
-    retry(dbWriteTable(conn, CacheDBTableName(drv, cachePath),
+    retry(dbWriteTable(conn, CacheDBTableName(cachePath, drv),
                        dt, append=TRUE, row.names = FALSE),
           retries = 15)
 

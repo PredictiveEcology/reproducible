@@ -1118,7 +1118,7 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = FALSE) {
     }
     instPkgs <- dir(libPath)
     instPkgs <- instPkgs[!instPkgs %in% basename2(c(CacheStorageDir("."),
-                                                    CacheDBFile(drv = NULL, ".")))]
+                                                    CacheDBFile(".", drv = NULL)))]
     instVers <- unlist(lapply(libPath, function(lib)
                     na.omit(unlist(unname(installedVersions(instPkgs, libPath = lib))))))
     if (length(instVers) == 1) names(instVers) <- instPkgs
