@@ -164,9 +164,9 @@ setMethod(
         }
 
       }
-      unlink(.cacheStorageDir(x), recursive = TRUE)
+      unlink(CacheStorageDir(x), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
-      unlink(.sqliteFile(x))
+      unlink(CacheSQLiteFile(x))
 
       checkPath(x, create = TRUE)
       createLocalRepo(x)
@@ -175,11 +175,8 @@ setMethod(
     }
 
     if (isInteractive()) {
-      # objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
       objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
       cacheSize <- sum(objSizes) / 4
-      #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT[[.cacheTableHashColName()]]), ".rda"))
-      #cacheSize <- sum(file.size(rdaFiles))
     }
 
     if (NROW(objsDT)) {
@@ -188,7 +185,6 @@ setMethod(
       hasARaster <-
         all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0
 
-      browser(expr = exists("hhhh"))
       if (hasARaster) {
         rasterObjSizes <- as.numeric(objsDT[get(.cacheTableHashColName()) %in%
                                               rastersInRepo[[.cacheTableHashColName()]] &

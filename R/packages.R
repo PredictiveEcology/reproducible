@@ -1117,8 +1117,8 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = FALSE) {
               paste(libPath, collapse = ", "))
     }
     instPkgs <- dir(libPath)
-    #instPkgs <- instPkgs[!instPkgs %in% c("backpack.db", "gallery")]
-    instPkgs <- instPkgs[!instPkgs %in% basename2(c(.cacheStorageDir("."), .sqliteFile(".")))]
+    instPkgs <- instPkgs[!instPkgs %in% basename2(c(CacheStorageDir("."),
+                                                    CacheSQLiteFile(".")))]
     instVers <- unlist(lapply(libPath, function(lib)
                     na.omit(unlist(unname(installedVersions(instPkgs, libPath = lib))))))
     if (length(instVers) == 1) names(instVers) <- instPkgs

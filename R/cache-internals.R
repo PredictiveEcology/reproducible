@@ -145,7 +145,7 @@
       if (file.exists(chcksumPath)) {
         checkDigest <- TRUE
       } else {
-        checkCopy <- file.path(.cacheStorageDir(cacheRepo), basename(chcksumName))
+        checkCopy <- file.path(CacheStorageDir(cacheRepo), basename(chcksumName))
         if (file.exists(checkCopy)) {
           chcksumPath <- checkCopy
           checkDigest <- TRUE
@@ -190,7 +190,7 @@
   }
 
   if (NROW(fromCopy)) {
-    repoTo <- .cacheStorageDir(cacheRepo)
+    repoTo <- CacheStorageDir(cacheRepo)
     lapply(fromCopy, function(x) {
       file.copy(from = file.path(repoTo, basename(x)),
                 to = file.path(cacheRepo), recursive = TRUE)
@@ -228,7 +228,7 @@
       stop("There is an unknown error 01")
 
     if (makeCopy) {
-      repoTo <- .cacheStorageDir(cacheRepo)
+      repoTo <- CacheStorageDir(cacheRepo)
       checkPath(repoTo, create = TRUE)
       lapply(dwdFlst, function(x) {
         file.copy(from = x, to = file.path(repoTo), recursive = TRUE)

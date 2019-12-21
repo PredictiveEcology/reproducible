@@ -34,7 +34,7 @@ lapply(c(runif, rnorm), function(f) {
 # clear out any stub artifacts
 showCache(tmpDir)
 
-file2Remove <- dir(file.path(tmpDir, "gallery"), full.name = TRUE)[1]
+file2Remove <- dir(CacheStorageDir(tmpDir), full.name = TRUE)[1]
 file.remove(file2Remove)
 showCache(tmpDir) # repository directory still thinks files are there
 

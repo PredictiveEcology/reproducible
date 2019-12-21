@@ -49,6 +49,7 @@ test_that("package-related functions work", {
   if (!grepl(pattern = "3.5", x = R.Version()[["version.string"]])) {
     expect_true(iv[iv$Package == "latdiag", "Version"] == versionlatdiag)
   }
+  browser()
   Require("achubaty/meow", libPath = packageDir,
           install_githubArgs = list(force = TRUE, dependencies = c("Depends", "Imports")),
           standAlone = TRUE)
@@ -66,7 +67,6 @@ test_that("package-related functions work", {
   expect_true(!is.na(installedVersions("TimeWarp", packageDir)))
 
   packageVersionFile <- file.path(packageDir, ".packageVersion2.txt")
-  # aaaa <<- 1
   pkgSnapshot(libPath = packageDir, packageVersionFile, standAlone = FALSE)
   installed <- data.table::fread(packageVersionFile)
   pkgDeps <- sort(c("Holidays", unique(unlist(pkgDep("Holidays", recursive = TRUE,

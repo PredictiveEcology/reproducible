@@ -23,15 +23,15 @@
 #' @rdname cacheTools
 createCache <- function(cachePath, drv = RSQLite::SQLite(),
                         conn = NULL, force = FALSE) {
-  dbPath <- .sqliteFile(cachePath) # file.path(cachePath, "cache.db")
-  alreadyExists <- .cacheIsACache(cachePath)
+  dbPath <- CacheStorageDir(cachePath) # file.path(cachePath, "cache.db")
+  alreadyExists <- CacheIsACache(cachePath)
   if (alreadyExists && force == FALSE) {
     message("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
     return(invisible(cachePath))
   }
 
   checkPath(cachePath, create = TRUE)
-  checkPath(.cacheStorageDir(cachePath), create = TRUE)
+  checkPath(CacheStorageDir(cachePath), create = TRUE)
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, dir = cachePath)
     on.exit(dbDisconnect(conn))
@@ -108,7 +108,7 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
 
   retry(dbWriteTable(conn, "dt", dt, append=TRUE, row.names = FALSE),
         retries = 15)
-  qs::qsave(file = .cacheStoredFile(cachePath, cacheId), obj)
+  qs::qsave(file = CacheStoredFile(cachePath, cacheId), obj)
 
   return(obj)
 
@@ -119,7 +119,7 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
 #' @rdname cacheTools
 #' @importFrom qs qread
 loadFromCache <- function(cachePath, cacheId) {
-  qs::qread(file = .cacheStoredFile(cachePath, cacheId))
+  qs::qread(file = CacheStoredFile(cachePath, cacheId))
 }
 
 #' Low level tools to work with Cache
@@ -146,11 +146,11 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
 dbConnectAll <- function(drv, dir, create = TRUE) {
   args <- list(drv = drv)
   if (is(drv, "SQLiteDriver")) {
-    if (!.cacheIsACache(drv = drv, dir = dir))
+    if (!CacheIsACache(drv = drv, dir = dir))
       if (isFALSE(create)) {
         return(invisible())
       }
-    args <- append(args, list(dbname = .sqliteFile(dir)))
+    args <- append(args, list(dbname = CacheStorageDir(dir)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }

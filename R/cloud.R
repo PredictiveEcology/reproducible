@@ -43,7 +43,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
   if (!any(isInCloud)) {
     message("Uploading local copy of ", artifactFileName,", with cacheId: ",
             outputHash," to cloud folder")
-    retry(drive_upload(media = file.path(cacheRepo, "gallery", artifactFileName),
+    retry(drive_upload(media = file.path(CacheStorageDir(cacheRepo), artifactFileName),
                  path = as_id(cloudFolderID), name = newFileName))
 
     cloudUploadRasterBackends(obj = output, cloudFolderID)
@@ -95,7 +95,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudF
     newFileName <- paste0(saved, ".rda")
     message("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder")
-    retry(drive_upload(media = file.path(cacheRepo, "gallery", newFileName),
+    retry(drive_upload(media = file.path(CacheStorageDir(cacheRepo), newFileName),
                        path = as_id(cloudFolderID), name = cacheIdFileName))
   }
   cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)

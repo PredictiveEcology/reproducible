@@ -571,7 +571,7 @@ setAs(from = "character", to = "Path", function(from) {
 #' # clear out any stub artifacts
 #' showCache(tmpDir)
 #'
-#' file2Remove <- dir(file.path(tmpDir, "gallery"), full.name = TRUE)[1]
+#' file2Remove <- dir(CacheStorageDir(tmpDir), full.name = TRUE)[1]
 #' file.remove(file2Remove)
 #' showCache(tmpDir) # repository directory still thinks files are there
 #'
@@ -597,7 +597,7 @@ setMethod(
       ret <- NULL
     } else {
       md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
-      listFiles <- dir(.cacheStorageDir(repoDir)) %>%
+      listFiles <- dir(CacheStorageDir(repoDir)) %>%
         strsplit(".rda") %>%
         unlist()
       toRemove <- !(md5hashInBackpack %in% listFiles)
@@ -656,7 +656,7 @@ setMethod(
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- .cacheIsACache(drv = drv, dir = repoDir)
+  isRepo <- CacheIsACache(drv = drv, dir = repoDir)
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {

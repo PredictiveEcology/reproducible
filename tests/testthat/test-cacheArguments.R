@@ -18,7 +18,7 @@ test_that("test cached downloads", {
 
   out <- createCache(outdir)
   # sideE <<- gggg <<- 1
-  storageDir <- .cacheStorageDir(outdir)
+  storageDir <- CacheStorageDir(outdir)
   # Cache download first run. File is downloaded. checksum is logged in backpack.
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
@@ -43,12 +43,12 @@ test_that("test cached downloads", {
                cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
 
   # Make sur the file do not exists before testing
-  toRemove <- list(basename(.sqliteFile(".")), basename(urlTif1))
+  toRemove <- list(basename(CacheSQLiteFile(".")), basename(urlTif1))
   lapply(toRemove, function(x) {
     if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
   })
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
-  expect_false(file.exists(.sqliteFile(outdir)))
+  expect_false(file.exists(CacheSQLiteFile(outdir)))
 
   # Test MakeCopy = TRUE
   out <- Cache(utils::download.file, url = urlTif1,

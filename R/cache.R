@@ -433,7 +433,7 @@ setMethod(
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-        .cacheIsACache(drv = drv, dir = cacheRepo)
+        CacheIsACache(drv = drv, cachePath = cacheRepo)
       }))
 
       if (any(!isIntactRepo)) {
@@ -579,7 +579,7 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          objSize <- file.size(.cacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
+          objSize <- file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
           class(objSize) <- "object_size"
           if (objSize > 1e6)
             message(crayon::blue(paste0("  ...(Object to retrieve is large: ", format(objSize, units = "auto"), ")")))
@@ -970,7 +970,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = RSQLite::SQLite(), conn = NULL,
                         cacheId) {
   counter <- 0
-  if (!.cacheIsACache(drv = drv, dir = cacheRepo)) {
+  if (!CacheIsACache(drv = drv, cachePath = cacheRepo)) {
     stop("That cacheRepo does not exist")
   }
 
@@ -1592,24 +1592,41 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   }
 }
 
-.sqliteFile <- function(dir) {
+#' A collection of low level tools for Cache
+#'
+#' These are not intended for normal use.
+#'
+#' @inheritParams Cache
+#' @rdname CacheHelpers
+#' @export
+#' @details
+#' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
+CacheSQLiteFile <- function(cachePath) {
   if (getOption("reproducible.newAlgo", TRUE)) {
-    file.path(dir, "cache.db")
+    file.path(cachePath, "cache.db")
   } else {
-    file.path(dir, "backpack.db")
+    file.path(cachePath, "backpack.db")
   }
 
 }
 
-.cacheStorageDir <- function(dir) {
+#' @rdname CacheHelpers
+#' @export
+CacheStorageDir <- function(cachePath) {
   if (getOption("reproducible.newAlgo", TRUE)) {
-    file.path(dir, "cacheOutputs")
+    file.path(cachePath, "cacheOutputs")
   } else {
-    file.path(dir, "gallery")
+    file.path(cachePath, "gallery")
   }
 }
 
-.cacheStoredFile <- function(dir, hash) {
+#' @details
+#' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
+#'
+#' @rdname CacheHelpers
+#' @export
+#' @param hash The cacheId or otherwise digested hash value, as character string.
+CacheStoredFile <- function(cachePath, hash) {
   csf <- getOption("reproducible.cacheSaveFormat", "qs")
   csExtension <- if (csf == "qs") {
     "qs"
@@ -1619,14 +1636,19 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
     "rda"
   }
   filename <- paste(hash, csExtension, sep = ".")
-  file.path(.cacheStorageDir(dir), filename)
+  file.path(CacheStorageDir(cachePath), filename)
 }
 
-.cacheIsACache <- function(drv, dir) {
+#' @rdname CacheHelpers
+#' @export
+#' @details
+#' \code{CacheIsACache} returns a logical of whether the specified cachePath
+#'   is actually a functioning cache.
+CacheIsACache <- function(drv, cachePath) {
   ret <- FALSE
   if (is(drv, "SQLiteDriver")) {
-    ret <- all(basename2(c(.sqliteFile(dir), .cacheStorageDir(dir))) %in%
-                 list.files(dir))
+    ret <- all(basename2(c(CacheSQLiteFile(cachePath), CacheStorageDir(cachePath))) %in%
+                 list.files(cachePath))
   } # other types of drv, e.g., Postgres can be done via env vars
 
   return(ret)
