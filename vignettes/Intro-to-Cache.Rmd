@@ -127,7 +127,12 @@ onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "a
 
 # inverse join with 2 data.tables ... using: a[!b]
 # i.e., return all of wholeCache that was not recently accessed
-toRemove <- unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$artifact
+#   Note: the two different ways to access -- old way with "artifact" will be deprecated
+toRemove <- if (getOption("reproducible.newAlgo", TRUE)) {
+  unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$cacheId
+} else {
+  unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$artifact
+}
 clearCache(tmpDir, toRemove, ask = FALSE) # remove ones not recently accessed
 showCache(tmpDir) # still has more recently accessed
 

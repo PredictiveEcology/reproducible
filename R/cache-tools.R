@@ -662,6 +662,7 @@ checkFutures <- function() {
 #' @param concatenated Logical. If \code{TRUE}, the returned \code{userTags} will
 #'   be concatenated \code{tagKey:tagValue}.
 getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
+  stop("This function is deprecated")
   if (missing(shownCache)) {
     if (missing(cacheRepo)) {
       cacheRepos <- .checkCacheRepo(create = TRUE)
@@ -715,6 +716,7 @@ getCacheId <- function(cacheRepo, shownCache, artifact) {
 #' @export
 #' @rdname cache-helpers
 getArtifact <- function(cacheRepo, shownCache, cacheId) {
+  stop("This function is deprecated")
   if (missing(shownCache)) {
     if (missing(cacheRepo)) {
       cacheRepos <- .checkCacheRepo(create = TRUE)

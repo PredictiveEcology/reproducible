@@ -35,7 +35,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = NULL) {
 #' @importFrom googledrive drive_upload
 #' @inheritParams Cache
 cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output) {
-  artifact <- isInRepo$artifact[1]
+  artifact <- isInRepo[[.cacheTableHashColName()]][1]
   artifactFileName <- paste0(artifact, ".rda")
   newFileName <- paste0(outputHash,".rda")
   isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
