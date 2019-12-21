@@ -1601,7 +1601,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 #' @export
 #' @details
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
-CacheSQLiteFile <- function(cachePath) {
+CacheDBFile <- function(cachePath) {
   if (getOption("reproducible.newAlgo", TRUE)) {
     file.path(cachePath, "cache.db")
   } else {
@@ -1647,7 +1647,7 @@ CacheStoredFile <- function(cachePath, hash) {
 CacheIsACache <- function(drv, cachePath) {
   ret <- FALSE
   if (is(drv, "SQLiteDriver")) {
-    ret <- all(basename2(c(CacheSQLiteFile(cachePath), CacheStorageDir(cachePath))) %in%
+    ret <- all(basename2(c(CacheDBFile(cachePath), CacheStorageDir(cachePath))) %in%
                  list.files(cachePath))
   } # other types of drv, e.g., Postgres can be done via env vars
 

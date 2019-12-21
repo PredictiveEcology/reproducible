@@ -166,7 +166,7 @@ setMethod(
       }
       unlink(CacheStorageDir(x), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
-      unlink(CacheSQLiteFile(x))
+      unlink(CacheDBFile(x))
 
       checkPath(x, create = TRUE)
       createLocalRepo(x)

@@ -23,7 +23,6 @@
 #' @rdname cacheTools
 createCache <- function(cachePath, drv = RSQLite::SQLite(),
                         conn = NULL, force = FALSE) {
-  dbPath <- CacheSQLiteFile(cachePath) # file.path(cachePath, "cache.db")
   alreadyExists <- CacheIsACache(cachePath)
   if (alreadyExists && force == FALSE) {
     message("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
@@ -150,7 +149,7 @@ dbConnectAll <- function(drv, cachePath, create = TRUE) {
       if (isFALSE(create)) {
         return(invisible())
       }
-    args <- append(args, list(dbname = CacheSQLiteFile(cachePath)))
+    args <- append(args, list(dbname = CacheDBFile(cachePath)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }
