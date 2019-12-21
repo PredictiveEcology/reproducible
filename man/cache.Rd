@@ -30,7 +30,8 @@ Cache(
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = RSQLite::SQLite()
+  drv = RSQLite::SQLite(),
+  conn = NULL
 )
 
 \S4method{Cache}{ANY}(
@@ -57,7 +58,8 @@ Cache(
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = RSQLite::SQLite()
+  drv = RSQLite::SQLite(),
+  conn = NULL
 )
 
 lhs \%<\% rhs
@@ -190,6 +192,9 @@ objects.}
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},
 or an existing \linkS4class{DBIConnection}
 object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{lhs}{A name to assign to.}
 

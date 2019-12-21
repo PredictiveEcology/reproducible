@@ -18,15 +18,17 @@ clearCache(
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = NULL,
+  drv = RSQLite::SQLite(),
+  conn = NULL,
   ...
 )
 
 \S4method{clearCache}{ANY}(
   x,
-  userTags,
+  userTags = character(),
   after,
   before,
-  ask,
+  ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   drv = RSQLite::SQLite(),
@@ -36,9 +38,25 @@ clearCache(
 
 cc(secs, ...)
 
-showCache(x, userTags = character(), after, before, ...)
+showCache(
+  x,
+  userTags = character(),
+  after,
+  before,
+  drv = RSQLite::SQLite(),
+  conn = NULL,
+  ...
+)
 
-\S4method{showCache}{ANY}(x, userTags, after, before, drv = RSQLite::SQLite(), ...)
+\S4method{showCache}{ANY}(
+  x,
+  userTags = character(),
+  after,
+  before,
+  drv = RSQLite::SQLite(),
+  conn = NULL,
+  ...
+)
 
 keepCache(
   x,
@@ -46,6 +64,8 @@ keepCache(
   after,
   before,
   ask = getOption("reproducible.ask"),
+  drv = RSQLite::SQLite(),
+  conn = NULL,
   ...
 )
 
@@ -55,6 +75,8 @@ keepCache(
   after,
   before,
   ask = getOption("reproducible.ask"),
+  drv = RSQLite::SQLite(),
+  conn = NULL,
   ...
 )
 }
@@ -94,16 +116,19 @@ The warning will have the \code{cloudFolderID} that should be used in subsequent
 It will also be added to \code{options("reproducible.cloudFolderID")},
 but this will not persist across sessions.}
 
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
+
 \item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
 This must be \code{TRUE} if the use is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
 missing, which is the same as \code{TRUE}. If there are errors due
 to regular expression problem, try \code{FALSE}. For \code{cc}, it is
 passed to \code{clearCache}, e.g., \code{ask}, \code{userTags}}
-
-\item{drv}{an object that inherits from \linkS4class{DBIDriver},
-or an existing \linkS4class{DBIConnection}
-object (in order to clone an existing connection).}
 
 \item{secs}{Currently 3 options: the number of seconds to pass to \code{clearCache(after = secs)},
 a \code{POSIXct} time e.g., from \code{Sys.time()}, or missing. If missing,

@@ -87,8 +87,8 @@
 #'
 setGeneric("clearCache", function(x, userTags = character(), after, before,
                                   ask = getOption("reproducible.ask"),
-                                  useCloud = FALSE,
-                                  cloudFolderID = NULL, ...) {
+                                  useCloud = FALSE, cloudFolderID = NULL,
+                                  drv = RSQLite::SQLite(), conn = NULL, ...) {
   standardGeneric("clearCache")
 })
 
@@ -99,7 +99,7 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after, before, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        drv = RSQLite::SQLite(), conn = NULL, ...) {
+                        drv, conn, ...) {
     # isn't clearing the raster bacekd file
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
@@ -140,7 +140,7 @@ setMethod(
 
     if (getOption("reproducible.newAlgo", TRUE)) {
       if (is.null(conn)) {
-        conn <- dbConnectAll(drv, dir = cachePath, create = FALSE)
+        conn <- dbConnectAll(drv, dir = x, create = FALSE)
       }
       if (is.null(conn)) {
         return(invisible(.emptyCacheTable))
@@ -235,7 +235,7 @@ setMethod(
 
       objToGet <- unique(objsDT[[.cacheTableHashColName()]])
       if (getOption("reproducible.newAlgo", TRUE)) {
-        rmFromCache(x, objToGet, conn, drv)# many = TRUE)
+        rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
       } else {
         suppressWarnings(rmFromLocalRepo(objToGet, x, many = TRUE))
       }
@@ -316,7 +316,8 @@ cc <- function(secs, ...) {
 #' @seealso \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
 #' in \code{\link{Cache}}
 #'
-setGeneric("showCache", function(x, userTags = character(), after, before, ...) {
+setGeneric("showCache", function(x, userTags = character(), after, before,
+                                 drv = RSQLite::SQLite(), conn = NULL, ...) {
   standardGeneric("showCache")
 })
 
@@ -324,7 +325,8 @@ setGeneric("showCache", function(x, userTags = character(), after, before, ...) 
 #' @rdname viewCache
 setMethod(
   "showCache",
-  definition = function(x, userTags, after, before, drv = RSQLite::SQLite(), ...) {
+  definition = function(x, userTags, after, before, drv,
+                        conn, ...) {
     browser(expr = exists("aaaa"))
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
@@ -441,7 +443,8 @@ setMethod(
 
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after, before,
-                                 ask  = getOption("reproducible.ask"), ...) {
+                                 ask  = getOption("reproducible.ask"),
+                                 drv = RSQLite::SQLite(), conn = NULL, ...) {
   standardGeneric("keepCache")
 })
 
@@ -449,7 +452,7 @@ setGeneric("keepCache", function(x, userTags = character(), after, before,
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask, ...) {
+  definition = function(x, userTags, after, before, ask, drv, conn, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
@@ -497,7 +500,8 @@ setMethod(
 #' objects themselves.
 #'
 #' @rdname mergeCache
-setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo, drvFrom) {
+setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo, drvFrom,
+                                  connTo, connFrom) {
   standardGeneric("mergeCache")
 })
 
@@ -506,9 +510,23 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo, drvFrom) {
 setMethod(
   "mergeCache",
   definition = function(cacheTo, cacheFrom, drvTo = RSQLite::SQLite(),
-                        drvFrom = RSQLite::SQLite()) {
-    suppressMessages(cacheFromList <- showCache(cacheFrom, drv = drvFrom))
-    suppressMessages(cacheToList <- showCache(cacheTo, drv = drvTo))
+                        drvFrom = RSQLite::SQLite(),
+                        connTo = NULL, connFrom = NULL) {
+
+    if (is.null(connTo)) {
+      connTo <- dbConnectAll(drvTo, dir = cacheTo)
+      on.exit(dbDisconnect(connTo))
+    }
+
+    if (is.null(connFrom)) {
+      connFrom <- dbConnectAll(drvFrom, dir = cacheFrom)
+      on.exit(dbDisconnect(connFrom))
+    }
+
+    suppressMessages(cacheFromList <- showCache(cacheFrom, drv = drvFrom,
+                                                connFrom = connFrom))
+    suppressMessages(cacheToList <- showCache(cacheTo, drv = drvTo,
+                                              connTo = connTo))
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {

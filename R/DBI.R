@@ -21,9 +21,9 @@
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
 #' @rdname cacheTools
-createCache <- function(cachePath, drv = RSQLite::SQLite(), conn = NULL, force = FALSE) {
+createCache <- function(cachePath, drv = RSQLite::SQLite(),
+                        conn = NULL, force = FALSE) {
   dbPath <- .sqliteFile(cachePath) # file.path(cachePath, "cache.db")
-  browser()
   alreadyExists <- .cacheIsACache(cachePath)
   if (alreadyExists && force == FALSE) {
     message("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
@@ -143,7 +143,7 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
 dbConnectAll <- function(drv, dir, create = TRUE) {
   args <- list(drv = drv)
   if (is(drv, "SQLiteDriver")) {
-    if (.cacheIsACache(drv = drv, dir = dir))
+    if (!.cacheIsACache(drv = drv, dir = dir))
       if (isFALSE(create)) {
         return(invisible())
       }

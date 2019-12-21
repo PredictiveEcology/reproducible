@@ -278,6 +278,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @inheritParams digest::digest
 #' @inheritParams DBI::dbConnect
+#' @inheritParams DBI::dbWriteTable
 #'
 #' @param digestPathContent Being deprecated. Use \code{quick}.
 #'
@@ -333,7 +334,7 @@ setGeneric(
            useCloud = FALSE,
            cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
            showSimilar = getOption("reproducible.showSimilar", FALSE),
-           drv = RSQLite::SQLite()) {
+           drv = RSQLite::SQLite(), conn = NULL) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
   })
 
@@ -348,7 +349,7 @@ setMethod(
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick, verbose,
                         cacheId, useCache,
-                        showSimilar, drv) {
+                        showSimilar, drv, conn) {
 
     if (!is.null(list(...)$objects)) {
       message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
@@ -528,7 +529,7 @@ setMethod(
         tries <- tries + 1
         browser(expr = exists("ffff"))
         if (getOption("reproducible.newAlgo", TRUE)) {
-          localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
+          localTags <- showCache(repo, drv = drv, conn = conn, verboseMessaging = FALSE) # This is noisy
           isInRepo <- localTags[cacheId %in% outputHash,]
         } else {
           localTags <- getLocalTags(repo)
@@ -784,7 +785,6 @@ setMethod(
             future::plan(thePlan)
           }
         }
-        browser()
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
           #saved <-
           future::futureCall(
