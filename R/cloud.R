@@ -57,8 +57,9 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 #' @param newFileName The character string of the local filename that the downloaded object will have
 #' @inheritParams cloudUpload
 #' @importFrom googledrive drive_download
+#' @inheritParams Cache
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
-                          drv = RSQLite::SQLite()) {
+                          drv = RSQLite::SQLite(), conn = NULL) {
   message("Downloading cloud copy of ", newFileName,", with cacheId: ",
           outputHash)
   localNewFilename <- file.path(tempdir(), newFileName)

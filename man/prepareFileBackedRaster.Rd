@@ -19,6 +19,10 @@
 
 \item{overwrite}{Logical. Should the raster be saved to disk, overwriting existing file.}
 
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
 \item{...}{passed to \code{archivist::saveToRepo}}
 }
 \value{

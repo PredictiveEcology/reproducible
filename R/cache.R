@@ -812,7 +812,7 @@ setMethod(
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
         if (getOption("reproducible.newAlgo", TRUE)) {
           output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                               outputToSave = outputToSave, cacheId = outputHash)
+                               obj = outputToSave, cacheId = outputHash)
         } else {
           while (written >= 0) {
 
@@ -965,7 +965,9 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #' @export
 #' @importFrom archivist saveToLocalRepo
 #' @importFrom stats runif
-writeFuture <- function(written, outputToSave, cacheRepo, userTags, drv = RSQLite::SQLite(),
+#' @inheritParams Cache
+writeFuture <- function(written, outputToSave, cacheRepo, userTags,
+                        drv = RSQLite::SQLite(), conn = NULL,
                         cacheId) {
   counter <- 0
   if (.cacheIsACache(drv = drv, dir = cacheRepo)) {
@@ -977,7 +979,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags, drv = RSQLit
       cacheId <- .robustDigest(outputToSave)
     }
     output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                        outputToSave = outputToSave, cacheId = cacheId)
+                        obj = outputToSave, cacheId = cacheId)
     saved <- cacheId
   } else {
     while (written >= 0) {
@@ -1573,6 +1575,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 }
 
 .cacheNumDefaultTags <- 6
+
 .cacheTableHashColName <- function() {
   if (getOption("reproducible.newAlgo", TRUE)) {
     "cacheId"

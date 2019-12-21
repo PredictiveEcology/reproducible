@@ -81,7 +81,7 @@
 #'
 #' # Fine control of cache elements -- pick out only the large runif object, and remove it
 #' cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
-#' toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700][[.cacheTableHashColName()]]
+#' toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$cacheId
 #' clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
@@ -492,6 +492,10 @@ setMethod(
 #'                  from which all objects will be taken and copied from
 #' @param drvTo The database driver for the \code{cacheTo}.
 #' @param drvFrom The database driver for the \code{cacheFrom}
+#' @param connTo The connection for the \code{cacheTo}. If not provided, then
+#'   a new one will be made from \code{drvTo} and \code{cacheTo}
+#' @param connFrom The database for the \code{cacheFrom}. If not provided, then
+#'   a new one will be made from \code{drvFrom} and \code{cacheFrom}
 #'
 #' @details
 #' This is still experimental
@@ -547,7 +551,8 @@ setMethod(
         userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "date", "cacheId"),
                                             list(tagKey, tagValue)]
         if (getOption("reproducible.newAlgo", TRUE)) {
-          output <- saveToCache(cacheTo, userTags = userTags, outputToSave = outputToSave,
+          output <- saveToCache(cacheTo, userTags = userTags,
+                                obj = outputToSave,
                                 cacheId = artifact)
         } else {
 

@@ -13,7 +13,7 @@ saveToCache(
   cachePath,
   drv = RSQLite::SQLite(),
   conn = NULL,
-  outputToSave,
+  obj,
   userTags,
   cacheId
 )
@@ -34,6 +34,10 @@ the database file(s)}
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
   even if it already exists, overwriting.
 # replaces archivist::createLocalRepo}
+
+\item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
+
+\item{cacheId}{The hash string representing the result of \code{.robustDigest}}
 }
 \description{
 Create a new cache

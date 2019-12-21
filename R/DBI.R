@@ -43,10 +43,13 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
 }
 
 #' @rdname cacheTools
+#' @inheritParams Cache
+#' @param cacheId The hash string representing the result of \code{.robustDigest}
+#' @param obj The R object to save to the cache
 #' @importFrom qs qsave
 saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
                         conn = NULL,
-                        outputToSave, userTags, cacheId) {
+                        obj, userTags, cacheId) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, dir = cachePath)
     on.exit(dbDisconnect(conn))
@@ -62,52 +65,52 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
     tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
   }
 
-  outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
+  outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
   if (outputToSaveIsList) {
-    rasters <- unlist(lapply(outputToSave, is, "Raster"))
+    rasters <- unlist(lapply(obj, is, "Raster"))
   } else {
-    rasters <- is(outputToSave, "Raster")
+    rasters <- is(obj, "Raster")
   }
   browser(expr = exists("aaaa"))
   if (any(rasters)) {
-    atts <- attributes(outputToSave)
+    atts <- attributes(obj)
     if (outputToSaveIsList) {
-      outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
+      obj[rasters] <- lapply(obj[rasters], function(x)
         .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv))
     } else {
-      outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cachePath,
+      obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
                                                overwrite = FALSE, drv = drv)
     }
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
-    setattr(outputToSave, "tags", atts$tags)
-    .setSubAttrInList(outputToSave, ".Cache", "newCache", atts$.Cache$newCache)
-    setattr(outputToSave, "call", atts$call)
+    setattr(obj, "tags", atts$tags)
+    .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
+    setattr(obj, "call", atts$call)
 
-    if (!identical(attr(outputToSave, ".Cache")$newCache, atts$.Cache$newCache))
+    if (!identical(attr(obj, ".Cache")$newCache, atts$.Cache$newCache))
       stop("attributes are not correct 6")
-    if (!identical(attr(outputToSave, "call"), atts$call))
+    if (!identical(attr(obj, "call"), atts$call))
       stop("attributes are not correct 7")
-    if (!identical(attr(outputToSave, "tags"), atts$tags))
+    if (!identical(attr(obj, "tags"), atts$tags))
       stop("attributes are not correct 8")
 
     if (!is.null(atts[["function"]])) {
-      setattr(outputToSave, "function", atts[["function"]])
-      if (!identical(attr(outputToSave, "function"), atts[["function"]]))
+      setattr(obj, "function", atts[["function"]])
+      if (!identical(attr(obj, "function"), atts[["function"]]))
         stop("There is an unknown error 04")
     }
-    # attr(outputToSave, "function") <- attr(output, "function")
+    # attr(obj, "function") <- attr(output, "function")
 
-   #output <- outputToSave
+   #output <- obj
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
   retry(dbWriteTable(conn, "dt", dt, append=TRUE, row.names = FALSE),
         retries = 15)
-  qs::qsave(file = .cacheStoredFile(cachePath, cacheId), outputToSave)
+  qs::qsave(file = .cacheStoredFile(cachePath, cacheId), obj)
 
-  return(outputToSave)
+  return(obj)
 
 }
 

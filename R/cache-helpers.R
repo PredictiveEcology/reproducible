@@ -634,6 +634,7 @@ setMethod(
 #' @importFrom digest digest
 #' @importFrom methods is selectMethod slot slot<-
 #' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
+#' @inheritParams Cache
 #' @rdname prepareFileBackedRaster
 #' @examples
 #' library(raster)

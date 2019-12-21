@@ -10,7 +10,8 @@ cloudDownload(
   gdriveLs,
   cacheRepo,
   cloudFolderID,
-  drv = RSQLite::SQLite()
+  drv = RSQLite::SQLite(),
+  conn = NULL
 )
 }
 \arguments{
@@ -28,6 +29,13 @@ If left as \code{NULL}, the function will create a cloud folder with a warning.
 The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
 It will also be added to \code{options("reproducible.cloudFolderID")},
 but this will not persist across sessions.}
+
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.
