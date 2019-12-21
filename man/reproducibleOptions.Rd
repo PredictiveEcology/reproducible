@@ -49,6 +49,8 @@ The following options are likely of interest to most users
   \code{inputPathsRecursive} \tab \code{FALSE} \tab Used in \code{\link{prepInputs}},
                               \code{\link{preProcess}}. Should the \code{reproducible.inputPaths}
                               be searched recursively for existence of a file\cr
+  \code{newAlgo} \tab \code{TRUE} \tab As of reproducible 0.3, the backend is now \code{DBI}
+                     package instead of \code{archivist}\cr
   \code{overwrite} \tab \code{FALSE} \tab Used in \code{\link{prepInputs}}, \code{\link{preProcess}},
                         \code{\link{downloadFile}}, and \code{\link{postProcess}}.\cr
   \code{quick} \tab \code{FALSE} \tab Used in \code{\link{Cache}}. This will cause

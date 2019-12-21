@@ -17,7 +17,6 @@ test_that("test cached downloads", {
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
 
   out <- createCache(outdir)
-  # sideE <<- gggg <<- 1
   storageDir <- CacheStorageDir(outdir)
   # Cache download first run. File is downloaded. checksum is logged in cache db
   out <- Cache(utils::download.file, url = urlTif1,
@@ -37,13 +36,14 @@ test_that("test cached downloads", {
                cachedChcksum)
 
   # rerun download. Shouldn't run. # TODO: this shouldn't be rerunning
+  # sideE <<- aaaa <<- gggg <<- eeee <<- ffff <<- nnnn <<- 1
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
                cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
 
   # Make sur the file do not exists before testing
-  toRemove <- list(basename(CacheDBFile(drv = NULL, ".")), basename(urlTif1))
+  toRemove <- list(basename(CacheDBFile(cachePath = ".")), basename(urlTif1))
   lapply(toRemove, function(x) {
     if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
   })

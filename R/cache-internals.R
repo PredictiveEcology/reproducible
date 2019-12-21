@@ -227,6 +227,7 @@
     if (!identical(attr(output, "chcksumFiles"), paste0(cacheName, ":", cachecurFlst)))
       stop("There is an unknown error 01")
 
+    browser(expr = exists("aaaa"))
     if (makeCopy) {
       repoTo <- CacheStorageDir(cacheRepo)
       checkPath(repoTo, create = TRUE)
@@ -298,6 +299,7 @@
   # This is protected from multiple-write to SQL collisions
   .addTagsRepo(isInRepo, cacheRepo, lastOne, drv)
 
+  browser(expr = exists("aaaa"))
   if (sideEffect != FALSE) {
     #if(isTRUE(sideEffect)) {
     .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, ...)

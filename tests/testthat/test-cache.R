@@ -33,6 +33,7 @@ test_that("test file-backed raster caching", {
       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
       clearCache(tmpCache, userTags = "something$", ask = FALSE)
       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      # aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
       clearCache(tmpCache, userTags = "something2", ask = FALSE)
       expect_equal(NROW(showCache(tmpCache)), 0)
 

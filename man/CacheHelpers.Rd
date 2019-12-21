@@ -4,14 +4,17 @@
 \alias{CacheDBFile}
 \alias{CacheStorageDir}
 \alias{CacheStoredFile}
+\alias{CacheDBTableName}
 \alias{CacheIsACache}
 \title{A collection of low level tools for Cache}
 \usage{
-CacheDBFile(drv, cachePath)
+CacheDBFile(drv = RSQLite::SQLite(), cachePath)
 
 CacheStorageDir(cachePath)
 
 CacheStoredFile(cachePath, hash)
+
+CacheDBTableName(drv = RSQLite::SQLite(), cachePath)
 
 CacheIsACache(drv, cachePath)
 }

@@ -679,6 +679,7 @@ setMethod(
       if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash))) stop("attributes are not correct 5")
 
       if (sideEffect != FALSE) {
+        browser(expr = exists("sideE"))
         output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
                                       makeCopy, quick)
       }
@@ -1601,7 +1602,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 #' @export
 #' @details
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
-CacheDBFile <- function(drv, cachePath) {
+CacheDBFile <- function(drv = RSQLite::SQLite(), cachePath) {
   if (is(drv, "SQLiteDriver")) {
 
     if (getOption("reproducible.newAlgo", TRUE)) {

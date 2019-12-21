@@ -651,6 +651,7 @@ setMethod(
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      drv = RSQLite::SQLite(), ...) {
+  browser(expr = exists("aaaa"))
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
