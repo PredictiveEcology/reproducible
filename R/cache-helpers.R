@@ -57,7 +57,6 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName,
                         fromMemoise) {
-    browser(expr = exists("dddd"))
     if (isTRUE(fromMemoise)) {
       message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
                            sep = ""))
@@ -652,11 +651,10 @@ setMethod(
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      drv = RSQLite::SQLite(), ...) {
-  browser(expr = exists("gggg"))
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- CacheIsACache(drv = drv, dir = repoDir)
+  isRepo <- CacheIsACache(drv = drv, cachePath = repoDir)
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {
@@ -712,7 +710,6 @@ setMethod(
 
       normalizePath(file.path(repoDir, splittedFilenames2), winslash = "/", mustWork = FALSE)
     }
-    browser(expr = exists("aaaa"))
     if (any(!file.exists(trySaveFilename))) {
       stop("The following file-backed rasters are supposed to be on disk ",
            "but appear to have been deleted:\n",
@@ -760,7 +757,6 @@ if (any(saveFilename != curFilename)) {
   notSameButBacked <- saveFilename != curFilename & isFilebacked
 
   if (any(notSameButBacked)) {
-    browser(expr = exists("ffff"))
     ## deal only with files that have been backed
       saveFilename2 <- saveFilename[notSameButBacked]
       curFilename2 <- curFilename[notSameButBacked]
@@ -779,7 +775,6 @@ if (any(saveFilename != curFilename)) {
           copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
         } else {
           saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
-            browser(expr = exists("gggg"))
             # change filename if it already exists
               if (file.exists(saveFilename2[x])) {
                 saveFilename2[x] <- nextNumericName(saveFilename2[x])

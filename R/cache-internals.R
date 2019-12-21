@@ -242,7 +242,7 @@
                          drv = RSQLite::SQLite(), conn = NULL) {
   if (getOption("reproducible.newAlgo", TRUE)) {
     if (is.null(conn)) {
-      conn <- dbConnectAll(drv, dir = cachePath, create = FALSE)
+      conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
       on.exit(dbDisconnect(conn))
     }
     dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",

@@ -33,7 +33,7 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
   checkPath(cachePath, create = TRUE)
   checkPath(CacheStorageDir(cachePath), create = TRUE)
   if (is.null(conn)) {
-    conn <- dbConnectAll(drv, dir = cachePath)
+    conn <- dbConnectAll(drv, cachePath = cachePath)
     on.exit(dbDisconnect(conn))
   }
   dt <- .emptyCacheTable
@@ -51,7 +51,7 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
                         conn = NULL,
                         obj, userTags, cacheId) {
   if (is.null(conn)) {
-    conn <- dbConnectAll(drv, dir = cachePath)
+    conn <- dbConnectAll(drv, cachePath = cachePath)
     on.exit(dbDisconnect(conn))
   }
 
@@ -130,7 +130,7 @@ loadFromCache <- function(cachePath, cacheId) {
 rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
                         conn = NULL) {
   if (is.null(conn)) {
-    conn <- dbConnectAll(drv, dir = cachePath, create = FALSE)
+    conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
     on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
@@ -143,14 +143,14 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
 
 }
 
-dbConnectAll <- function(drv, dir, create = TRUE) {
+dbConnectAll <- function(drv, cachePath, create = TRUE) {
   args <- list(drv = drv)
   if (is(drv, "SQLiteDriver")) {
-    if (!CacheIsACache(drv = drv, dir = dir))
+    if (!CacheIsACache(drv = drv, cachePath = cachePath))
       if (isFALSE(create)) {
         return(invisible())
       }
-    args <- append(args, list(dbname = CacheStorageDir(dir)))
+    args <- append(args, list(dbname = CacheStorageDir(cachePath)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }

@@ -140,7 +140,7 @@ setMethod(
 
     if (getOption("reproducible.newAlgo", TRUE)) {
       if (is.null(conn)) {
-        conn <- dbConnectAll(drv, dir = x, create = FALSE)
+        conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
       }
       if (is.null(conn)) {
         return(invisible(.emptyCacheTable))
@@ -353,7 +353,7 @@ setMethod(
     browser(expr = exists("ffff"))
     if (getOption("reproducible.newAlgo", TRUE)) {
       if (is.null(conn)) {
-        conn <- dbConnectAll(drv, dir = x, create = FALSE)
+        conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
       }
 
       if (is.null(conn)) {
@@ -514,12 +514,12 @@ setMethod(
                         drvFrom, connTo, connFrom) {
 
     if (is.null(connTo)) {
-      connTo <- dbConnectAll(drvTo, dir = cacheTo)
+      connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
       on.exit(dbDisconnect(connTo))
     }
 
     if (is.null(connFrom)) {
-      connFrom <- dbConnectAll(drvFrom, dir = cacheFrom)
+      connFrom <- dbConnectAll(drvFrom, cachePath = cacheFrom)
       on.exit(dbDisconnect(connFrom))
     }
 
