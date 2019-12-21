@@ -705,7 +705,6 @@ test_that("test mergeCache", {
   aCache <- showCache(tmpdir)
   bCache <- showCache(tmpCache)
 
-  browser()
   d <- mergeCache(tmpCache, tmpdir)
 
   dCache <- showCache(d)

@@ -7,7 +7,7 @@
 \alias{CacheIsACache}
 \title{A collection of low level tools for Cache}
 \usage{
-CacheDBFile(cachePath)
+CacheDBFile(drv, cachePath)
 
 CacheStorageDir(cachePath)
 
@@ -16,11 +16,11 @@ CacheStoredFile(cachePath, hash)
 CacheIsACache(drv, cachePath)
 }
 \arguments{
-\item{hash}{The cacheId or otherwise digested hash value, as character string.}
-
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},
 or an existing \linkS4class{DBIConnection}
 object (in order to clone an existing connection).}
+
+\item{hash}{The cacheId or otherwise digested hash value, as character string.}
 }
 \description{
 These are not intended for normal use.

@@ -10,7 +10,7 @@ test_that("test parallel collisions", {
     N <- min(2, detectCores())
 
     # make archivist repository
-    if (!file.exists(file.path(tmpdir, "backpack.db"))) {
+    if (!file.exists(CacheDBFile(tmpdir))) {
        archivist::createLocalRepo(tmpdir)
     }
 

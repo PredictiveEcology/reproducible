@@ -19,7 +19,7 @@ test_that("test cached downloads", {
   out <- createCache(outdir)
   # sideE <<- gggg <<- 1
   storageDir <- CacheStorageDir(outdir)
-  # Cache download first run. File is downloaded. checksum is logged in backpack.
+  # Cache download first run. File is downloaded. checksum is logged in cache db
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
@@ -28,7 +28,7 @@ test_that("test cached downloads", {
   # check if download occured
   expect_true(file.exists(file.path(outdir, basename(urlTif1))))
 
-  # compare checksum from file with checksum stored in backpack
+  # compare checksum from file with checksum stored in cache db
   urlfileSize <- list(basename(urlTif1), file.size(file.path(outdir, basename(urlTif1))))
   urlfileChcksum <- digest::digest(urlfileSize, algo = "xxhash64")
 
@@ -43,12 +43,12 @@ test_that("test cached downloads", {
                cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
 
   # Make sur the file do not exists before testing
-  toRemove <- list(basename(CacheDBFile(".")), basename(urlTif1))
+  toRemove <- list(basename(CacheDBFile(drv = NULL, ".")), basename(urlTif1))
   lapply(toRemove, function(x) {
     if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
   })
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
-  expect_false(file.exists(CacheDBFile(outdir)))
+  expect_false(file.exists(CacheDBFile(drv = NULL, outdir)))
 
   # Test MakeCopy = TRUE
   out <- Cache(utils::download.file, url = urlTif1,

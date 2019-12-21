@@ -36,7 +36,7 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
     on.exit(dbDisconnect(conn))
   }
   dt <- .emptyCacheTable
-  dbWriteTable(conn, "dt", dt, overwrite = TRUE,
+  dbWriteTable(conn, CacheDBTableName(drv, cachePath), dt, overwrite = TRUE,
                field.types = c(cacheId = "text", tagKey = "text",
                                tagValue = "text", createdDate = "text"))
 }
@@ -105,7 +105,7 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
-  retry(dbWriteTable(conn, "dt", dt, append=TRUE, row.names = FALSE),
+  retry(dbWriteTable(conn, CacheDBTableName(drv, cachePath), dt, append=TRUE, row.names = FALSE),
         retries = 15)
   qs::qsave(file = CacheStoredFile(cachePath, cacheId), obj)
 
@@ -133,7 +133,8 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
     on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  query <- paste0("DELETE FROM dt WHERE \"cacheId\" = $1")
+  query <- paste0("DELETE FROM ",CacheDBTableName(drv, cachePath),
+                  " WHERE \"cacheId\" = $1")
   res <- dbSendStatement(conn, query)
   dbBind(res, list(cacheId))
 
@@ -149,7 +150,7 @@ dbConnectAll <- function(drv, cachePath, create = TRUE) {
       if (isFALSE(create)) {
         return(invisible())
       }
-    args <- append(args, list(dbname = CacheDBFile(cachePath)))
+    args <- append(args, list(dbname = CacheDBFile(drv, cachePath)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }
@@ -157,3 +158,36 @@ dbConnectAll <- function(drv, cachePath, create = TRUE) {
 .emptyCacheTable <- data.table(cacheId = character(), tagKey = character(),
                                tagValue = character(), createdDate = character())
 
+
+.addTagsRepo <- function(isInRepo, cachePath, lastOne,
+                         drv = RSQLite::SQLite(), conn = NULL) {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
+      on.exit(dbDisconnect(conn))
+    }
+    dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
+                     "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
+
+    retry(dbWriteTable(conn, CacheDBTableName(drv, cachePath),
+                       dt, append=TRUE, row.names = FALSE),
+          retries = 15)
+
+  } else {
+
+    written <- 0
+    while (written >= 0) {
+      saved <- suppressWarnings(try(silent = TRUE,
+                                    addTagsRepo(isInRepo[[.cacheTableHashColName()]][lastOne],
+                                                repoDir = cachePath,
+                                                tags = paste0("accessed:", Sys.time()))))
+      written <- if (is(saved, "try-error")) {
+        Sys.sleep(sum(runif(written + 1,0.05, 0.1)))
+        written + 1
+      } else {
+        -1
+      }
+    }
+  }
+
+}

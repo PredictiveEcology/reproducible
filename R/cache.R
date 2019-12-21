@@ -1601,11 +1601,16 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 #' @export
 #' @details
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
-CacheDBFile <- function(cachePath) {
-  if (getOption("reproducible.newAlgo", TRUE)) {
-    file.path(cachePath, "cache.db")
+CacheDBFile <- function(drv, cachePath) {
+  if (is(drv, "SQLiteDriver")) {
+
+    if (getOption("reproducible.newAlgo", TRUE)) {
+      file.path(cachePath, "cache.db")
+    } else {
+      file.path(cachePath, "backpack.db")
+    }
   } else {
-    file.path(cachePath, "backpack.db")
+    file.path(cachePath, "cache.txt")
   }
 
 }
@@ -1641,13 +1646,34 @@ CacheStoredFile <- function(cachePath, hash) {
 
 #' @rdname CacheHelpers
 #' @export
+CacheDBTableName <- function(drv = RSQLite::SQLite(), cachePath) {
+  if (!is(cachePath, "Path")) {
+    cachePath <- asPath(cachePath, nParentDirs = 2)
+  }
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    toGo <- attr(cachePath, "nParentDirs")
+    cachePathTmp <- normPath(cachePath)
+    newPath <- basename2(cachePathTmp)
+    while(toGo > 1) {
+      toGo <- toGo - 1
+      cachePathTmp <- dirname(cachePathTmp)
+      newPath <- paste(basename2(cachePathTmp), newPath, sep = "_")
+    }
+  } else {
+    newPath <- "dt"
+  }
+  return(newPath)
+}
+
+#' @rdname CacheHelpers
+#' @export
 #' @details
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
 CacheIsACache <- function(drv, cachePath) {
   ret <- FALSE
   if (is(drv, "SQLiteDriver")) {
-    ret <- all(basename2(c(CacheDBFile(cachePath), CacheStorageDir(cachePath))) %in%
+    ret <- all(basename2(c(CacheDBFile(drv, cachePath), CacheStorageDir(cachePath))) %in%
                  list.files(cachePath))
   } # other types of drv, e.g., Postgres can be done via env vars
 

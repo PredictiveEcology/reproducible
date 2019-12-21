@@ -22,7 +22,8 @@
 #' raster already is file-backed, i.e., to create \code{.tif} or \code{.grd} backed rasters,
 #' use \code{writeRaster} first, then Cache. The .tif or .grd will be copied to the "raster"
 #' subdirectory of the \code{cacheRepo}.
-#' Their RAM representation (as an R object) will still be in the usual \file{gallery/} directory.
+#' Their RAM representation (as an R object) will still be in the usual
+#' \file{cacheOutputs/} (or formerly \file{gallery/}) directory.
 #' For \code{inMemory} raster objects, they will remain as binary \code{.RData} files.
 #'
 #' Functions (which are contained within environments) are

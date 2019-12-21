@@ -110,9 +110,7 @@ setMethod(
         x <- getOption("reproducible.cachePath")[1]
       }
     }
-    #if (is(x, "simList")) x <- x@paths$cachePath
 
-    browser(expr = exists("aaaa"))
     # Check if no args -- faster to delete all then make new empty repo for large repos
     clearWholeCache <- all(missing(userTags), missing(after), missing(before))
 
@@ -166,7 +164,7 @@ setMethod(
       }
       unlink(CacheStorageDir(x), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
-      unlink(CacheDBFile(x))
+      unlink(CacheDBFile(drv = drv, x))
 
       checkPath(x, create = TRUE)
       createLocalRepo(x)
@@ -343,14 +341,6 @@ setMethod(
         }
     }
 
-
-    # res <- DBI::dbSendQuery(conn, "SELECT cacheId FROM dt WHERE tagValue = 'randomPolyToDisk'")
-    # res1 <- DBI::dbFetch(res)
-    # DBI::dbClearResult(res)
-    # res <- DBI::dbSendQuery(conn, paste0("SELECT * FROM dt WHERE cacheId = '", res1$cacheId, "'"))
-    # res1 <- DBI::dbFetch(res)
-
-    browser(expr = exists("ffff"))
     if (getOption("reproducible.newAlgo", TRUE)) {
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
@@ -362,7 +352,7 @@ setMethod(
       on.exit({
         dbDisconnect(conn)
         })
-      tab <- try(dbReadTable(conn, "dt"), silent = TRUE)
+      tab <- try(dbReadTable(conn, CacheDBTableName(drv, x)), silent = TRUE)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
       else

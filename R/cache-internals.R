@@ -238,37 +238,6 @@
   return(output)
 }
 
-.addTagsRepo <- function(isInRepo, cachePath, lastOne,
-                         drv = RSQLite::SQLite(), conn = NULL) {
-  if (getOption("reproducible.newAlgo", TRUE)) {
-    if (is.null(conn)) {
-      conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-      on.exit(dbDisconnect(conn))
-    }
-    dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
-                     "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
-
-    retry(dbWriteTable(conn, "dt", dt, append=TRUE, row.names = FALSE),
-          retries = 15)
-
-  } else {
-
-    written <- 0
-    while (written >= 0) {
-      saved <- suppressWarnings(try(silent = TRUE,
-                                    addTagsRepo(isInRepo[[.cacheTableHashColName()]][lastOne],
-                                                repoDir = cachePath,
-                                                tags = paste0("accessed:", Sys.time()))))
-      written <- if (is(saved, "try-error")) {
-        Sys.sleep(sum(runif(written + 1,0.05, 0.1)))
-        written + 1
-      } else {
-        -1
-      }
-    }
-  }
-
-}
 
 .getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
