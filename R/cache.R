@@ -970,7 +970,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = RSQLite::SQLite(), conn = NULL,
                         cacheId) {
   counter <- 0
-  if (.cacheIsACache(drv = drv, dir = cacheRepo)) {
+  if (!.cacheIsACache(drv = drv, dir = cacheRepo)) {
     stop("That cacheRepo does not exist")
   }
 

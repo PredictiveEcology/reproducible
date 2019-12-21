@@ -504,8 +504,9 @@ setMethod(
 #' objects themselves.
 #'
 #' @rdname mergeCache
-setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo, drvFrom,
-                                  connTo, connFrom) {
+setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo = RSQLite::SQLite(),
+                                  drvFrom = RSQLite::SQLite(),
+                                  connTo = NULL, connFrom = NULL) {
   standardGeneric("mergeCache")
 })
 
@@ -513,9 +514,8 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo, drvFrom,
 #' @rdname mergeCache
 setMethod(
   "mergeCache",
-  definition = function(cacheTo, cacheFrom, drvTo = RSQLite::SQLite(),
-                        drvFrom = RSQLite::SQLite(),
-                        connTo = NULL, connFrom = NULL) {
+  definition = function(cacheTo, cacheFrom, drvTo,
+                        drvFrom, connTo, connFrom) {
 
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, dir = cacheTo)

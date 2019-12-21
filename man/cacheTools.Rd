@@ -35,6 +35,8 @@ the database file(s)}
   even if it already exists, overwriting.
 # replaces archivist::createLocalRepo}
 
+\item{obj}{The R object to save to the cache}
+
 \item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
 
 \item{cacheId}{The hash string representing the result of \code{.robustDigest}}

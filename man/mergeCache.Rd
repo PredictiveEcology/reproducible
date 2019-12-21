@@ -5,7 +5,14 @@
 \alias{mergeCache,ANY-method}
 \title{Merge two cache repositories together}
 \usage{
-mergeCache(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom)
+mergeCache(
+  cacheTo,
+  cacheFrom,
+  drvTo = RSQLite::SQLite(),
+  drvFrom = RSQLite::SQLite(),
+  connTo = NULL,
+  connFrom = NULL
+)
 
 \S4method{mergeCache}{ANY}(
   cacheTo,

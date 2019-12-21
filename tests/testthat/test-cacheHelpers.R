@@ -87,7 +87,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(identical(cMessCacheId, bMessCacheId))
 
   dMess <- capture_messages(b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
-  #browser(expr = !any(grepl("different n, sd", dMess)))
 
   # There are 2 ways this may come out -- similarity to 1 of 2 alternatives above
   expect1 <- any(grepl("different n, sd", dMess))
@@ -127,14 +126,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
                         writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "",
                                     drv = RSQLite::SQLite())))
   expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
-
-  ## verbose -- need 2 nested levels to run all lin
-  # fn <- function(a) {
-  #   Cache(fn1, cacheRepo = tmpCache, verbose = 2)
-  # }
-  # fn1 <- function() {
-  #   1
-  # }
 
   if (interactive()) {
     try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
