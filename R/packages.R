@@ -835,7 +835,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           if (internetExists) {
             lapply(canInstDirectFromCRAN$instPkgs, function(pkg) {
               system(paste0(rpath, " --quiet --vanilla -e \"do.call(install.packages,list('",
-                            pkg, "', lib='", libPath, "', dependencies = FALSE,  = '", repos,
+                            pkg, "', lib='", libPath, "', dependencies = FALSE, repos = '", repos,
                             "'))\""), wait = TRUE)
             })
           } else {

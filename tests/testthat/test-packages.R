@@ -1,6 +1,5 @@
 test_that("package-related functions work", {
 
-
   skip_on_cran()
 
   testInitOut <- testInit()
