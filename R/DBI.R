@@ -135,7 +135,10 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
   query <- paste0("DELETE FROM ",CacheDBTableName(cachePath, drv),
                   " WHERE \"cacheId\" = $1")
-  res <- dbSendStatement(conn, query)
+
+
+  res <- try({dbSendStatement(conn, query)})
+  browser(expr = is(res, "try-error"))
   dbBind(res, list(cacheId))
 
   dbClearResult(res)
