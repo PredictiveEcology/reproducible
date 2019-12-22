@@ -11,8 +11,9 @@ if (getRversion() >= "3.1.0") {
 #' @export
 #' @importFrom googledrive drive_mkdir
 checkAndMakeCloudFolderID <- function(cloudFolderID = NULL) {
+  browser(expr = exists("kkkk"))
   if (is.null(cloudFolderID)) {
-    newDir <- retry({drive_mkdir("testFolder")})
+    newDir <- retry({drive_mkdir("testFolder2")})
     cloudFolderID = newDir$id
     warning("No cloudFolderID supplied; if this is the first time using 'useCloud',",
             " this cloudFolderID, ", cloudFolderID,
@@ -33,18 +34,26 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = NULL) {
 #' @param gdriveLs The result of \code{googledrive::drive_ls(as_id(cloudFolderID), pattern = "outputHash")}
 #' @param output The output object of FUN that was run in \code{Cache}
 #' @importFrom googledrive drive_upload
+#' @importFrom tools file_ext
 #' @inheritParams Cache
 cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output) {
   artifact <- isInRepo[[.cacheTableHashColName()]][1]
-  artifactFileName <- paste0(artifact, ".rda")
-  newFileName <- paste0(outputHash,".rda")
-  isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
+  browser(expr = exists("kkkk"))
+  artifactFileName <- CacheStoredFile(cacheRepo, hash = artifact)
+  #artifactFileName <- paste0(artifact, ".rda")
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    newFileName <- basename2(artifactFileName)
+  } else {
+    newFileName <- paste0(outputHash,".rda")
+  }
+  isInCloud <- gsub(gdriveLs$name,
+                    pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
+                    replacement = "") %in% outputHash
 
   if (!any(isInCloud)) {
     message("Uploading local copy of ", artifactFileName,", with cacheId: ",
             outputHash," to cloud folder")
-    retry(drive_upload(media = file.path(CacheStorageDir(cacheRepo), artifactFileName),
-                 path = as_id(cloudFolderID), name = newFileName))
+    retry(drive_upload(media = artifactFileName, path = as_id(cloudFolderID), name = newFileName))
 
     cloudUploadRasterBackends(obj = output, cloudFolderID)
   }
@@ -60,17 +69,24 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 #' @inheritParams Cache
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                           drv = RSQLite::SQLite(), conn = NULL) {
+  browser()
   message("Downloading cloud copy of ", newFileName,", with cacheId: ",
           outputHash)
-  localNewFilename <- file.path(tempdir(), newFileName)
-  isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
+  localNewFilename <- file.path(tempdir(), basename2(newFileName))
+  isInCloud <- gsub(gdriveLs$name,
+                    pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
+                    replacement = "") %in% outputHash
 
   retry(drive_download(file = as_id(gdriveLs$id[isInCloud][1]),
                  path = localNewFilename, # take first if there are duplicates
                  overwrite = TRUE))
-  ee <- new.env(parent = emptyenv())
-  loadedObjName <- load(localNewFilename)
-  output <- get(loadedObjName, inherits = FALSE)
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    output <- qread(localNewFilename)
+  } else {
+    ee <- new.env(parent = emptyenv())
+    loadedObjName <- load(localNewFilename)
+    output <- get(loadedObjName, inherits = FALSE)
+  }
   output <- cloudDownloadRasterBackend(output, cacheRepo, cloudFolderID, drv = drv)
   output
 }
@@ -90,18 +106,24 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
 #' @keywords internal
 cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudFolderID,
                                  outputToSave, rasters) {
+  browser(expr = exists("kkkk"))
   if (!any(isInCloud)) {
-    cacheIdFileName <- paste0(outputHash,".rda")
-    newFileName <- paste0(saved, ".rda")
+    cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
+    newFileName <- if (getOption("reproducible.newAlgo", TRUE)) {
+      basename2(cacheIdFileName)
+    } else {
+      paste0(saved, ".rda")
+    }
     message("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder")
-    retry(drive_upload(media = file.path(CacheStorageDir(cacheRepo), newFileName),
-                       path = as_id(cloudFolderID), name = cacheIdFileName))
+    retry(drive_upload(media = CacheStoredFile(cacheRepo, outputHash),
+                       path = as_id(cloudFolderID), name = newFileName))
   }
   cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
+  browser(expr = exists("kkkk"))
   rasterFilename <- Filenames(obj)
   if (!is.null(rasterFilename) && length(rasterFilename) > 0) {
     allRelevantFiles <- sapply(rasterFilename, function(file) {
@@ -118,6 +140,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
 
 cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
                                        drv = RSQLite::SQLite()) {
+  browser()
   rasterFilename <- Filenames(output)
   if (!is.null(rasterFilename) && length(rasterFilename) > 0) {
     cacheRepoRasterDir <- file.path(cacheRepo, "rasters")

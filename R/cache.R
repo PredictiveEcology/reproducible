@@ -521,6 +521,7 @@ setMethod(
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
+        browser(expr = exists("kkkk"))
         message("Retrieving file list in cloud folder")
         gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
       }
@@ -621,9 +622,12 @@ setMethod(
 
       .CacheIsNew <- TRUE
       if (useCloud) {
+        browser(expr = exists("kkkk"))
         # Here, download cloud copy to local folder, skip the running of FUN
-        newFileName <- paste0(outputHash,".rda")
-        isInCloud <- gsub(gdriveLs$name, pattern = "\\.rda", replacement = "") %in% outputHash
+        newFileName <- CacheStoredFile(cacheRepo, outputHash) # paste0(outputHash,".rda")
+        isInCloud <- gsub(gdriveLs$name,
+                          pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
+                          replacement = "") %in% outputHash
         if (any(isInCloud)) {
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                                   drv = drv)

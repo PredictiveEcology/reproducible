@@ -2,15 +2,20 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   skip_if_no_token()
   if (interactive()) {
     testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
-                            needGoogle = TRUE,
+                            #needGoogle = TRUE,
                             opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                                         "reproducible.ask" = FALSE))
+    drive_auth("eliotmcintire@gmail.com")
     on.exit({
       testOnExit(testInitOut)
-      retry(drive_rm(as_id(newDir$id)))
+      # retry(drive_rm(as_id(newDir$id)))
     }, add = TRUE)
     clearCache(x = tmpCache)
-    newDir <- retry(drive_mkdir("testFolder"))
+    newDir <- if (Sys.info()[["user"]] == "emcintir") {
+      list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
+    } else { # this is slow for emcintir because googledrive is large
+      retry(drive_mkdir("testsForPkgs"))
+    }
     cloudFolderID = newDir$id
     #######################################
     # local absent, cloud absent
@@ -24,13 +29,15 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #######################################
     mess2 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
                                          cacheRepo = tmpCache, useCloud = TRUE))
-    expect_true(grepl("loading cached", mess2))
-    expect_false(grepl("uploaded", mess2))
-    expect_false(grepl("download", mess2))
+    expect_true(any(grepl("loading cached", mess2)))
+    expect_false(all(grepl("uploaded", mess2)))
+    expect_false(all(grepl("download", mess2)))
 
     #######################################
     # local absent, cloud present
     #######################################
+    browser()
+    kkkk <<- 1
     clearCache(userTags = .robustDigest(1), x = tmpCache)
     mess3 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
                                           cacheRepo = tmpCache, useCloud = TRUE))
