@@ -613,7 +613,6 @@ setMethod(
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
-  browser(expr = exists("dddd"))
   message("Cache size: ")
   message(preMessage1, format(fsTotal, "auto"))
   message(preMessage, format(fs, "auto"))
@@ -646,7 +645,7 @@ checkFutures <- function() {
     }
     browser(expr = exists("aaaa"))
     if (length(resol) > 0)
-      rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
+      .reproEnv$futureEnv[[lsFutureEnv]] <- NULL
   }
 }
 

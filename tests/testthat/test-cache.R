@@ -668,6 +668,7 @@ test_that("test Cache argument inheritance to inner functions", {
 ##########################
 test_that("test future", {
   skip_on_cran()
+
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
   if (.onLinux) {
     if (requireNamespace("future", quietly = TRUE)) {
