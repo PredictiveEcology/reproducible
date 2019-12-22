@@ -230,6 +230,7 @@ setMethod(
       objToGet <- unique(objsDT[[.cacheTableHashColName()]])
       if (getOption("reproducible.newAlgo", TRUE)) {
         rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
+        browser(expr = exists("rmFC"))
       } else {
         suppressWarnings(rmFromLocalRepo(objToGet, x, many = TRUE))
       }
@@ -643,6 +644,7 @@ checkFutures <- function() {
       resol <- future::resolved(.reproEnv$futureEnv)
       resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
     }
+    browser(expr = exists("aaaa"))
     if (length(resol) > 0)
       rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
   }

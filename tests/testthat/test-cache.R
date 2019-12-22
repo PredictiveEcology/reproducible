@@ -34,6 +34,7 @@ test_that("test file-backed raster caching", {
       clearCache(tmpCache, userTags = "something$", ask = FALSE)
       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
       # aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
+      #rmFC <<- 1
       clearCache(tmpCache, userTags = "something2", ask = FALSE)
       expect_equal(NROW(showCache(tmpCache)), 0)
 
@@ -678,11 +679,13 @@ test_that("test future", {
       }, add = TRUE)
 
       options("reproducible.futurePlan" = "multiprocess")
+      on.exit({
+        options("reproducible.futurePlan" = FALSE)
+      }, add = TRUE)
       # There is now a warning with future package
       (aa <- system.time({for (i in c(1:3)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
       a <- showCache(tmpCache)
 
-      options("reproducible.futurePlan" = FALSE)
       try(unlink(tmpCache, recursive = TRUE))
       (bb <- system.time({for (i in 1:3) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
 
@@ -854,7 +857,9 @@ test_that("test cc", {
   a <- showCache(x = tmpCache) # shows all 4 entries
   expect_true(length(unique(a[[.cacheTableHashColName()]])) == 4)
 
+  #rmFC <<- 1
   cc(ask = FALSE, x = tmpCache)
+  rm(rmFC, envir = .GlobalEnv)
   b <- showCache(x = tmpCache) # most recent is gone
   expect_true(length(unique(b[[.cacheTableHashColName()]])) == 3)
 

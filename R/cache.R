@@ -779,11 +779,11 @@ setMethod(
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess"\n',
                   'Please specify a plan by name, e.g., options("reproducible.futurePlan" = "multiprocess")')
-          future::plan("multiprocess")
+          future::plan("multiprocess", workers = 2)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
             thePlan <- getOption("reproducible.futurePlan")
-            future::plan(thePlan)
+            future::plan(thePlan, workers = 2)
           }
         }
         .reproEnv$futureEnv[[paste0("future_", rndstr(1,10))]] <-
@@ -1663,6 +1663,8 @@ CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
   } else {
     newPath <- "dt"
   }
+  # SQLite can't handle numbers as initial character of a table name
+  if (grepl("^[[:digit:]]", newPath)) {newPath <- paste0("_", newPath)}
   return(newPath)
 }
 
