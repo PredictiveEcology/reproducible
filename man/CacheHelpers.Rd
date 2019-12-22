@@ -19,6 +19,9 @@ CacheDBTableName(cachePath, drv = RSQLite::SQLite())
 CacheIsACache(cachePath, drv = RSQLite::SQLite())
 }
 \arguments{
+\item{cachePath}{A path describing the directory in which to create
+the database file(s)}
+
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},
 or an existing \linkS4class{DBIConnection}
 object (in order to clone an existing connection).}

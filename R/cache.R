@@ -1598,6 +1598,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 #' These are not intended for normal use.
 #'
 #' @inheritParams Cache
+#' @inheritParams createCache
 #' @rdname CacheHelpers
 #' @export
 #' @details
