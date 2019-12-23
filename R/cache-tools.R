@@ -115,6 +115,7 @@ setMethod(
     clearWholeCache <- all(missing(userTags), missing(after), missing(before))
 
     if (useCloud || !clearWholeCache) {
+      browser(expr = exists("jjjj"))
       if (missing(after)) after <- "1970-01-01"
       if (missing(before)) before <- Sys.time() + 1e5
 
@@ -127,9 +128,14 @@ setMethod(
           stop("If using 'useCloud', 'cloudFolderID' must be provided. If you don't know what should be used, ",
                "try getOption('reproducible.cloudFolderID')")
         }
-        cacheIds <- objsDT[tagKey == "cacheId", tagValue]
+        if (getOption("reproducible.newAlgo", TRUE)) {
+          cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
+        } else {
+          cacheIds <- objsDT[tagKey == "cacheId", tagValue]
+        }
         gdriveLs <- drive_ls(path = as_id(cloudFolderID), pattern = paste(cacheIds, collapse = "|"))
-        filenamesToRm <- paste0(cacheIds, ".rda")
+        filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
+        # filenamesToRm <- paste0(cacheIds, ".rda")
         isInCloud <- gdriveLs$name %in% filenamesToRm
         message("From Cloud:")
         drive_rm(as_id(gdriveLs$id[isInCloud]))
@@ -164,10 +170,14 @@ setMethod(
       }
       unlink(CacheStorageDir(x), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
-      unlink(CacheDBFile(x, drv = drv))
+      unlink(CacheDBFile(x, drv = drv), recursive = TRUE, force = TRUE)
 
       checkPath(x, create = TRUE)
-      createLocalRepo(x)
+      if (getOption("reproducible.newAlgo", TRUE)) {
+        createCache(x, drv = drv, conn = conn, force = TRUE)
+      } else {
+        createLocalRepo(x)
+      }
       memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
     }

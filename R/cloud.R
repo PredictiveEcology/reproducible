@@ -13,13 +13,13 @@ if (getRversion() >= "3.1.0") {
 checkAndMakeCloudFolderID <- function(cloudFolderID = NULL) {
   browser(expr = exists("kkkk"))
   if (is.null(cloudFolderID)) {
-    newDir <- retry({drive_mkdir("testFolder2")})
+    newDir <- retry({drive_mkdir(rndstr(1, 6))})
     cloudFolderID = newDir$id
     warning("No cloudFolderID supplied; if this is the first time using 'useCloud',",
             " this cloudFolderID, ", cloudFolderID,
             " should likely be kept and used in all subsequent calls to Cache using 'useCloud = TRUE'.", #nolint
-            " Making a new cloud folder and setting options('reproducible.cloudFolderID' = ",
-            cloudFolderID, ")")
+            " Making a new cloud folder and setting options('reproducible.cloudFolderID' = '",
+            cloudFolderID, "')")
     options('reproducible.cloudFolderID' = cloudFolderID)
   }
   return(cloudFolderID)
@@ -69,7 +69,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 #' @inheritParams Cache
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                           drv = RSQLite::SQLite(), conn = NULL) {
-  browser()
+  browser(expr = exists("kkkk"))
   message("Downloading cloud copy of ", newFileName,", with cacheId: ",
           outputHash)
   localNewFilename <- file.path(tempdir(), basename2(newFileName))
@@ -140,7 +140,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
 
 cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
                                        drv = RSQLite::SQLite()) {
-  browser()
+  browser(expr = exists("kkkk"))
   rasterFilename <- Filenames(output)
   if (!is.null(rasterFilename) && length(rasterFilename) > 0) {
     cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
