@@ -325,7 +325,8 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   # should have 2 files in cloud b/c of grd and gri
   expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
-  expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)), by = "artifact"))==1)
+  expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)),
+                          by = .cacheTableHashColName()))==1)
 
   ####################################################
   # both cloud and local exist -- take local only -- no change to cloud

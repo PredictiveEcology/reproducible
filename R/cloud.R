@@ -18,7 +18,8 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = NULL) {
     warning("No cloudFolderID supplied; if this is the first time using 'useCloud',",
             " this cloudFolderID, ", cloudFolderID,
             " should likely be kept and used in all subsequent calls to Cache using 'useCloud = TRUE'.", #nolint
-            " Making a new cloud folder and setting options('reproducible.cloudFolderID' = '",
+            " Making a new cloud folder, '",newDir$name,
+            "' and setting options('reproducible.cloudFolderID' = '",
             cloudFolderID, "')")
     options('reproducible.cloudFolderID' = cloudFolderID)
   }
