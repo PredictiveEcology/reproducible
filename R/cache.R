@@ -520,10 +520,11 @@ setMethod(
       if (useCloud) {
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
-        cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
+        #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
         browser(expr = exists("kkkk"))
-        message("Retrieving file list in cloud folder")
-        gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
+        #message("Retrieving file list in cloud folder")
+        #gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
+        gdriveLs <- driveLs(cloudFolderID, pattern = outputHash)
       }
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]

@@ -8,24 +8,49 @@ if (getRversion() >= "3.1.0") {
 #' if one not present on googledrive, with a warning.
 #'
 #' @param cloudFolderID The google folder ID where cloud caching will occur.
+#' @param create Logical. If \code{TRUE}, then the cloudFolderID will be created.
+#'     This should be used with caution as there are no checks for overwriting.
+#'     See \code{googledrive::drive_mkdir}. Default \code{FALSE}.
 #' @export
 #' @importFrom googledrive drive_mkdir
-checkAndMakeCloudFolderID <- function(cloudFolderID = NULL) {
+checkAndMakeCloudFolderID <- function(cloudFolderID = NULL, create = FALSE) {
   browser(expr = exists("kkkk"))
-  if (is.null(cloudFolderID)) {
-    newDir <- retry({drive_mkdir(rndstr(1, 6))})
+  isNullCFI <- is.null(cloudFolderID)
+  if (isNullCFI || isTRUE(create)) {
+    if (isNullCFI) {
+      cloudFolderID <- rndstr(1, 6)
+    }
+    newDir <- retry({drive_mkdir(cloudFolderID, path = "~/")})
     cloudFolderID = newDir$id
-    warning("No cloudFolderID supplied; if this is the first time using 'useCloud',",
-            " this cloudFolderID, ", cloudFolderID,
-            " should likely be kept and used in all subsequent calls to Cache using 'useCloud = TRUE'.", #nolint
-            " Making a new cloud folder, '",newDir$name,
-            "' and setting options('reproducible.cloudFolderID' = '",
-            cloudFolderID, "')")
+    if (isNullCFI)
+      warning("No cloudFolderID supplied; if this is the first time using 'useCloud',",
+              " this cloudFolderID, ", cloudFolderID,
+              " should likely be kept and used in all subsequent calls to Cache using 'useCloud = TRUE'.", #nolint
+              " Making a new cloud folder, '",newDir$name,
+              "' and setting options('reproducible.cloudFolderID' = '",
+              cloudFolderID, "')")
     options('reproducible.cloudFolderID' = cloudFolderID)
   }
   return(cloudFolderID)
 }
 
+driveLs <- function(cloudFolderID = NULL, pattern = NULL) {
+  cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID) # only deals with NULL case
+  browser(expr = exists("kkkk"))
+  message("Retrieving file list in cloud folder")
+  gdriveLs <- try(drive_ls(path = as_id(cloudFolderID), pattern = paste0(cloudFolderID, "|",pattern)))
+  if (is(gdriveLs, "try-error")) {
+    fnf <- grepl("File not found", gdriveLs)
+    if (!fnf) {
+      gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = paste0(cloudFolderID, "|",pattern)))
+      #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, create = TRUE)
+      #gdriveLs <- try(drive_ls(path = as_id(cloudFolderID), pattern = paste0(cloudFolderID, "|",pattern)))
+    } else {
+      stop("cloudFolderID not found on Gdrive\n", gdriveLs)
+    }
+  }
+  gdriveLs
+}
 #' Upload to cloud, if necessary
 #'
 #' Meant for internal use, as there are internal objects as arguments.
@@ -133,7 +158,9 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
                  full.names = TRUE))
     })
     out <- lapply(allRelevantFiles, function(file) {
-      retry(drive_upload(media = file,  path = as_id(cloudFolderID), name = basename(file)))
+      #retry(
+        drive_upload(media = file,  path = as_id(cloudFolderID), name = basename(file))
+       # )
     })
   }
   return(invisible())

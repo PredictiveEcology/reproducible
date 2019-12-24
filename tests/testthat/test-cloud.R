@@ -20,6 +20,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #######################################
     # local absent, cloud absent
     #######################################
+    kkkk <<- 1
     mess1 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
                                          cacheRepo = tmpCache, useCloud = TRUE))
     expect_true(any(grepl("uploaded", mess1)))
