@@ -405,12 +405,6 @@ test_that("test asPath", {
   # Third -- finally has all same as second time
   a3 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
 
-  cat("#### a1 ", file = "~/test.txt", sep = "\n")
-  cat(a1, file = "~/test.txt", sep = "\n", append = TRUE)
-  cat("#### a2 ", file = "~/test.txt", append = TRUE, sep = "\n")
-  cat(a2, file = "~/test.txt", append = TRUE, sep = "\n")
-  cat("#### a3 ", file = "~/test.txt", append = TRUE, sep = "\n")
-  cat(a3, file = "~/test.txt", append = TRUE, sep = "\n")
   expect_true(length(a1) == 0)
   expect_true(length(a2) == 0)
   expect_true(grepl("loading cached result", a3))
@@ -860,7 +854,6 @@ test_that("test cc", {
 
   #rmFC <<- 1
   cc(ask = FALSE, x = tmpCache)
-  rm(rmFC, envir = .GlobalEnv)
   b <- showCache(x = tmpCache) # most recent is gone
   expect_true(length(unique(b[[.cacheTableHashColName()]])) == 3)
 

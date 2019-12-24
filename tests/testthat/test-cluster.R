@@ -1,8 +1,9 @@
 test_that("test parallel collisions", {
   skip_on_cran() # testing multi-threaded things on CRAN
-  tmpdir <- file.path(tempdir(), "testCache")
-  checkPath(tmpdir, create = TRUE)
-  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   if (require(parallel, quietly = TRUE)) {
     # make cluster -- note this works if cluster is FORK also, but for simplicity, using default
