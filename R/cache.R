@@ -389,6 +389,7 @@ setMethod(
       nestedTags <- determineNestedTags(envir = environment(),
                                         mc = match.call(expand.dots = TRUE),
                                         userTags = userTags)
+      browser(expr = exists("aaaa"))
       userTags <- unique(c(userTags, .reproEnv$userTags))
       if (any(!nestedTags$objOverride)) {
         on.exit({
@@ -526,16 +527,16 @@ setMethod(
         #gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
         gdriveLs <- driveLs(cloudFolderID, pattern = outputHash)
       }
+      browser(expr = exists("ffff"))
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         tries <- tries + 1
-        browser(expr = exists("ffff"))
         if (getOption("reproducible.newAlgo", TRUE)) {
           localTags <- showCache(repo, drv = drv, conn = conn, verboseMessaging = FALSE) # This is noisy
           isInRepo <- localTags[cacheId %in% outputHash,]
         } else {
           localTags <- getLocalTags(repo)
-          isInRepo <- localTags[localTags[[.cacheTableTagColName()]] == paste0("cacheId:", outputHash), , drop = FALSE]
+          isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
         }
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
@@ -544,7 +545,6 @@ setMethod(
         }
       }
 
-      browser(expr = exists("nnnn"))
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
       )
@@ -570,7 +570,11 @@ setMethod(
           outputHash <- outputHashNew
           message("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'")
         } else {
-          isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
+          if (getOption("reproducible.newAlgo", TRUE)) {
+            isInRepo <- isInRepo[isInRepo[[.cacheTableHashColName()]] != outputHash, , drop = FALSE]
+          } else {
+            isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
+          }
           message("Overwriting Cache entry with function '",fnDetails$functionName ,"'")
         }
       }
@@ -581,6 +585,7 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
+          browser(expr = exists("nnnn"))
           objSize <- file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
           class(objSize) <- "object_size"
           if (objSize > 1e6)
@@ -611,6 +616,8 @@ setMethod(
         }
       } else {
         # find similar -- in progress
+        browser(expr = exists("kkkk"))
+
         if (!is.null(showSimilar)) { # TODO: Needs testing
           if (!isFALSE(showSimilar)) {
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
@@ -759,7 +766,7 @@ setMethod(
 
       objSize <- .objSizeInclEnviros(outputToSave)
       userTags <- c(userTags,
-                    paste0("class:", class(outputToSave)[1]),
+                    # paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0(otherFns),
@@ -822,6 +829,7 @@ setMethod(
         } else {
           while (written >= 0) {
 
+            browser(expr = exists("gggg"))
             saved <- suppressWarnings(try(silent = TRUE,
                                           saveToLocalRepo(
                                             outputToSave,
@@ -976,6 +984,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = RSQLite::SQLite(), conn = NULL,
                         cacheId) {
   counter <- 0
+  browser(expr = exists("mmmm"))
   if (!CacheIsACache(cachePath = cacheRepo, drv = drv)) {
     stop("That cacheRepo does not exist")
   }
@@ -1245,17 +1254,17 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   if (isDevMode) {
     showSimilar <- 1
   }
+  browser(expr = exists("kkkk")) # deal with tag
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")) #nolint
   userTags3 <- c(userTags, userTags2)
   hashName <- .cacheTableHashColName()
-  if (getOption('reproducible.newAlgo', TRUE)) {
-    Tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":")][[hashName]]
-  } else {
-    Tag <- localTags[tag %in% userTags3][[hashName]]
+  cn <- if (any(colnames(localTags) %in% "tag")) "tag" else "tagKey"
+
+  if (!(cn %in% "tag")) {
+    tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":")][[hashName]]
   }
-  aa <- localTags[Tag %in% userTags3][
-    ,.N, keyby = hashName]
+  aa <- localTags[tag %in% userTags3][,.N, keyby = hashName]
   setkeyv(aa, "N")
   similar <- if (NROW(localTags) > 0) {
     localTags[tail(aa, as.numeric(showSimilar)), on = hashName][N == max(N)]
@@ -1263,20 +1272,23 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     localTags
   }
   if (NROW(similar)) {
-    browser(expr = exists("aaaa")) # deal with tag
-    Tag <- similar[paste(tagKey , get(.cacheTableTagColName()), sep = ":")][[hashName]]
-    similar2 <- similar[grepl("preDigest", Tag)]
-    if (getOption("reproducible.newAlgo", TRUE)) {
-      cacheIdOfSimilar <- unique(similar[[.cacheTableHashColName()]])
-    } else {
-      cacheIdOfSimilar <- similar[grepl("cacheId", Tag)][[.cacheTableTagColName()]]
+    if (cn %in% "tag") {
+      similar2 <- similar[grepl("preDigest", tag)]
+      cacheIdOfSimilar <- similar[grepl("cacheId", tag)][[.cacheTableTagColName("tag")]]
       cacheIdOfSimilar <- unlist(strsplit(cacheIdOfSimilar, split = ":"))[2]
+      similar2[, `:=`(fun = unlist(lapply(strsplit(get(cn), split = ":"),
+                                          function(xx) xx[[2]])),
+                      hash = unlist(lapply(strsplit(get(cn), split = ":"),
+                                           function(xx) xx[[3]])))]
+    } else {
+      Tag <- similar[paste(tagKey , get(.cacheTableTagColName()), sep = ":")][[hashName]]
+      similar2 <- similar[grepl("preDigest", Tag)]
+      cacheIdOfSimilar <- unique(similar[[.cacheTableHashColName()]])
+      similar2[, `:=`(fun = unlist(lapply(strsplit(get(.cacheTableTagColName()), split = ":"),
+                                          function(xx) xx[[1]])),
+                      hash = unlist(lapply(strsplit(get(.cacheTableTagColName()), split = ":"),
+                                           function(xx) xx[[2]])))]
     }
-    similar2[, `:=`(fun = unlist(lapply(strsplit(get(.cacheTableTagColName()), split = ":"),
-                                        function(xx) xx[[1]])),
-                    hash = unlist(lapply(strsplit(get(.cacheTableTagColName()), split = ":"),
-                                         function(xx) xx[[2]])))]
-
 
     a <- setDT(as.list(preDigestUnlistTrunc))
     a <- melt(a, measure.vars = seq_along(names(a)), variable.name = "fun", value.name = "hash")
@@ -1532,10 +1544,11 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
                        isInRepo, outputHash) {
   browser(expr = exists("devMode"))
   userTags <- gsub(".*:(.*)", "\\1", userTags)
-  isInRepoAlt <- localTags[localTags[[.cacheTableTagColName()]] %in% userTags, , drop = FALSE]
+  isInRepoAlt <- localTags[localTags[[.cacheTableTagColName("tag")]] %in% userTags, , drop = FALSE]
   data.table::setDT(isInRepoAlt)
   if (NROW(isInRepoAlt) > 0)
-    isInRepoAlt <- isInRepoAlt[, iden := identical(sum(get(.cacheTableTagColName()) %in% userTags), length(userTags)),
+    isInRepoAlt <- isInRepoAlt[, iden := identical(sum(get(.cacheTableTagColName("tag"))
+                                                       %in% userTags), length(userTags)),
                                by = eval(.cacheTableHashColName())][iden == TRUE]
   if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt[[.cacheTableHashColName()]])) == 1) {
     newLocalTags <- localTags[localTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]],]
@@ -1546,7 +1559,9 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
                           ")"),
                    newLocalTags[["tagKey"]])
     localTagsAlt <- newLocalTags[!tags1,]
-    if (all(localTagsAlt[[.cacheTableTagColName()]] %in% userTags)) {
+    browser(expr = exists("kkkk"))
+
+    if (all(localTagsAlt[[.cacheTableTagColName("tag")]] %in% userTags)) {
       mess <- capture.output(type = "output", {
         similars <- .findSimilar(newLocalTags, scalls = scalls,
                                  preDigestUnlistTrunc = preDigestUnlistTrunc,
@@ -1563,8 +1578,9 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
           uniqueCacheId <- unique(isInRepoAlt[[.cacheTableHashColName()]])
           outputHash <- uniqueCacheId[uniqueCacheId %in% newLocalTags[[.cacheTableHashColName()]]]
         } else {
-          outputHash <- gsub("cacheId:", "", newLocalTags[newLocalTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]] & #nolint
-                                                            startsWith(newLocalTags[[.cacheTableTagColName()]], "cacheId"), ][[.cacheTableTagColName()]]) #nolint
+          outputHash <- gsub("cacheId:", "",
+                             newLocalTags[newLocalTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]] & #nolint
+                                            startsWith(newLocalTags[[.cacheTableTagColName("tag")]], "cacheId"), ][[.cacheTableTagColName()]]) #nolint
 
         }
         isInRepo <- isInRepoAlt
@@ -1580,7 +1596,12 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
 }
 
-.cacheNumDefaultTags <- 6
+.cacheNumDefaultTags <- function() {
+  if (getOption("reproducible.newAlgo", TRUE))
+    5
+  else
+    10
+}
 
 .cacheTableHashColName <- function() {
   if (getOption("reproducible.newAlgo", TRUE)) {
@@ -1590,12 +1611,15 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   }
 }
 
-.cacheTableTagColName <- function() {
+.cacheTableTagColName <- function(option = NULL) {
+  out <- "tagValue"
   if (getOption("reproducible.newAlgo", TRUE)) {
-    "tagValue"
   } else {
-    "tag"
+    if (isTRUE(option == "tag")) {
+      out <- "tag"
+    }
   }
+  out
 }
 
 #' A collection of low level tools for Cache
@@ -1639,7 +1663,11 @@ CacheStorageDir <- function(cachePath) {
 #' @export
 #' @param hash The cacheId or otherwise digested hash value, as character string.
 CacheStoredFile <- function(cachePath, hash) {
-  csf <- getOption("reproducible.cacheSaveFormat", "qs")
+  csf <- if (isTRUE(getOption("reproducible.newAlgo", TRUE)) == FALSE) {
+    "rda"
+  } else {
+    getOption("reproducible.cacheSaveFormat", "qs")
+  }
   csExtension <- if (csf == "qs") {
     "qs"
   } else if (csf == "rds") {

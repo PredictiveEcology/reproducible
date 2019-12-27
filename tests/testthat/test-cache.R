@@ -22,7 +22,7 @@ test_that("test file-backed raster caching", {
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
-  val1 <- if (getOption("reproducible.newAlgo", TRUE)) 7 else 11
+  val1 <- .cacheNumDefaultTags() + 1 # adding a userTag here
 
   #with_mock(
   #  "reproducible::isInteractive" = function() TRUE,
@@ -103,7 +103,7 @@ test_that("test file-backed raster caching", {
       expect_true(inMemory(bb))
 
       bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
-      expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags)
+      expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
 
       # Test that factors are saved correctly
       randomPolyToFactorInMemory <- function() {
@@ -288,20 +288,20 @@ test_that("test keepCache", {
   Cache(runif, 10, cacheRepo = tmpdir)
   Cache(round, runif(4), cacheRepo = tmpdir)
   expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) ==
-                .cacheNumDefaultTags * 3)
+                .cacheNumDefaultTags() * 3)
   expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))) == 0) # and search
-  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags)
+  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
 
   # do it twice to make sure it can deal with repeats
-  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags)
+  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
   st <- Sys.time()
   Sys.sleep(1)
   Cache(sample, 10, cacheRepo = tmpdir)
   Cache(length, 10, cacheRepo = tmpdir)
   Cache(sum, runif(4), cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags)
-  expect_true(NROW(keepCache(tmpdir, before = st, ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags)
-  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags)
+  expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
+  expect_true(NROW(keepCache(tmpdir, before = st, ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
 
   ranNums <- Cache(runif, 4, cacheRepo = tmpdir, userTags = "objectName:a")
   ranNums <- Cache(rnorm, 4, cacheRepo = tmpdir, userTags = "objectName:a")
@@ -690,7 +690,6 @@ test_that("test future", {
   }
 })
 
-
 ##########################
 test_that("test mergeCache", {
   testInitOut <- testInit("data.table")
@@ -698,11 +697,14 @@ test_that("test mergeCache", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
+  # aaaa <<- gggg <<- kkkk <<- 1
   a <- Cache(rnorm, 1, cacheRepo = tmpdir)
   b <- Cache(rnorm, 2, cacheRepo = tmpCache)
 
   aCache <- showCache(tmpdir)
   bCache <- showCache(tmpCache)
+
+  #nnnn <<- ffff <<- aaaa <<- bbbb <<-
 
   d <- mergeCache(tmpCache, tmpdir)
 

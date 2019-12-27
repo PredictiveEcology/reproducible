@@ -74,6 +74,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   ## showSimilar
   try(clearCache(ask = FALSE, x = tmpCache), silent = TRUE)
   aMess <- capture_messages(a <- Cache(rnorm, n = 1, mean = 1, cacheRepo = tmpCache))
+  #lapply(letters[11], function(l) assign(paste(rep(l, 4), collapse = ""), 1, envir = .GlobalEnv))
   bMess <- capture_messages(b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache))
   expect_true(any(grepl("different n", bMess)))
   expect_true(any(grepl("new argument.*sd", bMess)))
@@ -122,7 +123,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
 
   ## writeFuture
-  expect_true(identical(.robustDigest("sdf"),
+  comp <- if (getOption("reproducible.newAlgo", TRUE)) .robustDigest("sdf") else
+    "dda1fbb70d256e6b3b696ef0176c63de"
+  expect_true(identical(comp,
                         writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "",
                                     drv = RSQLite::SQLite())))
   expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))

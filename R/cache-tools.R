@@ -528,6 +528,7 @@ setMethod(
                                                 connFrom = connFrom))
     suppressMessages(cacheToList <- showCache(cacheTo, drv = drvTo,
                                               connTo = connTo))
+    browser(expr = exists("kkkk"))
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
@@ -545,7 +546,7 @@ setMethod(
         }
 
         ## Save it
-        userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "date", "cacheId"),
+        userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "date", "cacheId", "class"),
                                             list(tagKey, tagValue)]
         if (getOption("reproducible.newAlgo", TRUE)) {
           output <- saveToCache(cacheTo, userTags = userTags,
@@ -589,35 +590,38 @@ setMethod(
 
 #' @keywords internal
 .messageCacheSize <- function(x, artifacts = NULL, cacheTable) {
+  browser(expr = exists("ffff"))
+
+  tagCol <- "tagValue"
   if (missing(cacheTable)) {
     if (getOption("reproducible.newAlgo", TRUE)) {
       a <- showCache(x, verboseMessaging = FALSE)
     } else {
       a <- showLocalRepo2(x)
+      tagCol <- "tag"
     }
 
   } else {
     a <- cacheTable
   }
-  if (getOption("reproducible.newAlgo", TRUE)) {
-    b <- a[tagKey == "object.size",]
-    fsTotal <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
+  cn <- if (any(colnames(a) %in% "tag")) "tag" else "tagKey"
+  b <- a[a[[cn]] == "object.size",]
+  if (any(colnames(a) %in% "tag")) {
+    fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
   } else {
-    b <- a[startsWith(a[[.cacheTableTagColName()]], "object.size"),]
-    fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b[[.cacheTableTagColName()]], split = ":"), function(x) x[[2]])))) / 4
+    fsTotal <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
   }
   fsTotalRasters <- sum(file.size(dir(file.path(x, "rasters"), full.names = TRUE, recursive = TRUE)))
   fsTotal <- fsTotal + fsTotalRasters
   class(fsTotal) <- "object_size"
   preMessage1 <- "  Total (including Rasters): "
 
-  browser(expr = exists("ffff"))
   b <- a[a[[.cacheTableHashColName()]] %in% artifacts &
-           startsWith(a$tagKey, "object.size"),]
-  if (getOption("reproducible.newAlgo", TRUE)) {
-    fs<- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
+           (a[[cn]] %in% "object.size"),]
+  if (cn == "tag") {
+    fs <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
   } else {
-    fs <- sum(as.numeric(unlist(lapply(strsplit(b[[.cacheTableTagColName()]], split = ":"), function(x) x[[2]])))) / 4
+    fs<- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
   }
 
   class(fs) <- "object_size"
