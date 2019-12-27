@@ -135,6 +135,7 @@ test_that("test miscellaneous fns", {
 
 
 test_that("test miscellaneous fns", {
+  skip_if_no_token()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
@@ -148,19 +149,19 @@ test_that("test miscellaneous fns", {
   gdriveLs <- expect_error(driveLs("testy", "sdfsdf"), "File not found")
   expect_is(checkAndMakeCloudFolderID("testy"), "character")
   cloudFolderID <- checkAndMakeCloudFolderID("testy", create = TRUE)
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  testthat::with_mock(
+    "reproducible::retry" = function(..., retries = 1) TRUE,
+    {
+      if (getOption("reproducible.newAlgo", TRUE)) {
 
-    testthat::with_mock(
-      "reproducible::retry" = function(..., retries = 1) TRUE,
-      {
         mess1 <- capture_messages(expect_error(
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
                       gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
-      })
-  } else {
-    mess1 <- capture_messages(expect_error(cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                                                       gdriveLs = gdriveLs1)))
-  }
+      } else {
+        mess1 <- capture_messages(expect_error(cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
+                                                           gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+      }
+    })
   expect_true(grepl("Uploading local copy of", mess1))
   expect_true(grepl("cacheId\\: sdfsiodfja to cloud folder", mess1))
 
