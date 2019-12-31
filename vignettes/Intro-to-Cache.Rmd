@@ -109,7 +109,7 @@ showCache(tmpDir, userTags = c("runif")) # show only cached objects made during 
 clearCache(tmpDir, userTags = c("runif"), ask = FALSE) # remove only cached objects made during runif call
 showCache(tmpDir) # only those made during rnorm call
 
-#clearCache(tmpDir, ask = FALSE)
+clearCache(tmpDir, ask = FALSE)
 ```
 
 ## Example 2: using the "accessed" tag

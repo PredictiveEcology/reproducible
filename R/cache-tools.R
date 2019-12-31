@@ -143,13 +143,8 @@ setMethod(
     }
 
     if (getOption("reproducible.newAlgo", TRUE)) {
-      if (is.null(conn)) {
-        conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
-      }
-      if (is.null(conn)) {
+      if (!CacheIsACache(x))
         return(invisible(.emptyCacheTable))
-      }
-      on.exit(dbDisconnect(conn))
     }
 
     if (clearWholeCache) {
@@ -174,7 +169,7 @@ setMethod(
 
       checkPath(x, create = TRUE)
       if (getOption("reproducible.newAlgo", TRUE)) {
-        createCache(x, drv = drv, conn = conn, force = TRUE)
+        createCache(x, drv = drv, force = TRUE)
       } else {
         createLocalRepo(x)
       }
@@ -239,6 +234,10 @@ setMethod(
 
       objToGet <- unique(objsDT[[.cacheTableHashColName()]])
       if (getOption("reproducible.newAlgo", TRUE)) {
+        if (is.null(conn)) {
+          conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
+          on.exit({dbDisconnect(conn)})
+        }
         rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
         browser(expr = exists("rmFC"))
       } else {
@@ -359,10 +358,10 @@ setMethod(
 
       if (is.null(conn)) {
         return(invisible(.emptyCacheTable))
-        }
+      }
       on.exit({
         dbDisconnect(conn)
-        })
+      })
       tab <- try(dbReadTable(conn, CacheDBTableName(x, drv = drv)), silent = TRUE)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
