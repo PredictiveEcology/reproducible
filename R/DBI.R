@@ -36,9 +36,11 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
     on.exit(dbDisconnect(conn))
   }
   dt <- .emptyCacheTable
-  dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
-               field.types = c(cacheId = "text", tagKey = "text",
-                               tagValue = "text", createdDate = "text"))
+  retry(
+    dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
+                 field.types = c(cacheId = "text", tagKey = "text",
+                                 tagValue = "text", createdDate = "text"))
+  )
 }
 
 #' @rdname cacheTools
@@ -137,9 +139,9 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
                   " WHERE \"cacheId\" = $1")
 
 
-  res <- try({dbSendStatement(conn, query)})
+  res <- retry({dbSendStatement(conn, query)})
   browser(expr = is(res, "try-error"))
-  dbBind(res, list(cacheId))
+  retry(dbBind(res, list(cacheId)))
 
   dbClearResult(res)
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
