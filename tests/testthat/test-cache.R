@@ -24,10 +24,12 @@ test_that("test file-backed raster caching", {
   #   solves the error about not being in the testthat package
   val1 <- .cacheNumDefaultTags() + 1 # adding a userTag here
 
-  with_mock(
-   "reproducible::isInteractive" = function() TRUE,
-   {
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
+  # with_mock(
+  #  "reproducible::isInteractive" = function() TRUE,
+  #  {
+
+  browser()
+  aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
       # Test clearCache by tags
 
       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
@@ -144,7 +146,7 @@ test_that("test file-backed raster caching", {
       expect_true(NROW(raster::levels(bb)[[1]]) == 30)
 
       clearCache(tmpdir, ask = FALSE)
-   })
+#   })
 
 
 })

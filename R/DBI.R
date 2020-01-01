@@ -23,7 +23,8 @@
 #' @rdname cacheTools
 createCache <- function(cachePath, drv = RSQLite::SQLite(),
                         conn = NULL, force = FALSE) {
-  alreadyExists <- CacheIsACache(cachePath)
+  browser(expr = exists("aaaa"))
+  alreadyExists <- CacheIsACache(cachePath, drv = drv)
   if (alreadyExists && force == FALSE) {
     message("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
     return(invisible(cachePath))
@@ -36,6 +37,7 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
     on.exit(dbDisconnect(conn))
   }
   dt <- .emptyCacheTable
+
   retry(
     dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
                  field.types = c(cacheId = "text", tagKey = "text",

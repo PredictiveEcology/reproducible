@@ -411,6 +411,13 @@ setMethod(
       cacheRepos <- getCacheRepos(cacheRepo, modifiedDots)
       cacheRepo <- cacheRepos[[1]]
 
+      if (getOption("reproducible.newAlgo", TRUE)) {
+        if (is.null(conn)) {
+          conn <- dbConnectAll(drv, cachePath = cacheRepo)
+          on.exit(dbDisconnect(conn), add = TRUE)
+        }
+      }
+
       if (fnDetails$isPipe) {
         pipeRes <- .CachePipeFn1(modifiedDots, fnDetails, FUN)
         modifiedDots <- pipeRes$modifiedDots
@@ -434,13 +441,13 @@ setMethod(
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-        CacheIsACache(cachePath = cacheRepo, drv = drv)
+        CacheIsACache(cachePath = cacheRepo, drv = drv, conn = conn, create = TRUE)
       }))
 
       if (any(!isIntactRepo)) {
         if (getOption("reproducible.newAlgo", TRUE))
           ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
-            createCache(cacheRepos[[cacheRepoInd]],
+            createCache(cacheRepos[[cacheRepoInd]], drv = drv, conn = conn,
                         force = isIntactRepo[cacheRepoInd])
           })
         else
@@ -1708,12 +1715,36 @@ CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
 #' @details
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
-CacheIsACache <- function(cachePath, drv = RSQLite::SQLite()) {
+CacheIsACache <- function(cachePath, create = FALSE, drv = RSQLite::SQLite(), conn) {
   ret <- FALSE
   if (is(drv, "SQLiteDriver")) {
     ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
                  list.files(cachePath))
   } # other types of drv, e.g., Postgres can be done via env vars
-
+  if (is(drv, "PqDriver")) {
+    browser(expr = exists("jjjj"))
+    ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
+                 list.files(cachePath))
+  }
+  if (isFALSE(ret) && isTRUE(create)) {
+    if (is(drv, "PqDriver")) {
+      file.create(CacheDBFile(cachePath, drv = drv))
+    }
+  }
   return(ret)
+}
+
+CacheCreateDBFile <- function(cachePath, create = FALSE,
+                              drv = RSQLite::SQLite(), conn) {
+  ret <- FALSE
+  if (is(drv, "SQLiteDriver")) {
+    ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
+                 list.files(cachePath))
+  } # other types of drv, e.g., Postgres can be done via env vars
+  if (is(drv, "PqDriver")) {
+    browser(expr = exists("jjjj"))
+    ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
+                 list.files(cachePath))
+  }
+
 }

@@ -354,7 +354,9 @@ setMethod(
     }
 
     if (getOption("reproducible.newAlgo", TRUE)) {
+      needDisconnect <- FALSE
       if (is.null(conn)) {
+        needDisconnect <- TRUE
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
       }
 
@@ -362,7 +364,8 @@ setMethod(
         return(invisible(.emptyCacheTable))
       }
       on.exit({
-        dbDisconnect(conn)
+        if (needDisconnect)
+          dbDisconnect(conn)
       })
       dbTabNam <- CacheDBTableName(x, drv = drv)
       tab <- dbReadTable(conn, dbTabNam)
