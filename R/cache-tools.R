@@ -116,8 +116,8 @@ setMethod(
 
     if (useCloud || !clearWholeCache) {
       browser(expr = exists("jjjj"))
-      if (missing(after)) after <- "1970-01-01"
-      if (missing(before)) before <- Sys.time() + 1e5
+      if (missing(after)) after <- NA # "1970-01-01"
+      if (missing(before)) before <- NA # Sys.time() + 1e5
 
       args <- append(list(x = x, after = after, before = before, userTags = userTags),
                      list(...))
@@ -278,6 +278,7 @@ setMethod(
 #' cc(ask = FALSE, x = tmpDir) # Cache is
 #' cc(ask = FALSE, x = tmpDir) # Cache is already empty
 cc <- function(secs, ...) {
+  browser(expr = exists("jjjj"))
   if (missing(secs)) {
     message("No time provided; removing the most recent entry to the Cache")
     suppressMessages({theCache <- reproducible::showCache(...)})
@@ -336,8 +337,9 @@ setMethod(
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
-    if (missing(after)) after <- "1970-01-01"
-    if (missing(before)) before <- Sys.time() + 1e5
+    browser(expr = exists("jjjj"))
+    if (missing(after)) after <- NA # "1970-01-01"
+    if (missing(before)) before <- NA # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
     # not seeing userTags
@@ -362,25 +364,30 @@ setMethod(
       on.exit({
         dbDisconnect(conn)
       })
-      tab <- try(dbReadTable(conn, CacheDBTableName(x, drv = drv)), silent = TRUE)
+      dbTabNam <- CacheDBTableName(x, drv = drv)
+      tab <- dbReadTable(conn, dbTabNam)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
       else
         objsDT <- setDT(tab)
-      setkeyv(objsDT, "cacheId")
+      #setkeyv(objsDT, "cacheId")
     } else {
       objsDT <- showLocalRepo(x) %>% data.table()
-      setkeyv(objsDT, "md5hash")
+      #setkeyv(objsDT, "md5hash")
     }
 
     if (NROW(objsDT) > 0) {
       if (getOption("reproducible.newAlgo", TRUE)) {
         # objsDT <- data.table(splitTagsLocal(x), key = "artifact")
-        browser(expr = exists("aaaa"))
-
-        objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
-                                                  (tagValue >= after)][!duplicated(cacheId)]
-        objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
+        objsDT3 <- objsDT[tagKey == "accessed"]
+        if (!is.na(before))
+          objsDT3 <- objsDT3[(tagValue <= before)]
+        if ( !is.na(after))
+          objsDT3 <- objsDT3[(tagValue >= after)]
+        objsDT3 <- objsDT3[!duplicated(cacheId)]
+        browser(expr = exists("zzzz"))
+        # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
+        objsDT <- objsDT[objsDT$cacheId %in% objsDT3$cacheId] # faster than data.table join
       } else {
         objsDT <- data.table(splitTagsLocal(x), key = "artifact")
         objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
@@ -389,6 +396,7 @@ setMethod(
       }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
+          objsDTs <- list()
           for (ut in userTags) {
             #objsDT[[.cacheTableHashColName()]] %in% ut
             # if (getOption("reproducible.newAlgo", TRUE)) {
@@ -407,19 +415,19 @@ setMethod(
               setkeyv(objsDT2, .cacheTableHashColName())
               shortDT <- unique(objsDT2, by = .cacheTableHashColName())[, get(.cacheTableHashColName())]
             #}
-            objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
           }
         } else {
           if (getOption("reproducible.newAlgo", TRUE)) {
             objsDT2 <- objsDT[cacheId %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
             setkeyv(objsDT2, "cacheId")
             shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
-            objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
           } else {
             objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
             setkeyv(objsDT2, "artifact")
             shortDT <- unique(objsDT2, by = "artifact")[, artifact]
-            objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
 
           }
         }
@@ -453,8 +461,8 @@ setMethod(
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
-    if (missing(after)) after <- "1970-01-01"
-    if (missing(before)) before <- Sys.time() + 1e5
+    if (missing(after)) after <- NA # "1970-01-01"
+    if (missing(before)) before <- NA # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
@@ -545,7 +553,7 @@ setMethod(
         }
 
         ## Save it
-        userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "date", "cacheId", "class"),
+        userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][!tagKey %in% c("format", "name", "date", "cacheId", "class"),
                                             list(tagKey, tagValue)]
         if (getOption("reproducible.newAlgo", TRUE)) {
           output <- saveToCache(cacheTo, userTags = userTags,

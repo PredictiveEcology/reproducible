@@ -1262,7 +1262,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   cn <- if (any(colnames(localTags) %in% "tag")) "tag" else "tagKey"
 
   if (!(cn %in% "tag")) {
-    tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":")][[hashName]]
+    tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":"), on = .cacheTableHashColName()][[hashName]]
   }
   aa <- localTags[tag %in% userTags3][,.N, keyby = hashName]
   setkeyv(aa, "N")
@@ -1281,7 +1281,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
                       hash = unlist(lapply(strsplit(get(cn), split = ":"),
                                            function(xx) xx[[3]])))]
     } else {
-      Tag <- similar[paste(tagKey , get(.cacheTableTagColName()), sep = ":")][[hashName]]
+      Tag <- similar[paste(tagKey , get(.cacheTableTagColName()), sep = ":"),
+                     on = .cacheTableHashColName()][[hashName]]
       similar2 <- similar[grepl("preDigest", Tag)]
       cacheIdOfSimilar <- unique(similar[[.cacheTableHashColName()]])
       similar2[, `:=`(fun = unlist(lapply(strsplit(get(.cacheTableTagColName()), split = ":"),

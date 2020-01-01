@@ -116,6 +116,7 @@ clearCache(tmpDir, ask = FALSE)
 
 ```{r accessed-tag}
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+Sys.sleep(1)
 ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # access it again, from Cache
@@ -129,7 +130,7 @@ onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "a
 # i.e., return all of wholeCache that was not recently accessed
 #   Note: the two different ways to access -- old way with "artifact" will be deprecated
 toRemove <- if (getOption("reproducible.newAlgo", TRUE)) {
-  unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$cacheId
+  unique(wholeCache[!onlyRecentlyAccessed, on = "cacheId"], by = "cacheId")$cacheId
 } else {
   unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$artifact
 }

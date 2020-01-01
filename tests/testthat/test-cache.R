@@ -289,7 +289,8 @@ test_that("test keepCache", {
   Cache(round, runif(4), cacheRepo = tmpdir)
   expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) ==
                 .cacheNumDefaultTags() * 3)
-  expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))) == 0) # and search
+  expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))[tagKey != "otherFunctions"]) ==
+                0) # and search
   expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
 
   # do it twice to make sure it can deal with repeats
@@ -636,6 +637,8 @@ test_that("test Cache argument inheritance to inner functions", {
   aa <- Cache(outer, n = 2, cacheRepo = tmpdir, userTags = outerTag)
   bb <- showCache(tmpdir, userTags = outerTag)
   cc <- showCache(tmpdir)
+  data.table::setorderv(bb, c(.cacheTableHashColName(), "tagKey", "tagValue"))
+  data.table::setorderv(cc, c(.cacheTableHashColName(), "tagKey", "tagValue"))
   expect_true(identical(bb, cc))
 
   # Check userTags -- all items have the outer tag propagate, plus inner ones only have inner ones
@@ -846,6 +849,7 @@ test_that("test cc", {
   }, add = TRUE)
 
   Cache(rnorm, 1, cacheRepo = tmpCache)
+  Sys.sleep(1) # 0.2
   thisTime <- Sys.time()
   Sys.sleep(1) # 0.2
   Cache(rnorm, 2, cacheRepo = tmpCache)
@@ -859,6 +863,7 @@ test_that("test cc", {
   b <- showCache(x = tmpCache) # most recent is gone
   expect_true(length(unique(b[[.cacheTableHashColName()]])) == 3)
 
+  #jjjj <<- 1
   cc(thisTime, ask = FALSE, x = tmpCache)
   d <- showCache(x = tmpCache) # all those after this time gone, i.e., only 1 left
   expect_true(length(unique(d[[.cacheTableHashColName()]])) == 1)
