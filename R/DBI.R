@@ -175,9 +175,7 @@ dbConnectAll <- function(drv, cachePath, create = TRUE) {
     dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
                      "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
 
-    retry(dbWriteTable(conn, CacheDBTableName(cachePath, drv),
-                       dt, append=TRUE, row.names = FALSE),
-          retries = 15)
+    retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
 
   } else {
 
