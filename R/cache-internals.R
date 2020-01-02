@@ -297,7 +297,7 @@
                 fromMemoise = fromMemoise)
 
   # This is protected from multiple-write to SQL collisions
-  .addTagsRepo(isInRepo, cacheRepo, lastOne, drv)
+  .addTagsRepo(isInRepo, cacheRepo, lastOne, drv, conn = conn)
 
   browser(expr = exists("aaaa"))
   if (sideEffect != FALSE) {

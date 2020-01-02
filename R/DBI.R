@@ -172,10 +172,27 @@ dbConnectAll <- function(drv, cachePath, create = TRUE) {
       conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
       on.exit(dbDisconnect(conn))
     }
-    dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
-                     "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
 
-    retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
+    rs <- retry(DBI::dbSendStatement(conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
+                                      " (cacheId, tagKey, tagValue, createdDate) values ",
+                                      "('", isInRepo$cacheId[lastOne],
+                                      "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")),
+                retries = 15)
+
+    # executeSingleSilentQuery(dir, paste0("insert into tag (artifact, tag, createdDate) values ",
+    #                                      "('", md5hash, "', '", gsub(tag, pattern = "'", replacement = ""),
+    #                                      "', '", as.character(now()), "')"))
+    #
+    # rs <- dbSendStatement(con,
+    #                       "INSERT INTO cars (speed, dist) VALUES (1, 1), (2, 2), (3, 3);")
+    # dbHasCompleted(rs)
+    # dbGetRowsAffected(rs)
+    dbClearResult(rs)
+
+    #dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
+    #                 "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
+
+    # retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
 
   } else {
 
@@ -195,3 +212,134 @@ dbConnectAll <- function(drv, cachePath, create = TRUE) {
   }
 
 }
+
+.cacheNumDefaultTags <- function() {
+  if (getOption("reproducible.newAlgo", TRUE))
+    5
+  else
+    10
+}
+
+.cacheTableHashColName <- function() {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    "cacheId"
+  } else {
+    "artifact"
+  }
+}
+
+.cacheTableTagColName <- function(option = NULL) {
+  out <- "tagValue"
+  if (getOption("reproducible.newAlgo", TRUE)) {
+  } else {
+    if (isTRUE(option == "tag")) {
+      out <- "tag"
+    }
+  }
+  out
+}
+
+#' A collection of low level tools for Cache
+#'
+#' These are not intended for normal use.
+#'
+#' @inheritParams Cache
+#' @inheritParams createCache
+#' @rdname CacheHelpers
+#' @export
+#' @details
+#' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
+CacheDBFile <- function(cachePath, drv = RSQLite::SQLite()) {
+  if (is(drv, "SQLiteDriver")) {
+
+    if (getOption("reproducible.newAlgo", TRUE)) {
+      file.path(cachePath, "cache.db")
+    } else {
+      file.path(cachePath, "backpack.db")
+    }
+  } else {
+    file.path(cachePath, "cache.txt")
+  }
+
+}
+
+#' @rdname CacheHelpers
+#' @export
+CacheStorageDir <- function(cachePath) {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    file.path(cachePath, "cacheOutputs")
+  } else {
+    file.path(cachePath, "gallery")
+  }
+}
+
+#' @details
+#' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
+#'
+#' @rdname CacheHelpers
+#' @export
+#' @param hash The cacheId or otherwise digested hash value, as character string.
+CacheStoredFile <- function(cachePath, hash) {
+  csf <- if (isTRUE(getOption("reproducible.newAlgo", TRUE)) == FALSE) {
+    "rda"
+  } else {
+    getOption("reproducible.cacheSaveFormat", "qs")
+  }
+  csExtension <- if (csf == "qs") {
+    "qs"
+  } else if (csf == "rds") {
+    "rds"
+  } else {
+    "rda"
+  }
+  filename <- paste(hash, csExtension, sep = ".")
+  file.path(CacheStorageDir(cachePath), filename)
+}
+
+#' @rdname CacheHelpers
+#' @export
+CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
+  if (!is(cachePath, "Path")) {
+    cachePath <- asPath(cachePath, nParentDirs = 2)
+  }
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    toGo <- attr(cachePath, "nParentDirs")
+    cachePathTmp <- normPath(cachePath)
+    newPath <- basename2(cachePathTmp)
+    while(toGo > 1) {
+      toGo <- toGo - 1
+      cachePathTmp <- dirname(cachePathTmp)
+      newPath <- paste(basename2(cachePathTmp), newPath, sep = "_")
+    }
+  } else {
+    newPath <- "dt"
+  }
+  # SQLite can't handle numbers as initial character of a table name
+  if (grepl("^[[:digit:]]", newPath)) {newPath <- paste0("_", newPath)}
+  return(newPath)
+}
+
+#' @rdname CacheHelpers
+#' @export
+#' @details
+#' \code{CacheIsACache} returns a logical of whether the specified cachePath
+#'   is actually a functioning cache.
+CacheIsACache <- function(cachePath, create = FALSE, drv = RSQLite::SQLite()) {
+  ret <- FALSE
+  if (is(drv, "SQLiteDriver")) {
+    ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
+                 list.files(cachePath))
+  } # other types of drv, e.g., Postgres can be done via env vars
+  if (is(drv, "PqDriver")) {
+    browser(expr = exists("jjjj"))
+    ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
+                 list.files(cachePath))
+  }
+  if (isFALSE(ret) && isTRUE(create)) {
+    if (is(drv, "PqDriver")) {
+      file.create(CacheDBFile(cachePath, drv = drv))
+    }
+  }
+  return(ret)
+}
+

@@ -145,7 +145,7 @@ setMethod(
     }
 
     if (getOption("reproducible.newAlgo", TRUE)) {
-      if (!CacheIsACache(x, drv = drv, conn = conn))
+      if (!CacheIsACache(x, drv = drv))
         return(invisible(.emptyCacheTable))
     }
 
@@ -340,8 +340,17 @@ setMethod(
       x <- getOption("reproducible.cachePath")[1]
     }
     browser(expr = exists("jjjj"))
-    if (missing(after)) after <- NA # "1970-01-01"
-    if (missing(before)) before <- NA # Sys.time() + 1e5
+    afterNA <- FALSE
+    if (missing(after)) {
+      afterNA <- TRUE
+      after <- NA
+    }
+    # "1970-01-01"
+    beforeNA <- FALSE
+    if (missing(before)) {
+      beforeNA <- TRUE
+      before <- NA
+    } # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
     # not seeing userTags
@@ -384,15 +393,19 @@ setMethod(
     if (NROW(objsDT) > 0) {
       if (getOption("reproducible.newAlgo", TRUE)) {
         # objsDT <- data.table(splitTagsLocal(x), key = "artifact")
-        objsDT3 <- objsDT[tagKey == "accessed"]
-        if (!is.na(before))
-          objsDT3 <- objsDT3[(tagValue <= before)]
-        if ( !is.na(after))
-          objsDT3 <- objsDT3[(tagValue >= after)]
-        objsDT3 <- objsDT3[!duplicated(cacheId)]
-        browser(expr = exists("zzzz"))
-        # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
-        objsDT <- objsDT[objsDT$cacheId %in% objsDT3$cacheId] # faster than data.table join
+        # beforeNA <- is.na(before)
+        # afterNA <- is.na(after)
+        if (!afterNA || !beforeNA) {
+          objsDT3 <- objsDT[tagKey == "accessed"]
+          if (!beforeNA)
+            objsDT3 <- objsDT3[(tagValue <= before)]
+          if ( !afterNA)
+            objsDT3 <- objsDT3[(tagValue >= after)]
+          # objsDT3 <- objsDT3[!duplicated(cacheId)]
+          browser(expr = exists("zzzz"))
+          # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
+          objsDT <- objsDT[objsDT$cacheId %in% unique(objsDT3$cacheId)] # faster than data.table join
+        }
       } else {
         objsDT <- data.table(splitTagsLocal(x), key = "artifact")
         objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
