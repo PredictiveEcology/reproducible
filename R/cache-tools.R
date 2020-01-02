@@ -101,6 +101,8 @@ setMethod(
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                         drv, conn, ...) {
     # isn't clearing the raster bacekd file
+    browser(expr = exists("ssss"))
+
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
         message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
@@ -143,7 +145,7 @@ setMethod(
     }
 
     if (getOption("reproducible.newAlgo", TRUE)) {
-      if (!CacheIsACache(x))
+      if (!CacheIsACache(x, drv = drv, conn = conn))
         return(invisible(.emptyCacheTable))
     }
 
@@ -332,7 +334,7 @@ setMethod(
   "showCache",
   definition = function(x, userTags, after, before, drv,
                         conn, ...) {
-    browser(expr = exists("aaaa"))
+    browser(expr = exists("rrrr"))
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
