@@ -535,11 +535,19 @@ setMethod(
         gdriveLs <- driveLs(cloudFolderID, pattern = outputHash)
       }
       browser(expr = exists("ffff"))
+      conns <- list()
+      conns[[1]] <- conn
+      needDisconnect <- FALSE
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         tries <- tries + 1
         if (getOption("reproducible.newAlgo", TRUE)) {
-          localTags <- showCache(repo, drv = drv, conn = conn, verboseMessaging = FALSE) # This is noisy
+          if (!identical(normPath(repo), dirname(normPath(slot(conns[[tries - 1]], "dbname"))))) {
+            conns[[tries - 1]] <- dbConnectAll(drv, cachePath = repo)
+            needDisconnect <- TRUE
+            on.exit(try(dbDisconnect(conns[[tries - 1]]), silent = TRUE), add = TRUE)
+          }
+          localTags <- showCache(repo, drv = drv, conn = conns[[tries - 1]], verboseMessaging = FALSE) # This is noisy
           isInRepo <- localTags[cacheId %in% outputHash,]
         } else {
           localTags <- getLocalTags(repo)
@@ -547,10 +555,16 @@ setMethod(
         }
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
+          browser(expr = exists("uuuu"))
+          rrr <- lapply(length(conns) - 1, function(n) try(dbDisconnect(conns[[n]]), silent = TRUE))
+          conn <- conns[[tries - 1]]
           cacheRepo <- repo
           break
         }
+        if (needDisconnect) try(dbDisconnect(conns[[tries - 1]]), silent = TRUE)
+        conns[[tries]] <- conns[[tries - 1]]
       }
+      rm(conns)
 
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
