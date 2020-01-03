@@ -147,7 +147,7 @@ loadFromCache <- function(cachePath, cacheId) {
 
 #' Low level tools to work with Cache
 #'
-#' @importFrom DBI dbClearResult dbSendStatement dbBind
+#' @importFrom DBI dbClearResult dbSendStatement dbBind dbAppendTable
 #' @export
 #' @rdname cacheTools
 rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
