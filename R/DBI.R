@@ -152,11 +152,9 @@ loadFromCache <- function(cachePath, cacheId) {
 #' @rdname cacheTools
 rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
                         conn = NULL) {
-  if (getOption("reproducible.newAlgo", TRUE)) {
-    if (is.null(conn)) {
-      conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-      on.exit(dbDisconnect(conn))
-    }
+  if (is.null(conn)) {
+    conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
+    on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
   query <- paste0("DELETE FROM ",CacheDBTableName(cachePath, drv),
