@@ -55,11 +55,9 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
 saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
                         conn = NULL,
                         obj, userTags, cacheId) {
-  if (getOption("reproducible.newAlgo", TRUE)) {
-    if (is.null(conn)) {
-      conn <- dbConnectAll(drv, cachePath = cachePath)
-      on.exit(dbDisconnect(conn))
-    }
+  if (is.null(conn)) {
+    conn <- dbConnectAll(drv, cachePath = cachePath)
+    on.exit(dbDisconnect(conn))
   }
 
   if (missing(userTags)) userTags = "otherFunctions"
@@ -110,26 +108,29 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
 
    #output <- obj
   }
-  # dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
-  #                  "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
-  ci <- rep(cacheId, length(tagKey))
-  tagKey
-  tagValue
-  times <- rep(as.character(Sys.time()), length(tagKey))
-  vals <- paste0("(\"", paste(collapse = "\"), (\"",
-        apply(data.frame(ci, tagKey, tagValue, times), 1, function(y) {
-          paste(y, collapse = "\", \"")
-        })
-        ), "\")")
-  res <- retry(dbSendStatement(
-    conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
-                 " ('cacheId', 'tagKey', 'tagValue', 'createdDate') values ", vals)),
-    retries = 15)
-  dbClearResult(res)
+  # This section is more direct, and under some conditions is faster, but sooo wordy
+  # ci <- rep(cacheId, length(tagKey))
+  # tagKey
+  # tagValue
+  # times <- rep(as.character(Sys.time()), length(tagKey))
+  # vals <- paste0("(\"", paste(collapse = "\"), (\"",
+  #       apply(data.frame(ci, tagKey, tagValue, times), 1, function(y) {
+  #         paste(y, collapse = "\", \"")
+  #       })
+  #       ), "\")")
+  # res <- retry(dbSendStatement(
+  #   conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
+  #                " ('cacheId', 'tagKey', 'tagValue', 'createdDate') values ", vals)),
+  #   retries = 15)
+  # dbClearResult(res)
 
-  #retry(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, append=TRUE, row.names = FALSE),
-  #      retries = 15)
+  # The above can replace this
+  dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
+                   "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
+  retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt),
+       retries = 15)
+
   qs::qsave(file = CacheStoredFile(cachePath, cacheId), obj)
 
   return(obj)
@@ -162,10 +163,9 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
                   " WHERE \"cacheId\" = $1")
 
   res <- retry({dbSendStatement(conn, query)})
-  browser(expr = is(res, "try-error"))
   retry(dbBind(res, list(cacheId)))
-
   dbClearResult(res)
+
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
 
 }
@@ -206,9 +206,9 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
 
     dbClearResult(rs)
 
-    #dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
+    # dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
     #                 "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
-
+    #
     # retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
 
   } else {

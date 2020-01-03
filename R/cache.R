@@ -535,22 +535,24 @@ setMethod(
         gdriveLs <- driveLs(cloudFolderID, pattern = outputHash)
       }
       browser(expr = exists("ffff"))
-      conns <- list()
-      conns[[1]] <- conn
+      # conns <- list()
+      # conns[[1]] <- conn
       needDisconnect <- FALSE
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
-        tries <- tries + 1
         if (getOption("reproducible.newAlgo", TRUE)) {
-          if (!identical(normPath(repo), dirname(normPath(slot(conns[[tries - 1]], "dbname"))))) {
-            conns[[tries - 1]] <- dbConnectAll(drv, cachePath = repo)
-            needDisconnect <- TRUE
-            on.exit(try(dbDisconnect(conns[[tries - 1]]), silent = TRUE), add = TRUE)
-          }
+          # if (!identical(normPath(repo), dirname(normPath(slot(conns[[tries - 1]], "dbname"))))) {
+          #   conns[[tries - 1]] <- dbConnectAll(drv, cachePath = repo)
+          #   needDisconnect <- TRUE
+          #   on.exit(try(dbDisconnect(conns[[tries - 1]]), silent = TRUE), add = TRUE)
+          # }
           browser(expr = exists("iiii"))
-          localTags <- showCache(repo, drv = drv, conn = conns[[tries - 1]], verboseMessaging = FALSE) # This is noisy
+          localTags <- if (tries == 1) {
+            showCache(repo, drv = drv, conn = conn, verboseMessaging = FALSE) # This is noisy
+          } else {
+            showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
+          }
           isInRepo <- if (NROW(localTags)) {
-            setkeyv(localTags, "cacheId")
             localTags[outputHash, on = "cacheId", nomatch = NULL]
           } else {
             .emptyCacheTable
@@ -563,18 +565,24 @@ setMethod(
         if (NROW(isInRepo) > 0) {
           browser(expr = exists("uuuu"))
           if (getOption("reproducible.newAlgo", TRUE)) {
-            rrr <- lapply(length(conns) - 1, function(n) try(dbDisconnect(conns[[n]]), silent = TRUE))
-            conn <- conns[[tries - 1]]
+            if (tries > 1) {
+                dbDisconnect(conn)
+                conn <- dbConnectAll(drv, cachePath = cacheRepo)
+                on.exit(dbDisconnect(conn), add = TRUE)
+            }
+            #   rrr <- lapply(length(conns) - 1, function(n) try(dbDisconnect(conns[[n]]), silent = TRUE))
+            #   conn <- conns[[tries - 1]]
           }
           cacheRepo <- repo
           break
         }
-        if (needDisconnect) try(dbDisconnect(conns[[tries - 1]]), silent = TRUE)
-        if (getOption("reproducible.newAlgo", TRUE)) {
-          conns[[tries]] <- conns[[tries - 1]]
-        }
+        # if (needDisconnect) try(dbDisconnect(conns[[tries - 1]]), silent = TRUE)
+        # if (getOption("reproducible.newAlgo", TRUE)) {
+        #   conns[[tries]] <- conns[[tries - 1]]
+        # }
+        tries <- tries + 1
       }
-      rm(conns)
+      # rm(conns)
 
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
