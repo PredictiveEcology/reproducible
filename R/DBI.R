@@ -32,9 +32,11 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
 
   checkPath(cachePath, create = TRUE)
   checkPath(CacheStorageDir(cachePath), create = TRUE)
-  if (is.null(conn)) {
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
     on.exit(dbDisconnect(conn))
+    }
   }
   dt <- .emptyCacheTable
 
@@ -53,9 +55,11 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
 saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
                         conn = NULL,
                         obj, userTags, cacheId) {
-  if (is.null(conn)) {
-    conn <- dbConnectAll(drv, cachePath = cachePath)
-    on.exit(dbDisconnect(conn))
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, cachePath = cachePath)
+      on.exit(dbDisconnect(conn))
+    }
   }
 
   if (missing(userTags)) userTags = "otherFunctions"
@@ -113,11 +117,11 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
   tagKey
   tagValue
   times <- rep(as.character(Sys.time()), length(tagKey))
-  vals <- paste0("('", paste(collapse = "'), ('",
+  vals <- paste0("(\"", paste(collapse = "\"), (\"",
         apply(data.frame(ci, tagKey, tagValue, times), 1, function(y) {
-          paste(y, collapse = "', '")
+          paste(y, collapse = "\", \"")
         })
-        ), "')")
+        ), "\")")
   res <- retry(dbSendStatement(
     conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
                  " ('cacheId', 'tagKey', 'tagValue', 'createdDate') values ", vals)),
@@ -147,9 +151,11 @@ loadFromCache <- function(cachePath, cacheId) {
 #' @rdname cacheTools
 rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
                         conn = NULL) {
-  if (is.null(conn)) {
-    conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-    on.exit(dbDisconnect(conn))
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
+      on.exit(dbDisconnect(conn))
+    }
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
   query <- paste0("DELETE FROM ",CacheDBTableName(cachePath, drv),
@@ -198,14 +204,6 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
                                       "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")),
                 retries = 15)
 
-    # executeSingleSilentQuery(dir, paste0("insert into tag (artifact, tag, createdDate) values ",
-    #                                      "('", md5hash, "', '", gsub(tag, pattern = "'", replacement = ""),
-    #                                      "', '", as.character(now()), "')"))
-    #
-    # rs <- dbSendStatement(con,
-    #                       "INSERT INTO cars (speed, dist) VALUES (1, 1), (2, 2), (3, 3);")
-    # dbHasCompleted(rs)
-    # dbGetRowsAffected(rs)
     dbClearResult(rs)
 
     #dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
@@ -347,9 +345,11 @@ CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
 CacheIsACache <- function(cachePath, create = FALSE, drv = RSQLite::SQLite(), conn = NULL) {
-  if (is.null(conn)) {
-    conn <- dbConnectAll(drv, cachePath = cachePath)
-    on.exit(dbDisconnect(conn))
+  if (getOption('reproducible.newAlgo', TRUE)) {
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, cachePath = cachePath)
+      on.exit(dbDisconnect(conn))
+    }
   }
   # Can't use conn here as it will become infinite recursion
 
@@ -364,7 +364,10 @@ CacheIsACache <- function(cachePath, create = FALSE, drv = RSQLite::SQLite(), co
     ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
                  list.files(cachePath))
   }
-  ret <- ret && (length(dbListTables(conn)) > 0)
+  if (getOption("reproducible.newAlgo", TRUE)) {
+    if (ret)
+      ret <- ret && (length(dbListTables(conn)) > 0)
+  }
 
   if (isFALSE(ret) && isTRUE(create)) {
     if (is(drv, "PqDriver")) {

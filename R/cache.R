@@ -547,8 +547,14 @@ setMethod(
             needDisconnect <- TRUE
             on.exit(try(dbDisconnect(conns[[tries - 1]]), silent = TRUE), add = TRUE)
           }
+          browser(expr = exists("iiii"))
           localTags <- showCache(repo, drv = drv, conn = conns[[tries - 1]], verboseMessaging = FALSE) # This is noisy
-          isInRepo <- localTags[cacheId %in% outputHash,]
+          isInRepo <- if (NROW(localTags)) {
+            setkeyv(localTags, "cacheId")
+            localTags[outputHash, on = "cacheId", nomatch = NULL]
+          } else {
+            .emptyCacheTable
+          }
         } else {
           localTags <- getLocalTags(repo)
           isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
@@ -556,13 +562,17 @@ setMethod(
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
           browser(expr = exists("uuuu"))
-          rrr <- lapply(length(conns) - 1, function(n) try(dbDisconnect(conns[[n]]), silent = TRUE))
-          conn <- conns[[tries - 1]]
+          if (getOption("reproducible.newAlgo", TRUE)) {
+            rrr <- lapply(length(conns) - 1, function(n) try(dbDisconnect(conns[[n]]), silent = TRUE))
+            conn <- conns[[tries - 1]]
+          }
           cacheRepo <- repo
           break
         }
         if (needDisconnect) try(dbDisconnect(conns[[tries - 1]]), silent = TRUE)
-        conns[[tries]] <- conns[[tries - 1]]
+        if (getOption("reproducible.newAlgo", TRUE)) {
+          conns[[tries]] <- conns[[tries - 1]]
+        }
       }
       rm(conns)
 

@@ -316,7 +316,7 @@ cc <- function(secs, ...) {
 #' @inheritParams clearCache
 #'
 #' @export
-#' @importFrom DBI dbReadTable
+#' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
@@ -332,7 +332,7 @@ setGeneric("showCache", function(x, userTags = character(), after = NULL, before
 #' @rdname viewCache
 setMethod(
   "showCache",
-  definition = function(x, userTags, after, before, drv,
+  definition = function(x, userTags, after = NULL, before = NULL, drv,
                         conn, ...) {
     browser(expr = exists("rrrr"))
     if (missing(x)) {
@@ -340,17 +340,22 @@ setMethod(
       x <- getOption("reproducible.cachePath")[1]
     }
     browser(expr = exists("jjjj"))
-    afterNA <- FALSE
-    if (is.null(after)) {
-      afterNA <- TRUE
-      after <- NA
+    if (getOption("reproducible.newAlgo", TRUE)) {
+      afterNA <- FALSE
+      if (is.null(after)) {
+        afterNA <- TRUE
+        after <- NA
+      }
+      # "1970-01-01"
+      beforeNA <- FALSE
+      if (is.null(before)) {
+        beforeNA <- TRUE
+        before <- NA
+      } # Sys.time() + 1e5
+    } else {
+      if (is.null(after)) after <- "1970-01-01"
+      if (is.null(before)) before <- Sys.time() + 1e5
     }
-    # "1970-01-01"
-    beforeNA <- FALSE
-    if (is.null(before)) {
-      beforeNA <- TRUE
-      before <- NA
-    } # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
     # not seeing userTags
@@ -376,7 +381,6 @@ setMethod(
       }
 
       dbTabNam <- CacheDBTableName(x, drv = drv)
-      # browser()
       # tab <- dbReadTable(conn, dbTabNam)
       res <- dbSendQuery(conn, paste("SELECT * FROM", dbTabNam))
       tab <- dbFetch(res)
