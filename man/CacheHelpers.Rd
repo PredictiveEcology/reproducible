@@ -28,6 +28,9 @@ object (in order to clone an existing connection).}
 
 \item{hash}{The cacheId or otherwise digested hash value, as character string.}
 
+\item{create}{Logical. Currently only affects non RQSLite default drivers. If this
+is \code{TRUE} and there is no Cache database, the function will create one.}
+
 \item{conn}{A \linkS4class{DBIConnection} object, as returned by
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 }

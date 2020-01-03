@@ -323,6 +323,8 @@ CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
 }
 
 #' @rdname CacheHelpers
+#' @param create Logical. Currently only affects non RQSLite default drivers. If this
+#'   is \code{TRUE} and there is no Cache database, the function will create one.
 #' @importFrom DBI dbListTables
 #' @export
 #' @details
