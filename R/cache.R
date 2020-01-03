@@ -441,7 +441,7 @@ setMethod(
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-        CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE)
+        CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE, conn = conn)
       }))
 
       if (any(!isIntactRepo)) {
@@ -604,7 +604,7 @@ setMethod(
                                      verbose = verbose, sideEffect = sideEffect,
                                      quick = quick, algo = algo,
                                      preDigest = preDigest, startCacheTime = startCacheTime,
-                                     drv = drv,
+                                     drv = drv, conn = conn,
                                      ...))
           browser(expr = exists("bbbb"))
           if (is(output, "try-error")) {
@@ -992,7 +992,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         cacheId) {
   counter <- 0
   browser(expr = exists("mmmm"))
-  if (!CacheIsACache(cachePath = cacheRepo, drv = drv)) {
+  if (!CacheIsACache(cachePath = cacheRepo, drv = drv, conn = conn)) {
     stop("That cacheRepo does not exist")
   }
 

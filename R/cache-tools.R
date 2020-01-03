@@ -85,7 +85,7 @@
 #' clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
-setGeneric("clearCache", function(x, userTags = character(), after, before,
+setGeneric("clearCache", function(x, userTags = character(), after = NULL, before = NULL,
                                   ask = getOption("reproducible.ask"),
                                   useCloud = FALSE, cloudFolderID = NULL,
                                   drv = RSQLite::SQLite(), conn = NULL, ...) {
@@ -97,9 +97,9 @@ setGeneric("clearCache", function(x, userTags = character(), after, before,
 #' @rdname viewCache
 setMethod(
   "clearCache",
-  definition = function(x, userTags, after, before, ask, useCloud = FALSE,
+  definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        drv, conn, ...) {
+                        drv = RSQLite::SQLite(), conn = NULL, ...) {
     # isn't clearing the raster bacekd file
     browser(expr = exists("ssss"))
 
@@ -114,12 +114,12 @@ setMethod(
     }
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
-    clearWholeCache <- all(missing(userTags), missing(after), missing(before))
+    clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (useCloud || !clearWholeCache) {
       browser(expr = exists("jjjj"))
-      if (missing(after)) after <- NA # "1970-01-01"
-      if (missing(before)) before <- NA # Sys.time() + 1e5
+      # if (missing(after)) after <- NA # "1970-01-01"
+      # if (missing(before)) before <- NA # Sys.time() + 1e5
 
       args <- append(list(x = x, after = after, before = before, userTags = userTags),
                      list(...))
@@ -145,7 +145,7 @@ setMethod(
     }
 
     if (getOption("reproducible.newAlgo", TRUE)) {
-      if (!CacheIsACache(x, drv = drv))
+      if (!CacheIsACache(x, drv = drv, conn = conn))
         return(invisible(.emptyCacheTable))
     }
 
@@ -323,7 +323,7 @@ cc <- function(secs, ...) {
 #' @seealso \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
 #' in \code{\link{Cache}}
 #'
-setGeneric("showCache", function(x, userTags = character(), after, before,
+setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  drv = RSQLite::SQLite(), conn = NULL, ...) {
   standardGeneric("showCache")
 })
@@ -341,13 +341,13 @@ setMethod(
     }
     browser(expr = exists("jjjj"))
     afterNA <- FALSE
-    if (missing(after)) {
+    if (is.null(after)) {
       afterNA <- TRUE
       after <- NA
     }
     # "1970-01-01"
     beforeNA <- FALSE
-    if (missing(before)) {
+    if (is.null(before)) {
       beforeNA <- TRUE
       before <- NA
     } # Sys.time() + 1e5
@@ -365,19 +365,16 @@ setMethod(
     }
 
     if (getOption("reproducible.newAlgo", TRUE)) {
-      needDisconnect <- FALSE
       if (is.null(conn)) {
-        needDisconnect <- TRUE
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
+        if (is.null(conn)) {
+          return(invisible(.emptyCacheTable))
+        }
+        on.exit({
+          dbDisconnect(conn)
+        })
       }
 
-      if (is.null(conn)) {
-        return(invisible(.emptyCacheTable))
-      }
-      on.exit({
-        if (needDisconnect)
-          dbDisconnect(conn)
-      })
       dbTabNam <- CacheDBTableName(x, drv = drv)
       tab <- dbReadTable(conn, dbTabNam)
       if (is(tab, "try-error"))
@@ -464,7 +461,7 @@ setMethod(
 })
 
 #' @rdname viewCache
-setGeneric("keepCache", function(x, userTags = character(), after, before,
+setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
                                  drv = RSQLite::SQLite(), conn = NULL, ...) {
   standardGeneric("keepCache")
@@ -479,8 +476,8 @@ setMethod(
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
-    if (missing(after)) after <- NA # "1970-01-01"
-    if (missing(before)) before <- NA # Sys.time() + 1e5
+    # if (missing(after)) after <- NA # "1970-01-01"
+    # if (missing(before)) before <- NA # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
     args <- append(list(x = x, after = after, before = before, userTags = userTags),

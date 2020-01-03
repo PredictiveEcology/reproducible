@@ -13,8 +13,8 @@
 clearCache(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = NULL,
@@ -26,8 +26,8 @@ clearCache(
 \S4method{clearCache}{ANY}(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
@@ -41,8 +41,8 @@ cc(secs, ...)
 showCache(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   drv = RSQLite::SQLite(),
   conn = NULL,
   ...
@@ -51,8 +51,8 @@ showCache(
 \S4method{showCache}{ANY}(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   drv = RSQLite::SQLite(),
   conn = NULL,
   ...
@@ -61,8 +61,8 @@ showCache(
 keepCache(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   ask = getOption("reproducible.ask"),
   drv = RSQLite::SQLite(),
   conn = NULL,
@@ -72,8 +72,8 @@ keepCache(
 \S4method{keepCache}{ANY}(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   ask = getOption("reproducible.ask"),
   drv = RSQLite::SQLite(),
   conn = NULL,

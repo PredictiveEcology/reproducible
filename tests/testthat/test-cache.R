@@ -28,15 +28,12 @@ test_that("test file-backed raster caching", {
   #  "reproducible::isInteractive" = function() TRUE,
   #  {
 
-  browser()
   aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
       # Test clearCache by tags
 
       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
       clearCache(tmpCache, userTags = "something$", ask = FALSE)
       expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
-      # aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
-      #rmFC <<- 1
       clearCache(tmpCache, userTags = "something2", ask = FALSE)
       expect_equal(NROW(showCache(tmpCache)), 0)
 
@@ -76,6 +73,11 @@ test_that("test file-backed raster caching", {
         ceiling(raster[] / (mean(raster[]) + 1))
       }
       nOT <- Sys.time()
+
+      # xxxx <<- ssss <<- jjjj <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
+      #rmFC <<- 1
+      #browser()
+
       for (i in 1:2) {
         assign(paste0("b", i), system.time(
           assign(paste0("a", i), Cache(rasterTobinary, aa, cacheRepo = tmpCache, notOlderThan = nOT))
@@ -400,6 +402,7 @@ test_that("test asPath", {
   origDir <- getwd()
   on.exit(setwd(origDir))
   setwd(tmpdir)
+  # xxxx <<- ssss <<- jjjj <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
   # First -- has no filename.RData
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
   # Second -- has a filename.RData, and passing a character string,

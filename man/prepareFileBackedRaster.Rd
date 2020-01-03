@@ -9,6 +9,7 @@
   repoDir = NULL,
   overwrite = FALSE,
   drv = RSQLite::SQLite(),
+  conn = NULL,
   ...
 )
 }
@@ -22,6 +23,9 @@
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},
 or an existing \linkS4class{DBIConnection}
 object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{...}{passed to \code{archivist::saveToRepo}}
 }

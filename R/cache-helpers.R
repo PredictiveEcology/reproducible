@@ -650,12 +650,12 @@ setMethod(
 #' r # now in "rasters" subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
-                                     drv = RSQLite::SQLite(), ...) {
+                                     drv = RSQLite::SQLite(), conn = NULL, ...) {
   browser(expr = exists("aaaa"))
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- CacheIsACache(cachePath = repoDir, drv = drv)
+  isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {
