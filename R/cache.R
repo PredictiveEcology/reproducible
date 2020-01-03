@@ -564,16 +564,16 @@ setMethod(
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
           browser(expr = exists("uuuu"))
+          cacheRepo <- repo
           if (getOption("reproducible.newAlgo", TRUE)) {
             if (tries > 1) {
                 dbDisconnect(conn)
                 conn <- dbConnectAll(drv, cachePath = cacheRepo)
-                on.exit(dbDisconnect(conn), add = TRUE)
+                # on.exit(dbDisconnect(conn), add = TRUE) # already in the on.exit above
             }
             #   rrr <- lapply(length(conns) - 1, function(n) try(dbDisconnect(conns[[n]]), silent = TRUE))
             #   conn <- conns[[tries - 1]]
           }
-          cacheRepo <- repo
           break
         }
         # if (needDisconnect) try(dbDisconnect(conns[[tries - 1]]), silent = TRUE)
