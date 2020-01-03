@@ -376,7 +376,11 @@ setMethod(
       }
 
       dbTabNam <- CacheDBTableName(x, drv = drv)
-      tab <- dbReadTable(conn, dbTabNam)
+      # browser()
+      # tab <- dbReadTable(conn, dbTabNam)
+      res <- dbSendQuery(conn, paste("SELECT * FROM", dbTabNam))
+      tab <- dbFetch(res)
+      dbClearResult(res)
       if (is(tab, "try-error"))
         objsDT <- .emptyCacheTable
       else

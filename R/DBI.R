@@ -106,11 +106,26 @@ saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
 
    #output <- obj
   }
-  dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
-                   "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
+  # dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
+  #                  "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
 
-  retry(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, append=TRUE, row.names = FALSE),
-        retries = 15)
+  ci <- rep(cacheId, length(tagKey))
+  tagKey
+  tagValue
+  times <- rep(as.character(Sys.time()), length(tagKey))
+  vals <- paste0("('", paste(collapse = "'), ('",
+        apply(data.frame(ci, tagKey, tagValue, times), 1, function(y) {
+          paste(y, collapse = "', '")
+        })
+        ), "')")
+  res <- retry(dbSendStatement(
+    conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
+                 " ('cacheId', 'tagKey', 'tagValue', 'createdDate') values ", vals)),
+    retries = 15)
+  dbClearResult(res)
+
+  #retry(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, append=TRUE, row.names = FALSE),
+  #      retries = 15)
   qs::qsave(file = CacheStoredFile(cachePath, cacheId), obj)
 
   return(obj)
@@ -167,6 +182,7 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
                                tagValue = character(), createdDate = character())
 
 
+#' @importFrom DBI dbSendStatement dbClearResult
 .addTagsRepo <- function(isInRepo, cachePath, lastOne,
                          drv = RSQLite::SQLite(), conn = NULL) {
   browser(expr = exists("xxxx"))
@@ -176,7 +192,7 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
       on.exit(dbDisconnect(conn))
     }
 
-    rs <- retry(DBI::dbSendStatement(conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
+    rs <- retry(dbSendStatement(conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
                                       " (cacheId, tagKey, tagValue, createdDate) values ",
                                       "('", isInRepo$cacheId[lastOne],
                                       "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")),
