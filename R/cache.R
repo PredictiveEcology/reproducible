@@ -864,6 +864,7 @@ setMethod(
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
         if (getOption("reproducible.newAlgo", TRUE)) {
           output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
+                                conn = conn,
                                obj = outputToSave, cacheId = outputHash)
         } else {
           while (written >= 0) {
@@ -1033,6 +1034,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
       cacheId <- .robustDigest(outputToSave)
     }
     output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
+                          conn = conn,
                         obj = outputToSave, cacheId = cacheId)
     saved <- cacheId
   } else {

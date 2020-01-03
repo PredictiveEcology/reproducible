@@ -24,7 +24,7 @@
 createCache <- function(cachePath, drv = RSQLite::SQLite(),
                         conn = NULL, force = FALSE) {
   browser(expr = exists("aaaa"))
-  alreadyExists <- CacheIsACache(cachePath, drv = drv)
+  alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
   if (alreadyExists && force == FALSE) {
     message("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
     return(invisible(cachePath))
@@ -177,7 +177,7 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
     #   if (isFALSE(create)) {
     #     return(invisible())
     #   }
-    args <- append(args, list(dbname = CacheDBFile(cachePath, drv)))
+    args <- append(args, list(dbname = CacheDBFile(cachePath, drv, conn)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }
@@ -196,8 +196,8 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
       on.exit(dbDisconnect(conn))
     }
 
-    rs <- retry(dbSendStatement(conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
-                                      " (cacheId, tagKey, tagValue, createdDate) values ",
+    rs <- retry(dbSendStatement(conn, paste0("insert into \"",CacheDBTableName(cachePath, drv),"\"",
+                                      " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
                                       "('", isInRepo$cacheId[lastOne],
                                       "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")),
                 retries = 15)
@@ -264,9 +264,17 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
 #' @export
 #' @details
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
-CacheDBFile <- function(cachePath, drv = RSQLite::SQLite()) {
-  if (is(drv, "SQLiteDriver")) {
+CacheDBFile <- function(cachePath, drv = RSQLite::SQLite(), conn = NULL) {
 
+  if (getOption('reproducible.newAlgo', TRUE)) {
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, cachePath = cachePath)
+      on.exit(dbDisconnect(conn))
+    }
+    type <- gsub("Connection", "", class(conn))
+  }
+
+  if (grepl(type, "SQLite")) {
     if (getOption("reproducible.newAlgo", TRUE)) {
       file.path(cachePath, "cache.db")
     } else {
@@ -343,33 +351,27 @@ CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
 CacheIsACache <- function(cachePath, create = FALSE, drv = RSQLite::SQLite(), conn = NULL) {
+  browser(expr = exists("aaaa"))
   if (getOption('reproducible.newAlgo', TRUE)) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
       on.exit(dbDisconnect(conn))
     }
+    type <- gsub("Connection", "", class(conn))
   }
-  # Can't use conn here as it will become infinite recursion
 
   ret <- FALSE
-  if (is(drv, "SQLiteDriver")) {
-    browser(expr = exists("aaaa"))
-    ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
-                 list.files(cachePath))
-  } # other types of drv, e.g., Postgres can be done via env vars
-  if (is(drv, "PqDriver")) {
-    browser(expr = exists("jjjj"))
-    ret <- all(basename2(c(CacheDBFile(cachePath, drv), CacheStorageDir(cachePath))) %in%
-                 list.files(cachePath))
-  }
+  browser(expr = exists("jjjj"))
+  ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
+               list.files(cachePath))
   if (getOption("reproducible.newAlgo", TRUE)) {
     if (ret)
       ret <- ret && (length(dbListTables(conn)) > 0)
   }
 
   if (isFALSE(ret) && isTRUE(create)) {
-    if (is(drv, "PqDriver")) {
-      file.create(CacheDBFile(cachePath, drv = drv))
+    if (grepl(type, "Pq")) {
+      file.create(CacheDBFile(cachePath, drv = drv, conn))
     }
   }
   return(ret)

@@ -167,7 +167,7 @@ setMethod(
       }
       unlink(CacheStorageDir(x), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
-      unlink(CacheDBFile(x, drv = drv), recursive = TRUE, force = TRUE)
+      unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
 
       checkPath(x, create = TRUE)
       if (getOption("reproducible.newAlgo", TRUE)) {
@@ -382,7 +382,7 @@ setMethod(
 
       dbTabNam <- CacheDBTableName(x, drv = drv)
       # tab <- dbReadTable(conn, dbTabNam)
-      res <- dbSendQuery(conn, paste("SELECT * FROM", dbTabNam))
+      res <- dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))
       tab <- dbFetch(res)
       dbClearResult(res)
       if (is(tab, "try-error"))
