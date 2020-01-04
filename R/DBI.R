@@ -354,7 +354,7 @@ CacheDBTableName <- function(cachePath,
 CacheIsACache <- function(cachePath, create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
-  browser(expr = exists("aaaa"))
+  browser(expr = exists("wwww"))
   if (getOption('reproducible.useDBI', TRUE)) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -369,7 +369,7 @@ CacheIsACache <- function(cachePath, create = FALSE,
                list.files(cachePath))
   if (getOption("reproducible.useDBI", TRUE)) {
     if (ret)
-      ret <- ret && (length(dbListTables(conn)) > 0)
+      ret <- ret && any(grepl(CacheDBTableName(cachePath), dbListTables(conn)))
   }
 
   if (getOption('reproducible.useDBI', TRUE)) {
