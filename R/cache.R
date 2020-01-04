@@ -389,7 +389,6 @@ setMethod(
       nestedTags <- determineNestedTags(envir = environment(),
                                         mc = match.call(expand.dots = TRUE),
                                         userTags = userTags)
-      browser(expr = exists("aaaa"))
       userTags <- unique(c(userTags, .reproEnv$userTags))
       if (any(!nestedTags$objOverride)) {
         on.exit({
@@ -440,6 +439,7 @@ setMethod(
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
+      browser(expr = exists("wwww"))
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
         CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE, conn = conn)
       }))

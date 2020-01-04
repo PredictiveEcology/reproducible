@@ -27,7 +27,6 @@ test_that("test file-backed raster caching", {
   # with_mock(
   #  "reproducible::isInteractive" = function() TRUE,
   #  {
-
   aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
       # Test clearCache by tags
 

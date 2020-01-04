@@ -266,11 +266,11 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath, conn = NULL,
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
 CacheDBFile <- function(cachePath, drv = RSQLite::SQLite(), conn = NULL) {
 
+  type <- gsub("Driver", "", class(drv))
+
   if (getOption('reproducible.newAlgo', TRUE)) {
-    type <- if (is.null(conn)) {
-      gsub("Driver", "", class(drv))
-    } else {
-      gsub("Connection", "", class(conn))
+    if (!is.null(conn)) {
+      type <- gsub("Connection", "", class(conn))
     }
   }
 
@@ -369,9 +369,11 @@ CacheIsACache <- function(cachePath, create = FALSE, drv = RSQLite::SQLite(), co
       ret <- ret && (length(dbListTables(conn)) > 0)
   }
 
-  if (isFALSE(ret) && isTRUE(create)) {
-    if (grepl(type, "Pq")) {
-      file.create(CacheDBFile(cachePath, drv = drv, conn))
+  if (getOption('reproducible.newAlgo', TRUE)) {
+    if (isFALSE(ret) && isTRUE(create)) {
+      if (grepl(type, "Pq")) {
+        file.create(CacheDBFile(cachePath, drv = drv, conn))
+      }
     }
   }
   return(ret)
