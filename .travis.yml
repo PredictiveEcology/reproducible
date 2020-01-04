@@ -94,7 +94,6 @@ matrix:
     addons:
       homebrew:
         packages:
-        - gdal
         - libgit2
         - llvm
         - udunits
@@ -102,8 +101,8 @@ matrix:
     latex: false
     r_build_args: '--no-build-vignettes'
     r_check_args: '--as-cran --ignore-vignettes --no-examples'
-    before_script:
-      - Rscript -e "install.packages(c('rgdal', 'rgeos'), type = 'source')"
+#    before_script:
+#      - Rscript -e "install.packages(c('rgdal', 'rgeos'), type = 'source')"
 r_build_args: " "
 r_check_args: "--as-cran"
 warnings_are_errors: true
