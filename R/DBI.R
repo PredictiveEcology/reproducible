@@ -41,7 +41,7 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   dt <- .emptyCacheTable
 
   retry(retries = 15,
-    dWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
+    dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
                  field.types = c(cacheId = "text", tagKey = "text",
                                  tagValue = "text", createdDate = "text"))
   )
@@ -369,7 +369,7 @@ CacheIsACache <- function(cachePath, create = FALSE,
                list.files(cachePath))
   if (getOption("reproducible.useDBI", TRUE)) {
     if (ret)
-      ret <- ret && any(grepl(CacheDBTableName(cachePath), dbListTables(conn)))
+      ret <- retry(retries = 15, ret && any(grepl(CacheDBTableName(cachePath), dbListTables(conn))))
   }
 
   if (getOption('reproducible.useDBI', TRUE)) {
