@@ -100,7 +100,8 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL), ...) {
+                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        conn = getOption("reproducible.conn", NULL), ...) {
     # isn't clearing the raster bacekd file
     browser(expr = exists("ssss"))
 
@@ -145,6 +146,7 @@ setMethod(
       }
     }
 
+    browser(expr = exists("rrrr"))
     if (getOption("reproducible.useDBI", TRUE)) {
       if (!CacheIsACache(x, drv = drv, conn = conn))
         return(invisible(.emptyCacheTable))

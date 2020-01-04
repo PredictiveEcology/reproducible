@@ -157,8 +157,8 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
     on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  query <- paste0("DELETE FROM ",CacheDBTableName(cachePath, drv),
-                  " WHERE \"cacheId\" = $1")
+  query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv),
+                  "\" WHERE \"cacheId\" = $1")
 
   res <- retry({dbSendStatement(conn, query)})
   retry(dbBind(res, list(cacheId)))
