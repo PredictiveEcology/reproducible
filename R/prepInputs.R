@@ -451,10 +451,10 @@ extractFromArchive <- function(archive,
                                                                 collapse = ", "))
           message("From:", basename(archive[1]), "  \nExtracting\n ",
                   paste(collapse = "\n ", extractingTheseFiles))
-            filesExtracted <- c(filesExtracted,
-                                .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
-                                              files = filesInArchive[basename(filesInArchive) %in%
-                                                                       neededFiles]))
+          filesExtracted <- c(filesExtracted,
+                              .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
+                                                    files = filesInArchive[basename(filesInArchive) %in%
+                                                                             neededFiles]))
         } else {
           # don't have a 2nd archive, and don't have our neededFiles file
           #isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
