@@ -10,7 +10,7 @@ writeFuture(
   cacheRepo,
   userTags,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = NULL,
+  conn = getOption("reproducible.conn", NULL),
   cacheId
 )
 }

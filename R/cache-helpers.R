@@ -650,7 +650,8 @@ setMethod(
 #' r # now in "rasters" subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
-                                     drv = RSQLite::SQLite(), conn = NULL, ...) {
+                                     drv = RSQLite::SQLite(), conn = getOption("reproducible.conn", NULL),
+                                     ...) {
   browser(expr = exists("aaaa"))
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")

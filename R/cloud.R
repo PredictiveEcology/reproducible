@@ -94,7 +94,8 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 #' @importFrom googledrive drive_download
 #' @inheritParams Cache
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
-                          drv = RSQLite::SQLite(), conn = NULL) {
+                          drv = RSQLite::SQLite(),
+                          conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("kkkk"))
   message("Downloading cloud copy of ", newFileName,", with cacheId: ",
           outputHash)

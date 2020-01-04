@@ -88,7 +88,8 @@
 setGeneric("clearCache", function(x, userTags = character(), after = NULL, before = NULL,
                                   ask = getOption("reproducible.ask"),
                                   useCloud = FALSE, cloudFolderID = NULL,
-                                  drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL, ...) {
+                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("clearCache")
 })
 
@@ -99,7 +100,7 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL, ...) {
+                        drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL), ...) {
     # isn't clearing the raster bacekd file
     browser(expr = exists("ssss"))
 
@@ -324,7 +325,7 @@ cc <- function(secs, ...) {
 #' in \code{\link{Cache}}
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
-                                 drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL, ...) {
+                                 drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("showCache")
 })
 
@@ -471,7 +472,7 @@ setMethod(
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
-                                 drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL, ...) {
+                                 drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("keepCache")
 })
 

@@ -334,7 +334,7 @@ setGeneric(
            useCloud = FALSE,
            cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
            showSimilar = getOption("reproducible.showSimilar", FALSE),
-           drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL) {
+           drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL)) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
   })
 
@@ -1021,7 +1021,7 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #' @importFrom stats runif
 #' @inheritParams Cache
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL,
+                        drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL),
                         cacheId) {
   counter <- 0
   browser(expr = exists("mmmm"))

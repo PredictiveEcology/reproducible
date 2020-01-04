@@ -11,7 +11,7 @@ cloudDownload(
   cacheRepo,
   cloudFolderID,
   drv = RSQLite::SQLite(),
-  conn = NULL
+  conn = getOption("reproducible.conn", NULL)
 )
 }
 \arguments{

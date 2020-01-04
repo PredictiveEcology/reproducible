@@ -11,7 +11,7 @@
 CacheDBFile(
   cachePath,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = NULL
+  conn = getOption("reproducible.conn", NULL)
 )
 
 CacheStorageDir(cachePath)
@@ -27,7 +27,7 @@ CacheIsACache(
   cachePath,
   create = FALSE,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = NULL
+  conn = getOption("reproducible.conn", NULL)
 )
 }
 \arguments{

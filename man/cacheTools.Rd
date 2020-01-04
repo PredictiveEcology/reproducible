@@ -10,14 +10,14 @@
 createCache(
   cachePath,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = NULL,
+  conn = getOption("reproducible.conn", NULL),
   force = FALSE
 )
 
 saveToCache(
   cachePath,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = NULL,
+  conn = getOption("reproducible.conn", NULL),
   obj,
   userTags,
   cacheId
@@ -29,7 +29,7 @@ rmFromCache(
   cachePath,
   cacheId,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = NULL
+  conn = getOption("reproducible.conn", NULL)
 )
 }
 \arguments{

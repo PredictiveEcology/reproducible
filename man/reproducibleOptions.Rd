@@ -27,6 +27,11 @@ The following options are likely of interest to most users
                    The default path for repositories if not passed as an argument.\cr
   \code{cacheSaveFormat} \tab "qs" \tab What save format to use; currently,
                          "qs", "rds" or "rda" \cr
+  \code{conn} \tab \code{NULL} \tab Sets a specific connection to a database, e.g.,
+                      \code{dbConnect(drv = RSQLite::SQLite())} or
+                      \code{dbConnect(drv = RPostgres::Postgres()}. For remote
+                      database servers, setting one connection may be far faster than using
+                      \code{drv} which must make a new connection every time. \cr
   \code{destinationPath} \tab \code{NULL} \tab Used in \code{\link{prepInputs}},
                               \code{\link{preProcess}}. Can be set globally here. \cr
   \code{drv} \tab \code{RSQLite::SQLite()} \tab Sets the default driver for the backend

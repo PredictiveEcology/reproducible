@@ -9,7 +9,7 @@
   repoDir = NULL,
   overwrite = FALSE,
   drv = RSQLite::SQLite(),
-  conn = NULL,
+  conn = getOption("reproducible.conn", NULL),
   ...
 )
 }
