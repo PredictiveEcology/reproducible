@@ -33,6 +33,7 @@ test_that("test parallel collisions", {
     #   devtools::load_all()
     # })
     numToRun <- 40
+    skip_on_os("mac")
     a <- try(clusterMap(cl = cl, fun, seq(numToRun), cacheRepo = tmpdir, .scheduling = "dynamic"), silent = TRUE)
     expect_false(is(a, "try-error"))
     expect_true(is.list(a))
