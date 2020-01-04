@@ -168,7 +168,7 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
 
 }
 
-dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
+dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath, conn = NULL,
                          create = TRUE) {
   args <- list(drv = drv)
   browser(expr = exists("yyyy"))
@@ -267,11 +267,11 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath,
 CacheDBFile <- function(cachePath, drv = RSQLite::SQLite(), conn = NULL) {
 
   if (getOption('reproducible.newAlgo', TRUE)) {
-    if (is.null(conn)) {
-      conn <- dbConnectAll(drv, cachePath = cachePath)
-      on.exit(dbDisconnect(conn))
+    type <- if (is.null(conn)) {
+      gsub("Driver", "", class(drv))
+    } else {
+      gsub("Connection", "", class(conn))
     }
-    type <- gsub("Connection", "", class(conn))
   }
 
   if (grepl(type, "SQLite")) {

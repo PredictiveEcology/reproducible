@@ -8,7 +8,7 @@
 \alias{CacheIsACache}
 \title{A collection of low level tools for Cache}
 \usage{
-CacheDBFile(cachePath, drv = RSQLite::SQLite())
+CacheDBFile(cachePath, drv = RSQLite::SQLite(), conn = NULL)
 
 CacheStorageDir(cachePath)
 
@@ -26,13 +26,13 @@ the database file(s)}
 or an existing \linkS4class{DBIConnection}
 object (in order to clone an existing connection).}
 
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
+
 \item{hash}{The cacheId or otherwise digested hash value, as character string.}
 
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}
-
-\item{conn}{A \linkS4class{DBIConnection} object, as returned by
-\code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
 \description{
 These are not intended for normal use.
