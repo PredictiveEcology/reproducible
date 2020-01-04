@@ -8,15 +8,27 @@
 \alias{CacheIsACache}
 \title{A collection of low level tools for Cache}
 \usage{
-CacheDBFile(cachePath, drv = RSQLite::SQLite(), conn = NULL)
+CacheDBFile(
+  cachePath,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = NULL
+)
 
 CacheStorageDir(cachePath)
 
 CacheStoredFile(cachePath, hash)
 
-CacheDBTableName(cachePath, drv = RSQLite::SQLite())
+CacheDBTableName(
+  cachePath,
+  drv = getOption("reproducible.drv", RSQLite::SQLite())
+)
 
-CacheIsACache(cachePath, create = FALSE, drv = RSQLite::SQLite(), conn = NULL)
+CacheIsACache(
+  cachePath,
+  create = FALSE,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = NULL
+)
 }
 \arguments{
 \item{cachePath}{A path describing the directory in which to create

@@ -88,7 +88,7 @@
 setGeneric("clearCache", function(x, userTags = character(), after = NULL, before = NULL,
                                   ask = getOption("reproducible.ask"),
                                   useCloud = FALSE, cloudFolderID = NULL,
-                                  drv = RSQLite::SQLite(), conn = NULL, ...) {
+                                  drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL, ...) {
   standardGeneric("clearCache")
 })
 
@@ -99,7 +99,7 @@ setMethod(
   "clearCache",
   definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        drv = RSQLite::SQLite(), conn = NULL, ...) {
+                        drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL, ...) {
     # isn't clearing the raster bacekd file
     browser(expr = exists("ssss"))
 
@@ -130,7 +130,7 @@ setMethod(
           stop("If using 'useCloud', 'cloudFolderID' must be provided. If you don't know what should be used, ",
                "try getOption('reproducible.cloudFolderID')")
         }
-        if (getOption("reproducible.newAlgo", TRUE)) {
+        if (getOption("reproducible.useDBI", TRUE)) {
           cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
         } else {
           cacheIds <- objsDT[tagKey == "cacheId", tagValue]
@@ -144,7 +144,7 @@ setMethod(
       }
     }
 
-    if (getOption("reproducible.newAlgo", TRUE)) {
+    if (getOption("reproducible.useDBI", TRUE)) {
       if (!CacheIsACache(x, drv = drv, conn = conn))
         return(invisible(.emptyCacheTable))
     }
@@ -170,7 +170,7 @@ setMethod(
       unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
 
       checkPath(x, create = TRUE)
-      if (getOption("reproducible.newAlgo", TRUE)) {
+      if (getOption("reproducible.useDBI", TRUE)) {
         createCache(x, drv = drv, force = TRUE)
       } else {
         createLocalRepo(x)
@@ -196,7 +196,7 @@ setMethod(
                                               tagKey == "object.size"]$tagValue)
         fileBackedRastersInRepo <- rastersInRepo[[.cacheTableHashColName()]][rasterObjSizes < 1e5]
       filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
-          if (getOption("reproducible.newAlgo", TRUE)) {
+          if (getOption("reproducible.useDBI", TRUE)) {
             r <- loadFromCache(x, ras)
           } else {
             r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
@@ -235,7 +235,7 @@ setMethod(
       }
 
       objToGet <- unique(objsDT[[.cacheTableHashColName()]])
-      if (getOption("reproducible.newAlgo", TRUE)) {
+      if (getOption("reproducible.useDBI", TRUE)) {
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
           on.exit({dbDisconnect(conn)})
@@ -324,7 +324,7 @@ cc <- function(secs, ...) {
 #' in \code{\link{Cache}}
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
-                                 drv = RSQLite::SQLite(), conn = NULL, ...) {
+                                 drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL, ...) {
   standardGeneric("showCache")
 })
 
@@ -340,7 +340,7 @@ setMethod(
       x <- getOption("reproducible.cachePath")[1]
     }
     browser(expr = exists("jjjj"))
-    if (getOption("reproducible.newAlgo", TRUE)) {
+    if (getOption("reproducible.useDBI", TRUE)) {
       afterNA <- FALSE
       if (is.null(after)) {
         afterNA <- TRUE
@@ -369,7 +369,7 @@ setMethod(
         }
     }
 
-    if (getOption("reproducible.newAlgo", TRUE)) {
+    if (getOption("reproducible.useDBI", TRUE)) {
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
         if (is.null(conn)) {
@@ -396,7 +396,7 @@ setMethod(
     }
 
     if (NROW(objsDT) > 0) {
-      if (getOption("reproducible.newAlgo", TRUE)) {
+      if (getOption("reproducible.useDBI", TRUE)) {
         # objsDT <- data.table(splitTagsLocal(x), key = "artifact")
         # beforeNA <- is.na(before)
         # afterNA <- is.na(after)
@@ -422,7 +422,7 @@ setMethod(
           objsDTs <- list()
           for (ut in userTags) {
             #objsDT[[.cacheTableHashColName()]] %in% ut
-            # if (getOption("reproducible.newAlgo", TRUE)) {
+            # if (getOption("reproducible.useDBI", TRUE)) {
             #   objsDT2 <- objsDT[
             #     grepl(tagValue, pattern = ut) |
             #       grepl(tagKey, pattern = ut) |
@@ -441,7 +441,7 @@ setMethod(
             objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
           }
         } else {
-          if (getOption("reproducible.newAlgo", TRUE)) {
+          if (getOption("reproducible.useDBI", TRUE)) {
             objsDT2 <- objsDT[cacheId %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
             setkeyv(objsDT2, "cacheId")
             shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
@@ -471,7 +471,7 @@ setMethod(
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
-                                 drv = RSQLite::SQLite(), conn = NULL, ...) {
+                                 drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL, ...) {
   standardGeneric("keepCache")
 })
 
@@ -531,8 +531,8 @@ setMethod(
 #' objects themselves.
 #'
 #' @rdname mergeCache
-setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo = RSQLite::SQLite(),
-                                  drvFrom = RSQLite::SQLite(),
+setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
                                   connTo = NULL, connFrom = NULL) {
   standardGeneric("mergeCache")
 })
@@ -565,7 +565,7 @@ setMethod(
       browser(expr = exists("gggg"))
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         browser(expr = exists("gggg"))
-        outputToSave <- if (getOption("reproducible.newAlgo", TRUE)) {
+        outputToSave <- if (getOption("reproducible.useDBI", TRUE)) {
           try(loadFromCache(cacheFrom, artifact))
         } else {
           try(loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
@@ -578,7 +578,7 @@ setMethod(
         ## Save it
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][!tagKey %in% c("format", "name", "date", "cacheId", "class"),
                                             list(tagKey, tagValue)]
-        if (getOption("reproducible.newAlgo", TRUE)) {
+        if (getOption("reproducible.useDBI", TRUE)) {
           output <- saveToCache(cacheTo, userTags = userTags,
                                 obj = outputToSave,
                                 cacheId = artifact)
@@ -624,7 +624,7 @@ setMethod(
 
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
-    if (getOption("reproducible.newAlgo", TRUE)) {
+    if (getOption("reproducible.useDBI", TRUE)) {
       a <- showCache(x, verboseMessaging = FALSE)
     } else {
       a <- showLocalRepo2(x)

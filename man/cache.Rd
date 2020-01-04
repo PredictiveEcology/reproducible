@@ -30,7 +30,7 @@ Cache(
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL
 )
 
@@ -58,7 +58,7 @@ Cache(
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   showSimilar = getOption("reproducible.showSimilar", FALSE),
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL
 )
 

@@ -129,7 +129,7 @@ onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "a
 # inverse join with 2 data.tables ... using: a[!b]
 # i.e., return all of wholeCache that was not recently accessed
 #   Note: the two different ways to access -- old way with "artifact" will be deprecated
-toRemove <- if (getOption("reproducible.newAlgo", TRUE)) {
+toRemove <- if (getOption("reproducible.useDBI", TRUE)) {
   unique(wholeCache[!onlyRecentlyAccessed, on = "cacheId"], by = "cacheId")$cacheId
 } else {
   unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$artifact
@@ -289,7 +289,7 @@ Also, one can access cached items manually (rather than simply rerunning the sam
 
 ```{r manual-cache}
 # As of reproducible version 0.3.0, there is a new backend directly using DBI, not archivist
-if (getOption("reproducible.newAlgo", TRUE)) {
+if (getOption("reproducible.useDBI", TRUE)) {
   mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$cacheId)
   map <- loadFromCache(mapHash[1], cachePath = tmpDir)
   

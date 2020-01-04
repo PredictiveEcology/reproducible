@@ -9,7 +9,7 @@ writeFuture(
   outputToSave,
   cacheRepo,
   userTags,
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL,
   cacheId
 )

@@ -334,7 +334,7 @@ setGeneric(
            useCloud = FALSE,
            cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
            showSimilar = getOption("reproducible.showSimilar", FALSE),
-           drv = RSQLite::SQLite(), conn = NULL) {
+           drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL) {
     archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
   })
 
@@ -410,7 +410,7 @@ setMethod(
       cacheRepos <- getCacheRepos(cacheRepo, modifiedDots)
       cacheRepo <- cacheRepos[[1]]
 
-      if (getOption("reproducible.newAlgo", TRUE)) {
+      if (getOption("reproducible.useDBI", TRUE)) {
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = cacheRepo)
           on.exit(dbDisconnect(conn), add = TRUE)
@@ -445,7 +445,7 @@ setMethod(
       }))
 
       if (any(!isIntactRepo)) {
-        if (getOption("reproducible.newAlgo", TRUE))
+        if (getOption("reproducible.useDBI", TRUE))
           ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
             createCache(cacheRepos[[cacheRepoInd]], drv = drv, conn = conn,
                         force = isIntactRepo[cacheRepoInd])
@@ -540,7 +540,7 @@ setMethod(
       needDisconnect <- FALSE
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
-        if (getOption("reproducible.newAlgo", TRUE)) {
+        if (getOption("reproducible.useDBI", TRUE)) {
           # if (!identical(normPath(repo), dirname(normPath(slot(conns[[tries - 1]], "dbname"))))) {
           #   conns[[tries - 1]] <- dbConnectAll(drv, cachePath = repo)
           #   needDisconnect <- TRUE
@@ -565,7 +565,7 @@ setMethod(
         if (NROW(isInRepo) > 0) {
           browser(expr = exists("uuuu"))
           cacheRepo <- repo
-          if (getOption("reproducible.newAlgo", TRUE)) {
+          if (getOption("reproducible.useDBI", TRUE)) {
             if (tries > 1) {
                 dbDisconnect(conn)
                 conn <- dbConnectAll(drv, cachePath = cacheRepo)
@@ -577,7 +577,7 @@ setMethod(
           break
         }
         # if (needDisconnect) try(dbDisconnect(conns[[tries - 1]]), silent = TRUE)
-        # if (getOption("reproducible.newAlgo", TRUE)) {
+        # if (getOption("reproducible.useDBI", TRUE)) {
         #   conns[[tries]] <- conns[[tries - 1]]
         # }
         tries <- tries + 1
@@ -609,7 +609,7 @@ setMethod(
           outputHash <- outputHashNew
           message("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'")
         } else {
-          if (getOption("reproducible.newAlgo", TRUE)) {
+          if (getOption("reproducible.useDBI", TRUE)) {
             isInRepo <- isInRepo[isInRepo[[.cacheTableHashColName()]] != outputHash, , drop = FALSE]
           } else {
             isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
@@ -751,7 +751,7 @@ setMethod(
       if (isTRUE(any(alreadyIn)))
         otherFns <- otherFns[!alreadyIn]
 
-      if (!getOption("reproducible.newAlgo", TRUE)) {
+      if (!getOption("reproducible.useDBI", TRUE)) {
         outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
         if (outputToSaveIsList) {
           rasters <- unlist(lapply(outputToSave, is, "Raster"))
@@ -862,7 +862,7 @@ setMethod(
         class(otsObjSize) <- "object_size"
         if (otsObjSize > 1e7)
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
-        if (getOption("reproducible.newAlgo", TRUE)) {
+        if (getOption("reproducible.useDBI", TRUE)) {
           output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                                 conn = conn,
                                obj = outputToSave, cacheId = outputHash)
@@ -921,7 +921,7 @@ setMethod(
 #' @keywords internal
 .loadFromLocalRepoMem2 <- function(md5hash, repoDir, ...) {
   browser(expr = exists("eeee"))
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
   } else {
     out <- loadFromLocalRepo(md5hash, repoDir = repoDir, ...)
@@ -1021,7 +1021,7 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #' @importFrom stats runif
 #' @inheritParams Cache
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
-                        drv = RSQLite::SQLite(), conn = NULL,
+                        drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL,
                         cacheId) {
   counter <- 0
   browser(expr = exists("mmmm"))
@@ -1029,7 +1029,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
     stop("That cacheRepo does not exist")
   }
 
-  if (getOption('reproducible.newAlgo', TRUE)) {
+  if (getOption('reproducible.useDBI', TRUE)) {
     if (missing(cacheId)) {
       cacheId <- .robustDigest(outputToSave)
     }
@@ -1616,7 +1616,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 
       if (similarsHaveNA < 2) {
         verboseMessage1(verbose, userTags)
-        if (getOption("reproducible.newAlgo", TRUE)) {
+        if (getOption("reproducible.useDBI", TRUE)) {
           uniqueCacheId <- unique(isInRepoAlt[[.cacheTableHashColName()]])
           outputHash <- uniqueCacheId[uniqueCacheId %in% newLocalTags[[.cacheTableHashColName()]]]
         } else {

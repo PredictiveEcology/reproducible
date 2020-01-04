@@ -21,7 +21,7 @@
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
 #' @rdname cacheTools
-createCache <- function(cachePath, drv = RSQLite::SQLite(),
+createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = NULL, force = FALSE) {
   browser(expr = exists("aaaa"))
   alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
@@ -32,7 +32,7 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
 
   checkPath(cachePath, create = TRUE)
   checkPath(CacheStorageDir(cachePath), create = TRUE)
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
     on.exit(dbDisconnect(conn))
@@ -52,7 +52,7 @@ createCache <- function(cachePath, drv = RSQLite::SQLite(),
 #' @param cacheId The hash string representing the result of \code{.robustDigest}
 #' @param obj The R object to save to the cache
 #' @importFrom qs qsave
-saveToCache <- function(cachePath, drv = RSQLite::SQLite(),
+saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = NULL,
                         obj, userTags, cacheId) {
   if (is.null(conn)) {
@@ -150,7 +150,7 @@ loadFromCache <- function(cachePath, cacheId) {
 #' @importFrom DBI dbClearResult dbSendStatement dbBind dbAppendTable
 #' @export
 #' @rdname cacheTools
-rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
+rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = NULL) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
@@ -168,7 +168,7 @@ rmFromCache <- function(cachePath, cacheId, drv = RSQLite::SQLite(),
 
 }
 
-dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath, conn = NULL,
+dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()), cachePath, conn = NULL,
                          create = TRUE) {
   args <- list(drv = drv)
   browser(expr = exists("yyyy"))
@@ -188,9 +188,9 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath, conn = NULL,
 
 #' @importFrom DBI dbSendStatement dbClearResult
 .addTagsRepo <- function(isInRepo, cachePath, lastOne,
-                         drv = RSQLite::SQLite(), conn = NULL) {
+                         drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL) {
   browser(expr = exists("xxxx"))
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
       on.exit(dbDisconnect(conn))
@@ -229,14 +229,14 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath, conn = NULL,
 }
 
 .cacheNumDefaultTags <- function() {
-  if (getOption("reproducible.newAlgo", TRUE))
+  if (getOption("reproducible.useDBI", TRUE))
     5
   else
     10
 }
 
 .cacheTableHashColName <- function() {
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     "cacheId"
   } else {
     "artifact"
@@ -245,7 +245,7 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath, conn = NULL,
 
 .cacheTableTagColName <- function(option = NULL) {
   out <- "tagValue"
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
   } else {
     if (isTRUE(option == "tag")) {
       out <- "tag"
@@ -264,18 +264,18 @@ dbConnectAll <- function(drv = RSQLite::SQLite(), cachePath, conn = NULL,
 #' @export
 #' @details
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
-CacheDBFile <- function(cachePath, drv = RSQLite::SQLite(), conn = NULL) {
+CacheDBFile <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL) {
 
   type <- gsub("Driver", "", class(drv))
 
-  if (getOption('reproducible.newAlgo', TRUE)) {
+  if (getOption('reproducible.useDBI', TRUE)) {
     if (!is.null(conn)) {
       type <- gsub("Connection", "", class(conn))
     }
   }
 
   if (grepl(type, "SQLite")) {
-    if (getOption("reproducible.newAlgo", TRUE)) {
+    if (getOption("reproducible.useDBI", TRUE)) {
       file.path(cachePath, "cache.db")
     } else {
       file.path(cachePath, "backpack.db")
@@ -289,7 +289,7 @@ CacheDBFile <- function(cachePath, drv = RSQLite::SQLite(), conn = NULL) {
 #' @rdname CacheHelpers
 #' @export
 CacheStorageDir <- function(cachePath) {
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     file.path(cachePath, "cacheOutputs")
   } else {
     file.path(cachePath, "gallery")
@@ -303,7 +303,7 @@ CacheStorageDir <- function(cachePath) {
 #' @export
 #' @param hash The cacheId or otherwise digested hash value, as character string.
 CacheStoredFile <- function(cachePath, hash) {
-  csf <- if (isTRUE(getOption("reproducible.newAlgo", TRUE)) == FALSE) {
+  csf <- if (isTRUE(getOption("reproducible.useDBI", TRUE)) == FALSE) {
     "rda"
   } else {
     getOption("reproducible.cacheSaveFormat", "qs")
@@ -321,11 +321,12 @@ CacheStoredFile <- function(cachePath, hash) {
 
 #' @rdname CacheHelpers
 #' @export
-CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
+CacheDBTableName <- function(cachePath,
+                             drv = getOption("reproducible.drv", RSQLite::SQLite())) {
   if (!is(cachePath, "Path")) {
     cachePath <- asPath(cachePath, nParentDirs = 2)
   }
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     toGo <- attr(cachePath, "nParentDirs")
     cachePathTmp <- normPath(cachePath)
     newPath <- basename2(cachePathTmp)
@@ -350,9 +351,9 @@ CacheDBTableName <- function(cachePath, drv = RSQLite::SQLite()) {
 #' @details
 #' \code{CacheIsACache} returns a logical of whether the specified cachePath
 #'   is actually a functioning cache.
-CacheIsACache <- function(cachePath, create = FALSE, drv = RSQLite::SQLite(), conn = NULL) {
+CacheIsACache <- function(cachePath, create = FALSE, drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = NULL) {
   browser(expr = exists("aaaa"))
-  if (getOption('reproducible.newAlgo', TRUE)) {
+  if (getOption('reproducible.useDBI', TRUE)) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
       on.exit(dbDisconnect(conn))
@@ -364,12 +365,12 @@ CacheIsACache <- function(cachePath, create = FALSE, drv = RSQLite::SQLite(), co
   browser(expr = exists("jjjj"))
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
                list.files(cachePath))
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     if (ret)
       ret <- ret && (length(dbListTables(conn)) > 0)
   }
 
-  if (getOption('reproducible.newAlgo', TRUE)) {
+  if (getOption('reproducible.useDBI', TRUE)) {
     if (isFALSE(ret) && isTRUE(create)) {
       if (grepl(type, "Pq")) {
         file.create(CacheDBFile(cachePath, drv = drv, conn))

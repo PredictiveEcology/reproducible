@@ -18,7 +18,7 @@ clearCache(
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = NULL,
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL,
   ...
 )
@@ -31,7 +31,7 @@ clearCache(
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL,
   ...
 )
@@ -43,7 +43,7 @@ showCache(
   userTags = character(),
   after = NULL,
   before = NULL,
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL,
   ...
 )
@@ -53,7 +53,7 @@ showCache(
   userTags = character(),
   after = NULL,
   before = NULL,
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL,
   ...
 )
@@ -64,7 +64,7 @@ keepCache(
   after = NULL,
   before = NULL,
   ask = getOption("reproducible.ask"),
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL,
   ...
 )
@@ -75,7 +75,7 @@ keepCache(
   after = NULL,
   before = NULL,
   ask = getOption("reproducible.ask"),
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL,
   ...
 )

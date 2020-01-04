@@ -7,11 +7,16 @@
 \alias{rmFromCache}
 \title{Create a new cache}
 \usage{
-createCache(cachePath, drv = RSQLite::SQLite(), conn = NULL, force = FALSE)
+createCache(
+  cachePath,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = NULL,
+  force = FALSE
+)
 
 saveToCache(
   cachePath,
-  drv = RSQLite::SQLite(),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = NULL,
   obj,
   userTags,
@@ -20,7 +25,12 @@ saveToCache(
 
 loadFromCache(cachePath, cacheId)
 
-rmFromCache(cachePath, cacheId, drv = RSQLite::SQLite(), conn = NULL)
+rmFromCache(
+  cachePath,
+  cacheId,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = NULL
+)
 }
 \arguments{
 \item{cachePath}{A path describing the directory in which to create

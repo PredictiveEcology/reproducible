@@ -29,6 +29,9 @@ The following options are likely of interest to most users
                          "qs", "rds" or "rda" \cr
   \code{destinationPath} \tab \code{NULL} \tab Used in \code{\link{prepInputs}},
                               \code{\link{preProcess}}. Can be set globally here. \cr
+  \code{drv} \tab \code{RSQLite::SQLite()} \tab Sets the default driver for the backend
+                      database system. Only tested with \code{RSQLite::SQLite()} and
+                      \code{RPostgres::Postgres()} \cr
   \code{futurePlan} \tab \code{FALSE} \tab On Linux OSs, \code{Cache} and \code{cloudCache}
                          have some functionality that uses the \code{future} package.
                          Default is to not use these, as they are experimental. They may,
@@ -49,8 +52,6 @@ The following options are likely of interest to most users
   \code{inputPathsRecursive} \tab \code{FALSE} \tab Used in \code{\link{prepInputs}},
                               \code{\link{preProcess}}. Should the \code{reproducible.inputPaths}
                               be searched recursively for existence of a file\cr
-  \code{newAlgo} \tab \code{TRUE} \tab As of reproducible 0.3, the backend is now \code{DBI}
-                     package instead of \code{archivist}\cr
   \code{overwrite} \tab \code{FALSE} \tab Used in \code{\link{prepInputs}}, \code{\link{preProcess}},
                         \code{\link{downloadFile}}, and \code{\link{postProcess}}.\cr
   \code{quick} \tab \code{FALSE} \tab Used in \code{\link{Cache}}. This will cause
@@ -80,6 +81,8 @@ The following options are likely of interest to most users
                         deleting objects. This, therefore, is most useful if the user is
                         using unique values for \code{userTags}\cr
   \code{useCloud} \tab Passed to \code{Cache}. Default \code{FALSE}.\cr
+  \code{useDBI} \tab \code{TRUE} \tab As of reproducible 0.3, the backend is now \code{DBI}
+                     package instead of \code{archivist}\cr
   \code{useGDAL} \tab Passed to \code{useGDAL} in \code{projectInputs.Raster}.
                   Default \code{TRUE}.\cr
   \code{useMemoise} \tab \code{TRUE} \tab Used in \code{\link{Cache}}. If \code{TRUE},

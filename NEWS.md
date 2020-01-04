@@ -1,5 +1,21 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 0.3.0
+==============
+
+## Dependency changes
+
+* deprecating `archivist`
+
+## New features
+
+* A new backend was introduced that uses `DBI` package directly, without `archivist`. This has much improved speed. 
+* The default file saving format is now `qs` from `qs` package instead of `rda`. This has much improved speed.
+
+## bug fixes
+
+* Several minor, edge cases were detected and fixed.
+
 version 0.2.11
 ==============
 

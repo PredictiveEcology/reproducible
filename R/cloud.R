@@ -67,7 +67,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
   browser(expr = exists("kkkk"))
   artifactFileName <- CacheStoredFile(cacheRepo, hash = artifact)
   #artifactFileName <- paste0(artifact, ".rda")
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     newFileName <- basename2(artifactFileName)
   } else {
     newFileName <- paste0(outputHash,".rda")
@@ -106,7 +106,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   retry(drive_download(file = as_id(gdriveLs$id[isInCloud][1]),
                  path = localNewFilename, # take first if there are duplicates
                  overwrite = TRUE))
-  if (getOption("reproducible.newAlgo", TRUE)) {
+  if (getOption("reproducible.useDBI", TRUE)) {
     output <- qread(localNewFilename)
   } else {
     ee <- new.env(parent = emptyenv())
@@ -135,7 +135,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudF
   browser(expr = exists("kkkk"))
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
-    newFileName <- if (getOption("reproducible.newAlgo", TRUE)) {
+    newFileName <- if (getOption("reproducible.useDBI", TRUE)) {
       basename2(cacheIdFileName)
     } else {
       paste0(saved, ".rda")

@@ -592,7 +592,7 @@ setGeneric("clearStubArtifacts", function(repoDir = NULL) {
 setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
-    if (getOption("reproducible.newAlgo", TRUE)) {
+    if (getOption("reproducible.useDBI", TRUE)) {
       ret <- NULL
     } else {
       md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
