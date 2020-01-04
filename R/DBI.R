@@ -40,8 +40,8 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
   dt <- .emptyCacheTable
 
-  retry(
-    dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
+  retry(retries = 15,
+    dWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
                  field.types = c(cacheId = "text", tagKey = "text",
                                  tagValue = "text", createdDate = "text"))
   )
@@ -160,8 +160,8 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
   query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv),
                   "\" WHERE \"cacheId\" = $1")
 
-  res <- retry({dbSendStatement(conn, query)})
-  retry(dbBind(res, list(cacheId)))
+  res <- retry({dbSendStatement(conn, query)}, retries = 15)
+  retry(dbBind(res, list(cacheId)), retries = 15)
   dbClearResult(res)
 
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
@@ -369,7 +369,7 @@ CacheIsACache <- function(cachePath, create = FALSE,
                list.files(cachePath))
   if (getOption("reproducible.useDBI", TRUE)) {
     if (ret)
-      ret <- ret && (length(dbListTables(conn)) > 0)
+      ret <- retry(ret && (length(dbListTables(conn)) > 0), retries = 15)
   }
 
   if (getOption('reproducible.useDBI', TRUE)) {
