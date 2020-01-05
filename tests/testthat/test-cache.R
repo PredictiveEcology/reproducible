@@ -225,7 +225,7 @@ test_that("test memory backed raster robustDigest", {
 })
 
 test_that("test 'quick' argument", {
-  testInitOut <- testInit("raster", tmpFileExt = ".tif")
+  testInitOut <- testInit("raster", tmpFileExt = ".tif", opts = list("reproducible.useMemoise" = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -391,7 +391,7 @@ test_that("test environments", {
 })
 
 test_that("test asPath", {
-  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  testInitOut <- testInit("raster", tmpFileExt = "pdf", opts = list("reproducible.useMemoise" = TRUE))
   unlink(dir(tmpdir, full.names = TRUE))
   on.exit({
     testOnExit(testInitOut)

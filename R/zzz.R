@@ -22,9 +22,9 @@
   if (isInteractive()) {
     packageStartupMessage("Using reproducible version ",
                           utils::packageVersion("reproducible"), ".",
-                          "\n  'reproducible' has changed the default digest algorithm.",
+                          "\n  'reproducible' has changed the default database backend.",
                           "\n  See ?reproducibleOptions for details. To revert to the old:",
-                          "\n  options('reproducible.useNewDigestAlgorithm' = FALSE)")
+                          "\n  options('reproducible.useDBI' = FALSE)")
   }
 }
 

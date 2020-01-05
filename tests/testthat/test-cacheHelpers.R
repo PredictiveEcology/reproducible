@@ -1,6 +1,6 @@
 ##########################
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(opts = list(reproducible.useMemoise = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

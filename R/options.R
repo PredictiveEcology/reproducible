@@ -85,7 +85,7 @@
 #'                      package instead of \code{archivist}\cr
 #'   \code{useGDAL} \tab Passed to \code{useGDAL} in \code{projectInputs.Raster}.
 #'                   Default \code{TRUE}.\cr
-#'   \code{useMemoise} \tab \code{TRUE} \tab Used in \code{\link{Cache}}. If \code{TRUE},
+#'   \code{useMemoise} \tab \code{FALSE} \tab Used in \code{\link{Cache}}. If \code{TRUE},
 #'                   recovery of cached elements from the cacheRepo will use
 #'                   \code{memoise::memoise}. This means that the 3rd time running a function
 #'                   will be much faster than the 1st (create cache entry) or 2nd (recover
@@ -142,7 +142,7 @@ reproducibleOptions <- function() {
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #
     reproducible.useGDAL = TRUE, #
-    reproducible.useMemoise = TRUE, #memoise
+    reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = TRUE,
     reproducible.useragent = "http://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = FALSE
