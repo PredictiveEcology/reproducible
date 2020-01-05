@@ -43,12 +43,13 @@ test_that("test cached downloads", {
                cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
 
   # Make sur the file do not exists before testing
-  toRemove <- list(basename(CacheDBFile(cachePath = ".")), basename(urlTif1))
-  lapply(toRemove, function(x) {
-    if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
-  })
+  file.remove(basename(urlTif1))
+  #toRemove <- list(basename(CacheDBFile(outdir)), )
+  #lapply(toRemove, function(x) {
+  #  if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
+  #})
+  clearCache(outdir)
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
-  expect_false(file.exists(CacheDBFile(outdir, drv = NULL)))
 
   # Test MakeCopy = TRUE
   out <- Cache(utils::download.file, url = urlTif1,
@@ -58,6 +59,7 @@ test_that("test cached downloads", {
 
   # check if copy was created
   copyFolder <- storageDir
+
   expect_true(file.exists(file.path(copyFolder, basename(urlTif1))))
 
   # Remove downloaded file and check if it is brought back using the copy

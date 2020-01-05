@@ -124,7 +124,6 @@ testOnExit <- function(testInitOut) {
     tab2 <- grep(value = TRUE, tabs, pattern =
                   paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
                                           basename2(testInitOut$tmpdir))))
-
     if (length(tab1))
       try(DBI::dbRemoveTable(getOption("reproducible.conn"), tab1))
     if (length(tab2))

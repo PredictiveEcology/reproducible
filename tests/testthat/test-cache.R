@@ -398,9 +398,9 @@ test_that("test asPath", {
   }, add = TRUE)
 
   obj <- sample(1e5,10)
-  origDir <- getwd()
-  on.exit(setwd(origDir))
-  setwd(tmpdir)
+  #origDir <- getwd()
+  #on.exit(setwd(origDir), add = TRUE)
+  #setwd(tmpdir)
   # xxxx <<- ssss <<- jjjj <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
   # First -- has no filename.RData
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
@@ -834,13 +834,15 @@ test_that("test rm large non-file-backed rasters", {
   skip_on_cran()
   skip_on_travis()
 
+  if (!is.null(getOption("reproducible.conn")))
+    if (!grepl("SQLite", class(getOption("reproducible.conn"))))
+      skip("This is not for non-SQLite")
+
   testInitOut <- testInit(ask = FALSE, opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  if (!is.null(getOption("reproducible.conn")))
-    if (!grepl("SQLite", class(getOption("reproducible.conn"))))
-      skip("This is not for non-SQLite")
+
   st0 <- system.time(r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1, userTags = "first"))
   st1 <- system.time(clearCache(userTags = "first", ask = FALSE))
   expect_true(st1["elapsed"] < 0.75) # This was > 2 seconds in old way
