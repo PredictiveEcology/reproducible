@@ -595,6 +595,7 @@ setMethod(
       needFindByTags <- identical("devMode", useCache) &&
         NROW(isInRepo) == 0
       if (identical("devMode", useCache) && NROW(isInRepo) == 0) {
+        browser(expr = exists("llll"))
         devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
         outputHash <- devModeOut$outputHash
         isInRepo <- devModeOut$isInRepo
@@ -1584,7 +1585,7 @@ getCacheRepos <- function(cacheRepo, modifiedDots) {
 
 devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose,
                        isInRepo, outputHash) {
-  browser(expr = exists("devMode"))
+  browser(expr = exists("llll"))
   userTags <- gsub(".*:(.*)", "\\1", userTags)
   isInRepoAlt <- localTags[localTags[[.cacheTableTagColName("tag")]] %in% userTags, , drop = FALSE]
   data.table::setDT(isInRepoAlt)
@@ -1596,7 +1597,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
     newLocalTags <- localTags[localTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]],]
     tags1 <- grepl(paste0("(",
                           paste("accessed", "cacheId", "class", "date", "format", "function",
-                                "name", "object.size", "otherFunctions", "preDigest",
+                                "name", "object.size", "otherFunctions", "preDigest", "file.size",
                                 sep = "|"),
                           ")"),
                    newLocalTags[["tagKey"]])
