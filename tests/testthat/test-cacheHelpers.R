@@ -21,9 +21,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary", mess)))
 
-  opt <- options("reproducible.cachePath" = NULL)
+  opt11 <- options("reproducible.cachePath" = NULL)
   on.exit({
-    options(opt)
+    options(opt11)
   }, add = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cacheRepo supplied. Using tempdir()", mess)))
@@ -61,10 +61,10 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(grepl("skipping Cache", bMess))
 
   ## getOption("reproducible.useMemoise" = FALSE)
-  opt <- options("reproducible.useMemoise" = FALSE)
+  opt22 <- options("reproducible.useMemoise" = FALSE)
   aMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
   bMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
-  options(opt)
+  options(opt22)
   cMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
   dMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
   #expect_true(identical(aMess, bMess[1]))
