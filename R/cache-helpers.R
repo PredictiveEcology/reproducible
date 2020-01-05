@@ -662,7 +662,7 @@ setMethod(
   whichInMemory <- if (!isStack) {
     inMemory(obj)
   } else {
-   sapply(obj@layers, inMemory)
+    sapply(obj@layers, inMemory)
   }
   whichHasValues <- if (!isStack) {
     hasValues(obj)
