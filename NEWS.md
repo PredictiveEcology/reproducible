@@ -1,11 +1,7 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 0.3.0
+version 1.0.0
 ==============
-
-## Dependency changes
-
-* deprecating `archivist`
 
 ## New features
 
@@ -13,6 +9,10 @@ version 0.3.0
 * A new backend was introduced that uses `DBI` package directly, without `archivist`. This has much improved speed. 
 * The default file saving format is now `qs` from `qs` package instead of `rda`. This has much improved speed and file sizes compared to previous.
 * Changed default behaviour for memoising ... because Cache is now much faster, the default is to turn memoising off, via `options("reproducible.useMemoise" = FALSE)`. In cases of large objects, memoising should still be faster, so user can still activate it, setting the option to `TRUE`.
+
+## Dependency changes
+
+* deprecating `archivist`
 
 ## bug fixes
 
