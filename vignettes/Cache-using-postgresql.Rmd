@@ -1,0 +1,67 @@
+---
+title: "Using alternate database backends for Cache"
+author:
+  - "Alex M. Chubaty"
+  - "Eliot J. B. McIntire"
+date: '`r strftime(Sys.Date(), "%B %d %Y")`'
+output:
+  rmarkdown::html_vignette:
+    fig_width: 7
+    number_sections: yes
+    self_contained: yes
+    toc: yes
+vignette: >
+  %\VignetteIndexEntry{Cache using postgresql}
+  %\VignetteDepends{raster}
+  %\VignetteKeyword{Cache, postgresql}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+# Cache database backends
+
+By default, caching relies on a sqlite database for it's backend.
+While this works in many situations, there are some important limitations of using sqlite for caching, including 1) speed; 2) concurrent transactions; 3) sharing database across machines or projects.
+Fortunately, `Cache` makes use of `DBI` package and thus supports several database backends, including mysql and postgresql.
+This vignette demonstrates how to use a postgres database for caching.
+
+# Using Cache with postgresql
+
+## Set up a postgresql server and database
+
+Lorem ipsum ...
+
+# Best practices
+
+Be careful not to save database credentials in version control.
+
+We recommend per-project credentials saved either in config files or environment variables.
+
+See <https://db.rstudio.com/best-practices/managing-credentials/> for other important best practices.
+
+## Using config files
+
+<https://db.rstudio.com/best-practices/managing-credentials/#stored-in-a-file-with-config>
+
+## Using environment variables
+
+<https://db.rstudio.com/best-practices/managing-credentials/#use-environment-variables>
+
+Add the following to your project's `.Renviron` file:
+
+```
+PGHOST="localhost"
+PGPORT=5432
+PGDATABASE="mydatabase"
+PGUSER="mydbuser"
+PGPASSWORD="mysecurepassword"
+```
+
+Then, in your main project script, add the following:
+
+```{r, echo=TRUE, eval=FALSE}
+conn <- DBI::dbConnect(drv = RPostgres::Postgres())
+options("reproducible.conn" = conn) # sets the default connection globally
+```

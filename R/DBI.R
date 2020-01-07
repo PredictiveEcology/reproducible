@@ -53,8 +53,7 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 #' @param obj The R object to save to the cache
 #' @importFrom qs qsave
 saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                        conn = getOption("reproducible.conn", NULL),
-                        obj, userTags, cacheId) {
+                        conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
     on.exit(dbDisconnect(conn))
@@ -144,7 +143,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
     fsBig <- (as.integer(tagValue[whichOS]) * 4 ) < fs
-    if (fsBig) message("Object with cacheId",cacheId, "appears to have a much larger size ",
+    if (fsBig) message("Object with cacheId", cacheId, "appears to have a much larger size ",
                        "on disk than in memory. ",
                        "This usually means that the object has captured an environment with ",
                        "many objects due to how a function or a formula is defined. ",
@@ -159,9 +158,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
        retries = 15)
 
   return(obj)
-
 }
-
 
 #' @export
 #' @rdname cacheTools
@@ -182,19 +179,17 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
     on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv),
-                  "\" WHERE \"cacheId\" = $1")
+  query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
 
   res <- retry({dbSendStatement(conn, query)}, retries = 15)
   retry(dbBind(res, list(cacheId)), retries = 15)
   dbClearResult(res)
 
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
-
 }
 
-dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()), cachePath, conn = getOption("reproducible.conn", NULL),
-                         create = TRUE) {
+dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()), cachePath,
+                         conn = getOption("reproducible.conn", NULL), create = TRUE) {
   args <- list(drv = drv)
   browser(expr = exists("yyyy"))
   if (is(drv, "SQLiteDriver")) {
@@ -210,10 +205,10 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 .emptyCacheTable <- data.table(cacheId = character(), tagKey = character(),
                                tagValue = character(), createdDate = character())
 
-
 #' @importFrom DBI dbSendStatement dbClearResult
 .addTagsRepo <- function(isInRepo, cachePath, lastOne,
-                         drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL)) {
+                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                         conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("xxxx"))
   if (getOption("reproducible.useDBI", TRUE)) {
     if (is.null(conn)) {
@@ -221,16 +216,19 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
       on.exit(dbDisconnect(conn))
     }
 
-    rs <- retry(dbSendStatement(conn, paste0("insert into \"",CacheDBTableName(cachePath, drv),"\"",
-                                      " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
-                                      "('", isInRepo$cacheId[lastOne],
-                                      "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")),
-                retries = 15)
+    rs <- retry(dbSendStatement(
+      conn,
+      paste0("insert into \"",CacheDBTableName(cachePath, drv),"\"",
+             " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
+             "('", isInRepo$cacheId[lastOne],
+             "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")
+      ), retries = 15)
 
     dbClearResult(rs)
 
     # dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
-    #                 "tagValue" = as.character(Sys.time()), "createdDate" = as.character(Sys.time()))
+    #                 "tagValue" = as.character(Sys.time()),
+    #                 "createdDate" = as.character(Sys.time()))
     #
     # retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
 
@@ -250,14 +248,10 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
       }
     }
   }
-
 }
 
 .cacheNumDefaultTags <- function() {
-  if (getOption("reproducible.useDBI", TRUE))
-    6
-  else
-    10
+  if (getOption("reproducible.useDBI", TRUE)) 6 else 10
 }
 
 .cacheTableHashColName <- function() {
@@ -289,7 +283,8 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 #' @export
 #' @details
 #' \code{CacheStoredFile} returns the file path to the file with the specified hash value.
-CacheDBFile <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL)) {
+CacheDBFile <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        conn = getOption("reproducible.conn", NULL)) {
 
   type <- gsub("Driver", "", class(drv))
 
@@ -355,7 +350,7 @@ CacheDBTableName <- function(cachePath,
     toGo <- attr(cachePath, "nParentDirs")
     cachePathTmp <- normPath(cachePath)
     newPath <- basename2(cachePathTmp)
-    while(toGo > 1) {
+    while (toGo > 1) {
       toGo <- toGo - 1
       cachePathTmp <- dirname(cachePathTmp)
       newPath <- paste(basename2(cachePathTmp), newPath, sep = "_")
@@ -406,4 +401,3 @@ CacheIsACache <- function(cachePath, create = FALSE,
   }
   return(ret)
 }
-
