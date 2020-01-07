@@ -72,13 +72,6 @@ test_that("test miscellaneous fns", {
     normPath(filename(r4))
   ))
 
-  # helpers.R
-  a <- getCRANrepos(NULL)
-  expect_true(is.character(a))
-
-  a <- getCRANrepos("")
-  expect_true(grepl("https://cloud.r-project.org", a))
-
   expect_silent(b <- retry(rnorm(1), retries = 1, silent = TRUE))
   expect_error(b <- retry(stop(), retries = 1, silent = TRUE))
 
@@ -112,6 +105,22 @@ test_that("test miscellaneous fns", {
   expect_true(identical(unrar$fun, "unrar"))
   expect_error( .callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
 
+
+  testthat::with_mock(
+    "reproducible::getGDALVersion" = function() NA,
+    {
+      expect_false(checkGDALVersion("3.0"))
+    }
+  )
+
+  skip_on_appveyor() # can't tell what the CRAN repo is
+  # helpers.R
+  a <- getCRANrepos(NULL)
+  expect_true(is.character(a))
+
+  a <- getCRANrepos("")
+  expect_true(grepl("https://cloud.r-project.org", a))
+
   testthat::with_mock(
     "reproducible::isInteractive" = function() TRUE,
     "reproducible::chooseCRANmirror2" = function() {
@@ -125,12 +134,6 @@ test_that("test miscellaneous fns", {
     }
   )
 
-  testthat::with_mock(
-    "reproducible::getGDALVersion" = function() NA,
-    {
-      expect_false(checkGDALVersion("3.0"))
-    }
-  )
 })
 
 
