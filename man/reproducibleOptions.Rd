@@ -53,10 +53,11 @@ The following options are likely of interest to most users
                               in their \code{destinationPath}, but also minimize
                               re-downloading the same (perhaps large) file over and over
                               for each project. Because the files are hardlinks, there
-                              is no extra space taken up by the apparently duplicated files\cr
+                              is no extra space taken up by the apparently duplicated files.\cr
   \code{inputPathsRecursive} \tab \code{FALSE} \tab Used in \code{\link{prepInputs}},
                               \code{\link{preProcess}}. Should the \code{reproducible.inputPaths}
-                              be searched recursively for existence of a file\cr
+                              be searched recursively for existence of a file.\cr
+  \code{nThreads} \tab \code{1} \tab The number of threads to use for reading/writing cache files.\cr
   \code{overwrite} \tab \code{FALSE} \tab Used in \code{\link{prepInputs}}, \code{\link{preProcess}},
                         \code{\link{downloadFile}}, and \code{\link{postProcess}}.\cr
   \code{quick} \tab \code{FALSE} \tab Used in \code{\link{Cache}}. This will cause
