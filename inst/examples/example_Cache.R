@@ -8,6 +8,7 @@ ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
 ranNumsC <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 16)  # recovers cached copy
 ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 
+
 ###############################################
 # experimental devMode
 ###############################################
@@ -38,5 +39,20 @@ options(opt)
 
 # For more in depth uses, see vignette
 \dontrun{
+  # To use Postgres, set environment variables with the required credentials
+  if (requireNamespace("RPostgres")) {
+    Sys.setenv(PGHOST = "url.to.server")
+    Sys.setenv(PGPORT = "port.number.of.server")
+    Sys.setenv(PGDATABASE = "database.name")
+    Sys.setenv(PGUSER = "user.name.on.server")
+    Sys.setenv(PGPASSWORD = "password.on.server")
+
+    conn <- DBI::dbConnect(RPostgres::Postgres())
+    options("reproducible.conn" = conn)
+
+    # Will use postgres for cache data table, and tempdir() for saved R objects
+    Cache(rnorm, 1, cacheRepo = tempdir())
+  }
+
   browseVignettes(package = "reproducible")
 }
