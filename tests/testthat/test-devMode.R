@@ -61,10 +61,10 @@ test_that("test devMode", {
   opt <- options("reproducible.useCache" = TRUE)
   ranNumsG <- Cache(centralTendency, 1:12, cacheRepo = tmpdir, userTags = theTags)
   options(opt)
-  centralTendency <- function(x)
-    median(x)
-  mess <- capture_messages(ranNumsG <- Cache(centralTendency, 1:12, cacheRepo = tmpdir,
-                                     userTags = theTags, verbose = 1))
+  centralTendency <- function(x) median(x)
+  mess <- capture_messages({
+    ranNumsG <- Cache(centralTendency, 1:12, cacheRepo = tmpdir, userTags = theTags, verbose = 1)
+  })
   expect_true(any(grepl("not unique; defaulting", mess)))
 
   ### Test that vague userTags don't accidentally delete a non-similar entry
@@ -75,5 +75,4 @@ test_that("test devMode", {
   ranNumsI <- Cache(rnorm, 15, cacheRepo = tmpdir, userTags = theTags)
   a <- showCache(tmpdir) # 2 unique artifacts because VERY different
   expect_true(length(unique(a[[.cacheTableHashColName()]])) == 2)
-
 })

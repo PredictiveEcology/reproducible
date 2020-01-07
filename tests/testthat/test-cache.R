@@ -112,7 +112,7 @@ test_that("test file-backed raster caching", {
       randomPolyToFactorInMemory <- function() {
         r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
         levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
-                                vals2 <- sample(1:7, size = 30, replace = TRUE))
+                                vals2 = sample(1:7, size = 30, replace = TRUE))
         dataType(r) <- "INT1U"
         r
       }
@@ -148,8 +148,6 @@ test_that("test file-backed raster caching", {
 
       clearCache(tmpdir, ask = FALSE)
    })
-
-
 })
 
 test_that("test memory backed raster robustDigest", {
@@ -243,11 +241,13 @@ test_that("test 'quick' argument", {
   out1b <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
-  mess1 <- capture_messages(out1c <- Cache(quickFun, asPath(filename(r1)),
-                                          cacheRepo = tmpdir, quick = TRUE))
+  mess1 <- capture_messages({
+    out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
+  })
   expect_true(any(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 )))
-  expect_silent(out1c <- Cache(quickFun, asPath(filename(r1)),
-                                cacheRepo = tmpdir, quick = FALSE))
+  expect_silent({
+    out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = FALSE)
+  })
 
   # Using Raster directly -- not file
   quickFun <- function(ras) {
@@ -257,11 +257,16 @@ test_that("test 'quick' argument", {
   out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
-  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE))
-  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
+  mess1 <- capture_message({
+    out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
+  })
+  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy",
+                    mess1))
 
-  #mess3 <- capture_messages(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE))
-  expect_silent(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE))
+  #mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE) })
+  expect_silent({
+    out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE)
+  })
 })
 
 test_that("test date-based cache removal", {
@@ -279,7 +284,6 @@ test_that("test date-based cache removal", {
 
   b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
   expect_identical(data.table::setindex(b, NULL), data.table::setindex(a1, NULL))
-
 })
 
 test_that("test keepCache", {
@@ -815,7 +819,9 @@ test_that("test useCache = 'overwrite'", {
   a <- Cache(rnorm, 1, useCache = "overwrite", cacheRepo = tmpCache)
   #aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
   # ffff <<- 1
-  mess <- capture_messages(b <- Cache(rnorm, 1, useCache = "overwrite", cacheRepo = tmpCache))
+  mess <- capture_messages({
+    b <- Cache(rnorm, 1, useCache = "overwrite", cacheRepo = tmpCache)
+  })
   expect_true(!identical(a, b))
   expect_true(any(grepl(pattern = "Overwriting", mess)))
 
@@ -825,7 +831,9 @@ test_that("test useCache = 'overwrite'", {
   testInitOut <- testInit(ask = FALSE, opts = list("reproducible.useCache" = "overwrite"))
 
   a <- Cache(rnorm, 1, cacheRepo = tmpCache)
-  mess <- capture_messages(b <- Cache(rnorm, 1, cacheRepo = tmpCache))
+  mess <- capture_messages({
+    b <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  })
   expect_true(!identical(a, b))
   expect_true(any(grepl(pattern = "Overwriting", mess)))
 })
@@ -845,7 +853,9 @@ test_that("test rm large non-file-backed rasters", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  st0 <- system.time(r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1, userTags = "first"))
+  st0 <- system.time({
+    r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1, userTags = "first")
+  })
   st1 <- system.time(clearCache(userTags = "first", ask = FALSE))
   expect_true(st1["elapsed"] < 0.75) # This was > 2 seconds in old way
 })
@@ -886,5 +896,3 @@ test_that("test cc", {
   mess <- capture_messages(cc(ask = FALSE, x = tmpCache)) # Cache is already empty
   expect_true(any(grepl("Cache already empty", mess)))
 })
-
-

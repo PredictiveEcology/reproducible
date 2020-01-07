@@ -161,28 +161,35 @@ test_that("test miscellaneous fns", {
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
                       gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
       } else {
-        mess1 <- capture_messages(expect_error(cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                                                           gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+        mess1 <- capture_messages(expect_error(
+          cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
+                      gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
       }
     })
   expect_true(grepl("Uploading local copy of", mess1))
   expect_true(grepl("cacheId\\: sdfsiodfja to cloud folder", mess1))
 
   a <- cloudUploadRasterBackends(ras, cloudFolderID = cloudFolderID)
-  mess1 <- capture_messages(expect_error(expect_warning(a <- cloudDownload(outputHash = "sdfsd", newFileName = "test.tif",
-                                                                           gdriveLs = gdriveLs1, cloudFolderID = "testy"))))
+  mess1 <- capture_messages(expect_error(expect_warning({
+    a <- cloudDownload(outputHash = "sdfsd", newFileName = "test.tif",
+                       gdriveLs = gdriveLs1, cloudFolderID = "testy")
+  })))
   expect_true(grepl("Downloading cloud copy of test\\.tif", mess1))
   testthat::with_mock(
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
-      warns <- capture_warnings(expect_error(cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")))
+      warns <- capture_warnings(expect_error(
+        cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
+      ))
     })
 
   testthat::with_mock(
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
-      mess1 <- capture_messages(expect_error(cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs",
-                                                              saved = "life", cacheRepo = tmpCache)))
+      mess1 <- capture_messages(expect_error(
+        cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life",
+                             cacheRepo = tmpCache)
+      ))
     })
   expect_true(grepl("Uploading new cached object|with cacheId", mess1))
 

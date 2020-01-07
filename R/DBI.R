@@ -218,7 +218,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 
     rs <- retry(dbSendStatement(
       conn,
-      paste0("insert into \"",CacheDBTableName(cachePath, drv),"\"",
+      paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
              " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
              "('", isInRepo$cacheId[lastOne],
              "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")
@@ -231,7 +231,6 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     #                 "createdDate" = as.character(Sys.time()))
     #
     # retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
-
   } else {
 
     written <- 0

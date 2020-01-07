@@ -298,7 +298,6 @@ cc <- function(secs, ...) {
       reproducible::clearCache(after = Sys.time() - secs, ...)
     }
   }
-
 }
 
 #' Examining and modifying the cache
@@ -325,7 +324,8 @@ cc <- function(secs, ...) {
 #' in \code{\link{Cache}}
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
-                                 drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL), ...) {
+                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                 conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("showCache")
 })
 
@@ -452,7 +452,6 @@ setMethod(
             setkeyv(objsDT2, "artifact")
             shortDT <- unique(objsDT2, by = "artifact")[, artifact]
             objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
-
           }
         }
       }
@@ -472,7 +471,8 @@ setMethod(
 #' @rdname viewCache
 setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  ask  = getOption("reproducible.ask"),
-                                 drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL), ...) {
+                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                 conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("keepCache")
 })
 
@@ -489,13 +489,13 @@ setMethod(
     # if (missing(before)) before <- NA # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
-    args <- append(list(x = x, after = after, before = before, userTags = userTags),
-                   list(...))
+    args <- append(list(x = x, after = after, before = before, userTags = userTags), list(...))
 
     objsDTAll <- suppressMessages(showCache(x, verboseMessaging = FALSE))
     objsDT <- do.call(showCache, args = args)
     keep <- unique(objsDT[[.cacheTableHashColName()]])
-    eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][!(objsDTAll[[.cacheTableHashColName()]] %in% keep)])
+    eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
+      !(objsDTAll[[.cacheTableHashColName()]] %in% keep)])
 
 
     if (length(eliminate)) {

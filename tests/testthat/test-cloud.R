@@ -21,15 +21,17 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # local absent, cloud absent
     #######################################
     kkkk <<- 1
-    mess1 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
-                                         cacheRepo = tmpCache, useCloud = TRUE))
+    mess1 <- capture_messages({
+      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    })
     expect_true(any(grepl("uploaded", mess1)))
 
     #######################################
     # local present, cloud present
     #######################################
-    mess2 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
-                                         cacheRepo = tmpCache, useCloud = TRUE))
+    mess2 <- capture_messages({
+      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    })
     expect_true(any(grepl("loading cached", mess2)))
     expect_false(all(grepl("uploaded", mess2)))
     expect_false(all(grepl("download", mess2)))
@@ -38,8 +40,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # local absent, cloud present
     #######################################
     clearCache(userTags = .robustDigest(1), x = tmpCache)
-    mess3 <- capture_messages(a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID,
-                                          cacheRepo = tmpCache, useCloud = TRUE))
+    mess3 <- capture_messages({
+      a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    })
     expect_false(any(grepl("loading cached", mess3)))
     expect_false(any(grepl("uploaded", mess3)))
     expect_true(any(grepl("download", mess3)))
@@ -49,8 +52,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #######################################
     clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
     a1 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache)
-    mess4 <- capture_messages(a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID,
-                                          cacheRepo = tmpCache, useCloud = TRUE))
+    mess4 <- capture_messages({
+      a2 <- Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
+    })
 
     expect_true(any(grepl("loading cached", mess4)))
     expect_true(any(grepl("uploaded", mess4)))
@@ -63,9 +67,11 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
     opts <- options("reproducible.cloudFolderID" = NULL)
 
-    warn5 <- capture_warnings(
-      mess5 <- capture_messages(
-        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)))
+    warn5 <- capture_warnings({
+      mess5 <- capture_messages({
+        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)
+      })
+    })
 
     on.exit({
       retry(drive_rm(as_id(cloudFolderID)))
@@ -75,9 +81,11 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     expect_false(any(grepl("download", mess5)))
     expect_true(any(grepl("No cloudFolderID", warn5)))
 
-    warn6 <- capture_warnings(
-      mess6 <- capture_messages(
-        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)))
+    warn6 <- capture_warnings({
+      mess6 <- capture_messages({
+        a2 <- Cache(rnorm, 3, cacheRepo = tmpCache, useCloud = TRUE)
+      })
+    })
 
     expect_false(any(grepl("Folder created", mess6)))
     expect_false(any(grepl("Uploading", mess6)))
@@ -91,28 +99,38 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # Add 3 things to cloud and local -- then clear them all
     for (i in 1:3)
       a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
-    expect_silent(mess1 <- capture_messages(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)))
-    expect_true(NROW(drive_ls(path = as_id(cloudFolderID)))==0)
+    expect_silent({
+      mess1 <- capture_messages(
+        clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
+      )
+    })
+    expect_true(NROW(drive_ls(path = as_id(cloudFolderID))) == 0)
 
     # Add 3 things to local, only 2 to cloud -- clear them all, without an error
     for (i in 1:2)
       a1 <- Cache(rnorm, i, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     a1 <- Cache(rnorm, 3, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = FALSE)
-    expect_silent(mess2 <- capture_messages(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)))
-    expect_true(NROW(drive_ls(path = as_id(cloudFolderID)))==0)
+    expect_silent({
+      mess2 <- capture_messages(
+        clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
+      )
+    })
+    expect_true(NROW(drive_ls(path = as_id(cloudFolderID))) == 0)
 
     # Add 2 things to local and cloud -- clear only 1 of them, without an error
     Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     Cache(rnorm, 2, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
-    expect_silent(mess2 <- capture_messages(clearCache(x = tmpCache, userTags = .robustDigest(1), useCloud = TRUE, cloudFolderID = cloudFolderID)))
+    expect_silent({
+      mess2 <- capture_messages(
+        clearCache(x = tmpCache, userTags = .robustDigest(1), useCloud = TRUE, cloudFolderID = cloudFolderID)
+      )
+    })
 
     gdriveLs <- drive_ls(path = as_id(cloudFolderID))
-    expect_true(NROW(gdriveLs)==1)
+    expect_true(NROW(gdriveLs) == 1)
     expect_true(grepl(unique(showCache(tmpCache)[[.cacheTableHashColName()]]), gdriveLs$name))
-
   }
 })
-
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd", {
   skip_if_no_token()
@@ -244,6 +262,4 @@ test_that("Filenames for environment", {
 
     FnsB <- Filenames(s$b)
     expect_true(identical(FnsB, filename(s$b)))
-
 })
-
