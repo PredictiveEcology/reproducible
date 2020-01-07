@@ -11,7 +11,7 @@ output:
     toc: yes
 vignette: >
   %\VignetteIndexEntry{Introduction to Cache}
-  %\VignetteDepends{archivist, raster}
+  %\VignetteDepends{DBI, raster}
   %\VignetteKeyword{Cache}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
@@ -27,8 +27,8 @@ The `reproducible::Cache` function is built to work with any R function.
 
 ## Differences with other approaches
 
-`Cache` uses 2 key the `archivist` functions `saveToLocalRepo` and `loadFromLocalRepo`, but does not use `archivist::cache`.
-Similar to `archivist::cache`, there is some reliance on `digest::digest` to determine whether the arguments are identical in subsequent iterations.
+`Cache` users `DBI` as a backend, with key functions, `dbReadTable`, `dbRemoveTable`, `dbSendQuery`, `dbSendStatement`, `dbWriteTable` and `dbAppendTable`. These can all be accessed via `Cache`, `showCache`, `clearCache`, and `keepCache`. It is optimized for speed of transactions, using `fastdigest::fastdigest` on R memory objects and `digest::digest` on files.
+The main function is superficially similar to `archivist::cache`, which uses `digest::digest` in all cases to determine whether the arguments are identical in subsequent iterations.
 It also but does *many* things that make standard caching with `digest::digest` don't work reliably between systems.
 For these, the function `.robustDigest` is introduced to make caching transferable between systems.
 This is relevant for file paths, environments, parallel clusters, functions (which are contained within an environment), and many others (e.g., see `?.robustDigest` for methods).
@@ -61,6 +61,8 @@ newCRS <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +tow
 # No Cache
 system.time(map1 <- projectRaster(ras, crs = newCRS))
 
+# Try with memoise for this example -- for many simple cases, memoising will not be faster
+opts <- options("reproducible.useMemoise" = TRUE)
 # With Cache -- a little slower the first time because saving to disk
 system.time(map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir,
                          notOlderThan = Sys.time()))
@@ -68,8 +70,9 @@ system.time(map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir,
 # vastly faster the second time
 system.time(map2 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
 
-# even faster the third time
+# may be faster the third time because of memoise; but this example is too simple to show
 system.time(map3 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
+options(opts)
 
 all.equal(map1, map2) # TRUE
 all.equal(map1, map3) # TRUE
@@ -116,10 +119,10 @@ clearCache(tmpDir, ask = FALSE)
 
 ```{r accessed-tag}
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
-Sys.sleep(1)
 ranNumsB <- Cache(runif, 4, cacheRepo = tmpDir, userTags = "objectName:b")
 
 # access it again, from Cache
+Sys.sleep(1)
 ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
 wholeCache <- showCache(tmpDir)
 
@@ -129,15 +132,9 @@ onlyRecentlyAccessed <- showCache(tmpDir, userTags = max(wholeCache[tagKey == "a
 # inverse join with 2 data.tables ... using: a[!b]
 # i.e., return all of wholeCache that was not recently accessed
 #   Note: the two different ways to access -- old way with "artifact" will be deprecated
-toRemove <- if (getOption("reproducible.useDBI", TRUE)) {
-  unique(wholeCache[!onlyRecentlyAccessed, on = "cacheId"], by = "cacheId")$cacheId
-} else {
-  unique(wholeCache[!onlyRecentlyAccessed], by = "artifact")$artifact
-}
+toRemove <- unique(wholeCache[!onlyRecentlyAccessed, on = "cacheId"], by = "cacheId")$cacheId
 clearCache(tmpDir, toRemove, ask = FALSE) # remove ones not recently accessed
 showCache(tmpDir) # still has more recently accessed
-
-clearCache(tmpDir, ask = FALSE)
 
 ```
 
@@ -158,6 +155,17 @@ keepCache(tmpDir, userTags = "rnorm", ask = FALSE)
 clearCache(tmpDir, userTags = "rnorm", ask = FALSE)
 
 showCache(tmpDir) ## empty
+
+# Also, can set a time before caching happens and remove based on this
+#  --> a useful, simple way to control Cache
+ranNumsA <- Cache(rnorm, 4, cacheRepo = tmpDir, userTags = "objectName:a")
+startTime <- Sys.time()
+Sys.sleep(1)
+ranNumsB <- Cache(rnorm, 5, cacheRepo = tmpDir, userTags = "objectName:b")
+keepCache(tmpDir, after = startTime, ask = FALSE) # keep only those newer than startTime
+
+clearCache(tmpDir, ask = FALSE)
+
 ```
 
 ## Example 4: searching for multiple objects in the cache
@@ -272,35 +280,23 @@ Once a piece of code is run, then the `cacheId` can be manually extracted (it is
 ### cacheId
 set.seed(1)
 Cache(rnorm, 1, cacheRepo = tmpdir1)
-# manually look at output attribute which shows cacheId: ad184ce64541972b50afd8e7b75f821b
-Cache(rnorm, 1, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b") # same value
+# manually look at output attribute which shows cacheId: 7072c305d8c69df0
+Cache(rnorm, 1, cacheRepo = tmpdir1, cacheId = "7072c305d8c69df0") # same value
 # override even with different inputs:
-Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "ad184ce64541972b50afd8e7b75f821b")
+Cache(rnorm, 2, cacheRepo = tmpdir1, cacheId = "7072c305d8c69df0")
 
-## cleanup
-unlink(c("filename.rda", "filename1.rda"))
 ```
 
 ## Working with the Cache manually
 
-Since the cache is simply an `archivist` repository, all `archivist` functions will work as is.
+Since the cache is simply a `DBI` data table (of an SQLite database by default).
 In addition, there are several helpers in the `reproducible` package, including `showCache`, `keepCache` and `clearCache` that may be useful.
 Also, one can access cached items manually (rather than simply rerunning the same `Cache` function again).
 
 ```{r manual-cache}
-# As of reproducible version 0.3.0, there is a new backend directly using DBI, not archivist
-if (getOption("reproducible.useDBI", TRUE)) {
-  mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$cacheId)
-  map <- loadFromCache(mapHash[1], cachePath = tmpDir)
-  
-} else {
-  if (requireNamespace("archivist")) {
-    # get the RasterLayer that was produced with the gaussMap function:
-    mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$artifact)
-    map <- archivist::loadFromLocalRepo(md5hash = mapHash[1], repoDir = tmpDir, value = TRUE)
-    
-  }
-}
+# As of reproducible version 1.0, there is a new backend directly using DBI
+mapHash <- unique(showCache(tmpDir, userTags = "projectRaster")$cacheId)
+map <- loadFromCache(mapHash[1], cachePath = tmpDir)
 plot(map)
 ```
 
