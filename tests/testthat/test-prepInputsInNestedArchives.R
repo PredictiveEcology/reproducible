@@ -90,7 +90,7 @@ test_that(
 
 test_that(paste("prepInputs in a two files double nested rar file,",
                 "with the wanted file in the second layer, not specifying the targetFile"), {
- skip_on_cran()
+  skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)

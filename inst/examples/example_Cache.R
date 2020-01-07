@@ -8,7 +8,6 @@ ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
 ranNumsC <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 16)  # recovers cached copy
 ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 
-
 ###############################################
 # experimental devMode
 ###############################################
@@ -16,7 +15,7 @@ opt <- options("reproducible.useCache" = "devMode")
 clearCache(tmpDir, ask = FALSE)
 centralTendency <- function(x)
   mean(x)
-funnyData <- c(1,1,1,1,10)
+funnyData <- c(1, 1, 1, 1, 10)
 uniqueUserTags <- c("thisIsUnique", "reallyUnique")
 ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpDir,
                   userTags = uniqueUserTags) # sets new value to Cache
@@ -41,11 +40,11 @@ options(opt)
 \dontrun{
   # To use Postgres, set environment variables with the required credentials
   if (requireNamespace("RPostgres")) {
-    Sys.setenv(PGHOST = "url.to.server")
-    Sys.setenv(PGPORT = "port.number.of.server")
-    Sys.setenv(PGDATABASE = "database.name")
-    Sys.setenv(PGUSER = "user.name.on.server")
-    Sys.setenv(PGPASSWORD = "password.on.server")
+    Sys.setenv(PGHOST = "server.url")
+    Sys.setenv(PGPORT = 5432)
+    Sys.setenv(PGDATABASE = "mydatabase")
+    Sys.setenv(PGUSER = "mydbuser")
+    Sys.setenv(PGPASSWORD = "mysecurepassword")
 
     conn <- DBI::dbConnect(RPostgres::Postgres())
     options("reproducible.conn" = conn)
