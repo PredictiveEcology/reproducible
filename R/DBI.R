@@ -129,8 +129,8 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   fs <- qs::qsave(file = fts, obj)
   fsChar <- as.character(fs)
 
-  tagKeyHasFS <- tagKey %in% "file.size"
-  if (!(any(tagKeyHasFS)) ) {
+  tagKeyHasFS <- any(tagKey %in% "file.size")
+  if (isFALSE(tagKeyHasFS)) {
     tagKey <- c(tagKey, "file.size")
     tagValue <- c(tagValue, fsChar)
   } else {
@@ -142,20 +142,20 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   #  So effectively, it is like 6x buffer to try to avoid false positives.
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
-    fsBig <- (as.integer(tagValue[whichOS]) * 4 ) < fs
-    if (fsBig) message("Object with cacheId", cacheId, "appears to have a much larger size ",
-                       "on disk than in memory. ",
-                       "This usually means that the object has captured an environment with ",
-                       "many objects due to how a function or a formula is defined. ",
-                       "Usually, a solution involves using quote and eval around the formulas ",
-                       "and defining functions in a package or otherwise clean space, ",
-                       "i.e., not inside another function. See\n",
-                       "http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'")
+    fsBig <- (as.numeric(tagValue[whichOS]) * 4 ) < fs
+    if (fsBig)
+      message("Object with cacheId", cacheId, "appears to have a much larger size ",
+              "on disk than in memory. ",
+              "This usually means that the object has captured an environment with ",
+              "many objects due to how a function or a formula is defined. ",
+              "Usually, a solution involves using quote and eval around the formulas ",
+              "and defining functions in a package or otherwise clean space, ",
+              "i.e., not inside another function.\n",
+              "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.")
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
-  retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt),
-       retries = 15)
+  retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
 
   return(obj)
 }
