@@ -129,8 +129,8 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   fs <- qs::qsave(file = fts, obj)
   fsChar <- as.character(fs)
 
-  tagKeyHasFS <- any(tagKey %in% "file.size")
-  if (isFALSE(tagKeyHasFS)) {
+  tagKeyHasFS <- tagKey %in% "file.size"
+  if (isFALSE(any(tagKeyHasFS))) {
     tagKey <- c(tagKey, "file.size")
     tagValue <- c(tagValue, fsChar)
   } else {
