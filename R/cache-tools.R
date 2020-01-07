@@ -129,8 +129,8 @@ setMethod(
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (useCloud) {
         if (is.null(cloudFolderID)) {
-          stop("If using 'useCloud', 'cloudFolderID' must be provided. If you don't know what should be used, ",
-               "try getOption('reproducible.cloudFolderID')")
+          stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
+               "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
         }
         if (getOption("reproducible.useDBI", TRUE)) {
           cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
@@ -189,9 +189,8 @@ setMethod(
 
     if (NROW(objsDT)) {
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
-                                grepl(pattern = "Raster", get(.cacheTableTagColName()))] # only Rasters* class
-      hasARaster <-
-        all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0
+                                grepl(pattern = "Raster", get(.cacheTableTagColName()))]
+      hasARaster <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0 # nolint
 
       if (hasARaster) {
         rasterObjSizes <- as.numeric(objsDT[get(.cacheTableHashColName()) %in%
@@ -248,7 +247,6 @@ setMethod(
       } else {
         suppressWarnings(rmFromLocalRepo(objToGet, x, many = TRUE))
       }
-
     }
     memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
@@ -534,7 +532,8 @@ setMethod(
 #' objects themselves.
 #'
 #' @rdname mergeCache
-setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
+setGeneric("mergeCache", function(cacheTo, cacheFrom,
+                                  drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
                                   drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
                                   connTo = NULL, connFrom = NULL) {
   standardGeneric("mergeCache")
@@ -544,9 +543,7 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom, drvTo = getOption("reprodu
 #' @rdname mergeCache
 setMethod(
   "mergeCache",
-  definition = function(cacheTo, cacheFrom, drvTo,
-                        drvFrom, connTo, connFrom) {
-
+  definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
       on.exit(dbDisconnect(connTo))
@@ -557,10 +554,12 @@ setMethod(
       on.exit(dbDisconnect(connFrom))
     }
 
-    suppressMessages(cacheFromList <- showCache(cacheFrom, drv = drvFrom,
-                                                connFrom = connFrom))
-    suppressMessages(cacheToList <- showCache(cacheTo, drv = drvTo,
-                                              connTo = connTo))
+    suppressMessages({
+      cacheFromList <- showCache(cacheFrom, drv = drvFrom, connFrom = connFrom)
+    })
+    suppressMessages({
+      cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo)
+    })
     browser(expr = exists("kkkk"))
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
@@ -579,14 +578,11 @@ setMethod(
         }
 
         ## Save it
-        userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][!tagKey %in% c("format", "name", "date", "cacheId", "class"),
-                                            list(tagKey, tagValue)]
+        userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
+          !tagKey %in% c("format", "name", "date", "cacheId", "class"), list(tagKey, tagValue)]
         if (getOption("reproducible.useDBI", TRUE)) {
-          output <- saveToCache(cacheTo, userTags = userTags,
-                                obj = outputToSave,
-                                cacheId = artifact)
+          output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
         } else {
-
           written <- FALSE
           if (is(outputToSave, "Raster")) {
             outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
@@ -654,7 +650,7 @@ setMethod(
   if (cn == "tag") {
     fs <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
   } else {
-    fs<- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
+    fs <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
   }
 
   class(fs) <- "object_size"
@@ -779,6 +775,3 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
   }
   shownCache[tagKey == "cacheId", artifact]
 }
-
-
-

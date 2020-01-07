@@ -692,7 +692,7 @@ test_that("test future", {
       (bb <- system.time({for (i in 1:3) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
 
       # Test the speed of rerunning same line
-      (aa <- system.time({for (i in c(1,1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
+      (aa <- system.time({for (i in c(1, 1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
     }
   }
 })
@@ -716,7 +716,7 @@ test_that("test mergeCache", {
   d <- mergeCache(tmpCache, tmpdir)
 
   dCache <- showCache(d)
-  abCache <- rbindlist(list(aCache,bCache))
+  abCache <- rbindlist(list(aCache, bCache))
 
   # Remove date and accessed time stamps
   dCache <- dCache[!tagKey %in% c("date", "accessed")]
@@ -730,7 +730,9 @@ test_that("test mergeCache", {
                                        tagKey, get(.cacheTableTagColName()))],
                         dCache[, list(get(.cacheTableHashColName()),
                                       tagKey, get(.cacheTableTagColName()))]))
-  mess <- capture_messages(d1 <- mergeCache(tmpCache, tmpdir))
+  mess <- capture_messages({
+    d1 <- mergeCache(tmpCache, tmpdir)
+  })
   expect_true(any(grepl("Skipping", mess)))
   expect_true(identical(showCache(d), showCache(d1)))
 })
