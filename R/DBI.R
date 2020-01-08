@@ -16,10 +16,10 @@
 #' @param force Logical. Should it create a cache in the \code{cachePath},
 #'   even if it already exists, overwriting.
 #' # replaces archivist::createLocalRepo
-#' @importFrom DBI dbConnect dbDisconnect dbWriteTable
+#' @importFrom DBI dbConnect dbDisconnect dbCreateTable
 #' @importFrom data.table data.table
 #' @inheritParams DBI::dbConnect
-#' @inheritParams DBI::dbWriteTable
+#' @inheritParams DBI::dbCreateTable
 #' @rdname cacheTools
 createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), force = FALSE) {
@@ -39,12 +39,7 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
     }
   }
   dt <- .emptyCacheTable
-
-  retry(retries = 15,
-    dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
-                 field.types = c(cacheId = "text", tagKey = "text",
-                                 tagValue = "text", createdDate = "text"))
-  )
+  retry(retries = 15, quote(dbCreateTable(conn, CacheDBTableName(cachePath, drv), fields = dt)))
 }
 
 #' @rdname cacheTools
@@ -193,10 +188,6 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
   args <- list(drv = drv)
   browser(expr = exists("yyyy"))
   if (is(drv, "SQLiteDriver")) {
-    # if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn))
-    #   if (isFALSE(create)) {
-    #     return(invisible())
-    #   }
     args <- append(args, list(dbname = CacheDBFile(cachePath, drv, conn)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)

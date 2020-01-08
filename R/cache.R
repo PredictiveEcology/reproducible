@@ -278,7 +278,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @inheritParams digest::digest
 #' @inheritParams DBI::dbConnect
-#' @inheritParams DBI::dbWriteTable
+#' @inheritParams DBI::dbCreateTable
 #'
 #' @param digestPathContent Being deprecated. Use \code{quick}.
 #'
