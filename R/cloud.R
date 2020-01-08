@@ -16,7 +16,7 @@ if (getRversion() >= "3.1.0") {
 checkAndMakeCloudFolderID <- function(cloudFolderID = NULL, create = FALSE) {
   browser(expr = exists("kkkk"))
   isNullCFI <- is.null(cloudFolderID)
-  if (isNullCFI || isTRUE(create)) {
+  if (isNullCFI && isTRUE(create)) {
     if (isNullCFI) {
       cloudFolderID <- rndstr(1, 6)
     }
@@ -35,11 +35,11 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = NULL, create = FALSE) {
 }
 
 driveLs <- function(cloudFolderID = NULL, pattern = NULL) {
-  cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID) # only deals with NULL case
   browser(expr = exists("kkkk"))
+  cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID) # only deals with NULL case
   message("Retrieving file list in cloud folder")
-  gdriveLs <- try(drive_ls(path = as_id(cloudFolderID),
-                           pattern = paste0(cloudFolderID, "|",pattern)))
+  gdriveLs <- retry(quote(drive_ls(path = as_id(cloudFolderID),
+                           pattern = paste0(collapse = "|", c(cloudFolderID ,pattern)))))
   if (is(gdriveLs, "try-error")) {
     fnf <- grepl("File not found", gdriveLs)
     if (!fnf) {

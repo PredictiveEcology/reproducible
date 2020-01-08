@@ -23,6 +23,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     # local absent, cloud absent
     #######################################
     kkkk <<- 1
+    browser()
     mess1 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
@@ -41,7 +42,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #######################################
     # local absent, cloud present
     #######################################
-    clearCache(userTags = .robustDigest(1), x = tmpCache)
+    #kkkk <<- 1
+
+    clearCache(userTags = .robustDigest(1), x = tmpCache, useCloud = FALSE)
     mess3 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
@@ -75,9 +78,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
       })
     })
 
-    on.exit({
-      retry(quote(drive_rm(as_id(cloudFolderID))))
-    }, add = TRUE)
+    # on.exit({
+    #   retry(quote(drive_rm(as_id(cloudFolderID))))
+    # }, add = TRUE)
     expect_true(any(grepl("Created Drive file", mess5)))
     expect_true(any(grepl("Uploading", mess5)))
     expect_false(any(grepl("download", mess5)))
@@ -229,38 +232,3 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
   }
 })
 
-test_that("Filenames for environment", {
-  skip_if_no_token()
-  testInitOut <- testInit(c("raster"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
-                            opts = list("reproducible.ask" = FALSE))
-
-    on.exit({
-      testOnExit(testInitOut)
-      options(opts)
-      rm(s)
-    }, add = TRUE)
-
-    s <- new.env(parent = emptyenv())
-    s$r <- raster(extent(0,10,0,10), vals = 1, res = 1)
-    s$r2 <- raster(extent(0,10,0,10), vals = 1, res = 1)
-    s$r <- writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE)
-    s$r2 <- writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE)
-    s$s <- stack(s$r, s$r2)
-    s$b <- writeRaster(s$s, filename = tmpfile[5], overwrite = TRUE)
-
-    Fns <- Filenames(s)
-
-    expect_true(identical(Fns$b, filename(s$b)))
-    expect_true(identical(Fns$r, filename(s$r)))
-    expect_true(identical(Fns$r2, filename(s$r2)))
-    expect_true(identical(Fns$s, sapply(seq_len(nlayers(s$s)), function(rInd) filename(s$s[[rInd]]))))
-
-    FnsR <- Filenames(s$r)
-    expect_true(identical(FnsR, filename(s$r)))
-
-    FnsS <- Filenames(s$s)
-    expect_true(identical(FnsS, sapply(seq_len(nlayers(s$s)), function(rInd) filename(s$s[[rInd]]))))
-
-    FnsB <- Filenames(s$b)
-    expect_true(identical(FnsB, filename(s$b)))
-})
