@@ -150,7 +150,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
-  retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
+  a <- retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)), retries = 15)
 
   return(obj)
 }
@@ -176,8 +176,8 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
   query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
 
-  res <- retry({dbSendStatement(conn, query)}, retries = 15)
-  retry(dbBind(res, list(cacheId)), retries = 15)
+  res <- dbSendStatement(conn, query)
+  dbBind(res, list(cacheId))
   dbClearResult(res)
 
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
@@ -207,21 +207,21 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
       on.exit(dbDisconnect(conn))
     }
 
-    rs <- retry(dbSendStatement(
-      conn,
-      paste0("insert into \"",CacheDBTableName(cachePath, drv),"\"",
-             " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
-             "('", isInRepo$cacheId[lastOne],
-             "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")
-      ), retries = 15)
-
-    dbClearResult(rs)
-
+    # This is what the next code pair of lines does
     # dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
     #                 "tagValue" = as.character(Sys.time()),
     #                 "createdDate" = as.character(Sys.time()))
     #
     # retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
+    rs <- retry(quote(dbSendStatement(
+      conn,
+      paste0("insert into \"",CacheDBTableName(cachePath, drv),"\"",
+             " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
+             "('", isInRepo$cacheId[lastOne],
+             "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")
+      )), retries = 15)
+
+    dbClearResult(rs)
 
   } else {
 
@@ -379,8 +379,9 @@ CacheIsACache <- function(cachePath, create = FALSE,
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
                list.files(cachePath))
   if (getOption("reproducible.useDBI", TRUE)) {
-    if (ret)
-      ret <- retry(retries = 15, ret && any(grepl(CacheDBTableName(cachePath), dbListTables(conn))))
+    if (ret) {
+      ret <- ret && any(grepl(CacheDBTableName(cachePath), dbListTables(conn)))
+    }
   }
 
   if (getOption('reproducible.useDBI', TRUE)) {

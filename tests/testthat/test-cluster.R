@@ -21,7 +21,7 @@ test_that("test parallel collisions", {
     # make function that will write to archivist repository from with clusters
     fun <- function(x, cacheRepo) {
       #print(x)
-      Cache(rnorm, 1e4, sd = x, cacheRepo = cacheRepo)
+      Cache(rnorm, 10, sd = x, cacheRepo = cacheRepo)
     }
     # Run something that will write many times
     # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
@@ -29,6 +29,7 @@ test_that("test parallel collisions", {
     on.exit(stopCluster(cl), add = TRUE)
 
     clusterSetRNGStream(cl)
+    parallel::clusterEvalQ(cl, {library(reproducible)})
     # clusterEvalQ(cl = cl, {
     #   devtools::load_all()
     # })

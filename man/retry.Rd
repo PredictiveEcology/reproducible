@@ -4,10 +4,13 @@
 \alias{retry}
 \title{A wrapper around \code{try} that retries on failure}
 \usage{
-retry(expr, retries = 5, silent = FALSE)
+retry(expr, envir = parent.frame(), retries = 5, silent = TRUE)
 }
 \arguments{
-\item{expr}{Expression to run.}
+\item{expr}{Quoted expression to run, i.e., \code{quote(...)}}
+
+\item{envir}{The environment in which to evaluate the quoted expression, default
+to \code{parent.frame(1)}}
 
 \item{retries}{Numeric. The maximum number of retries.}
 
