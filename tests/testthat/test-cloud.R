@@ -8,13 +8,13 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
-      retry(drive_rm(as_id(newDir$id)))
+      retry(quote(drive_rm(as_id(newDir$id))))
     }, add = TRUE)
     clearCache(x = tmpCache)
     newDir <- #if (Sys.info()[["user"]] == "emcintir") {
     #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
     #} else { # this is slow for emcintir because googledrive is large
-      retry(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs"))
+      retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
     #}
     cloudFolderID = newDir$id
     #######################################
@@ -74,7 +74,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     })
 
     on.exit({
-      retry(drive_rm(as_id(cloudFolderID)))
+      retry(quote(drive_rm(as_id(cloudFolderID))))
     }, add = TRUE)
     expect_true(any(grepl("Created Drive file", mess5)))
     expect_true(any(grepl("Uploading", mess5)))
@@ -144,7 +144,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
-      retry(drive_rm(as_id(newDir$id)))
+      retry(quote(drive_rm(as_id(newDir$id))))
       options(opts)
     }, add = TRUE)
     clearCache(x = tmpCache)
@@ -152,7 +152,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     newDir <- #if (Sys.info()[["user"]] == "emcintir") {
       #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
       #} else { # this is slow for emcintir because googledrive is large
-      retry(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs"))
+      retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
     #}
     cloudFolderID = newDir$id
 
@@ -162,9 +162,9 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Raster")
 
-    retry(drive_rm(as_id(newDir$id)))
+    retry(quote(drive_rm(as_id(newDir$id))))
     clearCache(x = tmpdir)
-    newDir <- retry(drive_mkdir(rndstr(1,6)))
+    newDir <- retry(quote(drive_mkdir(rndstr(1,6))))
     cloudFolderID = newDir$id
 
     testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
@@ -182,7 +182,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
-      retry(drive_rm(as_id(newDir$id)))
+      retry(quote(drive_rm(as_id(newDir$id))))
       options(opts)
     }, add = TRUE)
     clearCache(x = tmpCache)
@@ -190,7 +190,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     newDir <- #if (Sys.info()[["user"]] == "emcintir") {
       #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
       #} else { # this is slow for emcintir because googledrive is large
-      retry(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs"))
+      retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
     #}
     cloudFolderID = newDir$id
 
@@ -210,7 +210,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
     drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
-      retry(drive_rm(as_id(newDir$id)))
+      retry(quote(drive_rm(as_id(newDir$id))))
       options(opts)
     }, add = TRUE)
     clearCache(x = tmpCache)
@@ -218,7 +218,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
     newDir <- #if (Sys.info()[["user"]] == "emcintir") {
       #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
       #} else { # this is slow for emcintir because googledrive is large
-      retry(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs"))
+      retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
     #}
     cloudFolderID = newDir$id
 

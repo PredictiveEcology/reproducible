@@ -296,7 +296,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
       a <- future::future({
         googledrive::drive_deauth()
-        retry(drive_download(as_id(url), path = destFile, overwrite = overwrite, verbose = TRUE))},
+        retry(quote(drive_download(as_id(url), path = destFile, overwrite = overwrite, verbose = TRUE)))},
         globals = list(drive_download = googledrive::drive_download,
                        as_id = googledrive::as_id,
                        retry = retry,
@@ -317,8 +317,8 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       cat("\nDone!\n")
 
     } else {
-      a <- retry(googledrive::drive_download(googledrive::as_id(url), path = destFile,
-                                             overwrite = overwrite, verbose = TRUE))
+      a <- retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
+                                             overwrite = overwrite, verbose = TRUE)))
     }
 
   } else {
@@ -488,7 +488,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   #   googledrive::drive_auth() ## needed for use on e.g., rstudio-server
 
   if (is.null(archive)) {
-    fileAttr <- retry(googledrive::drive_get(googledrive::as_id(url)))
+    fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url))))
     fileSize <- fileAttr$drive_resource[[1]]$size
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)
