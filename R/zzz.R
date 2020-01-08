@@ -1,6 +1,3 @@
-## be sure to update the 'Package Options' section of the package help file
-##   in R/reproducible-package.R
-##
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
   opts <- options()
@@ -53,8 +50,6 @@
                                           names(formals(writeOutputs)),
                                           unlist(lapply(methods("postProcess"),
                                                         function(x) names(formals(x))))))
-
-
 
 #' The \code{reproducible} package environment
 #'

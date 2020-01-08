@@ -108,7 +108,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
                  path = localNewFilename, # take first if there are duplicates
                  overwrite = TRUE))
   if (getOption("reproducible.useDBI", TRUE)) {
-    output <- qread(localNewFilename)
+    output <- qread(localNewFilename, nthreads = getOption("reproducible.nThreads", 1))
   } else {
     ee <- new.env(parent = emptyenv())
     loadedObjName <- load(localNewFilename)
