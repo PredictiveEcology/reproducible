@@ -150,6 +150,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudF
     }
     message("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder")
+    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     retry(quote(drive_upload(media = CacheStoredFile(cacheRepo, outputHash),
                              path = as_id(cloudFolderID), name = newFileName)))
   }

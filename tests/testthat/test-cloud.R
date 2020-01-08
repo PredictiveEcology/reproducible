@@ -22,8 +22,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #######################################
     # local absent, cloud absent
     #######################################
-    kkkk <<- 1
-    browser()
     mess1 <- capture_messages({
       a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cacheRepo = tmpCache, useCloud = TRUE)
     })
@@ -68,7 +66,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #######################################
     # cloudFolderID missing
     #######################################
-    clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
+    kkkk <<- 1
+    browser()
+    reproducible::clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
 
     opts <- options("reproducible.cloudFolderID" = NULL)
 
