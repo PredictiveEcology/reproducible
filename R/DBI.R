@@ -126,7 +126,13 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 
   # The above can replace this
   fts <- CacheStoredFile(cachePath, cacheId)
-  fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
+
+  if (getOption("reproducible.cacheSaveFormat", "qs") == "qs")
+    fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
+  else {
+    saveRDS(obj, file = fts)
+    fs <- file.size(fts)
+  }
   fsChar <- as.character(fs)
 
   tagKeyHasFS <- tagKey %in% "file.size"
@@ -164,8 +170,11 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 #' @rdname cacheTools
 #' @importFrom qs qread
 loadFromCache <- function(cachePath, cacheId) {
-  qs::qread(file = CacheStoredFile(cachePath, cacheId),
-            nthreads = getOption("reproducible.nThreads", 1))
+  if (getOption("reproducible.cacheSaveFormat", "qs") == "qs")
+    qs::qread(file = CacheStoredFile(cachePath, cacheId),
+              nthreads = getOption("reproducible.nThreads", 1))
+  else
+    readRDS(file = CacheStoredFile(cachePath, cacheId))
 }
 
 #' Low level tools to work with Cache

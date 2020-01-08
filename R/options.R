@@ -127,7 +127,7 @@ reproducibleOptions <- function() {
     reproducible.cloudChecksumsFilename = file.path(dirname(.reproducibleTempCacheDir),
                                                     "checksums.rds"),
     reproducible.cachePath = normPath(file.path(.reproducibleTempCacheDir)),
-    reproducible.cacheSaveFormat = "qs",
+    reproducible.cacheSaveFormat = "rds",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = RSQLite::SQLite(),
