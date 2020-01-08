@@ -30,10 +30,11 @@ The warning will have the \code{cloudFolderID} that should be used in subsequent
 It will also be added to \code{options("reproducible.cloudFolderID")},
 but this will not persist across sessions.}
 
-\item{outputToSave}{Only required if \code{any(rasters) == TRUE}. This is the \code{Raster*} object.}
+\item{outputToSave}{Only required if \code{any(rasters) == TRUE}.
+This is the \code{Raster*} object.}
 
-\item{rasters}{A logical vector of length >= 1 indicating which elements in \code{outputToSave}
-are \code{Raster*} objects.}
+\item{rasters}{A logical vector of length >= 1 indicating which elements in
+\code{outputToSave} are \code{Raster*} objects.}
 }
 \description{
 Meant for internal use, as there are internal objects as arguments.

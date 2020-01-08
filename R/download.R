@@ -296,7 +296,9 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
       a <- future::future({
         googledrive::drive_deauth()
-        retry(quote(drive_download(as_id(url), path = destFile, overwrite = overwrite, verbose = TRUE)))},
+        retry(quote(drive_download(as_id(url), path = destFile, overwrite = overwrite,
+                                   verbose = TRUE)))
+        },
         globals = list(drive_download = googledrive::drive_download,
                        as_id = googledrive::as_id,
                        retry = retry,
@@ -306,19 +308,19 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                        destFile = destFile))
       cat("\n")
       notResolved <- TRUE
-      while(notResolved) {
+      while (notResolved) {
         Sys.sleep(0.05)
         notResolved <- !future::resolved(a)
         fsActual <- file.size(destFile)
         class(fsActual) <- "object_size"
         if (!is.na(fsActual))
-          cat(format(fsActual, units = "auto"), "of", format(fs, units = "auto"), "downloaded         \r")
+          cat(format(fsActual, units = "auto"), "of", format(fs, units = "auto"),
+              "downloaded         \r")
       }
       cat("\nDone!\n")
-
     } else {
       a <- retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
-                                             overwrite = overwrite, verbose = TRUE)))
+                                                   overwrite = overwrite, verbose = TRUE)))
     }
 
   } else {

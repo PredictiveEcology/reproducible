@@ -1,10 +1,12 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
   skip_if_no_token()
   if (interactive()) {
-    testInitOut <- testInit(c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
-                            #needGoogle = TRUE,
-                            opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
-                                        "reproducible.ask" = FALSE))
+    testInitOut <- testInit(
+      c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
+      #needGoogle = TRUE,
+      opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
+                  "reproducible.ask" = FALSE)
+    )
     drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
@@ -169,7 +171,6 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
 
     testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
                       type = "Raster")
-
   }
 })
 

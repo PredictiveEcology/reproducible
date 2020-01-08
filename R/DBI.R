@@ -42,8 +42,8 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 
   retry(retries = 15,
     quote(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
-                 field.types = c(cacheId = "text", tagKey = "text",
-                                 tagValue = "text", createdDate = "text")))
+                       field.types = c(cacheId = "text", tagKey = "text",
+                                       tagValue = "text", createdDate = "text")))
   )
 }
 
@@ -118,10 +118,10 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   #         paste(y, collapse = "\", \"")
   #       })
   #       ), "\")")
-  # res <- retry(dbSendStatement(
+  # res <- retry(quote(dbSendStatement(
   #   conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
   #                " ('cacheId', 'tagKey', 'tagValue', 'createdDate') values ", vals)),
-  #   retries = 15)
+  #   retries = 15))
   # dbClearResult(res)
 
   # The above can replace this
@@ -222,7 +222,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     #                 "tagValue" = as.character(Sys.time()),
     #                 "createdDate" = as.character(Sys.time()))
     #
-    # retry(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15)
+    # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
     rs <- retry(quote(dbSendStatement(
       conn,
       paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",

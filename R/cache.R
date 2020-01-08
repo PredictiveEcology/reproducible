@@ -531,7 +531,7 @@ setMethod(
         #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
         browser(expr = exists("kkkk"))
         #message("Retrieving file list in cloud folder")
-        #gdriveLs <- retry(drive_ls(path = as_id(cloudFolderID), pattern = outputHash))
+        #gdriveLs <- retry(quote(drive_ls(path = as_id(cloudFolderID), pattern = outputHash)))
         gdriveLs <- driveLs(cloudFolderID, pattern = outputHash)
       }
       browser(expr = exists("ffff"))
@@ -685,7 +685,6 @@ setMethod(
           } else {
             .CacheIsNew <- FALSE
           }
-
         }
       }
 
