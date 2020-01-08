@@ -72,7 +72,7 @@ test_that("test miscellaneous fns", {
     normPath(filename(r4))
   ))
 
-  expect_silent(b <- retry(rnorm(1), retries = 1, silent = TRUE))
+  expect_silent(b <- retry(quote(rnorm(1)), retries = 1, silent = TRUE))
   expect_error(b <- retry(stop(), retries = 1, silent = TRUE))
 
   expect_true(identical(NULL, basename2(NULL)))

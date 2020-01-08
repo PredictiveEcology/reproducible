@@ -680,7 +680,7 @@ setMethod(
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                                   drv = drv)
           if (is.null(output)) {
-            retry(drive_rm(as_id(gdriveLs$id[isInCloud])))
+            retry(quote(drive_rm(as_id(gdriveLs$id[isInCloud]))))
             isInCloud[isInCloud] <- FALSE
           } else {
             .CacheIsNew <- FALSE
