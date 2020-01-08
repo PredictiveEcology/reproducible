@@ -163,7 +163,7 @@ retry <- function(expr, envir = parent.frame(), retries = 5, silent = TRUE) {
     if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
     result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
-      backoff <- runif(n = 1, min = 0, max = 2^i - 1)
+      backoff <- runif(n = 1, min = 0, max = 1.3^i - 1)
       if (backoff > 3)
         message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
       Sys.sleep(backoff)
