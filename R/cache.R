@@ -439,7 +439,6 @@ setMethod(
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
-      browser(expr = exists("wwww"))
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
         CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE, conn = conn)
       }))
@@ -789,7 +788,7 @@ setMethod(
           }
           # attr(outputToSave, "function") <- attr(output, "function")
 
-          output <- outputToSave
+          # output <- outputToSave
         }
       }
       if (length(debugCache)) {
@@ -863,7 +862,7 @@ setMethod(
         if (otsObjSize > 1e7)
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
         if (getOption("reproducible.useDBI", TRUE)) {
-          output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
+          outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                                 conn = conn,
                                obj = outputToSave, cacheId = outputHash)
         } else {
@@ -1200,6 +1199,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
       }
     }
   }
+  browser(expr = exists("wwww"))
   return(append(fnDetails, list(originalDots = originalDots, FUN = FUN, isPipe = isPipe,
                                 modifiedDots = modifiedDots, isDoCall = isDoCall,
                                 formalArgs = forms)))
