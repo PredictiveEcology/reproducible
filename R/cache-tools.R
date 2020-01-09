@@ -128,6 +128,7 @@ setMethod(
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (useCloud) {
+        browser(expr = exists("kkkk"))
         if (is.null(cloudFolderID)) {
           stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
                "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
