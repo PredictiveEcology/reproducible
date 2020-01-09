@@ -73,7 +73,7 @@ test_that("test miscellaneous fns", {
   ))
 
   expect_silent(b <- retry(quote(rnorm(1)), retries = 1, silent = TRUE))
-  expect_error(b <- retry(stop(), retries = 1, silent = TRUE))
+  expect_error(b <- retry(quote(stop()), retries = 1, silent = TRUE))
 
   expect_true(identical(NULL, basename2(NULL)))
   a <- .formalsNotInCurrentDots(rnorm, n = 1, b = 2)

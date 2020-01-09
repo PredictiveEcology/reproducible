@@ -40,8 +40,7 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
   dt <- .emptyCacheTable
 
-  retry(retries = 15,
-    quote(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
+  retry(quote(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
                        field.types = c(cacheId = "text", tagKey = "text",
                                        tagValue = "text", createdDate = "text")))
   )
