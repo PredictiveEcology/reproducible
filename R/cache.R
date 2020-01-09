@@ -313,6 +313,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom methods formalArgs
 #' @importFrom tools file_path_sans_ext
 #' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
+#' @importFrom rlang enquos expr
 #' @rdname cache
 #'
 #' @example inst/examples/example_Cache.R
@@ -351,6 +352,8 @@ setMethod(
                         cacheId, useCache,
                         showSimilar, drv, conn) {
 
+    dots <- enquos(...)
+    browser(expr = exists("rrrrCache"))
     if (!is.null(list(...)$objects)) {
       message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
     }
@@ -693,7 +696,9 @@ setMethod(
         if (fnDetails$isPipe) {
           output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
         } else {
-          output <- FUN(...)
+          theCall <- expr(FUN(!!!dots))
+          output <- eval_tidy(theCall)
+          # output <- do.call(FUN, lapply(list(...), eval_tidy)) #FUN(...)
         }
       }
 
@@ -1078,6 +1083,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   isPipe <- isTRUE(!is.null(modifiedDots$._pipe))
   originalDots <- modifiedDots
 
+  browser(expr = exists("rrrrCache"))
   # If passed with 'quote'
   if (!is.function(FUN)) {
     parsedFun <- parse(text = FUN)
