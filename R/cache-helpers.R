@@ -1158,3 +1158,46 @@ nextNumericName <- function(string) {
   grep(scallsFirstElement, pattern = pattern)
 }
 
+
+
+dealWithRasters <- function(obj, cachePath, drv) {
+  outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
+  if (outputToSaveIsList) {
+    rasters <- unlist(lapply(obj, is, "Raster"))
+  } else {
+    rasters <- is(obj, "Raster")
+  }
+  browser(expr = exists("aaaa"))
+  if (any(rasters)) {
+    atts <- attributes(obj)
+    if (outputToSaveIsList) {
+      obj[rasters] <- lapply(obj[rasters], function(x)
+        .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv))
+    } else {
+      obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
+                                      overwrite = FALSE, drv = drv)
+    }
+
+    # have to reset all these attributes on the rasters as they were undone in prev steps
+    setattr(obj, "tags", atts$tags)
+    .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
+    setattr(obj, "call", atts$call)
+
+    if (!identical(attr(obj, ".Cache")$newCache, atts$.Cache$newCache))
+      stop("attributes are not correct 6")
+    if (!identical(attr(obj, "call"), atts$call))
+      stop("attributes are not correct 7")
+    if (!identical(attr(obj, "tags"), atts$tags))
+      stop("attributes are not correct 8")
+
+    if (!is.null(atts[["function"]])) {
+      setattr(obj, "function", atts[["function"]])
+      if (!identical(attr(obj, "function"), atts[["function"]]))
+        stop("There is an unknown error 04")
+    }
+    # attr(obj, "function") <- attr(output, "function")
+
+    #output <- obj
+  }
+  obj
+}
