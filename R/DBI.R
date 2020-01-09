@@ -1,13 +1,3 @@
-# importFrom(archivist,addTagsRepo)
-# importFrom(archivist,cache)
-# importFrom(archivist,createLocalRepo)
-# importFrom(archivist,loadFromLocalRepo)
-# importFrom(archivist,rmFromLocalRepo)
-# importFrom(archivist,saveToLocalRepo)
-# importFrom(archivist,searchInLocalRepo)
-# importFrom(archivist,showLocalRepo)
-# importFrom(archivist,splitTagsLocal)
-
 #' Create a new cache
 #'
 #' @param cachePath A path describing the directory in which to create
@@ -41,8 +31,8 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   dt <- .emptyCacheTable
 
   retry(quote(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
-                       field.types = c(cacheId = "text", tagKey = "text",
-                                       tagValue = "text", createdDate = "text")))
+                           field.types = c(cacheId = "text", tagKey = "text",
+                                           tagValue = "text", createdDate = "text")))
   )
 }
 
@@ -242,7 +232,6 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     dbClearResult(rs)
 
   } else {
-
     written <- 0
     while (written >= 0) {
       saved <- suppressWarnings(try(silent = TRUE,
