@@ -533,7 +533,6 @@ setMethod(
         #gdriveLs <- retry(quote(drive_ls(path = as_id(cloudFolderID), pattern = outputHash)))
         gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = outputHash)))
       }
-      browser(expr = exists("ffff"))
       # conns <- list()
       # conns[[1]] <- conn
       needDisconnect <- FALSE
@@ -742,6 +741,9 @@ setMethod(
           stop("There is an unknown error 03")
       }
       # Can make new methods by class to add tags to outputs
+      if (getOption("reproducible.useDBI", TRUE)) {
+        output <- dealWithRasters(output, cacheRepo, drv)
+      }
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
 
       # Remove from otherFunctions if it is "function"
@@ -751,6 +753,7 @@ setMethod(
         otherFns <- otherFns[!alreadyIn]
 
       if (!getOption("reproducible.useDBI", TRUE)) {
+        browser(expr = exists("ffff"))
         outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
         if (outputToSaveIsList) {
           rasters <- unlist(lapply(outputToSave, is, "Raster"))
@@ -863,6 +866,7 @@ setMethod(
         if (otsObjSize > 1e7)
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
         if (getOption("reproducible.useDBI", TRUE)) {
+          browser(expr = exists("ffff"))
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                                       conn = conn, obj = outputToSave, cacheId = outputHash)
         } else {
