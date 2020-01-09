@@ -547,12 +547,12 @@ setMethod(
   definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
     if (is.null(connTo)) {
       connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
-      on.exit(dbDisconnect(connTo))
+      on.exit(dbDisconnect(connTo), add = TRUE)
     }
 
     if (is.null(connFrom)) {
       connFrom <- dbConnectAll(drvFrom, cachePath = cacheFrom)
-      on.exit(dbDisconnect(connFrom))
+      on.exit(dbDisconnect(connFrom), add = TRUE)
     }
 
     suppressMessages({
