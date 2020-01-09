@@ -66,8 +66,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     #######################################
     # cloudFolderID missing
     #######################################
-    kkkk <<- 1
-    browser()
     reproducible::clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
 
     opts <- options("reproducible.cloudFolderID" = NULL)
