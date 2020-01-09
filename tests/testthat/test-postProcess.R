@@ -59,7 +59,9 @@ test_that("prepInputs doesn't work (part 3)", {
   ncSmall2 <- spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
   expect_true(isTRUE(all.equal(extent(nc4), extent(ncSmall2))))
 
-  mess <- capture_messages(nc4 <- cropInputs(nc3, studyArea = 1))
+  mess <- capture_messages({
+    nc4 <- cropInputs(nc3, studyArea = 1)
+  })
   expect_true(grepl("cropInputs must have a rasterToMatch", mess))
 
   ncSmallShifted <- ncSmall + 10000000
@@ -72,7 +74,9 @@ test_that("prepInputs doesn't work (part 3)", {
 
   #LINEARRING Example
   p6 = readWKT("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
-  mess <- capture_messages(p6a <- fixErrors(p6))
+  mess <- capture_messages({
+    p6a <- fixErrors(p6)
+  })
   expect_true(any(grepl("Found errors", mess)))
   expect_true(any(grepl("Some or all of the errors fixed", mess)))
 
@@ -108,7 +112,9 @@ test_that("prepInputs doesn't work (part 3)", {
 
   # LINEARRING Example
   p6 = readWKT("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
-  mess <- capture_messages(p6a <- fixErrors(st_as_sf(p6)))
+  mess <- capture_messages({
+    p6a <- fixErrors(st_as_sf(p6))
+  })
   expect_true(any(grepl("Found errors", mess)))
   expect_true(any(grepl("Some or all of the errors fixed", mess)))
 

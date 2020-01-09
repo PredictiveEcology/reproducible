@@ -289,14 +289,16 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
         fpNew <- getOption("reproducible.futurePlan")
-        future::plan(fpNew)
+        future::plan(fpNew, workers = 2)
         on.exit({
           future::plan(fp)
         })
       }
       a <- future::future({
         googledrive::drive_deauth()
-        retry(drive_download(as_id(url), path = destFile, overwrite = overwrite, verbose = TRUE))},
+        retry(quote(drive_download(as_id(url), path = destFile, overwrite = overwrite,
+                                   verbose = TRUE)))
+        },
         globals = list(drive_download = googledrive::drive_download,
                        as_id = googledrive::as_id,
                        retry = retry,
@@ -306,19 +308,19 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                        destFile = destFile))
       cat("\n")
       notResolved <- TRUE
-      while(notResolved) {
+      while (notResolved) {
         Sys.sleep(0.05)
         notResolved <- !future::resolved(a)
         fsActual <- file.size(destFile)
         class(fsActual) <- "object_size"
         if (!is.na(fsActual))
-          cat(format(fsActual, units = "auto"), "of", format(fs, units = "auto"), "downloaded         \r")
+          cat(format(fsActual, units = "auto"), "of", format(fs, units = "auto"),
+              "downloaded         \r")
       }
       cat("\nDone!\n")
-
     } else {
-      a <- retry(googledrive::drive_download(googledrive::as_id(url), path = destFile,
-                                             overwrite = overwrite, verbose = TRUE))
+      a <- retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
+                                                   overwrite = overwrite, verbose = TRUE)))
     }
 
   } else {
@@ -488,7 +490,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   #   googledrive::drive_auth() ## needed for use on e.g., rstudio-server
 
   if (is.null(archive)) {
-    fileAttr <- retry(googledrive::drive_get(googledrive::as_id(url)))
+    fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url))))
     fileSize <- fileAttr$drive_resource[[1]]$size
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)

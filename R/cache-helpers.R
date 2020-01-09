@@ -256,13 +256,14 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
 
 #' @export
 #' @rdname prepareOutput
+#' @importFrom RSQLite SQLite
 setMethod(
   ".prepareOutput",
   signature = "RasterLayer",
-  definition = function(object, cacheRepo, ...) {
+  definition = function(object, cacheRepo, drv = RSQLite::SQLite(), ...) {
     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
     #  overwrite is ok
-    .prepareFileBackedRaster(object, repoDir = cacheRepo, ...)
+    .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, ...)
 })
 
 #' @export
@@ -569,7 +570,7 @@ setAs(from = "character", to = "Path", function(from) {
 #' # clear out any stub artifacts
 #' showCache(tmpDir)
 #'
-#' file2Remove <- dir(file.path(tmpDir, "gallery"), full.name = TRUE)[1]
+#' file2Remove <- dir(CacheStorageDir(tmpDir), full.name = TRUE)[1]
 #' file.remove(file2Remove)
 #' showCache(tmpDir) # repository directory still thinks files are there
 #'
@@ -591,15 +592,20 @@ setGeneric("clearStubArtifacts", function(repoDir = NULL) {
 setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
-    md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
-    listFiles <- dir(file.path(repoDir, "gallery")) %>%
-      strsplit(".rda") %>%
-      unlist()
-    toRemove <- !(md5hashInBackpack %in% listFiles)
-    md5hashInBackpack[toRemove] %>%
-      sapply(., rmFromLocalRepo, repoDir = repoDir)
-    return(invisible(md5hashInBackpack[toRemove]))
-})
+    if (getOption("reproducible.useDBI", TRUE)) {
+      ret <- NULL
+    } else {
+      md5hashInBackpack <- showLocalRepo(repoDir = repoDir)$md5hash
+      listFiles <- dir(CacheStorageDir(repoDir)) %>%
+        strsplit(".rda") %>%
+        unlist()
+      toRemove <- !(md5hashInBackpack %in% listFiles)
+      md5hashInBackpack[toRemove] %>%
+        sapply(., rmFromLocalRepo, repoDir = repoDir)
+      ret <- md5hashInBackpack[toRemove]
+    }
+    return(invisible(ret))
+  })
 
 #' Copy the file-backing of a file-backed Raster* object
 #'
@@ -627,6 +633,7 @@ setMethod(
 #' @importFrom digest digest
 #' @importFrom methods is selectMethod slot slot<-
 #' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
+#' @inheritParams Cache
 #' @rdname prepareFileBackedRaster
 #' @examples
 #' library(raster)
@@ -642,17 +649,20 @@ setMethod(
 #'
 #' r # now in "rasters" subfolder of tempdir()
 #'
-.prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE, ...) {
+.prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
+                                     drv = RSQLite::SQLite(), conn = getOption("reproducible.conn", NULL),
+                                     ...) {
+  browser(expr = exists("aaaa"))
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
-  isRepo <- all(c("backpack.db", "gallery") %in% list.files(repoDir))
+  isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {
     inMemory(obj)
   } else {
-   sapply(obj@layers, inMemory)
+    sapply(obj@layers, inMemory)
   }
   whichHasValues <- if (!isStack) {
     hasValues(obj)
@@ -1075,10 +1085,12 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     scalls <- sys.calls()
   }
 
-  otherFns <- .grepSysCalls(scalls, pattern = paste0("(test_)|(with_reporter)|(force)|",
-                                             "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
-                                             "(Cache)|(tryCatch)|(doTryCatch)|(withCallingHandlers)|",
-                                             "(FUN)"))
+  otherFns <- .grepSysCalls(
+    scalls,
+    pattern = paste0("(test_)|(with_reporter)|(force)|(Restart)|(with_mock)|",
+                     "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
+                     "(Cache)|(tryCatch)|(doTryCatch)|(withCallingHandlers)|",
+                     "(FUN)"))
   if (length(otherFns)) {
     otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
       tryCatch(as.character(x[[1]]), error = function(y) "")

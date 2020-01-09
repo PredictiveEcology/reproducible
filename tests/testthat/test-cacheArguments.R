@@ -1,13 +1,11 @@
 test_that("test cached downloads", {
   skip_on_cran()
 
-  outdir <- file.path(tempdir(), paste0(sample(LETTERS), collapse = ""))
-  expect_true(dir.create(outdir))
-
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
-    unlink(outdir, recursive = TRUE)
+    testOnExit(testInitOut)
   }, add = TRUE)
-  setwd(outdir)
+  outdir <- tmpdir
   ## https://open.canada.ca/data/en/dataset/9e1efe92-e5a3-4f70-b313-68fb1283eadf
   ## (Record ID: 9e1efe92-e5a3-4f70-b313-68fb1283eadf)
   #url <- "http://www.agr.gc.ca/atlas/data_donnees/lcv/aafcLand_Use/tif/2010/IMG_AAFC_LANDUSE_Z07_2010.zip" # nolint
@@ -18,7 +16,9 @@ test_that("test cached downloads", {
   }
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
 
-  # Cache download first run. File is downloaded. checksum is logged in backpack.
+  out <- createCache(outdir)
+  storageDir <- CacheStorageDir(outdir)
+  # Cache download first run. File is downloaded. checksum is logged in cache db
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
@@ -27,7 +27,7 @@ test_that("test cached downloads", {
   # check if download occured
   expect_true(file.exists(file.path(outdir, basename(urlTif1))))
 
-  # compare checksum from file with checksum stored in backpack
+  # compare checksum from file with checksum stored in cache db
   urlfileSize <- list(basename(urlTif1), file.size(file.path(outdir, basename(urlTif1))))
   urlfileChcksum <- digest::digest(urlfileSize, algo = "xxhash64")
 
@@ -36,18 +36,20 @@ test_that("test cached downloads", {
                cachedChcksum)
 
   # rerun download. Shouldn't run. # TODO: this shouldn't be rerunning
+  # sideE <<- aaaa <<- gggg <<- eeee <<- ffff <<- nnnn <<- 1
   out <- Cache(utils::download.file, url = urlTif1,
                destfile = asPath(file.path(outdir, basename(urlTif1))),
                method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE,
                cacheRepo = outdir, sideEffect = TRUE, makeCopy = FALSE, quick = TRUE)
 
   # Make sur the file do not exists before testing
-  toRemove <- list("backpack.db", basename(urlTif1))
-  lapply(toRemove, function(x) {
-    if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
-  })
+  file.remove(basename(urlTif1))
+  #toRemove <- list(basename(CacheDBFile(outdir)), )
+  #lapply(toRemove, function(x) {
+  #  if (file.exists(file.path(outdir, x))) file.remove(file.path(outdir, x))
+  #})
+  clearCache(outdir)
   expect_false(file.exists(file.path(outdir, basename(urlTif1))))
-  expect_false(file.exists(file.path(outdir, "backpack.db")))
 
   # Test MakeCopy = TRUE
   out <- Cache(utils::download.file, url = urlTif1,
@@ -56,7 +58,8 @@ test_that("test cached downloads", {
                cacheRepo = outdir, sideEffect = TRUE, makeCopy = TRUE, quick = TRUE)
 
   # check if copy was created
-  copyFolder <- file.path(outdir, "gallery")
+  copyFolder <- storageDir
+
   expect_true(file.exists(file.path(copyFolder, basename(urlTif1))))
 
   # Remove downloaded file and check if it is brought back using the copy

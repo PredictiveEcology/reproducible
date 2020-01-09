@@ -1,5 +1,6 @@
 #' @keywords internal
 .pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
+  browser(expr = exists("aaaa"))
   inst <- data.frame(instPkgs, instVers = unlist(instVers), stringsAsFactors = FALSE)
   write.table(inst, file = packageVersionFile, row.names = FALSE)
   inst
@@ -150,16 +151,19 @@ basename2 <- function(x) {
 #' @details
 #' Based on \url{https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525}.
 #'
-#' @param expr     Expression to run.
+#' @param expr     Quoted expression to run, i.e., \code{quote(...)}
 #' @param retries  Numeric. The maximum number of retries.
+#' @param envir    The environment in which to evaluate the quoted expression, default
+#'   to \code{parent.frame(1)}
 #' @param silent   Logical indicating whether to \code{try} silently.
 #'
 #' @export
-retry <- function(expr, retries = 5, silent = FALSE) {
+retry <- function(expr, envir = parent.frame(), retries = 5, silent = TRUE) {
   for (i in seq_len(retries)) {
-    result <- try(expr = expr, silent = silent)
+    if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
+    result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
-      backoff <- runif(n = 1, min = 0, max = 2^i - 1)
+      backoff <- runif(n = 1, min = 0, max = 1.3^i - 1)
       if (backoff > 3)
         message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
       Sys.sleep(backoff)

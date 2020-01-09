@@ -4,7 +4,15 @@
 \alias{writeFuture}
 \title{Write to archivist repository, using \code{future::future}}
 \usage{
-writeFuture(written, outputToSave, cacheRepo, userTags)
+writeFuture(
+  written,
+  outputToSave,
+  cacheRepo,
+  userTags,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
+  cacheId
+)
 }
 \arguments{
 \item{written}{Integer. If zero or positive then it needs to be written still.
@@ -16,6 +24,21 @@ Should be 0 to start.}
 
 \item{userTags}{Character string of tags to attach to this \code{outputToSave} in
 the \code{CacheRepo}}
+
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
+
+\item{cacheId}{Character string. If passed, this will override the calculated hash
+of the inputs, and return the result from this cacheId in the cacheRepo.
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.}
 }
 \description{
 This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.

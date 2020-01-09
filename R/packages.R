@@ -835,7 +835,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
           if (internetExists) {
             lapply(canInstDirectFromCRAN$instPkgs, function(pkg) {
               system(paste0(rpath, " --quiet --vanilla -e \"do.call(install.packages,list('",
-                            pkg, "', lib='", libPath, "', dependencies = FALSE,  = '", repos,
+                            pkg, "', lib='", libPath, "', dependencies = FALSE, repos = '", repos,
                             "'))\""), wait = TRUE)
             })
           } else {
@@ -1077,6 +1077,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #' data.table::fread(pkgSnapFile)
 #'
 pkgSnapshot <- function(packageVersionFile, libPath, standAlone = FALSE) {
+  browser(expr = exists("aaaa"))
   if (missing(libPath)) {
     if (standAlone) libPath <- .libPaths()[1] else libpath <- .libPaths()
   } else {
@@ -1116,9 +1117,10 @@ pkgSnapshot <- function(packageVersionFile, libPath, standAlone = FALSE) {
               paste(libPath, collapse = ", "))
     }
     instPkgs <- dir(libPath)
-    instPkgs <- instPkgs[!instPkgs %in% c("backpack.db", "gallery")]
+    instPkgs <- instPkgs[!instPkgs %in% basename2(c(CacheStorageDir("."),
+                                                    CacheDBFile(".", drv = NULL, conn = NULL)))]
     instVers <- unlist(lapply(libPath, function(lib)
-                    na.omit(unlist(installedVersions(instPkgs, libPath = lib)))))
+                    na.omit(unlist(unname(installedVersions(instPkgs, libPath = lib))))))
     if (length(instVers) == 1) names(instVers) <- instPkgs
 
     out <- .pkgSnapshot(names(instVers), instVers, packageVersionFile)

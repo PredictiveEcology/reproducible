@@ -72,14 +72,7 @@ test_that("test miscellaneous fns", {
     normPath(filename(r4))
   ))
 
-  # helpers.R
-  a <- getCRANrepos(NULL)
-  expect_true(is.character(a))
-
-  a <- getCRANrepos("")
-  expect_true(grepl("https://cloud.r-project.org", a))
-
-  expect_silent(b <- retry(rnorm(1), retries = 1, silent = TRUE))
+  expect_silent(b <- retry(quote(rnorm(1)), retries = 1, silent = TRUE))
   expect_error(b <- retry(stop(), retries = 1, silent = TRUE))
 
   expect_true(identical(NULL, basename2(NULL)))
@@ -112,6 +105,22 @@ test_that("test miscellaneous fns", {
   expect_true(identical(unrar$fun, "unrar"))
   expect_error( .callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
 
+
+  testthat::with_mock(
+    "reproducible::getGDALVersion" = function() NA,
+    {
+      expect_false(checkGDALVersion("3.0"))
+    }
+  )
+
+  skip_on_appveyor() # can't tell what the CRAN repo is
+  # helpers.R
+  a <- getCRANrepos(NULL)
+  expect_true(is.character(a))
+
+  a <- getCRANrepos("")
+  expect_true(grepl("https://cloud.r-project.org", a))
+
   testthat::with_mock(
     "reproducible::isInteractive" = function() TRUE,
     "reproducible::chooseCRANmirror2" = function() {
@@ -125,16 +134,11 @@ test_that("test miscellaneous fns", {
     }
   )
 
-  testthat::with_mock(
-    "reproducible::getGDALVersion" = function() NA,
-    {
-      expect_false(checkGDALVersion("3.0"))
-    }
-  )
 })
 
 
 test_that("test miscellaneous fns", {
+  skip_if_no_token()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
@@ -142,31 +146,89 @@ test_that("test miscellaneous fns", {
 
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)
   ras <- writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
+
+  gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
+  expect_warning(checkAndMakeCloudFolderID(), "No cloudFolderID supplied")
+  gdriveLs <- expect_error(driveLs("testy", "sdfsdf"), "File not found")
+  expect_is(checkAndMakeCloudFolderID("testy"), "character")
+  cloudFolderID <- checkAndMakeCloudFolderID("testy", create = TRUE)
   testthat::with_mock(
-    "reproducible::retry" = function(...) {
-      return(invisible())
-    },
+    "reproducible::retry" = function(..., retries = 1) TRUE,
     {
-      gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
-      expect_warning(checkAndMakeCloudFolderID(), "No cloudFolderID supplied")
-      expect_is(checkAndMakeCloudFolderID("test"), "character")
-      mess1 <- capture_messages(expect_error(cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
-                  gdriveLs = gdriveLs1)))
-      expect_true(grepl("Uploading local copy of sdfsdf\\.rda, with cacheId\\: sdfsiodfja to cloud folder", mess1))
+      if (getOption("reproducible.useDBI", TRUE)) {
 
-      a <- cloudUploadRasterBackends(ras, cloudFolderID = "testy")
-      mess1 <- capture_messages(expect_error(expect_warning(a <- cloudDownload(outputHash = "sdfsd", newFileName = "test.tif",
-                                                                gdriveLs = gdriveLs1, cloudFolderID = "testy"))))
-      expect_true(grepl("Downloading cloud copy of test\\.tif", mess1))
-      expect_error(cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character"))
+        mess1 <- capture_messages(expect_error(
+          cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
+                      gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+      } else {
+        mess1 <- capture_messages(expect_error(
+          cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
+                      gdriveLs = gdriveLs1, cacheRepo = tmpCache)))
+      }
+    })
+  expect_true(grepl("Uploading local copy of", mess1))
+  expect_true(grepl("cacheId\\: sdfsiodfja to cloud folder", mess1))
 
-      mess1 <- capture_messages(expect_error(cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life")))
-      expect_true(grepl("Uploading new cached object life\\.rda", mess1))
+  a <- cloudUploadRasterBackends(ras, cloudFolderID = cloudFolderID)
+  mess1 <- capture_messages(expect_error(expect_warning({
+    a <- cloudDownload(outputHash = "sdfsd", newFileName = "test.tif",
+                       gdriveLs = gdriveLs1, cloudFolderID = "testy")
+  })))
+  expect_true(grepl("Downloading cloud copy of test\\.tif", mess1))
+  testthat::with_mock(
+    "reproducible::retry" = function(..., retries = 1) TRUE,
+    {
+      warns <- capture_warnings(expect_error(
+        cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
+      ))
+    })
 
-    }
-  )
+  testthat::with_mock(
+    "reproducible::retry" = function(..., retries = 1) TRUE,
+    {
+      mess1 <- capture_messages(expect_error(
+        cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life",
+                             cacheRepo = tmpCache)
+      ))
+    })
+  expect_true(grepl("Uploading new cached object|with cacheId", mess1))
 
   a <- new.env(parent = emptyenv())
   a$a = list(ras, ras)
   expect_true(all(isOrHasRaster(a)))
+})
+
+test_that("Filenames for environment", {
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
+                          opts = list("reproducible.ask" = FALSE))
+
+  on.exit({
+    testOnExit(testInitOut)
+    options(opts)
+    rm(s)
+  }, add = TRUE)
+
+  s <- new.env(parent = emptyenv())
+  s$r <- raster(extent(0,10,0,10), vals = 1, res = 1)
+  s$r2 <- raster(extent(0,10,0,10), vals = 1, res = 1)
+  s$r <- writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE)
+  s$r2 <- writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE)
+  s$s <- stack(s$r, s$r2)
+  s$b <- writeRaster(s$s, filename = tmpfile[5], overwrite = TRUE)
+
+  Fns <- Filenames(s)
+
+  expect_true(identical(Fns$b, filename(s$b)))
+  expect_true(identical(Fns$r, filename(s$r)))
+  expect_true(identical(Fns$r2, filename(s$r2)))
+  expect_true(identical(Fns$s, sapply(seq_len(nlayers(s$s)), function(rInd) filename(s$s[[rInd]]))))
+
+  FnsR <- Filenames(s$r)
+  expect_true(identical(FnsR, filename(s$r)))
+
+  FnsS <- Filenames(s$s)
+  expect_true(identical(FnsS, sapply(seq_len(nlayers(s$s)), function(rInd) filename(s$s[[rInd]]))))
+
+  FnsB <- Filenames(s$b)
+  expect_true(identical(FnsB, filename(s$b)))
 })

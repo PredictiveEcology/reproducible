@@ -1,6 +1,6 @@
 ##########################
 test_that("test miscellaneous unit tests cache-helpers", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(opts = list(reproducible.useMemoise = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -21,9 +21,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary", mess)))
 
-  opt <- options("reproducible.cachePath" = NULL)
+  opt11 <- options("reproducible.cachePath" = NULL)
   on.exit({
-    options(opt)
+    options(opt11)
   }, add = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl("No cacheRepo supplied. Using tempdir()", mess)))
@@ -54,40 +54,60 @@ test_that("test miscellaneous unit tests cache-helpers", {
   b <- nextNumericName("test.pdf")
   b1 <- nextNumericName(b)
   expect_true(grepl("_2.pdf", b1))
-  aMess <- capture_messages(a <- Cache(rnorm, 1, useCache = FALSE, cacheRepo = tmpCache))
-  bMess <- capture_messages(b <- Cache(rnorm, 1, useCache = FALSE, cacheRepo = tmpCache))
+  aMess <- capture_messages({
+    a <- Cache(rnorm, 1, useCache = FALSE, cacheRepo = tmpCache)
+  })
+  bMess <- capture_messages({
+    b <- Cache(rnorm, 1, useCache = FALSE, cacheRepo = tmpCache)
+  })
   expect_false(identical(a,b))
   expect_true(grepl("skipping Cache", aMess))
   expect_true(grepl("skipping Cache", bMess))
 
   ## getOption("reproducible.useMemoise" = FALSE)
-  opt <- options("reproducible.useMemoise" = FALSE)
-  aMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
-  bMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
-  options(opt)
-  cMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
-  dMess <- capture_messages(a <- Cache(rnorm, 1, cacheRepo = tmpCache))
+  opt22 <- options("reproducible.useMemoise" = FALSE)
+  aMess <- capture_messages({
+    a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  })
+  bMess <- capture_messages({
+    a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  })
+  options(opt22)
+  cMess <- capture_messages({
+    a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  })
+  dMess <- capture_messages({
+    a <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  })
   #expect_true(identical(aMess, bMess[1]))
   expect_false(any(grepl("memoise", bMess)))
   expect_true(any(grepl("memoise", dMess)))
 
   ## showSimilar
   try(clearCache(ask = FALSE, x = tmpCache), silent = TRUE)
-  aMess <- capture_messages(a <- Cache(rnorm, n = 1, mean = 1, cacheRepo = tmpCache))
-  bMess <- capture_messages(b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache))
+  aMess <- capture_messages({
+    a <- Cache(rnorm, n = 1, mean = 1, cacheRepo = tmpCache)
+  })
+  #lapply(letters[11], function(l) assign(paste(rep(l, 4), collapse = ""), 1, envir = .GlobalEnv))
+  bMess <- capture_messages({
+    b <- Cache(rnorm, n = 2, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache)
+  })
   expect_true(any(grepl("different n", bMess)))
   expect_true(any(grepl("new argument.*sd", bMess)))
   expect_true(any(grepl("artifact with cacheId", bMess)))
-  cMess <- capture_messages(b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache))
+  # aaaa <<- bbbb <<- cccc <<- 1
+  cMess <- capture_messages({
+    b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache)
+  })
   expect_true(any(grepl("different n", cMess)))
   expect_false(any(grepl("new argument.*sd", cMess)))
   cMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", cMess, value = TRUE))
   bMessCacheId <- gsub(".*cacheId (.*)\x1b\\[.*", "\\1", grep("cacheId", bMess, value = TRUE))
   expect_false(identical(cMessCacheId, bMessCacheId))
 
-  dMess <- capture_messages(b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache))
-  rm(aaaa, envir = .GlobalEnv)
-  #browser(expr = !any(grepl("different n, sd", dMess)))
+  dMess <- capture_messages({
+    b <- Cache(rnorm, n = 4, mean = 1, sd = 4, showSimilar = TRUE, cacheRepo = tmpCache)
+  })
 
   # There are 2 ways this may come out -- similarity to 1 of 2 alternatives above
   expect1 <- any(grepl("different n, sd", dMess))
@@ -101,7 +121,9 @@ test_that("test miscellaneous unit tests cache-helpers", {
       expect_true(identical(dMessCacheId, bMessCacheId))
     }
 
-  eMess <- capture_messages(b <- Cache(rlnorm, 4, sd = 5, showSimilar = TRUE, cacheRepo = tmpCache))
+  eMess <- capture_messages({
+    b <- Cache(rlnorm, 4, sd = 5, showSimilar = TRUE, cacheRepo = tmpCache)
+  })
   expect_true(any(grepl("different .FUN", eMess)))
   expect_false(grepl(" n[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
   expect_false(grepl("[ ,]sd[ ,{\x1b}]", grep("different", eMess, value = TRUE)))
@@ -123,24 +145,20 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
 
   ## writeFuture
-  expect_true(identical("dda1fbb70d256e6b3b696ef0176c63de",
-                        writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "")))
+  comp <- if (getOption("reproducible.useDBI", TRUE)) .robustDigest("sdf") else
+    "dda1fbb70d256e6b3b696ef0176c63de"
+  expect_true(identical(comp,
+                        writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "",
+                                    drv = RSQLite::SQLite())))
   expect_error(writeFuture(1, "sdf", cacheRepo = "sdfd", userTags = ""))
-
-  ## verbose -- need 2 nested levels to run all lin
-  # fn <- function(a) {
-  #   Cache(fn1, cacheRepo = tmpCache, verbose = 2)
-  # }
-  # fn1 <- function() {
-  #   1
-  # }
 
   if (interactive()) {
     try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
-    bMess <- capture_output(aMess <-
-                              capture_messages(aa <- Cache(fnCacheHelper, 1,
-                                                           verbose = 2, cacheRepo = tmpCache,
-                                                           cacheRepo2 = tmpCache)))
+    bMess <- capture_output({
+      aMess <- capture_messages({
+        aa <- Cache(fnCacheHelper, 1, verbose = 2, cacheRepo = tmpCache, cacheRepo2 = tmpCache)
+      })
+    })
     expect_true(any(grepl("fnCacheHelper1", bMess))) # TODO: fix this;
     expect_true(any(grepl("The hashing details", aMess)))
   }
@@ -178,9 +196,7 @@ test_that("test cache-helpers with stacks", {
   expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
 
   ## removing entry from Cache
-  grep(basename(tmpfile),
-       list.files(tmpCache,, recursive = TRUE, full.names = TRUE),
-       value = TRUE) %>%
+  grep(basename(tmpfile), list.files(tmpCache, recursive = TRUE, full.names = TRUE), value = TRUE) %>%
     file.remove(.)
   expect_false(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
   b <- .prepareFileBackedRaster(s, tmpCache)
@@ -188,7 +204,7 @@ test_that("test cache-helpers with stacks", {
 
   # Test deleted raster backed file
   file.remove(tmpfile2)
-  expect_error(b <- .prepareFileBackedRaster(s, tmpCache), "The following file-backed rasters")
+  expect_error({b <- .prepareFileBackedRaster(s, tmpCache)}, "The following file-backed rasters")
 })
 
 ##########################
@@ -199,8 +215,6 @@ test_that("test miscellaneous unit tests cache-helpers", {
   }, add = TRUE)
   a <- Cache(rnorm, 1, cacheRepo = tmpCache)
   mess <- capture_messages(clearCache(cacheRepo = tmpCache))
-  expect_true(grepl("x not specified, but cacheRepo is", mess))
-  expect_error(clearCache(x = tmpCache, useCloud = TRUE,
-                          cloudFolderID = NULL))
-
+  expect_true(any(grepl("x not specified, but cacheRepo is", mess)))
+  expect_error(clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = NULL))
 })

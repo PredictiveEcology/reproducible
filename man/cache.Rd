@@ -29,7 +29,9 @@ Cache(
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  showSimilar = getOption("reproducible.showSimilar", FALSE)
+  showSimilar = getOption("reproducible.showSimilar", FALSE),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL)
 )
 
 \S4method{Cache}{ANY}(
@@ -55,7 +57,9 @@ Cache(
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  showSimilar = getOption("reproducible.showSimilar", FALSE)
+  showSimilar = getOption("reproducible.showSimilar", FALSE),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL)
 )
 
 lhs \%<\% rhs
@@ -184,6 +188,13 @@ does not find an identical archive in the cacheRepo, it will report (via message
 the next most similar archive, and indicate which argument(s) is/are different.
 If a number larger than \code{1}, then it will report the N most similar archived
 objects.}
+
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{lhs}{A name to assign to.}
 
@@ -382,7 +393,7 @@ opt <- options("reproducible.useCache" = "devMode")
 clearCache(tmpDir, ask = FALSE)
 centralTendency <- function(x)
   mean(x)
-funnyData <- c(1,1,1,1,10)
+funnyData <- c(1, 1, 1, 1, 10)
 uniqueUserTags <- c("thisIsUnique", "reallyUnique")
 ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpDir,
                   userTags = uniqueUserTags) # sets new value to Cache
@@ -405,6 +416,21 @@ options(opt)
 
 # For more in depth uses, see vignette
 \dontrun{
+  # To use Postgres, set environment variables with the required credentials
+  if (requireNamespace("RPostgres")) {
+    Sys.setenv(PGHOST = "server.url")
+    Sys.setenv(PGPORT = 5432)
+    Sys.setenv(PGDATABASE = "mydatabase")
+    Sys.setenv(PGUSER = "mydbuser")
+    Sys.setenv(PGPASSWORD = "mysecurepassword")
+
+    conn <- DBI::dbConnect(RPostgres::Postgres())
+    options("reproducible.conn" = conn)
+
+    # Will use postgres for cache data table, and tempdir() for saved R objects
+    Cache(rnorm, 1, cacheRepo = tempdir())
+  }
+
   browseVignettes(package = "reproducible")
 }
 # Equivalent

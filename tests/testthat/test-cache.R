@@ -22,34 +22,38 @@ test_that("test file-backed raster caching", {
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
+  val1 <- .cacheNumDefaultTags() + 1 # adding a userTag here
+
   with_mock(
-    "reproducible::isInteractive" = function() TRUE,
-    {
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2")
+   "reproducible::isInteractive" = function() TRUE,
+   {
+  aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
       # Test clearCache by tags
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-      clearCache(tmpdir, userTags = "something$", ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-      clearCache(tmpdir, userTags = "something2", ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)), 0)
 
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2")
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-      clearCache(tmpdir, userTags = c("something$", "testing$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-      clearCache(tmpdir, userTags = c("something2$", "testing$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]), 11)
-      clearCache(tmpdir, userTags = c("something2$", "randomPolyToDisk$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpdir)), 0)
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      clearCache(tmpCache, userTags = "something$", ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      clearCache(tmpCache, userTags = "something2", ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)), 0)
 
-      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2")
+      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      clearCache(tmpCache, userTags = c("something$", "testing$"), ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      clearCache(tmpCache, userTags = c("something2$", "testing$"), ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+
+      clearCache(tmpCache, userTags = c("something2$", "randomPolyToDisk$"), ask = FALSE)
+      expect_equal(NROW(showCache(tmpCache)), 0)
+
+      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
 
       # confirm that the raster has the new filename in the cachePath
       expect_false(identical(strsplit(tmpfile[1], split = "[\\/]"),
-                             strsplit(file.path(tmpdir, "rasters",
+                             strsplit(file.path(tmpCache, "rasters",
                                                 basename(tmpfile[1])), split = "[\\/]")))
       expect_true(any(grepl(pattern = basename(tmpfile[1]),
-                            dir(file.path(tmpdir, "rasters")))))
+                            dir(file.path(tmpCache, "rasters")))))
 
       ### Test for 2 caching events with same file-backing name
       randomPolyToDisk2 <- function(tmpfile, rand) {
@@ -61,7 +65,6 @@ test_that("test file-backed raster caching", {
 
       a <- Cache(randomPolyToDisk2, tmpfile[1], runif(1))
       b <- Cache(randomPolyToDisk2, tmpfile[1], runif(1))
-
       expect_false(identical(filename(a), filename(b)))
 
       # Caching a raster as an input works
@@ -69,9 +72,14 @@ test_that("test file-backed raster caching", {
         ceiling(raster[] / (mean(raster[]) + 1))
       }
       nOT <- Sys.time()
+
+      # xxxx <<- ssss <<- jjjj <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
+      #rmFC <<- 1
+      #browser()
+
       for (i in 1:2) {
         assign(paste0("b", i), system.time(
-          assign(paste0("a", i), Cache(rasterTobinary, aa, cacheRepo = tmpdir, notOlderThan = nOT))
+          assign(paste0("a", i), Cache(rasterTobinary, aa, cacheRepo = tmpCache, notOlderThan = nOT))
         ))
         nOT <- Sys.time() - 100
       }
@@ -84,7 +92,7 @@ test_that("test file-backed raster caching", {
       # confirm that the second one was obtained through reading from Cache... much faster than writing
       expect_true(b1[1] > b2[1])
 
-      clearCache(tmpdir, ask = FALSE)
+      clearCache(tmpCache, ask = FALSE)
 
       # Check that Caching of rasters saves them to tif file instead of rdata
       randomPolyToMemory <- function() {
@@ -98,13 +106,13 @@ test_that("test file-backed raster caching", {
       expect_true(inMemory(bb))
 
       bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
-      expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 10)
+      expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
 
       # Test that factors are saved correctly
       randomPolyToFactorInMemory <- function() {
         r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
         levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
-                                vals2 <- sample(1:7, size = 30, replace = TRUE))
+                                vals2 = sample(1:7, size = 30, replace = TRUE))
         dataType(r) <- "INT1U"
         r
       }
@@ -140,8 +148,6 @@ test_that("test file-backed raster caching", {
 
       clearCache(tmpdir, ask = FALSE)
    })
-
-
 })
 
 test_that("test memory backed raster robustDigest", {
@@ -217,7 +223,7 @@ test_that("test memory backed raster robustDigest", {
 })
 
 test_that("test 'quick' argument", {
-  testInitOut <- testInit("raster", tmpFileExt = ".tif")
+  testInitOut <- testInit("raster", tmpFileExt = ".tif", opts = list("reproducible.useMemoise" = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -235,11 +241,13 @@ test_that("test 'quick' argument", {
   out1b <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
-  mess1 <- capture_message(out1c <- Cache(quickFun, asPath(filename(r1)),
-                                          cacheRepo = tmpdir, quick = TRUE))
-  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
-  expect_silent(out1c <- Cache(quickFun, asPath(filename(r1)),
-                                cacheRepo = tmpdir, quick = FALSE))
+  mess1 <- capture_messages({
+    out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
+  })
+  expect_true(any(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 )))
+  expect_silent({
+    out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = FALSE)
+  })
 
   # Using Raster directly -- not file
   quickFun <- function(ras) {
@@ -249,9 +257,16 @@ test_that("test 'quick' argument", {
   out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
-  mess1 <- capture_message(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE))
-  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 ))
-  expect_silent(out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE))
+  mess1 <- capture_message({
+    out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
+  })
+  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy",
+                    mess1))
+
+  #mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE) })
+  expect_silent({
+    out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE)
+  })
 })
 
 test_that("test date-based cache removal", {
@@ -268,7 +283,7 @@ test_that("test date-based cache removal", {
   expect_identical(a1, showCache(tmpdir))
 
   b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
-  expect_identical(data.table::setindex(b, NULL), a1)
+  expect_identical(data.table::setindex(b, NULL), data.table::setindex(a1, NULL))
 })
 
 test_that("test keepCache", {
@@ -279,38 +294,40 @@ test_that("test keepCache", {
   Cache(rnorm, 10, cacheRepo = tmpdir)
   Cache(runif, 10, cacheRepo = tmpdir)
   Cache(round, runif(4), cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 30)
-  expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))) == 0) # and search
-  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == 10)
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) ==
+                .cacheNumDefaultTags() * 3)
+  expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))[tagKey != "otherFunctions"]) ==
+                0) # and search
+  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
 
   # do it twice to make sure it can deal with repeats
-  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == 10)
-  Sys.sleep(1)
+  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
   st <- Sys.time()
   Sys.sleep(1)
   Cache(sample, 10, cacheRepo = tmpdir)
   Cache(length, 10, cacheRepo = tmpdir)
   Cache(sum, runif(4), cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == 10)
-  expect_true(NROW(keepCache(tmpdir, before = st, ask = FALSE)[tagKey != "otherFunctions"]) == 10)
-  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == 10)
+  expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
+  expect_true(NROW(keepCache(tmpdir, before = st, ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
+  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
 
   ranNums <- Cache(runif, 4, cacheRepo = tmpdir, userTags = "objectName:a")
   ranNums <- Cache(rnorm, 4, cacheRepo = tmpdir, userTags = "objectName:a")
-  showCache(tmpdir) # shows spades, runif and rnorm objects
+  showCache(tmpdir) # shows rnorm, runif and rnorm objects
 
   # shows nothing because object has both spades and rnorm
   expect_true(NROW(showCache(tmpdir, userTags = c("spades", "rnorm"))) == 0)
 
   # "or" search
-  expect_true(length(unique(showCache(tmpdir, userTags = "spades|rnorm")$artifact)) == 2)
+  expect_true(length(unique(
+    showCache(tmpdir, userTags = "spades|rnorm")[[.cacheTableHashColName()]])) == 2)
 
   # keep all with spades or rnorm
   expect_true(length(unique(
-    keepCache(tmpdir, userTags = "spades|rnorm", ask = FALSE)$artifact)) == 2)
+    keepCache(tmpdir, userTags = "spades|rnorm", ask = FALSE)[[.cacheTableHashColName()]])) == 2)
 
   # shows spades, runif and rnorm objects
-  expect_true(length(unique(showCache(tmpdir)$artifact)) == 2)
+  expect_true(length(unique(showCache(tmpdir)[[.cacheTableHashColName()]])) == 2)
 })
 
 test_that("test environments", {
@@ -378,15 +395,17 @@ test_that("test environments", {
 })
 
 test_that("test asPath", {
-  testInitOut <- testInit("raster", tmpFileExt = "pdf")
+  testInitOut <- testInit("raster", tmpFileExt = "pdf", opts = list("reproducible.useMemoise" = TRUE))
+  unlink(dir(tmpdir, full.names = TRUE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
   obj <- sample(1e5,10)
-  origDir <- getwd()
-  on.exit(setwd(origDir))
-  setwd(tmpdir)
+  #origDir <- getwd()
+  #on.exit(setwd(origDir), add = TRUE)
+  #setwd(tmpdir)
+  # xxxx <<- ssss <<- jjjj <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
   # First -- has no filename.RData
   a1 <- capture_messages(Cache(saveRDS, obj, file = "filename.RData", cacheRepo = tmpdir))
   # Second -- has a filename.RData, and passing a character string,
@@ -626,6 +645,8 @@ test_that("test Cache argument inheritance to inner functions", {
   aa <- Cache(outer, n = 2, cacheRepo = tmpdir, userTags = outerTag)
   bb <- showCache(tmpdir, userTags = outerTag)
   cc <- showCache(tmpdir)
+  data.table::setorderv(bb, c(.cacheTableHashColName(), "tagKey", "tagValue"))
+  data.table::setorderv(cc, c(.cacheTableHashColName(), "tagKey", "tagValue"))
   expect_true(identical(bb, cc))
 
   # Check userTags -- all items have the outer tag propagate, plus inner ones only have inner ones
@@ -645,13 +666,14 @@ test_that("test Cache argument inheritance to inner functions", {
   bb <- showCache(tmpdir, userTags = "notHowdie")
   cc <- showCache(tmpdir)
   expect_false(identical(bb, cc))
-  expect_true(length(unique(bb$artifact)) == 1)
-  expect_true(length(unique(cc$artifact)) == 3)
+  expect_true(length(unique(bb[[.cacheTableHashColName()]])) == 1)
+  expect_true(length(unique(cc[[.cacheTableHashColName()]])) == 3)
 })
 
 ##########################
 test_that("test future", {
   skip_on_cran()
+
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
   if (.onLinux) {
     if (requireNamespace("future", quietly = TRUE)) {
@@ -663,20 +685,21 @@ test_that("test future", {
       }, add = TRUE)
 
       options("reproducible.futurePlan" = "multiprocess")
+      on.exit({
+        options("reproducible.futurePlan" = FALSE)
+      }, add = TRUE)
       # There is now a warning with future package
       (aa <- system.time({for (i in c(1:3)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
       a <- showCache(tmpCache)
 
-      options("reproducible.futurePlan" = FALSE)
       try(unlink(tmpCache, recursive = TRUE))
       (bb <- system.time({for (i in 1:3) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
 
       # Test the speed of rerunning same line
-      (aa <- system.time({for (i in c(1,1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
+      (aa <- system.time({for (i in c(1, 1)) a <- Cache(cacheRepo = tmpCache, seq, 5, 1e7 + i)}))
     }
   }
 })
-
 
 ##########################
 test_that("test mergeCache", {
@@ -685,36 +708,43 @@ test_that("test mergeCache", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
+  # aaaa <<- gggg <<- kkkk <<- 1
   a <- Cache(rnorm, 1, cacheRepo = tmpdir)
-  b <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  b <- Cache(rnorm, 2, cacheRepo = tmpCache)
 
   aCache <- showCache(tmpdir)
   bCache <- showCache(tmpCache)
 
+  #nnnn <<- ffff <<- aaaa <<- bbbb <<-
+
   d <- mergeCache(tmpCache, tmpdir)
 
   dCache <- showCache(d)
-  abCache <- rbindlist(list(aCache,bCache))
+  abCache <- rbindlist(list(aCache, bCache))
 
   # Remove date and accessed time stamps
   dCache <- dCache[!tagKey %in% c("date", "accessed")]
   abCache <- abCache[!tagKey %in% c("date", "accessed")]
 
   # remove keys
-  setkey(dCache, artifact)
-  setkey(abCache, artifact)
+  setkeyv(dCache, .cacheTableHashColName())
+  setkeyv(abCache, .cacheTableHashColName())
 
-  expect_true(identical(abCache[, list(artifact, tagKey, tagValue)],
-                        dCache[, list(artifact, tagKey, tagValue)]))
-
-  mess <- capture_messages(d1 <- mergeCache(tmpCache, tmpdir))
+  expect_true(all.equal(abCache[, list(get(.cacheTableHashColName()),
+                                       tagKey, get(.cacheTableTagColName()))],
+                        dCache[, list(get(.cacheTableHashColName()),
+                                      tagKey, get(.cacheTableTagColName()))]))
+  mess <- capture_messages({
+    d1 <- mergeCache(tmpCache, tmpdir)
+  })
   expect_true(any(grepl("Skipping", mess)))
-  expect_true(identical(d, d1))
+  expect_true(identical(showCache(d), showCache(d1)))
 })
 
 ##########################
 test_that("test cache-helpers", {
   testInitOut <- testInit("raster")
+  out <- createCache(tmpCache)
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -752,7 +782,6 @@ test_that("test cache-helpers", {
   # fix it, by giving correct tmpCache path
   b <- .prepareFileBackedRaster(r, tmpCache)
   expect_true(file.exists(filename(b)))
-
   # Check that it makes a new name if already in Cache
   checkPath(file.path(tmpCache, "rasters"), create = TRUE)
   r1 <- writeRaster(r1, filename = file.path(tmpCache, "rasters", basename(tmpfile2)), overwrite = TRUE)
@@ -788,7 +817,11 @@ test_that("test useCache = 'overwrite'", {
   }, add = TRUE)
 
   a <- Cache(rnorm, 1, useCache = "overwrite", cacheRepo = tmpCache)
-  mess <- capture_messages(b <- Cache(rnorm, 1, useCache = "overwrite", cacheRepo = tmpCache))
+  #aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
+  # ffff <<- 1
+  mess <- capture_messages({
+    b <- Cache(rnorm, 1, useCache = "overwrite", cacheRepo = tmpCache)
+  })
   expect_true(!identical(a, b))
   expect_true(any(grepl(pattern = "Overwriting", mess)))
 
@@ -798,7 +831,9 @@ test_that("test useCache = 'overwrite'", {
   testInitOut <- testInit(ask = FALSE, opts = list("reproducible.useCache" = "overwrite"))
 
   a <- Cache(rnorm, 1, cacheRepo = tmpCache)
-  mess <- capture_messages(b <- Cache(rnorm, 1, cacheRepo = tmpCache))
+  mess <- capture_messages({
+    b <- Cache(rnorm, 1, cacheRepo = tmpCache)
+  })
   expect_true(!identical(a, b))
   expect_true(any(grepl(pattern = "Overwriting", mess)))
 })
@@ -809,11 +844,18 @@ test_that("test rm large non-file-backed rasters", {
   skip_on_cran()
   skip_on_travis()
 
+  if (!is.null(getOption("reproducible.conn")))
+    if (!grepl("SQLite", class(getOption("reproducible.conn"))))
+      skip("This is not for non-SQLite")
+
   testInitOut <- testInit(ask = FALSE, opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  st0 <- system.time(r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1, userTags = "first"))
+
+  st0 <- system.time({
+    r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1, userTags = "first")
+  })
   st1 <- system.time(clearCache(userTags = "first", ask = FALSE))
   expect_true(st1["elapsed"] < 0.75) # This was > 2 seconds in old way
 })
@@ -828,27 +870,29 @@ test_that("test cc", {
   }, add = TRUE)
 
   Cache(rnorm, 1, cacheRepo = tmpCache)
+  Sys.sleep(1) # 0.2
   thisTime <- Sys.time()
   Sys.sleep(1) # 0.2
   Cache(rnorm, 2, cacheRepo = tmpCache)
   Cache(rnorm, 3, cacheRepo = tmpCache)
   Cache(rnorm, 4, cacheRepo = tmpCache)
   a <- showCache(x = tmpCache) # shows all 4 entries
-  expect_true(length(unique(a$artifact)) == 4)
+  expect_true(length(unique(a[[.cacheTableHashColName()]])) == 4)
 
+  #rmFC <<- 1
   cc(ask = FALSE, x = tmpCache)
   b <- showCache(x = tmpCache) # most recent is gone
-  expect_true(length(unique(b$artifact)) == 3)
+  expect_true(length(unique(b[[.cacheTableHashColName()]])) == 3)
 
+  #jjjj <<- 1
   cc(thisTime, ask = FALSE, x = tmpCache)
   d <- showCache(x = tmpCache) # all those after this time gone, i.e., only 1 left
-  expect_true(length(unique(d$artifact)) == 1)
+  expect_true(length(unique(d[[.cacheTableHashColName()]])) == 1)
 
   cc(ask = FALSE, x = tmpCache) # Cache is
   b1 <- showCache(x = tmpCache) # most recent is gone
-  expect_true(length(unique(b1$artifact)) == 0)
+  expect_true(length(unique(b1[[.cacheTableHashColName()]])) == 0)
 
   mess <- capture_messages(cc(ask = FALSE, x = tmpCache)) # Cache is already empty
   expect_true(any(grepl("Cache already empty", mess)))
 })
-
