@@ -7,18 +7,17 @@ test_that("test Cache(useCloud=TRUE, ...)", {
       opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
                   "reproducible.ask" = FALSE)
     )
-    drive_auth("predictiveecology@gmail.com")
+    # drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
-      retry(quote(drive_rm(as_id(newDir$id))))
     }, add = TRUE)
     clearCache(x = tmpCache)
-    newDir <- #if (Sys.info()[["user"]] == "emcintir") {
-    #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
-    #} else { # this is slow for emcintir because googledrive is large
-      retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
-    #}
+    newDir <- retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
     cloudFolderID = newDir$id
+    on.exit({
+      retry(quote(drive_rm(as_id(cloudFolderID))))
+    }, add = TRUE)
+
     #######################################
     # local absent, cloud absent
     #######################################
@@ -97,6 +96,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     expect_true(isTRUE(all.equal(length(warn6), 0)))
 
     ########
+    retry(quote(drive_rm(as_id(newDir$id)))) # clear the original one
     cloudFolderID <- getOption("reproducible.cloudFolderID")
     clearCache(x = tmpCache, useCloud = TRUE, cloudFolderID = cloudFolderID)
     # Add 3 things to cloud and local -- then clear them all
@@ -152,11 +152,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     }, add = TRUE)
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
-    newDir <- #if (Sys.info()[["user"]] == "emcintir") {
-      #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
-      #} else { # this is slow for emcintir because googledrive is large
-      retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
-    #}
+    newDir <- retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
     cloudFolderID = newDir$id
 
     on.exit({
@@ -189,11 +185,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     }, add = TRUE)
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
-    newDir <- #if (Sys.info()[["user"]] == "emcintir") {
-      #  list(id = "1vKImpt2FQLmdDzA7atwhz9B-6Er26rka")
-      #} else { # this is slow for emcintir because googledrive is large
-      retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
-    #}
+    newDir <- retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
     cloudFolderID = newDir$id
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
