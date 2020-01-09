@@ -139,7 +139,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   if (length(whichOS)) {
     fsBig <- (as.numeric(tagValue[whichOS]) * 4 ) < fs
     if (fsBig)
-      message("Object with cacheId", cacheId, "appears to have a much larger size ",
+      message("Object with cacheId ", cacheId, " appears to have a much larger size ",
               "on disk than in memory. ",
               "This usually means that the object has captured an environment with ",
               "many objects due to how a function or a formula is defined. ",
