@@ -628,7 +628,8 @@ setMethod(
           objSize <- file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
           class(objSize) <- "object_size"
           if (objSize > 1e6)
-            message(crayon::blue(paste0("  ...(Object to retrieve is large: ", format(objSize, units = "auto"), ")")))
+            message(crayon::blue(paste0("  ...(Object to retrieve is large: ",
+                                        format(objSize, units = "auto"), ")")))
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
                                      lastOne = lastOne, cacheRepo = cacheRepo,
                                      fnDetails = fnDetails,
@@ -741,8 +742,7 @@ setMethod(
           stop("There is an unknown error 03")
       }
       # Can make new methods by class to add tags to outputs
-      outputToSave <- .addTagsToOutput(output, outputObjects, FUN,
-                                       preDigestByClass)
+      outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
 
       # Remove from otherFunctions if it is "function"
       alreadyIn <- gsub(otherFns, pattern = "otherFunctions:", replacement = "") %in%
@@ -827,8 +827,9 @@ setMethod(
           .reproEnv$futureEnv <- new.env()
 
         if (isTRUE(getOption("reproducible.futurePlan"))) {
-          message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess"\n',
-                  'Please specify a plan by name, e.g., options("reproducible.futurePlan" = "multiprocess")')
+          message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess".\n',
+                  'Please specify a plan by name, e.g.,\n',
+                  '  options("reproducible.futurePlan" = "multiprocess")')
           future::plan("multiprocess", workers = 2)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
@@ -863,11 +864,9 @@ setMethod(
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
         if (getOption("reproducible.useDBI", TRUE)) {
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                                conn = conn,
-                               obj = outputToSave, cacheId = outputHash)
+                                      conn = conn, obj = outputToSave, cacheId = outputHash)
         } else {
           while (written >= 0) {
-
             browser(expr = exists("gggg"))
             saved <- suppressWarnings(try(silent = TRUE,
                                           saveToLocalRepo(
@@ -892,7 +891,6 @@ setMethod(
             }
           }
         }
-
       }
 
       if (useCloud) {
@@ -906,7 +904,7 @@ setMethod(
 
       if (isNullOutput) return(NULL) else return(output)
     }
-  })
+})
 
 #' @keywords internal
 .formalsCache <- formals(Cache)[-(1:2)]
@@ -1153,7 +1151,9 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
           fnDetails$functionName <- fnName
         } else {
           classes <- try({
-            suppressWarnings(info <- attr(utils::methods(whatArg), "info")) # from hadley/sloop package s3_method_generic
+            suppressWarnings({
+              info <- attr(utils::methods(whatArg), "info") # from hadley/sloop pkg s3_method_generic
+            })
             classes <- unlist(lapply(strsplit(rownames(info), split = "\\."), function(x) x[[2]]))
             gsub("-method$", "", classes)
           }, silent = TRUE)
@@ -1297,13 +1297,15 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   }
   browser(expr = exists("kkkk")) # deal with tag
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
-  userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")) #nolint
+  userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc),
+                                  preDigestUnlistTrunc, sep = ":"))
   userTags3 <- c(userTags, userTags2)
   hashName <- .cacheTableHashColName()
   cn <- if (any(colnames(localTags) %in% "tag")) "tag" else "tagKey"
 
   if (!(cn %in% "tag")) {
-    tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":"), on = .cacheTableHashColName()][[hashName]]
+    tag <- localTags[paste(tagKey , get(.cacheTableTagColName()), sep = ":"),
+                     on = .cacheTableHashColName()][[hashName]]
   }
   aa <- localTags[tag %in% userTags3][,.N, keyby = hashName]
   setkeyv(aa, "N")
@@ -1556,7 +1558,6 @@ determineNestedTags <- function(envir, mc, userTags) {
     prevValsInitial <- prevVals
   }
 
-
   if (any(objOverride)) {
     # get from .reproEnv
     lsDotReproEnv <- ls(.reproEnv)
@@ -1621,9 +1622,10 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
           outputHash <- uniqueCacheId[uniqueCacheId %in% newLocalTags[[.cacheTableHashColName()]]]
         } else {
           outputHash <- gsub("cacheId:", "",
-                             newLocalTags[newLocalTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]] & #nolint
-                                            startsWith(newLocalTags[[.cacheTableTagColName("tag")]], "cacheId"), ][[.cacheTableTagColName()]]) #nolint
-
+                             newLocalTags[newLocalTags[[.cacheTableHashColName()]] %in%
+                                            isInRepoAlt[[.cacheTableHashColName()]] &
+                                            startsWith(newLocalTags[[.cacheTableTagColName("tag")]],
+                                                       "cacheId"), ][[.cacheTableTagColName()]])
         }
         isInRepo <- isInRepoAlt
       } else {
@@ -1637,4 +1639,3 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   }
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
 }
-
