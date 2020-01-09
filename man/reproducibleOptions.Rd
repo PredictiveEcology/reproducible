@@ -25,8 +25,8 @@ The following options are likely of interest to most users
   \code{cachePath} \tab \code{.reproducibleTempCacheDir}
                    \tab Used in \code{\link{Cache}} and many others.
                    The default path for repositories if not passed as an argument.\cr
-  \code{cacheSaveFormat} \tab "qs" \tab What save format to use; currently,
-                         "qs", "rds" or "rda" \cr
+  \code{cacheSaveFormat} \tab "rds" \tab What save format to use; currently,
+                         "qs" or "rds" \cr
   \code{conn} \tab \code{NULL} \tab Sets a specific connection to a database, e.g.,
                       \code{dbConnect(drv = RSQLite::SQLite())} or
                       \code{dbConnect(drv = RPostgres::Postgres()}. For remote
