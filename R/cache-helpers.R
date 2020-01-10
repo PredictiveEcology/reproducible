@@ -69,6 +69,45 @@ setMethod(
     }
 })
 
+################################################################################
+#' Determine object size of all objects inside environments
+#'
+#' This is a generic definition that can be extended according to class.
+#'
+#' @return A numeric, the result of object.size for all objects in environments.
+#'
+#' @param object Any R object.
+#'
+#' @author Eliot McIntire
+#' @export
+#' @rdname objSizeInclEnviros
+#' @examples
+#' a <- new.env()
+#' a$b <- 1:10
+#' object.size(a)
+#' .objSizeInclEnviros(a) # much larger
+#'
+setGeneric(".objSizeInclEnviros", function(object) {
+  standardGeneric(".objSizeInclEnviros")
+})
+
+#' @export
+#' @rdname objSizeInclEnviros
+setMethod(
+  ".objSizeInclEnviros",
+  signature = "ANY",
+  definition = function(object) {
+    object.size(object)
+})
+
+#' @export
+#' @rdname objSizeInclEnviros
+setMethod(
+  ".objSizeInclEnviros",
+  signature = "environment",
+  definition = function(object) {
+    object.size(as.list(object, all.names = TRUE))
+})
 
 ################################################################################
 #' Add tags to object
