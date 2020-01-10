@@ -810,7 +810,7 @@ setMethod(
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
-      objSize <- .objSizeInclEnviros(outputToSave)
+      objSize <- sum(unlist(objSize(outputToSave)))
       userTags <- c(userTags,
                     # paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", objSize),
@@ -1040,8 +1040,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
       cacheId <- .robustDigest(outputToSave)
     }
     output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                          conn = conn,
-                        obj = outputToSave, cacheId = cacheId)
+                          conn = conn, obj = outputToSave, cacheId = cacheId)
     saved <- cacheId
   } else {
     while (written >= 0) {
