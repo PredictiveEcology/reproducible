@@ -463,7 +463,9 @@ setMethod(
       }
 
       # remove things in the Cache call that are not relevant to Caching
-      if (!is.null(modifiedDots$progress)) if (!is.na(modifiedDots$progress)) modifiedDots$progress <- NULL
+      if (!is.null(modifiedDots$progress))
+        if (!is.na(modifiedDots$progress))
+          modifiedDots$progress <- NULL
 
       # Do the digesting
       if (!is.null(omitArgs)) {
@@ -480,9 +482,7 @@ setMethod(
       startHashTime <- verboseTime(verbose)
 
       # remove some of the arguments passed to Cache, which are irrelevant for digest
-      argsToOmitForDigest <- dotPipe |
-        (names(modifiedDots) %in%
-           .defaultCacheOmitArgs)
+      argsToOmitForDigest <- dotPipe | (names(modifiedDots) %in% .defaultCacheOmitArgs)
 
       cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], .objects = .objects,
                                  length = length, algo = algo, quick = quick,
