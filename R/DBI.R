@@ -11,6 +11,7 @@
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
 #' @rdname cacheTools
+#' @export
 createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), force = FALSE) {
   browser(expr = exists("aaaa"))
