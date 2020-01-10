@@ -562,6 +562,7 @@ setMethod(
           localTags <- getLocalTags(repo)
           isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
         }
+        fullCacheTableForObj <- isInRepo
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
           browser(expr = exists("uuuu"))
@@ -627,7 +628,11 @@ setMethod(
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
           browser(expr = exists("nnnn"))
-          objSize <- file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
+          objSize <- if (getOption("reproducible.useDBI", TRUE)) {
+            as.numeric(tail(fullCacheTableForObj[["tagValue"]][fullCacheTableForObj$tagKey=="file.size"],1))
+          } else {
+            file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
+          }
           class(objSize) <- "object_size"
           if (objSize > 1e6)
             message(crayon::blue(paste0("  ...(Object to retrieve is large: ",
