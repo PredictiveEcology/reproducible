@@ -313,6 +313,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom methods formalArgs
 #' @importFrom tools file_path_sans_ext
 #' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
+#' @importFrom rlang enquos expr
 #' @rdname cache
 #'
 #' @example inst/examples/example_Cache.R
@@ -351,6 +352,8 @@ setMethod(
                         cacheId, useCache,
                         showSimilar, drv, conn) {
 
+    dots <- enquos(...)
+    browser(expr = exists("rrrrCache"))
     if (!is.null(list(...)$objects)) {
       message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
     }
@@ -559,6 +562,7 @@ setMethod(
           localTags <- getLocalTags(repo)
           isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
         }
+        fullCacheTableForObj <- isInRepo
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
           browser(expr = exists("uuuu"))
@@ -624,7 +628,11 @@ setMethod(
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
           browser(expr = exists("nnnn"))
-          objSize <- file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
+          objSize <- if (getOption("reproducible.useDBI", TRUE)) {
+            as.numeric(tail(fullCacheTableForObj[["tagValue"]][fullCacheTableForObj$tagKey=="file.size"],1))
+          } else {
+            file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
+          }
           class(objSize) <- "object_size"
           if (objSize > 1e6)
             message(crayon::blue(paste0("  ...(Object to retrieve is large: ",
@@ -693,7 +701,9 @@ setMethod(
         if (fnDetails$isPipe) {
           output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
         } else {
-          output <- FUN(...)
+          theCall <- expr(FUN(!!!dots))
+          output <- eval_tidy(theCall)
+          # output <- do.call(FUN, lapply(list(...), eval_tidy)) #FUN(...)
         }
       }
 
@@ -805,7 +815,7 @@ setMethod(
       # This is for write conflicts to the SQLite database
       #   (i.e., keep trying until it is written)
 
-      objSize <- .objSizeInclEnviros(outputToSave)
+      objSize <- sum(unlist(objSize(outputToSave)))
       userTags <- c(userTags,
                     # paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", objSize),
@@ -1035,8 +1045,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
       cacheId <- .robustDigest(outputToSave)
     }
     output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                          conn = conn,
-                        obj = outputToSave, cacheId = cacheId)
+                          conn = conn, obj = outputToSave, cacheId = cacheId)
     saved <- cacheId
   } else {
     while (written >= 0) {
@@ -1078,6 +1087,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   isPipe <- isTRUE(!is.null(modifiedDots$._pipe))
   originalDots <- modifiedDots
 
+  browser(expr = exists("rrrrCache"))
   # If passed with 'quote'
   if (!is.function(FUN)) {
     parsedFun <- parse(text = FUN)

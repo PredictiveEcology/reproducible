@@ -88,7 +88,7 @@ objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
 objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE),
                                 enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   xName <- deparse(substitute(x))
-  print(format(x))
+  # print(format(x))
   os <- objSize(as.list(x, all.names = TRUE), enclosingEnvs = enclosingEnvs,
                 .prevEnvirs = .prevEnvirs)
   if (length(os) > 0)
