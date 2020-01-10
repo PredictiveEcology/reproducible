@@ -495,7 +495,8 @@ setMethod(
 
       # This does to depth 3
       preDigestUnlistTrunc <- unlist(
-        .unlistToCharacter(preDigest, getOption("reproducible.showSimilarDepth", 3)))
+        .unlistToCharacter(preDigest, getOption("reproducible.showSimilarDepth", 3))
+      )
 
       if (verbose > 1) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
@@ -629,7 +630,8 @@ setMethod(
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
           browser(expr = exists("nnnn"))
           objSize <- if (getOption("reproducible.useDBI", TRUE)) {
-            as.numeric(tail(fullCacheTableForObj[["tagValue"]][fullCacheTableForObj$tagKey=="file.size"],1))
+            as.numeric(tail(fullCacheTableForObj[["tagValue"]][
+              fullCacheTableForObj$tagKey == "file.size"], 1))
           } else {
             file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
           }
@@ -734,9 +736,12 @@ setMethod(
       # attr(output, "tags") <- paste0("cacheId:", outputHash)
       # attr(output, ".Cache")$newCache <- TRUE
       # attr(output, "call") <- ""
-      if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew)) stop("attributes are not correct 3")
-      if (!identical(attr(output, "call"), "")) stop("attributes are not correct 4")
-      if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash))) stop("attributes are not correct 5")
+      if (!identical(attr(output, ".Cache")$newCache, .CacheIsNew))
+        stop("attributes are not correct 3")
+      if (!identical(attr(output, "call"), ""))
+        stop("attributes are not correct 4")
+      if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
+        stop("attributes are not correct 5")
 
       if (sideEffect != FALSE) {
         browser(expr = exists("sideE"))
