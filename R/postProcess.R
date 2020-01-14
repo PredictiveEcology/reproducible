@@ -703,7 +703,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         # return the integer class to the data in the raster object
         if (isTRUE(isInteger)) {
-          #dataType(x) <- origDataType  ## TODO: this can cause problems with on-disk rasters
+          dataType(x) <- origDataType
           x[] <- as.integer(x[])
         }
 
