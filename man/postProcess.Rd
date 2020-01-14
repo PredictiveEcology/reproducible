@@ -43,8 +43,7 @@ postProcess(x, ...)
 See individual methods.}
 
 \item{...}{Additional arguments passed to methods. For \code{spatialObjects},
-           these are: \code{\link{cropInputs}},
-           \code{\link{fixErrors}},
+           these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
            Each of these may also pass \code{...} into other functions, like

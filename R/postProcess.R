@@ -87,8 +87,7 @@ postProcess.list <- function(x, ...) {
 #'                 in details below.
 #'
 #' @param ... Additional arguments passed to methods. For \code{spatialObjects},
-#'            these are: \code{\link{cropInputs}},
-#'            \code{\link{fixErrors}},
+#'            these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
 #'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
 #'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
 #'            Each of these may also pass \code{...} into other functions, like
@@ -154,9 +153,8 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   x1 <- postProcessAllSpatial(x = x, studyArea = studyArea,
                              rasterToMatch = rasterToMatch, useCache = useCache,
-                             filename1 =filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite,
-                             ...)
+                             filename1 = filename1, filename2 = filename2,
+                             useSAcrs = useSAcrs, overwrite = overwrite, ...)
   return(x1)
 }
 
@@ -182,9 +180,8 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
 
   x <- postProcessAllSpatial(x = x, studyArea = studyArea,
                              rasterToMatch = rasterToMatch, useCache = useCache,
-                             filename1 =filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite,
-                             ...)
+                             filename1 = filename1, filename2 = filename2,
+                             useSAcrs = useSAcrs, overwrite = overwrite, ...)
 
   return(x)
 }
@@ -372,8 +369,8 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' Do some minor error fixing
 #'
 #' These must be very common for this function to be useful. Currently, the only
-#' meaningful method is on SpatialPolygons, and it runs \code{rgeos::gIsValid}. If
-#' \code{FALSE}, then it runs a buffer of width 0.
+#' meaningful method is on \code{SpatialPolygons}, and it runs \code{rgeos::gIsValid}.
+#' If \code{FALSE}, then it runs a buffer of width 0.
 #'
 #' @param x A \code{SpatialPolygons*} or \code{sf} object.
 #'
@@ -457,7 +454,8 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE), ...) {
   if (attemptErrorFixes) {
     if (is.null(objectName)) objectName = "SimpleFeature"
-    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY") || is(st_geometry(x), "sfc")) {
+    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY") ||
+        is(st_geometry(x), "sfc")) {
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
@@ -691,8 +689,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
             if (all(res(x) %==% res(rasterToMatch))) {
               res(x) <- res(rasterToMatch)
             } else {
-              stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
-                          "You can try increasing error tolerance in options('fpCompare.tolerance')."))
+              stop("Error: input and output resolutions are not similar after using projectRaster.",
+                   "\nTry increasing error tolerance in options('fpCompare.tolerance').")
             }
           }
         }
@@ -847,7 +845,9 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
       studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
     if (!identical(crs(x), crs(studyArea)))
       studyArea <- spTransform(studyArea, CRSobj = crs(x))
-    suppressWarnings(studyArea <- fixErrors(studyArea, "studyArea"))
+    suppressWarnings({
+      studyArea <- fixErrors(studyArea, "studyArea")
+    })
     # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
     #  specifically ecodistricts.shp . It created an invalid object with
     #  non-unique row names
@@ -1062,7 +1062,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
                     "\n saving", names(x), "as", datatype2))
       dots$datatype <- datatype2
     } else if (datatype2 != dots$datatype) {
-      message("chosen 'datatype', ",dots$datatype,", may be inadequate for the ",
+      message("chosen 'datatype', ", dots$datatype, ", may be inadequate for the ",
               "range/type of values in ", names(x),
               "\n consider changing to ", datatype2)
     }
@@ -1152,9 +1152,12 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' Can be used to write prepared inputs on disk.
 #'
-#' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#' @param type Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'.
-#' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
+#' @param ras  The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.
+#' @param type Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
+#'             data type for writing from the raster and gdalUtils packages, respectively, or
+#'             \code{"projectRaster"} to return recommended resampling type.
+#' @return The appropriate data type for the range of values in \code{ras}.
+#'         See \code{\link[raster]{dataType}} for details.
 #'
 #' @author Eliot McIntire
 #' @author Ceres Barros
@@ -1197,7 +1200,7 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
       ## if() else is faster than if
       datatype <- if (maxVal <= 255) "INT1U" else
         if (maxVal <= 65534) "INT2U" else
-          if (maxVal <= 4294967296) "INT4U" else    ## note that: dataType doc. advises against INT4U
+          if (maxVal <= 4294967296) "INT4U" else  ## note: ?dataType advises against INT4U
             if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
     }
   } else {
@@ -1205,7 +1208,7 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
       ## if() else is faster than if
       datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
         if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
-          if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else    ## note that: dataType doc. advises against INT4U
+          if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else  ## note: ?dataType advises against INT4U
             if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
     } else {
       if (doubVal)
