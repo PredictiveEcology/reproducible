@@ -641,7 +641,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                  "\"", tempSrcRaster, "\"", " ",
                  "\"", tempDstRaster, "\""),
           wait = TRUE)
-        ##
+
         x <- raster(tempDstRaster)
         crs(x) <- targetCRS #sometimes the crs is correct but the character string is not identical
         #file exists in temp drive. Can copy to filename2
