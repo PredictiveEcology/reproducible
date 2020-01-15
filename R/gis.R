@@ -160,7 +160,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
-        dType <- assessDataType(raster(x), type = "writeRaster")
+        dType <- assessDataType(x, type = "writeRaster")
         x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
         gc()
       } else {
