@@ -689,7 +689,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
           if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
             if (all(res(x) %==% res(rasterToMatch))) {
-              res(x) <- res(rasterToMatch)
+              res(x) <- res(rasterToMatch) # TODO: This is irrelevant. Should not happen. TO Omit.
             } else {
               stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
                           "You can try increasing error tolerance in options('fpCompare.tolerance')."))
@@ -703,8 +703,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         # return the integer class to the data in the raster object
         if (isTRUE(isInteger)) {
-          dataType(x) <- origDataType
           x[] <- as.integer(x[])
+          dataType(x) <- origDataType
         }
 
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
