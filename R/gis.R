@@ -207,6 +207,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                "\"", tempDstRaster, "\""),
         wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
       x <- raster(tempDstRaster)
+      x <- setMinMax(x)
     } else {
       extentY <- extent(y)
       resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
