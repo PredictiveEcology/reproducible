@@ -69,7 +69,7 @@ checkGDALVersion <- function(version) {
 #' @importFrom fasterize fasterize
 #' @importFrom parallel detectCores
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
-#' @importFrom raster xmin xmax ymin ymax fromDisk
+#' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
