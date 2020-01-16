@@ -566,13 +566,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                !identical(extent(x), extent(rasterToMatch))) {
       doProjection <- TRUE
     }
+
     if (doProjection) {
       if (!canProcessInMemory(x, 3) && isTRUE(useGDAL)) {
         ## the raster is in memory, but large enough to trigger this function: write it to disk
         message("   large raster: reprojecting after writing to temp drive...")
         ## rasters need to go to same file so it can be unlinked at end without losing other temp files
-        tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
-        tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
+        tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
+        tempSrcRaster <- bigRastersTmpFile()
         tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names, "a_reproj.tif")) # fails if x = stack
 
         if (!is.null(rasterToMatch)) {
@@ -1459,9 +1460,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       x <- do.call(writeOutputs, append(list(x = quote(x), filename2 = newFilename,
                                              overwrite = overwrite), dots))
 
-      if (dir.exists(file.path(raster::tmpDir(), "bigRasters"))) {
+      if (dir.exists(bigRastersTmpFolder())) {
         ## Delete gdalwarp results in temp
-        unlink(file.path(raster::tmpDir(), "bigRasters"), recursive = TRUE)
+        unlink(bigRastersTmpFolder(), recursive = TRUE)
       }
     }
   }

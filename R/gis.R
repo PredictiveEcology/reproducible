@@ -154,8 +154,8 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       message("fastMask is using gdalwarp")
 
       # rasters need to go to same directory that can be unlinked at end without losing other temp files
-      tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
-      tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
+      tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
+      tempSrcRaster <- bigRastersTmpFile()
       tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
 
       # the raster could be in memory if it wasn't reprojected
@@ -207,6 +207,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                "\"", tempDstRaster, "\""),
         wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
       x <- raster(tempDstRaster)
+      x <- setMinMax(x)
     } else {
       extentY <- extent(y)
       resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
@@ -246,3 +247,8 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     }
   }
 }
+
+#' @importFrom raster tmpDir
+bigRastersTmpFolder <- function() file.path(raster::tmpDir(), "bigRasters")
+
+bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
