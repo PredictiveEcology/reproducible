@@ -119,12 +119,12 @@ setMethod("Copy",
 #' @inheritParams DBI::dbConnect
 setMethod("Copy",
           signature(object = "Raster"),
-          definition = function(object, filebackedDir, drv = RSQLite::SQLite(), ...) {
+          definition = function(object, filebackedDir, drv = RSQLite::SQLite(), conn = NULL, ...) {
             if (missing(filebackedDir)) {
               filebackedDir <- tempdir2(rndstr(1, 8))
             }
             if (!is.null(filebackedDir))
-              object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv)
+              object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
             object
           })
 

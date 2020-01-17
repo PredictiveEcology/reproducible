@@ -778,10 +778,10 @@ setMethod(
         if (any(rasters)) {
           if (outputToSaveIsList) {
             outputToSave[rasters] <- lapply(outputToSave[rasters], function(x)
-              .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE, drv = drv))
+              .prepareFileBackedRaster(x, repoDir = cacheRepo, overwrite = FALSE, drv = drv, conn = conn))
           } else {
             outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheRepo,
-                                                     overwrite = FALSE, drv = drv)
+                                                     overwrite = FALSE, drv = drv, conn = conn)
           }
 
           # have to reset all these attributes on the rasters as they were undone in prev steps
