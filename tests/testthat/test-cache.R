@@ -912,5 +912,7 @@ test_that("test pre-creating conn", {
               conn = conn)
   expect_true(file.exists(filename(r1)))
   expect_true(file.exists(filename(r2)))
+  expect_true(grepl(basename(dirname(filename(r1))), "rasters"))
+  expect_true(grepl(basename(dirname(filename(r2))), "rasters"))
 
 })
