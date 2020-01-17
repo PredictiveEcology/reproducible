@@ -896,3 +896,21 @@ test_that("test cc", {
   mess <- capture_messages(cc(ask = FALSE, x = tmpCache)) # Cache is already empty
   expect_true(any(grepl("Cache already empty", mess)))
 })
+
+test_that("test pre-creating conn", {
+  testInitOut <- testInit(ask = FALSE, tmpFileExt = c(".tif", ".tif"))
+  on.exit({
+    testOnExit(testInitOut)
+    dbDisconnect(conn)
+  }, add = TRUE)
+
+  conn <- dbConnectAll(cachePath = tmpdir)
+  ra <- raster(extent(0,10,0,10), vals = sample(1:100))
+  rb <- raster(extent(0,10,0,10), vals = sample(1:100))
+  r1 <- Cache(writeRaster, ra, filename = tmpfile[1], overwrite = TRUE, cacheRepo = tmpCache)
+  r2 <- Cache(writeRaster, rb, filename = tmpfile[2], overwrite = TRUE, cacheRepo = tmpdir,
+              conn = conn)
+  expect_true(file.exists(filename(r1)))
+  expect_true(file.exists(filename(r2)))
+
+})
