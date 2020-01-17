@@ -352,7 +352,7 @@ setMethod(
                         showSimilar, drv, conn) {
 
     # dots <- enquos(...)
-    browser(expr = exists("rrrrCache"))
+    browser(expr = exists("._Cache_1"))
     if (!is.null(list(...)$objects)) {
       message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
     }
@@ -531,7 +531,7 @@ setMethod(
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
-        browser(expr = exists("kkkk"))
+        browser(expr = exists("._Cache_2"))
         #message("Retrieving file list in cloud folder")
         #gdriveLs <- retry(quote(drive_ls(path = as_id(cloudFolderID), pattern = outputHash)))
         gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = outputHash)))
@@ -547,7 +547,7 @@ setMethod(
           #   needDisconnect <- TRUE
           #   on.exit(try(dbDisconnect(conns[[tries - 1]]), silent = TRUE), add = TRUE)
           # }
-          browser(expr = exists("iiii"))
+          browser(expr = exists("._Cache_3"))
           localTags <- if (tries == 1) {
             showCache(repo, drv = drv, conn = conn, verboseMessaging = FALSE) # This is noisy
           } else {
@@ -565,7 +565,7 @@ setMethod(
         fullCacheTableForObj <- isInRepo
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
         if (NROW(isInRepo) > 0) {
-          browser(expr = exists("uuuu"))
+          browser(expr = exists("._Cache_4"))
           cacheRepo <- repo
           if (getOption("reproducible.useDBI", TRUE)) {
             if (tries > 1) {
@@ -597,7 +597,7 @@ setMethod(
       needFindByTags <- identical("devMode", useCache) &&
         NROW(isInRepo) == 0
       if (identical("devMode", useCache) && NROW(isInRepo) == 0) {
-        browser(expr = exists("llll"))
+        browser(expr = exists("._Cache_5"))
         devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
         outputHash <- devModeOut$outputHash
         isInRepo <- devModeOut$isInRepo
@@ -627,7 +627,7 @@ setMethod(
         lastEntry <- max(isInRepo$createdDate)
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
-          browser(expr = exists("nnnn"))
+          browser(expr = exists("._Cache_6"))
           objSize <- if (getOption("reproducible.useDBI", TRUE)) {
             as.numeric(tail(fullCacheTableForObj[["tagValue"]][
               fullCacheTableForObj$tagKey == "file.size"], 1))
@@ -647,7 +647,7 @@ setMethod(
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...))
-          browser(expr = exists("bbbb"))
+          browser(expr = exists("._Cache_7"))
           if (is(output, "try-error")) {
             cID <- gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
             stop("Error in trying to recover cacheID: ", cID,
@@ -664,7 +664,7 @@ setMethod(
         }
       } else {
         # find similar -- in progress
-        browser(expr = exists("kkkk"))
+        browser(expr = exists("._Cache_8"))
 
         if (!is.null(showSimilar)) { # TODO: Needs testing
           if (!isFALSE(showSimilar)) {
@@ -678,7 +678,7 @@ setMethod(
 
       .CacheIsNew <- TRUE
       if (useCloud) {
-        browser(expr = exists("kkkk"))
+        browser(expr = exists("._Cache_9"))
         # Here, download cloud copy to local folder, skip the running of FUN
         newFileName <- CacheStoredFile(cacheRepo, outputHash) # paste0(outputHash,".rda")
         isInCloud <- gsub(gdriveLs$name,
@@ -743,7 +743,7 @@ setMethod(
         stop("attributes are not correct 5")
 
       if (sideEffect != FALSE) {
-        browser(expr = exists("sideE"))
+        browser(expr = exists("._Cache_9"))
         output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
                                       makeCopy, quick)
       }
@@ -767,7 +767,7 @@ setMethod(
         otherFns <- otherFns[!alreadyIn]
 
       if (!getOption("reproducible.useDBI", TRUE)) {
-        browser(expr = exists("ffff"))
+        browser(expr = exists("._Cache_10"))
         outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
         if (outputToSaveIsList) {
           rasters <- unlist(lapply(outputToSave, is, "Raster"))
@@ -880,12 +880,12 @@ setMethod(
         if (otsObjSize > 1e7)
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
         if (getOption("reproducible.useDBI", TRUE)) {
-          browser(expr = exists("ffff"))
+          browser(expr = exists("._Cache_11"))
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                                       conn = conn, obj = outputToSave, cacheId = outputHash)
         } else {
           while (written >= 0) {
-            browser(expr = exists("gggg"))
+            browser(expr = exists("._Cache_12"))
             saved <- suppressWarnings(try(silent = TRUE,
                                           saveToLocalRepo(
                                             outputToSave,
@@ -935,7 +935,7 @@ setMethod(
 
 #' @keywords internal
 .loadFromLocalRepoMem2 <- function(md5hash, repoDir, ...) {
-  browser(expr = exists("eeee"))
+  browser(expr = exists("._loadFromLocalRepoMem2_1"))
   if (getOption("reproducible.useDBI", TRUE)) {
     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
   } else {
@@ -1039,7 +1039,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL),
                         cacheId) {
   counter <- 0
-  browser(expr = exists("mmmm"))
+  browser(expr = exists("._writeFuture_1"))
   if (!CacheIsACache(cachePath = cacheRepo, drv = drv, conn = conn)) {
     stop("That cacheRepo does not exist")
   }
@@ -1091,7 +1091,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   isPipe <- isTRUE(!is.null(modifiedDots$._pipe))
   originalDots <- modifiedDots
 
-  browser(expr = exists("rrrrCache"))
+  browser(expr = exists("._fnCleanup_1"))
   # If passed with 'quote'
   if (!is.function(FUN)) {
     parsedFun <- parse(text = FUN)
@@ -1217,7 +1217,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
       }
     }
   }
-  browser(expr = exists("wwww"))
+  browser(expr = exists("._fnCleanup_2"))
   return(append(fnDetails, list(originalDots = originalDots, FUN = FUN, isPipe = isPipe,
                                 modifiedDots = modifiedDots, isDoCall = isDoCall,
                                 formalArgs = forms)))
@@ -1313,7 +1313,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   if (isDevMode) {
     showSimilar <- 1
   }
-  browser(expr = exists("kkkk")) # deal with tag
+  browser(expr = exists("._findSimilar_1"))
+  # deal with tag
   userTags2 <- .getOtherFnNamesAndTags(scalls = scalls)
   userTags2 <- c(userTags2, paste("preDigest", names(preDigestUnlistTrunc),
                                   preDigestUnlistTrunc, sep = ":"))
@@ -1603,7 +1604,7 @@ getCacheRepos <- function(cacheRepo, modifiedDots) {
 
 devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose,
                        isInRepo, outputHash) {
-  browser(expr = exists("llll"))
+  browser(expr = exists("._devModeFn1_1"))
   userTags <- gsub(".*:(.*)", "\\1", userTags)
   isInRepoAlt <- localTags[localTags[[.cacheTableTagColName("tag")]] %in% userTags, , drop = FALSE]
   data.table::setDT(isInRepoAlt)
@@ -1620,7 +1621,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
                           ")"),
                    newLocalTags[["tagKey"]])
     localTagsAlt <- newLocalTags[!tags1,]
-    browser(expr = exists("kkkk"))
+    browser(expr = exists("._devModeFn1_2"))
 
     if (all(localTagsAlt[[.cacheTableTagColName("tag")]] %in% userTags)) {
       mess <- capture.output(type = "output", {
