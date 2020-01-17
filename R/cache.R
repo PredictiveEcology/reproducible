@@ -352,7 +352,7 @@ setMethod(
                         cacheId, useCache,
                         showSimilar, drv, conn) {
 
-    dots <- enquos(...)
+    # dots <- enquos(...)
     browser(expr = exists("rrrrCache"))
     if (!is.null(list(...)$objects)) {
       message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
@@ -703,9 +703,10 @@ setMethod(
         if (fnDetails$isPipe) {
           output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
         } else {
-          theCall <- expr(FUN(!!!dots))
-          output <- eval_tidy(theCall)
-          # output <- do.call(FUN, lapply(list(...), eval_tidy)) #FUN(...)
+          # theCall <- expr(FUN(!!!dots))
+          # output <- eval_tidy(theCall)
+          # output <- do.call(FUN, lapply(list(...), eval_tidy)) #
+          output <- FUN(...)
         }
       }
 
