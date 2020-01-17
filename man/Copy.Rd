@@ -40,6 +40,9 @@ file backing them.}
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},
 or an existing \linkS4class{DBIConnection}
 object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
 \description{
 When copying environments and all the objects contained within them, there are

@@ -33,6 +33,7 @@ tempdir2 <- function(sub) {
 #' @author Eliot McIntire
 #' @export
 #' @importFrom data.table copy
+#' @inheritParams Cache
 #' @rdname Copy
 #' @seealso \code{\link{.robustDigest}}
 #'
