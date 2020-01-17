@@ -313,7 +313,6 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom methods formalArgs
 #' @importFrom tools file_path_sans_ext
 #' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
-#' @importFrom rlang enquos expr
 #' @rdname cache
 #'
 #' @example inst/examples/example_Cache.R
@@ -705,7 +704,6 @@ setMethod(
         } else {
           # theCall <- expr(FUN(!!!dots))
           # output <- eval_tidy(theCall)
-          # output <- do.call(FUN, lapply(list(...), eval_tidy)) #
           output <- FUN(...)
         }
       }
