@@ -172,7 +172,8 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   return(invisible())
 }
 
-cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, drv = RSQLite::SQLite()) {
+cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, drv = RSQLite::SQLite(),
+                                       conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("kkkk"))
   rasterFilename <- Filenames(output)
   if (!is.null(rasterFilename) && length(rasterFilename) > 0) {
