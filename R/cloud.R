@@ -160,7 +160,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudF
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   browser(expr = exists("kkkk"))
   rasterFilename <- Filenames(obj)
-  if (!is.null(rasterFilename) && length(rasterFilename) > 0) {
+  if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
     allRelevantFiles <- sapply(rasterFilename, function(file) {
       unique(dir(dirname(file), pattern = paste(collapse = "|", file_path_sans_ext(basename(file))),
                  full.names = TRUE))
@@ -176,7 +176,7 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, drv = R
                                        conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("kkkk"))
   rasterFilename <- Filenames(output)
-  if (!is.null(rasterFilename) && length(rasterFilename) > 0) {
+  if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
     gdriveLs2 <- NULL
     cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
     checkPath(cacheRepoRasterDir, create = TRUE)
@@ -212,9 +212,15 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, drv = R
   output
 }
 
+#' @importFrom rlang inherits_only
 isOrHasRaster <- function(obj) {
   rasters <- if (is(obj, "environment")) {
-    unlist(lapply(mget(ls(obj), envir = obj), function(x) isOrHasRaster(x)))
+    if (inherits_only(obj, "environment")) {
+      unlist(lapply(mget(ls(obj), envir = obj), function(x) isOrHasRaster(x)))
+    } else {
+      tryCatch(unlist(lapply(mget(ls(obj), envir = obj@.xData),
+                        function(x) isOrHasRaster(x))), error = function(x) FALSE)
+    }
   } else if (is.list(obj)) {
     unlist(lapply(obj, function(x) isOrHasRaster(x)))
   } else {
