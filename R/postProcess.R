@@ -2,7 +2,8 @@
 #'
 #' @export
 #' @param x  An object of postProcessing, e.g., \code{spatialObjects}.
-#'           See individual methods.
+#'           See individual methods. This can be provided as a
+#'           \code{rlang::quosure} or a normal R object.
 #' @importClassesFrom quickPlot spatialObjects
 #' @importFrom utils capture.output
 #' @importFrom raster buffer

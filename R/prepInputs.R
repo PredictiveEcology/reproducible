@@ -325,16 +325,19 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
     #  This rlang stuff is a way to pass through objects without evaluating them
 
-    argList <- append(list(x = x, filename1 = out$targetFilePath,
-                           overwrite = overwrite,
-                           destinationPath = out$destinationPath,
-                           useCache = useCache), # passed into postProcess
-                      out$dots)
-    rdal <- .robustDigest(argList)
+    # argList <- append(list(x = x, filename1 = out$targetFilePath,
+    #                        overwrite = overwrite,
+    #                        destinationPath = out$destinationPath,
+    #                        useCache = useCache), # passed into postProcess
+    #                   out$dots)
+    # rdal <- .robustDigest(argList)
     browser(expr = exists("._prepInputs_2"))
 
+    # make quosure out of all spatial objects and x
     spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is (x, "sf"))
     out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
+    xquo <- rlang::quo(x)
+
     #argList$x <- rlang::quo(x)
     # x <- Cache(.Cache, quote(do.call(postProcess, argList)), envir = environment(),
     #            robustDigest = .robustDigest(argList))
@@ -344,12 +347,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     #x <- Cache(do.call, postProcess, argList, useCache = useCache # used here
     #)
     x <- Cache(
-      do.call, postProcess, append(list(x = rlang::quo(x), filename1 = out$targetFilePath,
-                                                 overwrite = overwrite,
-                                                 destinationPath = out$destinationPath,
-                                                 useCache = useCache, digestPostProcessArgs = rdal), # passed into postProcess
-                                            out$dots),
-               useCache = useCache  # used here
+      do.call, postProcess, append(list(x = xquo, filename1 = out$targetFilePath,
+                                        overwrite = overwrite,
+                                        destinationPath = out$destinationPath,
+                                        useCache = useCache), # passed into postProcess
+                                   out$dots),
+      useCache = useCache  # used here
     )
   }
 
