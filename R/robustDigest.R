@@ -111,12 +111,16 @@ setGeneric(".robustDigest", function(object, .objects,
 })
 
 #' @rdname robustDigest
+#' @importFrom rlang get_expr
 #' @export
 setMethod(
   ".robustDigest",
   signature = "ANY",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
+    if (is(object, "quosure")) # can't get this class from rlang via importClass rlang quosure
+      object <- get_expr(object)
+
     # passByReference -- while doing pass by reference attribute setting is faster, is
     #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
     object1 <- .removeCacheAtts(object, passByReference = FALSE)
@@ -150,6 +154,8 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     .robustDigestFormatOnly(object, algo = algo)
 })
+
+
 
 #' @rdname robustDigest
 #' @export

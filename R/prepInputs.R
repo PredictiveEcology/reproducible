@@ -252,6 +252,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
 
   # Download, Checksum, Extract from Archive
+  browser(expr = exists("._prepInputs_1"))
   message("Running preProcess")
   out <- preProcess(
     targetFile = targetFile,
@@ -323,14 +324,32 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
     # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
     #  This rlang stuff is a way to pass through objects without evaluating them
+
+    argList <- append(list(x = x, filename1 = out$targetFilePath,
+                           overwrite = overwrite,
+                           destinationPath = out$destinationPath,
+                           useCache = useCache), # passed into postProcess
+                      out$dots)
+    rdal <- .robustDigest(argList)
+    browser(expr = exists("._prepInputs_2"))
+
     spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is (x, "sf"))
     out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
-    x <- Cache(do.call, postProcess, append(list(x = rlang::quo(x), filename1 = out$targetFilePath,
+    #argList$x <- rlang::quo(x)
+    # x <- Cache(.Cache, quote(do.call(postProcess, argList)), envir = environment(),
+    #            robustDigest = .robustDigest(argList))
+    #env <- environment()
+    #x <- Cache(.Cache, quote(do.call(postProcess, argList)), envir = env,
+    #           robustDigest = rdal, useCache = useCache)
+    #x <- Cache(do.call, postProcess, argList, useCache = useCache # used here
+    #)
+    x <- Cache(
+      do.call, postProcess, append(list(x = rlang::quo(x), filename1 = out$targetFilePath,
                                                  overwrite = overwrite,
                                                  destinationPath = out$destinationPath,
-                                                 useCache = useCache), # passed into postProcess
-                                  out$dots),
-               useCache = useCache # used here
+                                                 useCache = useCache, digestPostProcessArgs = rdal), # passed into postProcess
+                                            out$dots),
+               useCache = useCache  # used here
     )
   }
 
@@ -1032,3 +1051,9 @@ missingUnrarMess <- "The archive is a 'rar' archive; your system does not have u
 knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
 knownSystemArchiveExtensions <- c("rar", "7z")
 knownArchiveExtensions <- c(knownInternalArchiveExtensions, knownSystemArchiveExtensions)
+
+
+.Cache <- function(quote, envir, robustDigest) {
+  browser(expr = exists("._.Cache_1"))
+  eval(quote, envir = envir)
+}

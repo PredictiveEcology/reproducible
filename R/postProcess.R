@@ -23,6 +23,7 @@ postProcess.default <- function(x, ...) {
 
 #' @importFrom rlang eval_tidy
 postProcess.quosure <- function(x, ...) {
+  browser(expr = exists("._postProcess.quosure_1"))
   postProcess(rlang::eval_tidy(x), ...)
 }
 
@@ -151,8 +152,9 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  x1 <- postProcessAllSpatial(x = x, studyArea = studyArea,
-                             rasterToMatch = rasterToMatch, useCache = useCache,
+  browser(expr = exists("._postProcess.spatialobjects_1"))
+  x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
+                             rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
                              filename1 = filename1, filename2 = filename2,
                              useSAcrs = useSAcrs, overwrite = overwrite, ...)
   return(x1)
