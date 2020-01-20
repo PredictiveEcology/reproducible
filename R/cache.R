@@ -636,7 +636,9 @@ setMethod(
           }
           class(objSize) <- "object_size"
           if (objSize > 1e6)
-            message(crayon::blue(paste0("  ...(Object to retrieve is large: ",
+            message(crayon::blue(paste0("  ...(Object to retrieve (",
+                                        basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
+                                        ") is large: ",
                                         format(objSize, units = "auto"), ")")))
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
                                      lastOne = lastOne, cacheRepo = cacheRepo,
@@ -879,7 +881,8 @@ setMethod(
         otsObjSize <- as.numeric(otsObjSize)
         class(otsObjSize) <- "object_size"
         if (otsObjSize > 1e7)
-          message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
+          message("Saving large object (cacheId: ", outputHash, ") to Cache: ",
+                  format(otsObjSize, units = "auto"))
         if (getOption("reproducible.useDBI", TRUE)) {
           browser(expr = exists("._Cache_13"))
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,

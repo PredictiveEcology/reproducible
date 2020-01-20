@@ -1055,8 +1055,3 @@ knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
 knownSystemArchiveExtensions <- c("rar", "7z")
 knownArchiveExtensions <- c(knownInternalArchiveExtensions, knownSystemArchiveExtensions)
 
-
-.Cache <- function(quote, envir, robustDigest) {
-  browser(expr = exists("._.Cache_1"))
-  eval(quote, envir = envir)
-}
