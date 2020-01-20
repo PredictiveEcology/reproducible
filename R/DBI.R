@@ -44,6 +44,7 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 #' @importFrom qs qsave
 saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId) {
+  browser(expr = exists("._saveToCache_1"))
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
     on.exit(dbDisconnect(conn))
@@ -117,6 +118,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   # The above can replace this
   fts <- CacheStoredFile(cachePath, cacheId)
 
+  browser(expr = exists("._saveToCache_2"))
   if (getOption("reproducible.cacheSaveFormat", "qs") == "qs")
     fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
   else {

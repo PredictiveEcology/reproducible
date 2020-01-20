@@ -697,6 +697,7 @@ setMethod(
       }
 
       # check that it didn't come from cloud or failed to find complete cloud (i.e., output is NULL)
+      browser(expr = exists("._Cache_10"))
       if (!exists("output", inherits = FALSE) || is.null(output)) {
         # Run the FUN
         if (fnDetails$isPipe) {
@@ -743,7 +744,7 @@ setMethod(
         stop("attributes are not correct 5")
 
       if (sideEffect != FALSE) {
-        browser(expr = exists("._Cache_9"))
+        browser(expr = exists("._Cache_11"))
         output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
                                       makeCopy, quick)
       }
@@ -767,7 +768,7 @@ setMethod(
         otherFns <- otherFns[!alreadyIn]
 
       if (!getOption("reproducible.useDBI", TRUE)) {
-        browser(expr = exists("._Cache_10"))
+        browser(expr = exists("._Cache_12"))
         outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
         if (outputToSaveIsList) {
           rasters <- unlist(lapply(outputToSave, is, "Raster"))
@@ -880,12 +881,12 @@ setMethod(
         if (otsObjSize > 1e7)
           message("Saving large object to Cache: ", format(otsObjSize, units = "auto"))
         if (getOption("reproducible.useDBI", TRUE)) {
-          browser(expr = exists("._Cache_11"))
+          browser(expr = exists("._Cache_13"))
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                                       conn = conn, obj = outputToSave, cacheId = outputHash)
         } else {
           while (written >= 0) {
-            browser(expr = exists("._Cache_12"))
+            browser(expr = exists("._Cache_14"))
             saved <- suppressWarnings(try(silent = TRUE,
                                           saveToLocalRepo(
                                             outputToSave,
