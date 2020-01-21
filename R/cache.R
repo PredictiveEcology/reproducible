@@ -305,8 +305,10 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom archivist createLocalRepo addTagsRepo
+#' @importFrom DBI SQL
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
+#' @importFrom glue glue_sql double_quote
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
@@ -550,9 +552,11 @@ setMethod(
               conn <- dbConnectAll(drv, cachePath = repo)
             }
           }
-          res <- dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam
-                                          , "\" where \"cacheId\" = $1"))
-          dbBind(res, list(outputHash))
+          qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+                                dbTabName = dbTabNam,
+                                outputHash = outputHash,
+                                .con = conn)
+          res <- dbSendQuery(conn, qry)
           isInRepo <- setDT(dbFetch(res))
           dbClearResult(res)
         } else {

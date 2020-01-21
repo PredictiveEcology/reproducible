@@ -43,6 +43,7 @@ Imports:
     fpCompare,
     gdalUtils,
     git2r (>= 0.18),
+    glue,
     googledrive,
     httr,
     magrittr,

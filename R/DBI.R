@@ -181,10 +181,18 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
     on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
+  query <- glue::glue_sql("DELETE FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" IN ({cacheId*})",
+                        dbTabName = CacheDBTableName(cachePath, drv),
+                        cacheId = cacheId,
+                        .con = conn)
+  res <- dbSendQuery(conn, query)
 
-  res <- dbSendStatement(conn, query)
-  dbBind(res, list(cacheId))
+  if (FALSE)   { # this is the "unsafe" version
+    query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
+    res <- dbSendStatement(conn, query)
+    dbBind(res, list(cacheId))
+  }
+
   dbClearResult(res)
 
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))

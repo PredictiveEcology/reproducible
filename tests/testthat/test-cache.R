@@ -884,7 +884,7 @@ test_that("test cc", {
   b <- showCache(x = tmpCache) # most recent is gone
   expect_true(length(unique(b[[.cacheTableHashColName()]])) == 3)
 
-  #jjjj <<- 1
+  # ._rmFromCache_1 <<- 1
   cc(thisTime, ask = FALSE, x = tmpCache)
   d <- showCache(x = tmpCache) # all those after this time gone, i.e., only 1 left
   expect_true(length(unique(d[[.cacheTableHashColName()]])) == 1)
