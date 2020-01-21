@@ -542,22 +542,18 @@ setMethod(
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
         if (getOption("reproducible.useDBI", TRUE)) {
-          # if (!identical(normPath(repo), dirname(normPath(slot(conns[[tries - 1]], "dbname"))))) {
-          #   conns[[tries - 1]] <- dbConnectAll(drv, cachePath = repo)
-          #   needDisconnect <- TRUE
-          #   on.exit(try(dbDisconnect(conns[[tries - 1]]), silent = TRUE), add = TRUE)
-          # }
           browser(expr = exists("._Cache_3"))
-          localTags <- if (tries == 1) {
-            showCache(repo, drv = drv, conn = conn, verboseMessaging = FALSE) # This is noisy
-          } else {
-            showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
+          dbTabNam <- CacheDBTableName(repo, drv = drv)
+          if (getOption("reproducible.useDBI", TRUE)) {
+            if (tries > 1) {
+              dbDisconnect(conn)
+              conn <- dbConnectAll(drv, cachePath = repo)
+            }
           }
-          isInRepo <- if (NROW(localTags)) {
-            localTags[outputHash, on = "cacheId", nomatch = NULL]
-          } else {
-            .emptyCacheTable
-          }
+          res <- dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam
+                                          , "\" where cacheId = \"",outputHash,"\""))
+          isInRepo <- setDT(dbFetch(res))
+          dbClearResult(res)
         } else {
           localTags <- getLocalTags(repo)
           isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
@@ -567,21 +563,8 @@ setMethod(
         if (NROW(isInRepo) > 0) {
           browser(expr = exists("._Cache_4"))
           cacheRepo <- repo
-          if (getOption("reproducible.useDBI", TRUE)) {
-            if (tries > 1) {
-                dbDisconnect(conn)
-                conn <- dbConnectAll(drv, cachePath = cacheRepo)
-                # on.exit(dbDisconnect(conn), add = TRUE) # already in the on.exit above
-            }
-            #   rrr <- lapply(length(conns) - 1, function(n) try(dbDisconnect(conns[[n]]), silent = TRUE))
-            #   conn <- conns[[tries - 1]]
-          }
           break
         }
-        # if (needDisconnect) try(dbDisconnect(conns[[tries - 1]]), silent = TRUE)
-        # if (getOption("reproducible.useDBI", TRUE)) {
-        #   conns[[tries]] <- conns[[tries - 1]]
-        # }
         tries <- tries + 1
       }
       # rm(conns)
@@ -598,6 +581,9 @@ setMethod(
         NROW(isInRepo) == 0
       if (identical("devMode", useCache) && NROW(isInRepo) == 0) {
         browser(expr = exists("._Cache_5"))
+        # It will not have the "localTags" object because of "direct db access" added Jan 20 2020
+        if (!exists("localTags", inherits = FALSE)) #
+          localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
         devModeOut <- devModeFn1(localTags, userTags, scalls, preDigestUnlistTrunc, useCache, verbose, isInRepo, outputHash)
         outputHash <- devModeOut$outputHash
         isInRepo <- devModeOut$isInRepo
@@ -668,6 +654,8 @@ setMethod(
 
         if (!is.null(showSimilar)) { # TODO: Needs testing
           if (!isFALSE(showSimilar)) {
+            if (!exists("localTags", inherits = FALSE)) #
+              localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
                          userTags, useCache = useCache)
           }
