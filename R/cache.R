@@ -800,8 +800,8 @@ setMethod(
               stop("There is an unknown error 04")
           }
           # attr(outputToSave, "function") <- attr(output, "function")
-
-          # output <- outputToSave
+          # For Rasters, there will be a new name if file-backed ... it must be conveyed to output too
+          output <- outputToSave
         }
       }
       if (length(debugCache)) {
