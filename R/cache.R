@@ -738,8 +738,8 @@ setMethod(
       if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
         stop("attributes are not correct 5")
 
+      browser(expr = exists("._Cache_11"))
       if (sideEffect != FALSE) {
-        browser(expr = exists("._Cache_11"))
         output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
                                       makeCopy, quick)
       }
@@ -752,7 +752,7 @@ setMethod(
       }
       # Can make new methods by class to add tags to outputs
       if (getOption("reproducible.useDBI", TRUE)) {
-        output <- dealWithRasters(output, cacheRepo, drv)
+        output <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
       }
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
 

@@ -242,7 +242,9 @@
 
 .getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
-                         algo, preDigest, startCacheTime, drv = RSQLite::SQLite(), conn, ...) {
+                         algo, preDigest, startCacheTime,
+                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                         conn = getOption("reproducible.conn", NULL), ...) {
 
   if (verbose > 1) {
     startLoadTime <- Sys.time()

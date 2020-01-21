@@ -8,7 +8,13 @@
 \usage{
 .prepareOutput(object, cacheRepo, ...)
 
-\S4method{.prepareOutput}{RasterLayer}(object, cacheRepo, drv = RSQLite::SQLite(), ...)
+\S4method{.prepareOutput}{RasterLayer}(
+  object,
+  cacheRepo,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
 
 \S4method{.prepareOutput}{ANY}(object, cacheRepo, ...)
 }
@@ -23,6 +29,9 @@ This is optional if \code{Cache} is used inside a SpaDES module.}
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},
 or an existing \linkS4class{DBIConnection}
 object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
 \value{
 The object, modified

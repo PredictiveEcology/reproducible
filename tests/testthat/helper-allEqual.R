@@ -116,8 +116,8 @@ testOnExit <- function(testInitOut) {
   unlink(testInitOut$tmpCache, recursive = TRUE, force = TRUE)
   unlink(testInitOut$tmpdir, recursive = TRUE, force = TRUE)
 
-  if (grepl("Pq", class(getOption("reproducible.conn")))) {
-    tabs <- DBI::dbListTables(getOption("reproducible.conn"))
+  if (grepl("Pq", class(getOption("reproducible.conn", NULL)))) {
+    tabs <- DBI::dbListTables(conn = getOption("reproducible.conn", NULL))
     tab1 <- grep(value = TRUE, tabs, pattern =
            paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
                                    basename2(testInitOut$tmpCache))))
@@ -125,9 +125,9 @@ testOnExit <- function(testInitOut) {
                   paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
                                           basename2(testInitOut$tmpdir))))
     if (length(tab1))
-      try(DBI::dbRemoveTable(getOption("reproducible.conn"), tab1))
+      try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab1))
     if (length(tab2))
-      try(DBI::dbRemoveTable(getOption("reproducible.conn"), tab2))
+      try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
   }
 
   lapply(testInitOut$libs, function(lib) {

@@ -120,7 +120,9 @@ setMethod("Copy",
 #' @inheritParams DBI::dbConnect
 setMethod("Copy",
           signature(object = "Raster"),
-          definition = function(object, filebackedDir, drv = RSQLite::SQLite(), conn = NULL, ...) {
+          definition = function(object, filebackedDir,
+                                drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                conn = getOption("reproducible.conn", NULL), ...) {
             if (missing(filebackedDir)) {
               filebackedDir <- tempdir2(rndstr(1, 8))
             }

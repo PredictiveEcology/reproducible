@@ -97,7 +97,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 #' @importFrom googledrive drive_download
 #' @inheritParams Cache
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
-                          drv = RSQLite::SQLite(),
+                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("kkkk"))
   message("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
@@ -172,7 +172,8 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   return(invisible())
 }
 
-cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID, drv = RSQLite::SQLite(),
+cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
+                                       drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                        conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("kkkk"))
   rasterFilename <- Filenames(output)

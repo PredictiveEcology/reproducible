@@ -207,7 +207,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     #   if (isFALSE(create)) {
     #     return(invisible())
     #   }
-    args <- append(args, list(dbname = CacheDBFile(cachePath, drv, conn)))
+    args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }
@@ -383,7 +383,7 @@ CacheDBTableName <- function(cachePath,
 CacheIsACache <- function(cachePath, create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
-  browser(expr = exists("wwww"))
+  browser(expr = exists("._CacheIsACache"))
   if (getOption('reproducible.useDBI', TRUE)) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -405,7 +405,7 @@ CacheIsACache <- function(cachePath, create = FALSE,
   if (getOption('reproducible.useDBI', TRUE)) {
     if (isFALSE(ret) && isTRUE(create)) {
       if (grepl(type, "Pq")) {
-        file.create(CacheDBFile(cachePath, drv = drv, conn))
+        file.create(CacheDBFile(cachePath, drv = drv, conn = conn))
       }
     }
   }
