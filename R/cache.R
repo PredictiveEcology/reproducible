@@ -551,7 +551,8 @@ setMethod(
             }
           }
           res <- dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam
-                                          , "\" where \"cacheId\" = \"",outputHash,"\""))
+                                          , "\" where \"cacheId\" = $1"))
+          dbBind(res, list(outputHash))
           isInRepo <- setDT(dbFetch(res))
           dbClearResult(res)
         } else {
