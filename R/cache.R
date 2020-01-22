@@ -305,8 +305,10 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPolygonsDataFrame
 #' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
 #' @importFrom archivist createLocalRepo addTagsRepo
+#' @importFrom DBI SQL
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
+#' @importFrom glue glue_sql double_quote
 #' @importFrom magrittr %>%
 #' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
@@ -550,9 +552,11 @@ setMethod(
               conn <- dbConnectAll(drv, cachePath = repo)
             }
           }
-          res <- dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam
-                                          , "\" where \"cacheId\" = $1"))
-          dbBind(res, list(outputHash))
+          qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
+                                dbTabName = dbTabNam,
+                                outputHash = outputHash,
+                                .con = conn)
+          res <- dbSendQuery(conn, qry)
           isInRepo <- setDT(dbFetch(res))
           dbClearResult(res)
         } else {
@@ -734,8 +738,8 @@ setMethod(
       if (!identical(attr(output, "tags"), paste0("cacheId:", outputHash)))
         stop("attributes are not correct 5")
 
+      browser(expr = exists("._Cache_11"))
       if (sideEffect != FALSE) {
-        browser(expr = exists("._Cache_11"))
         output <- .CacheSideEffectFn2(sideEffect, cacheRepo, priorRepo, algo, output,
                                       makeCopy, quick)
       }
@@ -748,7 +752,7 @@ setMethod(
       }
       # Can make new methods by class to add tags to outputs
       if (getOption("reproducible.useDBI", TRUE)) {
-        output <- dealWithRasters(output, cacheRepo, drv)
+        output <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
       }
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
 
@@ -796,8 +800,8 @@ setMethod(
               stop("There is an unknown error 04")
           }
           # attr(outputToSave, "function") <- attr(output, "function")
-
-          # output <- outputToSave
+          # For Rasters, there will be a new name if file-backed ... it must be conveyed to output too
+          output <- outputToSave
         }
       }
       if (length(debugCache)) {

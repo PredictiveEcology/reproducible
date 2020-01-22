@@ -181,10 +181,18 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
     on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
+  query <- glue::glue_sql("DELETE FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" IN ({cacheId*})",
+                        dbTabName = CacheDBTableName(cachePath, drv),
+                        cacheId = cacheId,
+                        .con = conn)
+  res <- dbSendQuery(conn, query)
 
-  res <- dbSendStatement(conn, query)
-  dbBind(res, list(cacheId))
+  if (FALSE)   { # this is the "unsafe" version
+    query <- paste0("DELETE FROM \"", CacheDBTableName(cachePath, drv), "\" WHERE \"cacheId\" = $1")
+    res <- dbSendStatement(conn, query)
+    dbBind(res, list(cacheId))
+  }
+
   dbClearResult(res)
 
   unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
@@ -199,7 +207,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     #   if (isFALSE(create)) {
     #     return(invisible())
     #   }
-    args <- append(args, list(dbname = CacheDBFile(cachePath, drv, conn)))
+    args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn)))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }
@@ -375,7 +383,7 @@ CacheDBTableName <- function(cachePath,
 CacheIsACache <- function(cachePath, create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
-  browser(expr = exists("wwww"))
+  browser(expr = exists("._CacheIsACache"))
   if (getOption('reproducible.useDBI', TRUE)) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -397,7 +405,7 @@ CacheIsACache <- function(cachePath, create = FALSE,
   if (getOption('reproducible.useDBI', TRUE)) {
     if (isFALSE(ret) && isTRUE(create)) {
       if (grepl(type, "Pq")) {
-        file.create(CacheDBFile(cachePath, drv = drv, conn))
+        file.create(CacheDBFile(cachePath, drv = drv, conn = conn))
       }
     }
   }

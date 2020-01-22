@@ -844,8 +844,8 @@ test_that("test rm large non-file-backed rasters", {
   skip_on_cran()
   skip_on_travis()
 
-  if (!is.null(getOption("reproducible.conn")))
-    if (!grepl("SQLite", class(getOption("reproducible.conn"))))
+  if (!is.null(getOption("reproducible.conn", NULL)))
+    if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
       skip("This is not for non-SQLite")
 
   testInitOut <- testInit(ask = FALSE, opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
@@ -884,7 +884,7 @@ test_that("test cc", {
   b <- showCache(x = tmpCache) # most recent is gone
   expect_true(length(unique(b[[.cacheTableHashColName()]])) == 3)
 
-  #jjjj <<- 1
+  # ._rmFromCache_1 <<- 1
   cc(thisTime, ask = FALSE, x = tmpCache)
   d <- showCache(x = tmpCache) # all those after this time gone, i.e., only 1 left
   expect_true(length(unique(d[[.cacheTableHashColName()]])) == 1)
@@ -904,7 +904,7 @@ test_that("test pre-creating conn", {
     dbDisconnect(conn)
   }, add = TRUE)
 
-  conn <- dbConnectAll(cachePath = tmpdir)
+  conn <- dbConnectAll(cachePath = tmpdir, conn = NULL)
   ra <- raster(extent(0,10,0,10), vals = sample(1:100))
   rb <- raster(extent(0,10,0,10), vals = sample(1:100))
   r1 <- Cache(writeRaster, ra, filename = tmpfile[1], overwrite = TRUE, cacheRepo = tmpCache)

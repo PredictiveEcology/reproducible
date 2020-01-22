@@ -221,10 +221,11 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
 setMethod(
   ".prepareOutput",
   signature = "RasterLayer",
-  definition = function(object, cacheRepo, drv = RSQLite::SQLite(), ...) {
+  definition = function(object, cacheRepo, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        conn = getOption("reproducible.conn", NULL), ...) {
     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
     #  overwrite is ok
-    .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, ...)
+    .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
 })
 
 #' @export
@@ -611,9 +612,10 @@ setMethod(
 #' r # now in "rasters" subfolder of tempdir()
 #'
 .prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
-                                     drv = RSQLite::SQLite(), conn = getOption("reproducible.conn", NULL),
+                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                     conn = getOption("reproducible.conn", NULL),
                                      ...) {
-  browser(expr = exists("pfbr"))
+  browser(expr = exists("._prepareFieBackedRaster_1"))
   isRasterLayer <- TRUE
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
@@ -738,6 +740,7 @@ if (any(saveFilename != curFilename)) {
           copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
         } else {
           saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
+            browser(expr = exists("._prepareFileBackedRaster_2"))
             # change filename if it already exists
               if (file.exists(saveFilename2[x])) {
                 saveFilename2[x] <- nextNumericName(saveFilename2[x])
@@ -1121,7 +1124,7 @@ nextNumericName <- function(string) {
 
 
 
-dealWithRasters <- function(obj, cachePath, drv) {
+dealWithRasters <- function(obj, cachePath, drv, conn) {
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
   if (outputToSaveIsList) {
     rasters <- unlist(lapply(obj, is, "Raster"))
@@ -1133,10 +1136,10 @@ dealWithRasters <- function(obj, cachePath, drv) {
     atts <- attributes(obj)
     if (outputToSaveIsList) {
       obj[rasters] <- lapply(obj[rasters], function(x)
-        .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv))
+        .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv, conn = conn))
     } else {
       obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
-                                      overwrite = FALSE, drv = drv)
+                                      overwrite = FALSE, drv = drv, conn = conn)
     }
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
