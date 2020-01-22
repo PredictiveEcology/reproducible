@@ -845,7 +845,7 @@ test_that("test rm large non-file-backed rasters", {
   skip_on_travis()
 
   if (!is.null(getOption("reproducible.conn", NULL)))
-    if (!grepl("SQLite", class(conn = getOption("reproducible.conn", NULL))))
+    if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
       skip("This is not for non-SQLite")
 
   testInitOut <- testInit(ask = FALSE, opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
