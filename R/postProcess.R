@@ -1517,8 +1517,7 @@ bufferWarningSuppress <- function(warn, objectName, x1, bufferFn) {
     message("There are errors with ", objectName,
             ". Couldn't fix them with ",bufferFn,"(..., width = 0)")
   } else {
-    x <- x1
     message("  Some or all of the errors fixed.")
   }
-
+  x1
 }
