@@ -2062,3 +2062,24 @@ test_that("Test of using future and progress indicator for lrg files on Google D
     }
   }
 })
+
+test_that("writeOutputs with non-matching filename2", {
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  r <- raster(extent(0,10,0,10), vals = rnorm(100))
+  r <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
+  warn <- capture_warnings(r1 <- writeOutputs(r, filename2 = tmpfile[2]))
+  expect_true(any(grepl("filename2 file type", warn)))
+  r2 <- raster(filename(r1))
+  vals1 <- r2[]
+  vals2 <- r1[]
+  vals3 <- r[]
+  expect_true(identical(vals1, vals2))
+  expect_true(identical(vals1, vals3))
+  expect_false(identical(normPath(filename(r)), normPath(filename(r1))))
+  expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
+
+})
