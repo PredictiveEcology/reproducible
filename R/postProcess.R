@@ -427,20 +427,8 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
         })
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        warnAboutNotProjected <- startsWith(warn, "Spatial object is not projected; GEOS expects planar coordinates")
-        if (any(warnAboutNotProjected))
-          warn <- warn[!warnAboutNotProjected]
-        if (length(warn))
-          warning(warn)
-
-        if (is(x1, "try-error")) {
-          message("There are errors with ", objectName,
-                  ". Couldn't fix them with raster::buffer(..., width = 0)")
-        } else {
-          x <- x1
-          message("  Some or all of the errors fixed.")
-        }
-
+        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+                              x1 = x1, bufferFn = "raster::buffer")
       } else {
         message("  Found no errors.")
       }
@@ -466,21 +454,8 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
           x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
         })
 
-        # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        warnAboutNotProjected <- startsWith(warn, paste("Spatial object is not projected;",
-                                                        "GEOS expects planar coordinates"))
-        if (any(warnAboutNotProjected))
-          warn <- warn[!warnAboutNotProjected]
-        if (length(warn))
-          warning(warn)
-
-        if (is(x1, "try-error")) {
-          message("There are errors with ", objectName,
-                  ". Couldn't fix them with sf::st_buffer(..., width = 0)")
-        } else {
-          x <- x1
-          message("  Some or all of the errors fixed.")
-        }
+        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+                                   x1 = x1, bufferFn = "sf::st_buffer")
       } else {
         message("  Found no errors.")
       }
@@ -1528,4 +1503,22 @@ useETM <- function(extentToMatch, extentCRS) {
     return(TRUE)
   }
   return(FALSE)
+}
+
+bufferWarningSuppress <- function(warn, objectName, x1, bufferFn) {
+  warnAboutNotProjected <- startsWith(warn, paste("Spatial object is not projected;",
+                                                  "GEOS expects planar coordinates"))
+  if (any(warnAboutNotProjected))
+    warn <- warn[!warnAboutNotProjected]
+  if (length(warn))
+    warning(warn)
+
+  if (is(x1, "try-error")) {
+    message("There are errors with ", objectName,
+            ". Couldn't fix them with ",bufferFn,"(..., width = 0)")
+  } else {
+    x <- x1
+    message("  Some or all of the errors fixed.")
+  }
+
 }
