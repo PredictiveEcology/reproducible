@@ -631,10 +631,34 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
 
         dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+
+        # This will clear the Windows error that sometimes occurs:
+        #  ERROR 1: PROJ: pj_obj_create: Cannot find proj.db ## Eliot Jan 22, 2020
+        if (identical(.Platform[["OS.type"]], "windows")) {
+          oldProjLib <- Sys.getenv("PROJ_LIB")
+          if (!isTRUE(grepl("proj.db", dir(oldProjLib)))) {
+            possNewDir <- dir(file.path(dirname(getOption("gdalUtils_gdalPath")[[1]]$path), "share", "proj"),
+                              recursive = TRUE, pattern = "proj.db", full.names = TRUE)
+            if (length(possNewDir)) {
+              Sys.setenv(PROJ_LIB = dirname(possNewDir))
+              on.exit(add = TRUE, {
+                Sys.setenv(PROJ_LIB = oldProjLib)
+              })
+            }
+          }
+        }
+
+        targCRS <- as.character(targetCRS)
+        if (FALSE){
+          # There is a new-ish warning " +init=epsg:XXXX syntax is deprecated. It might return a CRS with a non-EPSG compliant axis order."
+          #  This next clears all the extraneous stuff after the EPSG... but that may not be correct.
+          #  I think leave it with the warning.
+          targCRS <- gsub(".*(epsg:.[0123456789]*)( ).*", "\\1", targCRS)
+        }
         system(
           paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                  "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
-                 " -t_srs \"", as.character(targetCRS), "\"",
+                 " -t_srs \"", targCRS, "\"",
                  " -multi ", prll,
                  "-ot ", dType,
                  teRas,
