@@ -633,6 +633,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
 
+        browser(expr = exists("._projectInputs_2"))
         # This will clear the Windows error that sometimes occurs:
         #  ERROR 1: PROJ: pj_obj_create: Cannot find proj.db ## Eliot Jan 22, 2020
         if (identical(.Platform[["OS.type"]], "windows")) {
