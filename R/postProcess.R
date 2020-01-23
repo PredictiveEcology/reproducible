@@ -1083,7 +1083,17 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
-      browser()
+      if (tools::file_ext(filename(x)) == "grd") {
+        if (!tools::file_ext(filename2) == "grd") {
+          warning("filename2 file type (",tools::file_ext(filename2),") was not same type (",tools::file_ext(filename(x)),") ",
+                  "as the filename of the raster; ",
+                  "Changing filename2 so that it is ",tools::file_ext(filename(x)))
+          filename2 <- gsub(tools::file_ext(filename2), "grd", filename2)
+        }
+        file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
+                  overwrite = overwrite)
+      }
+
       file.copy(filename(x), filename2, overwrite = overwrite)
       x@file@name <- filename2
       if (dots$datatype != dataType(x)) {
