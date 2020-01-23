@@ -1361,6 +1361,7 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
+  browser(expr = exists("._postProcessAllSpatial_1"))
 
   if (!is.null(studyArea))
     if (is(studyArea, "quosure"))
@@ -1430,6 +1431,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       }
     }
 
+    browser(expr = exists("._postProcess.spatialobjects_2"))
     x <- Cache(cropInputs, x = x, studyArea = studyArea,
                extentToMatch = extRTM,
                extentCRS = crsRTM,
@@ -1440,6 +1442,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     }
 
     # cropInputs may have returned NULL if they don't overlap
+    browser(expr = exists("._postProcess.spatialobjects_3"))
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
       x <- fixErrors(x = x, objectName = objectName,
@@ -1451,6 +1454,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
                                  targetCRS)
 
+      browser(expr = exists("._postProcess.spatialobjects_4"))
       x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
                  rasterToMatch = rasterToMatch, useCache = useCache, ...)
       # may need to fix again
@@ -1460,6 +1464,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # maskInputs
       ##################################
+      browser(expr = exists("._postProcess.spatialobjects_5"))
       x <- Cache(maskInputs, x = x, studyArea = studyArea,
                  rasterToMatch = rasterToMatch, useCache = useCache, ...)
 
@@ -1474,6 +1479,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       x <- do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
                                              overwrite = overwrite), dots))
 
+      browser(expr = exists("._postProcess.spatialobjects_6"))
       if (dir.exists(bigRastersTmpFolder())) {
         ## Delete gdalwarp results in temp
         unlink(bigRastersTmpFolder(), recursive = TRUE)
