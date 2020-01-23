@@ -7,7 +7,8 @@ version 1.0.0
 
 * This version is not backwards-compatible out of the box. To maintain backwards compatibility, set: `options("reproducible.useDBI" = FALSE)`
 * A new backend was introduced that uses `DBI` package directly, without `archivist`. This has much improved speed. 
-* The default file saving format is now `qs` from `qs` package instead of `rda`. This has much improved speed and file sizes compared to previous.
+* New option: `options("reproducible.cacheSaveFormat")`. This can be either `rds` (default) or `qs`. All cached objects will be saved with this format. Previously it was `rda`. 
+* Cache objects can now be saved with with `qs` from `qs` package. In many cases, this has much improved speed and file sizes compared to `rds`; however, testing across a wide range of conditions will occur before it becomes the default.
 * Changed default behaviour for memoising ... because Cache is now much faster, the default is to turn memoising off, via `options("reproducible.useMemoise" = FALSE)`. In cases of large objects, memoising should still be faster, so user can still activate it, setting the option to `TRUE`.
 
 ## Dependency changes
