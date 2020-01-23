@@ -25,7 +25,7 @@ postProcess.default <- function(x, ...) {
 #' @importFrom rlang eval_tidy
 postProcess.quosure <- function(x, ...) {
   browser(expr = exists("._postProcess.quosure_1"))
-  postProcess(rlang::eval_tidy(x), ...)
+  postProcess(eval_tidy(x), ...)
 }
 
 #' @export
@@ -1057,9 +1057,6 @@ writeOutputs <- function(x, filename2,
 writeOutputs.Raster <- function(x, filename2 = NULL,
                                 overwrite = getOption("reproducible.overwrite", FALSE),
                                 ...) {
-  if (is(x, "quosure")) {
-    x <- eval_tidy(x)
-  }
   dots <- list(...)
   datatype2 <- assessDataType(x, type = "writeRaster")
 
@@ -1086,6 +1083,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
+      browser()
       file.copy(filename(x), filename2, overwrite = overwrite)
       x@file@name <- filename2
       if (dots$datatype != dataType(x)) {
@@ -1112,9 +1110,6 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 writeOutputs.Spatial <- function(x, filename2 = NULL,
                                  overwrite = getOption("reproducible.overwrite", TRUE),
                                  ...) {
-  if (is(x, "quosure")) {
-    x <- eval_tidy(x)
-  }
 
   if (!is.null(filename2)) {
     dots <- list(...)
@@ -1138,10 +1133,6 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
 writeOutputs.sf <- function(x, filename2 = NULL,
                             overwrite = getOption("reproducible.overwrite", FALSE),
                             ...) {
-  if (is(x, "quosure")) {
-    x <- eval_tidy(x)
-  }
-
   if (!is.null(filename2)) {
     if (!nzchar(tools::file_ext(filename2))) {
       filename2 <- paste0(filename2, ".shp")
@@ -1156,6 +1147,11 @@ writeOutputs.sf <- function(x, filename2 = NULL,
                  ...)
   }
   x
+}
+
+#' @rdname writeOutputs
+writeOutputs.quosure <- function(x, filename2, ...) {
+  writeOutputs(eval_tidy(x), filename2 = filename2, ...)
 }
 
 #' @rdname writeOutputs
