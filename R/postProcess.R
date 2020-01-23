@@ -1057,6 +1057,9 @@ writeOutputs <- function(x, filename2,
 writeOutputs.Raster <- function(x, filename2 = NULL,
                                 overwrite = getOption("reproducible.overwrite", FALSE),
                                 ...) {
+  if (is(x, "quosure")) {
+    x <- eval_tidy(x)
+  }
   dots <- list(...)
   datatype2 <- assessDataType(x, type = "writeRaster")
 
@@ -1109,6 +1112,10 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 writeOutputs.Spatial <- function(x, filename2 = NULL,
                                  overwrite = getOption("reproducible.overwrite", TRUE),
                                  ...) {
+  if (is(x, "quosure")) {
+    x <- eval_tidy(x)
+  }
+
   if (!is.null(filename2)) {
     dots <- list(...)
     notWanted1 <- .formalsNotInCurrentDots(shapefile, ...)
@@ -1131,6 +1138,10 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
 writeOutputs.sf <- function(x, filename2 = NULL,
                             overwrite = getOption("reproducible.overwrite", FALSE),
                             ...) {
+  if (is(x, "quosure")) {
+    x <- eval_tidy(x)
+  }
+
   if (!is.null(filename2)) {
     if (!nzchar(tools::file_ext(filename2))) {
       filename2 <- paste0(filename2, ".shp")
@@ -1460,7 +1471,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # writeOutputs
       ##################################
-      x <- do.call(writeOutputs, append(list(x = quote(x), filename2 = newFilename,
+      x <- do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
                                              overwrite = overwrite), dots))
 
       if (dir.exists(bigRastersTmpFolder())) {
