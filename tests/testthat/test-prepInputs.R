@@ -1831,18 +1831,20 @@ test_that("System call gdal works using multicores for both projecting and maski
   }, add = TRUE)
 
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  # crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
   coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2),
                       .Dim = c(5L, 2L))
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  # crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
   # Passing a specific integer for cores
