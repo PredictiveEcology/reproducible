@@ -1831,18 +1831,20 @@ test_that("System call gdal works using multicores for both projecting and maski
   }, add = TRUE)
 
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  # crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
   coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2),
                       .Dim = c(5L, 2L))
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  # crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
   # Passing a specific integer for cores
@@ -2059,4 +2061,25 @@ test_that("Test of using future and progress indicator for lrg files on Google D
       expect_true(is(smallRT, "list"))
     }
   }
+})
+
+test_that("writeOutputs with non-matching filename2", {
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  r <- raster(extent(0,10,0,10), vals = rnorm(100))
+  r <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
+  warn <- capture_warnings(r1 <- writeOutputs(r, filename2 = tmpfile[2]))
+  expect_true(any(grepl("filename2 file type", warn)))
+  r2 <- raster(filename(r1))
+  vals1 <- r2[]
+  vals2 <- r1[]
+  vals3 <- r[]
+  expect_true(identical(vals1, vals2))
+  expect_true(identical(vals1, vals3))
+  expect_false(identical(normPath(filename(r)), normPath(filename(r1))))
+  expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
+
 })

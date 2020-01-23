@@ -25,7 +25,7 @@ postProcess.default <- function(x, ...) {
 #' @importFrom rlang eval_tidy
 postProcess.quosure <- function(x, ...) {
   browser(expr = exists("._postProcess.quosure_1"))
-  postProcess(rlang::eval_tidy(x), ...)
+  postProcess(eval_tidy(x), ...)
 }
 
 #' @export
@@ -427,20 +427,8 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
         })
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        warnAboutNotProjected <- startsWith(warn, "Spatial object is not projected; GEOS expects planar coordinates")
-        if (any(warnAboutNotProjected))
-          warn <- warn[!warnAboutNotProjected]
-        if (length(warn))
-          warning(warn)
-
-        if (is(x1, "try-error")) {
-          message("There are errors with ", objectName,
-                  ". Couldn't fix them with raster::buffer(..., width = 0)")
-        } else {
-          x <- x1
-          message("  Some or all of the errors fixed.")
-        }
-
+        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+                              x1 = x1, bufferFn = "raster::buffer")
       } else {
         message("  Found no errors.")
       }
@@ -466,21 +454,8 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
           x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
         })
 
-        # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        warnAboutNotProjected <- startsWith(warn, paste("Spatial object is not projected;",
-                                                        "GEOS expects planar coordinates"))
-        if (any(warnAboutNotProjected))
-          warn <- warn[!warnAboutNotProjected]
-        if (length(warn))
-          warning(warn)
-
-        if (is(x1, "try-error")) {
-          message("There are errors with ", objectName,
-                  ". Couldn't fix them with sf::st_buffer(..., width = 0)")
-        } else {
-          x <- x1
-          message("  Some or all of the errors fixed.")
-        }
+        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+                                   x1 = x1, bufferFn = "sf::st_buffer")
       } else {
         message("  Found no errors.")
       }
@@ -632,10 +607,35 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
 
         dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+
+        browser(expr = exists("._projectInputs_2"))
+        # This will clear the Windows error that sometimes occurs:
+        #  ERROR 1: PROJ: pj_obj_create: Cannot find proj.db ## Eliot Jan 22, 2020
+        if (identical(.Platform[["OS.type"]], "windows")) {
+          oldProjLib <- Sys.getenv("PROJ_LIB")
+          if (!isTRUE(grepl("proj.db", dir(oldProjLib)))) {
+            possNewDir <- dir(file.path(dirname(getOption("gdalUtils_gdalPath")[[1]]$path), "share", "proj"),
+                              recursive = TRUE, pattern = "proj.db", full.names = TRUE)
+            if (length(possNewDir)) {
+              Sys.setenv(PROJ_LIB = dirname(possNewDir))
+              on.exit(add = TRUE, {
+                Sys.setenv(PROJ_LIB = oldProjLib)
+              })
+            }
+          }
+        }
+
+        targCRS <- as.character(targetCRS)
+        if (FALSE){
+          # There is a new-ish warning " +init=epsg:XXXX syntax is deprecated. It might return a CRS with a non-EPSG compliant axis order."
+          #  This next clears all the extraneous stuff after the EPSG... but that may not be correct.
+          #  I think leave it with the warning.
+          targCRS <- gsub(".*(epsg:.[0123456789]*)( ).*", "\\1", targCRS)
+        }
         system(
           paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                  "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
-                 " -t_srs \"", as.character(targetCRS), "\"",
+                 " -t_srs \"", targCRS, "\"",
                  " -multi ", prll,
                  "-ot ", dType,
                  teRas,
@@ -1083,6 +1083,17 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
+      if (tools::file_ext(filename(x)) == "grd") {
+        if (!tools::file_ext(filename2) == "grd") {
+          warning("filename2 file type (",tools::file_ext(filename2),") was not same type (",tools::file_ext(filename(x)),") ",
+                  "as the filename of the raster; ",
+                  "Changing filename2 so that it is ",tools::file_ext(filename(x)))
+          filename2 <- gsub(tools::file_ext(filename2), "grd", filename2)
+        }
+        file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
+                  overwrite = overwrite)
+      }
+
       file.copy(filename(x), filename2, overwrite = overwrite)
       x@file@name <- filename2
       if (dots$datatype != dataType(x)) {
@@ -1109,6 +1120,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 writeOutputs.Spatial <- function(x, filename2 = NULL,
                                  overwrite = getOption("reproducible.overwrite", TRUE),
                                  ...) {
+
   if (!is.null(filename2)) {
     dots <- list(...)
     notWanted1 <- .formalsNotInCurrentDots(shapefile, ...)
@@ -1145,6 +1157,11 @@ writeOutputs.sf <- function(x, filename2 = NULL,
                  ...)
   }
   x
+}
+
+#' @rdname writeOutputs
+writeOutputs.quosure <- function(x, filename2, ...) {
+  writeOutputs(eval_tidy(x), filename2 = filename2, ...)
 }
 
 #' @rdname writeOutputs
@@ -1350,6 +1367,7 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
+  browser(expr = exists("._postProcessAllSpatial_1"))
 
   if (!is.null(studyArea))
     if (is(studyArea, "quosure"))
@@ -1419,6 +1437,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       }
     }
 
+    browser(expr = exists("._postProcess.spatialobjects_2"))
     x <- Cache(cropInputs, x = x, studyArea = studyArea,
                extentToMatch = extRTM,
                extentCRS = crsRTM,
@@ -1429,6 +1448,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     }
 
     # cropInputs may have returned NULL if they don't overlap
+    browser(expr = exists("._postProcess.spatialobjects_3"))
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
       x <- fixErrors(x = x, objectName = objectName,
@@ -1440,6 +1460,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
                                  targetCRS)
 
+      browser(expr = exists("._postProcess.spatialobjects_4"))
       x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
                  rasterToMatch = rasterToMatch, useCache = useCache, ...)
       # may need to fix again
@@ -1449,6 +1470,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # maskInputs
       ##################################
+      browser(expr = exists("._postProcess.spatialobjects_5"))
       x <- Cache(maskInputs, x = x, studyArea = studyArea,
                  rasterToMatch = rasterToMatch, useCache = useCache, ...)
 
@@ -1460,9 +1482,10 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # writeOutputs
       ##################################
-      x <- do.call(writeOutputs, append(list(x = quote(x), filename2 = newFilename,
+      x <- do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
                                              overwrite = overwrite), dots))
 
+      browser(expr = exists("._postProcess.spatialobjects_6"))
       if (dir.exists(bigRastersTmpFolder())) {
         ## Delete gdalwarp results in temp
         unlink(bigRastersTmpFolder(), recursive = TRUE)
@@ -1480,4 +1503,22 @@ useETM <- function(extentToMatch, extentCRS) {
     return(TRUE)
   }
   return(FALSE)
+}
+
+bufferWarningSuppress <- function(warn, objectName, x1, bufferFn) {
+  warnAboutNotProjected <- startsWith(warn, paste("Spatial object is not projected;",
+                                                  "GEOS expects planar coordinates"))
+  if (any(warnAboutNotProjected))
+    warn <- warn[!warnAboutNotProjected]
+  if (length(warn))
+    warning(warn)
+
+  if (is(x1, "try-error")) {
+    message("There are errors with ", objectName,
+            ". Couldn't fix them with ",bufferFn,"(..., width = 0)")
+  } else {
+    x <- x1
+    message("  Some or all of the errors fixed.")
+  }
+
 }
