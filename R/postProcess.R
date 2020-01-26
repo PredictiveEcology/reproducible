@@ -174,7 +174,11 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   message("postProcess with sf class objects is still experimental")
   if (!is.null(rasterToMatch)) {
-    stop("sf class objects are not yet working with rasterToMatch argument")
+    if (is.null(studyArea))
+      stop("sf class objects are not yet working with rasterToMatch argument")
+    message("sf class objects can not be postProcessed directly from rasterToMatch yet;",
+            "using studyArea. ")
+    rasterToMatch <- NULL
   }
   if (is(studyArea, "Spatial")) {
     studyArea <- st_as_sf(studyArea)
@@ -1170,11 +1174,15 @@ writeOutputs.sf <- function(x, filename2 = NULL,
     if (identical(".", dirname(filename2))) {
       filename2 <- normPath(filename2)
     }
+    dp <- list(...)$destinationPath
+    if (!is.null(dp)) {
+      if (!isTRUE(grepl(normPath(dp), filename2)))
+        filename2 <- normPath(file.path(dp, basename(filename2)))
+    }
     if (!all(file.exists(filename2)))
       overwrite = FALSE
 
-    sf::st_write(obj = x, dsn = filename2, delete_dsn = overwrite,
-                 ...)
+    sf::st_write(obj = x, dsn = filename2, delete_dsn = overwrite)
   }
   x
 }
