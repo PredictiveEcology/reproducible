@@ -337,12 +337,12 @@ test_that("test environments", {
   }, add = TRUE)
 
   # make several unique environments
-  a <- new.env()
-  b <- new.env()
-  g <- new.env()
-  d <- new.env()
-  f <- new.env()
-  h <- new.env()
+  a <- new.env(parent = emptyenv())
+  b <- new.env(parent = emptyenv())
+  g <- new.env(parent = emptyenv())
+  d <- new.env(parent = emptyenv())
+  f <- new.env(parent = emptyenv())
+  h <- new.env(parent = emptyenv())
   # give the same value to a in each
   a$a <- runif(10)
   b$a <- a$a

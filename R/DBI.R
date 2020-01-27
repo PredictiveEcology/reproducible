@@ -141,7 +141,8 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
     fsBig <- (as.numeric(tagValue[whichOS]) * 4 ) < fs
-    if (fsBig)
+    if (fsBig) {
+      browser(expr = exists("._saveToCache_3"))
       message("Object with cacheId ", cacheId, " appears to have a much larger size ",
               "on disk than in memory. ",
               "This usually means that the object has captured an environment with ",
@@ -150,6 +151,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
               "and defining functions in a package or otherwise clean space, ",
               "i.e., not inside another function.\n",
               "See http://adv-r.had.co.nz/memory.html#gc and 'capturing environments'.")
+    }
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))

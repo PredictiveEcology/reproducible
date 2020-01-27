@@ -211,7 +211,7 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
   }
   if (file.exists(filename)) {
     if (version == 2) {
-      thisenvir <- new.env()
+      thisenvir <- new.env(parent = emptyenv())
       data <- get(load(filename, thisenvir), thisenvir)
     }
     else {

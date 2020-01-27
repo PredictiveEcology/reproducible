@@ -1228,7 +1228,7 @@ test_that("load rdata in prepInputs", {
   aa <- prepInputs(tmpfile, fun = "base::load")
   expect_true(identical(aa, list(a = a, b = b)))
 
-  d <- new.env()
+  d <- new.env(parent = emptyenv())
   aa <- prepInputs(tmpfile, fun = "base::load", envir = d)
   expect_false(identical(aa, list(a = a, b = b))) # not in aa, because loaded to d
   expect_true(identical(as.list(d), list(a = a, b = b)))

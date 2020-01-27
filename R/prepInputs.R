@@ -293,7 +293,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         if (is.null(args$envir)) {
           message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
                   "if you would like it loaded to a specific environment")
-          tmpEnv <- new.env()
+          tmpEnv <- new.env(parent = emptyenv())
           returnAsList <- TRUE
         } else {
           tmpEnv <- args$envir

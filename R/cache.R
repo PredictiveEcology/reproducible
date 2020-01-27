@@ -837,7 +837,7 @@ setMethod(
       }
       if (useFuture) {
         if (exists("futureEnv", envir = .reproEnv))
-          .reproEnv$futureEnv <- new.env()
+          .reproEnv$futureEnv <- new.env(parent = emptyenv())
 
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess".\n',
