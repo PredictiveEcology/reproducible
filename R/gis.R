@@ -67,7 +67,6 @@ checkGDALVersion <- function(version) {
 #' @export
 #' @inheritParams projectInputs.Raster
 #' @importFrom fasterize fasterize
-#' @importFrom parallel detectCores
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sf st_as_sf st_write
@@ -180,20 +179,8 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
         exe <- ""
       }
       dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-      if (is.null(cores) || cores == "AUTO") {
-        cores <- as.integer(parallel::detectCores() * 0.9)
-        prll <- paste0("-wo NUM_THREADS=", cores, " ")
-      } else {
-        if (!is.integer(cores)) {
-          if (is.character(cores) | is.logical(cores)) {
-            stop("'cores' needs to be passed as numeric or 'AUTO'")
-          } else {
-            prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
-          }
-        } else {
-          prll <- paste0("-wo NUM_THREADS=", cores, " ")
-        }
-      }
+      cores <- dealWithCores(cores)
+      prll <- paste0("-wo NUM_THREADS=", cores, " ")
       system(
         paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                " -multi ", prll,
@@ -252,3 +239,22 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 bigRastersTmpFolder <- function() file.path(raster::tmpDir(), "bigRasters")
 
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
+
+dealWithCores <- function(cores) {
+  if (is.null(cores) || cores == "AUTO") {
+    if (requireNamespace("parallel")) {
+      cores <- as.integer(parallel::detectCores() * 0.9)
+    } else {
+      cores <- 1L
+    }
+  } else {
+    if (!is.integer(cores)) {
+      if (is.character(cores) | is.logical(cores)) {
+        stop("'cores' needs to be passed as numeric or 'AUTO'")
+      } else {
+        cores <- as.integer(cores)
+      }
+    }
+  }
+
+}

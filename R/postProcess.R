@@ -518,7 +518,6 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
-#' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
 #' @importFrom testthat capture_warnings
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
@@ -595,20 +594,9 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                                           extent(rasterToMatch)@xmax, " ",
                                           extent(rasterToMatch)@ymax, " "))
         }
-        if (is.null(cores) || cores == "AUTO") {
-          cores <- as.integer(parallel::detectCores() * 0.9)
-          prll <- paste0("-wo NUM_THREADS=", cores, " ")
-        } else {
-          if (!is.integer(cores)) {
-            if (is.character(cores) | is.logical(cores)) {
-              stop("'cores' needs to be passed as numeric or 'AUTO'")
-            } else {
-              prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
-            }
-          } else {
-            prll <- paste0("-wo NUM_THREADS=", cores, " ")
-          }
-        }
+
+        cores <- dealWithCores(cores)
+        prll <- paste0("-wo NUM_THREADS=", cores, " ")
 
         dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
 

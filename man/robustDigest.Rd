@@ -3,7 +3,6 @@
 \name{.robustDigest}
 \alias{.robustDigest}
 \alias{.robustDigest,ANY-method}
-\alias{.robustDigest,cluster-method}
 \alias{.robustDigest,function-method}
 \alias{.robustDigest,expression-method}
 \alias{.robustDigest,character-method}
@@ -26,8 +25,6 @@
 )
 
 \S4method{.robustDigest}{ANY}(object, .objects, length, algo, quick, classOptions)
-
-\S4method{.robustDigest}{cluster}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{`function`}(object, .objects, length, algo, quick, classOptions)
 

@@ -49,7 +49,6 @@ Imports:
     magrittr,
     memoise,
     methods,
-    parallel,
     qs,
     quickPlot,
     R.utils,
@@ -70,6 +69,7 @@ Suggests:
     covr,
     future,
     knitr,
+    parallel,
     rmarkdown,
     TimeWarp
 Encoding: UTF-8
