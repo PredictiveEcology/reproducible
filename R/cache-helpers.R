@@ -1124,6 +1124,7 @@ nextNumericName <- function(string) {
 
 
 
+#' @importFrom raster fromDisk
 dealWithRasters <- function(obj, cachePath, drv, conn) {
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
   if (outputToSaveIsList) {
@@ -1143,6 +1144,8 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
     }
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
+    isFromDisk <- fromDisk(obj)
+    atts$tags <- c(atts$tags, paste("fromDisk", sep = ":", isFromDisk))
     setattr(obj, "tags", atts$tags)
     .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
     setattr(obj, "call", atts$call)

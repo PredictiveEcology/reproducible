@@ -580,7 +580,7 @@ setMethod(
 
         ## Save it
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
-          !tagKey %in% c("format", "name", "date", "cacheId", "class"), list(tagKey, tagValue)]
+          !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)]
         if (getOption("reproducible.useDBI", TRUE)) {
           output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
         } else {

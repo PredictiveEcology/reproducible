@@ -817,7 +817,7 @@ setMethod(
 
       objSize <- sum(unlist(objSize(outputToSave)))
       userTags <- c(userTags,
-                    # paste0("class:", class(outputToSave)[1]),
+                    paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0(otherFns),
