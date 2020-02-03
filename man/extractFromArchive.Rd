@@ -13,7 +13,8 @@ extractFromArchive(
   needChecksums = 0,
   filesExtracted = character(),
   checkSumFilePath = character(),
-  quick = FALSE
+  quick = FALSE,
+  ...
 )
 }
 \arguments{

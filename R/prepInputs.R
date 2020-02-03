@@ -390,7 +390,7 @@ extractFromArchive <- function(archive,
                                destinationPath = getOption("reproducible.destinationPath", dirname(archive)),
                                neededFiles = NULL, extractedArchives = NULL, checkSums = NULL,
                                needChecksums = 0, filesExtracted = character(),
-                               checkSumFilePath = character(), quick = FALSE) {
+                               checkSumFilePath = character(), quick = FALSE, ...) {
   if (!is.null(archive)) {
     if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
@@ -462,12 +462,11 @@ extractFromArchive <- function(archive,
           )
         } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
           possibleFolders <- filesInArchive[file_ext(filesInArchive) == ""]
-          if (length(possibleFolders)!=0){
+          if (length(possibleFolders) != 0) {
             filesInArchive <- setdiff(filesInArchive, possibleFolders)
           }
           extractingTheseFiles <- paste(basename(filesInArchive[basename(filesInArchive) %in%
-                                                                  neededFiles]),
-                                        collapse = ", ")
+                                                                  neededFiles]), collapse = ", ")
           if (!nzchar(extractingTheseFiles))
             extractingTheseFiles <- paste0("all files: ", paste(basename(filesInArchive),
                                                                 collapse = ", "))
