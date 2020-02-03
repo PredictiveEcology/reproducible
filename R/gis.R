@@ -66,7 +66,6 @@ checkGDALVersion <- function(version) {
 #' @author Eliot McIntire
 #' @export
 #' @inheritParams projectInputs.Raster
-#' @importFrom fasterize fasterize
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sf st_as_sf st_write

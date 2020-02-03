@@ -39,7 +39,6 @@ Imports:
     digest,
     dplyr,
     fastdigest,
-    fasterize,
     fpCompare,
     gdalUtils,
     git2r (>= 0.18),
@@ -67,6 +66,7 @@ Imports:
     versions
 Suggests:
     covr,
+    fasterize,
     future,
     knitr,
     parallel,
