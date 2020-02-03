@@ -5,6 +5,7 @@
 \alias{writeOutputs.Raster}
 \alias{writeOutputs.Spatial}
 \alias{writeOutputs.sf}
+\alias{writeOutputs.quosure}
 \alias{writeOutputs.default}
 \title{Write module inputs on disk}
 \usage{
@@ -35,6 +36,8 @@ writeOutputs(
   overwrite = getOption("reproducible.overwrite", FALSE),
   ...
 )
+
+\method{writeOutputs}{quosure}(x, filename2, ...)
 
 \method{writeOutputs}{default}(x, filename2, ...)
 }

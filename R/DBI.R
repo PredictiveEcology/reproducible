@@ -183,10 +183,11 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
     on.exit(dbDisconnect(conn))
   }
   # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-  query <- glue::glue_sql("DELETE FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" IN ({cacheId*})",
-                        dbTabName = CacheDBTableName(cachePath, drv),
-                        cacheId = cacheId,
-                        .con = conn)
+  query <- glue::glue_sql(
+    "DELETE FROM {DBI::SQL(double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
+    dbTabName = CacheDBTableName(cachePath, drv),
+    cacheId = cacheId,
+    .con = conn)
   res <- dbSendQuery(conn, query)
 
   if (FALSE)   { # this is the "unsafe" version
@@ -197,7 +198,8 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
 
   dbClearResult(res)
 
-  unlink(file.path(cachePath, "cacheObjects", paste0(cacheId, ".qs")))
+  unlink(file.path(cachePath, "cacheObjects",
+                   paste0(cacheId, ".", getOption("reproducible.cacheSaveFormat", "qs"))))
 }
 
 dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()), cachePath,
@@ -243,7 +245,6 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
       )), retries = 15)
 
     dbClearResult(rs)
-
   } else {
     written <- 0
     while (written >= 0) {
@@ -252,7 +253,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                                 repoDir = cachePath,
                                                 tags = paste0("accessed:", Sys.time()))))
       written <- if (is(saved, "try-error")) {
-        Sys.sleep(sum(runif(written + 1,0.05, 0.1)))
+        Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
         written + 1
       } else {
         -1
@@ -314,7 +315,6 @@ CacheDBFile <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   } else {
     file.path(cachePath, "cache.txt")
   }
-
 }
 
 #' @rdname CacheHelpers
