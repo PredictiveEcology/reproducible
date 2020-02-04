@@ -49,7 +49,6 @@ Imports:
     quickPlot,
     R.utils,
     raster,
-    RCurl (>= 1.95-4.8),
     RSQLite,
     remotes,
     rgdal,
@@ -69,6 +68,7 @@ Suggests:
     git2r (>= 0.18),
     knitr,
     parallel,
+    RCurl (>= 1.95-4.8),
     rmarkdown,
     TimeWarp
 Encoding: UTF-8
