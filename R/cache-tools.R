@@ -200,7 +200,7 @@ setMethod(
           if (useDBI()) {
             r <- loadFromCache(x, ras)
           } else {
-            r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
+            r <- suppressWarnings(archivist::loadFromLocalRepo(ras, repoDir = x, value = TRUE))
           }
           tryCatch(filename(r), error = function(e) NULL)
         })
@@ -556,7 +556,7 @@ setMethod(
         outputToSave <- if (useDBI()) {
           try(loadFromCache(cacheFrom, artifact))
         } else {
-          try(loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
+          try(archivist::loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
         }
         if (is(outputToSave, "try-error")) {
           message("Continuing to load others")

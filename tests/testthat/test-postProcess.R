@@ -36,7 +36,7 @@ test_that("prepInputs doesn't work (part 3)", {
 
     # now raster with sf
     if (requireNamespace("fasterize")) {
-      r1 <- fasterize(nc1, r)
+      r1 <- fasterize::fasterize(nc1, r)
       r2 <- postProcess(r1, studyArea = ncSmall, filename2 = NULL)
       expect_true(is(r2, "RasterLayer"))
       expect_true(ncell(r2) < ncell(r1))

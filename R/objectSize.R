@@ -158,8 +158,9 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
     # Update the object in the function so next lapply has access to the updated version
     .prevEnvirs <<- unique(append(.prevEnvirs, as.environment(x)))
     out <- if (!any(unlist(doneAlready))) {
-      try(objSize(as.environment(x), enclosingEnvs = enclosingEnvs,
-                  .prevEnvirs = .prevEnvirs))
+      tryCatch(objSize(as.environment(x), enclosingEnvs = enclosingEnvs,
+                  .prevEnvirs = .prevEnvirs), error = function(x) NULL,
+               warning = function(y) NULL)
     } else {
       NULL
     }

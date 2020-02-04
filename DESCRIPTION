@@ -62,6 +62,7 @@ Imports:
 Suggests:
     archivist (>= 2.1.2),
     covr,
+    dplyr,
     fasterize,
     future,
     git2r (>= 0.18),

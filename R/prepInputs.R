@@ -776,7 +776,7 @@ extractFromArchive <- function(archive,
 
 #' @keywords internal
 #' @importFrom utils capture.output
-#' @importFrom data.table rbindlist as.data.table
+#' @importFrom data.table rbindlist as.data.table setDT setDF
 appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                                  destinationPath = getOption("reproducible.destinationPath"),
                                  append = TRUE) {
@@ -787,8 +787,16 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       # meant that it was an empty CHECKSUMS.txt file -- rebuild it
       append <- FALSE
     } else {
-      nonCurrentFiles <- cs %>%
-        filter(!file %in% filesToChecksum)
+      setDT(cs)
+      nonCurrentFiles <- cs[!file %in% filesToChecksum]
+      if (requireNamespace("dplyr")) {
+        nonCurrentFiles1 <- cs %>%
+          dplyr::filter(!file %in% filesToChecksum)
+        browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
+        stopifnot(identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
+      }
+      setDF(cs)
+
     }
     messStart <- "Appending "
   } else {
