@@ -223,7 +223,9 @@ test_that("test memory backed raster robustDigest", {
 })
 
 test_that("test 'quick' argument", {
-  testInitOut <- testInit("raster", tmpFileExt = ".tif", opts = list("reproducible.useMemoise" = TRUE))
+  testInitOut <- testInit("raster", tmpFileExt = ".tif",
+                          opts = list("reproducible.useMemoise" = TRUE,
+                                      "reproducible.showSimilar" = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
