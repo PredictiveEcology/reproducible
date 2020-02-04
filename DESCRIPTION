@@ -52,7 +52,6 @@ Imports:
     RSQLite,
     remotes,
     rgdal,
-    rgeos,
     rlang,
     sf,
     sp,
@@ -69,6 +68,7 @@ Suggests:
     knitr,
     parallel,
     RCurl (>= 1.95-4.8),
+    rgeos,
     rmarkdown,
     TimeWarp
 Encoding: UTF-8

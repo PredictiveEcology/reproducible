@@ -216,7 +216,6 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
 #' @export
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
-#' @importFrom rgeos gIsValid
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
 #' @rdname cropInputs
 cropInputs <- function(x, studyArea, rasterToMatch, ...) {
@@ -424,8 +423,15 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
     if (is.null(objectName)) objectName = "SpatialPolygon"
     if (is(x, "SpatialPolygons")) {
       message("Checking for errors in ", objectName)
-      if (suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))) {
-        message("Found errors in ", objectName, ". Attempting to correct.")
+      anyNotValid <- if (requireNamespace("rgeos", quietly = TRUE)) {
+        anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
+        if (isTRUE(anv)) message("Found errors in ", objectName, ". Attempting to correct.")
+        anv
+      } else {
+        message("fixErrors for SpatialPolygons will be faster with install.packages('rgeos')")
+        TRUE
+      }
+      if (anyNotValid) {
         warn <- capture_warnings({
           x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
         })
