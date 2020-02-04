@@ -1126,25 +1126,27 @@ nextNumericName <- function(string) {
 
 #' @importFrom raster fromDisk
 dealWithRasters <- function(obj, cachePath, drv, conn) {
+  browser(expr = exists("._dealWithRasters_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
   if (outputToSaveIsList) {
     rasters <- unlist(lapply(obj, is, "Raster"))
   } else {
     rasters <- is(obj, "Raster")
   }
-  browser(expr = exists("aaaa"))
   if (any(rasters)) {
     atts <- attributes(obj)
+    browser(expr = exists("._dealWithRasters_2"))
     if (outputToSaveIsList) {
       obj[rasters] <- lapply(obj[rasters], function(x)
         .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv, conn = conn))
+      isFromDisk <- any(unlist(lapply(obj, function(x) fromDisk(x))))
     } else {
       obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
                                       overwrite = FALSE, drv = drv, conn = conn)
+      isFromDisk <- fromDisk(obj)
     }
 
     # have to reset all these attributes on the rasters as they were undone in prev steps
-    isFromDisk <- fromDisk(obj)
     atts$tags <- c(atts$tags, paste("fromDisk", sep = ":", isFromDisk))
     setattr(obj, "tags", atts$tags)
     .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
