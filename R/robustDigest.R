@@ -50,7 +50,7 @@
 #'
 #' @return A hash i.e., digest of the object passed in.
 #'
-#' @seealso \code{\link[archivist]{cache}}.
+#' @seealso \code{archivist::cache}.
 #'
 #' @author Eliot McIntire
 #' @export

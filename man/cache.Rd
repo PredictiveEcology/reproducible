@@ -68,9 +68,9 @@ lhs \%<\% rhs
 \item{FUN}{Either a function or an unevaluated function call (e.g., using
 \code{quote}.}
 
-\item{...}{Arguments of \code{FUN} function .}
+\item{...}{Arguments passed to \code{FUN}}
 
-\item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
+\item{notOlderThan}{A time. Load an object from the Cache if it was created after this.}
 
 \item{.objects}{Character vector of objects to be digested. This is only applicable
 if there is a list, environment (or similar) named objects
@@ -99,7 +99,9 @@ which is set to \code{Inf}.}
 
 \item{compareRasterFileLength}{Being deprecated; use \code{length}.}
 
-\item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
+\item{userTags}{A character vector with descriptions of the Cache function call. These
+will be added to the Cache so that this entry in the Cache can be found using
+\code{userTags} e.g., via \code{\link{showCache}}}
 
 \item{digestPathContent}{Being deprecated. Use \code{quick}.}
 
@@ -201,7 +203,7 @@ object (in order to clone an existing connection).}
 \item{rhs}{A function call}
 }
 \value{
-As with \code{\link[archivist]{cache}}, returns the value of the
+As with \code{archivist::cache}, returns the value of the
 function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
@@ -211,7 +213,7 @@ Still experimental and may change. This form cannot pass any arguments to
 it is a clean alternative for simple cases.
 }
 \details{
-Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
+Caching R objects using \code{archivist::cache} has five important limitations:
 \enumerate{
   \item the \code{archivist} package detects different environments as different;
   \item it also does not detect S4 methods correctly due to method inheritance;
@@ -439,7 +441,7 @@ b \%<\% rnorm(1)
 
 }
 \seealso{
-\code{\link[archivist]{cache}}, \code{\link{.robustDigest}}
+\code{archivist::cache}, \code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire

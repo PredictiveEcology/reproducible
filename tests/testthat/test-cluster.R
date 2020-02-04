@@ -12,7 +12,7 @@ test_that("test parallel collisions", {
 
     # make archivist repository
     if (!file.exists(CacheDBFile(tmpdir))) {
-      if (getOption("reproducible.useDBI", TRUE))
+      if (useDBI())
         createCache(tmpdir)
       else
         archivist::createLocalRepo(tmpdir)

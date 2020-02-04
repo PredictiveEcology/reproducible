@@ -48,7 +48,6 @@
 #' large cache repository.
 #'
 #' @export
-#' @importFrom archivist rmFromLocalRepo searchInLocalRepo
 #' @importFrom data.table setindex
 #' @importFrom methods setGeneric setMethod
 #' @importFrom utils object.size
@@ -94,7 +93,6 @@ setGeneric("clearCache", function(x, userTags = character(), after = NULL, befor
 })
 
 #' @export
-#' @importFrom archivist createLocalRepo
 #' @rdname viewCache
 setMethod(
   "clearCache",
@@ -133,7 +131,7 @@ setMethod(
           stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
                "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
         }
-        if (getOption("reproducible.useDBI", TRUE)) {
+        if (useDBI()) {
           cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
         } else {
           cacheIds <- objsDT[tagKey == "cacheId", tagValue]
@@ -148,7 +146,7 @@ setMethod(
     }
 
     browser(expr = exists("rrrr"))
-    if (getOption("reproducible.useDBI", TRUE)) {
+    if (useDBI()) {
       if (!CacheIsACache(x, drv = drv, conn = conn))
         return(invisible(.emptyCacheTable))
     }
@@ -174,10 +172,10 @@ setMethod(
       unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
 
       checkPath(x, create = TRUE)
-      if (getOption("reproducible.useDBI", TRUE)) {
+      if (useDBI()) {
         createCache(x, drv = drv, force = TRUE)
       } else {
-        createLocalRepo(x)
+        archivist::createLocalRepo(x)
       }
       memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
@@ -199,7 +197,7 @@ setMethod(
                                               tagKey == "object.size"]$tagValue)
         fileBackedRastersInRepo <- rastersInRepo[[.cacheTableHashColName()]][rasterObjSizes < 1e5]
       filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
-          if (getOption("reproducible.useDBI", TRUE)) {
+          if (useDBI()) {
             r <- loadFromCache(x, ras)
           } else {
             r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
@@ -238,7 +236,7 @@ setMethod(
       }
 
       objToGet <- unique(objsDT[[.cacheTableHashColName()]])
-      if (getOption("reproducible.useDBI", TRUE)) {
+      if (useDBI()) {
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
           on.exit({dbDisconnect(conn)})
@@ -246,7 +244,7 @@ setMethod(
         rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
         browser(expr = exists("rmFC"))
       } else {
-        suppressWarnings(rmFromLocalRepo(objToGet, x, many = TRUE))
+        suppressWarnings(archivist::rmFromLocalRepo(objToGet, x, many = TRUE))
       }
     }
     memoise::forget(.loadFromLocalRepoMem)
@@ -303,7 +301,8 @@ cc <- function(secs, ...) {
 
 #' Examining and modifying the cache
 #'
-#' These are convenience wrappers around \code{archivist} package functions.
+#' These are convenience wrappers around \code{DBI}
+#' (formerly \code{archivist}) package functions.
 #' They allow the user a bit of control over what is being cached.
 #'
 #' \describe{
@@ -318,10 +317,9 @@ cc <- function(secs, ...) {
 #'
 #' @export
 #' @importFrom DBI dbSendQuery dbFetch dbClearResult
-#' @importFrom archivist splitTagsLocal
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
-#' @seealso \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
+#' @seealso \code{\link{mergeCache}}, \code{archivist::splitTagsLocal}. Many more examples
 #' in \code{\link{Cache}}
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
@@ -342,7 +340,7 @@ setMethod(
       x <- getOption("reproducible.cachePath")[1]
     }
     browser(expr = exists("jjjj"))
-    if (getOption("reproducible.useDBI", TRUE)) {
+    if (useDBI()) {
       afterNA <- FALSE
       if (is.null(after)) {
         afterNA <- TRUE
@@ -371,7 +369,7 @@ setMethod(
         }
     }
 
-    if (getOption("reproducible.useDBI", TRUE)) {
+    if (useDBI()) {
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
         if (is.null(conn)) {
@@ -393,15 +391,12 @@ setMethod(
         objsDT <- setDT(tab)
       #setkeyv(objsDT, "cacheId")
     } else {
-      objsDT <- showLocalRepo(x) %>% data.table()
+      objsDT <- archivist::showLocalRepo(x) %>% data.table()
       #setkeyv(objsDT, "md5hash")
     }
 
     if (NROW(objsDT) > 0) {
-      if (getOption("reproducible.useDBI", TRUE)) {
-        # objsDT <- data.table(splitTagsLocal(x), key = "artifact")
-        # beforeNA <- is.na(before)
-        # afterNA <- is.na(after)
+      if (useDBI()) {
         if (!afterNA || !beforeNA) {
           objsDT3 <- objsDT[tagKey == "accessed"]
           if (!beforeNA)
@@ -414,7 +409,7 @@ setMethod(
           objsDT <- objsDT[objsDT$cacheId %in% unique(objsDT3$cacheId)] # faster than data.table join
         }
       } else {
-        objsDT <- data.table(splitTagsLocal(x), key = "artifact")
+        objsDT <- data.table(archivist::splitTagsLocal(x), key = "artifact")
         objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
                                                   (tagValue >= after)][!duplicated(artifact)]
         objsDT <- objsDT[artifact %in% objsDT3[[.cacheTableHashColName()]]]
@@ -423,16 +418,6 @@ setMethod(
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
           objsDTs <- list()
           for (ut in userTags) {
-            #objsDT[[.cacheTableHashColName()]] %in% ut
-            # if (getOption("reproducible.useDBI", TRUE)) {
-            #   objsDT2 <- objsDT[
-            #     grepl(tagValue, pattern = ut) |
-            #       grepl(tagKey, pattern = ut) |
-            #       grepl(cacheId, pattern = ut)]
-            #   setkeyv(objsDT2, "cacheId")
-            #   shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
-            #
-            # } else {
               objsDT2 <- objsDT[
                 grepl(get(.cacheTableTagColName()), pattern = ut) |
                   grepl(tagKey, pattern = ut) |
@@ -443,7 +428,7 @@ setMethod(
             objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
           }
         } else {
-          if (getOption("reproducible.useDBI", TRUE)) {
+          if (useDBI()) {
             objsDT2 <- objsDT[cacheId %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
             setkeyv(objsDT2, "cacheId")
             shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
@@ -568,7 +553,7 @@ setMethod(
       browser(expr = exists("gggg"))
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
         browser(expr = exists("gggg"))
-        outputToSave <- if (getOption("reproducible.useDBI", TRUE)) {
+        outputToSave <- if (useDBI()) {
           try(loadFromCache(cacheFrom, artifact))
         } else {
           try(loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
@@ -581,7 +566,7 @@ setMethod(
         ## Save it
         userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
           !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)]
-        if (getOption("reproducible.useDBI", TRUE)) {
+        if (useDBI()) {
           output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
         } else {
           written <- FALSE
@@ -624,7 +609,7 @@ setMethod(
 
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
-    if (getOption("reproducible.useDBI", TRUE)) {
+    if (useDBI()) {
       a <- showCache(x, verboseMessaging = FALSE)
     } else {
       a <- showLocalRepo2(x)
@@ -775,4 +760,14 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
     shownCache <- shownCache[tagValue %in% cacheId]
   }
   shownCache[tagKey == "cacheId", artifact]
+}
+
+useDBI <- function() {
+  ud <- getOption("reproducible.useDBI", TRUE)
+  rn <- requireNamespace("archivist", quietly = TRUE)
+  if (!ud && !rn)
+    message("Trying to not use DBI as database engine, but archivist is not ",
+            "installed. Please install.packages('archivist') or ",
+            "set options('reproducible.useDBI' = TRUE)")
+  ud || !rn
 }

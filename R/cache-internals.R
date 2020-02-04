@@ -269,7 +269,7 @@
     #if (is(output, "simList_")) output <- as(output, "simList")
   } else {
     loadFromMgs <- "Loading from repo"
-    if (getOption("reproducible.useDBI", TRUE)) {
+    if (useDBI()) {
       output <- loadFromCache(cacheRepo, isInRepo$cacheId[lastOne])
 
     } else {

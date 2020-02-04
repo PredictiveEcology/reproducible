@@ -69,7 +69,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
   browser(expr = exists("kkkk"))
   artifactFileName <- CacheStoredFile(cacheRepo, hash = artifact)
   #artifactFileName <- paste0(artifact, ".rda")
-  if (getOption("reproducible.useDBI", TRUE)) {
+  if (useDBI()) {
     newFileName <- basename2(artifactFileName)
   } else {
     newFileName <- paste0(outputHash,".rda")
@@ -109,7 +109,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   retry(quote(drive_download(file = as_id(gdriveLs$id[isInCloud][1]),
                              path = localNewFilename, # take first if there are duplicates
                              overwrite = TRUE)))
-  if (getOption("reproducible.useDBI", TRUE)) {
+  if (useDBI()) {
     if (getOption("reproducible.cacheSaveFormat", "qs") == "qs")
       output <- qread(localNewFilename, nthreads = getOption("reproducible.nThreads", 1))
     else
@@ -129,7 +129,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
 #' Meant for internal use, as there are internal objects as arguments.
 #'
 #' @param isInCloud     A logical indicating whether an \code{outputHash} is in the cloud already.
-#' @param saved         The character string of the saved file's archivist digest value.
+#' @param saved         The character string of the saved file's digest value.
 #' @param outputToSave  Only required if \code{any(rasters) == TRUE}.
 #'                      This is the \code{Raster*} object.
 #' @param rasters       A logical vector of length >= 1 indicating which elements in
@@ -143,7 +143,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudF
   browser(expr = exists("kkkk"))
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
-    newFileName <- if (getOption("reproducible.useDBI", TRUE)) {
+    newFileName <- if (useDBI()) {
       basename2(cacheIdFileName)
     } else {
       paste0(saved, ".rda")

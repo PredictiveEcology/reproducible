@@ -87,7 +87,7 @@ as paths, if they are file-backed.}
 specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
-\item{...}{Arguments of \code{FUN} function .}
+\item{...}{Arguments passed to \code{FUN}}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used
@@ -184,7 +184,7 @@ digest::digest(r2) # different
 
 }
 \seealso{
-\code{\link[archivist]{cache}}.
+\code{archivist::cache}.
 }
 \author{
 Eliot McIntire

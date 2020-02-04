@@ -9,7 +9,7 @@ if (getRversion() >= "3.1.0") {
 #' Cache method that accommodates environments, S4 methods, Rasters, & nested caching
 #'
 #' @details
-#' Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
+#' Caching R objects using \code{archivist::cache} has five important limitations:
 #' \enumerate{
 #'   \item the \code{archivist} package detects different environments as different;
 #'   \item it also does not detect S4 methods correctly due to method inheritance;
@@ -161,13 +161,12 @@ if (getRversion() >= "3.1.0") {
 #'
 #' See \code{\link{.robustDigest}} for other specifics for other classes.
 #'
-#' @inheritParams archivist::cache
-#' @inheritParams archivist::saveToLocalRepo
 #' @include cache-helpers.R
 #' @include robustDigest.R
 #'
 #' @param FUN Either a function or an unevaluated function call (e.g., using
 #'            \code{quote}.
+#' @param ... Arguments passed to \code{FUN}
 #'
 #' @param .objects Character vector of objects to be digested. This is only applicable
 #'                if there is a list, environment (or similar) named objects
@@ -219,6 +218,11 @@ if (getRversion() >= "3.1.0") {
 #'        of the downloaded files are corrupted or missing. Currently only works when
 #'        set to \code{TRUE} during the first run of \code{Cache}. Default is \code{FALSE}.
 #'        \emph{NOTE: this argument is experimental and may change in future releases.}
+#'
+#' @param userTags A character vector with descriptions of the Cache function call. These
+#'   will be added to the Cache so that this entry in the Cache can be found using
+#'   \code{userTags} e.g., via \code{\link{showCache}}
+#' @param notOlderThan A time. Load an object from the Cache if it was created after this.
 #'
 #' @param quick Logical. If \code{TRUE},
 #'        little or no disk-based information will be assessed, i.e., mostly its
@@ -282,11 +286,11 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param digestPathContent Being deprecated. Use \code{quick}.
 #'
-#' @return As with \code{\link[archivist]{cache}}, returns the value of the
+#' @return As with \code{archivist::cache}, returns the value of the
 #' function call or the cached version (i.e., the result from a previous call
 #' to this same cached function with identical arguments).
 #'
-#' @seealso \code{\link[archivist]{cache}}, \code{\link{.robustDigest}}
+#' @seealso \code{archivist::cache}, \code{\link{.robustDigest}}
 #'
 #' @author Eliot McIntire
 #' @export
@@ -303,8 +307,6 @@ if (getRversion() >= "3.1.0") {
 #' @importClassesFrom sp SpatialPointsDataFrame
 #' @importClassesFrom sp SpatialPolygons
 #' @importClassesFrom sp SpatialPolygonsDataFrame
-#' @importFrom archivist cache loadFromLocalRepo saveToLocalRepo showLocalRepo
-#' @importFrom archivist createLocalRepo addTagsRepo
 #' @importFrom DBI SQL
 #' @importFrom digest digest
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
@@ -337,7 +339,7 @@ setGeneric(
            cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL)) {
-    archivist::cache(cacheRepo, FUN, ..., notOlderThan, algo, userTags = userTags)
+    standardGeneric("Cache")
   })
 
 #' @export
@@ -414,7 +416,7 @@ setMethod(
       cacheRepos <- getCacheRepos(cacheRepo, modifiedDots)
       cacheRepo <- cacheRepos[[1]]
 
-      if (getOption("reproducible.useDBI", TRUE)) {
+      if (useDBI()) {
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = cacheRepo)
           on.exit(dbDisconnect(conn), add = TRUE)
@@ -448,7 +450,7 @@ setMethod(
       }))
 
       if (any(!isIntactRepo)) {
-        if (getOption("reproducible.useDBI", TRUE))
+        if (useDBI())
           ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
             createCache(cacheRepos[[cacheRepoInd]], drv = drv, conn = conn,
                         force = isIntactRepo[cacheRepoInd])
@@ -543,10 +545,10 @@ setMethod(
       needDisconnect <- FALSE
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
-        if (getOption("reproducible.useDBI", TRUE)) {
+        if (useDBI()) {
           browser(expr = exists("._Cache_3"))
           dbTabNam <- CacheDBTableName(repo, drv = drv)
-          if (getOption("reproducible.useDBI", TRUE)) {
+          if (useDBI()) {
             if (tries > 1) {
               dbDisconnect(conn)
               conn <- dbConnectAll(drv, cachePath = repo)
@@ -603,7 +605,7 @@ setMethod(
           outputHash <- outputHashNew
           message("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'")
         } else {
-          if (getOption("reproducible.useDBI", TRUE)) {
+          if (useDBI()) {
             isInRepo <- isInRepo[isInRepo[[.cacheTableHashColName()]] != outputHash, , drop = FALSE]
           } else {
             isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
@@ -619,7 +621,7 @@ setMethod(
         lastOne <- order(isInRepo$createdDate, decreasing = TRUE)[1]
         if (is.null(notOlderThan) || (notOlderThan < lastEntry)) {
           browser(expr = exists("._Cache_6"))
-          objSize <- if (getOption("reproducible.useDBI", TRUE)) {
+          objSize <- if (useDBI()) {
             as.numeric(tail(fullCacheTableForObj[["tagValue"]][
               fullCacheTableForObj$tagKey == "file.size"], 1))
           } else {
@@ -751,7 +753,7 @@ setMethod(
           stop("There is an unknown error 03")
       }
       # Can make new methods by class to add tags to outputs
-      if (getOption("reproducible.useDBI", TRUE)) {
+      if (useDBI()) {
         output <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
       }
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
@@ -762,7 +764,7 @@ setMethod(
       if (isTRUE(any(alreadyIn)))
         otherFns <- otherFns[!alreadyIn]
 
-      if (!getOption("reproducible.useDBI", TRUE)) {
+      if (!useDBI()) {
         browser(expr = exists("._Cache_12"))
         outputToSaveIsList <- is(outputToSave, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
         if (outputToSaveIsList) {
@@ -876,7 +878,7 @@ setMethod(
         if (otsObjSize > 1e7)
           message("Saving large object (cacheId: ", outputHash, ") to Cache: ",
                   format(otsObjSize, units = "auto"))
-        if (getOption("reproducible.useDBI", TRUE)) {
+        if (useDBI()) {
           browser(expr = exists("._Cache_13"))
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                                       conn = conn, obj = outputToSave, cacheId = outputHash)
@@ -884,7 +886,7 @@ setMethod(
           while (written >= 0) {
             browser(expr = exists("._Cache_14"))
             saved <- suppressWarnings(try(silent = TRUE,
-                                          saveToLocalRepo(
+                                          archivist::saveToLocalRepo(
                                             outputToSave,
                                             repoDir = cacheRepo,
                                             artifactName = NULL,
@@ -933,10 +935,10 @@ setMethod(
 #' @keywords internal
 .loadFromLocalRepoMem2 <- function(md5hash, repoDir, ...) {
   browser(expr = exists("._loadFromLocalRepoMem2_1"))
-  if (getOption("reproducible.useDBI", TRUE)) {
+  if (useDBI()) {
     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
   } else {
-    out <- loadFromLocalRepo(md5hash, repoDir = repoDir, ...)
+    out <- archivist::loadFromLocalRepo(md5hash, repoDir = repoDir, ...)
   }
   out <- makeMemoisable(out)
   return(out)
@@ -999,19 +1001,18 @@ unmakeMemoisable.default <- function(x) {
   x
 }
 
-#' @inheritParams archivist showLocalRepo
 #' @importFrom fastdigest fastdigest
 showLocalRepo2 <- function(repoDir, algo = "xxhash64") {
   #if (requireNamespace("future"))
   #  checkFutures() # will pause until all futures are done
-  aa <- showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
+  aa <- archivist::showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
   dig <- fastdigest(aa$md5hash) # this is only on local computer, don't use digest::digest; too slow
   bb <- showLocalRepo3Mem(repoDir, dig)
   return(bb)
 }
 
 showLocalRepo3 <- function(repoDir, dig) {
-  showLocalRepo(repoDir, "tags")
+  archivist::showLocalRepo(repoDir, "tags")
 }
 
 showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
@@ -1029,7 +1030,6 @@ showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
 #'                 the \code{CacheRepo}
 #'
 #' @export
-#' @importFrom archivist saveToLocalRepo
 #' @importFrom stats runif
 #' @inheritParams Cache
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
@@ -1041,7 +1041,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
     stop("That cacheRepo does not exist")
   }
 
-  if (getOption('reproducible.useDBI', TRUE)) {
+  if (useDBI()) {
     if (missing(cacheId)) {
       cacheId <- .robustDigest(outputToSave)
     }
@@ -1053,7 +1053,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
       #future::plan(multiprocess)
       saved <- #suppressWarnings(
         try(#silent = TRUE,
-          saveToLocalRepo(
+          archivist::saveToLocalRepo(
             outputToSave,
             repoDir = cacheRepo,
             artifactName = NULL,
@@ -1633,7 +1633,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 
       if (similarsHaveNA < 2) {
         verboseMessage1(verbose, userTags)
-        if (getOption("reproducible.useDBI", TRUE)) {
+        if (useDBI()) {
           uniqueCacheId <- unique(isInRepoAlt[[.cacheTableHashColName()]])
           outputHash <- uniqueCacheId[uniqueCacheId %in% newLocalTags[[.cacheTableHashColName()]]]
         } else {

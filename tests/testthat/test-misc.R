@@ -155,7 +155,7 @@ test_that("test miscellaneous fns", {
   testthat::with_mock(
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
-      if (getOption("reproducible.useDBI", TRUE)) {
+      if (useDBI()) {
 
         mess1 <- capture_messages(expect_error(
           cloudUpload(isInRepo = data.frame(artifact = "sdfsdf"), outputHash = "sdfsiodfja",
