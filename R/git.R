@@ -4,18 +4,20 @@
 #' if a user's \file{.gitconfig} file rewrites HTTPS urls to SSH.
 #'
 #' @author Alex Chubaty
-#' @importFrom git2r config
 #' @keywords internal
 #' @name .checkGitConfig
 #' @rdname checkGitConfig
 #'
 .checkGitConfig <- function() {
-  gitConfig <- unlist(git2r::config(global = TRUE))
-  usingSSH <- any(grepl("url.ssh://git@github.com/.insteadof", names(gitConfig)))
-  if (usingSSH) {
-    stop("A .gitconfig file is rewriting HTTPS urls to SSH,",
-         " which breaks some functionality because 'git2r' can't handle SSH remotes.\n",
-         "Please [temporarily] disable this option.")
+  .Deprecated(msg = ".checkGitConfig is not sufficiently tested or developed to be useful")
+  if (requireNamespace("git2r")) {
+    gitConfig <- unlist(git2r::config(global = TRUE))
+    usingSSH <- any(grepl("url.ssh://git@github.com/.insteadof", names(gitConfig)))
+    if (usingSSH) {
+      stop("A .gitconfig file is rewriting HTTPS urls to SSH,",
+           " which breaks some functionality because 'git2r' can't handle SSH remotes.\n",
+           "Please [temporarily] disable this option.")
+    }
   }
   return(invisible(TRUE))
 }
@@ -44,8 +46,6 @@
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @export
-#' @importFrom git2r checkout clone commit cred_token cred_ssh_key head init lookup
-#'                   remote_add remote_set_url remote_url repository status
 #' @importFrom utils getFromNamespace
 #' @rdname checkoutVersion
 #'
@@ -76,69 +76,72 @@
 #' }
 #'
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "", ...) {
-  .checkGitConfig()
+  .Deprecated(msg = "checkoutVersions is not sufficiently tested or developed to be useful")
+  if (requireNamespace("git2r")) {
+    .checkGitConfig()
 
-  localRepoPath <- normalizePath(path.expand(localRepoPath), mustWork = FALSE)
+    localRepoPath <- normalizePath(path.expand(localRepoPath), mustWork = FALSE)
 
-  .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "remotes") # nolint
-  params <- .parse_git_repo(repo)
-  gitHash <- if (is.null(params$ref)) "master" else params$ref
+    .parse_git_repo <- utils::getFromNamespace("parse_git_repo", "remotes") # nolint
+    params <- .parse_git_repo(repo)
+    gitHash <- if (is.null(params$ref)) "master" else params$ref
 
-  repoName <- params$repo
-  repoAcct <- params$username
+    repoName <- params$repo
+    repoAcct <- params$username
 
-  ghPrivateKeyFile <- if (file.exists(cred)) cred else NULL
+    ghPrivateKeyFile <- if (file.exists(cred)) cred else NULL
 
-  cred <- if (is.null(ghPrivateKeyFile)) {
-     cred_token(cred)
-   } else {
-     cred_ssh_key(publickey = paste0(ghPrivateKeyFile, ".pub"), privatekey = ghPrivateKeyFile)
-   }
+    cred <- if (is.null(ghPrivateKeyFile)) {
+      git2r::cred_token(cred)
+     } else {
+       git2r::cred_ssh_key(publickey = paste0(ghPrivateKeyFile, ".pub"), privatekey = ghPrivateKeyFile)
+     }
 
-  httpsURL <- paste0("https://github.com/", repoAcct, "/", repoName, ".git")
-  sshURL <- paste0("ssh://git@github.com:", repoAcct, "/", repoName, ".git")
-  needSSH <- class(cred) == "cred_ssh_key"
-  urls <- c(httpsURL, sshURL)
-  url1 <- ifelse(needSSH, sshURL, httpsURL)
+    httpsURL <- paste0("https://github.com/", repoAcct, "/", repoName, ".git")
+    sshURL <- paste0("ssh://git@github.com:", repoAcct, "/", repoName, ".git")
+    needSSH <- class(cred) == "cred_ssh_key"
+    urls <- c(httpsURL, sshURL)
+    url1 <- ifelse(needSSH, sshURL, httpsURL)
 
-  pathExists <- dir.exists(localRepoPath)
-  pathIsRepo <- if (pathExists) {
-    is(tryCatch(repository(localRepoPath), error = function(e) FALSE),
-       "git_repository")
-  } else {
-    FALSE
-  }
-
-  if (!pathIsRepo) {
-    repo1 <- git2r::clone(url1, path.expand(localRepoPath), credentials = cred, ...)
-  } else if (pathExists && pathIsRepo) {
-    repo0 <- repository(localRepoPath, discover = TRUE)
-    if (!(remote_url(repo0) %in% urls)) {
-      stop("Local repository exists and remote URLs do not match:\n",
-           "  requested repo: ", url1, "\n",
-           "  localRepoPath: ", remote_url(repo0))
+    pathExists <- dir.exists(localRepoPath)
+    pathIsRepo <- if (pathExists) {
+      is(tryCatch(git2r::repository(localRepoPath), error = function(e) FALSE),
+         "git_repository")
+    } else {
+      FALSE
     }
-    repo1 <- repo0
-  } else {
-    repo1 <- git2r::init(localRepoPath)
-    remote_add(repo1, name = repo, url = url1)
 
-    ## if repo's remote url uses SSH, 'git2r' wonn't work -- must change it temporarily
-    isSSH <- !any(grepl(httpsURL, remote_url(repo1)))
+    if (!pathIsRepo) {
+      repo1 <- git2r::clone(url1, path.expand(localRepoPath), credentials = cred, ...)
+    } else if (pathExists && pathIsRepo) {
+      repo0 <- git2r::repository(localRepoPath, discover = TRUE)
+      if (!(git2r::remote_url(repo0) %in% urls)) {
+        stop("Local repository exists and remote URLs do not match:\n",
+             "  requested repo: ", url1, "\n",
+             "  localRepoPath: ", git2r::remote_url(repo0))
+      }
+      repo1 <- repo0
+    } else {
+      repo1 <- git2r::init(localRepoPath)
+      git2r::remote_add(repo1, name = repo, url = url1)
+
+      ## if repo's remote url uses SSH, 'git2r' wonn't work -- must change it temporarily
+      isSSH <- !any(grepl(httpsURL, git2r::remote_url(repo1)))
+      if (xor(isSSH, needSSH)) {
+        git2r::remote_set_url(repo, "origin", url = url1)
+      }
+    }
+
+    tryCatch(git2r::checkout(git2r::lookup(repo1, gitHash)), error = function(x) {
+      git2r::checkout(repo1, gitHash, ...)
+    })
+
+    ## switch back to using SSH for remote url if it was previously set
+    isSSH <- !any(grepl(httpsURL, git2r::remote_url(repo1)))
     if (xor(isSSH, needSSH)) {
-      remote_set_url(repo, "origin", url = url1)
+      git2r::remote_set_url(repo1, "origin", url = setdiff(urls, url1))
     }
+
+    return(invisible(repo1))
   }
-
-  tryCatch(git2r::checkout(lookup(repo1, gitHash)), error = function(x) {
-    checkout(repo1, gitHash, ...)
-  })
-
-  ## switch back to using SSH for remote url if it was previously set
-  isSSH <- !any(grepl(httpsURL, remote_url(repo1)))
-  if (xor(isSSH, needSSH)) {
-    remote_set_url(repo1, "origin", url = setdiff(urls, url1))
-  }
-
-  return(invisible(repo1))
 }
