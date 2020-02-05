@@ -191,10 +191,11 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       if (!is(y, "sf")) {
         y <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
       }
-      if (canProcessInMemory(x, 3) && fromDisk(x))
-        x[] <- x[]
-      m <- is.na(y[])
-      x[m] <- NA
+      x <- maskWithRasterNAs(x = x, y = y)
+      # if (canProcessInMemory(x, 3) && fromDisk(x))
+      #   x[] <- x[]
+      # m <- which(is.na(y[]))
+      # x[m] <- NA
 
       if (nlayers(x) > 1) {
         raster::stack(x)
@@ -274,4 +275,13 @@ findGDAL <- function() {
   if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
     attemptGDAL <- FALSE
   attemptGDAL
+}
+
+
+maskWithRasterNAs <- function(x, y) {
+  if (canProcessInMemory(x, 3) && fromDisk(x))
+    x[] <- x[]
+  m <- which(is.na(y[]))
+  x[m] <- NA
+  x
 }

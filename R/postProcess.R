@@ -855,11 +855,13 @@ maskInputs <- function(x, studyArea, ...) {
 #' @rdname maskInputs
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   message("    masking...")
+  browser(expr = exists("._maskInputs_1"))
   if (isTRUE(maskWithRTM)) {
-    if (canProcessInMemory(x, 3) && fromDisk(x))
-      x[] <- x[]
-    m <- is.na(rasterToMath[])
-    x[m] <- NA
+    x <- maskWithRasterNAs(x = x, y = rasterToMatch)
+    # if (canProcessInMemory(x, 3) && fromDisk(x))
+    #   x[] <- x[]
+    # m <- which(is.na(rasterToMatch[]))
+    # x[m] <- NA
     # x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
