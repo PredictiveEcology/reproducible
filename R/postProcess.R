@@ -555,7 +555,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
     }
 
     if (doProjection) {
-      if (!canProcessInMemory(x, 3) && isTRUE(useGDAL)) {
+      if (!canProcessInMemory(x, 3) && isTRUE(useGDAL) || identical(useGDAL, "force")) {
         ## the raster is in memory, but large enough to trigger this function: write it to disk
         message("   large raster: reprojecting after writing to temp drive...")
         ## rasters need to go to same file so it can be unlinked at end without losing other temp files
@@ -829,7 +829,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
   } else {
     if (!is.null(studyArea)) {
       dots <- list(...)
-      x <- fastMask(x = x, y = studyArea, cores = dots$cores)
+      x <- fastMask(x = x, y = studyArea, cores = dots$cores, ...)
     } else {
       message("studyArea not provided, skipping masking.")
     }

@@ -59,6 +59,7 @@ checkGDALVersion <- function(version) {
 #'           triggered. \code{'AUTO'} will calculate 90% of the total
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
+#' @param ... Currently unused.
 #'
 #' @return A \code{Raster*} object, masked (i.e., smaller extent and/or
 #'         several pixels converted to NA)
@@ -104,7 +105,7 @@ checkGDALVersion <- function(version) {
 #'   plot(shp, add = TRUE)
 #' }
 #'
-fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
+fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE), ...) {
   if (is(x, "RasterLayer") && requireNamespace("sf") && requireNamespace("fasterize")) {
     message("fastMask is using sf and fasterize")
 
@@ -123,8 +124,10 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       }
     }
 
-    attemptGDAL <- !raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+    attemptGDAL <- #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+      (!canProcessInMemory(x, 3) && isTRUE(useGDAL) || identical(useGDAL, "force"))
 
+    browser(expr = exists("._fastMask_2"))
     if (attemptGDAL) { # need to double check that gdal executable exists before going down this path
       gdalPath <- NULL
       if (isWindows()) {

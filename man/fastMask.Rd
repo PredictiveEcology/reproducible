@@ -4,7 +4,13 @@
 \alias{fastMask}
 \title{Faster operations on rasters}
 \usage{
-fastMask(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE))
+fastMask(
+  x,
+  y,
+  cores = NULL,
+  useGDAL = getOption("reproducible.useGDAL", TRUE),
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{Raster*} object.}
@@ -24,6 +30,8 @@ small enough to fit in memory (i.e., \emph{if the operation fails} the
 usually be faster than \code{raster::projectRaster}, the function used
 if this is \code{FALSE}. Since since the two options use different algorithms,
 there may be different projection results.}
+
+\item{...}{Currently unused.}
 }
 \value{
 A \code{Raster*} object, masked (i.e., smaller extent and/or
