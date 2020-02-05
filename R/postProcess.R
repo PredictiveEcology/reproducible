@@ -586,11 +586,13 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         if (inMemory(x)) { #must be written to disk
           dType <- assessDataType(x, type = "writeRaster")
+          dTypeGDAL <- assessDataType(x, type = "GDAL")
           writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
           rm(x) #Saves memory if this was a huge raster, but be careful
           gc()
         } else {
           tempSrcRaster <- x@file@name #Keep original raster
+          dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
         }
 
         teRas <- " " #This sets extents in GDAL
@@ -603,8 +605,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         cores <- dealWithCores(cores)
         prll <- paste0("-wo NUM_THREADS=", cores, " ")
-
-        dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
 
         browser(expr = exists("._projectInputs_2"))
         # This will clear the Windows error that sometimes occurs:
@@ -635,7 +635,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                  "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
                  " -t_srs \"", targCRS, "\"",
                  " -multi ", prll,
-                 "-ot ", dType,
+                 "-ot ", dTypeGDAL,
                  teRas,
                  "-r ", dots$method,
                  " -overwrite ",
