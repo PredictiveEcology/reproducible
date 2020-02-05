@@ -239,7 +239,9 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #' @importFrom raster projectExtent tmpDir
 #' @rdname cropInputs
 cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
-                                      extentToMatch = NULL, extentCRS = NULL, ...) {
+                                      extentToMatch = NULL, extentCRS = NULL,
+                                      useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                      ...) {
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
   if (useExtentToMatch) {
     extentToMatch <- NULL
@@ -297,10 +299,33 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         if (canProcessInMemory(x, 3)) {
           x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
         } else {
-          x <- do.call(raster::crop,
-                       args = append(list(x = x, y = cropExtent,
-                                          filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-                                     dots))
+          if (isTRUE(useGDAL)) {
+            tmpfile <- paste0(tempfile(fileext = ".tif"));
+            resForCrop <- raster(cropExtent, res = res(x), crs = crs(x))
+            gdalwarp(srcfile = filename(x), dstfile = tmpfile, tr = c(res(x)[1], res(x)[2]),
+                     overwrite = TRUE,
+                     te = c(xmin(cropExtent), ymin(cropExtent), xmax(cropExtent), ymax(cropExtent)))
+            yy <- raster(tmpfile)
+
+            # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+            #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
+            #        " -t_srs \"", targCRS, "\"",
+            #        " -multi ", prll,
+            #        "-ot ", dType,
+            #        teRas,
+            #        "-r ", dots$method,
+            #        " -overwrite ",
+            #        "-tr ", paste(tr, collapse = " "), " ",
+            #        "\"", tempSrcRaster, "\"", " ",
+            #        "\"", tempDstRaster, "\""),
+
+          } else {
+            x <- do.call(raster::crop,
+                         args = append(list(x = x, y = cropExtent,
+                                            filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
+                                       dots))
+          }
+
         }
         if (is.null(x)) {
           message("    polygons do not intersect.")

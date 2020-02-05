@@ -17,6 +17,7 @@ cropInputs(x, studyArea, rasterToMatch, ...)
   rasterToMatch = NULL,
   extentToMatch = NULL,
   extentCRS = NULL,
+  useGDAL = getOption("reproducible.useGDAL", TRUE),
   ...
 )
 
