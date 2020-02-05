@@ -203,11 +203,12 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       x <- raster(tempDstRaster)
       x <- setMinMax(x)
     } else {
-      extentY <- extent(y)
-      resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
-      if ( (xmin(x) + resX[1]) < xmin(extentY) && (xmax(x) - resX[1]) > xmax(extentY) &&
-           (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
-        x <- cropInputs(x, y)
+      # Eliot removed this because fasterize::fasterize will handle cases where x[[1]] is too big
+      #extentY <- extent(y)
+      #resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
+      # if ( (xmin(x) + resX[1]) < xmin(extentY) && (xmax(x) - resX[1]) > xmax(extentY) &&
+      #      (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
+      #   x <- cropInputs(x, y)
       if (!is(y, "sf")) {
         y <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
       }
