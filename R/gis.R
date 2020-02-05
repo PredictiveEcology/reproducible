@@ -131,14 +131,19 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     if (attemptGDAL) { # need to double check that gdal executable exists before going down this path
       gdalPath <- NULL
       if (isWindows()) {
-        possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
+        # Handle all QGIS possibilities
+        a <- dir("C:/", pattern = "Progra", full.names = TRUE)
+        a <- grep("Program Files", a, value = TRUE)
+        a <- unlist(lapply(a, dir, pattern = "QGIS", full.name = TRUE))
+        a <- unlist(lapply(a, dir, pattern = "bin", full.name = TRUE))
+
+
+        possibleWindowsPaths <- c(a, "C:/OSGeo4W64/bin",
                                   "C:/GuidosToolbox/QGIS/bin",
                                   "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
-                                  "C:/Program Files (x86)/QGIS 3.6/bin",
                                   "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
                                   "C:/Program Files/GDAL",
-                                  "C:/Program Files (x86)/GDAL",
-                                  "C:/Program Files (x86)/QGIS 2.18/bin")
+                                  "C:/Program Files (x86)/GDAL")
         message("Searching for gdal installation")
         gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
         if (any(gdalInfoExists))
