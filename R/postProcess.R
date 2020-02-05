@@ -850,7 +850,11 @@ maskInputs <- function(x, studyArea, ...) {
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   message("    masking...")
   if (isTRUE(maskWithRTM)) {
-    x[is.na(rasterToMatch)] <- NA
+    if (canProcessInMemory(x, 3) && fromDisk(x))
+      x[] <- x[]
+    m <- is.na(rasterToMath[])
+    x[m] <- NA
+    # x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
       dots <- list(...)
