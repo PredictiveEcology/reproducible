@@ -594,7 +594,9 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           tr <- res(x)
         }
 
-        gdalUtils::gdal_setInstallation()
+        gdalPath <- findGDAL()
+        gdalUtils::gdal_setInstallation(gdalPath)
+
         if (isWindows()) {
           exe <- ".exe"
         } else {

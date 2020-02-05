@@ -129,26 +129,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 
     browser(expr = exists("._fastMask_2"))
     if (attemptGDAL) { # need to double check that gdal executable exists before going down this path
-      gdalPath <- NULL
-      if (isWindows()) {
-        # Handle all QGIS possibilities
-        a <- dir("C:/", pattern = "Progra", full.names = TRUE)
-        a <- grep("Program Files", a, value = TRUE)
-        a <- unlist(lapply(a, dir, pattern = "QGIS", full.name = TRUE))
-        a <- unlist(lapply(a, dir, pattern = "bin", full.name = TRUE))
-
-
-        possibleWindowsPaths <- c(a, "C:/OSGeo4W64/bin",
-                                  "C:/GuidosToolbox/QGIS/bin",
-                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
-                                  "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
-                                  "C:/Program Files/GDAL",
-                                  "C:/Program Files (x86)/GDAL")
-        message("Searching for gdal installation")
-        gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
-        if (any(gdalInfoExists))
-          gdalPath <- possibleWindowsPaths[gdalInfoExists]
-      }
+      gdalPath <- findGDAL()
       gdalUtils::gdal_setInstallation(gdalPath)
 
       if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
@@ -265,4 +246,28 @@ dealWithCores <- function(cores) {
     }
   }
 
+}
+
+findGDAL <- function() {
+  gdalPath <- NULL
+  if (isWindows()) {
+    # Handle all QGIS possibilities
+    a <- dir("C:/", pattern = "Progra", full.names = TRUE)
+    a <- grep("Program Files", a, value = TRUE)
+    a <- unlist(lapply(a, dir, pattern = "QGIS", full.name = TRUE))
+    a <- unlist(lapply(a, dir, pattern = "bin", full.name = TRUE))
+
+
+    possibleWindowsPaths <- c(a, "C:/OSGeo4W64/bin",
+                              "C:/GuidosToolbox/QGIS/bin",
+                              "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
+                              "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
+                              "C:/Program Files/GDAL",
+                              "C:/Program Files (x86)/GDAL")
+    message("Searching for gdal installation")
+    gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
+    if (any(gdalInfoExists))
+      gdalPath <- possibleWindowsPaths[gdalInfoExists]
+  }
+  gdalPath
 }
