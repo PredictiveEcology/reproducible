@@ -865,8 +865,8 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
     # x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
-      dots <- list(...)
-      x <- fastMask(x = x, y = studyArea, cores = dots$cores, ...)
+      # dots <- list(...)
+      x <- fastMask(x = x, y = studyArea, ...)
     } else {
       message("studyArea not provided, skipping masking.")
     }
