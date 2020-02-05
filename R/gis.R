@@ -148,10 +148,12 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
         dType <- assessDataType(x, type = "writeRaster")
+        dTypeGDAL <- assessDataType(x, type = "GDAL")
         x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
         gc()
       } else {
         tempSrcRaster <- x@file@name #Keep original raster.
+        dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
       }
 
       ## GDAL requires file path to cutline - write to disk
@@ -166,14 +168,14 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       } else {
         exe <- ""
       }
-      dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+      # dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
       cores <- dealWithCores(cores)
       prll <- paste0("-wo NUM_THREADS=", cores, " ")
       system(
         paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                " -multi ", prll,
                "-ot ",
-               dType, " ",
+               dTypeGDAL, " ",
                "-crop_to_cutline ",
                "-cutline ",  "\"", tempSrcShape,"\"", " ",
                " -overwrite ",
