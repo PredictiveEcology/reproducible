@@ -129,11 +129,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 
     browser(expr = exists("._fastMask_2"))
     if (attemptGDAL) { # need to double check that gdal executable exists before going down this path
-      gdalPath <- findGDAL()
-      gdalUtils::gdal_setInstallation(gdalPath)
-
-      if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
-        attemptGDAL <- FALSE
+      attemptGDAL <- findGDAL()
     }
 
     if (attemptGDAL) {
@@ -252,6 +248,7 @@ dealWithCores <- function(cores) {
 
 findGDAL <- function() {
   gdalPath <- NULL
+  attemptGDAL <- TRUE
   if (isWindows()) {
     # Handle all QGIS possibilities
     a <- dir("C:/", pattern = "Progra", full.names = TRUE)
@@ -272,4 +269,9 @@ findGDAL <- function() {
       gdalPath <- possibleWindowsPaths[gdalInfoExists]
   }
   gdalPath
+  gdalUtils::gdal_setInstallation(gdalPath)
+
+  if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
+    attemptGDAL <- FALSE
+  attemptGDAL
 }

@@ -580,7 +580,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
     }
 
     if (doProjection) {
-      if (!canProcessInMemory(x, 3) && isTRUE(useGDAL) || identical(useGDAL, "force")) {
+      # need to double check that gdal executable exists before going down this path
+      attemptGDAL <- if (!canProcessInMemory(x, 3) && isTRUE(useGDAL) || identical(useGDAL, "force")) {
+        findGDAL()
+      } else {
+        FALSE
+      }
+
+      if (attemptGDAL) {
         ## the raster is in memory, but large enough to trigger this function: write it to disk
         message("   large raster: reprojecting after writing to temp drive...")
         ## rasters need to go to same file so it can be unlinked at end without losing other temp files
@@ -593,9 +600,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         } else {
           tr <- res(x)
         }
-
-        gdalPath <- findGDAL()
-        gdalUtils::gdal_setInstallation(gdalPath)
 
         if (isWindows()) {
           exe <- ".exe"
