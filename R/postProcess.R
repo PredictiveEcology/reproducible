@@ -1235,42 +1235,59 @@ assessDataType <- function(ras, type = 'writeRaster') {
 assessDataType.Raster <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
   N <- 1e5
-  if (ncell(ras) > N) {
-    rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
-  } else {
-    rasVals <- raster::getValues(ras)
-  }
-  minVal <- ras@data@min
-  maxVal <- ras@data@max
-  signVal <- minVal < 0
-  doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
 
-  ## writeRaster deals with infinite values as FLT8S
-  # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
-
-  if (!doubVal & !signVal) {
-    ## only check for binary if there are no decimals and no signs
-    logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
-
-    if (logi) {
-      datatype <- "LOG1S"
-    } else {
-      ## if() else is faster than if
-      datatype <- if (maxVal <= 255) "INT1U" else
-        if (maxVal <= 65534) "INT2U" else
-          if (maxVal <= 4294967296) "INT4U" else  ## note: ?dataType advises against INT4U
-            if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+  browser(expr = exists("._assessDataType_1"))
+  datatype <- NULL
+  if (ncell(ras) > 1e8) { # for very large rasters, try a different way
+    maxIntVals <- c(127, 255, 32767, 65534, 2147483647, 4294967296)
+    maxValCurrent <- maxValue(ras)
+    possibleShortCut <- maxValCurrent %in% maxIntVals
+    if (isTRUE(possibleShortCut)) {
+      suppressWarnings(ras <- setMinMax(ras))
+      if (maxValCurrent != maxValue(ras))
+        datatype <- dataType(ras)
     }
-  } else {
-    if (signVal & !doubVal) {
-      ## if() else is faster than if
-      datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
-        if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
-          if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else  ## note: ?dataType advises against INT4U
-            if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+  }
+
+  if (is.null(datatype)) {
+
+    if (ncell(ras) > N) {
+      rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
     } else {
-      if (doubVal)
-        datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      rasVals <- raster::getValues(ras)
+    }
+    minVal <- ras@data@min
+    maxVal <- ras@data@max
+    signVal <- minVal < 0
+    doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
+
+    ## writeRaster deals with infinite values as FLT8S
+    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
+
+    if (!doubVal & !signVal) {
+      ## only check for binary if there are no decimals and no signs
+      logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
+
+      if (logi) {
+        datatype <- "LOG1S"
+      } else {
+        ## if() else is faster than if
+        datatype <- if (maxVal <= 255) "INT1U" else
+          if (maxVal <= 65534) "INT2U" else
+            if (maxVal <= 4294967296) "INT4U" else  ## note: ?dataType advises against INT4U
+              if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      }
+    } else {
+      if (signVal & !doubVal) {
+        ## if() else is faster than if
+        datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
+          if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
+            if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else  ## note: ?dataType advises against INT4U
+              if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      } else {
+        if (doubVal)
+          datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      }
     }
   }
   #convert datatype if needed
