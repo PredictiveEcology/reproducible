@@ -1112,63 +1112,64 @@ test_that("prepInputs doesn't work (part 2)", {
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
     crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-    if (url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
-                   timeout = 1)) {
-      mess1 <- capture_messages({
-        test1 <- prepInputs(
-          #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-          targetFile = targetFileLuxRDS,
-          #destinationPath = ".",
-          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-          path = tmpdir)
-      })
-      mess2 <- capture_messages({
-        test2 <- prepInputs(targetFile = targetFileLuxRDS,
-                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                            path = tmpdir)
-      })
-      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-
-      mess2 <- capture_messages({
-        warn <- capture_warnings({
-          test3 <- prepInputs(targetFile = targetFileLuxRDS,
+    if (requireNamespace("RCurl")) {
+      if (RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
+                     timeout = 1)) {
+        mess1 <- capture_messages({
+          test1 <- prepInputs(
+            #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
+            targetFile = targetFileLuxRDS,
+            #destinationPath = ".",
+            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+            #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+            path = tmpdir)
+        })
+        mess2 <- capture_messages({
+          test2 <- prepInputs(targetFile = targetFileLuxRDS,
                               dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                              path = tmpdir, studyArea = StudyArea)
+                              path = tmpdir)
         })
-      })
-      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-              test = test3)
+        runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+        runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
 
-      testOnExit(testInitOut)
-      testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                    "reproducible.overwrite" = TRUE),
-                              needGoogle = TRUE)
-      mess2 <- capture_messages({
-        warn <- capture_warnings({
-          test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
-                              country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
+        mess2 <- capture_messages({
+          warn <- capture_warnings({
+            test3 <- prepInputs(targetFile = targetFileLuxRDS,
+                                dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+                                path = tmpdir, studyArea = StudyArea)
+          })
         })
-      })
-      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-              test = test3)
+        runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+                test = test3)
 
-      runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
-              expectedMess = expectedMessagePostProcess,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
+        testOnExit(testInitOut)
+        testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                      "reproducible.overwrite" = TRUE),
+                                needGoogle = TRUE)
+        mess2 <- capture_messages({
+          warn <- capture_warnings({
+            test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
+                                country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
+          })
+        })
+        runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+                test = test3)
 
-      testOnExit(testInitOut)
-      testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-                                                    "reproducible.inputPaths" = NULL),
-                              needGoogle = TRUE)
-    } else {
+        runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+                expectedMess = expectedMessagePostProcess,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
+
+        testOnExit(testInitOut)
+        testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                      "reproducible.inputPaths" = NULL),
+                                needGoogle = TRUE)
+      } else {
+      }
     }
-
     # Add a study area to Crop and Mask to
     # Create a "study area"
     coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
@@ -1565,19 +1566,20 @@ test_that("options inputPaths", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  useGADM <- url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds", timeout = 1)
-  theFile <- if (useGADM) {
-    targetFileLuxRDS
-  } else {
-    "rasterTest.tif"
-  }
-  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+  if (requireNamespace("RCurl")) {
+    useGADM <- RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds", timeout = 1)
+    theFile <- if (useGADM) {
+      targetFileLuxRDS
+    } else {
+      "rasterTest.tif"
+    }
+    url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
 
-  f <- formals(prepInputs);
+    f <- formals(prepInputs);
 
-  if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
-  options("reproducible.inputPaths" = NULL)
-  options("reproducible.inputPathsRecursive" = FALSE)
+    if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
+    options("reproducible.inputPaths" = NULL)
+    options("reproducible.inputPathsRecursive" = FALSE)
 
     mess1 <- capture_messages({
       test1 <- prepInputs(destinationPath = tmpdir,
@@ -1722,6 +1724,7 @@ test_that("options inputPaths", {
     expect_is(test1, "spatialObjects")
     expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 0) # no link made b/c identical dir
     expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 0) # no link made b/c identical dir
+  }
 })
 
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {

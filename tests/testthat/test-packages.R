@@ -166,7 +166,6 @@ test_that("package-related functions work", {
 #     expect_identical(aStart,bStart)
 #     expect_true(aTime[3] > bTime[3])
 #
-#     pkg <- "dplyr"
 #     df <- expand.grid(suggests = c(TRUE, FALSE),
 #                       #depends = c(TRUE, FALSE),
 #                       imports = c(TRUE, FALSE),

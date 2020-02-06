@@ -670,7 +670,6 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #'
 #' @export
 #' @importFrom data.table data.table rbindlist setDT setnames
-#' @importFrom RCurl url.exists
 #' @importFrom remotes install_github
 #' @importFrom utils available.packages install.packages installed.packages read.table
 #' @importFrom versions install.versions
@@ -774,7 +773,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     whPkgsNeeded <- unique(whPkgsNeeded, by = c("instPkgs", "instVers"))
 
     if (nrow(whPkgsNeeded)) {
-      internetExists <- url.exists("www.google.com")
+      internetExists <- internetExists()
 
       packages <- whPkgsNeeded[, "instPkgs"]
       if (length(gitHubPackages)) {
@@ -861,7 +860,14 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                      paste0(tryCRANarchive$instPkgs, "_",
                                             tryCRANarchive$instVers, ".tar.gz"))
             for (pkg in packageURLs) {
-              if (url.exists(pkg)) {
+              urlex <- if (requireNamespace("RCurl", quietly = TRUE)) # cleaner with RCurl, but not required
+                RCurl::url.exists(pkg)
+              else {
+                message(RCurlMess)
+                TRUE
+              }
+
+              if (urlex) {
                 system(paste0(rpath, " --quiet --vanilla -e \"install.packages('", pkg,
                               "', lib='", libPath,
                               "', dependencies = FALSE, repos = NULL, type = 'source')\""), wait = TRUE)
@@ -988,7 +994,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(libPathPkgs))]
   needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
   if (length(needInstall)) {
-    internetExists <- url.exists("www.google.com")
+    internetExists <- internetExists()
     gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
     if (length(gitPkgs)) {
       oldLibPaths <- .libPaths()
@@ -1215,3 +1221,29 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
     unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
   }
 }
+
+
+internetExists <- function() {
+  if (requireNamespace("RCurl", quietly = TRUE)) {
+    out <- RCurl::url.exists("www.google.com")
+  } else {
+    message(RCurlMess)
+    if (.Platform$OS.type == "windows") {
+      ipmessage <- system("ipconfig", intern = TRUE)
+    } else {
+      ipmessage <- system("ifconfig", intern = TRUE)
+    }
+    validIP <- "((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)[.]){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+    linesWithIP <- grep(validIP, ipmessage)
+    out <- if (length(linesWithIP)) {
+      any(linesWithIP) && all(!grepl("127.0.0.1", ipmessage[linesWithIP]))
+    } else {
+      FALSE
+    }
+    out
+  }
+  return(out)
+}
+
+RCurlMess <- paste0("install.packages('RCurl') may give a more reliable detection ",
+"of internet connection")

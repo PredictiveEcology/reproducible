@@ -50,7 +50,7 @@
 #'
 #' @return A hash i.e., digest of the object passed in.
 #'
-#' @seealso \code{\link[archivist]{cache}}.
+#' @seealso \code{archivist::cache}.
 #'
 #' @author Eliot McIntire
 #' @export
@@ -122,6 +122,15 @@ setMethod(
       object <- eval_tidy(object)
     }
 
+    if (is(object, "cluster")) {# can't get this class from rlang via importClass rlang quosure
+      out <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+        digest(NULL, algo = algo)
+      else
+        fastdigest(NULL)
+      return(out)
+    }
+
+
     # passByReference -- while doing pass by reference attribute setting is faster, is
     #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
     object1 <- .removeCacheAtts(object, passByReference = FALSE)
@@ -131,21 +140,6 @@ setMethod(
       fastdigest(object1)
 })
 
-#' @import parallel
-setOldClass("cluster")
-
-#' @rdname robustDigest
-#' @export
-setMethod(
-  ".robustDigest",
-  signature = "cluster",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
-    #object <- .removeCacheAtts(object)
-    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-      digest(NULL, algo = algo)
-    else
-      fastdigest(NULL)
-})
 
 #' @rdname robustDigest
 #' @export

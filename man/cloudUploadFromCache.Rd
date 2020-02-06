@@ -19,7 +19,7 @@ cloudUploadFromCache(
 
 \item{outputHash}{The \code{cacheId} of the object to upload}
 
-\item{saved}{The character string of the saved file's archivist digest value.}
+\item{saved}{The character string of the saved file's digest value.}
 
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}

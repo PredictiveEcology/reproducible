@@ -142,7 +142,8 @@ between \code{after} or \code{before}) from the repository located at
 Invisibly returns a \code{data.table} of the removed items.
 }
 \description{
-These are convenience wrappers around \code{archivist} package functions.
+These are convenience wrappers around \code{DBI}
+(formerly \code{archivist}) package functions.
 They allow the user a bit of control over what is being cached.
 }
 \details{
@@ -216,6 +217,6 @@ cc(ask = FALSE, x = tmpDir) # Cache is
 cc(ask = FALSE, x = tmpDir) # Cache is already empty
 }
 \seealso{
-\code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
+\code{\link{mergeCache}}, \code{archivist::splitTagsLocal}. Many more examples
 in \code{\link{Cache}}
 }

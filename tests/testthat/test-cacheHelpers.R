@@ -145,7 +145,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(grepl("other", unlist(.unlistToCharacter(1, 0))))
 
   ## writeFuture
-  comp <- if (getOption("reproducible.useDBI", TRUE)) .robustDigest("sdf") else
+  comp <- if (useDBI()) .robustDigest("sdf") else
     "dda1fbb70d256e6b3b696ef0176c63de"
   expect_true(identical(comp,
                         writeFuture(1, "sdf", cacheRepo = tmpCache, userTags = "",

@@ -3,7 +3,6 @@
 \name{.robustDigest}
 \alias{.robustDigest}
 \alias{.robustDigest,ANY-method}
-\alias{.robustDigest,cluster-method}
 \alias{.robustDigest,function-method}
 \alias{.robustDigest,expression-method}
 \alias{.robustDigest,character-method}
@@ -26,8 +25,6 @@
 )
 
 \S4method{.robustDigest}{ANY}(object, .objects, length, algo, quick, classOptions)
-
-\S4method{.robustDigest}{cluster}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{`function`}(object, .objects, length, algo, quick, classOptions)
 
@@ -90,7 +87,7 @@ as paths, if they are file-backed.}
 specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
-\item{...}{Arguments of \code{FUN} function .}
+\item{...}{Arguments passed to \code{FUN}}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used
@@ -187,7 +184,7 @@ digest::digest(r2) # different
 
 }
 \seealso{
-\code{\link[archivist]{cache}}.
+\code{archivist::cache}.
 }
 \author{
 Eliot McIntire

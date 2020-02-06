@@ -59,6 +59,7 @@ checkGDALVersion <- function(version) {
 #'           triggered. \code{'AUTO'} will calculate 90% of the total
 #'           number of cores in the system, while an integer or rounded
 #'           float will be passed as the exact number of cores to be used.
+#' @param ... Currently unused.
 #'
 #' @return A \code{Raster*} object, masked (i.e., smaller extent and/or
 #'         several pixels converted to NA)
@@ -66,8 +67,6 @@ checkGDALVersion <- function(version) {
 #' @author Eliot McIntire
 #' @export
 #' @inheritParams projectInputs.Raster
-#' @importFrom fasterize fasterize
-#' @importFrom parallel detectCores
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sf st_as_sf st_write
@@ -106,7 +105,7 @@ checkGDALVersion <- function(version) {
 #'   plot(shp, add = TRUE)
 #' }
 #'
-fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
+fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE), ...) {
   if (is(x, "RasterLayer") && requireNamespace("sf") && requireNamespace("fasterize")) {
     message("fastMask is using sf and fasterize")
 
@@ -125,28 +124,12 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       }
     }
 
-    attemptGDAL <- !raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+    attemptGDAL <- #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+      (!canProcessInMemory(x, 3) && isTRUE(useGDAL) || identical(useGDAL, "force"))
 
+    browser(expr = exists("._fastMask_2"))
     if (attemptGDAL) { # need to double check that gdal executable exists before going down this path
-      gdalPath <- NULL
-      if (isWindows()) {
-        possibleWindowsPaths <- c("C:/PROGRA~1/QGIS3~1.0/bin/", "C:/OSGeo4W64/bin",
-                                  "C:/GuidosToolbox/QGIS/bin",
-                                  "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
-                                  "C:/Program Files (x86)/QGIS 3.6/bin",
-                                  "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
-                                  "C:/Program Files/GDAL",
-                                  "C:/Program Files (x86)/GDAL",
-                                  "C:/Program Files (x86)/QGIS 2.18/bin")
-        message("Searching for gdal installation")
-        gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
-        if (any(gdalInfoExists))
-          gdalPath <- possibleWindowsPaths[gdalInfoExists]
-      }
-      gdalUtils::gdal_setInstallation(gdalPath)
-
-      if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
-        attemptGDAL <- FALSE
+      attemptGDAL <- findGDAL()
     }
 
     if (attemptGDAL) {
@@ -161,10 +144,12 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
         dType <- assessDataType(x, type = "writeRaster")
+        dTypeGDAL <- assessDataType(x, type = "GDAL")
         x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
         gc()
       } else {
         tempSrcRaster <- x@file@name #Keep original raster.
+        dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
       }
 
       ## GDAL requires file path to cutline - write to disk
@@ -179,26 +164,14 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       } else {
         exe <- ""
       }
-      dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
-      if (is.null(cores) || cores == "AUTO") {
-        cores <- as.integer(parallel::detectCores() * 0.9)
-        prll <- paste0("-wo NUM_THREADS=", cores, " ")
-      } else {
-        if (!is.integer(cores)) {
-          if (is.character(cores) | is.logical(cores)) {
-            stop("'cores' needs to be passed as numeric or 'AUTO'")
-          } else {
-            prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
-          }
-        } else {
-          prll <- paste0("-wo NUM_THREADS=", cores, " ")
-        }
-      }
+      # dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+      cores <- dealWithCores(cores)
+      prll <- paste0("-wo NUM_THREADS=", cores, " ")
       system(
         paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                " -multi ", prll,
                "-ot ",
-               dType, " ",
+               dTypeGDAL, " ",
                "-crop_to_cutline ",
                "-cutline ",  "\"", tempSrcShape,"\"", " ",
                " -overwrite ",
@@ -209,18 +182,20 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       x <- raster(tempDstRaster)
       x <- setMinMax(x)
     } else {
-      extentY <- extent(y)
-      resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
-      if ( (xmin(x) + resX[1]) < xmin(extentY) && (xmax(x) - resX[1]) > xmax(extentY) &&
-           (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
-        x <- cropInputs(x, y)
+      # Eliot removed this because fasterize::fasterize will handle cases where x[[1]] is too big
+      #extentY <- extent(y)
+      #resX <- res(x) * 2 # allow a fuzzy interpretation -- the cropInputs here won't make it perfect anyway
+      # if ( (xmin(x) + resX[1]) < xmin(extentY) && (xmax(x) - resX[1]) > xmax(extentY) &&
+      #      (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
+      #   x <- cropInputs(x, y)
       if (!is(y, "sf")) {
         y <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
       }
-      if (canProcessInMemory(x, 3) && fromDisk(x))
-        x[] <- x[]
-      m <- is.na(y[])
-      x[m] <- NA
+      x <- maskWithRasterNAs(x = x, y = y)
+      # if (canProcessInMemory(x, 3) && fromDisk(x))
+      #   x[] <- x[]
+      # m <- which(is.na(y[]))
+      # x[m] <- NA
 
       if (nlayers(x) > 1) {
         raster::stack(x)
@@ -252,3 +227,61 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 bigRastersTmpFolder <- function() file.path(raster::tmpDir(), "bigRasters")
 
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
+
+dealWithCores <- function(cores) {
+  if (is.null(cores) || cores == "AUTO") {
+    if (requireNamespace("parallel")) {
+      cores <- as.integer(parallel::detectCores() * 0.9)
+    } else {
+      cores <- 1L
+    }
+  } else {
+    if (!is.integer(cores)) {
+      if (is.character(cores) | is.logical(cores)) {
+        stop("'cores' needs to be passed as numeric or 'AUTO'")
+      } else {
+        cores <- as.integer(cores)
+      }
+    }
+  }
+
+}
+
+findGDAL <- function() {
+  gdalPath <- NULL
+  attemptGDAL <- TRUE
+  if (isWindows()) {
+    # Handle all QGIS possibilities
+    a <- dir("C:/", pattern = "Progra", full.names = TRUE)
+    a <- grep("Program Files", a, value = TRUE)
+    a <- unlist(lapply(a, dir, pattern = "QGIS", full.name = TRUE))
+    a <- unlist(lapply(a, dir, pattern = "bin", full.name = TRUE))
+
+
+    possibleWindowsPaths <- c(a, "C:/OSGeo4W64/bin",
+                              "C:/GuidosToolbox/QGIS/bin",
+                              "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
+                              "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
+                              "C:/Program Files/GDAL",
+                              "C:/Program Files (x86)/GDAL")
+    message("Searching for gdal installation")
+    gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
+    if (any(gdalInfoExists))
+      gdalPath <- possibleWindowsPaths[gdalInfoExists]
+  }
+  gdalPath
+  gdalUtils::gdal_setInstallation(gdalPath)
+
+  if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
+    attemptGDAL <- FALSE
+  attemptGDAL
+}
+
+
+maskWithRasterNAs <- function(x, y) {
+  if (canProcessInMemory(x, 3) && fromDisk(x))
+    x[] <- x[]
+  m <- which(is.na(y[]))
+  x[m] <- NA
+  x
+}

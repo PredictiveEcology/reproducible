@@ -211,12 +211,12 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
 #'                      See details in \code{\link{postProcess}}.
 #'
 #' @param ... Passed to raster::crop
+#' @inheritParams projectInputs
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_postProcess.R
 #' @export
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
-#' @importFrom rgeos gIsValid
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
 #' @rdname cropInputs
 cropInputs <- function(x, studyArea, rasterToMatch, ...) {
@@ -240,7 +240,9 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #' @importFrom raster projectExtent tmpDir
 #' @rdname cropInputs
 cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
-                                      extentToMatch = NULL, extentCRS = NULL, ...) {
+                                      extentToMatch = NULL, extentCRS = NULL,
+                                      useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                      ...) {
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
   if (useExtentToMatch) {
     extentToMatch <- NULL
@@ -298,10 +300,33 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         if (canProcessInMemory(x, 3)) {
           x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
         } else {
-          x <- do.call(raster::crop,
-                       args = append(list(x = x, y = cropExtent,
-                                          filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-                                     dots))
+          if (isTRUE(useGDAL)) {
+            tmpfile <- paste0(tempfile(fileext = ".tif"));
+            resForCrop <- raster(cropExtent, res = res(x), crs = crs(x))
+            gdalwarp(srcfile = filename(x), dstfile = tmpfile, tr = c(res(x)[1], res(x)[2]),
+                     overwrite = TRUE,
+                     te = c(xmin(cropExtent), ymin(cropExtent), xmax(cropExtent), ymax(cropExtent)))
+            yy <- raster(tmpfile)
+
+            # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+            #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
+            #        " -t_srs \"", targCRS, "\"",
+            #        " -multi ", prll,
+            #        "-ot ", dType,
+            #        teRas,
+            #        "-r ", dots$method,
+            #        " -overwrite ",
+            #        "-tr ", paste(tr, collapse = " "), " ",
+            #        "\"", tempSrcRaster, "\"", " ",
+            #        "\"", tempDstRaster, "\""),
+
+          } else {
+            x <- do.call(raster::crop,
+                         args = append(list(x = x, y = cropExtent,
+                                            filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
+                                       dots))
+          }
+
         }
         if (is.null(x)) {
           message("    polygons do not intersect.")
@@ -424,8 +449,15 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
     if (is.null(objectName)) objectName = "SpatialPolygon"
     if (is(x, "SpatialPolygons")) {
       message("Checking for errors in ", objectName)
-      if (suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))) {
-        message("Found errors in ", objectName, ". Attempting to correct.")
+      anyNotValid <- if (requireNamespace("rgeos", quietly = TRUE)) {
+        anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
+        if (isTRUE(anv)) message("Found errors in ", objectName, ". Attempting to correct.")
+        anv
+      } else {
+        message("fixErrors for SpatialPolygons will be faster with install.packages('rgeos')")
+        TRUE
+      }
+      if (anyNotValid) {
         warn <- capture_warnings({
           x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
         })
@@ -508,17 +540,18 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @param useGDAL Logical, defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
+#' @param useGDAL Logical or \code{"force"}.
+#'     Defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
 #'     If \code{TRUE}, then this function will use \code{gdalwarp} only when not
 #'     small enough to fit in memory (i.e., \emph{if the operation fails} the
 #'     \code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
 #'     usually be faster than \code{raster::projectRaster}, the function used
 #'     if this is \code{FALSE}. Since since the two options use different algorithms,
-#'     there may be different projection results.
+#'     there may be different projection results. \code{"force"} will cause it to
+#'     use GDAL regardless of the memory test described here.
 #'
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
-#' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
 #' @importFrom testthat capture_warnings
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
@@ -550,7 +583,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
     }
 
     if (doProjection) {
-      if (!canProcessInMemory(x, 3) && isTRUE(useGDAL)) {
+      # need to double check that gdal executable exists before going down this path
+      attemptGDAL <- if (!canProcessInMemory(x, 3) && isTRUE(useGDAL) || identical(useGDAL, "force")) {
+        findGDAL()
+      } else {
+        FALSE
+      }
+
+      if (attemptGDAL) {
         ## the raster is in memory, but large enough to trigger this function: write it to disk
         message("   large raster: reprojecting after writing to temp drive...")
         ## rasters need to go to same file so it can be unlinked at end without losing other temp files
@@ -564,7 +604,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           tr <- res(x)
         }
 
-        gdalUtils::gdal_setInstallation()
         if (isWindows()) {
           exe <- ".exe"
         } else {
@@ -581,11 +620,13 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         if (inMemory(x)) { #must be written to disk
           dType <- assessDataType(x, type = "writeRaster")
+          dTypeGDAL <- assessDataType(x, type = "GDAL")
           writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
           rm(x) #Saves memory if this was a huge raster, but be careful
           gc()
         } else {
           tempSrcRaster <- x@file@name #Keep original raster
+          dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
         }
 
         teRas <- " " #This sets extents in GDAL
@@ -595,22 +636,9 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                                           extent(rasterToMatch)@xmax, " ",
                                           extent(rasterToMatch)@ymax, " "))
         }
-        if (is.null(cores) || cores == "AUTO") {
-          cores <- as.integer(parallel::detectCores() * 0.9)
-          prll <- paste0("-wo NUM_THREADS=", cores, " ")
-        } else {
-          if (!is.integer(cores)) {
-            if (is.character(cores) | is.logical(cores)) {
-              stop("'cores' needs to be passed as numeric or 'AUTO'")
-            } else {
-              prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
-            }
-          } else {
-            prll <- paste0("-wo NUM_THREADS=", cores, " ")
-          }
-        }
 
-        dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+        cores <- dealWithCores(cores)
+        prll <- paste0("-wo NUM_THREADS=", cores, " ")
 
         browser(expr = exists("._projectInputs_2"))
         # This will clear the Windows error that sometimes occurs:
@@ -641,7 +669,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                  "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
                  " -t_srs \"", targCRS, "\"",
                  " -multi ", prll,
-                 "-ot ", dType,
+                 "-ot ", dTypeGDAL,
                  teRas,
                  "-r ", dots$method,
                  " -overwrite ",
@@ -830,12 +858,18 @@ maskInputs <- function(x, studyArea, ...) {
 #' @rdname maskInputs
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   message("    masking...")
+  browser(expr = exists("._maskInputs_1"))
   if (isTRUE(maskWithRTM)) {
-    x[is.na(rasterToMatch)] <- NA
+    x <- maskWithRasterNAs(x = x, y = rasterToMatch)
+    # if (canProcessInMemory(x, 3) && fromDisk(x))
+    #   x[] <- x[]
+    # m <- which(is.na(rasterToMatch[]))
+    # x[m] <- NA
+    # x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
-      dots <- list(...)
-      x <- fastMask(x = x, y = studyArea, cores = dots$cores)
+      # dots <- list(...)
+      x <- fastMask(x = x, y = studyArea, ...)
     } else {
       message("studyArea not provided, skipping masking.")
     }
@@ -1206,42 +1240,59 @@ assessDataType <- function(ras, type = 'writeRaster') {
 assessDataType.Raster <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
   N <- 1e5
-  if (ncell(ras) > N) {
-    rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
-  } else {
-    rasVals <- raster::getValues(ras)
-  }
-  minVal <- ras@data@min
-  maxVal <- ras@data@max
-  signVal <- minVal < 0
-  doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
 
-  ## writeRaster deals with infinite values as FLT8S
-  # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
-
-  if (!doubVal & !signVal) {
-    ## only check for binary if there are no decimals and no signs
-    logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
-
-    if (logi) {
-      datatype <- "LOG1S"
-    } else {
-      ## if() else is faster than if
-      datatype <- if (maxVal <= 255) "INT1U" else
-        if (maxVal <= 65534) "INT2U" else
-          if (maxVal <= 4294967296) "INT4U" else  ## note: ?dataType advises against INT4U
-            if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+  browser(expr = exists("._assessDataType_1"))
+  datatype <- NULL
+  if (ncell(ras) > 1e8) { # for very large rasters, try a different way
+    maxIntVals <- c(127, 255, 32767, 65534, 2147483647, 4294967296)
+    maxValCurrent <- maxValue(ras)
+    possibleShortCut <- maxValCurrent %in% maxIntVals
+    if (isTRUE(possibleShortCut)) {
+      suppressWarnings(ras <- setMinMax(ras))
+      if (maxValCurrent != maxValue(ras))
+        datatype <- dataType(ras)
     }
-  } else {
-    if (signVal & !doubVal) {
-      ## if() else is faster than if
-      datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
-        if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
-          if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else  ## note: ?dataType advises against INT4U
-            if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+  }
+
+  if (is.null(datatype)) {
+
+    if (ncell(ras) > N) {
+      rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
     } else {
-      if (doubVal)
-        datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      rasVals <- raster::getValues(ras)
+    }
+    minVal <- ras@data@min
+    maxVal <- ras@data@max
+    signVal <- minVal < 0
+    doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
+
+    ## writeRaster deals with infinite values as FLT8S
+    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
+
+    if (!doubVal & !signVal) {
+      ## only check for binary if there are no decimals and no signs
+      logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
+
+      if (logi) {
+        datatype <- "LOG1S"
+      } else {
+        ## if() else is faster than if
+        datatype <- if (maxVal <= 255) "INT1U" else
+          if (maxVal <= 65534) "INT2U" else
+            if (maxVal <= 4294967296) "INT4U" else  ## note: ?dataType advises against INT4U
+              if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      }
+    } else {
+      if (signVal & !doubVal) {
+        ## if() else is faster than if
+        datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
+          if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
+            if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else  ## note: ?dataType advises against INT4U
+              if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      } else {
+        if (doubVal)
+          datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      }
     }
   }
   #convert datatype if needed
