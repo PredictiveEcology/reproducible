@@ -211,6 +211,7 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
 #'                      See details in \code{\link{postProcess}}.
 #'
 #' @param ... Passed to raster::crop
+#' @inheritParams projectInputs
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_postProcess.R
 #' @export
@@ -539,13 +540,15 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @param useGDAL Logical, defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
+#' @param useGDAL Logical or \code{"force"}.
+#'     Defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
 #'     If \code{TRUE}, then this function will use \code{gdalwarp} only when not
 #'     small enough to fit in memory (i.e., \emph{if the operation fails} the
 #'     \code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
 #'     usually be faster than \code{raster::projectRaster}, the function used
 #'     if this is \code{FALSE}. Since since the two options use different algorithms,
-#'     there may be different projection results.
+#'     there may be different projection results. \code{"force"} will cause it to
+#'     use GDAL regardless of the memory test described here.
 #'
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
