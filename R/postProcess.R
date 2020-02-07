@@ -337,7 +337,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           }
 
         }
-      }
+
         if (is.null(x)) {
           message("    polygons do not intersect.")
         }
@@ -738,7 +738,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
         if (!identical(crs(x), targetCRS)) {
           crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
-                              #  they should be
+          #  they should be
         }
 
         # return the integer class to the data in the raster object
