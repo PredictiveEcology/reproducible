@@ -299,33 +299,36 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
             message("x was a SpatialPolygonsDataFrame with no data; converting to SpatialPolygons object")
           }
         }
-        if (canProcessInMemory(x, 3)) {
-          x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
+        # need to double check that gdal executable exists before going down this path
+        attemptGDAL <- attemptGDAL(x, useGDAL) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+
+        if (attemptGDAL) {
+          tmpfile <- paste0(tempfile(fileext = ".tif"));
+          resForCrop <- raster(cropExtent, res = res(x), crs = crs(x))
+          # Need to create correct "origin" meaning the 0,0 are same. If we take the
+          #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
+          newExt <- c(round(c(xmin(cropExtent), xmax(cropExtent))/res(x)[1],0)*res(x)[1],
+                      round(c(ymin(cropExtent), ymax(cropExtent))/res(x)[2],0)*res(x)[2])
+          gdalwarp(srcfile = filename(x), dstfile = tmpfile, tr = c(res(x)[1], res(x)[2]),
+                   overwrite = TRUE,
+                   te = c(newExt[1], newExt[3], newExt[2], newExt[4]))
+          x <- raster(tmpfile)
+
+          # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+          #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
+          #        " -t_srs \"", targCRS, "\"",
+          #        " -multi ", prll,
+          #        "-ot ", dType,
+          #        teRas,
+          #        "-r ", dots$method,
+          #        " -overwrite ",
+          #        "-tr ", paste(tr, collapse = " "), " ",
+          #        "\"", tempSrcRaster, "\"", " ",
+          #        "\"", tempDstRaster, "\""),
+
         } else {
-          if (isTRUE(useGDAL)) {
-            tmpfile <- paste0(tempfile(fileext = ".tif"));
-            resForCrop <- raster(cropExtent, res = res(x), crs = crs(x))
-            # Need to create correct "origin" meaning the 0,0 are same. If we take the
-            #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
-            newExt <- c(round(c(xmin(cropExtent), xmax(cropExtent))/res(x)[1],0)*res(x)[1],
-                        round(c(ymin(cropExtent), ymax(cropExtent))/res(x)[2],0)*res(x)[2])
-            gdalwarp(srcfile = filename(x), dstfile = tmpfile, tr = c(res(x)[1], res(x)[2]),
-                     overwrite = TRUE,
-                     te = c(newExt[1], newExt[3], newExt[2], newExt[4]))
-            x <- raster(tmpfile)
-
-            # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-            #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
-            #        " -t_srs \"", targCRS, "\"",
-            #        " -multi ", prll,
-            #        "-ot ", dType,
-            #        teRas,
-            #        "-r ", dots$method,
-            #        " -overwrite ",
-            #        "-tr ", paste(tr, collapse = " "), " ",
-            #        "\"", tempSrcRaster, "\"", " ",
-            #        "\"", tempDstRaster, "\""),
-
+          if (canProcessInMemory(x, 3)) {
+            x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
           } else {
             x <- do.call(raster::crop,
                          args = append(list(x = x, y = cropExtent,
@@ -334,6 +337,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           }
 
         }
+      }
         if (is.null(x)) {
           message("    polygons do not intersect.")
         }
@@ -590,11 +594,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
     if (doProjection) {
       # need to double check that gdal executable exists before going down this path
-      attemptGDAL <- if (!canProcessInMemory(x, 3) && isTRUE(useGDAL) || identical(useGDAL, "force")) {
-        findGDAL()
-      } else {
-        FALSE
-      }
+      attemptGDAL <- attemptGDAL(x, useGDAL) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
 
       if (attemptGDAL) {
         ## the raster is in memory, but large enough to trigger this function: write it to disk

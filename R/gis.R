@@ -124,13 +124,10 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       }
     }
 
-    attemptGDAL <- #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
-      (!canProcessInMemory(x, 3) && isTRUE(useGDAL) || identical(useGDAL, "force"))
+    # need to double check that gdal executable exists before going down this path
+    attemptGDAL <- attemptGDAL(x, useGDAL)
 
     browser(expr = exists("._fastMask_2"))
-    if (attemptGDAL) { # need to double check that gdal executable exists before going down this path
-      attemptGDAL <- findGDAL()
-    }
 
     if (attemptGDAL) {
      # call gdal
@@ -274,6 +271,16 @@ findGDAL <- function() {
 
   if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
     attemptGDAL <- FALSE
+  attemptGDAL
+}
+
+attemptGDAL <- function(x, useGDAL) {
+  attemptGDAL <- if (!canProcessInMemory(x, 3) && isTRUE(useGDAL) ||
+                     identical(useGDAL, "force")) {
+    findGDAL()
+  } else {
+    FALSE
+  }
   attemptGDAL
 }
 
