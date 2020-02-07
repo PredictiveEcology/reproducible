@@ -243,6 +243,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL,
                                       useGDAL = getOption("reproducible.useGDAL", TRUE),
                                       ...) {
+  browser(expr = exists("._cropInputs_1"))
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
   if (useExtentToMatch) {
     extentToMatch <- NULL
@@ -284,6 +285,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
       }
     }
 
+    browser(expr = exists("._cropInputs_2"))
     if (!is.null(cropExtent)) {
       # crop it
       if (!identical(cropExtent, extent(x))) {
@@ -303,10 +305,14 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           if (isTRUE(useGDAL)) {
             tmpfile <- paste0(tempfile(fileext = ".tif"));
             resForCrop <- raster(cropExtent, res = res(x), crs = crs(x))
+            # Need to create correct "origin" meaning the 0,0 are same. If we take the
+            #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
+            newExt <- c(round(c(xmin(cropExtent), xmax(cropExtent))/res(x)[1],0)*res(x)[1],
+                        round(c(ymin(cropExtent), ymax(cropExtent))/res(x)[2],0)*res(x)[2])
             gdalwarp(srcfile = filename(x), dstfile = tmpfile, tr = c(res(x)[1], res(x)[2]),
                      overwrite = TRUE,
-                     te = c(xmin(cropExtent), ymin(cropExtent), xmax(cropExtent), ymax(cropExtent)))
-            yy <- raster(tmpfile)
+                     te = c(newExt[1], newExt[3], newExt[2], newExt[4]))
+            x <- raster(tmpfile)
 
             # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
             #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
