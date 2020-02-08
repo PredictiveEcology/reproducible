@@ -576,7 +576,7 @@ setMethod(
           userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
           while (!written) {
             saved <- suppressWarnings(try(
-              saveToLocalRepo(outputToSave, repoDir = cacheTo,
+              archivist::saveToLocalRepo(outputToSave, repoDir = cacheTo,
                               artifactName = NULL,
                               archiveData = FALSE, archiveSessionInfo = FALSE,
                               archiveMiniature = FALSE, rememberName = FALSE,

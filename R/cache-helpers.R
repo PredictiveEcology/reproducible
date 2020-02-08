@@ -292,6 +292,7 @@ setMethod(
 #'
 #' @author Eliot McIntire
 #' @importFrom methods selectMethod showMethods
+#' @importFrom utils head
 #' @keywords internal
 #' @rdname cacheHelper
 getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # nolint

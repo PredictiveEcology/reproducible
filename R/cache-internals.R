@@ -273,7 +273,7 @@
       output <- loadFromCache(cacheRepo, isInRepo$cacheId[lastOne])
 
     } else {
-      output <- loadFromLocalRepo(cacheObj,
+      output <- archivist::loadFromLocalRepo(cacheObj,
                                   repoDir = cacheRepo, value = TRUE)
     }
   }
