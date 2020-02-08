@@ -66,9 +66,9 @@ test_that("fastMask produces correct results", {
         #     newStack3 <- fastMask(x = origStack[[2]], y = shpDF))
         #   )
         # }
-        # mess <- capture_messages(
-        #     out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"))
-        # expect_true(any(grepl("GDAL because crs", mess)))
+        mess <- capture_messages(
+            out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"))
+        expect_true(any(grepl("GDAL because crs", mess)))
 
       }
     }
