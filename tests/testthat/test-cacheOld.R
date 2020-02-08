@@ -1,7 +1,8 @@
 ##########################
 test_that("test miscellaneous unit tests cache-helpers", {
   testInitOut <- testInit(libraries = "raster", tmpFileExt = c(".tif", ".grd"),
-                          opts = list(reproducible.useMemoise = TRUE, reproducible.useDBI = FALSE))
+                          opts = list(reproducible.useMemoise = TRUE, reproducible.useDBI = FALSE,
+                                      reproducible.showSimilar = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
