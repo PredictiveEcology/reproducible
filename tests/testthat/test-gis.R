@@ -32,7 +32,6 @@ test_that("fastMask produces correct results", {
   expect_equivalent(newStack1, newStack2)
 
   # Run same as above but with different internal pathway
-  browser()
   testthat::with_mock(
     "raster::canProcessInMemory" = function(x, n) {
       FALSE
@@ -58,15 +57,15 @@ test_that("fastMask produces correct results", {
     # The warning is "data type "LOG" is not available in GDAL -- not relevant here
     {
       if (hasGDALInstalled) {
-        if (identical(.Platform$OS.type, "windows")) {
-          warn <- capture_warnings(
-            newStack3 <- fastMask(x = origStack[[2]], y = shpDF)
-          )
-        } else {
-          warn <- capture_warnings(expect_error(
-            newStack3 <- fastMask(x = origStack[[2]], y = shpDF))
-          )
-        }
+        # if (identical(.Platform$OS.type, "windows")) {
+        #   warn <- capture_warnings(
+        #     newStack3 <- fastMask(x = origStack[[2]], y = shpDF)
+        #   )
+        # } else {
+        #   warn <- capture_warnings(expect_error(
+        #     newStack3 <- fastMask(x = origStack[[2]], y = shpDF))
+        #   )
+        # }
         # mess <- capture_messages(
         #     out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"))
         # expect_true(any(grepl("GDAL because crs", mess)))
