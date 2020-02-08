@@ -164,8 +164,12 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       # dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
       cores <- dealWithCores(cores)
       prll <- paste0("-wo NUM_THREADS=", cores, " ")
+      srcCRS <- as.character(raster::crs(raster::raster(tempSrcRaster)))
+      targCRS <- srcCRS
       system(
         paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+               "-s_srs \"", srcCRS, "\"",
+               " -t_srs \"", targCRS, "\"",
                " -multi ", prll,
                "-ot ",
                dTypeGDAL, " ",
@@ -226,6 +230,7 @@ bigRastersTmpFolder <- function() file.path(raster::tmpDir(), "bigRasters")
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
 
 dealWithCores <- function(cores) {
+  browser(expr = exists("._dealWithCores_1"))
   if (is.null(cores) || cores == "AUTO") {
     if (requireNamespace("parallel")) {
       cores <- as.integer(parallel::detectCores() * 0.9)
@@ -275,10 +280,20 @@ findGDAL <- function() {
 }
 
 attemptGDAL <- function(x, useGDAL) {
-  attemptGDAL <- if (!canProcessInMemory(x, 3) && isTRUE(useGDAL) ||
-                     identical(useGDAL, "force")) {
+  browser(expr = exists("._attemptGDAL_1"))
+  crsIsNA <- is.na(crs(x))
+  cpim <- canProcessInMemory(x, 3)
+  isTRUEuseGDAL <- isTRUE(useGDAL)
+  forceGDAL <- identical(useGDAL, "force")
+  shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
+  attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
     findGDAL()
   } else {
+    if (crsIsNA && shouldUseGDAL)
+      message("Can't use GDAL because crs is NA")
+    if (cpim && isTRUEuseGDAL)
+      message("useGDAL is TRUE, but problem is small enough for RAM; use GDAL = 'force' to override")
+
     FALSE
   }
   attemptGDAL

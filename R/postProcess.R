@@ -310,7 +310,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           newExt <- c(round(c(xmin(cropExtent), xmax(cropExtent))/res(x)[1],0)*res(x)[1],
                       round(c(ymin(cropExtent), ymax(cropExtent))/res(x)[2],0)*res(x)[2])
           gdalwarp(srcfile = filename(x), dstfile = tmpfile, tr = c(res(x)[1], res(x)[2]),
-                   overwrite = TRUE,
+                   overwrite = TRUE, s_srs = crs(x), t_srs = crs(x),
                    te = c(newExt[1], newExt[3], newExt[2], newExt[4]))
           x <- raster(tmpfile)
 
