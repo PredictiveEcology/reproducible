@@ -25,8 +25,12 @@ test_that("test parallel collisions", {
     }
     # Run something that will write many times
     # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
-    of <- tempfile[3]
-    cl <- makeCluster(N, outfile = of)
+    if (interactive()) {
+      of <- tmpfile[3]
+      cl <- makeCluster(N, outfile = of)
+    } else {
+      cl <- makeCluster(N)
+    }
     on.exit(stopCluster(cl), add = TRUE)
 
     clusterSetRNGStream(cl)
@@ -36,7 +40,6 @@ test_that("test parallel collisions", {
     # })
     numToRun <- 40
     skip_on_os("mac")
-    browser()
     a <- try(clusterMap(cl = cl, fun, seq(numToRun), cacheRepo = tmpdir, .scheduling = "dynamic"),
              silent = FALSE)
     expect_false(is(a, "try-error"))
