@@ -31,9 +31,10 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
   dt <- .emptyCacheTable
 
-  retry(quote(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
-                           field.types = c(cacheId = "text", tagKey = "text",
-                                           tagValue = "text", createdDate = "text")))
+  retry(retries = 15, quote(
+    dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
+                 field.types = c(cacheId = "text", tagKey = "text",
+                                 tagValue = "text", createdDate = "text")))
   )
 }
 
@@ -155,7 +156,8 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
-  a <- retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)), retries = 15)
+  a <- retry(retries = 15, quote(
+    dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
 
   return(obj)
 }
@@ -236,13 +238,14 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     #                 "createdDate" = as.character(Sys.time()))
     #
     # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
-    rs <- retry(quote(dbSendStatement(
-      conn,
-      paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
-             " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
-             "('", isInRepo$cacheId[lastOne],
-             "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")
-      )), retries = 15)
+    rs <- retry(retries = 15, quote(
+      dbSendStatement(
+        conn,
+        paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
+               " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
+               "('", isInRepo$cacheId[lastOne],
+               "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")
+      )))
 
     dbClearResult(rs)
   } else {
@@ -401,7 +404,8 @@ CacheIsACache <- function(cachePath, create = FALSE,
   if (useDBI()) {
     if (ret) {
       ret <- ret && any(grepl(CacheDBTableName(cachePath),
-                              retry(quote(dbListTables(conn)))))
+                              retry(retries = 15, quote(
+                                dbListTables(conn)))))
     }
   }
 
