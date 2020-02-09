@@ -400,7 +400,8 @@ CacheIsACache <- function(cachePath, create = FALSE,
                list.files(cachePath))
   if (useDBI()) {
     if (ret) {
-      ret <- ret && any(grepl(CacheDBTableName(cachePath), dbListTables(conn)))
+      ret <- ret && any(grepl(CacheDBTableName(cachePath),
+                              retry(quote(dbListTables(conn)))))
     }
   }
 

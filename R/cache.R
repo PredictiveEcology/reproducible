@@ -558,7 +558,7 @@ setMethod(
                                 dbTabName = dbTabNam,
                                 outputHash = outputHash,
                                 .con = conn)
-          res <- dbSendQuery(conn, qry)
+          res <- retry(quote(dbSendQuery(conn, qry)))
           isInRepo <- setDT(dbFetch(res))
           dbClearResult(res)
         } else {
@@ -628,7 +628,7 @@ setMethod(
             file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
           }
           class(objSize) <- "object_size"
-          if (objSize > 1e6)
+          if ( isTRUE(objSize > 1e6) )
             message(crayon::blue(paste0("  ...(Object to retrieve (",
                                         basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
                                         ") is large: ",
