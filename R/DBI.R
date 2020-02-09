@@ -213,7 +213,8 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     #   if (isFALSE(create)) {
     #     return(invisible())
     #   }
-    args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn)))
+    args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn),
+                              synchronous = NULL))
   } # other types of drv, e.g., Postgres can be done via env vars
   do.call(dbConnect, args)
 }

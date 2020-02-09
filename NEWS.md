@@ -10,10 +10,12 @@ version 1.0.0
 * New option: `options("reproducible.cacheSaveFormat")`. This can be either `rds` (default) or `qs`. All cached objects will be saved with this format. Previously it was `rda`. 
 * Cache objects can now be saved with with `qs` from `qs` package. In many cases, this has much improved speed and file sizes compared to `rds`; however, testing across a wide range of conditions will occur before it becomes the default.
 * Changed default behaviour for memoising ... because Cache is now much faster, the default is to turn memoising off, via `options("reproducible.useMemoise" = FALSE)`. In cases of large objects, memoising should still be faster, so user can still activate it, setting the option to `TRUE`.
+* Much better SQLite database handling for concurrent write attempts. Tested with dozens of write attempts per second by 3 cores with abundant locked database occurrences.
 
 ## Dependency changes
 
-* deprecating `archivist`
+* deprecating `archivist`; moved to Suggests.
+* removed imports for `bitops`, `dplyr`, `fasterize`, `flock`, `git2r`, `lubridate`, `RcppArmadillo`, `RCurl` and `tidyselect`. Some of these went to Suggests.
 
 ## bug fixes
 
