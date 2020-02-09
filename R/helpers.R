@@ -155,11 +155,16 @@ basename2 <- function(x) {
 #' @param retries  Numeric. The maximum number of retries.
 #' @param envir    The environment in which to evaluate the quoted expression, default
 #'   to \code{parent.frame(1)}
+#' @param exponentialDecayBase Numeric > 1.0. The delay between
+#'   successive retries will be \code{runif(1, min = 0, max = exponentialDecayBase ^ i - 1)}
+#'   where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})
 #' @param silent   Logical indicating whether to \code{try} silently.
 #'
 #' @export
 retry <- function(expr, envir = parent.frame(), retries = 5,
                   exponentialDecayBase = 1.3, silent = TRUE) {
+  if (exponentialDecayBase <= 1)
+    stop("exponentialDecayBase must be greater than 1.0")
   for (i in seq_len(retries)) {
     if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
     result <- try(expr = eval(expr, envir = envir), silent = silent)
