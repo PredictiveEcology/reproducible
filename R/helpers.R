@@ -165,8 +165,9 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
     result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
       backoff <- runif(n = 1, min = 0, max = exponentialDecayBase^i - 1)
-      if (backoff > 3)
+      if (backoff > 3) {
         message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
+      }
       Sys.sleep(backoff)
     } else {
       break

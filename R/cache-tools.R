@@ -382,7 +382,7 @@ setMethod(
 
       dbTabNam <- CacheDBTableName(x, drv = drv)
       # tab <- dbReadTable(conn, dbTabNam)
-      res <- retry(retries = 15, quote(
+      res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
         dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
       tab <- dbFetch(res)
       dbClearResult(res)

@@ -31,7 +31,7 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
   dt <- .emptyCacheTable
 
-  retry(retries = 15, quote(
+  retry(retries = 250, exponentialDecayBase = 1.01, quote(
     dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
                  field.types = c(cacheId = "text", tagKey = "text",
                                  tagValue = "text", createdDate = "text")))
@@ -156,7 +156,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
   dt <- data.table("cacheId" = cacheId, "tagKey" = tagKey,
                    "tagValue" = tagValue, "createdDate" = as.character(Sys.time()))
-  a <- retry(retries = 15, quote(
+  a <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
     dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)))
 
   return(obj)
@@ -238,7 +238,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
     #                 "createdDate" = as.character(Sys.time()))
     #
     # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
-    rs <- retry(retries = 15, quote(
+    rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
       dbSendStatement(
         conn,
         paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
@@ -404,7 +404,7 @@ CacheIsACache <- function(cachePath, create = FALSE,
   if (useDBI()) {
     if (ret) {
       ret <- ret && any(grepl(CacheDBTableName(cachePath),
-                              retry(retries = 15, quote(
+                              retry(retries = 250, exponentialDecayBase = 1.01, quote(
                                 dbListTables(conn)))))
     }
   }
