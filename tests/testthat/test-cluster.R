@@ -1,6 +1,6 @@
 test_that("test parallel collisions", {
   skip_on_cran() # testing multi-threaded things on CRAN
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd", ".txt"))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -25,7 +25,7 @@ test_that("test parallel collisions", {
     }
     # Run something that will write many times
     # This will produce "database is locked" on Windows or Linux *most* of the time without the fix
-    of <- tempfile(fileext = ".txt")
+    of <- tempfile[3]
     cl <- makeCluster(N, outfile = of)
     on.exit(stopCluster(cl), add = TRUE)
 
