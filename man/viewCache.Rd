@@ -17,7 +17,7 @@ clearCache(
   before = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
-  cloudFolderID = NULL,
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
   ...
