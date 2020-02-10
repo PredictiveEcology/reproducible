@@ -1241,7 +1241,7 @@ assessDataType <- function(ras, type = 'writeRaster') {
 }
 
 #' @export
-#' @importFrom raster getValues ncell maxValue
+#' @importFrom raster getValues maxValue ncell
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters

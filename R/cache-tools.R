@@ -333,9 +333,7 @@ setGeneric("showCache", function(x, userTags = character(), after = NULL, before
 #' @rdname viewCache
 setMethod(
   "showCache",
-  definition = function(x, userTags, after = NULL, before = NULL, drv,
-                        conn, ...) {
-
+  definition = function(x, userTags, after = NULL, before = NULL, drv, conn, ...) {
     browser(expr = exists("rrrr"))
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
@@ -490,7 +488,6 @@ setMethod(
     eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
       !(objsDTAll[[.cacheTableHashColName()]] %in% keep)])
 
-
     if (length(eliminate)) {
       #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
       clearCache(x, eliminate, verboseMessaging = FALSE, regexp = FALSE, ask = ask)
@@ -584,10 +581,10 @@ setMethod(
           while (!written) {
             saved <- suppressWarnings(try(
               archivist::saveToLocalRepo(outputToSave, repoDir = cacheTo,
-                              artifactName = NULL,
-                              archiveData = FALSE, archiveSessionInfo = FALSE,
-                              archiveMiniature = FALSE, rememberName = FALSE,
-                              silent = TRUE, userTags = userTags),
+                                         artifactName = NULL,
+                                         archiveData = FALSE, archiveSessionInfo = FALSE,
+                                         archiveMiniature = FALSE, rememberName = FALSE,
+                                         silent = TRUE, userTags = userTags),
               silent = TRUE
             ))
             # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
@@ -720,7 +717,6 @@ getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
     userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
   userTags
 }
-
 
 #' @param artifact Character vector of artifact values in the
 #'   \code{artifact} column of \code{showCache}

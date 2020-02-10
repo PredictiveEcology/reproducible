@@ -239,13 +239,11 @@
   return(output)
 }
 
-
 .getFromRepo <- function(FUN, isInRepo, notOlderThan, lastOne, cacheRepo, fnDetails,
                          modifiedDots, debugCache, verbose, sideEffect, quick,
                          algo, preDigest, startCacheTime,
                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          conn = getOption("reproducible.conn", NULL), ...) {
-
   if (verbose > 1) {
     startLoadTime <- Sys.time()
   }
@@ -255,26 +253,22 @@
   fromMemoise <- NA
   if (getOption("reproducible.useMemoise")) {
     fromMemoise <-
-      if (memoise::has_cache(.loadFromLocalRepoMem)(cacheObj,
-                                                    repoDir = cacheRepo, value = TRUE)) {
+      if (memoise::has_cache(.loadFromLocalRepoMem)(cacheObj, repoDir = cacheRepo, value = TRUE)) {
         TRUE
       } else {
         FALSE
       }
     loadFromMgs <- "Loading from memoised version of repo"
     browser(expr = exists("eeee"))
-    output <- .loadFromLocalRepoMem(md5hash = cacheObj,
-                                    repoDir = cacheRepo, value = TRUE)
+    output <- .loadFromLocalRepoMem(md5hash = cacheObj, repoDir = cacheRepo, value = TRUE)
     output <- unmakeMemoisable(output)
     #if (is(output, "simList_")) output <- as(output, "simList")
   } else {
     loadFromMgs <- "Loading from repo"
     if (useDBI()) {
       output <- loadFromCache(cacheRepo, isInRepo$cacheId[lastOne])
-
     } else {
-      output <- archivist::loadFromLocalRepo(cacheObj,
-                                  repoDir = cacheRepo, value = TRUE)
+      output <- archivist::loadFromLocalRepo(cacheObj, repoDir = cacheRepo, value = TRUE)
     }
   }
 
@@ -344,5 +338,4 @@
       output <- NULL
 
   return(output)
-
 }

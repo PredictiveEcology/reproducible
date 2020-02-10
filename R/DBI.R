@@ -409,8 +409,8 @@ CacheIsACache <- function(cachePath, create = FALSE,
   if (useDBI()) {
     if (ret) {
       ret <- ret && any(grepl(CacheDBTableName(cachePath),
-                              retry(retries = 250, exponentialDecayBase = 1.01, quote(
-                                dbListTables(conn)))))
+                              retry(retries = 250, exponentialDecayBase = 1.01,
+                                    quote(dbListTables(conn)))))
     }
   }
 
