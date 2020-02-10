@@ -335,6 +335,7 @@ setMethod(
   "showCache",
   definition = function(x, userTags, after = NULL, before = NULL, drv,
                         conn, ...) {
+
     browser(expr = exists("rrrr"))
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
@@ -379,6 +380,10 @@ setMethod(
         on.exit({
           dbDisconnect(conn)
         })
+      }
+      if (useDBI()) {
+        if (!CacheIsACache(x, drv = drv, conn = conn))
+          return(invisible(.emptyCacheTable))
       }
 
       dbTabNam <- CacheDBTableName(x, drv = drv)

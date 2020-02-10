@@ -267,7 +267,11 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 }
 
 .cacheNumDefaultTags <- function() {
-  if (useDBI()) 7 else 11
+  if (useDBI()) 4 else 8
+}
+
+.ignoreTagKeys <- function() {
+  c("preDigest", "otherFunctions", "accessed")
 }
 
 .cacheTableHashColName <- function() {

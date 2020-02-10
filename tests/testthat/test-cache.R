@@ -23,25 +23,25 @@ test_that("test file-backed raster caching", {
   # https://github.com/r-lib/testthat/issues/734 to direct it to reproducible::isInteractive
   #   solves the error about not being in the testthat package
   val1 <- .cacheNumDefaultTags() + 1 # adding a userTag here
-
+  ik <- .ignoreTagKeys()
   with_mock(
    "reproducible::isInteractive" = function() TRUE,
    {
   aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
       # Test clearCache by tags
 
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
       clearCache(tmpCache, userTags = "something$", ask = FALSE)
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
       clearCache(tmpCache, userTags = "something2", ask = FALSE)
       expect_equal(NROW(showCache(tmpCache)), 0)
 
       aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
       clearCache(tmpCache, userTags = c("something$", "testing$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
       clearCache(tmpCache, userTags = c("something2$", "testing$"), ask = FALSE)
-      expect_equal(NROW(showCache(tmpCache)[tagKey != "otherFunctions"]), val1)
+      expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
 
       clearCache(tmpCache, userTags = c("something2$", "randomPolyToDisk$"), ask = FALSE)
       expect_equal(NROW(showCache(tmpCache)), 0)
@@ -106,7 +106,7 @@ test_that("test file-backed raster caching", {
       expect_true(inMemory(bb))
 
       bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
-      expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
+      expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
 
       # Test that factors are saved correctly
       randomPolyToFactorInMemory <- function() {
@@ -296,22 +296,22 @@ test_that("test keepCache", {
   Cache(rnorm, 10, cacheRepo = tmpdir)
   Cache(runif, 10, cacheRepo = tmpdir)
   Cache(round, runif(4), cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) ==
+  expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) ==
                 .cacheNumDefaultTags() * 3)
-  expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))[tagKey != "otherFunctions"]) ==
+  expect_true(NROW(showCache(tmpdir, c("rnorm", "runif"))[!tagKey %in% .ignoreTagKeys()]) ==
                 0) # and search
-  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
+  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
 
   # do it twice to make sure it can deal with repeats
-  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
+  expect_true(NROW(keepCache(tmpdir, "rnorm", ask = FALSE)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
   st <- Sys.time()
   Sys.sleep(1)
   Cache(sample, 10, cacheRepo = tmpdir)
   Cache(length, 10, cacheRepo = tmpdir)
   Cache(sum, runif(4), cacheRepo = tmpdir)
-  expect_true(NROW(showCache(tmpdir, before = st)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
-  expect_true(NROW(keepCache(tmpdir, before = st, ask = FALSE)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
-  expect_true(NROW(showCache(tmpdir)[tagKey != "otherFunctions"]) == .cacheNumDefaultTags())
+  expect_true(NROW(showCache(tmpdir, before = st)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
+  expect_true(NROW(keepCache(tmpdir, before = st, ask = FALSE)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
+  expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
 
   ranNums <- Cache(runif, 4, cacheRepo = tmpdir, userTags = "objectName:a")
   ranNums <- Cache(rnorm, 4, cacheRepo = tmpdir, userTags = "objectName:a")
@@ -397,7 +397,9 @@ test_that("test environments", {
 })
 
 test_that("test asPath", {
-  testInitOut <- testInit("raster", tmpFileExt = "pdf", opts = list("reproducible.useMemoise" = TRUE))
+  testInitOut <- testInit("raster", tmpFileExt = "pdf",
+                          opts = list("reproducible.useMemoise" = TRUE,
+                                      "reproducible.showSimilar" = FALSE))
   unlink(dir(tmpdir, full.names = TRUE))
   on.exit({
     testOnExit(testInitOut)
@@ -534,7 +536,7 @@ test_that("test quoted FUN in Cache", {
 })
 
 test_that("test Cache argument inheritance to inner functions", {
-  testInitOut <- testInit("raster")
+  testInitOut <- testInit("raster", opts = list("reproducible.showSimilar" = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
