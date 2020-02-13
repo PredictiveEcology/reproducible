@@ -120,7 +120,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   fts <- CacheStoredFile(cachePath, cacheId)
 
   browser(expr = exists("._saveToCache_2"))
-  if (getOption("reproducible.cacheSaveFormat", "qs") == "qs")
+  if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
     fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
   else {
     saveRDS(obj, file = fts)
@@ -166,7 +166,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 #' @rdname cacheTools
 #' @importFrom qs qread
 loadFromCache <- function(cachePath, cacheId) {
-  if (getOption("reproducible.cacheSaveFormat", "qs") == "qs")
+  if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
     qs::qread(file = CacheStoredFile(cachePath, cacheId),
               nthreads = getOption("reproducible.nThreads", 1))
   else
@@ -201,7 +201,7 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
   dbClearResult(res)
 
   unlink(file.path(cachePath, "cacheObjects",
-                   paste0(cacheId, ".", getOption("reproducible.cacheSaveFormat", "qs"))))
+                   paste0(cacheId, ".", getOption("reproducible.cacheSaveFormat", "rds"))))
 }
 
 dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()), cachePath,
@@ -345,7 +345,7 @@ CacheStoredFile <- function(cachePath, hash) {
   csf <- if (isTRUE(useDBI()) == FALSE) {
     "rda"
   } else {
-    getOption("reproducible.cacheSaveFormat", "qs")
+    getOption("reproducible.cacheSaveFormat", "rds")
   }
   csExtension <- if (csf == "qs") {
     "qs"
