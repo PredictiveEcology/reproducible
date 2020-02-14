@@ -116,12 +116,25 @@ setMethod(
     if (any(rastersLogical)) {
       rasterNames <- names(rastersLogical)[rastersLogical]
       if (!is.null(rasterNames)) {
-        diskBacked <- sapply(mget(rasterNames, envir = obj), fromDisk)
+        no <- names(obj);
+        names(no) <- no;
+        nestedOnes <- lapply(no, function(rn) grep(paste0("^", rn, "\\."), rasterNames, value = TRUE))
+        nestedOnes1 <- nestedOnes[sapply(nestedOnes, function(x) length(x) > 0)]
+        nonNested <- nestedOnes[sapply(nestedOnes, function(x) length(x) == 0)]
+        nonNestedRasterNames <- rasterNames[rasterNames %in% names(nonNested)]
+
+
+        diskBacked <- sapply(mget(nonNestedRasterNames, envir = obj), fromDisk)
+
         names(rasterNames) <- rasterNames
         rasterFilename <- if (sum(diskBacked) > 0) {
           lapply(mget(rasterNames[diskBacked], envir = obj), Filenames)
         } else {
           NULL
+        }
+        if (length(nestedOnes1) > 0) {
+          rasterFilename2 <- sapply(mget(names(nestedOnes1), envir = obj), Filenames)
+          rasterFilename <- c(rasterFilename, rasterFilename2)
         }
       }
     }
@@ -139,3 +152,4 @@ setMethod(
     ## convert a list to an environment -- this is to align it with a simList and environment
     Filenames(as.environment(obj))
 })
+

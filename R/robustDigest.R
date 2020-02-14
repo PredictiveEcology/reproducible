@@ -22,7 +22,8 @@
 #' raster already is file-backed, i.e., to create \code{.tif} or \code{.grd} backed rasters,
 #' use \code{writeRaster} first, then Cache. The .tif or .grd will be copied to the "raster"
 #' subdirectory of the \code{cacheRepo}.
-#' Their RAM representation (as an R object) will still be in the usual \file{gallery/} directory.
+#' Their RAM representation (as an R object) will still be in the usual
+#' \file{cacheOutputs/} (or formerly \file{gallery/}) directory.
 #' For \code{inMemory} raster objects, they will remain as binary \code{.RData} files.
 #'
 #' Functions (which are contained within environments) are
@@ -49,7 +50,7 @@
 #'
 #' @return A hash i.e., digest of the object passed in.
 #'
-#' @seealso \code{\link[archivist]{cache}}.
+#' @seealso \code{archivist::cache}.
 #'
 #' @author Eliot McIntire
 #' @export
@@ -120,6 +121,16 @@ setMethod(
     if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
       object <- eval_tidy(object)
     }
+
+    if (is(object, "cluster")) {# can't get this class from rlang via importClass rlang quosure
+      out <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+        digest(NULL, algo = algo)
+      else
+        fastdigest(NULL)
+      return(out)
+    }
+
+
     # passByReference -- while doing pass by reference attribute setting is faster, is
     #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
     object1 <- .removeCacheAtts(object, passByReference = FALSE)
@@ -129,21 +140,6 @@ setMethod(
       fastdigest(object1)
 })
 
-#' @import parallel
-setOldClass("cluster")
-
-#' @rdname robustDigest
-#' @export
-setMethod(
-  ".robustDigest",
-  signature = "cluster",
-  definition = function(object, .objects, length, algo, quick, classOptions) {
-    #object <- .removeCacheAtts(object)
-    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-      digest(NULL, algo = algo)
-    else
-      fastdigest(NULL)
-})
 
 #' @rdname robustDigest
 #' @export
@@ -153,6 +149,8 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     .robustDigestFormatOnly(object, algo = algo)
 })
+
+
 
 #' @rdname robustDigest
 #' @export
@@ -173,7 +171,9 @@ setMethod(
 
     if (!quick) {
         if (any(unlist(lapply(object, file.exists)))) {
+          browser(expr = exists("hhhh"))
           unlist(lapply(object, function(x) {
+            browser(expr = exists("hhhh"))
             if (dir.exists(x)) {
               if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
                 digest(basename(x), algo = algo)

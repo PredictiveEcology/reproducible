@@ -17,6 +17,7 @@ cropInputs(x, studyArea, rasterToMatch, ...)
   rasterToMatch = NULL,
   extentToMatch = NULL,
   extentCRS = NULL,
+  useGDAL = getOption("reproducible.useGDAL", TRUE),
   ...
 )
 
@@ -52,6 +53,16 @@ passed.}
 
 \item{extentCRS}{Optional. Can pass a \code{crs} here with an extent to
 \code{extentTomatch} instead of \code{rasterToMatch}}
+
+\item{useGDAL}{Logical or \code{"force"}.
+Defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
+If \code{TRUE}, then this function will use \code{gdalwarp} only when not
+small enough to fit in memory (i.e., \emph{if the operation fails} the
+\code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
+usually be faster than \code{raster::projectRaster}, the function used
+if this is \code{FALSE}. Since since the two options use different algorithms,
+there may be different projection results. \code{"force"} will cause it to
+use GDAL regardless of the memory test described here.}
 }
 \description{
 This function can be used to crop or reproject module inputs from raw data.

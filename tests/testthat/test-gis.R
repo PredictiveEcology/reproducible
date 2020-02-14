@@ -57,26 +57,26 @@ test_that("fastMask produces correct results", {
     # The warning is "data type "LOG" is not available in GDAL -- not relevant here
     {
       if (hasGDALInstalled) {
-        if (identical(.Platform$OS.type, "windows")) {
-          warn <- capture_warnings(
-            newStack3 <- fastMask(x = origStack[[2]], y = shpDF)
-          )
-        } else {
-          warn <- capture_warnings(expect_error(
-            newStack3 <- fastMask(x = origStack[[2]], y = shpDF))
-          )
-        }
-        warn <- capture_warnings(
-          expect_error(
-            out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"), "needs to be passed")
-        )
+        mess <- capture_messages(
+            out <- fastMask(x = origStack[[2]], y = shpDF))
+        expect_true(any(grepl("GDAL because crs", mess)))
+
       }
     }
+
   )
+  mess <- capture_messages(
+    out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"))
+  expect_true(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
 
   crs(shpDF) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
   crs(shp) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
   crs(origStack[[2]]) <- "+proj=lcc +lat_1=49 +lat_2=33 +lon_0=-100 +ellps=WGS84"
+
+  # Test "force" even for a small problem
+  warn <- capture_warnings(mess <- capture_messages(out <- fastMask(x = origStack[[2]], y = shpDF, useGDAL = "force")))
+  expect_false(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
+
 
   newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
 

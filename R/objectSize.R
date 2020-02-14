@@ -41,7 +41,7 @@
 #' os1 <- object.size(as.environment("package:reproducible"))
 #' os2 <- objSize(as.environment("package:reproducible"))
 #' (os1) # very small -- just the environment container
-#' sum(unlist(os2)) # around 31 MB, with all functions, objects
+#' sum(unlist(os2)) # around 13 MB, with all functions, objects
 #'                  # and imported functions
 #'
 objSize <- function(x, quick, enclosingEnvs, .prevEnvirs, ...) {
@@ -88,7 +88,7 @@ objSize.list <- function(x, quick = getOption("reproducible.quick", FALSE),
 objSize.environment <- function(x, quick = getOption("reproducible.quick", FALSE),
                                 enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   xName <- deparse(substitute(x))
-  print(format(x))
+  # print(format(x))
   os <- objSize(as.list(x, all.names = TRUE), enclosingEnvs = enclosingEnvs,
                 .prevEnvirs = .prevEnvirs)
   if (length(os) > 0)
@@ -158,8 +158,9 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
     # Update the object in the function so next lapply has access to the updated version
     .prevEnvirs <<- unique(append(.prevEnvirs, as.environment(x)))
     out <- if (!any(unlist(doneAlready))) {
-      try(objSize(as.environment(x), enclosingEnvs = enclosingEnvs,
-                  .prevEnvirs = .prevEnvirs))
+      tryCatch(objSize(as.environment(x), enclosingEnvs = enclosingEnvs,
+                  .prevEnvirs = .prevEnvirs), error = function(x) NULL,
+               warning = function(y) NULL)
     } else {
       NULL
     }

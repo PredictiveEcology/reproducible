@@ -57,8 +57,8 @@ Cache is used on the internal \code{raster::buffer} command.}
 }
 \description{
 These must be very common for this function to be useful. Currently, the only
-meaningful method is on SpatialPolygons, and it runs \code{rgeos::gIsValid}. If
-\code{FALSE}, then it runs a buffer of width 0.
+meaningful method is on \code{SpatialPolygons}, and it runs \code{rgeos::gIsValid}.
+If \code{FALSE}, then it runs a buffer of width 0.
 
 This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
 failures to \code{rgeos::gIsValid}

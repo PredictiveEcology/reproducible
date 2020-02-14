@@ -22,7 +22,13 @@ Copy(object, filebackedDir, ...)
 
 \S4method{Copy}{data.frame}(object, filebackedDir, ...)
 
-\S4method{Copy}{Raster}(object, filebackedDir, ...)
+\S4method{Copy}{Raster}(
+  object,
+  filebackedDir,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
 }
 \arguments{
 \item{object}{An R object (likely containing environments) or an environment.}
@@ -36,6 +42,13 @@ pre-copied object and post-copied object would have the same
 file backing them.}
 
 \item{...}{Only used for custom Methods}
+
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
 \description{
 When copying environments and all the objects contained within them, there are

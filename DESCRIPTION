@@ -12,8 +12,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2020-01-03
-Version: 0.2.11.9000
+Date: 2020-02-10
+Version: 1.0.0.9006
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -31,30 +31,27 @@ Authors@R: c(
 Depends:
     R (>= 3.5)
 Imports:
-    archivist (>= 2.1.2),
     backports,
     crayon,
     data.table (>= 1.10.4),
+    DBI,
     digest,
-    dplyr,
     fastdigest,
-    fasterize,
     fpCompare,
     gdalUtils,
-    git2r (>= 0.18),
+    glue,
     googledrive,
     httr,
     magrittr,
     memoise,
     methods,
-    parallel,
+    qs,
     quickPlot,
     R.utils,
     raster,
-    RCurl (>= 1.95-4.8),
+    RSQLite,
     remotes,
     rgdal,
-    rgeos,
     rlang,
     sf,
     sp,
@@ -63,9 +60,16 @@ Imports:
     utils,
     versions
 Suggests:
+    archivist (>= 2.1.2),
     covr,
+    dplyr,
+    fasterize,
     future,
+    git2r (>= 0.18),
     knitr,
+    parallel,
+    RCurl (>= 1.95-4.8),
+    rgeos,
     rmarkdown,
     TimeWarp
 Encoding: UTF-8
@@ -76,6 +80,7 @@ BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 RoxygenNote: 7.0.2
 Collate: 
+    'DBI.R'
     'cache-helpers.R'
     'cache-internals.R'
     'cache-tools.R'

@@ -40,11 +40,11 @@ postProcess(x, ...)
 }
 \arguments{
 \item{x}{An object of postProcessing, e.g., \code{spatialObjects}.
-See individual methods.}
+See individual methods. This can be provided as a
+\code{rlang::quosure} or a normal R object.}
 
 \item{...}{Additional arguments passed to methods. For \code{spatialObjects},
-           these are: \code{\link{cropInputs}},
-           \code{\link{fixErrors}},
+           these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
            Each of these may also pass \code{...} into other functions, like

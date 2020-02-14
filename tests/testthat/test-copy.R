@@ -37,7 +37,7 @@ test_that("test Copy", {
   ### environments
   dt <- data.table(a = 1:2, b = rev(LETTERS[1:2]))
   li <- list(dt = dt, ras = ras, ras2 = ras2)
-  li <- list2env(li, env = new.env())
+  li <- list2env(li, env = new.env(parent = emptyenv()))
 
   tmpdir <- file.path(tempdir(), "ras3")
   li2 <- Copy(li, tmpdir)
@@ -62,8 +62,8 @@ test_that("test Copy", {
   ### Nested Environments
   dt <- data.table(a = 1:2, b = rev(LETTERS[1:2]))
   li <- list(dt = dt, ras = ras, ras2 = ras2)
-  env1 <- new.env()
-  env2 <- new.env()
+  env1 <- new.env(parent = emptyenv())
+  env2 <- new.env(parent = emptyenv())
   liEnv <- list2env(li, env = env1)
   liEnv[["env"]] <- li
 

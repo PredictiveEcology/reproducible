@@ -29,7 +29,9 @@ Cache(
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  showSimilar = getOption("reproducible.showSimilar", FALSE)
+  showSimilar = getOption("reproducible.showSimilar", FALSE),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL)
 )
 
 \S4method{Cache}{ANY}(
@@ -55,7 +57,9 @@ Cache(
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-  showSimilar = getOption("reproducible.showSimilar", FALSE)
+  showSimilar = getOption("reproducible.showSimilar", FALSE),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL)
 )
 
 lhs \%<\% rhs
@@ -64,9 +68,9 @@ lhs \%<\% rhs
 \item{FUN}{Either a function or an unevaluated function call (e.g., using
 \code{quote}.}
 
-\item{...}{Arguments of \code{FUN} function .}
+\item{...}{Arguments passed to \code{FUN}}
 
-\item{notOlderThan}{load an artifact from the database only if it was created after notOlderThan.}
+\item{notOlderThan}{A time. Load an object from the Cache if it was created after this.}
 
 \item{.objects}{Character vector of objects to be digested. This is only applicable
 if there is a list, environment (or similar) named objects
@@ -95,7 +99,9 @@ which is set to \code{Inf}.}
 
 \item{compareRasterFileLength}{Being deprecated; use \code{length}.}
 
-\item{userTags}{A character vector with Tags. These Tags will be added to the repository along with the artifact.}
+\item{userTags}{A character vector with descriptions of the Cache function call. These
+will be added to the Cache so that this entry in the Cache can be found using
+\code{userTags} e.g., via \code{\link{showCache}}}
 
 \item{digestPathContent}{Being deprecated. Use \code{quick}.}
 
@@ -185,12 +191,19 @@ the next most similar archive, and indicate which argument(s) is/are different.
 If a number larger than \code{1}, then it will report the N most similar archived
 objects.}
 
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
+
 \item{lhs}{A name to assign to.}
 
 \item{rhs}{A function call}
 }
 \value{
-As with \code{\link[archivist]{cache}}, returns the value of the
+As with \code{archivist::cache}, returns the value of the
 function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
@@ -200,7 +213,7 @@ Still experimental and may change. This form cannot pass any arguments to
 it is a clean alternative for simple cases.
 }
 \details{
-Caching R objects using \code{\link[archivist]{cache}} has five important limitations:
+Caching R objects using \code{archivist::cache} has five important limitations:
 \enumerate{
   \item the \code{archivist} package detects different environments as different;
   \item it also does not detect S4 methods correctly due to method inheritance;
@@ -382,7 +395,7 @@ opt <- options("reproducible.useCache" = "devMode")
 clearCache(tmpDir, ask = FALSE)
 centralTendency <- function(x)
   mean(x)
-funnyData <- c(1,1,1,1,10)
+funnyData <- c(1, 1, 1, 1, 10)
 uniqueUserTags <- c("thisIsUnique", "reallyUnique")
 ranNumsB <- Cache(centralTendency, funnyData, cacheRepo = tmpDir,
                   userTags = uniqueUserTags) # sets new value to Cache
@@ -405,6 +418,21 @@ options(opt)
 
 # For more in depth uses, see vignette
 \dontrun{
+  # To use Postgres, set environment variables with the required credentials
+  if (requireNamespace("RPostgres")) {
+    Sys.setenv(PGHOST = "server.url")
+    Sys.setenv(PGPORT = 5432)
+    Sys.setenv(PGDATABASE = "mydatabase")
+    Sys.setenv(PGUSER = "mydbuser")
+    Sys.setenv(PGPASSWORD = "mysecurepassword")
+
+    conn <- DBI::dbConnect(RPostgres::Postgres())
+    options("reproducible.conn" = conn)
+
+    # Will use postgres for cache data table, and tempdir() for saved R objects
+    Cache(rnorm, 1, cacheRepo = tempdir())
+  }
+
   browseVignettes(package = "reproducible")
 }
 # Equivalent
@@ -413,7 +441,7 @@ b \%<\% rnorm(1)
 
 }
 \seealso{
-\code{\link[archivist]{cache}}, \code{\link{.robustDigest}}
+\code{archivist::cache}, \code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire

@@ -51,7 +51,6 @@ cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, check
 #' @param ... Passed to \code{\link{Cache}}
 #'
 #' @export
-#' @importFrom archivist createLocalRepo saveToLocalRepo
 #' @importFrom data.table setattr
 #' @rdname Deprcated
 #' @seealso \code{\link{cloudSyncCacheOld}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},

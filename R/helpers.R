@@ -1,5 +1,6 @@
 #' @keywords internal
 .pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
+  browser(expr = exists("aaaa"))
   inst <- data.frame(instPkgs, instVers = unlist(instVers), stringsAsFactors = FALSE)
   write.table(inst, file = packageVersionFile, row.names = FALSE)
   inst
@@ -107,7 +108,7 @@ rndstr <- function(n = 1, len = 8) {
 #' Alternative to \code{interactive()} for unit testing
 #'
 #' This is a suggestion from
-#' \url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}
+#' \url{https://github.com/MangoTheCat/blog-with-mock/blob/master/Blogpost1.Rmd}
 #' as a way to test interactive code in unit tests. Basically, in the unit tests,
 #' we use \code{testthat::with_mock}, and inside that we redefine \code{isInteractive}
 #' just for the test. In all other times, this returns the same things as
@@ -150,18 +151,28 @@ basename2 <- function(x) {
 #' @details
 #' Based on \url{https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525}.
 #'
-#' @param expr     Expression to run.
+#' @param expr     Quoted expression to run, i.e., \code{quote(...)}
 #' @param retries  Numeric. The maximum number of retries.
+#' @param envir    The environment in which to evaluate the quoted expression, default
+#'   to \code{parent.frame(1)}
+#' @param exponentialDecayBase Numeric > 1.0. The delay between
+#'   successive retries will be \code{runif(1, min = 0, max = exponentialDecayBase ^ i - 1)}
+#'   where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})
 #' @param silent   Logical indicating whether to \code{try} silently.
 #'
 #' @export
-retry <- function(expr, retries = 5, silent = FALSE) {
+retry <- function(expr, envir = parent.frame(), retries = 5,
+                  exponentialDecayBase = 1.3, silent = TRUE) {
+  if (exponentialDecayBase <= 1)
+    stop("exponentialDecayBase must be greater than 1.0")
   for (i in seq_len(retries)) {
-    result <- try(expr = expr, silent = silent)
+    if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
+    result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
-      backoff <- runif(n = 1, min = 0, max = 2^i - 1)
-      if (backoff > 3)
+      backoff <- runif(n = 1, min = 0, max = exponentialDecayBase^i - 1)
+      if (backoff > 3) {
         message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
+      }
       Sys.sleep(backoff)
     } else {
       break

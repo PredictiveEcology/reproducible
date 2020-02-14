@@ -13,46 +13,70 @@
 clearCache(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
-  cloudFolderID = NULL,
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
   ...
 )
 
 \S4method{clearCache}{ANY}(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   ask = getOption("reproducible.ask"),
   useCloud = FALSE,
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
   ...
 )
 
 cc(secs, ...)
 
-showCache(x, userTags = character(), after, before, ...)
+showCache(
+  x,
+  userTags = character(),
+  after = NULL,
+  before = NULL,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
 
-\S4method{showCache}{ANY}(x, userTags = character(), after, before, ...)
+\S4method{showCache}{ANY}(
+  x,
+  userTags = character(),
+  after = NULL,
+  before = NULL,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
 
 keepCache(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   ask = getOption("reproducible.ask"),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
   ...
 )
 
 \S4method{keepCache}{ANY}(
   x,
   userTags = character(),
-  after,
-  before,
+  after = NULL,
+  before = NULL,
   ask = getOption("reproducible.ask"),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
   ...
 )
 }
@@ -92,6 +116,13 @@ The warning will have the \code{cloudFolderID} that should be used in subsequent
 It will also be added to \code{options("reproducible.cloudFolderID")},
 but this will not persist across sessions.}
 
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
+
 \item{...}{Other arguments. Currently, \code{regexp}, a logical, can be provided.
 This must be \code{TRUE} if the use is passing a regular expression.
 Otherwise, \code{userTags} will need to be exact matches. Default is
@@ -111,7 +142,8 @@ between \code{after} or \code{before}) from the repository located at
 Invisibly returns a \code{data.table} of the removed items.
 }
 \description{
-These are convenience wrappers around \code{archivist} package functions.
+These are convenience wrappers around \code{DBI}
+(formerly \code{archivist}) package functions.
 They allow the user a bit of control over what is being cached.
 }
 \details{
@@ -164,7 +196,7 @@ showCache(tmpDir, userTags = c("^a$")) # regular expression ... "a" exactly
 
 # Fine control of cache elements -- pick out only the large runif object, and remove it
 cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
-toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$artifact
+toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$cacheId
 clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 
@@ -185,6 +217,6 @@ cc(ask = FALSE, x = tmpDir) # Cache is
 cc(ask = FALSE, x = tmpDir) # Cache is already empty
 }
 \seealso{
-\code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
+\code{\link{mergeCache}}, \code{archivist::splitTagsLocal}. Many more examples
 in \code{\link{Cache}}
 }
