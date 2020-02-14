@@ -558,7 +558,8 @@ setMethod(
                                 dbTabName = dbTabNam,
                                 outputHash = outputHash,
                                 .con = conn)
-          res <- retry(quote(dbSendQuery(conn, qry)))
+          res <- retry(retries = 15, exponentialDecayBase = 1.01,
+                       quote(dbSendQuery(conn, qry)))
           isInRepo <- setDT(dbFetch(res))
           dbClearResult(res)
         } else {

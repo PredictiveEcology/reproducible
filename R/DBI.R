@@ -25,17 +25,23 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   checkPath(CacheStorageDir(cachePath), create = TRUE)
   if (useDBI()) {
     if (is.null(conn)) {
-    conn <- dbConnectAll(drv, cachePath = cachePath)
-    on.exit(dbDisconnect(conn))
+      conn <- dbConnectAll(drv, cachePath = cachePath)
+      on.exit(dbDisconnect(conn))
     }
   }
   dt <- .emptyCacheTable
 
-  retry(retries = 250, exponentialDecayBase = 1.01, quote(
-    dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = TRUE,
-                 field.types = c(cacheId = "text", tagKey = "text",
-                                 tagValue = "text", createdDate = "text")))
-  )
+  # Some tough to find cases where stalls on dbWriteTable -- this *may* prevent some
+  a <- retry(retries = 250, exponentialDecayBase = 1.01,
+        quote(dbListTables(conn)))
+
+  if (isTRUE(!CacheDBTableName(cachePath, drv) %in% a))
+    #retry(retries = 5, exponentialDecayBase = 1.5, quote(
+      try(dbWriteTable(conn, CacheDBTableName(cachePath, drv), dt, overwrite = FALSE,
+                   field.types = c(cacheId = "text", tagKey = "text",
+                                   tagValue = "text", createdDate = "text")), silent = TRUE)
+    #)
+
 }
 
 #' @rdname cacheTools
