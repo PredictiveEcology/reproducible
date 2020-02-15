@@ -141,7 +141,6 @@ test_that("prepInputs doesn't work (part 1)", {
   ### url                          ######
   #######################################
   # messages received below may help for filling in more arguments in the subsequent call
-  browser()
   LCC2005 <- prepInputs(
     url = url,
     destinationPath = asPath(dPath),
