@@ -302,16 +302,15 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         # need to double check that gdal executable exists before going down this path
         attemptGDAL <- attemptGDAL(x, useGDAL) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
 
+        cropExtentRounded <- roundToRes(cropExtent, x)
         if (attemptGDAL) {
           tmpfile <- paste0(tempfile(fileext = ".tif"));
-          resForCrop <- raster(cropExtent, res = res(x), crs = crs(x))
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
-          newExt <- c(round(c(xmin(cropExtent), xmax(cropExtent))/res(x)[1],0)*res(x)[1],
-                      round(c(ymin(cropExtent), ymax(cropExtent))/res(x)[2],0)*res(x)[2])
           gdalwarp(srcfile = filename(x), dstfile = tmpfile, tr = c(res(x)[1], res(x)[2]),
                    overwrite = TRUE, s_srs = crs(x), t_srs = crs(x),
-                   te = c(newExt[1], newExt[3], newExt[2], newExt[4]))
+                   te = c(cropExtentRounded[1], cropExtentRounded[3],
+                          cropExtentRounded[2], cropExtentRounded[4]))
           x <- raster(tmpfile)
 
           # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
@@ -328,10 +327,10 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
         } else {
           if (canProcessInMemory(x, 3)) {
-            x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
+            x <- do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots))
           } else {
             x <- do.call(raster::crop,
-                         args = append(list(x = x, y = cropExtent,
+                         args = append(list(x = x, y = cropExtentRounded,
                                             filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
                                        dots))
           }
@@ -395,10 +394,12 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
     if (!is.null(cropExtent)) {
       # crop it
       if (!identical(cropExtent, extent(x))) {
+        cropExtentRounded <- roundToRes(cropExtent, x)
+
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
-        x <- do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots))
+        x <- do.call(sf::st_crop, args = append(list(x = x, y = cropExtentRounded), dots))
         if (all(sapply(extent(x), function(xx) is.na(xx)))) {
           message("    polygons do not intersect.")
         }
@@ -574,7 +575,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
     rasterFactorLevels <- raster::levels(x)
   }
 
-  if (is.null(rasterToMatch) & is.null(targetCRS)) {
+  if (is.null(rasterToMatch) && is.null(targetCRS)) {
     message("     no reprojecting because no rasterToMatch & targetCRS are FALSE (or NULL).")
   } else if (is.null(rasterToMatch) & identical(crs(x), targetCRS)) {
     message("    no reprojecting because target CRS is same as input CRS.")
@@ -1585,4 +1586,10 @@ bufferWarningSuppress <- function(warn, objectName, x1, bufferFn) {
     message("  Some or all of the errors fixed.")
   }
   x1
+}
+
+roundToRes <- function(extent, x) {
+  raster::extent(
+    c(round(c(xmin(extent), xmax(extent))/res(x)[1],0)*res(x)[1],
+      round(c(ymin(extent), ymax(extent))/res(x)[2],0)*res(x)[2]))
 }
