@@ -13,6 +13,7 @@ version 1.0.0
   In cases of large objects, memoising should still be faster, so user can still activate it, setting the option to `TRUE`.
 * Much better SQLite database handling for concurrent write attempts.
   Tested with dozens of write attempts per second by 3 cores with abundant locked database occurrences.
+* `postProcess` arg `useGDAL` can now take `"force"` as the default behaviour is to not use GDAL if the problem can fit into RAM and `sf` or `raster` tools will be faster than `GDAL` tools
 
 ## Dependency changes
 
@@ -22,6 +23,7 @@ version 1.0.0
 ## bug fixes
 
 * Several minor, edge cases were detected and fixed.
+* `postProcess` calls that use GDAL made more robust
 
 version 0.2.11
 ==============
