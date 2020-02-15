@@ -292,7 +292,8 @@ attemptGDAL <- function(x, useGDAL) {
     if (crsIsNA && shouldUseGDAL)
       message("Can't use GDAL because crs is NA")
     if (cpim && isTRUEuseGDAL)
-      message("useGDAL is TRUE, but problem is small enough for RAM; use GDAL = 'force' to override")
+      message("useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
+              "use GDAL = 'force' to override")
 
     FALSE
   }
