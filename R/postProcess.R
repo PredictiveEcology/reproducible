@@ -394,12 +394,10 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
     if (!is.null(cropExtent)) {
       # crop it
       if (!identical(cropExtent, extent(x))) {
-        cropExtentRounded <- roundToRes(cropExtent, x)
-
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
-        x <- do.call(sf::st_crop, args = append(list(x = x, y = cropExtentRounded), dots))
+        x <- do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots))
         if (all(sapply(extent(x), function(xx) is.na(xx)))) {
           message("    polygons do not intersect.")
         }
@@ -1589,7 +1587,9 @@ bufferWarningSuppress <- function(warn, objectName, x1, bufferFn) {
 }
 
 roundToRes <- function(extent, x) {
-  raster::extent(
-    c(round(c(xmin(extent), xmax(extent))/res(x)[1],0)*res(x)[1],
-      round(c(ymin(extent), ymax(extent))/res(x)[2],0)*res(x)[2]))
+  if (is(x, "Raster"))
+    extent <- raster::extent(
+      c(round(c(xmin(extent), xmax(extent))/res(x)[1],0)*res(x)[1],
+        round(c(ymin(extent), ymax(extent))/res(x)[2],0)*res(x)[2]))
+  extent
 }
