@@ -307,10 +307,16 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           tmpfile <- paste0(tempfile(fileext = ".tif"));
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
-          gdalwarp(srcfile = filename(x), dstfile = tmpfile, tr = c(res(x)[1], res(x)[2]),
-                   overwrite = TRUE, s_srs = crs(x), t_srs = crs(x),
+          gdalwarp(srcfile = filename(x),
+                   dstfile = tmpfile,
+                   tr = c(res(x)[1], res(x)[2]),
+                   overwrite = TRUE,
+                   s_srs = crsX,
+                   t_srs = crsX,
                    te = c(cropExtentRounded[1], cropExtentRounded[3],
-                          cropExtentRounded[2], cropExtentRounded[4]))
+                          cropExtentRounded[2], cropExtentRounded[4]),
+                   te_srs = crsX,
+                   tap = TRUE)
           x <- raster(tmpfile)
           x <- setMinMaxIfNeeded(x)
 
