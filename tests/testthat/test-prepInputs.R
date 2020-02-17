@@ -184,6 +184,7 @@ test_that("prepInputs doesn't work (part 1)", {
   expect_true(isTRUE(any(grepl(pattern = "Loading", mess))))
 
   expect_is(LCC2005_2, "Raster")
+  names(LCC2005) <- names(LCC2005_2) <- "LCC2005" ## workaround names mismatch
   expect_equivalent(LCC2005, LCC2005_2)
 
   ######################################
