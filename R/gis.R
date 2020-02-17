@@ -138,6 +138,9 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       tempSrcRaster <- bigRastersTmpFile()
       tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
 
+      # GDAL will to a reprojection without an explicit crop
+      cropExtent <- extent(x)
+      # cropExtentRounded <- roundToRes(cropExtent, x)
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
         dType <- assessDataType(x, type = "writeRaster")
@@ -173,10 +176,13 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                " -multi ", prll,
                "-ot ",
                dTypeGDAL, " ",
-               "-crop_to_cutline ",
+               # "-crop_to_cutline ", # crop to cutline is wrong here, it will realign raster to new origin
                "-cutline ",  "\"", tempSrcShape,"\"", " ",
                " -overwrite ",
                "-tr ", paste(tr, collapse = " "), " ",
+               "-te ", paste(c(cropExtent[1], cropExtent[3], # having this here is like crop to cutline
+                               cropExtent[2], cropExtent[4]), # but without cutting pixels off
+                             collapse = " "), " ",
                "\"", tempSrcRaster, "\"", " ",
                "\"", tempDstRaster, "\""),
         wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
