@@ -1597,11 +1597,18 @@ roundToRes <- function(extent, x) {
 
 setMinMaxIfNeeded <- function(ras) {
   maxIntVals <- c(127, 255, 32767, 65534, 2147483647, 4294967296)
-  maxValCurrent <- maxValue(ras)
-  possibleShortCut <- maxValCurrent %in% maxIntVals
-  if (isTRUE(possibleShortCut)) {
+  suppressWarnings(maxValCurrent <- maxValue(ras))
+  needSetMinMax <- FALSE
+  if (isTRUE(is.na(maxValCurrent))) {
+    needSetMinMax <- TRUE
+  } else {
+    possibleShortCut <- maxValCurrent %in% maxIntVals
+    if (isTRUE(possibleShortCut)) {
+      needSetMinMax <- TRUE
+    }
+  }
+  if (isTRUE(needSetMinMax)) {
     suppressWarnings(ras <- setMinMax(ras))
-
   }
   ras
 }

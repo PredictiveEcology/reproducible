@@ -106,11 +106,10 @@ Defaults to \code{getOption("reproducible.useCache")}.}
 }
 \description{
 The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
-crop, reproject, and mask, in that order.  This function is a wrapper for
-\code{\link{cropInputs}}, \code{\link{fixErrors}}, \code{\link{projectInputs}},
-\code{\link{maskInputs}} and
-\code{\link{writeOutputs}}, with a decent amount of data manipulating
-between these calls so that the crs match.
+crop, reproject, and mask, in that order.
+This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
+\code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
+with a decent amount of data manipulation between these calls so that the crs match.
 }
 \section{Post processing sequence}{
 
