@@ -21,7 +21,7 @@ test_that("prepInputs doesn't work (part 1)", {
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(StudyArea) <- crsToUse
 
   dPath <- file.path(tmpdir, "ecozones")
 
@@ -150,7 +150,7 @@ test_that("prepInputs doesn't work (part 1)", {
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) ## TODO: fix intermittent failure (#93)
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 
   #######################################
   ### url, targetFile, archive     ######
@@ -272,7 +272,7 @@ test_that("prepInputs doesn't work (part 1)", {
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   # crop and mask worked:
   expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) ## TODO: fix failure (#93)
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 })
 
 test_that("interactive prepInputs", {
@@ -1110,7 +1110,7 @@ test_that("prepInputs doesn't work (part 2)", {
     Sr1 <- Polygon(coords)
     Srs1 <- Polygons(list(Sr1), "s1")
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
-    crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(StudyArea) <- crsToUse
 
     if (requireNamespace("RCurl")) {
       if (RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
@@ -1176,7 +1176,7 @@ test_that("prepInputs doesn't work (part 2)", {
     Sr1 <- Polygon(coords)
     Srs1 <- Polygons(list(Sr1), "s1")
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
-    crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(StudyArea) <- crsToUse
 
     mess1 <- capture_messages({
       test <- prepInputs(
@@ -1428,7 +1428,7 @@ test_that("lightweight tests for code coverage", {
     expect_true(identical(a, b))
 
     ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
-    crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(ras) <- crsToUse
 
     expect_error(postProcess(ras, studyArea = 1), "The 'studyArea")
     expect_error(postProcess(ras, rasterToMatch = 1), "The 'rasterToMatch")
@@ -1444,18 +1444,18 @@ test_that("lightweight tests for code coverage", {
     expect_true(identical(a, b))
 
     ras2 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
-    crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(ras2) <- crsToUse
     a <- cropInputs(ras, extentToMatch = extent(ras2), extentCRS = crs(ras2))
     expect_is(a, "RasterLayer")
 
     ras4 <- raster(extent(6,10,6,10), res = 1, vals = 1:16)
     sp4 <- as(raster::extent(ras4), "SpatialPolygons")
-    crs(sp4) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(sp4) <- crsToUse
 
     expect_error(cropInputs(ras2, studyArea = sp4), "extents do not overlap")
 
     ras3 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
-    crs(ras3) <- "+init=epsg:4326 +proj=longlat +datum=NAD83 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(ras3) <- crsToUse
 
     ################################################
     # Different crs
@@ -1764,8 +1764,8 @@ test_that("rasters aren't properly resampled", {
 
   a <- raster(extent(0, 20, 0, 20), res = 1, vals = 1:400)
   b <- raster(extent(0, 20, 0, 20), res = c(2,2), vals = 1:100)
-  crs(a) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  crs(b) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(a) <- crsToUse
+  crs(b) <- crsToUse
 
   tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   writeRaster(a, filename = tiftemp1)
@@ -1783,7 +1783,7 @@ test_that("rasters aren't properly resampled", {
   expect_true(dataType(out2) == "FLT4S")
 
   c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
-  crs(c) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(c) <- crsToUse
   tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   writeRaster(c, filename = tiftemp3)
 
@@ -1802,11 +1802,11 @@ test_that("System call gdal works", {
   }, add = TRUE)
 
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras) <- crsToUse
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras2) <- crsToUse
 
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
@@ -1838,15 +1838,14 @@ test_that("System call gdal works using multicores for both projecting and maski
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  # crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras2) <- crsToUse
 
   coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2),
                       .Dim = c(5L, 2L))
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  # crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  # crs(StudyArea) <- crsToUse
   crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
@@ -2084,5 +2083,4 @@ test_that("writeOutputs with non-matching filename2", {
   expect_true(identical(vals1, vals3))
   expect_false(identical(normPath(filename(r)), normPath(filename(r1))))
   expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
-
 })

@@ -386,3 +386,4 @@ fnCacheHelper <- function(a, cacheRepo2) {
   Cache(fnCacheHelper1, cacheRepo = cacheRepo2, verbose = 2)
 }
 
+crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"

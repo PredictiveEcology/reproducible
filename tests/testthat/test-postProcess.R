@@ -19,7 +19,7 @@ test_that("prepInputs doesn't work (part 3)", {
     Sr1 <- Polygon(coords)
     Srs1 <- Polygons(list(Sr1), "s1")
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
-    crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(StudyArea) <- crsToUse
 
     nonLatLongProj <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
     #dPath <- file.path(tmpdir, "ecozones")
