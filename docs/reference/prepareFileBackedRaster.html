@@ -83,7 +83,7 @@ to the new file." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -105,6 +105,9 @@ to the new file." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -147,7 +150,14 @@ and changes the pointer (i.e., <code>filename(object)</code>) so that it is poin
 to the new file.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.prepareFileBackedRaster</span>(<span class='no'>obj</span>, <span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>.prepareFileBackedRaster</span>(
+  <span class='no'>obj</span>,
+  <span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
+  <span class='no'>...</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -165,6 +175,17 @@ to the new file.</p>
       <td><p>Logical. Should the raster be saved to disk, overwriting existing file.</p></td>
     </tr>
     <tr>
+      <th>drv</th>
+      <td><p>an object that inherits from DBIDriver,
+or an existing DBIConnection
+object (in order to clone an existing connection).</p></td>
+    </tr>
+    <tr>
+      <th>conn</th>
+      <td><p>A DBIConnection object, as returned by
+<code><a href='https://dbi.r-dbi.org/reference/dbConnect.html'>dbConnect()</a></code>.</p></td>
+    </tr>
+    <tr>
       <th>...</th>
       <td><p>passed to <code><a href='https://rdrr.io/pkg/archivist/man/saveToRepo.html'>archivist::saveToRepo</a></code></p></td>
     </tr>
@@ -179,7 +200,8 @@ to the new file.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
-<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/archivist/man/createEmptyRepo.html'>createLocalRepo</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>())</div><div class='output co'>#&gt; <span class='message'>Directory /tmp/RtmpEvs1Yv does exist and contain the backpack.db file. Use force=TRUE to reinitialize.</span></div><div class='input'>
+<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/archivist/man/createEmptyRepo.html'>createLocalRepo</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>())
+
 <span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='fu'><a href='https://rdrr.io/pkg/raster/man/extent.html'>extent</a></span>(<span class='fl'>0</span>,<span class='fl'>10</span>,<span class='fl'>0</span>,<span class='fl'>10</span>), <span class='kw'>vals</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>100</span>)
 
 <span class='co'># write to disk manually -- will be in tempdir()</span>
@@ -193,7 +215,7 @@ to the new file.</p>
 #&gt; resolution : 1, 1  (x, y)
 #&gt; extent     : 0, 10, 0, 10  (xmin, xmax, ymin, ymax)
 #&gt; crs        : NA 
-#&gt; source     : /tmp/RtmpEvs1Yv/rasters/file45db680df1a3.grd 
+#&gt; source     : C:/Users/emcintir/AppData/Local/Temp/RtmpG8MQuU/rasters/file35f0386d6f87.grd 
 #&gt; names      : layer 
 #&gt; values     : 1, 100  (min, max)
 #&gt; </div><div class='input'>

@@ -84,7 +84,7 @@ See Details for the special case of functions and their enclosing environments."
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -106,6 +106,9 @@ See Details for the special case of functions and their enclosing environments."
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -252,7 +255,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 <span class='no'>foo</span>$<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
 <span class='no'>foo</span>$<span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>:<span class='fl'>10</span>
 
-<span class='fu'>objSize</span>(<span class='no'>foo</span>) <span class='co'># all the elements in the environment</span></div><div class='output co'>#&gt; [1] "&lt;environment: 0x556c13042090&gt;"</div><div class='output co'>#&gt; $`foo$b`
+<span class='fu'>objSize</span>(<span class='no'>foo</span>) <span class='co'># all the elements in the environment</span></div><div class='output co'>#&gt; $`foo$b`
 #&gt; 96 bytes
 #&gt; 
 #&gt; $`foo$d`
@@ -261,14 +264,14 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $foo
 #&gt; 56 bytes
 #&gt; </div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='no'>foo</span>) <span class='co'># different - only measuring the environment as an object</span></div><div class='output co'>#&gt; 56 bytes</div><div class='input'>
-<span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='no'>prepInputs</span>) <span class='co'># only the function, without its enclosing environment</span></div><div class='output co'>#&gt; 341416 bytes</div><div class='input'><span class='fu'>objSize</span>(<span class='no'>prepInputs</span>)     <span class='co'># the function, plus its enclosing environment</span></div><div class='output co'>#&gt; $`%&lt;%`
+<span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='no'>prepInputs</span>) <span class='co'># only the function, without its enclosing environment</span></div><div class='output co'>#&gt; 46984 bytes</div><div class='input'><span class='fu'>objSize</span>(<span class='no'>prepInputs</span>)     <span class='co'># the function, plus its enclosing environment</span></div><div class='output co'>#&gt; $`%&lt;%`
 #&gt; 24120 bytes
 #&gt; 
 #&gt; $`%C%`
 #&gt; 292504 bytes
 #&gt; 
 #&gt; $appendChecksumsTable
-#&gt; 134552 bytes
+#&gt; 28480 bytes
 #&gt; 
 #&gt; $argsToRemove
 #&gt; 1896 bytes
@@ -289,7 +292,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 3808 bytes
 #&gt; 
 #&gt; $assessDataType.Raster
-#&gt; 175000 bytes
+#&gt; 38024 bytes
 #&gt; 
 #&gt; $assessDataType.RasterStack
 #&gt; 21832 bytes
@@ -298,7 +301,10 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 109368 bytes
 #&gt; 
 #&gt; $assessGoogle
-#&gt; 73320 bytes
+#&gt; 70304 bytes
+#&gt; 
+#&gt; $attemptGDAL
+#&gt; 8928 bytes
 #&gt; 
 #&gt; $available.packagesMem
 #&gt; 3792 bytes
@@ -306,26 +312,50 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $basename2
 #&gt; 4768 bytes
 #&gt; 
+#&gt; $bigRastersTmpFile
+#&gt; 2200 bytes
+#&gt; 
+#&gt; $bigRastersTmpFolder
+#&gt; 3448 bytes
+#&gt; 
+#&gt; $bufferWarningSuppress
+#&gt; 27384 bytes
+#&gt; 
 #&gt; $Cache
-#&gt; 33504 bytes
+#&gt; 22688 bytes
+#&gt; 
+#&gt; $CacheDBFile
+#&gt; 31776 bytes
+#&gt; 
+#&gt; $CacheDBTableName
+#&gt; 47392 bytes
 #&gt; 
 #&gt; $CacheDigest
 #&gt; 112568 bytes
 #&gt; 
+#&gt; $CacheIsACache
+#&gt; 15240 bytes
+#&gt; 
+#&gt; $CacheStorageDir
+#&gt; 7720 bytes
+#&gt; 
+#&gt; $CacheStoredFile
+#&gt; 29224 bytes
+#&gt; 
 #&gt; $cc
-#&gt; 53296 bytes
+#&gt; 10224 bytes
 #&gt; 
 #&gt; $checkAndMakeCloudFolderID
-#&gt; 21104 bytes
+#&gt; 8408 bytes
 #&gt; 
 #&gt; $checkFutures
-#&gt; 54168 bytes
+#&gt; 11552 bytes
 #&gt; 
 #&gt; $checkGDALVersion
 #&gt; 12808 bytes
 #&gt; 
 #&gt; $checkoutVersion
-#&gt; 179968 bytes
+#&gt; 247600 bytes
 #&gt; 
 #&gt; $checkPath
 #&gt; 5256 bytes
@@ -337,7 +367,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1120 bytes
 #&gt; 
 #&gt; $clearCache
-#&gt; 8792 bytes
+#&gt; 12360 bytes
 #&gt; 
 #&gt; $clearStubArtifacts
 #&gt; 4696 bytes
@@ -349,22 +379,22 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 4000 bytes
 #&gt; 
 #&gt; $cloudDownload
-#&gt; 47272 bytes
+#&gt; 15264 bytes
 #&gt; 
 #&gt; $cloudDownloadRasterBackend
-#&gt; 139056 bytes
+#&gt; 21280 bytes
 #&gt; 
 #&gt; $cloudSyncCacheOld
 #&gt; 5616 bytes
 #&gt; 
 #&gt; $cloudUpload
-#&gt; 47696 bytes
+#&gt; 11104 bytes
 #&gt; 
 #&gt; $cloudUploadFromCache
-#&gt; 36080 bytes
+#&gt; 8696 bytes
 #&gt; 
 #&gt; $cloudUploadRasterBackends
-#&gt; 65544 bytes
+#&gt; 9016 bytes
 #&gt; 
 #&gt; $cloudWriteOld
 #&gt; 4808 bytes
@@ -387,6 +417,9 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $copySingleFile
 #&gt; 276680 bytes
 #&gt; 
+#&gt; $createCache
+#&gt; 14168 bytes
+#&gt; 
 #&gt; $cropInputs
 #&gt; 2056 bytes
 #&gt; 
@@ -397,7 +430,16 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 154696 bytes
 #&gt; 
 #&gt; $cropInputs.spatialObjects
-#&gt; 212696 bytes
+#&gt; 41280 bytes
+#&gt; 
+#&gt; $dbConnectAll
+#&gt; 5712 bytes
+#&gt; 
+#&gt; $dealWithCores
+#&gt; 7688 bytes
+#&gt; 
+#&gt; $dealWithRasters
+#&gt; 27920 bytes
 #&gt; 
 #&gt; $determineFilename
 #&gt; 102848 bytes
@@ -406,13 +448,13 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 104896 bytes
 #&gt; 
 #&gt; $devModeFn1
-#&gt; 170568 bytes
+#&gt; 33896 bytes
 #&gt; 
 #&gt; $dlGeneric
 #&gt; 46688 bytes
 #&gt; 
 #&gt; $dlGoogle
-#&gt; 208280 bytes
+#&gt; 197976 bytes
 #&gt; 
 #&gt; $downloadFile
 #&gt; 677272 bytes
@@ -420,14 +462,20 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $downloadRemote
 #&gt; 342592 bytes
 #&gt; 
+#&gt; $driveLs
+#&gt; 8552 bytes
+#&gt; 
 #&gt; $extractFromArchive
-#&gt; 538640 bytes
+#&gt; 538808 bytes
 #&gt; 
 #&gt; $fastMask
-#&gt; 532416 bytes
+#&gt; 54528 bytes
 #&gt; 
 #&gt; $Filenames
 #&gt; 4744 bytes
+#&gt; 
+#&gt; $findGDAL
+#&gt; 58424 bytes
 #&gt; 
 #&gt; $fixErrors
 #&gt; 2584 bytes
@@ -436,13 +484,13 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 2120 bytes
 #&gt; 
 #&gt; $fixErrors.sf
-#&gt; 109720 bytes
+#&gt; 80776 bytes
 #&gt; 
 #&gt; $fixErrors.SpatialPolygons
-#&gt; 98616 bytes
+#&gt; 94200 bytes
 #&gt; 
 #&gt; $getArtifact
-#&gt; 27864 bytes
+#&gt; 28832 bytes
 #&gt; 
 #&gt; $getCacheId
 #&gt; 30208 bytes
@@ -463,7 +511,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 40808 bytes
 #&gt; 
 #&gt; $getUserTags
-#&gt; 56040 bytes
+#&gt; 57008 bytes
 #&gt; 
 #&gt; $installedVersions
 #&gt; 110480 bytes
@@ -472,19 +520,22 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 116976 bytes
 #&gt; 
 #&gt; $installVersions
-#&gt; 926920 bytes
+#&gt; 946320 bytes
+#&gt; 
+#&gt; $internetExists
+#&gt; 46896 bytes
 #&gt; 
 #&gt; $isInteractive
 #&gt; 840 bytes
 #&gt; 
 #&gt; $isOrHasRaster
-#&gt; 42432 bytes
+#&gt; 78752 bytes
 #&gt; 
 #&gt; $isWindows
 #&gt; 3544 bytes
 #&gt; 
 #&gt; $keepCache
-#&gt; 7864 bytes
+#&gt; 10664 bytes
 #&gt; 
 #&gt; $knownArchiveExtensions
 #&gt; 432 bytes
@@ -498,6 +549,9 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $linkOrCopy
 #&gt; 121392 bytes
 #&gt; 
+#&gt; $loadFromCache
+#&gt; 16552 bytes
+#&gt; 
 #&gt; $makeMemoisable
 #&gt; 1552 bytes
 #&gt; 
@@ -508,16 +562,19 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1888 bytes
 #&gt; 
 #&gt; $maskInputs.Raster
-#&gt; 28704 bytes
+#&gt; 5992 bytes
 #&gt; 
 #&gt; $maskInputs.sf
 #&gt; 107768 bytes
 #&gt; 
 #&gt; $maskInputs.Spatial
-#&gt; 107640 bytes
+#&gt; 108992 bytes
+#&gt; 
+#&gt; $maskWithRasterNAs
+#&gt; 19016 bytes
 #&gt; 
 #&gt; $mergeCache
-#&gt; 5264 bytes
+#&gt; 9880 bytes
 #&gt; 
 #&gt; $missingFiles
 #&gt; 38056 bytes
@@ -544,7 +601,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 3496 bytes
 #&gt; 
 #&gt; $objSize.environment
-#&gt; 37928 bytes
+#&gt; 35144 bytes
 #&gt; 
 #&gt; $objSize.function
 #&gt; 48056 bytes
@@ -556,7 +613,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 6984 bytes
 #&gt; 
 #&gt; $objSizeSession
-#&gt; 128576 bytes
+#&gt; 143520 bytes
 #&gt; 
 #&gt; $package_dependenciesMem
 #&gt; 102240 bytes
@@ -571,7 +628,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 62152 bytes
 #&gt; 
 #&gt; $pkgSnapshot
-#&gt; 164016 bytes
+#&gt; 30712 bytes
 #&gt; 
 #&gt; $postProcess
 #&gt; 1720 bytes
@@ -583,22 +640,22 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 8872 bytes
 #&gt; 
 #&gt; $postProcess.quosure
-#&gt; 5944 bytes
+#&gt; 1648 bytes
 #&gt; 
 #&gt; $postProcess.sf
-#&gt; 38704 bytes
+#&gt; 44200 bytes
 #&gt; 
 #&gt; $postProcess.spatialObjects
-#&gt; 27496 bytes
+#&gt; 5336 bytes
 #&gt; 
 #&gt; $postProcessAllSpatial
-#&gt; 327088 bytes
+#&gt; 52976 bytes
 #&gt; 
 #&gt; $postProcessChecks
 #&gt; 49936 bytes
 #&gt; 
 #&gt; $prepInputs
-#&gt; 341416 bytes
+#&gt; 46984 bytes
 #&gt; 
 #&gt; $preProcess
 #&gt; 1024000 bytes
@@ -610,7 +667,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1424 bytes
 #&gt; 
 #&gt; $projectInputs.Raster
-#&gt; 702992 bytes
+#&gt; 84552 bytes
 #&gt; 
 #&gt; $projectInputs.sf
 #&gt; 91944 bytes
@@ -618,17 +675,29 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $projectInputs.Spatial
 #&gt; 43432 bytes
 #&gt; 
+#&gt; $RCurlMess
+#&gt; 232 bytes
+#&gt; 
 #&gt; $reproducibleOptions
-#&gt; 16400 bytes
+#&gt; 20640 bytes
 #&gt; 
 #&gt; $Require
 #&gt; 354824 bytes
 #&gt; 
 #&gt; $retry
-#&gt; 40288 bytes
+#&gt; 56104 bytes
+#&gt; 
+#&gt; $rmFromCache
+#&gt; 48752 bytes
 #&gt; 
 #&gt; $rndstr
 #&gt; 29240 bytes
+#&gt; 
+#&gt; $roundToRes
+#&gt; 44720 bytes
+#&gt; 
+#&gt; $saveToCache
+#&gt; 30216 bytes
 #&gt; 
 #&gt; $searchFull
 #&gt; 37224 bytes
@@ -636,14 +705,17 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $searchFullEx
 #&gt; 1120 bytes
 #&gt; 
+#&gt; $setMinMaxIfNeeded
+#&gt; 29840 bytes
+#&gt; 
 #&gt; $showCache
-#&gt; 6848 bytes
+#&gt; 9648 bytes
 #&gt; 
 #&gt; $showLocalRepo2
-#&gt; 11400 bytes
+#&gt; 13200 bytes
 #&gt; 
 #&gt; $showLocalRepo3
-#&gt; 3272 bytes
+#&gt; 4856 bytes
 #&gt; 
 #&gt; $showLocalRepo3Mem
 #&gt; 88680 bytes
@@ -656,6 +728,9 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 
 #&gt; $unmakeMemoisable.default
 #&gt; 1088 bytes
+#&gt; 
+#&gt; $useDBI
+#&gt; 12904 bytes
 #&gt; 
 #&gt; $useETM
 #&gt; 14544 bytes
@@ -685,7 +760,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 24960 bytes
 #&gt; 
 #&gt; $writeFuture
-#&gt; 64408 bytes
+#&gt; 17832 bytes
 #&gt; 
 #&gt; $writeOutputs
 #&gt; 2360 bytes
@@ -693,11 +768,14 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $writeOutputs.default
 #&gt; 4400 bytes
 #&gt; 
+#&gt; $writeOutputs.quosure
+#&gt; 6032 bytes
+#&gt; 
 #&gt; $writeOutputs.Raster
-#&gt; 132056 bytes
+#&gt; 205488 bytes
 #&gt; 
 #&gt; $writeOutputs.sf
-#&gt; 42088 bytes
+#&gt; 68192 bytes
 #&gt; 
 #&gt; $writeOutputs.Spatial
 #&gt; 61776 bytes
@@ -709,7 +787,8 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 }
 
 <span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
-<span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))</div><div class='output co'>#&gt; [1] "&lt;environment: package:reproducible&gt;"</div><div class='input'>(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 584 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 31 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 13881104</div><div class='input'>                 # and imported functions
+<span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
+(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 648 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 11842104</div><div class='input'>                 # and imported functions
 
 </div></pre>
   </div>

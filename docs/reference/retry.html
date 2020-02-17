@@ -80,7 +80,7 @@ reasons that do not persist." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -102,6 +102,9 @@ reasons that do not persist." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -141,18 +144,35 @@ reasons that do not persist." />
 reasons that do not persist.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>retry</span>(<span class='no'>expr</span>, <span class='kw'>retries</span> <span class='kw'>=</span> <span class='fl'>5</span>, <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>retry</span>(
+  <span class='no'>expr</span>,
+  <span class='kw'>envir</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sys.parent.html'>parent.frame</a></span>(),
+  <span class='kw'>retries</span> <span class='kw'>=</span> <span class='fl'>5</span>,
+  <span class='kw'>exponentialDecayBase</span> <span class='kw'>=</span> <span class='fl'>1.3</span>,
+  <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>expr</th>
-      <td><p>Expression to run.</p></td>
+      <td><p>Quoted expression to run, i.e., <code><a href='https://rdrr.io/r/base/substitute.html'>quote(...)</a></code></p></td>
+    </tr>
+    <tr>
+      <th>envir</th>
+      <td><p>The environment in which to evaluate the quoted expression, default
+to <code><a href='https://rdrr.io/r/base/sys.parent.html'>parent.frame(1)</a></code></p></td>
     </tr>
     <tr>
       <th>retries</th>
       <td><p>Numeric. The maximum number of retries.</p></td>
+    </tr>
+    <tr>
+      <th>exponentialDecayBase</th>
+      <td><p>Numeric &gt; 1.0. The delay between
+successive retries will be <code><a href='https://rdrr.io/r/stats/Uniform.html'>runif(1, min = 0, max = exponentialDecayBase ^ i - 1)</a></code>
+where <code>i</code> is the retry number (i.e., follows <code><a href='https://rdrr.io/r/base/seq.html'>seq_len(retries)</a></code>)</p></td>
     </tr>
     <tr>
       <th>silent</th>

@@ -87,7 +87,7 @@ See examples." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -109,6 +109,9 @@ See examples." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -375,7 +378,7 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
 <span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords</span>)
 <span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
 <span class='no'>StudyArea</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
-<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>StudyArea</span>) <span class='kw'>&lt;-</span> <span class='st'>"+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>StudyArea</span>) <span class='kw'>&lt;-</span> <span class='st'>"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
 
 <span class='co'>#  specify targetFile, alsoExtract, and fun, wrap with Cache</span>
 <span class='no'>ecozoneFilename</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>dPath</span>, <span class='st'>"ecozones.shp"</span>)
@@ -385,8 +388,8 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
                   <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span>)
 <span class='no'>shpEcozoneSm</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>,
                       <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
-                      <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/reproducible/man/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFilename</span>),
-                      <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/reproducible/man/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFiles</span>),
+                      <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFilename</span>),
+                      <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFiles</span>),
                       <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>,
                       <span class='kw'>fun</span> <span class='kw'>=</span> <span class='st'>"shapefile"</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>,
                       <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='st'>"EcozoneFile.shp"</span>) <span class='co'># passed to determineFilename</span>

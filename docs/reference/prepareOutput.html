@@ -79,7 +79,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -101,6 +101,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -142,7 +145,13 @@
     <pre class="usage"><span class='fu'>.prepareOutput</span>(<span class='no'>object</span>, <span class='no'>cacheRepo</span>, <span class='no'>...</span>)
 
 <span class='co'># S4 method for RasterLayer</span>
-<span class='fu'>.prepareOutput</span>(<span class='no'>object</span>, <span class='no'>cacheRepo</span>, <span class='no'>...</span>)
+<span class='fu'>.prepareOutput</span>(
+  <span class='no'>object</span>,
+  <span class='no'>cacheRepo</span>,
+  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
+  <span class='no'>...</span>
+)
 
 <span class='co'># S4 method for ANY</span>
 <span class='fu'>.prepareOutput</span>(<span class='no'>object</span>, <span class='no'>cacheRepo</span>, <span class='no'>...</span>)</pre>
@@ -161,7 +170,18 @@ This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
     </tr>
     <tr>
       <th>...</th>
-      <td><p>Arguments of <code>FUN</code> function .</p></td>
+      <td><p>Arguments passed to <code>FUN</code></p></td>
+    </tr>
+    <tr>
+      <th>drv</th>
+      <td><p>an object that inherits from DBIDriver,
+or an existing DBIConnection
+object (in order to clone an existing connection).</p></td>
+    </tr>
+    <tr>
+      <th>conn</th>
+      <td><p>A DBIConnection object, as returned by
+<code><a href='https://dbi.r-dbi.org/reference/dbConnect.html'>dbConnect()</a></code>.</p></td>
     </tr>
     </table>
 
@@ -175,7 +195,8 @@ This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
 <span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='st'>"Null"</span>
 <span class='fu'>.prepareOutput</span>(<span class='no'>b</span>) <span class='co'># converts to NULL</span></div><div class='output co'>#&gt; NULL</div><div class='input'>
 <span class='co'># For rasters, it is same as .prepareFileBackedRaster</span>
-<span class='fu'><a href='https://rdrr.io/r/base/try.html'>try</a></span>(<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/archivist/man/createEmptyRepo.html'>createLocalRepo</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>()))</div><div class='output co'>#&gt; <span class='message'>Directory /tmp/RtmpEvs1Yv does exist and contain the backpack.db file. Use force=TRUE to reinitialize.</span></div><div class='input'>
+<span class='fu'><a href='https://rdrr.io/r/base/ns-load.html'>requireNamespace</a></span>(<span class='st'>"archivist"</span>, <span class='kw'>quietly</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+  <span class='fu'><a href='https://rdrr.io/r/base/try.html'>try</a></span>(<span class='kw pkg'>archivist</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/archivist/man/createEmptyRepo.html'>createLocalRepo</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>()))</div><div class='output co'>#&gt; <span class='message'>Directory C:\Users\emcintir\AppData\Local\Temp\RtmpG8MQuU does exist and contain the backpack.db file. Use force=TRUE to reinitialize.</span></div><div class='input'>
 <span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
 <span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='fu'><a href='https://rdrr.io/pkg/raster/man/extent.html'>extent</a></span>(<span class='fl'>0</span>,<span class='fl'>10</span>,<span class='fl'>0</span>,<span class='fl'>10</span>), <span class='kw'>vals</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>100</span>)
 

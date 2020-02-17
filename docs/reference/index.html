@@ -77,7 +77,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -99,6 +99,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -149,48 +152,6 @@
       <tr>
         
         <td>
-          <p><code><a href="CacheDigest.html">CacheDigest()</a></code> </p>
-        </td>
-        <td><p>The exact digest function that <code>Cache</code> uses</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="Checksums.html">Checksums()</a></code> </p>
-        </td>
-        <td><p>Calculate checksum</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="Copy.html">Copy()</a></code> </p>
-        </td>
-        <td><p>Recursive copying of nested environments, and other "hard to copy" objects</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="Deprcated.html">cloudCache()</a></code> </p>
-        </td>
-        <td><p>Deprecated</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="Filenames.html">Filenames()</a></code> </p>
-        </td>
-        <td><p>Return the filename(s) from a <code>Raster*</code> object</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="Path-class.html">asPath()</a></code> </p>
-        </td>
-        <td><p>Coerce a character string to a class "Path"</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="Require.html">Require()</a></code> </p>
-        </td>
-        <td><p>Repeatability-safe install and load packages, optionally with specific versions</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="addChangedAttr.html">.addChangedAttr()</a></code> </p>
         </td>
         <td><p>Add an attribute to an object indicating which named elements change</p></td>
@@ -233,9 +194,27 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="CacheDigest.html">CacheDigest()</a></code> </p>
+        </td>
+        <td><p>The exact digest function that <code>Cache</code> uses</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="CacheHelpers.html">CacheDBFile()</a></code> <code><a href="CacheHelpers.html">CacheStorageDir()</a></code> <code><a href="CacheHelpers.html">CacheStoredFile()</a></code> <code><a href="CacheHelpers.html">CacheDBTableName()</a></code> <code><a href="CacheHelpers.html">CacheIsACache()</a></code> </p>
+        </td>
+        <td><p>A collection of low level tools for Cache</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="cacheMessage.html">.cacheMessage()</a></code> </p>
         </td>
         <td><p>Create a custom cache message by class</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="cacheTools.html">createCache()</a></code> <code><a href="cacheTools.html">saveToCache()</a></code> <code><a href="cacheTools.html">loadFromCache()</a></code> <code><a href="cacheTools.html">rmFromCache()</a></code> </p>
+        </td>
+        <td><p>Create a new cache</p></td>
       </tr><tr>
         
         <td>
@@ -257,15 +236,21 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="checkoutVersion.html">checkoutVersion()</a></code> </p>
+        </td>
+        <td><p>Clone, fetch, and checkout from GitHub.com repositories</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="checkPath.html">checkPath()</a></code> </p>
         </td>
         <td><p>Check directory path</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="checkoutVersion.html">checkoutVersion()</a></code> </p>
+          <p><code><a href="Checksums.html">Checksums()</a></code> </p>
         </td>
-        <td><p>Clone, fetch, and checkout from GitHub.com repositories</p></td>
+        <td><p>Calculate checksum</p></td>
       </tr><tr>
         
         <td>
@@ -317,6 +302,12 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="Copy.html">Copy()</a></code> </p>
+        </td>
+        <td><p>Recursive copying of nested environments, and other "hard to copy" objects</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="copyFile.html">copySingleFile()</a></code> <code><a href="copyFile.html">copyFile()</a></code> </p>
         </td>
         <td><p>Copy a file using <code>robocopy</code> on Windows and <code>rsync</code> on Linux/macOS</p></td>
@@ -332,6 +323,12 @@
           <p><code><a href="debugCache.html">.debugCache()</a></code> </p>
         </td>
         <td><p>Attach debug info to return for Cache</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="Deprcated.html">cloudCache()</a></code> </p>
+        </td>
+        <td><p>Deprecated</p></td>
       </tr><tr>
         
         <td>
@@ -365,9 +362,21 @@
       </tr><tr>
         
         <td>
+          <p><code><a href="Filenames.html">Filenames()</a></code> </p>
+        </td>
+        <td><p>Return the filename(s) from a <code>Raster*</code> object</p></td>
+      </tr><tr>
+        
+        <td>
           <p><code><a href="getGDALVersion.html">getGDALVersion()</a></code> </p>
         </td>
         <td><p>Check the GDAL version in use</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="installedVersions.html">installedVersions()</a></code> </p>
+        </td>
+        <td><p>Determine versions all installed packages</p></td>
       </tr><tr>
         
         <td>
@@ -380,12 +389,6 @@
           <p><code><a href="installVersions.html">installVersions()</a></code> </p>
         </td>
         <td><p>Install exact package versions from a package version text file &amp; GitHub</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="installedVersions.html">installedVersions()</a></code> </p>
-        </td>
-        <td><p>Determine versions all installed packages</p></td>
       </tr><tr>
         
         <td>
@@ -431,15 +434,15 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="objSizeInclEnviros.html">.objSizeInclEnviros()</a></code> </p>
-        </td>
-        <td><p>Determine object size of all objects inside environments</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="package_dependenciesMem.html">package_dependenciesMem()</a></code> </p>
         </td>
         <td><p>Memoised version of <code>package_dependencies</code></p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="Path-class.html">asPath()</a></code> </p>
+        </td>
+        <td><p>Coerce a character string to a class "Path"</p></td>
       </tr><tr>
         
         <td>
@@ -473,21 +476,9 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="preProcess.html">preProcess()</a></code> </p>
-        </td>
-        <td><p>Download, Checksum, Extract files</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="prefix.html">.prefix()</a></code> <code><a href="prefix.html">.suffix()</a></code> </p>
         </td>
         <td><p>Add a prefix or suffix to the basename part of a file path</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="prepInputs.html">prepInputs()</a></code> </p>
-        </td>
-        <td><p>Download and optionally post process files</p></td>
       </tr><tr>
         
         <td>
@@ -500,6 +491,18 @@
           <p><code><a href="prepareOutput.html">.prepareOutput()</a></code> </p>
         </td>
         <td><p>Make any modifications to object recovered from cacheRepo</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="prepInputs.html">prepInputs()</a></code> </p>
+        </td>
+        <td><p>Download and optionally post process files</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="preProcess.html">preProcess()</a></code> </p>
+        </td>
+        <td><p>Download, Checksum, Extract files</p></td>
       </tr><tr>
         
         <td>
@@ -518,6 +521,12 @@
           <p><code><a href="reproducibleOptions.html">reproducibleOptions()</a></code> </p>
         </td>
         <td><p><code>reproducible</code> options</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="Require.html">Require()</a></code> </p>
+        </td>
+        <td><p>Repeatability-safe install and load packages, optionally with specific versions</p></td>
       </tr><tr>
         
         <td>

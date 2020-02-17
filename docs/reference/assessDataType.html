@@ -79,7 +79,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -101,6 +101,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -155,17 +158,20 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>ras</th>
-      <td><p>The RasterLayer or RasterStack for which data type will be assessed.</p></td>
+      <td><p>The <code>RasterLayer</code> or <code>RasterStack</code> for which data type will be assessed.</p></td>
     </tr>
     <tr>
       <th>type</th>
-      <td><p>Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'.</p></td>
+      <td><p>Character. <code>"writeRaster"</code> (default) or <code>"GDAL"</code> to return the recommended
+data type for writing from the raster and gdalUtils packages, respectively, or
+<code>"projectRaster"</code> to return recommended resampling type.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>The appropriate data type for the range of values in <code>ras</code>. See <code><a href='https://rdrr.io/pkg/raster/man/dataType.html'>dataType</a></code> for details.</p>
+    <p>The appropriate data type for the range of values in <code>ras</code>.
+        See <code><a href='https://rdrr.io/pkg/raster/man/dataType.html'>dataType</a></code> for details.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'>## LOG1S</span>

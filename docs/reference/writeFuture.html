@@ -80,7 +80,7 @@ This is still experimental." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -102,6 +102,9 @@ This is still experimental." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -141,7 +144,15 @@ This is still experimental." />
 This is still experimental.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>writeFuture</span>(<span class='no'>written</span>, <span class='no'>outputToSave</span>, <span class='no'>cacheRepo</span>, <span class='no'>userTags</span>)</pre>
+    <pre class="usage"><span class='fu'>writeFuture</span>(
+  <span class='no'>written</span>,
+  <span class='no'>outputToSave</span>,
+  <span class='no'>cacheRepo</span>,
+  <span class='no'>userTags</span>,
+  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
+  <span class='no'>cacheId</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -163,6 +174,27 @@ Should be 0 to start.</p></td>
       <th>userTags</th>
       <td><p>Character string of tags to attach to this <code>outputToSave</code> in
 the <code>CacheRepo</code></p></td>
+    </tr>
+    <tr>
+      <th>drv</th>
+      <td><p>an object that inherits from DBIDriver,
+or an existing DBIConnection
+object (in order to clone an existing connection).</p></td>
+    </tr>
+    <tr>
+      <th>conn</th>
+      <td><p>A DBIConnection object, as returned by
+<code><a href='https://dbi.r-dbi.org/reference/dbConnect.html'>dbConnect()</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>cacheId</th>
+      <td><p>Character string. If passed, this will override the calculated hash
+of the inputs, and return the result from this cacheId in the cacheRepo.
+Setting this is equivalent to manually saving the output of this function, i.e.,
+the object will be on disk, and will be recovered in subsequent
+This may help in some particularly finicky situations
+where Cache is not correctly detecting unchanged inputs. This will guarantee
+the object will be identical each time; this may be useful in operational code.</p></td>
     </tr>
     </table>
 

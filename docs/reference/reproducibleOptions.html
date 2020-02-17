@@ -81,7 +81,7 @@ See Details below." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -103,6 +103,9 @@ See Details below." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -158,8 +161,18 @@ file so they persist between sessions.</p>
                                    <code><a href='viewCache.html'>keepCache</a></code></td></tr>
 <tr><td><code>cachePath</code></td><td><code>.reproducibleTempCacheDir</code></td><td>Used in <code><a href='cache.html'>Cache</a></code> and many others.
                    The default path for repositories if not passed as an argument.</td></tr>
+<tr><td><code>cacheSaveFormat</code></td><td>"rds"</td><td>What save format to use; currently,
+                         "qs" or "rds"</td></tr>
+<tr><td><code>conn</code></td><td><code>NULL</code></td><td>Sets a specific connection to a database, e.g.,
+                      <code>dbConnect(drv = RSQLite::SQLite())</code> or
+                      <code>dbConnect(drv = RPostgres::Postgres()</code>. For remote
+                      database servers, setting one connection may be far faster than using
+                      <code>drv</code> which must make a new connection every time.</td></tr>
 <tr><td><code>destinationPath</code></td><td><code>NULL</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>,
                               <code><a href='preProcess.html'>preProcess</a></code>. Can be set globally here.</td></tr>
+<tr><td><code>drv</code></td><td><code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code></td><td>Sets the default driver for the backend
+                      database system. Only tested with <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code> and
+                      <code><a href='https://rpostgres.r-dbi.org/reference/Postgres.html'>RPostgres::Postgres()</a></code></td></tr>
 <tr><td><code>futurePlan</code></td><td><code>FALSE</code></td><td>On Linux OSs, <code>Cache</code> and <code>cloudCache</code>
                          have some functionality that uses the <code>future</code> package.
                          Default is to not use these, as they are experimental. They may,
@@ -176,10 +189,11 @@ file so they persist between sessions.</p>
                               in their <code>destinationPath</code>, but also minimize
                               re-downloading the same (perhaps large) file over and over
                               for each project. Because the files are hardlinks, there
-                              is no extra space taken up by the apparently duplicated files</td></tr>
+                              is no extra space taken up by the apparently duplicated files.</td></tr>
 <tr><td><code>inputPathsRecursive</code></td><td><code>FALSE</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>,
                               <code><a href='preProcess.html'>preProcess</a></code>. Should the <code>reproducible.inputPaths</code>
-                              be searched recursively for existence of a file</td></tr>
+                              be searched recursively for existence of a file.</td></tr>
+<tr><td><code>nThreads</code></td><td><code>1</code></td><td>The number of threads to use for reading/writing cache files.</td></tr>
 <tr><td><code>overwrite</code></td><td><code>FALSE</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>, <code><a href='preProcess.html'>preProcess</a></code>,
                         <code><a href='downloadFile.html'>downloadFile</a></code>, and <code><a href='postProcess.html'>postProcess</a></code>.</td></tr>
 <tr><td><code>quick</code></td><td><code>FALSE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. This will cause
@@ -208,9 +222,11 @@ file so they persist between sessions.</p>
                         this option will default back to the non devMode behaviour to avoid
                         deleting objects. This, therefore, is most useful if the user is
                         using unique values for <code>userTags</code></td><td><code>useCloud</code></td></tr>
-<tr><td>Passed to <code>Cache</code>. Default <code>FALSE</code>.</td><td><code>useGDAL</code></td><td>Passed to <code>useGDAL</code> in <code>projectInputs.Raster</code>.
+<tr><td>Passed to <code>Cache</code>. Default <code>FALSE</code>.</td><td><code>useDBI</code></td><td><code>TRUE</code></td></tr>
+<tr><td>As of reproducible 0.3, the backend is now <code>DBI</code>
+                     package instead of <code>archivist</code></td><td><code>useGDAL</code></td><td>Passed to <code>useGDAL</code> in <code>projectInputs.Raster</code>.
                   Default <code>TRUE</code>.</td></tr>
-<tr><td><code>useMemoise</code></td><td><code>TRUE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. If <code>TRUE</code>,
+<tr><td><code>useMemoise</code></td><td><code>FALSE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. If <code>TRUE</code>,
                   recovery of cached elements from the cacheRepo will use
                   <code><a href='https://rdrr.io/pkg/memoise/man/memoise.html'>memoise::memoise</a></code>. This means that the 3rd time running a function
                   will be much faster than the 1st (create cache entry) or 2nd (recover

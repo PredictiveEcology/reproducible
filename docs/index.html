@@ -43,7 +43,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -66,6 +66,9 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
+      <a href="articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
+    <li>
       <a href="articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul>
@@ -98,6 +101,11 @@
 <a href="#reproducible" class="anchor"></a>reproducible</h1></div>
 
 <p>A set of tools for R that enhance reproducibility beyond package management. Built on top of <code>git2r</code> and <code>archivist</code>, this package aims at making high-level, robust, machine and OS independent tools for making deeply reproducible and reusable content in R. This extends beyond the package management utilities of <code>packrat</code> and <code>checkpoint</code> by including tools for caching and accessing GitHub repositories.</p>
+<div id="news" class="section level2">
+<h2 class="hasAnchor">
+<a href="#news" class="anchor"></a>News</h2>
+<p>See updates from latest <a href="https://cran.r-project.org/package=reproducible">CRAN</a> and <a href="https://github.com/PredictiveEcology/reproducible/blob/development/NEWS.md">development</a> versions. Note that versions 1.0.0 and later are not compatible with previous versions “out of the box”. However, setting the <code><a href="https://rdrr.io/r/base/options.html">options("reproducible.useDBI" = FALSE)</a></code> will return the behaviour to prior versions and so <em>should</em> be compatible. The new version is much faster and creates smaller repository files and allows for different (e.g., <code>RPostgres</code> backends for the database – not the saved files, however; these are still saved locally).</p>
+</div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -106,20 +114,20 @@
 <a href="#current-release-on-cran" class="anchor"></a>Current release (on CRAN)</h3>
 <p><a href="https://travis-ci.org/PredictiveEcology/reproducible"><img src="https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=master" alt="Build Status"></a> <a href="https://ci.appveyor.com/project/achubaty/reproducible/branch/master"><img src="https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/master?svg=true" alt="Appveyor Build status"></a> <a href="https://coveralls.io/github/PredictiveEcology/reproducible?branch=master"><img src="https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=master" alt="Coverage Status"></a></p>
 <p><strong>Install from CRAN:</strong></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"reproducible"</span>)</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"reproducible"</span>)</span></code></pre></div>
 <p><strong>Install from GitHub:</strong></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#install.packages("devtools")</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"devtools"</span>)
-<span class="kw"><a href="https://rdrr.io/pkg/devtools/man/remote-reexports.html">install_github</a></span>(<span class="st">"PredictiveEcology/reproducible"</span>, <span class="dt">dependencies =</span> <span class="ot">TRUE</span>) </code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co">#install.packages("devtools")</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"devtools"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="kw">install_github</span>(<span class="st">"PredictiveEcology/reproducible"</span>, <span class="dt">dependencies =</span> <span class="ot">TRUE</span>) </span></code></pre></div>
 </div>
 <div id="development-version" class="section level3">
 <h3 class="hasAnchor">
 <a href="#development-version" class="anchor"></a>Development version</h3>
 <p><a href="https://travis-ci.org/PredictiveEcology/reproducible"><img src="https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=development" alt="Build Status"></a> <a href="https://ci.appveyor.com/project/achubaty/reproducible/branch/development"><img src="https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/development?svg=true" alt="Appveyor Build status"></a> <a href="https://coveralls.io/github/PredictiveEcology/reproducible?branch=development"><img src="https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development" alt="Coverage Status"></a></p>
 <p><strong>Install from GitHub:</strong></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#install.packages("devtools")</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"devtools"</span>)
-<span class="kw"><a href="https://rdrr.io/pkg/devtools/man/remote-reexports.html">install_github</a></span>(<span class="st">"PredictiveEcology/reproducible"</span>, <span class="dt">ref =</span> <span class="st">"development"</span>, <span class="dt">dependencies =</span> <span class="ot">TRUE</span>) </code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="co">#install.packages("devtools")</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"devtools"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="kw">install_github</span>(<span class="st">"PredictiveEcology/reproducible"</span>, <span class="dt">ref =</span> <span class="st">"development"</span>, <span class="dt">dependencies =</span> <span class="ot">TRUE</span>) </span></code></pre></div>
 </div>
 </div>
 <div id="contributions" class="section level2">

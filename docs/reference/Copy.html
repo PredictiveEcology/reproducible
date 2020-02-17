@@ -82,7 +82,7 @@ environments)." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -104,6 +104,9 @@ environments)." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -163,7 +166,13 @@ environments).</p>
 <span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)
 
 <span class='co'># S4 method for Raster</span>
-<span class='fu'>Copy</span>(<span class='no'>object</span>, <span class='no'>filebackedDir</span>, <span class='no'>...</span>)</pre>
+<span class='fu'>Copy</span>(
+  <span class='no'>object</span>,
+  <span class='no'>filebackedDir</span>,
+  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
+  <span class='no'>...</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -185,6 +194,17 @@ file backing them.</p></td>
     <tr>
       <th>...</th>
       <td><p>Only used for custom Methods</p></td>
+    </tr>
+    <tr>
+      <th>drv</th>
+      <td><p>an object that inherits from DBIDriver,
+or an existing DBIConnection
+object (in order to clone an existing connection).</p></td>
+    </tr>
+    <tr>
+      <th>conn</th>
+      <td><p>A DBIConnection object, as returned by
+<code><a href='https://dbi.r-dbi.org/reference/dbConnect.html'>dbConnect()</a></code>.</p></td>
     </tr>
     </table>
 

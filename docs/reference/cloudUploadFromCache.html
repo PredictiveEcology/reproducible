@@ -79,7 +79,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -101,6 +101,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -162,7 +165,7 @@
     </tr>
     <tr>
       <th>saved</th>
-      <td><p>The character string of the saved file's archivist digest value.</p></td>
+      <td><p>The character string of the saved file's digest value.</p></td>
     </tr>
     <tr>
       <th>cacheRepo</th>
@@ -179,12 +182,13 @@ but this will not persist across sessions.</p></td>
     </tr>
     <tr>
       <th>outputToSave</th>
-      <td><p>Only required if <code>any(rasters) == TRUE</code>. This is the <code>Raster*</code> object.</p></td>
+      <td><p>Only required if <code>any(rasters) == TRUE</code>.
+This is the <code>Raster*</code> object.</p></td>
     </tr>
     <tr>
       <th>rasters</th>
-      <td><p>A logical vector of length &gt;= 1 indicating which elements in <code>outputToSave</code>
-are <code>Raster*</code> objects.</p></td>
+      <td><p>A logical vector of length &gt;= 1 indicating which elements in
+<code>outputToSave</code> are <code>Raster*</code> objects.</p></td>
     </tr>
     </table>
 

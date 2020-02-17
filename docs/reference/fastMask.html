@@ -79,7 +79,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -101,6 +101,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -139,7 +142,13 @@
     <p>This alternative to <code><a href='https://rdrr.io/pkg/raster/man/mask.html'>raster::mask</a></code> is included here.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>fastMask</span>(<span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>cores</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>useGDAL</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useGDAL"</span>, <span class='fl'>TRUE</span>))</pre>
+    <pre class="usage"><span class='fu'>fastMask</span>(
+  <span class='no'>x</span>,
+  <span class='no'>y</span>,
+  <span class='kw'>cores</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>useGDAL</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useGDAL"</span>, <span class='fl'>TRUE</span>),
+  <span class='no'>...</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -162,13 +171,19 @@ float will be passed as the exact number of cores to be used.</p></td>
     </tr>
     <tr>
       <th>useGDAL</th>
-      <td><p>Logical, defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.useGDAL" = TRUE)</a></code>.
+      <td><p>Logical or <code>"force"</code>.
+Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.useGDAL" = TRUE)</a></code>.
 If <code>TRUE</code>, then this function will use <code>gdalwarp</code> only when not
 small enough to fit in memory (i.e., <em>if the operation fails</em> the
 <code><a href='https://rdrr.io/pkg/raster/man/programming.html'>raster::canProcessInMemory(x, 3)</a></code> test). Using <code>gdalwarp</code> will
 usually be faster than <code><a href='https://rdrr.io/pkg/raster/man/projectRaster.html'>raster::projectRaster</a></code>, the function used
 if this is <code>FALSE</code>. Since since the two options use different algorithms,
-there may be different projection results.</p></td>
+there may be different projection results. <code>"force"</code> will cause it to
+use GDAL regardless of the memory test described here.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Currently unused.</p></td>
     </tr>
     </table>
 

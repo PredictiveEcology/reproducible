@@ -82,7 +82,7 @@ raster (e.g., after copying the file to a new location)." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -104,6 +104,9 @@ raster (e.g., after copying the file to a new location)." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -174,7 +177,7 @@ containing replacement text (see <code><a href='https://rdrr.io/r/base/grep.html
     <pre class="examples"><div class='input'><span class='no'>filenames</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"/home/user1/Documents/file.txt"</span>, <span class='st'>"/Users/user1/Documents/file.txt"</span>)
 <span class='no'>oldPaths</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/basename.html'>dirname</a></span>(<span class='no'>filenames</span>)
 <span class='no'>newPaths</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"/home/user2/Desktop"</span>, <span class='st'>"/Users/user2/Desktop"</span>)
-<span class='fu'>convertPaths</span>(<span class='no'>filenames</span>, <span class='no'>oldPaths</span>, <span class='no'>newPaths</span>)</div><div class='output co'>#&gt; [1] "/home/user2/Desktop/file.txt"  "/Users/user2/Desktop/file.txt"</div><div class='input'>
+<span class='fu'>convertPaths</span>(<span class='no'>filenames</span>, <span class='no'>oldPaths</span>, <span class='no'>newPaths</span>)</div><div class='output co'>#&gt; [1] "C:/home/user2/Desktop/file.txt"  "C:/Users/user2/Desktop/file.txt"</div><div class='input'>
 <span class='no'>r1</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>raster</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span>(<span class='st'>"external/test.grd"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"raster"</span>))
 <span class='no'>r2</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>raster</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span>(<span class='st'>"external/rlogo.grd"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"raster"</span>))
 <span class='no'>rasters</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>r1</span>, <span class='no'>r2</span>)
@@ -182,10 +185,10 @@ containing replacement text (see <code><a href='https://rdrr.io/r/base/grep.html
 <span class='no'>newPaths</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='st'>"~/rasters"</span>)
 <span class='no'>rasters</span> <span class='kw'>&lt;-</span> <span class='fu'>convertRasterPaths</span>(<span class='no'>rasters</span>, <span class='no'>oldPaths</span>, <span class='no'>newPaths</span>)
 <span class='fu'><a href='https://rdrr.io/r/base/lapply.html'>lapply</a></span>(<span class='no'>rasters</span>, <span class='kw pkg'>raster</span><span class='kw ns'>::</span><span class='no'><a href='https://rdrr.io/pkg/raster/man/filename.html'>filename</a></span>)</div><div class='output co'>#&gt; [[1]]
-#&gt; [1] "/home/emcintir/rasters/test.grd"
+#&gt; [1] "C:/Eliot/rasters/test.grd"
 #&gt; 
 #&gt; [[2]]
-#&gt; [1] "/home/emcintir/rasters/rlogo.grd"
+#&gt; [1] "C:/Eliot/rasters/rlogo.grd"
 #&gt; </div><div class='input'>
 </div></pre>
   </div>

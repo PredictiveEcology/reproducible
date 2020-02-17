@@ -88,7 +88,7 @@ work correctly." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -110,6 +110,9 @@ work correctly." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -168,9 +171,6 @@ work correctly.</p>
 )
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
-
-<span class='co'># S4 method for cluster</span>
 <span class='fu'>.robustDigest</span>(<span class='no'>object</span>, <span class='no'>.objects</span>, <span class='no'>length</span>, <span class='no'>algo</span>, <span class='no'>quick</span>, <span class='no'>classOptions</span>)
 
 <span class='co'># S4 method for `function`</span>
@@ -259,7 +259,7 @@ to do with.</p></td>
     </tr>
     <tr>
       <th>...</th>
-      <td><p>Arguments of <code>FUN</code> function .</p></td>
+      <td><p>Arguments passed to <code>FUN</code></p></td>
     </tr>
     <tr>
       <th>objects</th>
@@ -287,7 +287,8 @@ for having their data content located on disk, this format will be maintained if
 raster already is file-backed, i.e., to create <code>.tif</code> or <code>.grd</code> backed rasters,
 use <code>writeRaster</code> first, then Cache. The .tif or .grd will be copied to the "raster"
 subdirectory of the <code>cacheRepo</code>.
-Their RAM representation (as an R object) will still be in the usual <code class="file">gallery/</code> directory.
+Their RAM representation (as an R object) will still be in the usual
+<code class="file">cacheOutputs/</code> (or formerly <code class="file">gallery/</code>) directory.
 For <code>inMemory</code> raster objects, they will remain as binary <code>.RData</code> files.</p>
 <p>Functions (which are contained within environments) are
 converted to a text representation via a call to <code><a href='https://rdrr.io/r/base/format.html'>format(FUN)</a></code>.</p>
@@ -300,7 +301,7 @@ only its filename via <code><a href='https://rdrr.io/r/base/basename.html'>basen
 using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>cache</a></code>.</p></div>
+    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code>.</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
@@ -311,16 +312,16 @@ using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
 <span class='fu'><a href='https://rdrr.io/r/base/save.html'>save</a></span>(<span class='no'>a</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
 <span class='co'># treats as character string, so 2 filenames are different</span>
-<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "3b93be1868c294b8e8077390f9ca46ff"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "9bc2d45e4219abfb91efb88e5111ff61"</div><div class='input'>
+<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "d39c2220490cad08875655c2fa1f1063"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "13825fc709a1a1f961d91b3d83153205"</div><div class='input'>
 <span class='co'># tests to see whether character string is representing a file</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "80b781f5b1bf87c9"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>tmpfile2</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [1] "80b781f5b1bf87c9"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "0d8e9d280cc34fad"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>tmpfile2</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [1] "0d8e9d280cc34fad"</div><div class='input'>
 <span class='co'># if you tell it that it is a path, then you can decide if you want it to be</span>
 <span class='co'>#  treated as a character string or as a file path</span>
-<span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "8752b83bf44c2d69"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "42e62f590d43ae29"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "2a4f5d1a0dca9d02"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "4fe65c8b00b78089"</div><div class='input'>
 <span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; [[1]]
-#&gt; [1] "80b781f5b1bf87c9"
+#&gt; [1] "0d8e9d280cc34fad"
 #&gt; </div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>) <span class='co'># same because using file content</span></div><div class='output co'>#&gt; [[1]]
-#&gt; [1] "80b781f5b1bf87c9"
+#&gt; [1] "0d8e9d280cc34fad"
 #&gt; </div><div class='input'>
 <span class='co'># Rasters are interesting because it is not know a priori if it</span>
 <span class='co'>#   it has a file name associated with it.</span>
@@ -331,7 +332,7 @@ using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
 <span class='no'>r1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile1</span>)
 <span class='no'>r2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
-<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "4a32e07ca0fdf03ac6e2a0f0e723d123"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "e39fa434e1fa69d7bed54782ca09aec6"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "4a32e07ca0fdf03ac6e2a0f0e723d123"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "e39fa434e1fa69d7bed54782ca09aec6"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'>
+<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "d10d21a80568128f9741eb92debf609c"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "957878334cf6ef30f0ce8821e4d3b394"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "d10d21a80568128f9741eb92debf609c"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "957878334cf6ef30f0ce8821e4d3b394"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'>
 <span class='co'># note, this is not true for comparing memory and file-backed rasters</span>
 <span class='fu'>.robustDigest</span>(<span class='no'>r</span>)</div><div class='output co'>#&gt; [1] "e4c91c4fbea055a8"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'>
 </div></pre>

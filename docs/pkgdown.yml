@@ -1,9 +1,10 @@
-pandoc: 1.19.2.4
+pandoc: 2.9.1.1
 pkgdown: 1.4.1
 pkgdown_sha: ~
 articles:
+  Cache-using-postgresql: Cache-using-postgresql.html
   Intro-to-Cache: Intro-to-Cache.html
 urls:
-  reference: http://reproducible.predictiveecology.org/reference
-  article: http://reproducible.predictiveecology.org/articles
+  reference: https://reproducible.predictiveecology.org/reference
+  article: https://reproducible.predictiveecology.org/articles
 

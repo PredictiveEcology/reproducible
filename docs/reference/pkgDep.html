@@ -86,7 +86,7 @@ the pkgDep on those." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -108,6 +108,9 @@ the pkgDep on those." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -252,55 +255,42 @@ circumstances:</p><ol>
 #&gt;  [6] "gtable"       "lazyeval"     "MASS"         "mgcv"         "reshape2"    
 #&gt; [11] "scales"       "viridisLite"  "grid"         "grDevices"    "utils"       
 #&gt; [16] "methods"      "graphics"     "stats"        "Matrix"       "splines"     
-#&gt; [21] "nlme"         "lattice"      "plyr"         "Rcpp"         "stringr"     
-#&gt; [26] "glue"         "stringi"      "tools"        "magrittr"     "labeling"    
-#&gt; [31] "munsell"      "colorspace"   "R6"           "digest"       "rlang"       
-#&gt; [36] "tibble"       "withr"        "cli"          "fansi"        "pillar"      
-#&gt; [41] "assertthat"   "crayon"       "utf8"         "vctrs"        "backports"   
-#&gt; [46] "ellipsis"     "zeallot"      "pkgconfig"    "sp"           "data.table"  
-#&gt; [51] "fpCompare"    "raster"       "rgdal"       
-#&gt; 
-#&gt; $archivist
-#&gt;  [1] "RCurl"       "digest"      "httr"        "DBI"         "lubridate"  
-#&gt;  [6] "RSQLite"     "magrittr"    "flock"       "bitops"      "methods"    
-#&gt; [11] "stats"       "graphics"    "grDevices"   "utils"       "curl"       
-#&gt; [16] "jsonlite"    "mime"        "openssl"     "R6"          "tools"      
-#&gt; [21] "askpass"     "sys"         "stringr"     "Rcpp"        "glue"       
-#&gt; [26] "stringi"     "bit64"       "blob"        "memoise"     "pkgconfig"  
-#&gt; [31] "BH"          "plogr"       "bit"         "prettyunits" "rlang"      
-#&gt; [36] "vctrs"       "assertthat"  "backports"   "ellipsis"    "zeallot"    
+#&gt; [21] "nlme"         "lattice"      "plyr"         "stringr"      "Rcpp"        
+#&gt; [26] "stringi"      "tools"        "glue"         "magrittr"     "farver"      
+#&gt; [31] "labeling"     "munsell"      "lifecycle"    "colorspace"   "rlang"       
+#&gt; [36] "R6"           "digest"       "tibble"       "withr"        "cli"         
+#&gt; [41] "fansi"        "pillar"       "pkgconfig"    "assertthat"   "crayon"      
+#&gt; [46] "utf8"         "vctrs"        "ellipsis"     "sp"           "backports"   
+#&gt; [51] "data.table"   "fpCompare"    "raster"       "rgdal"       
 #&gt; 
 #&gt; $googledrive
-#&gt;  [1] "gargle"     "uuid"       "fs"         "withr"      "methods"   
-#&gt;  [6] "Rcpp"       "stats"      "graphics"   "grDevices"  "utils"     
-#&gt; [11] "glue"       "httr"       "jsonlite"   "rlang"      "curl"      
-#&gt; [16] "mime"       "openssl"    "R6"         "tools"      "askpass"   
-#&gt; [21] "sys"        "magrittr"   "purrr"      "tibble"     "cli"       
-#&gt; [26] "fansi"      "pillar"     "assertthat" "crayon"     "utf8"      
-#&gt; [31] "vctrs"      "backports"  "ellipsis"   "zeallot"    "digest"    
-#&gt; [36] "pkgconfig" 
-#&gt; 
-#&gt; $dplyr
-#&gt;  [1] "tibble"     "tidyselect" "cli"        "fansi"      "pillar"    
-#&gt;  [6] "assertthat" "crayon"     "methods"    "utils"      "tools"     
-#&gt; [11] "grDevices"  "stats"      "graphics"   "utf8"       "rlang"     
-#&gt; [16] "vctrs"      "backports"  "ellipsis"   "zeallot"    "digest"    
-#&gt; [21] "glue"       "pkgconfig"  "purrr"      "magrittr"   "Rcpp"      
-#&gt; [26] "R6"         "BH"         "plogr"     
+#&gt;  [1] "curl"       "gargle"     "httr"       "jsonlite"   "magrittr"  
+#&gt;  [6] "purrr"      "rlang"      "tibble"     "uuid"       "fs"        
+#&gt; [11] "withr"      "methods"    "Rcpp"       "stats"      "graphics"  
+#&gt; [16] "grDevices"  "utils"      "glue"       "mime"       "openssl"   
+#&gt; [21] "R6"         "tools"      "askpass"    "sys"        "cli"       
+#&gt; [26] "fansi"      "pillar"     "pkgconfig"  "assertthat" "crayon"    
+#&gt; [31] "utf8"       "vctrs"      "ellipsis"   "digest"    
 #&gt; 
 #&gt; $testthat
 #&gt;  [1] "evaluate"    "pkgload"     "praise"      "methods"     "stats"      
 #&gt;  [6] "graphics"    "grDevices"   "utils"       "desc"        "pkgbuild"   
 #&gt; [11] "rprojroot"   "rstudioapi"  "assertthat"  "R6"          "crayon"     
-#&gt; [16] "tools"       "callr"       "processx"    "ps"          "cli"        
-#&gt; [21] "prettyunits" "withr"       "magrittr"    "backports"   "rlang"      
-#&gt; [26] "digest"      "ellipsis"   
+#&gt; [16] "tools"       "callr"       "prettyunits" "processx"    "ps"         
+#&gt; [21] "cli"         "withr"       "glue"        "fansi"       "backports"  
+#&gt; [26] "rlang"       "digest"      "ellipsis"    "magrittr"   
+#&gt; 
+#&gt; $RSQLite
+#&gt;  [1] "bit64"     "blob"      "BH"        "plogr"     "bit"       "utils"    
+#&gt;  [7] "methods"   "stats"     "graphics"  "grDevices" "rlang"     "vctrs"    
+#&gt; [13] "ellipsis"  "digest"    "glue"      "DBI"       "memoise"   "pkgconfig"
+#&gt; [19] "Rcpp"     
 #&gt; 
 #&gt; $gdalUtils
-#&gt;  [1] "foreach"     "R.utils"     "rgdal"       "codetools"   "iterators"  
-#&gt;  [6] "utils"       "R.methodsS3" "R.oo"        "methods"     "stats"      
-#&gt; [11] "graphics"    "grDevices"   "tools"       "sp"          "lattice"    
-#&gt; [16] "grid"        "raster"      "Rcpp"       
+#&gt;  [1] "sp"          "foreach"     "R.utils"     "raster"      "rgdal"      
+#&gt;  [6] "lattice"     "grid"        "grDevices"   "graphics"    "stats"      
+#&gt; [11] "utils"       "methods"     "codetools"   "iterators"   "tools"      
+#&gt; [16] "R.methodsS3" "R.oo"        "Rcpp"       
 #&gt; 
 #&gt; $sf
 #&gt;  [1] "classInt"   "units"      "e1071"      "class"      "KernSmooth"
@@ -308,38 +298,29 @@ circumstances:</p><ol>
 #&gt; [11] "MASS"       "Rcpp"       "DBI"        "grid"       "magrittr"  
 #&gt; [16] "tools"     
 #&gt; 
-#&gt; $httr
-#&gt;  [1] "curl"      "jsonlite"  "mime"      "openssl"   "R6"        "methods"  
-#&gt;  [7] "stats"     "graphics"  "grDevices" "utils"     "tools"     "askpass"  
-#&gt; [13] "sys"      
+#&gt; $raster
+#&gt; [1] "Rcpp"      "methods"   "utils"     "stats"     "graphics"  "grDevices"
+#&gt; [7] "sp"        "lattice"   "grid"     
 #&gt; 
-#&gt; $fasterize
-#&gt;  [1] "raster"        "sp"            "RcppArmadillo" "Rcpp"         
-#&gt;  [5] "methods"       "utils"         "stats"         "graphics"     
-#&gt;  [9] "grDevices"     "lattice"       "grid"         
+#&gt; $httr
+#&gt; [1] "mime"     "openssl"  "R6"       "tools"    "askpass"  "sys"      "curl"    
+#&gt; [8] "jsonlite"
 #&gt; 
 #&gt; $R.utils
-#&gt; [1] "R.methodsS3" "R.oo"        "utils"       "methods"     "stats"      
-#&gt; [6] "graphics"    "grDevices"   "tools"      
+#&gt; [1] "tools"       "R.methodsS3" "R.oo"        "utils"       "methods"    
+#&gt; [6] "stats"       "graphics"    "grDevices"  
 #&gt; 
 #&gt; $rgdal
 #&gt; [1] "grDevices" "graphics"  "stats"     "utils"     "methods"   "sp"       
 #&gt; [7] "lattice"   "grid"     
 #&gt; 
-#&gt; $rgeos
-#&gt; [1] "utils"     "stats"     "graphics"  "methods"   "sp"        "grDevices"
-#&gt; [7] "lattice"   "grid"     
-#&gt; 
-#&gt; $raster
-#&gt; [1] "Rcpp"      "methods"   "sp"        "utils"     "stats"     "graphics" 
-#&gt; [7] "grDevices"
+#&gt; $qs
+#&gt; [1] "RApiSerialize" "Rcpp"          "methods"       "utils"        
+#&gt; [5] "stats"         "graphics"      "grDevices"    
 #&gt; 
 #&gt; $sp
 #&gt; [1] "lattice"   "grid"      "grDevices" "graphics"  "stats"     "utils"    
 #&gt; [7] "methods"  
-#&gt; 
-#&gt; $RCurl
-#&gt; [1] "bitops"    "methods"   "stats"     "graphics"  "grDevices" "utils"    
 #&gt; 
 #&gt; $remotes
 #&gt; [1] "methods"   "stats"     "tools"     "utils"     "graphics"  "grDevices"
@@ -350,23 +331,23 @@ circumstances:</p><ol>
 #&gt; $data.table
 #&gt; [1] "methods"   "stats"     "graphics"  "grDevices" "utils"    
 #&gt; 
+#&gt; $DBI
+#&gt; [1] "methods"   "stats"     "graphics"  "grDevices" "utils"    
+#&gt; 
+#&gt; $glue
+#&gt; [1] "methods"   "stats"     "graphics"  "grDevices" "utils"    
+#&gt; 
 #&gt; $methods
 #&gt; [1] "stats"     "graphics"  "grDevices" "utils"    
 #&gt; 
-#&gt; $git2r
-#&gt; [1] "graphics"  "utils"     "grDevices"
-#&gt; 
-#&gt; $parallel
-#&gt; [1] "compiler" "tools"   
+#&gt; $memoise
+#&gt; [1] "digest" "utils" 
 #&gt; 
 #&gt; $backports
 #&gt; [1] "utils"
 #&gt; 
-#&gt; $memoise
-#&gt; [1] "digest"
-#&gt; 
 #&gt; $digest
-#&gt; character(0)
+#&gt; [1] "utils"
 #&gt; 
 #&gt; $fastdigest
 #&gt; character(0)

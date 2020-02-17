@@ -79,7 +79,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -101,6 +101,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -139,7 +142,15 @@
     <p>Meant for internal use, as there are internal objects as arguments.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>cloudDownload</span>(<span class='no'>outputHash</span>, <span class='no'>newFileName</span>, <span class='no'>gdriveLs</span>, <span class='no'>cacheRepo</span>, <span class='no'>cloudFolderID</span>)</pre>
+    <pre class="usage"><span class='fu'>cloudDownload</span>(
+  <span class='no'>outputHash</span>,
+  <span class='no'>newFileName</span>,
+  <span class='no'>gdriveLs</span>,
+  <span class='no'>cacheRepo</span>,
+  <span class='no'>cloudFolderID</span>,
+  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>)
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -168,6 +179,17 @@ If left as <code>NULL</code>, the function will create a cloud folder with a war
 The warning will have the <code>cloudFolderID</code> that should be used in subsequent calls.
 It will also be added to <code><a href='https://rdrr.io/r/base/options.html'>options("reproducible.cloudFolderID")</a></code>,
 but this will not persist across sessions.</p></td>
+    </tr>
+    <tr>
+      <th>drv</th>
+      <td><p>an object that inherits from DBIDriver,
+or an existing DBIConnection
+object (in order to clone an existing connection).</p></td>
+    </tr>
+    <tr>
+      <th>conn</th>
+      <td><p>A DBIConnection object, as returned by
+<code><a href='https://dbi.r-dbi.org/reference/dbConnect.html'>dbConnect()</a></code>.</p></td>
     </tr>
     </table>
 

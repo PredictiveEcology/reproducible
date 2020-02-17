@@ -36,7 +36,12 @@
 
 
 <meta property="og:title" content="Alternative to <code>interactive()</code> for unit testing — isInteractive" />
-<meta property="og:description" content="Alternative to interactive() for unit testing" />
+<meta property="og:description" content="This is a suggestion from
+https://github.com/MangoTheCat/blog-with-mock/blob/master/Blogpost1.Rmd
+as a way to test interactive code in unit tests. Basically, in the unit tests,
+we use testthat::with_mock, and inside that we redefine isInteractive
+just for the test. In all other times, this returns the same things as
+interactive()." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -79,7 +84,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -101,6 +106,9 @@
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -136,7 +144,12 @@
     </div>
 
     <div class="ref-description">
-    <p>Alternative to <code><a href='https://rdrr.io/r/base/interactive.html'>interactive()</a></code> for unit testing</p>
+    <p>This is a suggestion from
+<a href='https://github.com/MangoTheCat/blog-with-mock/blob/master/Blogpost1.Rmd'>https://github.com/MangoTheCat/blog-with-mock/blob/master/Blogpost1.Rmd</a>
+as a way to test interactive code in unit tests. Basically, in the unit tests,
+we use <code><a href='https://rdrr.io/pkg/testthat/man/with_mock.html'>testthat::with_mock</a></code>, and inside that we redefine <code>isInteractive</code>
+just for the test. In all other times, this returns the same things as
+<code><a href='https://rdrr.io/r/base/interactive.html'>interactive()</a></code>.</p>
     </div>
 
     <pre class="usage"><span class='fu'>isInteractive</span>()</pre>

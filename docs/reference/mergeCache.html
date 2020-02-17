@@ -84,7 +84,7 @@ of merging." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
       </span>
     </div>
 
@@ -106,6 +106,9 @@ of merging." />
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
     <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
@@ -149,10 +152,24 @@ current <code><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time()</a></cod
 of merging.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>mergeCache</span>(<span class='no'>cacheTo</span>, <span class='no'>cacheFrom</span>)
+    <pre class="usage"><span class='fu'>mergeCache</span>(
+  <span class='no'>cacheTo</span>,
+  <span class='no'>cacheFrom</span>,
+  <span class='kw'>drvTo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>drvFrom</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>connTo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>connFrom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>mergeCache</span>(<span class='no'>cacheTo</span>, <span class='no'>cacheFrom</span>)</pre>
+<span class='fu'>mergeCache</span>(
+  <span class='no'>cacheTo</span>,
+  <span class='no'>cacheFrom</span>,
+  <span class='kw'>drvTo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>drvFrom</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>connTo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>connFrom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -166,6 +183,24 @@ that will become larger, i.e., merge into this</p></td>
       <th>cacheFrom</th>
       <td><p>The cache repository (character string of the file path)
 from which all objects will be taken and copied from</p></td>
+    </tr>
+    <tr>
+      <th>drvTo</th>
+      <td><p>The database driver for the <code>cacheTo</code>.</p></td>
+    </tr>
+    <tr>
+      <th>drvFrom</th>
+      <td><p>The database driver for the <code>cacheFrom</code></p></td>
+    </tr>
+    <tr>
+      <th>connTo</th>
+      <td><p>The connection for the <code>cacheTo</code>. If not provided, then
+a new one will be made from <code>drvTo</code> and <code>cacheTo</code></p></td>
+    </tr>
+    <tr>
+      <th>connFrom</th>
+      <td><p>The database for the <code>cacheFrom</code>. If not provided, then
+a new one will be made from <code>drvFrom</code> and <code>cacheFrom</code></p></td>
     </tr>
     </table>
 
