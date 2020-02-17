@@ -40,11 +40,11 @@ postProcess(x, ...)
 }
 \arguments{
 \item{x}{An object of postProcessing, e.g., \code{spatialObjects}.
-See individual methods.}
+See individual methods. This can be provided as a
+\code{rlang::quosure} or a normal R object.}
 
 \item{...}{Additional arguments passed to methods. For \code{spatialObjects},
-           these are: \code{\link{cropInputs}},
-           \code{\link{fixErrors}},
+           these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
            Each of these may also pass \code{...} into other functions, like
@@ -106,11 +106,10 @@ Defaults to \code{getOption("reproducible.useCache")}.}
 }
 \description{
 The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
-crop, reproject, and mask, in that order.  This function is a wrapper for
-\code{\link{cropInputs}}, \code{\link{fixErrors}}, \code{\link{projectInputs}},
-\code{\link{maskInputs}} and
-\code{\link{writeOutputs}}, with a decent amount of data manipulating
-between these calls so that the crs match.
+crop, reproject, and mask, in that order.
+This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
+\code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
+with a decent amount of data manipulation between these calls so that the crs match.
 }
 \section{Post processing sequence}{
 
@@ -180,7 +179,7 @@ coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58
 Sr1 <- Polygon(coords1)
 Srs1 <- Polygons(list(Sr1), "s1")
 shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-crs(shpEcozone) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
 # make a "study area" that is subset of larger dataset
 coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
@@ -188,7 +187,7 @@ coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58,
 Sr1 <- Polygon(coords)
 Srs1 <- Polygons(list(Sr1), "s1")
 StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 #'
 #'
 ##########
@@ -213,7 +212,7 @@ coords1 <- structure(c(-123.98, -117.1, -80.2, -100, -123.98, 60.9, 67.73, 65.58
 Sr1 <- Polygon(coords1)
 Srs1 <- Polygons(list(Sr1), "s1")
 shpEcozone <- SpatialPolygons(list(Srs1), 1L)
-crs(shpEcozone) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crs(shpEcozone) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
 # make a "study area" that is subset of larger dataset
 coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58, 54.79, 59.9),
@@ -221,7 +220,7 @@ coords <- structure(c(-118.98, -116.1, -99.2, -106, -118.98, 59.9, 65.73, 63.58,
 Sr1 <- Polygon(coords)
 Srs1 <- Polygons(list(Sr1), "s1")
 StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 #'
 #'
 ##########

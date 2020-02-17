@@ -16,12 +16,15 @@ assessDataType(ras, type = "writeRaster")
 \method{assessDataType}{default}(ras, type = "writeRaster")
 }
 \arguments{
-\item{ras}{The RasterLayer or RasterStack for which data type will be assessed.}
+\item{ras}{The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.}
 
-\item{type}{Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'.}
+\item{type}{Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
+data type for writing from the raster and gdalUtils packages, respectively, or
+\code{"projectRaster"} to return recommended resampling type.}
 }
 \value{
-The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
+The appropriate data type for the range of values in \code{ras}.
+        See \code{\link[raster]{dataType}} for details.
 }
 \description{
 Can be used to write prepared inputs on disk.

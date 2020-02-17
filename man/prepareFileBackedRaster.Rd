@@ -4,7 +4,14 @@
 \alias{.prepareFileBackedRaster}
 \title{Copy the file-backing of a file-backed Raster* object}
 \usage{
-.prepareFileBackedRaster(obj, repoDir = NULL, overwrite = FALSE, ...)
+.prepareFileBackedRaster(
+  obj,
+  repoDir = NULL,
+  overwrite = FALSE,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
 }
 \arguments{
 \item{obj}{The raster object to save to the repository.}
@@ -12,6 +19,13 @@
 \item{repoDir}{Character denoting an existing directory in which an artifact will be saved.}
 
 \item{overwrite}{Logical. Should the raster be saved to disk, overwriting existing file.}
+
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{...}{passed to \code{archivist::saveToRepo}}
 }

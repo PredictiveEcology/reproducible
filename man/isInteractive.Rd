@@ -8,7 +8,7 @@ isInteractive()
 }
 \description{
 This is a suggestion from
-\url{https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions}
+\url{https://github.com/MangoTheCat/blog-with-mock/blob/master/Blogpost1.Rmd}
 as a way to test interactive code in unit tests. Basically, in the unit tests,
 we use \code{testthat::with_mock}, and inside that we redefine \code{isInteractive}
 just for the test. In all other times, this returns the same things as

@@ -173,7 +173,7 @@ will only remove entries in the \code{CHECKSUMS.txt} that are associated with
 
 \examples{
 # This function works within a module; however, currently,
-#   \\cde{sourceURL} is not yet working as desired. Use \\code{url}.
+#   \cde{sourceURL} is not yet working as desired. Use \code{url}.
 \dontrun{
 # download a zip file from internet, unzip all files, load as shapefile, Cache the call
 # First time: don't know all files - prepInputs will guess, if download file is an archive,
@@ -208,7 +208,7 @@ coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58,
 Sr1 <- Polygon(coords)
 Srs1 <- Polygons(list(Sr1), "s1")
 StudyArea <- SpatialPolygons(list(Srs1), 1L)
-crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
 #  specify targetFile, alsoExtract, and fun, wrap with Cache
 ecozoneFilename <- file.path(dPath, "ecozones.shp")

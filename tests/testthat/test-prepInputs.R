@@ -21,7 +21,7 @@ test_that("prepInputs doesn't work (part 1)", {
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(StudyArea) <- crsToUse
 
   dPath <- file.path(tmpdir, "ecozones")
 
@@ -150,7 +150,7 @@ test_that("prepInputs doesn't work (part 1)", {
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) ## TODO: fix intermittent failure (#93)
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 
   #######################################
   ### url, targetFile, archive     ######
@@ -184,6 +184,7 @@ test_that("prepInputs doesn't work (part 1)", {
   expect_true(isTRUE(any(grepl(pattern = "Loading", mess))))
 
   expect_is(LCC2005_2, "Raster")
+  names(LCC2005) <- names(LCC2005_2) <- "LCC2005" ## workaround names mismatch
   expect_equivalent(LCC2005, LCC2005_2)
 
   ######################################
@@ -272,7 +273,7 @@ test_that("prepInputs doesn't work (part 1)", {
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   # crop and mask worked:
   expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) ## TODO: fix failure (#93)
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 })
 
 test_that("interactive prepInputs", {
@@ -1110,72 +1111,73 @@ test_that("prepInputs doesn't work (part 2)", {
     Sr1 <- Polygon(coords)
     Srs1 <- Polygons(list(Sr1), "s1")
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
-    crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(StudyArea) <- crsToUse
 
-    if (url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
-                   timeout = 1)) {
-      mess1 <- capture_messages({
-        test1 <- prepInputs(
-          #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-          targetFile = targetFileLuxRDS,
-          #destinationPath = ".",
-          dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-          #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-          path = tmpdir)
-      })
-      mess2 <- capture_messages({
-        test2 <- prepInputs(targetFile = targetFileLuxRDS,
-                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                            path = tmpdir)
-      })
-      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-
-      mess2 <- capture_messages({
-        warn <- capture_warnings({
-          test3 <- prepInputs(targetFile = targetFileLuxRDS,
+    if (requireNamespace("RCurl")) {
+      if (RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
+                     timeout = 1)) {
+        mess1 <- capture_messages({
+          test1 <- prepInputs(
+            #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
+            targetFile = targetFileLuxRDS,
+            #destinationPath = ".",
+            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+            #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+            path = tmpdir)
+        })
+        mess2 <- capture_messages({
+          test2 <- prepInputs(targetFile = targetFileLuxRDS,
                               dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                              path = tmpdir, studyArea = StudyArea)
+                              path = tmpdir)
         })
-      })
-      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-              test = test3)
+        runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+        runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
 
-      testOnExit(testInitOut)
-      testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                    "reproducible.overwrite" = TRUE),
-                              needGoogle = TRUE)
-      mess2 <- capture_messages({
-        warn <- capture_warnings({
-          test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
-                              country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
+        mess2 <- capture_messages({
+          warn <- capture_warnings({
+            test3 <- prepInputs(targetFile = targetFileLuxRDS,
+                                dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+                                path = tmpdir, studyArea = StudyArea)
+          })
         })
-      })
-      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-              test = test3)
+        runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+                test = test3)
 
-      runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
-              expectedMess = expectedMessagePostProcess,
-              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
+        testOnExit(testInitOut)
+        testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                      "reproducible.overwrite" = TRUE),
+                                needGoogle = TRUE)
+        mess2 <- capture_messages({
+          warn <- capture_warnings({
+            test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
+                                country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
+          })
+        })
+        runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+                test = test3)
 
-      testOnExit(testInitOut)
-      testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-                                                    "reproducible.inputPaths" = NULL),
-                              needGoogle = TRUE)
-    } else {
+        runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+                expectedMess = expectedMessagePostProcess,
+                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
+
+        testOnExit(testInitOut)
+        testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                      "reproducible.inputPaths" = NULL),
+                                needGoogle = TRUE)
+      } else {
+      }
     }
-
     # Add a study area to Crop and Mask to
     # Create a "study area"
     coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
     Sr1 <- Polygon(coords)
     Srs1 <- Polygons(list(Sr1), "s1")
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
-    crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(StudyArea) <- crsToUse
 
     mess1 <- capture_messages({
       test <- prepInputs(
@@ -1228,7 +1230,7 @@ test_that("load rdata in prepInputs", {
   aa <- prepInputs(tmpfile, fun = "base::load")
   expect_true(identical(aa, list(a = a, b = b)))
 
-  d <- new.env()
+  d <- new.env(parent = emptyenv())
   aa <- prepInputs(tmpfile, fun = "base::load", envir = d)
   expect_false(identical(aa, list(a = a, b = b))) # not in aa, because loaded to d
   expect_true(identical(as.list(d), list(a = a, b = b)))
@@ -1389,7 +1391,6 @@ test_that("lightweight tests for code coverage", {
     unzip("ecozone_shp.zip", exdir = tmpdir)
     file.copy(dir(file.path(tmpdir, "Ecozones"), full.names = TRUE), tmpdir)
     checkSums <- Checksums(path = tmpdir, write = TRUE)
-    #dir(tmpdir)
 
     aMess <- capture_messages(downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
                                            targetFile = "ecozones.shp",
@@ -1399,14 +1400,20 @@ test_that("lightweight tests for code coverage", {
 
     expect_true(any(grepl("Skipping download", aMess)))
 
+    filesForShp <- dir(file.path(tmpdir), pattern = "ecozones", full.names = TRUE)
+    file.copy(filesForShp, tmpCache)
+    # Need these in a test further down -- mostly just need the CRS
+    filesForShp2 <- dir(file.path(tmpCache), pattern = "ecozones", full.names = TRUE)
+    shpFile <- shapefile(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
     # Test when wrong archive exists, wrong checkSums
-    #checkSums <- Checksums(path = tmpdir)
     file.remove(file.path(tmpdir, "ecozone_shp.zip"))
-    file.remove(dir(file.path(tmpdir), pattern = "ecozones", full.names = TRUE))
+    file.remove(filesForShp)
     file.create(file.path(tmpdir, "ecozone_shp.zip"))
     checkSums <- Checksums(path = tmpdir, write = TRUE)
     file.remove(file.path(tmpdir, "ecozone_shp.zip"))
     checkSums <- Checksums(path = tmpdir)
+
+
 
     expect_error(downloadFile(url = url,
                               neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
@@ -1427,7 +1434,7 @@ test_that("lightweight tests for code coverage", {
     expect_true(identical(a, b))
 
     ras <- raster(extent(0,10,0,10), res = 1, vals = 1:100)
-    crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(ras) <- crsToUse
 
     expect_error(postProcess(ras, studyArea = 1), "The 'studyArea")
     expect_error(postProcess(ras, rasterToMatch = 1), "The 'rasterToMatch")
@@ -1443,18 +1450,18 @@ test_that("lightweight tests for code coverage", {
     expect_true(identical(a, b))
 
     ras2 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
-    crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(ras2) <- crsToUse
     a <- cropInputs(ras, extentToMatch = extent(ras2), extentCRS = crs(ras2))
     expect_is(a, "RasterLayer")
 
     ras4 <- raster(extent(6,10,6,10), res = 1, vals = 1:16)
     sp4 <- as(raster::extent(ras4), "SpatialPolygons")
-    crs(sp4) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(sp4) <- crsToUse
 
     expect_error(cropInputs(ras2, studyArea = sp4), "extents do not overlap")
 
     ras3 <- raster(extent(0,5,0,5), res = 1, vals = 1:25)
-    crs(ras3) <- "+init=epsg:4326 +proj=longlat +datum=NAD83 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+    crs(ras3) <- crsToUse
 
     ################################################
     # Different crs
@@ -1483,7 +1490,7 @@ test_that("lightweight tests for code coverage", {
     expect_true(identical(crs(a), crs(ras3)))
 
     #warns if bilinear is passed for reprojecting integer
-    expect_warning(projectInputs(ras2, rasterToMatch = ras3, method = "bilinear"))
+    expect_warning(projectInputs(ras2, targetCRS = crs(shpFile), method = "bilinear"))
 
     #Works with no rasterToMatch
     a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
@@ -1565,19 +1572,20 @@ test_that("options inputPaths", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  useGADM <- url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds", timeout = 1)
-  theFile <- if (useGADM) {
-    targetFileLuxRDS
-  } else {
-    "rasterTest.tif"
-  }
-  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+  if (requireNamespace("RCurl")) {
+    useGADM <- RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds", timeout = 1)
+    theFile <- if (useGADM) {
+      targetFileLuxRDS
+    } else {
+      "rasterTest.tif"
+    }
+    url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
 
-  f <- formals(prepInputs);
+    f <- formals(prepInputs);
 
-  if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
-  options("reproducible.inputPaths" = NULL)
-  options("reproducible.inputPathsRecursive" = FALSE)
+    if (getRversion() <= "3.3.0")  skip("Doesn't work on R 3.3.0") # Not sure why this fails on 3.3.0
+    options("reproducible.inputPaths" = NULL)
+    options("reproducible.inputPathsRecursive" = FALSE)
 
     mess1 <- capture_messages({
       test1 <- prepInputs(destinationPath = tmpdir,
@@ -1722,6 +1730,7 @@ test_that("options inputPaths", {
     expect_is(test1, "spatialObjects")
     expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 0) # no link made b/c identical dir
     expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 0) # no link made b/c identical dir
+  }
 })
 
 test_that("writeOutputs saves factor rasters with .grd class to preserve levels", {
@@ -1761,8 +1770,8 @@ test_that("rasters aren't properly resampled", {
 
   a <- raster(extent(0, 20, 0, 20), res = 1, vals = 1:400)
   b <- raster(extent(0, 20, 0, 20), res = c(2,2), vals = 1:100)
-  crs(a) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  crs(b) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(a) <- crsToUse
+  crs(b) <- crsToUse
 
   tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   writeRaster(a, filename = tiftemp1)
@@ -1780,7 +1789,7 @@ test_that("rasters aren't properly resampled", {
   expect_true(dataType(out2) == "FLT4S")
 
   c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
-  crs(c) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(c) <- crsToUse
   tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   writeRaster(c, filename = tiftemp3)
 
@@ -1799,11 +1808,11 @@ test_that("System call gdal works", {
   }, add = TRUE)
 
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras) <- crsToUse
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras2) <- crsToUse
 
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
@@ -1831,18 +1840,19 @@ test_that("System call gdal works using multicores for both projecting and maski
   }, add = TRUE)
 
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  crs(ras2) <- crsToUse
 
   coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2),
                       .Dim = c(5L, 2L))
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  # crs(StudyArea) <- crsToUse
+  crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
   # Passing a specific integer for cores
@@ -2059,4 +2069,24 @@ test_that("Test of using future and progress indicator for lrg files on Google D
       expect_true(is(smallRT, "list"))
     }
   }
+})
+
+test_that("writeOutputs with non-matching filename2", {
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  r <- raster(extent(0,10,0,10), vals = rnorm(100))
+  r <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
+  warn <- capture_warnings(r1 <- writeOutputs(r, filename2 = tmpfile[2]))
+  expect_true(any(grepl("filename2 file type", warn)))
+  r2 <- raster(filename(r1))
+  vals1 <- r2[]
+  vals2 <- r1[]
+  vals3 <- r[]
+  expect_true(identical(vals1, vals2))
+  expect_true(identical(vals1, vals3))
+  expect_false(identical(normPath(filename(r)), normPath(filename(r1))))
+  expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
 })

@@ -7,6 +7,10 @@ A set of tools for R that enhance reproducibility beyond package management.
 Built on top of `git2r` and `archivist`, this package aims at making high-level, robust, machine and OS independent tools for making deeply reproducible and reusable content in R.
 This extends beyond the package management utilities of `packrat` and `checkpoint` by including tools for caching and accessing GitHub repositories.
 
+## News
+
+See updates from latest [CRAN](https://cran.r-project.org/package=reproducible) and [development](https://github.com/PredictiveEcology/reproducible/blob/development/NEWS.md) versions. Note that versions 1.0.0 and later are not compatible with previous versions "out of the box". However, setting the `options("reproducible.useDBI" = FALSE)` will return the behaviour to prior versions and so *should* be compatible. The new version is much faster and creates smaller repository files and allows for different (e.g., `RPostgres` backends for the database -- not the saved files, however; these are still saved locally).
+
 ## Installation
 
 ### Current release (on CRAN)

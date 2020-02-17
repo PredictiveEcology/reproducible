@@ -4,10 +4,14 @@
 \alias{checkAndMakeCloudFolderID}
 \title{Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})}
 \usage{
-checkAndMakeCloudFolderID(cloudFolderID = NULL)
+checkAndMakeCloudFolderID(cloudFolderID = NULL, create = FALSE)
 }
 \arguments{
 \item{cloudFolderID}{The google folder ID where cloud caching will occur.}
+
+\item{create}{Logical. If \code{TRUE}, then the cloudFolderID will be created.
+This should be used with caution as there are no checks for overwriting.
+See \code{googledrive::drive_mkdir}. Default \code{FALSE}.}
 }
 \description{
 Will check for presence of a \code{cloudFolderID} and make a new one

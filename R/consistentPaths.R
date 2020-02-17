@@ -114,7 +114,8 @@ setMethod(
       if (isTRUE(all(is.na(path)))) {
         stop("Invalid path: cannot be NA.")
       } else {
-        path <- normPath(path)
+
+        path <- normPath(path) # this is necessary to cover Windows double slash used on non-Windows
 
         dirsThatExist <- dir.exists(path)
         if (any(!dirsThatExist)) {
@@ -127,12 +128,15 @@ setMethod(
                 dir.create(file.path(pth), recursive = TRUE, showWarnings = FALSE)
               })
             } else {
-              stop(paste("Specified path", path, "doesn't exist.",
+              stop(paste("Specified path", normPath(path), "doesn't exist.",
                          "Create it and try again."))
             }
           }
         }
-        return(normPath(path)) # ensure path re-normalized after creation (see #267)
+        if (Sys.info()[["sysname"]] == "Darwin")
+          path <- normPath(path) # ensure path re-normalized after creation (see #267)
+
+        return(path)
       }
     #}
 })

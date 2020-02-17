@@ -2,7 +2,8 @@
 #'
 #' @export
 #' @param x  An object of postProcessing, e.g., \code{spatialObjects}.
-#'           See individual methods.
+#'           See individual methods. This can be provided as a
+#'           \code{rlang::quosure} or a normal R object.
 #' @importClassesFrom quickPlot spatialObjects
 #' @importFrom utils capture.output
 #' @importFrom raster buffer
@@ -23,7 +24,8 @@ postProcess.default <- function(x, ...) {
 
 #' @importFrom rlang eval_tidy
 postProcess.quosure <- function(x, ...) {
-  postProcess(rlang::eval_tidy(x), ...)
+  browser(expr = exists("._postProcess.quosure_1"))
+  postProcess(eval_tidy(x), ...)
 }
 
 #' @export
@@ -35,12 +37,10 @@ postProcess.list <- function(x, ...) {
 #' Post processing for \code{spatialObjects}
 #'
 #' The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
-#' crop, reproject, and mask, in that order.  This function is a wrapper for
-#' \code{\link{cropInputs}}, \code{\link{fixErrors}}, \code{\link{projectInputs}},
-#' \code{\link{maskInputs}} and
-#' \code{\link{writeOutputs}}, with a decent amount of data manipulating
-#' between these calls so that the crs match.
-#'
+#' crop, reproject, and mask, in that order.
+#' This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
+#' \code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
+#' with a decent amount of data manipulation between these calls so that the crs match.
 #'
 #' @section Post processing sequence:
 #'
@@ -87,8 +87,7 @@ postProcess.list <- function(x, ...) {
 #'                 in details below.
 #'
 #' @param ... Additional arguments passed to methods. For \code{spatialObjects},
-#'            these are: \code{\link{cropInputs}},
-#'            \code{\link{fixErrors}},
+#'            these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
 #'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
 #'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
 #'            Each of these may also pass \code{...} into other functions, like
@@ -152,11 +151,11 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  x1 <- postProcessAllSpatial(x = x, studyArea = studyArea,
-                             rasterToMatch = rasterToMatch, useCache = useCache,
-                             filename1 =filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite,
-                             ...)
+  browser(expr = exists("._postProcess.spatialobjects_1"))
+  x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
+                             rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
+                             filename1 = filename1, filename2 = filename2,
+                             useSAcrs = useSAcrs, overwrite = overwrite, ...)
   return(x1)
 }
 
@@ -174,7 +173,11 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   message("postProcess with sf class objects is still experimental")
   if (!is.null(rasterToMatch)) {
-    stop("sf class objects are not yet working with rasterToMatch argument")
+    if (is.null(studyArea))
+      stop("sf class objects are not yet working with rasterToMatch argument")
+    message("sf class objects can not be postProcessed directly from rasterToMatch yet;",
+            "using studyArea. ")
+    rasterToMatch <- NULL
   }
   if (is(studyArea, "Spatial")) {
     studyArea <- st_as_sf(studyArea)
@@ -182,9 +185,8 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
 
   x <- postProcessAllSpatial(x = x, studyArea = studyArea,
                              rasterToMatch = rasterToMatch, useCache = useCache,
-                             filename1 =filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite,
-                             ...)
+                             filename1 = filename1, filename2 = filename2,
+                             useSAcrs = useSAcrs, overwrite = overwrite, ...)
 
   return(x)
 }
@@ -207,12 +209,12 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
 #'                      See details in \code{\link{postProcess}}.
 #'
 #' @param ... Passed to raster::crop
+#' @inheritParams projectInputs
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_postProcess.R
 #' @export
 #' @importFrom methods is
 #' @importFrom raster buffer crop crs extent projectRaster res crs<-
-#' @importFrom rgeos gIsValid
 #' @importFrom sp SpatialPolygonsDataFrame spTransform CRS proj4string
 #' @rdname cropInputs
 cropInputs <- function(x, studyArea, rasterToMatch, ...) {
@@ -236,7 +238,10 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #' @importFrom raster projectExtent tmpDir
 #' @rdname cropInputs
 cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
-                                      extentToMatch = NULL, extentCRS = NULL, ...) {
+                                      extentToMatch = NULL, extentCRS = NULL,
+                                      useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                      ...) {
+  browser(expr = exists("._cropInputs_1"))
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
   if (useExtentToMatch) {
     extentToMatch <- NULL
@@ -278,6 +283,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
       }
     }
 
+    browser(expr = exists("._cropInputs_2"))
     if (!is.null(cropExtent)) {
       # crop it
       if (!identical(cropExtent, extent(x))) {
@@ -291,14 +297,51 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
             message("x was a SpatialPolygonsDataFrame with no data; converting to SpatialPolygons object")
           }
         }
-        if (canProcessInMemory(x, 3)) {
-          x <- do.call(raster::crop, args = append(list(x = x, y = cropExtent), dots))
+        # need to double check that gdal executable exists before going down this path
+        attemptGDAL <- attemptGDAL(x, useGDAL) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+
+        cropExtentRounded <- roundToRes(cropExtent, x)
+        if (attemptGDAL) {
+          tmpfile <- paste0(tempfile(fileext = ".tif"));
+          # Need to create correct "origin" meaning the 0,0 are same. If we take the
+          #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
+          gdalwarp(srcfile = filename(x),
+                   dstfile = tmpfile,
+                   tr = c(res(x)[1], res(x)[2]),
+                   overwrite = TRUE,
+                   s_srs = crsX,
+                   t_srs = crsX,
+                   te = c(cropExtentRounded[1], cropExtentRounded[3],
+                          cropExtentRounded[2], cropExtentRounded[4]),
+                   te_srs = crsX,
+                   tap = TRUE)
+          x <- raster(tmpfile)
+          x <- setMinMaxIfNeeded(x)
+
+          # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+          #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
+          #        " -t_srs \"", targCRS, "\"",
+          #        " -multi ", prll,
+          #        "-ot ", dType,
+          #        teRas,
+          #        "-r ", dots$method,
+          #        " -overwrite ",
+          #        "-tr ", paste(tr, collapse = " "), " ",
+          #        "\"", tempSrcRaster, "\"", " ",
+          #        "\"", tempDstRaster, "\""),
+
         } else {
-          x <- do.call(raster::crop,
-                       args = append(list(x = x, y = cropExtent,
-                                          filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-                                     dots))
+          if (canProcessInMemory(x, 3)) {
+            x <- do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots))
+          } else {
+            x <- do.call(raster::crop,
+                         args = append(list(x = x, y = cropExtentRounded,
+                                            filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
+                                       dots))
+          }
+
         }
+
         if (is.null(x)) {
           message("    polygons do not intersect.")
         }
@@ -372,8 +415,8 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' Do some minor error fixing
 #'
 #' These must be very common for this function to be useful. Currently, the only
-#' meaningful method is on SpatialPolygons, and it runs \code{rgeos::gIsValid}. If
-#' \code{FALSE}, then it runs a buffer of width 0.
+#' meaningful method is on \code{SpatialPolygons}, and it runs \code{rgeos::gIsValid}.
+#' If \code{FALSE}, then it runs a buffer of width 0.
 #'
 #' @param x A \code{SpatialPolygons*} or \code{sf} object.
 #'
@@ -420,27 +463,22 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
     if (is.null(objectName)) objectName = "SpatialPolygon"
     if (is(x, "SpatialPolygons")) {
       message("Checking for errors in ", objectName)
-      if (suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))) {
-        message("Found errors in ", objectName, ". Attempting to correct.")
+      anyNotValid <- if (requireNamespace("rgeos", quietly = TRUE)) {
+        anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
+        if (isTRUE(anv)) message("Found errors in ", objectName, ". Attempting to correct.")
+        anv
+      } else {
+        message("fixErrors for SpatialPolygons will be faster with install.packages('rgeos')")
+        TRUE
+      }
+      if (anyNotValid) {
         warn <- capture_warnings({
           x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
         })
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        warnAboutNotProjected <- startsWith(warn, "Spatial object is not projected; GEOS expects planar coordinates")
-        if (any(warnAboutNotProjected))
-          warn <- warn[!warnAboutNotProjected]
-        if (length(warn))
-          warning(warn)
-
-        if (is(x1, "try-error")) {
-          message("There are errors with ", objectName,
-                  ". Couldn't fix them with raster::buffer(..., width = 0)")
-        } else {
-          x <- x1
-          message("  Some or all of the errors fixed.")
-        }
-
+        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+                              x1 = x1, bufferFn = "raster::buffer")
       } else {
         message("  Found no errors.")
       }
@@ -457,7 +495,8 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE), ...) {
   if (attemptErrorFixes) {
     if (is.null(objectName)) objectName = "SimpleFeature"
-    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY") || is(st_geometry(x), "sfc")) {
+    if (is(st_geometry(x), "sfc_MULTIPOLYGON") || is(st_geometry(x), "sfc_GEOMETRY") ||
+        is(st_geometry(x), "sfc")) {
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
@@ -465,21 +504,8 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
           x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
         })
 
-        # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        warnAboutNotProjected <- startsWith(warn, paste("Spatial object is not projected;",
-                                                        "GEOS expects planar coordinates"))
-        if (any(warnAboutNotProjected))
-          warn <- warn[!warnAboutNotProjected]
-        if (length(warn))
-          warning(warn)
-
-        if (is(x1, "try-error")) {
-          message("There are errors with ", objectName,
-                  ". Couldn't fix them with sf::st_buffer(..., width = 0)")
-        } else {
-          x <- x1
-          message("  Some or all of the errors fixed.")
-        }
+        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+                                   x1 = x1, bufferFn = "sf::st_buffer")
       } else {
         message("  Found no errors.")
       }
@@ -528,17 +554,18 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' @export
 #' @rdname projectInputs
-#' @param useGDAL Logical, defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
+#' @param useGDAL Logical or \code{"force"}.
+#'     Defaults to \code{getOption("reproducible.useGDAL" = TRUE)}.
 #'     If \code{TRUE}, then this function will use \code{gdalwarp} only when not
 #'     small enough to fit in memory (i.e., \emph{if the operation fails} the
 #'     \code{raster::canProcessInMemory(x, 3)} test). Using \code{gdalwarp} will
 #'     usually be faster than \code{raster::projectRaster}, the function used
 #'     if this is \code{FALSE}. Since since the two options use different algorithms,
-#'     there may be different projection results.
+#'     there may be different projection results. \code{"force"} will cause it to
+#'     use GDAL regardless of the memory test described here.
 #'
 #' @importFrom fpCompare %==%
 #' @importFrom gdalUtils gdal_setInstallation gdalwarp
-#' @importFrom parallel detectCores
 #' @importFrom raster crs dataType res res<- dataType<-
 #' @importFrom testthat capture_warnings
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
@@ -551,7 +578,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
     rasterFactorLevels <- raster::levels(x)
   }
 
-  if (is.null(rasterToMatch) & is.null(targetCRS)) {
+  if (is.null(rasterToMatch) && is.null(targetCRS)) {
     message("     no reprojecting because no rasterToMatch & targetCRS are FALSE (or NULL).")
   } else if (is.null(rasterToMatch) & identical(crs(x), targetCRS)) {
     message("    no reprojecting because target CRS is same as input CRS.")
@@ -568,13 +595,17 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                !identical(extent(x), extent(rasterToMatch))) {
       doProjection <- TRUE
     }
+
     if (doProjection) {
-      if (!canProcessInMemory(x, 3) && isTRUE(useGDAL)) {
+      # need to double check that gdal executable exists before going down this path
+      attemptGDAL <- attemptGDAL(x, useGDAL) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
+
+      if (attemptGDAL) {
         ## the raster is in memory, but large enough to trigger this function: write it to disk
         message("   large raster: reprojecting after writing to temp drive...")
         ## rasters need to go to same file so it can be unlinked at end without losing other temp files
-        tmpRasPath <- checkPath(file.path(raster::tmpDir(), "bigRasters"), create = TRUE)
-        tempSrcRaster <- file.path(tmpRasPath, "bigRasInput.tif")
+        tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
+        tempSrcRaster <- bigRastersTmpFile()
         tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names, "a_reproj.tif")) # fails if x = stack
 
         if (!is.null(rasterToMatch)) {
@@ -583,7 +614,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           tr <- res(x)
         }
 
-        gdalUtils::gdal_setInstallation()
         if (isWindows()) {
           exe <- ".exe"
         } else {
@@ -600,11 +630,13 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         if (inMemory(x)) { #must be written to disk
           dType <- assessDataType(x, type = "writeRaster")
+          dTypeGDAL <- assessDataType(x, type = "GDAL")
           writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
           rm(x) #Saves memory if this was a huge raster, but be careful
           gc()
         } else {
           tempSrcRaster <- x@file@name #Keep original raster
+          dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
         }
 
         teRas <- " " #This sets extents in GDAL
@@ -614,28 +646,40 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                                           extent(rasterToMatch)@xmax, " ",
                                           extent(rasterToMatch)@ymax, " "))
         }
-        if (is.null(cores) || cores == "AUTO") {
-          cores <- as.integer(parallel::detectCores() * 0.9)
-          prll <- paste0("-wo NUM_THREADS=", cores, " ")
-        } else {
-          if (!is.integer(cores)) {
-            if (is.character(cores) | is.logical(cores)) {
-              stop("'cores' needs to be passed as numeric or 'AUTO'")
-            } else {
-              prll <- paste0("-wo NUM_THREADS=", as.integer(cores), " ")
+
+        cores <- dealWithCores(cores)
+        prll <- paste0("-wo NUM_THREADS=", cores, " ")
+
+        browser(expr = exists("._projectInputs_2"))
+        # This will clear the Windows error that sometimes occurs:
+        #  ERROR 1: PROJ: pj_obj_create: Cannot find proj.db ## Eliot Jan 22, 2020
+        if (identical(.Platform[["OS.type"]], "windows")) {
+          oldProjLib <- Sys.getenv("PROJ_LIB")
+          if (!isTRUE(grepl("proj.db", dir(oldProjLib)))) {
+            possNewDir <- dir(file.path(dirname(getOption("gdalUtils_gdalPath")[[1]]$path), "share", "proj"),
+                              recursive = TRUE, pattern = "proj.db", full.names = TRUE)
+            if (length(possNewDir)) {
+              Sys.setenv(PROJ_LIB = dirname(possNewDir))
+              on.exit(add = TRUE, {
+                Sys.setenv(PROJ_LIB = oldProjLib)
+              })
             }
-          } else {
-            prll <- paste0("-wo NUM_THREADS=", cores, " ")
           }
         }
 
-        dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+        targCRS <- as.character(targetCRS)
+        if (FALSE){
+          # There is a new-ish warning " +init=epsg:XXXX syntax is deprecated. It might return a CRS with a non-EPSG compliant axis order."
+          #  This next clears all the extraneous stuff after the EPSG... but that may not be correct.
+          #  I think leave it with the warning.
+          targCRS <- gsub(".*(epsg:.[0123456789]*)( ).*", "\\1", targCRS)
+        }
         system(
           paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
                  "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
-                 " -t_srs \"", as.character(targetCRS), "\"",
+                 " -t_srs \"", targCRS, "\"",
                  " -multi ", prll,
-                 "-ot ", dType,
+                 "-ot ", dTypeGDAL,
                  teRas,
                  "-r ", dots$method,
                  " -overwrite ",
@@ -643,7 +687,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                  "\"", tempSrcRaster, "\"", " ",
                  "\"", tempDstRaster, "\""),
           wait = TRUE)
-        ##
+
         x <- raster(tempDstRaster)
         crs(x) <- targetCRS #sometimes the crs is correct but the character string is not identical
         #file exists in temp drive. Can copy to filename2
@@ -689,22 +733,22 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
           if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
             if (all(res(x) %==% res(rasterToMatch))) {
-              res(x) <- res(rasterToMatch)
+              res(x) <- res(rasterToMatch) # TODO: This is irrelevant. Should not happen. TO Omit.
             } else {
-              stop(paste0("Error: input and output resolutions are not similar after using projectRaster.\n",
-                          "You can try increasing error tolerance in options('fpCompare.tolerance')."))
+              stop("Error: input and output resolutions are not similar after using projectRaster.",
+                   "\nTry increasing error tolerance in options('fpCompare.tolerance').")
             }
           }
         }
         if (!identical(crs(x), targetCRS)) {
           crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
-                              #  they should be
+          #  they should be
         }
 
         # return the integer class to the data in the raster object
         if (isTRUE(isInteger)) {
-          dataType(x) <- origDataType
           x[] <- as.integer(x[])
+          dataType(x) <- origDataType
         }
 
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
@@ -824,12 +868,18 @@ maskInputs <- function(x, studyArea, ...) {
 #' @rdname maskInputs
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   message("    masking...")
+  browser(expr = exists("._maskInputs_1"))
   if (isTRUE(maskWithRTM)) {
-    x[is.na(rasterToMatch)] <- NA
+    x <- maskWithRasterNAs(x = x, y = rasterToMatch)
+    # if (canProcessInMemory(x, 3) && fromDisk(x))
+    #   x[] <- x[]
+    # m <- which(is.na(rasterToMatch[]))
+    # x[m] <- NA
+    # x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
-      dots <- list(...)
-      x <- fastMask(x = x, y = studyArea, cores = dots$cores)
+      # dots <- list(...)
+      x <- fastMask(x = x, y = studyArea, ...)
     } else {
       message("studyArea not provided, skipping masking.")
     }
@@ -847,7 +897,9 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
       studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
     if (!identical(crs(x), crs(studyArea)))
       studyArea <- spTransform(studyArea, CRSobj = crs(x))
-    suppressWarnings(studyArea <- fixErrors(studyArea, "studyArea"))
+    suppressWarnings({
+      studyArea <- fixErrors(studyArea, "studyArea")
+    })
     # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
     #  specifically ecodistricts.shp . It created an invalid object with
     #  non-unique row names
@@ -1062,7 +1114,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
                     "\n saving", names(x), "as", datatype2))
       dots$datatype <- datatype2
     } else if (datatype2 != dots$datatype) {
-      message("chosen 'datatype', ",dots$datatype,", may be inadequate for the ",
+      message("chosen 'datatype', ", dots$datatype, ", may be inadequate for the ",
               "range/type of values in ", names(x),
               "\n consider changing to ", datatype2)
     }
@@ -1079,6 +1131,17 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
+      if (tools::file_ext(filename(x)) == "grd") {
+        if (!tools::file_ext(filename2) == "grd") {
+          warning("filename2 file type (",tools::file_ext(filename2),") was not same type (",tools::file_ext(filename(x)),") ",
+                  "as the filename of the raster; ",
+                  "Changing filename2 so that it is ",tools::file_ext(filename(x)))
+          filename2 <- gsub(tools::file_ext(filename2), "grd", filename2)
+        }
+        file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
+                  overwrite = overwrite)
+      }
+
       file.copy(filename(x), filename2, overwrite = overwrite)
       x@file@name <- filename2
       if (dots$datatype != dataType(x)) {
@@ -1105,6 +1168,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 writeOutputs.Spatial <- function(x, filename2 = NULL,
                                  overwrite = getOption("reproducible.overwrite", TRUE),
                                  ...) {
+
   if (!is.null(filename2)) {
     dots <- list(...)
     notWanted1 <- .formalsNotInCurrentDots(shapefile, ...)
@@ -1134,13 +1198,22 @@ writeOutputs.sf <- function(x, filename2 = NULL,
     if (identical(".", dirname(filename2))) {
       filename2 <- normPath(filename2)
     }
+    dp <- list(...)$destinationPath
+    if (!is.null(dp)) {
+      if (!isTRUE(grepl(normPath(dp), filename2)))
+        filename2 <- normPath(file.path(dp, basename(filename2)))
+    }
     if (!all(file.exists(filename2)))
       overwrite = FALSE
 
-    sf::st_write(obj = x, dsn = filename2, delete_dsn = overwrite,
-                 ...)
+    sf::st_write(obj = x, dsn = filename2, delete_dsn = overwrite)
   }
   x
+}
+
+#' @rdname writeOutputs
+writeOutputs.quosure <- function(x, filename2, ...) {
+  writeOutputs(eval_tidy(x), filename2 = filename2, ...)
 }
 
 #' @rdname writeOutputs
@@ -1152,9 +1225,12 @@ writeOutputs.default <- function(x, filename2, ...) {
 #'
 #' Can be used to write prepared inputs on disk.
 #'
-#' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
-#' @param type Character. 'writeRaster' or 'GDAL' to return the recommended data type for writing from the raster and gdalUtils packages, respectively, or 'projectRaster' to return recommended resampling type. Default is 'writeRaster'.
-#' @return The appropriate data type for the range of values in \code{ras}. See \code{\link[raster]{dataType}} for details.
+#' @param ras  The \code{RasterLayer} or \code{RasterStack} for which data type will be assessed.
+#' @param type Character. \code{"writeRaster"} (default) or \code{"GDAL"} to return the recommended
+#'             data type for writing from the raster and gdalUtils packages, respectively, or
+#'             \code{"projectRaster"} to return recommended resampling type.
+#' @return The appropriate data type for the range of values in \code{ras}.
+#'         See \code{\link[raster]{dataType}} for details.
 #'
 #' @author Eliot McIntire
 #' @author Ceres Barros
@@ -1169,47 +1245,60 @@ assessDataType <- function(ras, type = 'writeRaster') {
 }
 
 #' @export
-#' @importFrom raster getValues ncell
+#' @importFrom raster getValues maxValue ncell
 #' @rdname assessDataType
 assessDataType.Raster <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
   N <- 1e5
-  if (ncell(ras) > N) {
-    rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
-  } else {
-    rasVals <- raster::getValues(ras)
+
+  browser(expr = exists("._assessDataType_1"))
+  datatype <- NULL
+  if (ncell(ras) > 1e8) { # for very large rasters, try a different way
+    maxValCurrent <- maxValue(ras)
+    ras <- setMinMaxIfNeeded(ras)
+    if (maxValCurrent != maxValue(ras))
+      datatype <- dataType(ras)
   }
-  minVal <- ras@data@min
-  maxVal <- ras@data@max
-  signVal <- minVal < 0
-  doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
 
-  ## writeRaster deals with infinite values as FLT8S
-  # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
+  if (is.null(datatype)) {
 
-  if (!doubVal & !signVal) {
-    ## only check for binary if there are no decimals and no signs
-    logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
-
-    if (logi) {
-      datatype <- "LOG1S"
+    if (ncell(ras) > N) {
+      rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
     } else {
-      ## if() else is faster than if
-      datatype <- if (maxVal <= 255) "INT1U" else
-        if (maxVal <= 65534) "INT2U" else
-          if (maxVal <= 4294967296) "INT4U" else    ## note that: dataType doc. advises against INT4U
-            if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      rasVals <- raster::getValues(ras)
     }
-  } else {
-    if (signVal & !doubVal) {
-      ## if() else is faster than if
-      datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
-        if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
-          if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else    ## note that: dataType doc. advises against INT4U
-            if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+    minVal <- ras@data@min
+    maxVal <- ras@data@max
+    signVal <- minVal < 0
+    doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
+
+    ## writeRaster deals with infinite values as FLT8S
+    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
+
+    if (!doubVal & !signVal) {
+      ## only check for binary if there are no decimals and no signs
+      logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
+
+      if (logi) {
+        datatype <- "LOG1S"
+      } else {
+        ## if() else is faster than if
+        datatype <- if (maxVal <= 255) "INT1U" else
+          if (maxVal <= 65534) "INT2U" else
+            if (maxVal <= 4294967296) "INT4U" else  ## note: ?dataType advises against INT4U
+              if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      }
     } else {
-      if (doubVal)
-        datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      if (signVal & !doubVal) {
+        ## if() else is faster than if
+        datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
+          if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
+            if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else  ## note: ?dataType advises against INT4U
+              if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      } else {
+        if (doubVal)
+          datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+      }
     }
   }
   #convert datatype if needed
@@ -1343,6 +1432,7 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
+  browser(expr = exists("._postProcessAllSpatial_1"))
 
   if (!is.null(studyArea))
     if (is(studyArea, "quosure"))
@@ -1412,6 +1502,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       }
     }
 
+    browser(expr = exists("._postProcess.spatialobjects_2"))
     x <- Cache(cropInputs, x = x, studyArea = studyArea,
                extentToMatch = extRTM,
                extentCRS = crsRTM,
@@ -1422,6 +1513,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     }
 
     # cropInputs may have returned NULL if they don't overlap
+    browser(expr = exists("._postProcess.spatialobjects_3"))
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
       x <- fixErrors(x = x, objectName = objectName,
@@ -1433,6 +1525,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
                                  targetCRS)
 
+      browser(expr = exists("._postProcess.spatialobjects_4"))
       x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
                  rasterToMatch = rasterToMatch, useCache = useCache, ...)
       # may need to fix again
@@ -1442,6 +1535,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # maskInputs
       ##################################
+      browser(expr = exists("._postProcess.spatialobjects_5"))
       x <- Cache(maskInputs, x = x, studyArea = studyArea,
                  rasterToMatch = rasterToMatch, useCache = useCache, ...)
 
@@ -1453,12 +1547,13 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # writeOutputs
       ##################################
-      x <- do.call(writeOutputs, append(list(x = quote(x), filename2 = newFilename,
+      x <- do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
                                              overwrite = overwrite), dots))
 
-      if (dir.exists(file.path(raster::tmpDir(), "bigRasters"))) {
+      browser(expr = exists("._postProcess.spatialobjects_6"))
+      if (dir.exists(bigRastersTmpFolder())) {
         ## Delete gdalwarp results in temp
-        unlink(file.path(raster::tmpDir(), "bigRasters"), recursive = TRUE)
+        unlink(bigRastersTmpFolder(), recursive = TRUE)
       }
     }
   }
@@ -1473,4 +1568,47 @@ useETM <- function(extentToMatch, extentCRS) {
     return(TRUE)
   }
   return(FALSE)
+}
+
+bufferWarningSuppress <- function(warn, objectName, x1, bufferFn) {
+  warnAboutNotProjected <- startsWith(warn, paste("Spatial object is not projected;",
+                                                  "GEOS expects planar coordinates"))
+  if (any(warnAboutNotProjected))
+    warn <- warn[!warnAboutNotProjected]
+  if (length(warn))
+    warning(warn)
+
+  if (is(x1, "try-error")) {
+    message("There are errors with ", objectName,
+            ". Couldn't fix them with ",bufferFn,"(..., width = 0)")
+  } else {
+    message("  Some or all of the errors fixed.")
+  }
+  x1
+}
+
+roundToRes <- function(extent, x) {
+  if (is(x, "Raster"))
+    extent <- raster::extent(
+      c(round(c(xmin(extent), xmax(extent))/res(x)[1],0)*res(x)[1],
+        round(c(ymin(extent), ymax(extent))/res(x)[2],0)*res(x)[2]))
+  extent
+}
+
+setMinMaxIfNeeded <- function(ras) {
+  maxIntVals <- c(127, 255, 32767, 65534, 2147483647, 4294967296)
+  suppressWarnings(maxValCurrent <- maxValue(ras))
+  needSetMinMax <- FALSE
+  if (isTRUE(is.na(maxValCurrent))) {
+    needSetMinMax <- TRUE
+  } else {
+    possibleShortCut <- maxValCurrent %in% maxIntVals
+    if (isTRUE(possibleShortCut)) {
+      needSetMinMax <- TRUE
+    }
+  }
+  if (isTRUE(needSetMinMax)) {
+    suppressWarnings(ras <- setMinMax(ras))
+  }
+  ras
 }

@@ -3,7 +3,6 @@
 \name{.robustDigest}
 \alias{.robustDigest}
 \alias{.robustDigest,ANY-method}
-\alias{.robustDigest,cluster-method}
 \alias{.robustDigest,function-method}
 \alias{.robustDigest,expression-method}
 \alias{.robustDigest,character-method}
@@ -26,8 +25,6 @@
 )
 
 \S4method{.robustDigest}{ANY}(object, .objects, length, algo, quick, classOptions)
-
-\S4method{.robustDigest}{cluster}(object, .objects, length, algo, quick, classOptions)
 
 \S4method{.robustDigest}{`function`}(object, .objects, length, algo, quick, classOptions)
 
@@ -90,7 +87,7 @@ as paths, if they are file-backed.}
 specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
-\item{...}{Arguments of \code{FUN} function .}
+\item{...}{Arguments passed to \code{FUN}}
 
 \item{objects}{Optional character vector indicating which objects are to
 be considered while making digestible. This argument is not used
@@ -124,7 +121,8 @@ for having their data content located on disk, this format will be maintained if
 raster already is file-backed, i.e., to create \code{.tif} or \code{.grd} backed rasters,
 use \code{writeRaster} first, then Cache. The .tif or .grd will be copied to the "raster"
 subdirectory of the \code{cacheRepo}.
-Their RAM representation (as an R object) will still be in the usual \file{gallery/} directory.
+Their RAM representation (as an R object) will still be in the usual
+\file{cacheOutputs/} (or formerly \file{gallery/}) directory.
 For \code{inMemory} raster objects, they will remain as binary \code{.RData} files.
 
 Functions (which are contained within environments) are
@@ -186,7 +184,7 @@ digest::digest(r2) # different
 
 }
 \seealso{
-\code{\link[archivist]{cache}}.
+\code{archivist::cache}.
 }
 \author{
 Eliot McIntire

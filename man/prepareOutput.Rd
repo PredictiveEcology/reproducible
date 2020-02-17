@@ -8,7 +8,13 @@
 \usage{
 .prepareOutput(object, cacheRepo, ...)
 
-\S4method{.prepareOutput}{RasterLayer}(object, cacheRepo, ...)
+\S4method{.prepareOutput}{RasterLayer}(
+  object,
+  cacheRepo,
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
 
 \S4method{.prepareOutput}{ANY}(object, cacheRepo, ...)
 }
@@ -18,7 +24,14 @@
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
-\item{...}{Arguments of \code{FUN} function .}
+\item{...}{Arguments passed to \code{FUN}}
+
+\item{drv}{an object that inherits from \linkS4class{DBIDriver},
+or an existing \linkS4class{DBIConnection}
+object (in order to clone an existing connection).}
+
+\item{conn}{A \linkS4class{DBIConnection} object, as returned by
+\code{\link[DBI:dbConnect]{dbConnect()}}.}
 }
 \value{
 The object, modified
@@ -34,7 +47,8 @@ b <- "Null"
 .prepareOutput(b) # converts to NULL
 
 # For rasters, it is same as .prepareFileBackedRaster
-try(archivist::createLocalRepo(tempdir()))
+requireNamespace("archivist", quietly = TRUE)
+  try(archivist::createLocalRepo(tempdir()))
 
 library(raster)
 r <- raster(extent(0,10,0,10), vals = 1:100)

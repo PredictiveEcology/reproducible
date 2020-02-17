@@ -113,6 +113,23 @@ testOnExit <- function(testInitOut) {
     if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
   }
+  unlink(testInitOut$tmpCache, recursive = TRUE, force = TRUE)
+  unlink(testInitOut$tmpdir, recursive = TRUE, force = TRUE)
+
+  if (grepl("Pq", class(getOption("reproducible.conn", NULL)))) {
+    tabs <- DBI::dbListTables(conn = getOption("reproducible.conn", NULL))
+    tab1 <- grep(value = TRUE, tabs, pattern =
+           paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
+                                   basename2(testInitOut$tmpCache))))
+    tab2 <- grep(value = TRUE, tabs, pattern =
+                  paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
+                                          basename2(testInitOut$tmpdir))))
+    if (length(tab1))
+      try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab1))
+    if (length(tab2))
+      try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab2))
+  }
+
   lapply(testInitOut$libs, function(lib) {
     try(detach(paste0("package:", lib), character.only = TRUE), silent = TRUE)}
   )
@@ -194,7 +211,7 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
   }
   if (file.exists(filename)) {
     if (version == 2) {
-      thisenvir <- new.env()
+      thisenvir <- new.env(parent = emptyenv())
       data <- get(load(filename, thisenvir), thisenvir)
     }
     else {
@@ -323,7 +340,8 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   # should have 2 files in cloud b/c of grd and gri
   expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
-  expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)), by = "artifact"))==1)
+  expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)),
+                          by = .cacheTableHashColName()))==1)
 
   ####################################################
   # both cloud and local exist -- take local only -- no change to cloud
@@ -368,3 +386,4 @@ fnCacheHelper <- function(a, cacheRepo2) {
   Cache(fnCacheHelper1, cacheRepo = cacheRepo2, verbose = 2)
 }
 
+crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"

@@ -48,7 +48,6 @@
 #' large cache repository.
 #'
 #' @export
-#' @importFrom archivist rmFromLocalRepo searchInLocalRepo
 #' @importFrom data.table setindex
 #' @importFrom methods setGeneric setMethod
 #' @importFrom utils object.size
@@ -81,25 +80,30 @@
 #'
 #' # Fine control of cache elements -- pick out only the large runif object, and remove it
 #' cache1 <- showCache(tmpDir, userTags = c("runif")) # show only cached objects made during runif
-#' toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$artifact
+#' toRemove <- cache1[tagKey == "object.size"][as.numeric(tagValue) > 700]$cacheId
 #' clearCache(tmpDir, userTags = toRemove, ask = FALSE)
 #' cacheAfter <- showCache(tmpDir, userTags = c("runif")) # Only the small one is left
 #'
-setGeneric("clearCache", function(x, userTags = character(), after, before,
+setGeneric("clearCache", function(x, userTags = character(), after = NULL, before = NULL,
                                   ask = getOption("reproducible.ask"),
                                   useCloud = FALSE,
-                                  cloudFolderID = NULL, ...) {
+                                  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("clearCache")
 })
 
 #' @export
-#' @importFrom archivist createLocalRepo
 #' @rdname viewCache
 setMethod(
   "clearCache",
-  definition = function(x, userTags, after, before, ask, useCloud = FALSE,
+  definition = function(x, userTags, after = NULL, before = NULL, ask, useCloud = FALSE,
                         cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
-                        ...) {
+                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        conn = getOption("reproducible.conn", NULL), ...) {
+    # isn't clearing the raster bacekd file
+    browser(expr = exists("ssss"))
+
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
         message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
@@ -109,31 +113,43 @@ setMethod(
         x <- getOption("reproducible.cachePath")[1]
       }
     }
-    #if (is(x, "simList")) x <- x@paths$cachePath
 
     # Check if no args -- faster to delete all then make new empty repo for large repos
-    clearWholeCache <- all(missing(userTags), missing(after), missing(before))
+    clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (useCloud || !clearWholeCache) {
-      if (missing(after)) after <- "1970-01-01"
-      if (missing(before)) before <- Sys.time() + 1e5
+      browser(expr = exists("jjjj"))
+      # if (missing(after)) after <- NA # "1970-01-01"
+      # if (missing(before)) before <- NA # Sys.time() + 1e5
 
       args <- append(list(x = x, after = after, before = before, userTags = userTags),
                      list(...))
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (useCloud) {
+        browser(expr = exists("kkkk"))
         if (is.null(cloudFolderID)) {
-          stop("If using 'useCloud', 'cloudFolderID' must be provided. If you don't know what should be used, ",
-               "try getOption('reproducible.cloudFolderID')")
+          stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
+               "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
         }
-        cacheIds <- objsDT[tagKey == "cacheId", tagValue]
+        if (useDBI()) {
+          cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
+        } else {
+          cacheIds <- objsDT[tagKey == "cacheId", tagValue]
+        }
         gdriveLs <- drive_ls(path = as_id(cloudFolderID), pattern = paste(cacheIds, collapse = "|"))
-        filenamesToRm <- paste0(cacheIds, ".rda")
+        filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
+        # filenamesToRm <- paste0(cacheIds, ".rda")
         isInCloud <- gdriveLs$name %in% filenamesToRm
         message("From Cloud:")
         drive_rm(as_id(gdriveLs$id[isInCloud]))
       }
+    }
+
+    browser(expr = exists("rrrr"))
+    if (useDBI()) {
+      if (!CacheIsACache(x, drv = drv, conn = conn))
+        return(invisible(.emptyCacheTable))
     }
 
     if (clearWholeCache) {
@@ -152,37 +168,47 @@ setMethod(
         }
 
       }
-      unlink(file.path(x, "gallery"), recursive = TRUE)
+      unlink(CacheStorageDir(x), recursive = TRUE)
       unlink(file.path(x, "rasters"), recursive = TRUE)
-      unlink(file.path(x, "backpack.db"))
+      unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
 
       checkPath(x, create = TRUE)
-      createLocalRepo(x)
+      if (useDBI()) {
+        createCache(x, drv = drv, force = TRUE)
+      } else {
+        archivist::createLocalRepo(x)
+      }
       memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
     }
 
     if (isInteractive()) {
-      objSizes <- as.numeric(objsDT[tagKey == "object.size"]$tagValue)
+      objSizes <- as.numeric(objsDT[tagKey == "object.size"][[.cacheTableTagColName()]])
       cacheSize <- sum(objSizes) / 4
-      #rdaFiles <- file.path(x, "gallery", paste0(unique(objsDT$artifact), ".rda"))
-      #cacheSize <- sum(file.size(rdaFiles))
     }
 
     if (NROW(objsDT)) {
       rastersInRepo <- objsDT[grepl(pattern = "class", tagKey) &
-                                grepl(pattern = "Raster", tagValue)] # only Rasters* class
-      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
-        rasterObjSizes <- as.numeric(objsDT[artifact %in% rastersInRepo$artifact &
+                                grepl(pattern = "Raster", get(.cacheTableTagColName()))]
+      hasARaster <- all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0 # nolint
+
+      if (hasARaster) {
+        rasterObjSizes <- as.numeric(objsDT[get(.cacheTableHashColName()) %in%
+                                              rastersInRepo[[.cacheTableHashColName()]] &
                                               tagKey == "object.size"]$tagValue)
-        fileBackedRastersInRepo <- rastersInRepo$artifact[rasterObjSizes < 1e5]
-        filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
-          r <- suppressWarnings(loadFromLocalRepo(ras, repoDir = x, value = TRUE))
+        fileBackedRastersInRepo <- rastersInRepo[[.cacheTableHashColName()]][rasterObjSizes < 1e5]
+      filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
+          if (useDBI()) {
+            r <- loadFromCache(x, ras)
+          } else {
+            r <- suppressWarnings(archivist::loadFromLocalRepo(ras, repoDir = x, value = TRUE))
+          }
           tryCatch(filename(r), error = function(e) NULL)
         })
 
         if (length(filesToRemove)) {
-          filesToRemove <- gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
+          filesToRemove <- unlist(filesToRemove)
+          #filesToRemove <- file_path_sans_ext(filesToRemove)#gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
           if (isInteractive()) {
             dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
@@ -205,11 +231,22 @@ setMethod(
           }
       }
 
-      if (all(!is.na(rastersInRepo$artifact)) && NROW(rastersInRepo) > 0) {
+      # remove file-backed files
+      if (all(!is.na(rastersInRepo$cacheId)) && NROW(rastersInRepo) > 0) {
         unlink(filesToRemove)
       }
 
-      suppressWarnings(rmFromLocalRepo(unique(objsDT$artifact), x, many = TRUE))
+      objToGet <- unique(objsDT[[.cacheTableHashColName()]])
+      if (useDBI()) {
+        if (is.null(conn)) {
+          conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
+          on.exit({dbDisconnect(conn)})
+        }
+        rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
+        browser(expr = exists("rmFC"))
+      } else {
+        suppressWarnings(archivist::rmFromLocalRepo(objToGet, x, many = TRUE))
+      }
     }
     memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
@@ -244,12 +281,13 @@ setMethod(
 #' cc(ask = FALSE, x = tmpDir) # Cache is
 #' cc(ask = FALSE, x = tmpDir) # Cache is already empty
 cc <- function(secs, ...) {
+  browser(expr = exists("jjjj"))
   if (missing(secs)) {
     message("No time provided; removing the most recent entry to the Cache")
     suppressMessages({theCache <- reproducible::showCache(...)})
     if (NROW(theCache) > 0) {
       accessed <- data.table::setkey(theCache[tagKey == "accessed"], tagValue)
-      clearCache(userTags = tail(accessed, 1)$artifact, ...)
+      clearCache(userTags = tail(accessed, 1)[[.cacheTableHashColName()]], ...)
     } else {
       message("Cache already empty")
     }
@@ -260,12 +298,12 @@ cc <- function(secs, ...) {
       reproducible::clearCache(after = Sys.time() - secs, ...)
     }
   }
-
 }
 
 #' Examining and modifying the cache
 #'
-#' These are convenience wrappers around \code{archivist} package functions.
+#' These are convenience wrappers around \code{DBI}
+#' (formerly \code{archivist}) package functions.
 #' They allow the user a bit of control over what is being cached.
 #'
 #' \describe{
@@ -279,13 +317,15 @@ cc <- function(secs, ...) {
 #' @inheritParams clearCache
 #'
 #' @export
-#' @importFrom archivist splitTagsLocal
+#' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
-#' @seealso \code{\link{mergeCache}}, \code{\link[archivist]{splitTagsLocal}}. Many more examples
+#' @seealso \code{\link{mergeCache}}, \code{archivist::splitTagsLocal}. Many more examples
 #' in \code{\link{Cache}}
 #'
-setGeneric("showCache", function(x, userTags = character(), after, before, ...) {
+setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
+                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                 conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("showCache")
 })
 
@@ -293,15 +333,32 @@ setGeneric("showCache", function(x, userTags = character(), after, before, ...) 
 #' @rdname viewCache
 setMethod(
   "showCache",
-  definition = function(x, userTags, after, before, ...) {
+  definition = function(x, userTags, after = NULL, before = NULL, drv, conn, ...) {
+    browser(expr = exists("rrrr"))
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
-    if (missing(after)) after <- "1970-01-01"
-    if (missing(before)) before <- Sys.time() + 1e5
+    browser(expr = exists("jjjj"))
+    if (useDBI()) {
+      afterNA <- FALSE
+      if (is.null(after)) {
+        afterNA <- TRUE
+        after <- NA
+      }
+      # "1970-01-01"
+      beforeNA <- FALSE
+      if (is.null(before)) {
+        beforeNA <- TRUE
+        before <- NA
+      } # Sys.time() + 1e5
+    } else {
+      if (is.null(after)) after <- "1970-01-01"
+      if (is.null(before)) before <- Sys.time() + 1e5
+    }
     # if (is(x, "simList")) x <- x@paths$cachePath
 
+    # not seeing userTags
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
       !isFALSE(getOption("reproducible.futurePlan"))
@@ -312,30 +369,81 @@ setMethod(
         }
     }
 
-    objsDT <- showLocalRepo(x) %>% data.table()
-    setkeyv(objsDT, "md5hash")
+    if (useDBI()) {
+      if (is.null(conn)) {
+        conn <- dbConnectAll(drv, cachePath = x, create = FALSE)
+        if (is.null(conn)) {
+          return(invisible(.emptyCacheTable))
+        }
+        on.exit({
+          dbDisconnect(conn)
+        })
+      }
+      if (useDBI()) {
+        if (!CacheIsACache(x, drv = drv, conn = conn))
+          return(invisible(.emptyCacheTable))
+      }
+
+      dbTabNam <- CacheDBTableName(x, drv = drv)
+      # tab <- dbReadTable(conn, dbTabNam)
+      res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
+        dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))))
+      tab <- dbFetch(res)
+      dbClearResult(res)
+      if (is(tab, "try-error"))
+        objsDT <- .emptyCacheTable
+      else
+        objsDT <- setDT(tab)
+      #setkeyv(objsDT, "cacheId")
+    } else {
+      objsDT <- archivist::showLocalRepo(x) %>% data.table()
+      #setkeyv(objsDT, "md5hash")
+    }
+
     if (NROW(objsDT) > 0) {
-      objsDT <- data.table(splitTagsLocal(x), key = "artifact")
-      objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
-                                                (tagValue >= after)][!duplicated(artifact)]
-      objsDT <- objsDT[artifact %in% objsDT3$artifact]
+      if (useDBI()) {
+        if (!afterNA || !beforeNA) {
+          objsDT3 <- objsDT[tagKey == "accessed"]
+          if (!beforeNA)
+            objsDT3 <- objsDT3[(tagValue <= before)]
+          if ( !afterNA)
+            objsDT3 <- objsDT3[(tagValue >= after)]
+          # objsDT3 <- objsDT3[!duplicated(cacheId)]
+          browser(expr = exists("zzzz"))
+          # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
+          objsDT <- objsDT[objsDT$cacheId %in% unique(objsDT3$cacheId)] # faster than data.table join
+        }
+      } else {
+        objsDT <- data.table(archivist::splitTagsLocal(x), key = "artifact")
+        objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
+                                                  (tagValue >= after)][!duplicated(artifact)]
+        objsDT <- objsDT[artifact %in% objsDT3[[.cacheTableHashColName()]]]
+      }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
+          objsDTs <- list()
           for (ut in userTags) {
-            #objsDT$artifact %in% ut
-            objsDT2 <- objsDT[
-              grepl(tagValue, pattern = ut) |
-                grepl(tagKey, pattern = ut) |
-                grepl(artifact, pattern = ut)]
-            setkeyv(objsDT2, "artifact")
-            shortDT <- unique(objsDT2, by = "artifact")[, artifact]
-            objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+              objsDT2 <- objsDT[
+                grepl(get(.cacheTableTagColName()), pattern = ut) |
+                  grepl(tagKey, pattern = ut) |
+                  grepl(get(.cacheTableHashColName()), pattern = ut)]
+              setkeyv(objsDT2, .cacheTableHashColName())
+              shortDT <- unique(objsDT2, by = .cacheTableHashColName())[, get(.cacheTableHashColName())]
+            #}
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
           }
         } else {
-          objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
-          setkeyv(objsDT2, "artifact")
-          shortDT <- unique(objsDT2, by = "artifact")[, artifact]
-          objsDT <- if (NROW(shortDT)) objsDT[shortDT] else objsDT[0] # merge each userTags
+          if (useDBI()) {
+            objsDT2 <- objsDT[cacheId %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
+            setkeyv(objsDT2, "cacheId")
+            shortDT <- unique(objsDT2, by = "cacheId")[, cacheId]
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
+          } else {
+            objsDT2 <- objsDT[artifact %in% userTags | tagKey %in% userTags | tagValue %in% userTags]
+            setkeyv(objsDT2, "artifact")
+            shortDT <- unique(objsDT2, by = "artifact")[, artifact]
+            objsDT <- if (NROW(shortDT)) objsDT[shortDT, on = .cacheTableHashColName()] else objsDT[0] # merge each userTags
+          }
         }
       }
     }
@@ -346,13 +454,16 @@ setMethod(
       }
     }
     if (verboseMessaging)
-      .messageCacheSize(x, artifacts = unique(objsDT$artifact))
+      .messageCacheSize(x, artifacts = unique(objsDT[[.cacheTableHashColName()]]),
+                        cacheTable = objsDT)
     objsDT
 })
 
 #' @rdname viewCache
-setGeneric("keepCache", function(x, userTags = character(), after, before,
-                                 ask  = getOption("reproducible.ask"), ...) {
+setGeneric("keepCache", function(x, userTags = character(), after = NULL, before = NULL,
+                                 ask  = getOption("reproducible.ask"),
+                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                 conn = getOption("reproducible.conn", NULL), ...) {
   standardGeneric("keepCache")
 })
 
@@ -360,22 +471,22 @@ setGeneric("keepCache", function(x, userTags = character(), after, before,
 #' @rdname viewCache
 setMethod(
   "keepCache",
-  definition = function(x, userTags, after, before, ask, ...) {
+  definition = function(x, userTags, after, before, ask, drv, conn, ...) {
     if (missing(x)) {
       message("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
-    if (missing(after)) after <- "1970-01-01"
-    if (missing(before)) before <- Sys.time() + 1e5
+    # if (missing(after)) after <- NA # "1970-01-01"
+    # if (missing(before)) before <- NA # Sys.time() + 1e5
     # if (is(x, "simList")) x <- x@paths$cachePath
 
-    args <- append(list(x = x, after = after, before = before, userTags = userTags),
-                   list(...))
+    args <- append(list(x = x, after = after, before = before, userTags = userTags), list(...))
 
-    objsDTAll <- suppressMessages(showCache(x))
+    objsDTAll <- suppressMessages(showCache(x, verboseMessaging = FALSE))
     objsDT <- do.call(showCache, args = args)
-    keep <- unique(objsDT$artifact)
-    eliminate <- unique(objsDTAll$artifact[!(objsDTAll$artifact %in% keep)])
+    keep <- unique(objsDT[[.cacheTableHashColName()]])
+    eliminate <- unique(objsDTAll[[.cacheTableHashColName()]][
+      !(objsDTAll[[.cacheTableHashColName()]] %in% keep)])
 
     if (length(eliminate)) {
       #eliminate <- paste(eliminate, collapse = "|") ## TODO: remove
@@ -397,6 +508,12 @@ setMethod(
 #'                that will become larger, i.e., merge into this
 #' @param cacheFrom The cache repository (character string of the file path)
 #'                  from which all objects will be taken and copied from
+#' @param drvTo The database driver for the \code{cacheTo}.
+#' @param drvFrom The database driver for the \code{cacheFrom}
+#' @param connTo The connection for the \code{cacheTo}. If not provided, then
+#'   a new one will be made from \code{drvTo} and \code{cacheTo}
+#' @param connFrom The database for the \code{cacheFrom}. If not provided, then
+#'   a new one will be made from \code{drvFrom} and \code{cacheFrom}
 #'
 #' @details
 #' This is still experimental
@@ -405,7 +522,10 @@ setMethod(
 #' objects themselves.
 #'
 #' @rdname mergeCache
-setGeneric("mergeCache", function(cacheTo, cacheFrom) {
+setGeneric("mergeCache", function(cacheTo, cacheFrom,
+                                  drvTo = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  drvFrom = getOption("reproducible.drv", RSQLite::SQLite()),
+                                  connTo = NULL, connFrom = NULL) {
   standardGeneric("mergeCache")
 })
 
@@ -413,42 +533,67 @@ setGeneric("mergeCache", function(cacheTo, cacheFrom) {
 #' @rdname mergeCache
 setMethod(
   "mergeCache",
-  definition = function(cacheTo, cacheFrom) {
-    suppressMessages(cacheFromList <- showCache(cacheFrom))
-    suppressMessages(cacheToList <- showCache(cacheTo))
+  definition = function(cacheTo, cacheFrom, drvTo, drvFrom, connTo, connFrom) {
+    if (is.null(connTo)) {
+      connTo <- dbConnectAll(drvTo, cachePath = cacheTo)
+      on.exit(dbDisconnect(connTo), add = TRUE)
+    }
 
-    artifacts <- unique(cacheFromList$artifact)
+    if (is.null(connFrom)) {
+      connFrom <- dbConnectAll(drvFrom, cachePath = cacheFrom)
+      on.exit(dbDisconnect(connFrom), add = TRUE)
+    }
+
+    suppressMessages({
+      cacheFromList <- showCache(cacheFrom, drv = drvFrom, connFrom = connFrom)
+    })
+    suppressMessages({
+      cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo)
+    })
+    browser(expr = exists("kkkk"))
+
+    artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
-      if (!(artifact %in% cacheToList$artifact)) {
-        outputToSave <- try(loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
+      browser(expr = exists("gggg"))
+      if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
+        browser(expr = exists("gggg"))
+        outputToSave <- if (useDBI()) {
+          try(loadFromCache(cacheFrom, artifact))
+        } else {
+          try(archivist::loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
+        }
         if (is(outputToSave, "try-error")) {
           message("Continuing to load others")
           outputToSave <- NULL
         }
 
         ## Save it
-        written <- FALSE
-        if (is(outputToSave, "Raster")) {
-          outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
-        }
-        userTags <- cacheFromList[artifact][!tagKey %in% c("format", "name", "class", "date", "cacheId"),
-                                            list(tagKey, tagValue)]
-        userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
-        while (!written) {
-          saved <- suppressWarnings(try(
-            saveToLocalRepo(outputToSave, repoDir = cacheTo,
-                            artifactName = NULL,
-                            archiveData = FALSE, archiveSessionInfo = FALSE,
-                            archiveMiniature = FALSE, rememberName = FALSE,
-                            silent = TRUE, userTags = userTags),
-            silent = TRUE
-          ))
-          # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-          written <- if (is(saved, "try-error")) {
-            Sys.sleep(0.05)
-            FALSE
-          } else {
-            TRUE
+        userTags <- cacheFromList[artifact, on = .cacheTableHashColName()][
+          !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)]
+        if (useDBI()) {
+          output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
+        } else {
+          written <- FALSE
+          if (is(outputToSave, "Raster")) {
+            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
+          }
+          userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
+          while (!written) {
+            saved <- suppressWarnings(try(
+              archivist::saveToLocalRepo(outputToSave, repoDir = cacheTo,
+                                         artifactName = NULL,
+                                         archiveData = FALSE, archiveSessionInfo = FALSE,
+                                         archiveMiniature = FALSE, rememberName = FALSE,
+                                         silent = TRUE, userTags = userTags),
+              silent = TRUE
+            ))
+            # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
+            written <- if (is(saved, "try-error")) {
+              Sys.sleep(0.05)
+              FALSE
+            } else {
+              TRUE
+            }
           }
         }
         message(artifact, " copied")
@@ -457,23 +602,46 @@ setMethod(
         message("Skipping ", artifact, "; already in ", cacheTo)
       }
     })
-    .messageCacheSize(cacheTo)
+    .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo))
 
     return(invisible(cacheTo))
 })
 
 #' @keywords internal
-.messageCacheSize <- function(x, artifacts = NULL) {
-  a <- showLocalRepo2(x);
-  b <- a[startsWith(a$tag, "object.size"),]
-  fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+.messageCacheSize <- function(x, artifacts = NULL, cacheTable) {
+  browser(expr = exists("ffff"))
+
+  tagCol <- "tagValue"
+  if (missing(cacheTable)) {
+    if (useDBI()) {
+      a <- showCache(x, verboseMessaging = FALSE)
+    } else {
+      a <- showLocalRepo2(x)
+      tagCol <- "tag"
+    }
+
+  } else {
+    a <- cacheTable
+  }
+  cn <- if (any(colnames(a) %in% "tag")) "tag" else "tagKey"
+  b <- a[a[[cn]] == "object.size",]
+  if (any(colnames(a) %in% "tag")) {
+    fsTotal <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
+  } else {
+    fsTotal <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
+  }
   fsTotalRasters <- sum(file.size(dir(file.path(x, "rasters"), full.names = TRUE, recursive = TRUE)))
   fsTotal <- fsTotal + fsTotalRasters
   class(fsTotal) <- "object_size"
   preMessage1 <- "  Total (including Rasters): "
 
-  b <- a[a$artifact %in% artifacts & startsWith(a$tag, "object.size"),]
-  fs <- sum(as.numeric(unlist(lapply(strsplit(b$tag, split = ":"), function(x) x[[2]])))) / 4
+  b <- a[a[[.cacheTableHashColName()]] %in% artifacts &
+           (a[[cn]] %in% "object.size"),]
+  if (cn == "tag") {
+    fs <- sum(as.numeric(unlist(lapply(strsplit(b[[cn]], split = ":"), function(x) x[[2]])))) / 4
+  } else {
+    fs <- sum(as.numeric(b[[.cacheTableTagColName()]])) / 4
+  }
 
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
@@ -508,8 +676,9 @@ checkFutures <- function() {
       resol <- future::resolved(.reproEnv$futureEnv)
       resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
     }
+    browser(expr = exists("aaaa"))
     if (length(resol) > 0)
-      rm(list = names(resol)[resol], envir = .reproEnv$futureEnv)
+      .reproEnv$futureEnv[[lsFutureEnv]] <- NULL
   }
 }
 
@@ -527,6 +696,7 @@ checkFutures <- function() {
 #' @param concatenated Logical. If \code{TRUE}, the returned \code{userTags} will
 #'   be concatenated \code{tagKey:tagValue}.
 getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
+  stop("This function is deprecated")
   if (missing(shownCache)) {
     if (missing(cacheRepo)) {
       cacheRepos <- .checkCacheRepo(create = TRUE)
@@ -547,7 +717,6 @@ getUserTags <- function(cacheRepo, shownCache, cacheId, concatenated = TRUE) {
     userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
   userTags
 }
-
 
 #' @param artifact Character vector of artifact values in the
 #'   \code{artifact} column of \code{showCache}
@@ -580,6 +749,7 @@ getCacheId <- function(cacheRepo, shownCache, artifact) {
 #' @export
 #' @rdname cache-helpers
 getArtifact <- function(cacheRepo, shownCache, cacheId) {
+  stop("This function is deprecated")
   if (missing(shownCache)) {
     if (missing(cacheRepo)) {
       cacheRepos <- .checkCacheRepo(create = TRUE)
@@ -593,4 +763,14 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
     shownCache <- shownCache[tagValue %in% cacheId]
   }
   shownCache[tagKey == "cacheId", artifact]
+}
+
+useDBI <- function() {
+  ud <- getOption("reproducible.useDBI", TRUE)
+  rn <- requireNamespace("archivist", quietly = TRUE)
+  if (!ud && !rn)
+    message("Trying to not use DBI as database engine, but archivist is not ",
+            "installed. Please install.packages('archivist') or ",
+            "set options('reproducible.useDBI' = TRUE)")
+  ud || !rn
 }
