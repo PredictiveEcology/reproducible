@@ -1391,7 +1391,6 @@ test_that("lightweight tests for code coverage", {
     unzip("ecozone_shp.zip", exdir = tmpdir)
     file.copy(dir(file.path(tmpdir, "Ecozones"), full.names = TRUE), tmpdir)
     checkSums <- Checksums(path = tmpdir, write = TRUE)
-    #dir(tmpdir)
 
     aMess <- capture_messages(downloadFile(url = url, neededFiles = "ecozones.shp", checkSums = checkSums,
                                            targetFile = "ecozones.shp",
@@ -1401,14 +1400,20 @@ test_that("lightweight tests for code coverage", {
 
     expect_true(any(grepl("Skipping download", aMess)))
 
+    filesForShp <- dir(file.path(tmpdir), pattern = "ecozones", full.names = TRUE)
+    file.copy(filesForShp, tmpCache)
+    # Need these in a test further down -- mostly just need the CRS
+    filesForShp2 <- dir(file.path(tmpCache), pattern = "ecozones", full.names = TRUE)
+    shpFile <- shapefile(grep(filesForShp2, pattern = "\\.shp", value = TRUE))
     # Test when wrong archive exists, wrong checkSums
-    #checkSums <- Checksums(path = tmpdir)
     file.remove(file.path(tmpdir, "ecozone_shp.zip"))
-    file.remove(dir(file.path(tmpdir), pattern = "ecozones", full.names = TRUE))
+    file.remove(filesForShp)
     file.create(file.path(tmpdir, "ecozone_shp.zip"))
     checkSums <- Checksums(path = tmpdir, write = TRUE)
     file.remove(file.path(tmpdir, "ecozone_shp.zip"))
     checkSums <- Checksums(path = tmpdir)
+
+
 
     expect_error(downloadFile(url = url,
                               neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
@@ -1485,7 +1490,7 @@ test_that("lightweight tests for code coverage", {
     expect_true(identical(crs(a), crs(ras3)))
 
     #warns if bilinear is passed for reprojecting integer
-    expect_warning(projectInputs(ras2, rasterToMatch = ras3, method = "bilinear"))
+    expect_warning(projectInputs(ras2, targetCRS = crs(shpFile), method = "bilinear"))
 
     #Works with no rasterToMatch
     a <- projectInputs(ras2, targetCRS = crs(ras3), method = "ngb")
