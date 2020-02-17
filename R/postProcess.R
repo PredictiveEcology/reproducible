@@ -312,6 +312,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
                    te = c(cropExtentRounded[1], cropExtentRounded[3],
                           cropExtentRounded[2], cropExtentRounded[4]))
           x <- raster(tmpfile)
+          x <- setMinMaxIfNeeded(x)
 
           # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
           #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
@@ -1249,14 +1250,10 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
   browser(expr = exists("._assessDataType_1"))
   datatype <- NULL
   if (ncell(ras) > 1e8) { # for very large rasters, try a different way
-    maxIntVals <- c(127, 255, 32767, 65534, 2147483647, 4294967296)
     maxValCurrent <- maxValue(ras)
-    possibleShortCut <- maxValCurrent %in% maxIntVals
-    if (isTRUE(possibleShortCut)) {
-      suppressWarnings(ras <- setMinMax(ras))
-      if (maxValCurrent != maxValue(ras))
-        datatype <- dataType(ras)
-    }
+    ras <- setMinMaxIfNeeded(ras)
+    if (maxValCurrent != maxValue(ras))
+      datatype <- dataType(ras)
   }
 
   if (is.null(datatype)) {
@@ -1592,4 +1589,15 @@ roundToRes <- function(extent, x) {
       c(round(c(xmin(extent), xmax(extent))/res(x)[1],0)*res(x)[1],
         round(c(ymin(extent), ymax(extent))/res(x)[2],0)*res(x)[2]))
   extent
+}
+
+setMinMaxIfNeeded <- function(ras) {
+  maxIntVals <- c(127, 255, 32767, 65534, 2147483647, 4294967296)
+  maxValCurrent <- maxValue(ras)
+  possibleShortCut <- maxValCurrent %in% maxIntVals
+  if (isTRUE(possibleShortCut)) {
+    suppressWarnings(ras <- setMinMax(ras))
+
+  }
+  ras
 }
