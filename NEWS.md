@@ -22,8 +22,8 @@ version 1.0.0
 
 ## bug fixes
 
+* `postProcess` calls that use GDAL made more robust (including #93).
 * Several minor, edge cases were detected and fixed.
-* `postProcess` calls that use GDAL made more robust
 
 version 0.2.11
 ==============
