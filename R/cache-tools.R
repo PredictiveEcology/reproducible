@@ -129,20 +129,22 @@ setMethod(
       if (useCloud) {
         browser(expr = exists("kkkk"))
         if (is.null(cloudFolderID)) {
-          stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
-               "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
+          cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID,
+                                                     cloudFolder = cloudFolderFromCacheRepo(x))
+          # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
+          #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
         }
         if (useDBI()) {
           cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
         } else {
           cacheIds <- objsDT[tagKey == "cacheId", tagValue]
         }
-        gdriveLs <- drive_ls(path = as_id(cloudFolderID), pattern = paste(cacheIds, collapse = "|"))
+        gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
         filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
         # filenamesToRm <- paste0(cacheIds, ".rda")
         isInCloud <- gdriveLs$name %in% filenamesToRm
         message("From Cloud:")
-        drive_rm(as_id(gdriveLs$id[isInCloud]))
+        drive_rm(gdriveLs[isInCloud,])
       }
     }
 

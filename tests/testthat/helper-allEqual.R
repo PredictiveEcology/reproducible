@@ -303,6 +303,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     r2Orig <- brick(r2Orig, r2Orig2)
     r2Orig <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   }
+  browser()
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
   expect_true(identical(unname(r1EndData), unname(r2End[])))
   expect_false(identical(r1EndFilename, Filenames(r2End)))

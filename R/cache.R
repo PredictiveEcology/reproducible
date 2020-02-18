@@ -538,6 +538,11 @@ setMethod(
         browser(expr = exists("._Cache_2"))
         #message("Retrieving file list in cloud folder")
         #gdriveLs <- retry(quote(drive_ls(path = as_id(cloudFolderID), pattern = outputHash)))
+        cloudFolder <- cloudFolderFromCacheRepo(cacheRepo)
+        if (is.null(cloudFolderID)) {
+          cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, create = TRUE,
+                                                     cloudFolder, overwrite = FALSE)
+        }
         gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = outputHash)))
       }
       # conns <- list()
@@ -652,8 +657,10 @@ setMethod(
           }
 
           if (useCloud) {
+            browser(expr = exists("._cache_7b"))
             # Here, upload local copy to cloud folder
-            isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output)
+            isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output,
+                                     cloudFolder)
           }
 
           return(output)
@@ -686,7 +693,7 @@ setMethod(
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                                   drv = drv)
           if (is.null(output)) {
-            retry(quote(drive_rm(as_id(gdriveLs$id[isInCloud]))))
+            retry(quote(drive_rm(gdriveLs[isInCloud,])))
             isInCloud[isInCloud] <- FALSE
           } else {
             .CacheIsNew <- FALSE
@@ -755,7 +762,8 @@ setMethod(
       }
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
-        output <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
+        if (.CacheIsNew)
+          output <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
       }
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
 
@@ -911,7 +919,7 @@ setMethod(
         }
       }
 
-      if (useCloud) {
+      if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
         cloudUploadFromCache(isInCloud, outputHash, saved, cacheRepo, cloudFolderID, outputToSave, rasters)
       }
@@ -1656,3 +1664,6 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   }
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
 }
+
+cloudFolderFromCacheRepo <- function(cacheRepo)
+  paste0(basename2(dirname(cacheRepo)), "_", basename2(cacheRepo))
