@@ -14,6 +14,7 @@ if (getRversion() >= "3.1.0") {
 #' @param overwrite Logical. Passed to \code{googledrive::drive_mkdir}.
 #' @export
 #' @importFrom googledrive drive_mkdir
+#' @inheritParams Cache
 checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cloudFolderID', NULL),
                                       cacheRepo = NULL,
                                       create = FALSE,

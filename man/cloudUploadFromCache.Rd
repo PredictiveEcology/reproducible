@@ -24,11 +24,13 @@ cloudUploadFromCache(
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
-\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}.
-If left as \code{NULL}, the function will create a cloud folder with a warning.
-The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
-It will also be added to \code{options("reproducible.cloudFolderID")},
-but this will not persist across sessions.}
+\item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
+If left as \code{NULL}, the function will create a cloud folder with name from last
+two folder levels of the \code{cacheRepo} path, :
+\code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
+This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
+but this will not persist across sessions. If this is a character string, it will
+treat this as a folder name to create or use on GoogleDrive.}
 
 \item{outputToSave}{Only required if \code{any(rasters) == TRUE}.
 This is the \code{Raster*} object.}

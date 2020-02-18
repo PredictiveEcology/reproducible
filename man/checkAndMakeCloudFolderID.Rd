@@ -6,12 +6,16 @@
 \usage{
 checkAndMakeCloudFolderID(
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  cacheRepo = NULL,
   create = FALSE,
   overwrite = FALSE
 )
 }
 \arguments{
 \item{cloudFolderID}{The google folder ID where cloud caching will occur.}
+
+\item{cacheRepo}{A repository used for storing cached objects.
+This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{create}{Logical. If \code{TRUE}, then the cloudFolderID will be created.
 This should be used with caution as there are no checks for overwriting.
