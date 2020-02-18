@@ -11,16 +11,20 @@ if (getRversion() >= "3.1.0") {
 #' @param create Logical. If \code{TRUE}, then the cloudFolderID will be created.
 #'     This should be used with caution as there are no checks for overwriting.
 #'     See \code{googledrive::drive_mkdir}. Default \code{FALSE}.
+#' @param overwrite Logical. Passed to \code{googledrive::drive_mkdir}.
 #' @export
 #' @importFrom googledrive drive_mkdir
-checkAndMakeCloudFolderID <- function(cloudFolderID = NULL, create = FALSE) {
+checkAndMakeCloudFolderID <- function(cloudFolderID = NULL, create = FALSE,
+                                      overwrite = FALSE) {
   browser(expr = exists("kkkk"))
   isNullCFI <- is.null(cloudFolderID)
   if (isNullCFI && isTRUE(create)) {
     if (isNullCFI) {
       cloudFolderID <- rndstr(1, 6)
     }
-    newDir <- retry(quote(drive_mkdir(cloudFolderID, path = "~/")))
+  }
+  if (isTRUE(create)) {
+    newDir <- drive_mkdir(cloudFolderID, path = "~/", overwrite = overwrite)
     cloudFolderID = newDir$id
     if (isNullCFI)
       warning("No cloudFolderID supplied; if this is the first time using 'useCloud',",
