@@ -124,8 +124,8 @@
 reproducibleOptions <- function() {
   list( # nolint
     reproducible.ask = TRUE,
-    reproducible.cloudChecksumsFilename = file.path(dirname(.reproducibleTempCacheDir),
-                                                    "checksums.rds"),
+    reproducible.cloudChecksumsFilename = normPath(file.path(dirname(.reproducibleTempCacheDir),
+                                                    "checksums.rds")),
     reproducible.cachePath = normPath(file.path(.reproducibleTempCacheDir)),
     reproducible.cacheSaveFormat = "rds",
     reproducible.conn = NULL,
