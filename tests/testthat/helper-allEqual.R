@@ -282,7 +282,13 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   }
 
+  # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
+  cloudFolderID1 <- cloudFolderID
+  on.exit({
+    clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID1)
+  })
+
   r1EndData <- r1End[]
   r1EndFilename <- Filenames(r1End)
   r1EndCacheAttr <- attr(r1End, ".Cache")$newCache
@@ -303,16 +309,21 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     r2Orig <- brick(r2Orig, r2Orig2)
     r2Orig <- writeRaster(r2Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   }
-  browser()
+  # ._clearCache_3 <<- ._cloudUpload_1 <<- ._cloudDownloadRasterBackend_1 <<- 1
   r2End <- Cache(fn, r2Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
+  cloudFolderID2 <- cloudFolderID
+  on.exit({
+    clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID2)
+  })
+
   expect_true(identical(unname(r1EndData), unname(r2End[])))
-  expect_false(identical(r1EndFilename, Filenames(r2End)))
+  expect_true(identical(r1EndFilename, Filenames(r2End))) # this now has correct: only 1 downloaded copy exists
   expect_false(identical(Filenames(r2Orig), Filenames(r1Orig)))
   expect_true(r1EndCacheAttr == TRUE)
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
   filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(file_path_sans_ext(Filenames(r2End))))))
   filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(file_path_sans_ext(r1EndFilename)))))
-  expect_true(NROW(filnames1End) == numRasterFiles * 2) # both sets because of the _1 -- a bit of an artifact due to same folder
+  expect_true(NROW(filnames1End) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
   expect_true(NROW(filnames2End) == numRasterFiles) # both sets because of the _1
 
 
@@ -331,18 +342,24 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   }
   r1End <- Cache(fn, r1Orig, useCloud = FALSE, cloudFolderID = cloudFolderID)
+
   expect_true(attr(r1End, ".Cache")$newCache == TRUE) # new to local cache
 
   r4End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
+  cloudFolderID3 <- cloudFolderID
+  on.exit({
+    clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID3)
+  })
+
   expect_true(attr(r4End, ".Cache")$newCache == FALSE) # new to local cache
-  driveLs <- drive_ls(as_id(cloudFolderID))
+  driveLs <- drive_ls(cloudFolderID)
   data.table::setDT(driveLs)
   expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
   # should have 2 files in cloud b/c of grd and gri
   expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
-  expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)),
-                          by = .cacheTableHashColName()))==1)
+  suppressMessages(expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)),
+                          by = .cacheTableHashColName()))==1))
 
   ####################################################
   # both cloud and local exist -- take local only -- no change to cloud
@@ -359,10 +376,14 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     r1Orig <- writeRaster(r1Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   }
   r1End <- Cache(fn, r1Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
+  on.exit({
+    clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
+  })
+
   expect_true(attr(r1End, ".Cache")$newCache == TRUE) # new to local cache
 
 
-  driveLsBefore <- drive_ls(as_id(cloudFolderID))
+  driveLsBefore <- drive_ls(cloudFolderID)
   r5Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
   r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   if (mc$type == "Stack") {
@@ -374,9 +395,15 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   }
   r5End <- Cache(fn, r5Orig, useCloud = TRUE, cloudFolderID = cloudFolderID)
+  on.exit({
+    clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
+  })
   expect_true(attr(r5End, ".Cache")$newCache == FALSE) # new to local cache
-  driveLsAfter <- drive_ls(as_id(cloudFolderID))
+  driveLsAfter <- drive_ls(cloudFolderID)
   expect_true(identical(driveLsAfter, driveLsBefore))
+  clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
+  driveLsEnd <- drive_ls(cloudFolderID)
+  expect_true(NROW(driveLsEnd) == 0)
 }
 
 fnCacheHelper1 <- function() {

@@ -224,7 +224,8 @@ setMethod(
                         conn = getOption("reproducible.conn", NULL), ...) {
     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
     #  overwrite is ok
-    .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
+    # .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
+    object
   })
 
 #' @export

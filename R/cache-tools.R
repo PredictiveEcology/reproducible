@@ -102,7 +102,7 @@ setMethod(
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), ...) {
     # isn't clearing the raster bacekd file
-    browser(expr = exists("ssss"))
+    browser(expr = exists("._clearCache_1"))
 
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
@@ -118,7 +118,7 @@ setMethod(
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (useCloud || !clearWholeCache) {
-      browser(expr = exists("jjjj"))
+      browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
 
@@ -126,25 +126,10 @@ setMethod(
                      list(...))
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
-      if (useCloud) {
-        browser(expr = exists("kkkk"))
-        if (is.null(cloudFolderID)) {
-          cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID,
-                                                     cloudFolder = cloudFolderFromCacheRepo(x))
-          # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
-          #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
-        }
-        if (useDBI()) {
-          cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
-        } else {
-          cacheIds <- objsDT[tagKey == "cacheId", tagValue]
-        }
-        gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
-        filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
-        # filenamesToRm <- paste0(cacheIds, ".rda")
-        isInCloud <- gdriveLs$name %in% filenamesToRm
-        message("From Cloud:")
-        drive_rm(gdriveLs[isInCloud,])
+      if (useCloud && NROW(objsDT) > 0) {
+        browser(expr = exists("._clearCache_3"))
+        rmFromCloudFolder(cloudFolderID, x, objsDT)
+
       }
     }
 
@@ -775,4 +760,38 @@ useDBI <- function() {
             "installed. Please install.packages('archivist') or ",
             "set options('reproducible.useDBI' = TRUE)")
   ud || !rn
+}
+
+rmFromCloudFolder <- function(cloudFolderID, x, objsDT) {
+  if (is.null(cloudFolderID)) {
+
+    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
+    # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
+    #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
+  }
+  if (useDBI()) {
+    cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
+  } else {
+    cacheIds <- objsDT[tagKey == "cacheId", tagValue]
+  }
+  gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
+  cacheIds <- gsub("\\..*", "", gdriveLs$name)
+  filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
+  # filenamesToRm <- paste0(cacheIds, ".rda")
+  isInCloud <- gdriveLs$name %in% filenamesToRm
+  # Deal with Rasters
+  files <- CacheStoredFile(x, hash = cacheIds[isInCloud])
+  sc <- suppressMessages(showCache(x, userTags = cacheIds))
+  classes <- sc[tagKey == "class"]$tagValue
+  rases <- classes %in% c("RasterLayer", "RasterStack", "RasterBrick")
+  objs <- lapply(files[rases], readRDS)
+  frmDisk <- unlist(lapply(objs, fromDisk))
+  filenames <- unlist(lapply(objs[frmDisk], Filenames))
+  toDelete <- gdriveLs[isInCloud,]
+  message("Cloud:")
+  if (!is.null(filenames)) {
+    rasFiles <- drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
+    toDelete <- rbind(rasFiles, toDelete)
+  }
+  retry(quote(drive_rm(toDelete)))
 }
