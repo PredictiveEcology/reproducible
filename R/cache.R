@@ -134,6 +134,33 @@ if (getRversion() >= "3.1.0") {
 #' default to the behaviour of \code{useCache = TRUE} with a message. This means
 #' that \code{"devMode"} is most useful if used from the start of a project.
 #'
+#' @section \code{useCloud}:
+#' This is a way to store all or some of the local Cache in the cloud.
+#' Currently, the only cloud option is Google Drive, via \code{googledrive}
+#' package. For this to work, the user must be or be able to be authenticated
+#' with \code{googledrive::drive_auth()}. The principle behind this
+#' \code{useCloud} is that it will be a full or partial mirror of a local Cache.
+#' It is not intended to be used independently from a local Cache. To share
+#' objects that are in the Cloud with another person, it requires 2 steps. 1)
+#' share the \code{cloudFolderID$id}, which can be retrieved by
+#' \code{getOption("reproducible.cloudFolderID")$id} after at least one Cache
+#' call has been made. 2) The other user must then set their
+#' \code{cacheFolderID} in a \code{Cache(..., reproducible.cloudFolderID = "the
+#' ID here")} call or set their option manually
+#' \code{options("reproducible.cloudFolderID" = "the ID here)}.
+#'
+#' If \code{TRUE}, then this Cache call will download
+#'   (if local copy doesn't exist, but cloud copy does exist), upload
+#'   (local copy does or doesn't exist and
+#'   cloud copy doesn't exist), or
+#'   will not download nor upload if object exists in both. If \code{TRUE} will be at
+#'   least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
+#'   cloud folder gets large. If a user wishes to keep "high-level" control, set this to
+#'   \code{getOption("reproducible.useCloud", FALSE)} or
+#'   \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
+#'   be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
+#'   this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
+#'
 #' @section \code{sideEffect}:
 #' If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
 #' added to \code{sideEffect} will be added as an attribute to the cached copy.
@@ -255,17 +282,7 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param useCache Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.
 #'
-#' @param useCloud Logical. If \code{TRUE}, then this Cache call will download
-#'   (if local copy doesn't exist,
-#'   but cloud copy does exist), upload (local copy does or doesn't exist and
-#'   cloud copy doesn't exist), or
-#'   will not download nor upload if object exists in both. If \code{TRUE} will be at
-#'   least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
-#'   cloud folder gets large. If a user wishes to keep "high-level" control, set this to
-#'   \code{getOption("reproducible.useCloud", FALSE)} or
-#'   \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
-#'   be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
-#'   this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
+#' @param useCloud Logical. See Details.
 #'
 #' @param cloudFolderID A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 #'   If left as \code{NULL}, the function will create a cloud folder with name from last
@@ -548,8 +565,8 @@ setMethod(
         }
         gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = outputHash)))
       }
-      # conns <- list()
-      # conns[[1]] <- conn
+
+      # Check if it is in repository
       needDisconnect <- FALSE
       while (tries <= length(cacheRepos)) {
         repo <- cacheRepos[[tries]]
@@ -583,7 +600,6 @@ setMethod(
         }
         tries <- tries + 1
       }
-      # rm(conns)
 
       userTags <- c(userTags, if (!is.na(fnDetails$functionName))
         paste0("function:", fnDetails$functionName)
@@ -593,9 +609,8 @@ setMethod(
 
       # First, if this is not matched by outputHash, test that it is matched by
       #   userTags and in devMode
-      needFindByTags <- identical("devMode", useCache) &&
-        NROW(isInRepo) == 0
-      if (identical("devMode", useCache) && NROW(isInRepo) == 0) {
+      needFindByTags <- identical("devMode", useCache) && NROW(isInRepo) == 0
+      if (needFindByTags) {
         browser(expr = exists("._Cache_5"))
         # It will not have the "localTags" object because of "direct db access" added Jan 20 2020
         if (!exists("localTags", inherits = FALSE)) #
@@ -606,15 +621,27 @@ setMethod(
         needFindByTags <- devModeOut$needFindByTags
       }
 
-      if (identical("overwrite", useCache)  && NROW(isInRepo) > 0 || needFindByTags) {
-        suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE, useCloud = useCloud))
+      # Deal with overwrite, needFindByTags (which is related to "devMode")
+      isInCloud <- FALSE
+      if (useCloud && identical("overwrite", useCache)) {
+        browser(expr = exists("._Cache_16"))
+        isInCloud <- isTRUE(any(gdriveLs$name %in% basename2(CacheStoredFile(cacheRepo, outputHash))))
+      }
+
+      if (identical("overwrite", useCache)  && (NROW(isInRepo) > 0 || isInCloud) || needFindByTags) {
+        suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE,
+                                    useCloud = "force", drv = drv, conn = conn,
+                                    cloudFolderID = cloudFolderID))
         if (identical("devMode", useCache)) {
           userTagsSimple <- gsub(".*:(.*)", "\\1", userTags)
           isInRepo <- isInRepo[!isInRepo[[.cacheTableTagColName()]] %in% userTagsSimple, , drop = FALSE]
           outputHash <- outputHashNew
           message("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'")
         } else {
+          # remove entries from the 2 data.frames of isInRep & gdriveLs
           if (useDBI()) {
+            if (useCloud)
+              gdriveLs <- gdriveLs[!gdriveLs$name %in% basename2(CacheStoredFile(cacheRepo, outputHash)),]
             isInRepo <- isInRepo[isInRepo[[.cacheTableHashColName()]] != outputHash, , drop = FALSE]
           } else {
             isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
@@ -662,8 +689,9 @@ setMethod(
           if (useCloud) {
             browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
-            isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
-                                     cloudFolderID, output)
+            cu <- try(retry(quote(isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
+                                     cloudFolderID, output))))
+            .updateTagsRepo(outputHash, cacheRepo, "inCloud", "TRUE", drv = drv, conn = conn)
           }
 
           return(output)
@@ -729,8 +757,10 @@ setMethod(
       if (nrow(isInRepo) > 0) {
         # flush it if notOlderThan is violated
         if (notOlderThan >= lastEntry) {
-          suppressMessages(clearCache(userTags = isInRepo[[.cacheTableHashColName()]][lastOne], x = cacheRepo,
-                                      ask = FALSE))
+          suppressMessages(clearCache(userTags = isInRepo[[.cacheTableHashColName()]][lastOne],
+                                      x = cacheRepo,
+                                      ask = FALSE, useCloud = useCloud, drv = drv, conn = conn,
+                                      cloudFolderID = cloudFolderID))
         }
       }
 
@@ -834,6 +864,7 @@ setMethod(
                     paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
+                    paste0("inCloud:", isTRUE(useCloud)),
                     paste0(otherFns),
                     paste("preDigest", names(preDigestUnlistTrunc),
                           preDigestUnlistTrunc, sep = ":")
@@ -924,7 +955,12 @@ setMethod(
 
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
-        cloudUploadFromCache(isInCloud, outputHash, saved, cacheRepo, cloudFolderID, outputToSave, rasters)
+        browser(expr = exists("._Cache_15"))
+        cufc <- try(cloudUploadFromCache(isInCloud, outputHash, saved, cacheRepo, cloudFolderID,
+                             outputToSave, rasters))
+        if (is(cufc, "try-error"))
+          .updateTagsRepo(outputHash, cacheRepo, "inCloud", "FALSE", drv = drv, conn = conn)
+
       }
 
       verboseDF2(verbose, fnDetails$functionName, startSaveTime)

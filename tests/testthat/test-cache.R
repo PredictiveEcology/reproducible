@@ -793,7 +793,7 @@ test_that("test cache-helpers", {
   expect_true(identical(normalizePath(filename(b), winslash = "/", mustWork = FALSE),
                         normalizePath(file.path(dirname(filename(r1)),
                                                 nextNumericName(basename(filename(r1)))),
-                                                winslash = "/", mustWork = FALSE)))
+                                      winslash = "/", mustWork = FALSE)))
 
   r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))

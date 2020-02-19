@@ -166,17 +166,7 @@ the object will be identical each time; this may be useful in operational code.}
 
 \item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
 
-\item{useCloud}{Logical. If \code{TRUE}, then this Cache call will download
-(if local copy doesn't exist,
-but cloud copy does exist), upload (local copy does or doesn't exist and
-cloud copy doesn't exist), or
-will not download nor upload if object exists in both. If \code{TRUE} will be at
-least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
-cloud folder gets large. If a user wishes to keep "high-level" control, set this to
-\code{getOption("reproducible.useCloud", FALSE)} or
-\code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
-be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
-this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})}
+\item{useCloud}{Logical. See Details.}
 
 \item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 If left as \code{NULL}, the function will create a cloud folder with name from last
@@ -356,6 +346,35 @@ This should be used with caution as it is still experimental. Currently, if
 \code{userTags} are not unique to a single entry in the cacheRepo, it will
 default to the behaviour of \code{useCache = TRUE} with a message. This means
 that \code{"devMode"} is most useful if used from the start of a project.
+}
+
+\section{\code{useCloud}}{
+
+This is a way to store all or some of the local Cache in the cloud.
+Currently, the only cloud option is Google Drive, via \code{googledrive}
+package. For this to work, the user must be or be able to be authenticated
+with \code{googledrive::drive_auth()}. The principle behind this
+\code{useCloud} is that it will be a full or partial mirror of a local Cache.
+It is not intended to be used independently from a local Cache. To share
+objects that are in the Cloud with another person, it requires 2 steps. 1)
+share the \code{cloudFolderID$id}, which can be retrieved by
+\code{getOption("reproducible.cloudFolderID")$id} after at least one Cache
+call has been made. 2) The other user must then set their
+\code{cacheFolderID} in a \code{Cache(..., reproducible.cloudFolderID = "the
+ID here")} call or set their option manually
+\code{options("reproducible.cloudFolderID" = "the ID here)}.
+
+If \code{TRUE}, then this Cache call will download
+  (if local copy doesn't exist, but cloud copy does exist), upload
+  (local copy does or doesn't exist and
+  cloud copy doesn't exist), or
+  will not download nor upload if object exists in both. If \code{TRUE} will be at
+  least 1 second slower than setting this to \code{FALSE}, and likely even slower as the
+  cloud folder gets large. If a user wishes to keep "high-level" control, set this to
+  \code{getOption("reproducible.useCloud", FALSE)} or
+  \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
+  be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
+  this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
 }
 
 \section{\code{sideEffect}}{

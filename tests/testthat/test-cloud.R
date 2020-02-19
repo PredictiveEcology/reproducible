@@ -215,7 +215,6 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
                             opts = list("reproducible.ask" = FALSE))
 
     opts <- options("reproducible.cachePath" = tmpdir)
-    drive_auth("predictiveecology@gmail.com")
     on.exit({
       testOnExit(testInitOut)
       try(retry(quote(drive_rm(newDir))), silent = TRUE)
@@ -236,3 +235,126 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
   }
 })
 
+test_that("Cache(useCloud=TRUE, ...) with useCache = 'overwrite'", {
+  skip_if_no_token()
+  if (interactive()) {
+    rm(list = ls(all.names = TRUE)[startsWith(ls(all.names = TRUE), "._")])
+    testInitOut <- testInit(c("googledrive"), # tmpFileExt = c(".tif", ".grd"),
+                            opts = list("reproducible.ask" = FALSE))
+
+    opts <- options("reproducible.cachePath" = tmpdir)
+    on.exit({
+      try(retry(quote(drive_rm(cloudFolderFromCacheRepo(tmpCache)))), silent = TRUE)
+      testOnExit(testInitOut)
+      options(opts)
+    }, add = TRUE)
+    clearCache(x = tmpCache)
+    clearCache(x = tmpdir)
+
+    mess2 <- capture_messages({
+      a1 <- Cache(rnorm, 1, cloudFolderID = NULL, cacheRepo = tmpCache, useCloud = TRUE,
+                  omitArgs = "n")
+    })
+    mess3 <- capture_messages({
+      a2 <- Cache(rnorm, 2, cloudFolderID = NULL, cacheRepo = tmpCache, useCloud = TRUE,
+                  omitArgs = "n", useCache = "overwrite")
+    })
+    expect_true(sum(grepl("Overwriting", mess3)) == 1)
+    expect_true(sum(grepl("Uploading new cached", mess3)) == 1)
+    expect_true(sum(grepl("Uploading new cached", mess2)) == 1)
+    expect_true(identical(CacheDigest(list(rnorm))$outputHash,
+                          gsub("cacheId:", "", attr(a2, "tags"))))
+    expect_true(length(a2) == 2)
+    ## Remove local copy -- should NOT get cloud version that is still there
+    clearCache(x = tmpCache)
+    # ._clearCache_3 <<- ._clearCache_1 <<- ._Cache_16 <<- 1
+    mess3 <- capture_messages({
+      a2 <- Cache(rnorm, 2, cloudFolderID = NULL, cacheRepo = tmpCache, useCloud = TRUE,
+                  omitArgs = "n", useCache = "overwrite")
+    })
+    expect_true(sum(grepl("Overwriting", mess3)) == 1)
+    expect_true(sum(grepl("Uploading new cached", mess3)) == 1)
+
+    # Now try with a true overwrite ... results in a different object
+    clearCache(x = tmpCache)
+    mess3 <- capture_messages({
+      a2 <- Cache(rnorm, 3, cloudFolderID = NULL, cacheRepo = tmpCache, useCloud = TRUE,
+                  omitArgs = "n", useCache = "overwrite")
+    })
+    expect_true(sum(grepl("Overwriting", mess3)) == 1)
+    expect_true(sum(grepl("Uploading new cached", mess3)) == 1)
+    expect_true(length(a2) == 3)
+
+    # Now remove local and should retrieve from cloud with length 3
+    clearCache(x = tmpCache)
+    mess3 <- capture_messages({
+      a2 <- Cache(rnorm, 3, cloudFolderID = NULL, cacheRepo = tmpCache, useCloud = TRUE,
+                  omitArgs = "n")
+    })
+    expect_false(sum(grepl("Overwriting", mess3)) == 1)
+    expect_false(sum(grepl("Uploading new cached", mess3)) == 1)
+    expect_true(sum(grepl("Downloading cloud", mess3)) == 1)
+    expect_true(length(a2) == 3)
+
+
+    # replace with a different object, same CacheDigest, using "overwrite"
+    mess4 <- capture_messages({
+      a3 <- Cache(rnorm, 6, cloudFolderID = NULL, cacheRepo = tmpCache, useCloud = TRUE,
+                  omitArgs = "n", useCache = "overwrite")
+    })
+    expect_true(sum(grepl("Overwriting", mess4)) == 1)
+    expect_true(sum(grepl("Uploading new cached", mess4)) == 1)
+    expect_true(length(a3) == 6)
+    expect_true(NROW(driveLs(cloudFolderID = cloudFolderFromCacheRepo(tmpCache),
+                             pattern = "*")) == 1) # still only one object
+
+    # ._Cache_15 <<- 1
+    mess5 <- capture_messages({
+      a5 <- Cache(rnorm, 1, cloudFolderID = NULL, cacheRepo = tmpCache)
+    })
+
+    mess6 <- capture_messages({
+      a6 <- Cache(rnorm, 1, cloudFolderID = NULL, cacheRepo = tmpCache, useCloud = TRUE)
+    })
+
+    expect_true(length(a6) == 1)
+    expect_true(length(a5) == 1)
+    expect_true(isFALSE(attr(a6, ".Cache")$newCache))
+    expect_true(sum(grepl("Uploading", mess6)) == 1)
+
+  }
+
+})
+
+test_that("Cache(useCloud=TRUE, ...) more", {
+  skip_if_no_token()
+  if (interactive()) {
+    rm(list = ls(all.names = TRUE)[startsWith(ls(all.names = TRUE), "._")])
+    testInitOut <- testInit(c("googledrive"), # tmpFileExt = c(".tif", ".grd"),
+                            opts = list("reproducible.ask" = FALSE))
+    on.exit({
+      try(retry(quote(drive_rm(cloudFolderID))), silent = TRUE)
+      testOnExit(testInitOut)
+      options(opts)
+    }, add = TRUE)
+    mess1 <- capture_messages({
+      a1 <- Cache(rnorm, 10, useCloud = TRUE, cloudFolderID = NULL)
+    })
+    cloudFolderID <- getOption("reproducible.cloudFolderID")
+    # remove local -- then pass cloudFolderID as a character string
+    clearCache(tmpCache)
+    mess6 <- capture_messages({
+      a1 <- Cache(rnorm, 10, useCloud = TRUE, cloudFolderID = cloudFolderID$id)
+    })
+    drive_share(cloudFolderID, type = "anyone")
+    drive_deauth()
+    drive_auth()
+    clearCache(tmpCache)
+    mess7 <- capture_messages({
+      a2 <- Cache(rnorm, 10, useCloud = TRUE, cloudFolderID = cloudFolderID$id)
+    })
+    expect_true(length(a2) == 10)
+    expect_true(sum(grepl("Downloading cloud", mess7)) == 1)
+  }
+
+})

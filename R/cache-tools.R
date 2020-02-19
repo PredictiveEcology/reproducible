@@ -117,7 +117,7 @@ setMethod(
     # Check if no args -- faster to delete all then make new empty repo for large repos
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
-    if (useCloud || !clearWholeCache) {
+    if (isTRUEorForce(useCloud) || !clearWholeCache) {
       browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
@@ -126,9 +126,18 @@ setMethod(
                      list(...))
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
-      if (useCloud && NROW(objsDT) > 0) {
+      if (isTRUE(useCloud) && NROW(objsDT) > 0 || identical(useCloud, "force")) {
         browser(expr = exists("._clearCache_3"))
-        rmFromCloudFolder(cloudFolderID, x, objsDT)
+        if (useDBI()) {
+          cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
+        } else {
+          cacheIds <- objsDT[tagKey == "cacheId", tagValue]
+        }
+        if (identical(useCloud, "force")) {
+          gdriveLs <- driveLs(cloudFolderID, pattern = userTags)
+          cacheIds <- c(cacheIds, gsub("\\..*$", "", gdriveLs$name))
+        }
+        rmFromCloudFolder(cloudFolderID, x, cacheIds)
 
       }
     }
@@ -184,7 +193,7 @@ setMethod(
                                               rastersInRepo[[.cacheTableHashColName()]] &
                                               tagKey == "object.size"]$tagValue)
         fileBackedRastersInRepo <- rastersInRepo[[.cacheTableHashColName()]][rasterObjSizes < 1e5]
-      filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
+        filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
           if (useDBI()) {
             r <- loadFromCache(x, ras)
           } else {
@@ -205,17 +214,17 @@ setMethod(
       }
 
       if (isInteractive()) {
-          class(cacheSize) <- "object_size"
-          formattedCacheSize <- format(cacheSize, "auto")
-          if (isTRUE(ask)) {
-            message("Your size of your selected objects is ", formattedCacheSize, ".\n",
-                    " Are you sure you would like to delete it all? Y or N")
-            rl <- readline()
-            if (!identical(toupper(rl), "Y")) {
-              message("Aborting clearCache")
-              return(invisible())
-            }
+        class(cacheSize) <- "object_size"
+        formattedCacheSize <- format(cacheSize, "auto")
+        if (isTRUE(ask)) {
+          message("Your size of your selected objects is ", formattedCacheSize, ".\n",
+                  " Are you sure you would like to delete it all? Y or N")
+          rl <- readline()
+          if (!identical(toupper(rl), "Y")) {
+            message("Aborting clearCache")
+            return(invisible())
           }
+        }
       }
 
       # remove file-backed files
@@ -238,7 +247,7 @@ setMethod(
     memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
-})
+  })
 
 #' @details
 #' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
@@ -762,18 +771,14 @@ useDBI <- function() {
   ud || !rn
 }
 
-rmFromCloudFolder <- function(cloudFolderID, x, objsDT) {
+rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   if (is.null(cloudFolderID)) {
 
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cacheRepo = x)
     # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
     #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
   }
-  if (useDBI()) {
-    cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
-  } else {
-    cacheIds <- objsDT[tagKey == "cacheId", tagValue]
-  }
+
   gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)
   filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
@@ -794,4 +799,9 @@ rmFromCloudFolder <- function(cloudFolderID, x, objsDT) {
     toDelete <- rbind(rasFiles, toDelete)
   }
   retry(quote(drive_rm(toDelete)))
+}
+
+
+isTRUEorForce <- function(cond) {
+  isTRUE(cond) || identical(cond, "force")
 }
