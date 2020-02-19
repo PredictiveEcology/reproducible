@@ -631,7 +631,8 @@ setMethod(
 
       if (identical("overwrite", useCache)  && (NROW(isInRepo) > 0 || isInCloud) || needFindByTags) {
         suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE,
-                                    useCloud = "force", drv = drv, conn = conn,
+                                    useCloud = ifelse(isTRUEorForce(useCloud), "force", FALSE),
+                                    drv = drv, conn = conn,
                                     cloudFolderID = cloudFolderID))
         if (identical("devMode", useCache)) {
           userTagsSimple <- gsub(".*:(.*)", "\\1", userTags)

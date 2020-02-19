@@ -415,3 +415,7 @@ fnCacheHelper <- function(a, cacheRepo2) {
 }
 
 crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+rmDotUnderline <- function(envir = .GlobalEnv)
+  rm(list = ls(all.names = TRUE, envir = envir)[startsWith(ls(all.names = TRUE, envir = envir), "._")],
+     envir = envir)

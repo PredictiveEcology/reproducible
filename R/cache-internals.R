@@ -294,7 +294,8 @@
 
   # This is protected from multiple-write to SQL collisions
   # .addTagsRepo(isInRepo, cacheRepo, lastOne, drv, conn = conn)
-  .addTagsRepo(cacheId = isInRepo$cacheId[lastOne], cachePath = cacheRepo,
+  .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
+               cachePath = cacheRepo,
                drv = drv, conn = conn)
 
   browser(expr = exists("sideE"))
