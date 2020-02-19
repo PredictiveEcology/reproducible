@@ -619,7 +619,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 143520 bytes
 #&gt; 
 #&gt; $package_dependenciesMem
-#&gt; 106816 bytes
+#&gt; 102240 bytes
 #&gt; 
 #&gt; $pickFirstVersion
 #&gt; 17000 bytes
@@ -724,7 +724,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 4856 bytes
 #&gt; 
 #&gt; $showLocalRepo3Mem
-#&gt; 105464 bytes
+#&gt; 88680 bytes
 #&gt; 
 #&gt; $tempdir2
 #&gt; 5680 bytes
@@ -794,7 +794,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 
 <span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
 <span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
-(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 648 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 11987272</div><div class='input'>                 # and imported functions
+(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 584 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 11965848</div><div class='input'>                 # and imported functions
 
 </div></pre>
   </div>
