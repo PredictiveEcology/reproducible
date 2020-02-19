@@ -266,7 +266,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
       written <- 0
       while (written >= 0) {
         saved <- suppressWarnings(try(silent = TRUE,
-                                      archivist::addTagsRepo(isInRepo[[.cacheTableHashColName()]][lastOne],
+                                      archivist::addTagsRepo(cacheId,
                                                              repoDir = cachePath,
                                                              tags = paste0("accessed:", Sys.time()))))
         written <- if (is(saved, "try-error")) {
@@ -320,7 +320,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 
 }
 .cacheNumDefaultTags <- function() {
-  if (useDBI()) 4 else 8
+  if (useDBI()) 5 else 9
 }
 
 .ignoreTagKeys <- function() {

@@ -333,6 +333,7 @@ test_that("Cache(useCloud=TRUE, ...) more", {
     testInitOut <- testInit(c("googledrive"), # tmpFileExt = c(".tif", ".grd"),
                             opts = list("reproducible.ask" = FALSE))
     on.exit({
+      try(drive_auth("predictiveecology@gmail.com"))
       try(retry(quote(drive_rm(cloudFolderID))), silent = TRUE)
       testOnExit(testInitOut)
       options(opts)

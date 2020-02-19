@@ -138,16 +138,17 @@ if (getRversion() >= "3.1.0") {
 #' This is a way to store all or some of the local Cache in the cloud.
 #' Currently, the only cloud option is Google Drive, via \code{googledrive}
 #' package. For this to work, the user must be or be able to be authenticated
-#' with \code{googledrive::drive_auth()}. The principle behind this
+#' with \code{googledrive::drive_auth}. The principle behind this
 #' \code{useCloud} is that it will be a full or partial mirror of a local Cache.
 #' It is not intended to be used independently from a local Cache. To share
 #' objects that are in the Cloud with another person, it requires 2 steps. 1)
 #' share the \code{cloudFolderID$id}, which can be retrieved by
 #' \code{getOption("reproducible.cloudFolderID")$id} after at least one Cache
 #' call has been made. 2) The other user must then set their
-#' \code{cacheFolderID} in a \code{Cache(..., reproducible.cloudFolderID = "the
-#' ID here")} call or set their option manually
-#' \code{options("reproducible.cloudFolderID" = "the ID here)}.
+#' \code{cacheFolderID} in a
+#' \code{Cache\(..., reproducible.cloudFolderID = \"the ID here\"\)} call or
+#' set their option manually
+#' \code{options\(\"reproducible.cloudFolderID\" = \"the ID here\"\)}.
 #'
 #' If \code{TRUE}, then this Cache call will download
 #'   (if local copy doesn't exist, but cloud copy does exist), upload
@@ -630,7 +631,8 @@ setMethod(
 
       if (identical("overwrite", useCache)  && (NROW(isInRepo) > 0 || isInCloud) || needFindByTags) {
         suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE,
-                                    useCloud = "force", drv = drv, conn = conn,
+                                    useCloud = ifelse(isTRUEorForce(useCloud), "force", FALSE),
+                                    drv = drv, conn = conn,
                                     cloudFolderID = cloudFolderID))
         if (identical("devMode", useCache)) {
           userTagsSimple <- gsub(".*:(.*)", "\\1", userTags)
