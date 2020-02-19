@@ -88,13 +88,13 @@
 
       
 
-      </header><script src="Intro-to-Cache_files/jquery-1.11.3/jquery.min.js"></script><script src="Intro-to-Cache_files/elevate-section-attrs-2.0/elevate-section-attrs.js"></script><div class="row">
+      </header><script src="Intro-to-Cache_files/header-attrs-2.1.1/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1>Introduction to Cache</h1>
                         <h4 class="author">Eliot J. B. McIntire</h4>
             
-            <h4 class="date">February 17 2020</h4>
+            <h4 class="date">February 18 2020</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/vignettes/Intro-to-Cache.Rmd"><code>vignettes/Intro-to-Cache.Rmd</code></a></small>
       <div class="hidden name"><code>Intro-to-Cache.Rmd</code></div>
@@ -124,7 +124,7 @@
 <span id="cb3-2"><a href="#cb3-2"></a></span>
 <span id="cb3-3"><a href="#cb3-3"></a>tmpDir &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span>(), <span class="st">"reproducible_examples"</span>, <span class="st">"Cache"</span>)</span>
 <span id="cb3-4"><a href="#cb3-4"></a><span class="kw"><a href="../reference/checkPath.html">checkPath</a></span>(tmpDir, <span class="dt">create =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
-<pre><code>## [1] "C:/Users/emcintir/AppData/Local/Temp/RtmpsTQeDE/reproducible_examples/Cache"</code></pre>
+<pre><code>## [1] "/private/var/folders/l2/hy6b0sl977bcd8695nt6j7s80000gn/T/RtmpAzMQsc/reproducible_examples/Cache"</code></pre>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>ras &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/raster/man/raster.html">raster</a></span>(<span class="kw"><a href="https://rdrr.io/pkg/raster/man/extent.html">extent</a></span>(<span class="dv">0</span>, <span class="dv">1000</span>, <span class="dv">0</span>, <span class="dv">1000</span>), <span class="dt">vals =</span> <span class="dv">1</span><span class="op">:</span><span class="fl">1e6</span>, <span class="dt">res =</span> <span class="dv">1</span>)</span>
 <span id="cb5-2"><a href="#cb5-2"></a><span class="kw"><a href="https://rdrr.io/pkg/raster/man/projection.html">crs</a></span>(ras) &lt;-<span class="st"> "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"</span></span>
 <span id="cb5-3"><a href="#cb5-3"></a></span>
@@ -132,26 +132,26 @@
 <span id="cb5-5"><a href="#cb5-5"></a><span class="co"># No Cache</span></span>
 <span id="cb5-6"><a href="#cb5-6"></a><span class="kw"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span>(map1 &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/pkg/raster/man/projectRaster.html">projectRaster</a></span>(ras, <span class="dt">crs =</span> newCRS))</span></code></pre></div>
 <pre><code>##    user  system elapsed 
-##    1.64    0.14    1.83</code></pre>
+##   2.385   0.330   3.163</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># Try with memoise for this example -- for many simple cases, memoising will not be faster</span></span>
 <span id="cb7-2"><a href="#cb7-2"></a>opts &lt;-<span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/base/options.html">options</a></span>(<span class="st">"reproducible.useMemoise"</span> =<span class="st"> </span><span class="ot">TRUE</span>)</span>
 <span id="cb7-3"><a href="#cb7-3"></a><span class="co"># With Cache -- a little slower the first time because saving to disk</span></span>
 <span id="cb7-4"><a href="#cb7-4"></a><span class="kw"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span>(map1 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cache.html">Cache</a></span>(projectRaster, ras, <span class="dt">crs =</span> newCRS, <span class="dt">cacheRepo =</span> tmpDir,</span>
 <span id="cb7-5"><a href="#cb7-5"></a>                         <span class="dt">notOlderThan =</span> <span class="kw"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span>()))</span></code></pre></div>
 <pre><code>##    user  system elapsed 
-##    2.44    0.25    2.84</code></pre>
+##   3.248   0.416   4.295</code></pre>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># vastly faster the second time</span></span>
 <span id="cb9-2"><a href="#cb9-2"></a><span class="kw"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span>(map2 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cache.html">Cache</a></span>(projectRaster, ras, <span class="dt">crs =</span> newCRS, <span class="dt">cacheRepo =</span> tmpDir))</span></code></pre></div>
 <pre><code>##   ...(Object to retrieve (8e07ebc7bbe758ad.rds) is large: 6.5 Mb)</code></pre>
 <pre><code>##   loading cached result from previous projectRaster call, adding to memoised copy</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.33    0.06    0.39</code></pre>
+##   0.388   0.011   0.332</code></pre>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="co"># may be faster the third time because of memoise; but this example is too simple to show</span></span>
 <span id="cb13-2"><a href="#cb13-2"></a><span class="kw"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span>(map3 &lt;-<span class="st"> </span><span class="kw"><a href="../reference/cache.html">Cache</a></span>(projectRaster, ras, <span class="dt">crs =</span> newCRS, <span class="dt">cacheRepo =</span> tmpDir))</span></code></pre></div>
 <pre><code>##   ...(Object to retrieve (8e07ebc7bbe758ad.rds) is large: 6.5 Mb)</code></pre>
 <pre><code>##   loading memoised result from previous projectRaster call.</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.17    0.03    0.20</code></pre>
+##   0.394   0.009   0.238</code></pre>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw"><a href="https://rdrr.io/r/base/options.html">options</a></span>(opts)</span>
 <span id="cb17-2"><a href="#cb17-2"></a></span>
 <span id="cb17-3"><a href="#cb17-3"></a><span class="kw"><a href="https://rdrr.io/r/base/all.equal.html">all.equal</a></span>(map1, map2) <span class="co"># TRUE</span></span></code></pre></div>
@@ -198,93 +198,93 @@
 <pre><code>##   Total (including Rasters): 504 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 504 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 3aef38d1fc02aee5     objectName                     b 2020-02-17 15:25:59
-##  2: 3aef38d1fc02aee5       function                 runif 2020-02-17 15:25:59
-##  3: 3aef38d1fc02aee5          class               numeric 2020-02-17 15:25:59
-##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-17 15:25:59
-##  5: 3aef38d1fc02aee5       accessed   2020-02-17 15:25:59 2020-02-17 15:25:59
-##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-17 15:25:59
-##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-17 15:25:59
-##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-17 15:25:59
-##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-17 15:25:59
-## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-17 15:25:59
-## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-17 15:25:59
-## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-17 15:25:59
-## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-17 15:25:59
-## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-17 15:25:59
-## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-17 15:25:59
-## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-17 15:25:59
-## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-17 15:25:59
-## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:25:59
-## 19: 3aef38d1fc02aee5      file.size                   170 2020-02-17 15:25:59
-## 20: f7bee22047b8d0c1     objectName                     a 2020-02-17 15:25:59
-## 21: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:25:59
-## 22: f7bee22047b8d0c1          class               numeric 2020-02-17 15:25:59
-## 23: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:25:59
-## 24: f7bee22047b8d0c1       accessed   2020-02-17 15:25:59 2020-02-17 15:25:59
-## 25: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:25:59
-## 26: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:25:59
-## 27: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:25:59
-## 28: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:25:59
-## 29: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:25:59
-## 30: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:25:59
-## 31: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:25:59
-## 32: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:25:59
-## 33: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:25:59
-## 34: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:25:59
-## 35: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:25:59
-## 36: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:25:59
-## 37: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:25:59
-## 38: f7bee22047b8d0c1      file.size                   173 2020-02-17 15:25:59
+##  1: 3aef38d1fc02aee5     objectName                     b 2020-02-18 20:45:09
+##  2: 3aef38d1fc02aee5       function                 runif 2020-02-18 20:45:09
+##  3: 3aef38d1fc02aee5          class               numeric 2020-02-18 20:45:09
+##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-18 20:45:09
+##  5: 3aef38d1fc02aee5       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-18 20:45:09
+##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-18 20:45:09
+##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-18 20:45:09
+##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-18 20:45:09
+## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-18 20:45:09
+## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-18 20:45:09
+## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-18 20:45:09
+## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-18 20:45:09
+## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-18 20:45:09
+## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-18 20:45:09
+## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-18 20:45:09
+## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:09
+## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:45:09
+## 19: 3aef38d1fc02aee5      file.size                   169 2020-02-18 20:45:09
+## 20: f7bee22047b8d0c1     objectName                     a 2020-02-18 20:45:09
+## 21: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:09
+## 22: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:09
+## 23: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:09
+## 24: f7bee22047b8d0c1       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+## 25: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:09
+## 26: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:09
+## 27: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:09
+## 28: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:09
+## 29: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:09
+## 30: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:09
+## 31: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:09
+## 32: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:09
+## 33: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:09
+## 34: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:09
+## 35: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:09
+## 36: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:09
+## 37: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:09
+## 38: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:09
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 <div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="kw"><a href="../reference/viewCache.html">showCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"^a$"</span>)) <span class="co"># regular expression ... "a" exactly</span></span></code></pre></div>
 <pre><code>## Cache size:</code></pre>
 <pre><code>##   Total (including Rasters): 252 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 252 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: f7bee22047b8d0c1     objectName                     a 2020-02-17 15:25:59
-##  2: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:25:59
-##  3: f7bee22047b8d0c1          class               numeric 2020-02-17 15:25:59
-##  4: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:25:59
-##  5: f7bee22047b8d0c1       accessed   2020-02-17 15:25:59 2020-02-17 15:25:59
-##  6: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:25:59
-##  7: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:25:59
-##  8: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:25:59
-##  9: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:25:59
-## 10: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:25:59
-## 11: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:25:59
-## 12: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:25:59
-## 13: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:25:59
-## 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:25:59
-## 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:25:59
-## 16: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:25:59
-## 17: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:25:59
-## 18: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:25:59
-## 19: f7bee22047b8d0c1      file.size                   173 2020-02-17 15:25:59</code></pre>
+##  1: f7bee22047b8d0c1     objectName                     a 2020-02-18 20:45:09
+##  2: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:09
+##  3: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:09
+##  4: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:09
+##  5: f7bee22047b8d0c1       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+##  6: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:09
+##  7: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:09
+##  8: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:09
+##  9: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:09
+## 10: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:09
+## 11: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:09
+## 12: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:09
+## 13: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:09
+## 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:09
+## 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:09
+## 16: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:09
+## 17: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:09
+## 18: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:09
+## 19: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:09</code></pre>
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1"></a><span class="kw"><a href="../reference/viewCache.html">showCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"runif"</span>)) <span class="co"># show only cached objects made during runif call</span></span></code></pre></div>
 <pre><code>## Cache size:</code></pre>
 <pre><code>##   Total (including Rasters): 252 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 252 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 3aef38d1fc02aee5     objectName                     b 2020-02-17 15:25:59
-##  2: 3aef38d1fc02aee5       function                 runif 2020-02-17 15:25:59
-##  3: 3aef38d1fc02aee5          class               numeric 2020-02-17 15:25:59
-##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-17 15:25:59
-##  5: 3aef38d1fc02aee5       accessed   2020-02-17 15:25:59 2020-02-17 15:25:59
-##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-17 15:25:59
-##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-17 15:25:59
-##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-17 15:25:59
-##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-17 15:25:59
-## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-17 15:25:59
-## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-17 15:25:59
-## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-17 15:25:59
-## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-17 15:25:59
-## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-17 15:25:59
-## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-17 15:25:59
-## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-17 15:25:59
-## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-17 15:25:59
-## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:25:59
-## 19: 3aef38d1fc02aee5      file.size                   170 2020-02-17 15:25:59</code></pre>
+##  1: 3aef38d1fc02aee5     objectName                     b 2020-02-18 20:45:09
+##  2: 3aef38d1fc02aee5       function                 runif 2020-02-18 20:45:09
+##  3: 3aef38d1fc02aee5          class               numeric 2020-02-18 20:45:09
+##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-18 20:45:09
+##  5: 3aef38d1fc02aee5       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-18 20:45:09
+##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-18 20:45:09
+##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-18 20:45:09
+##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-18 20:45:09
+## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-18 20:45:09
+## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-18 20:45:09
+## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-18 20:45:09
+## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-18 20:45:09
+## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-18 20:45:09
+## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-18 20:45:09
+## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-18 20:45:09
+## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:09
+## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:45:09
+## 19: 3aef38d1fc02aee5      file.size                   169 2020-02-18 20:45:09</code></pre>
 <div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"runif"</span>), <span class="dt">ask =</span> <span class="ot">FALSE</span>) <span class="co"># remove only cached objects made during runif call</span></span></code></pre></div>
 <pre><code>## Cache size:</code></pre>
 <pre><code>##   Total (including Rasters): 252 bytes</code></pre>
@@ -294,67 +294,67 @@
 <pre><code>##   Total (including Rasters): 804 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 804 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: f11fb1a2880f8060       function                 rnorm 2020-02-17 15:25:58
-##  2: f11fb1a2880f8060          class               numeric 2020-02-17 15:25:58
-##  3: f11fb1a2880f8060    object.size                  1104 2020-02-17 15:25:58
-##  4: f11fb1a2880f8060       accessed   2020-02-17 15:25:58 2020-02-17 15:25:58
-##  5: f11fb1a2880f8060 otherFunctions               saveRDS 2020-02-17 15:25:58
-##  6: f11fb1a2880f8060 otherFunctions               do.call 2020-02-17 15:25:58
-##  7: f11fb1a2880f8060 otherFunctions          process_file 2020-02-17 15:25:58
-##  8: f11fb1a2880f8060 otherFunctions         process_group 2020-02-17 15:25:58
-##  9: f11fb1a2880f8060 otherFunctions   process_group.block 2020-02-17 15:25:58
-## 10: f11fb1a2880f8060 otherFunctions            call_block 2020-02-17 15:25:58
-## 11: f11fb1a2880f8060 otherFunctions            block_exec 2020-02-17 15:25:58
-## 12: f11fb1a2880f8060 otherFunctions                in_dir 2020-02-17 15:25:58
-## 13: f11fb1a2880f8060 otherFunctions             timing_fn 2020-02-17 15:25:58
-## 14: f11fb1a2880f8060 otherFunctions                handle 2020-02-17 15:25:58
-## 15: f11fb1a2880f8060 otherFunctions           withVisible 2020-02-17 15:25:58
-## 16: f11fb1a2880f8060      preDigest    n:c5775c3b366fb719 2020-02-17 15:25:58
-## 17: f11fb1a2880f8060      preDigest mean:15620f138033a66c 2020-02-17 15:25:58
-## 18: f11fb1a2880f8060      preDigest .FUN:4f604aa46882b368 2020-02-17 15:25:58
-## 19: f11fb1a2880f8060      file.size                   225 2020-02-17 15:25:58
-## 20: f11fb1a2880f8060       accessed   2020-02-17 15:25:58 2020-02-17 15:25:58
-## 21: f11fb1a2880f8060       accessed   2020-02-17 15:25:58 2020-02-17 15:25:58
-## 22: f11fb1a2880f8060       accessed   2020-02-17 15:25:58 2020-02-17 15:25:58
-## 23: c16f0e2c57596069       function 'rnorm' pipe sequence 2020-02-17 15:25:58
-## 24: c16f0e2c57596069          class               numeric 2020-02-17 15:25:58
-## 25: c16f0e2c57596069    object.size                  1104 2020-02-17 15:25:58
-## 26: c16f0e2c57596069       accessed   2020-02-17 15:25:58 2020-02-17 15:25:58
-## 27: c16f0e2c57596069 otherFunctions               saveRDS 2020-02-17 15:25:58
-## 28: c16f0e2c57596069 otherFunctions               do.call 2020-02-17 15:25:58
-## 29: c16f0e2c57596069 otherFunctions          process_file 2020-02-17 15:25:58
-## 30: c16f0e2c57596069 otherFunctions         process_group 2020-02-17 15:25:58
-## 31: c16f0e2c57596069 otherFunctions   process_group.block 2020-02-17 15:25:58
-## 32: c16f0e2c57596069 otherFunctions            call_block 2020-02-17 15:25:58
-## 33: c16f0e2c57596069 otherFunctions            block_exec 2020-02-17 15:25:58
-## 34: c16f0e2c57596069 otherFunctions                in_dir 2020-02-17 15:25:58
-## 35: c16f0e2c57596069 otherFunctions             timing_fn 2020-02-17 15:25:58
-## 36: c16f0e2c57596069 otherFunctions                handle 2020-02-17 15:25:58
-## 37: c16f0e2c57596069 otherFunctions           withVisible 2020-02-17 15:25:58
-## 38: c16f0e2c57596069 otherFunctions                   %C% 2020-02-17 15:25:58
-## 39: c16f0e2c57596069      preDigest    n:c5775c3b366fb719 2020-02-17 15:25:58
-## 40: c16f0e2c57596069      preDigest mean:152602b8ff81e5bb 2020-02-17 15:25:58
-## 41: c16f0e2c57596069      preDigest .FUN:4f604aa46882b368 2020-02-17 15:25:58
-## 42: c16f0e2c57596069      file.size                   224 2020-02-17 15:25:58
-## 43: f7bee22047b8d0c1     objectName                     a 2020-02-17 15:25:59
-## 44: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:25:59
-## 45: f7bee22047b8d0c1          class               numeric 2020-02-17 15:25:59
-## 46: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:25:59
-## 47: f7bee22047b8d0c1       accessed   2020-02-17 15:25:59 2020-02-17 15:25:59
-## 48: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:25:59
-## 49: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:25:59
-## 50: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:25:59
-## 51: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:25:59
-## 52: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:25:59
-## 53: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:25:59
-## 54: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:25:59
-## 55: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:25:59
-## 56: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:25:59
-## 57: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:25:59
-## 58: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:25:59
-## 59: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:25:59
-## 60: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:25:59
-## 61: f7bee22047b8d0c1      file.size                   173 2020-02-17 15:25:59
+##  1: f11fb1a2880f8060       function                 rnorm 2020-02-18 20:45:09
+##  2: f11fb1a2880f8060          class               numeric 2020-02-18 20:45:09
+##  3: f11fb1a2880f8060    object.size                  1104 2020-02-18 20:45:09
+##  4: f11fb1a2880f8060       accessed   2020-02-18 20:45:08 2020-02-18 20:45:09
+##  5: f11fb1a2880f8060 otherFunctions               saveRDS 2020-02-18 20:45:09
+##  6: f11fb1a2880f8060 otherFunctions               do.call 2020-02-18 20:45:09
+##  7: f11fb1a2880f8060 otherFunctions          process_file 2020-02-18 20:45:09
+##  8: f11fb1a2880f8060 otherFunctions         process_group 2020-02-18 20:45:09
+##  9: f11fb1a2880f8060 otherFunctions   process_group.block 2020-02-18 20:45:09
+## 10: f11fb1a2880f8060 otherFunctions            call_block 2020-02-18 20:45:09
+## 11: f11fb1a2880f8060 otherFunctions            block_exec 2020-02-18 20:45:09
+## 12: f11fb1a2880f8060 otherFunctions                in_dir 2020-02-18 20:45:09
+## 13: f11fb1a2880f8060 otherFunctions             timing_fn 2020-02-18 20:45:09
+## 14: f11fb1a2880f8060 otherFunctions                handle 2020-02-18 20:45:09
+## 15: f11fb1a2880f8060 otherFunctions           withVisible 2020-02-18 20:45:09
+## 16: f11fb1a2880f8060      preDigest    n:c5775c3b366fb719 2020-02-18 20:45:09
+## 17: f11fb1a2880f8060      preDigest mean:15620f138033a66c 2020-02-18 20:45:09
+## 18: f11fb1a2880f8060      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:09
+## 19: f11fb1a2880f8060      file.size                   224 2020-02-18 20:45:09
+## 20: f11fb1a2880f8060       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+## 21: f11fb1a2880f8060       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+## 22: f11fb1a2880f8060       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+## 23: c16f0e2c57596069       function 'rnorm' pipe sequence 2020-02-18 20:45:09
+## 24: c16f0e2c57596069          class               numeric 2020-02-18 20:45:09
+## 25: c16f0e2c57596069    object.size                  1104 2020-02-18 20:45:09
+## 26: c16f0e2c57596069       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+## 27: c16f0e2c57596069 otherFunctions               saveRDS 2020-02-18 20:45:09
+## 28: c16f0e2c57596069 otherFunctions               do.call 2020-02-18 20:45:09
+## 29: c16f0e2c57596069 otherFunctions          process_file 2020-02-18 20:45:09
+## 30: c16f0e2c57596069 otherFunctions         process_group 2020-02-18 20:45:09
+## 31: c16f0e2c57596069 otherFunctions   process_group.block 2020-02-18 20:45:09
+## 32: c16f0e2c57596069 otherFunctions            call_block 2020-02-18 20:45:09
+## 33: c16f0e2c57596069 otherFunctions            block_exec 2020-02-18 20:45:09
+## 34: c16f0e2c57596069 otherFunctions                in_dir 2020-02-18 20:45:09
+## 35: c16f0e2c57596069 otherFunctions             timing_fn 2020-02-18 20:45:09
+## 36: c16f0e2c57596069 otherFunctions                handle 2020-02-18 20:45:09
+## 37: c16f0e2c57596069 otherFunctions           withVisible 2020-02-18 20:45:09
+## 38: c16f0e2c57596069 otherFunctions                   %C% 2020-02-18 20:45:09
+## 39: c16f0e2c57596069      preDigest    n:c5775c3b366fb719 2020-02-18 20:45:09
+## 40: c16f0e2c57596069      preDigest mean:152602b8ff81e5bb 2020-02-18 20:45:09
+## 41: c16f0e2c57596069      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:09
+## 42: c16f0e2c57596069      file.size                   224 2020-02-18 20:45:09
+## 43: f7bee22047b8d0c1     objectName                     a 2020-02-18 20:45:09
+## 44: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:09
+## 45: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:09
+## 46: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:09
+## 47: f7bee22047b8d0c1       accessed   2020-02-18 20:45:09 2020-02-18 20:45:09
+## 48: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:09
+## 49: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:09
+## 50: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:09
+## 51: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:09
+## 52: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:09
+## 53: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:09
+## 54: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:09
+## 55: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:09
+## 56: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:09
+## 57: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:09
+## 58: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:09
+## 59: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:09
+## 60: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:09
+## 61: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:09
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 <div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1"></a><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir, <span class="dt">ask =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
 </div>
@@ -390,26 +390,26 @@
 <pre><code>##   Total (including Rasters): 252 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 252 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: f7bee22047b8d0c1     objectName                     a 2020-02-17 15:26:00
-##  2: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:26:00
-##  3: f7bee22047b8d0c1          class               numeric 2020-02-17 15:26:00
-##  4: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:26:00
-##  5: f7bee22047b8d0c1       accessed   2020-02-17 15:26:00 2020-02-17 15:26:00
-##  6: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:26:00
-##  7: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:26:00
-##  8: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:26:00
-##  9: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:26:00
-## 10: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:26:00
-## 11: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:26:00
-## 12: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:26:00
-## 13: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:26:00
-## 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:26:00
-## 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:26:00
-## 16: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:26:00
-## 17: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:00
-## 18: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:00
-## 19: f7bee22047b8d0c1      file.size                   175 2020-02-17 15:26:00
-## 20: f7bee22047b8d0c1       accessed   2020-02-17 15:26:01 2020-02-17 15:26:01</code></pre>
+##  1: f7bee22047b8d0c1     objectName                     a 2020-02-18 20:45:10
+##  2: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:10
+##  3: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:10
+##  4: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:10
+##  5: f7bee22047b8d0c1       accessed   2020-02-18 20:45:10 2020-02-18 20:45:10
+##  6: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:10
+##  7: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:10
+##  8: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:10
+##  9: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:10
+## 10: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:10
+## 11: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:10
+## 12: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:10
+## 13: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:10
+## 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:10
+## 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:10
+## 16: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:10
+## 17: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:10
+## 18: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:10
+## 19: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:10
+## 20: f7bee22047b8d0c1       accessed   2020-02-18 20:45:11 2020-02-18 20:45:11</code></pre>
 </div>
 <div id="example-3-using-keepcache" class="section level2">
 <h2 class="hasAnchor">
@@ -425,46 +425,46 @@
 <pre><code>##   Total (including Rasters): 504 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 504 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: f7bee22047b8d0c1     objectName                     a 2020-02-17 15:26:00
-##  2: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:26:00
-##  3: f7bee22047b8d0c1          class               numeric 2020-02-17 15:26:00
-##  4: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:26:00
-##  5: f7bee22047b8d0c1       accessed   2020-02-17 15:26:00 2020-02-17 15:26:00
-##  6: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:26:00
-##  7: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:26:00
-##  8: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:26:00
-##  9: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:26:00
-## 10: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:26:00
-## 11: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:26:00
-## 12: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:26:00
-## 13: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:26:00
-## 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:26:00
-## 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:26:00
-## 16: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:26:00
-## 17: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:00
-## 18: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:00
-## 19: f7bee22047b8d0c1      file.size                   175 2020-02-17 15:26:00
-## 20: f7bee22047b8d0c1       accessed   2020-02-17 15:26:01 2020-02-17 15:26:01
-## 21: f7bee22047b8d0c1       accessed   2020-02-17 15:26:01 2020-02-17 15:26:01
-## 22: 3aef38d1fc02aee5     objectName                     b 2020-02-17 15:26:01
-## 23: 3aef38d1fc02aee5       function                 runif 2020-02-17 15:26:01
-## 24: 3aef38d1fc02aee5          class               numeric 2020-02-17 15:26:01
-## 25: 3aef38d1fc02aee5    object.size                  1008 2020-02-17 15:26:01
-## 26: 3aef38d1fc02aee5       accessed   2020-02-17 15:26:01 2020-02-17 15:26:01
-## 27: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-17 15:26:01
-## 28: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-17 15:26:01
-## 29: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-17 15:26:01
-## 30: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-17 15:26:01
-## 31: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-17 15:26:01
-## 32: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-17 15:26:01
-## 33: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-17 15:26:01
-## 34: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-17 15:26:01
-## 35: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-17 15:26:01
-## 36: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-17 15:26:01
-## 37: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-17 15:26:01
-## 38: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:01
-## 39: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:26:01
-## 40: 3aef38d1fc02aee5      file.size                   169 2020-02-17 15:26:01
+##  1: f7bee22047b8d0c1     objectName                     a 2020-02-18 20:45:10
+##  2: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:10
+##  3: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:10
+##  4: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:10
+##  5: f7bee22047b8d0c1       accessed   2020-02-18 20:45:10 2020-02-18 20:45:10
+##  6: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:10
+##  7: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:10
+##  8: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:10
+##  9: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:10
+## 10: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:10
+## 11: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:10
+## 12: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:10
+## 13: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:10
+## 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:10
+## 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:10
+## 16: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:10
+## 17: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:10
+## 18: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:10
+## 19: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:10
+## 20: f7bee22047b8d0c1       accessed   2020-02-18 20:45:11 2020-02-18 20:45:11
+## 21: f7bee22047b8d0c1       accessed   2020-02-18 20:45:11 2020-02-18 20:45:11
+## 22: 3aef38d1fc02aee5     objectName                     b 2020-02-18 20:45:11
+## 23: 3aef38d1fc02aee5       function                 runif 2020-02-18 20:45:11
+## 24: 3aef38d1fc02aee5          class               numeric 2020-02-18 20:45:11
+## 25: 3aef38d1fc02aee5    object.size                  1008 2020-02-18 20:45:11
+## 26: 3aef38d1fc02aee5       accessed   2020-02-18 20:45:11 2020-02-18 20:45:11
+## 27: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-18 20:45:11
+## 28: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-18 20:45:11
+## 29: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-18 20:45:11
+## 30: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-18 20:45:11
+## 31: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-18 20:45:11
+## 32: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-18 20:45:11
+## 33: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-18 20:45:11
+## 34: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-18 20:45:11
+## 35: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-18 20:45:11
+## 36: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-18 20:45:11
+## 37: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-18 20:45:11
+## 38: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:11
+## 39: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:45:11
+## 40: 3aef38d1fc02aee5      file.size                   169 2020-02-18 20:45:11
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 <div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1"></a><span class="co"># Keep all Cache items created with an rnorm() call</span></span>
 <span id="cb82-2"><a href="#cb82-2"></a><span class="kw"><a href="../reference/viewCache.html">keepCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="st">"rnorm"</span>, <span class="dt">ask =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
@@ -472,27 +472,27 @@
 <pre><code>##   Total (including Rasters): 252 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 252 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: f7bee22047b8d0c1     objectName                     a 2020-02-17 15:26:00
-##  2: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:26:00
-##  3: f7bee22047b8d0c1          class               numeric 2020-02-17 15:26:00
-##  4: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:26:00
-##  5: f7bee22047b8d0c1       accessed   2020-02-17 15:26:00 2020-02-17 15:26:00
-##  6: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:26:00
-##  7: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:26:00
-##  8: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:26:00
-##  9: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:26:00
-## 10: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:26:00
-## 11: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:26:00
-## 12: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:26:00
-## 13: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:26:00
-## 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:26:00
-## 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:26:00
-## 16: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:26:00
-## 17: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:00
-## 18: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:00
-## 19: f7bee22047b8d0c1      file.size                   175 2020-02-17 15:26:00
-## 20: f7bee22047b8d0c1       accessed   2020-02-17 15:26:01 2020-02-17 15:26:01
-## 21: f7bee22047b8d0c1       accessed   2020-02-17 15:26:01 2020-02-17 15:26:01
+##  1: f7bee22047b8d0c1     objectName                     a 2020-02-18 20:45:10
+##  2: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:10
+##  3: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:10
+##  4: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:10
+##  5: f7bee22047b8d0c1       accessed   2020-02-18 20:45:10 2020-02-18 20:45:10
+##  6: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:10
+##  7: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:10
+##  8: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:10
+##  9: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:10
+## 10: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:10
+## 11: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:10
+## 12: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:10
+## 13: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:10
+## 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:10
+## 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:10
+## 16: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:10
+## 17: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:10
+## 18: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:10
+## 19: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:10
+## 20: f7bee22047b8d0c1       accessed   2020-02-18 20:45:11 2020-02-18 20:45:11
+## 21: f7bee22047b8d0c1       accessed   2020-02-18 20:45:11 2020-02-18 20:45:11
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 <div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1"></a><span class="co"># Remove all Cache items that happened within a rnorm() call</span></span>
 <span id="cb87-2"><a href="#cb87-2"></a><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="st">"rnorm"</span>, <span class="dt">ask =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
@@ -515,25 +515,25 @@
 <pre><code>##   Total (including Rasters): 256 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 256 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 142b4176fe87d51d     objectName                     b 2020-02-17 15:26:02
-##  2: 142b4176fe87d51d       function                 rnorm 2020-02-17 15:26:02
-##  3: 142b4176fe87d51d          class               numeric 2020-02-17 15:26:02
-##  4: 142b4176fe87d51d    object.size                  1024 2020-02-17 15:26:02
-##  5: 142b4176fe87d51d       accessed   2020-02-17 15:26:02 2020-02-17 15:26:02
-##  6: 142b4176fe87d51d otherFunctions               saveRDS 2020-02-17 15:26:02
-##  7: 142b4176fe87d51d otherFunctions               do.call 2020-02-17 15:26:02
-##  8: 142b4176fe87d51d otherFunctions          process_file 2020-02-17 15:26:02
-##  9: 142b4176fe87d51d otherFunctions         process_group 2020-02-17 15:26:02
-## 10: 142b4176fe87d51d otherFunctions   process_group.block 2020-02-17 15:26:02
-## 11: 142b4176fe87d51d otherFunctions            call_block 2020-02-17 15:26:02
-## 12: 142b4176fe87d51d otherFunctions            block_exec 2020-02-17 15:26:02
-## 13: 142b4176fe87d51d otherFunctions                in_dir 2020-02-17 15:26:02
-## 14: 142b4176fe87d51d otherFunctions             timing_fn 2020-02-17 15:26:02
-## 15: 142b4176fe87d51d otherFunctions                handle 2020-02-17 15:26:02
-## 16: 142b4176fe87d51d otherFunctions           withVisible 2020-02-17 15:26:02
-## 17: 142b4176fe87d51d      preDigest    n:a4f076b3db622faf 2020-02-17 15:26:02
-## 18: 142b4176fe87d51d      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:02
-## 19: 142b4176fe87d51d      file.size                   185 2020-02-17 15:26:02</code></pre>
+##  1: 142b4176fe87d51d     objectName                     b 2020-02-18 20:45:13
+##  2: 142b4176fe87d51d       function                 rnorm 2020-02-18 20:45:13
+##  3: 142b4176fe87d51d          class               numeric 2020-02-18 20:45:13
+##  4: 142b4176fe87d51d    object.size                  1024 2020-02-18 20:45:13
+##  5: 142b4176fe87d51d       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+##  6: 142b4176fe87d51d otherFunctions               saveRDS 2020-02-18 20:45:13
+##  7: 142b4176fe87d51d otherFunctions               do.call 2020-02-18 20:45:13
+##  8: 142b4176fe87d51d otherFunctions          process_file 2020-02-18 20:45:13
+##  9: 142b4176fe87d51d otherFunctions         process_group 2020-02-18 20:45:13
+## 10: 142b4176fe87d51d otherFunctions   process_group.block 2020-02-18 20:45:13
+## 11: 142b4176fe87d51d otherFunctions            call_block 2020-02-18 20:45:13
+## 12: 142b4176fe87d51d otherFunctions            block_exec 2020-02-18 20:45:13
+## 13: 142b4176fe87d51d otherFunctions                in_dir 2020-02-18 20:45:13
+## 14: 142b4176fe87d51d otherFunctions             timing_fn 2020-02-18 20:45:13
+## 15: 142b4176fe87d51d otherFunctions                handle 2020-02-18 20:45:13
+## 16: 142b4176fe87d51d otherFunctions           withVisible 2020-02-18 20:45:13
+## 17: 142b4176fe87d51d      preDigest    n:a4f076b3db622faf 2020-02-18 20:45:13
+## 18: 142b4176fe87d51d      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:13
+## 19: 142b4176fe87d51d      file.size                   183 2020-02-18 20:45:13</code></pre>
 <div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1"></a><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir, <span class="dt">ask =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
 </div>
 <div id="example-4-searching-for-multiple-objects-in-the-cache" class="section level2">
@@ -549,44 +549,44 @@
 <pre><code>##   Total (including Rasters): 504 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 504 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 3aef38d1fc02aee5     objectName                     a 2020-02-17 15:26:03
-##  2: 3aef38d1fc02aee5       function                 runif 2020-02-17 15:26:03
-##  3: 3aef38d1fc02aee5          class               numeric 2020-02-17 15:26:03
-##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-17 15:26:03
-##  5: 3aef38d1fc02aee5       accessed   2020-02-17 15:26:03 2020-02-17 15:26:03
-##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-17 15:26:03
-##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-17 15:26:03
-##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-17 15:26:03
-##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-17 15:26:03
-## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-17 15:26:03
-## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-17 15:26:03
-## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-17 15:26:03
-## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-17 15:26:03
-## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-17 15:26:03
-## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-17 15:26:03
-## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-17 15:26:03
-## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:03
-## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:26:03
-## 19: 3aef38d1fc02aee5      file.size                   170 2020-02-17 15:26:03
-## 20: f7bee22047b8d0c1     objectName                     b 2020-02-17 15:26:03
-## 21: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:26:03
-## 22: f7bee22047b8d0c1          class               numeric 2020-02-17 15:26:03
-## 23: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:26:03
-## 24: f7bee22047b8d0c1       accessed   2020-02-17 15:26:03 2020-02-17 15:26:03
-## 25: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:26:03
-## 26: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:26:03
-## 27: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:26:03
-## 28: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:26:03
-## 29: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:26:03
-## 30: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:26:03
-## 31: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:26:03
-## 32: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:26:03
-## 33: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:26:03
-## 34: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:26:03
-## 35: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:26:03
-## 36: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:03
-## 37: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:03
-## 38: f7bee22047b8d0c1      file.size                   176 2020-02-17 15:26:03
+##  1: 3aef38d1fc02aee5     objectName                     a 2020-02-18 20:45:13
+##  2: 3aef38d1fc02aee5       function                 runif 2020-02-18 20:45:13
+##  3: 3aef38d1fc02aee5          class               numeric 2020-02-18 20:45:13
+##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-18 20:45:13
+##  5: 3aef38d1fc02aee5       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-18 20:45:13
+##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-18 20:45:13
+##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-18 20:45:13
+##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-18 20:45:13
+## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-18 20:45:13
+## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-18 20:45:13
+## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-18 20:45:13
+## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-18 20:45:13
+## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-18 20:45:13
+## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-18 20:45:13
+## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-18 20:45:13
+## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:13
+## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:45:13
+## 19: 3aef38d1fc02aee5      file.size                   168 2020-02-18 20:45:13
+## 20: f7bee22047b8d0c1     objectName                     b 2020-02-18 20:45:13
+## 21: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:13
+## 22: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:13
+## 23: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:13
+## 24: f7bee22047b8d0c1       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+## 25: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:13
+## 26: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:13
+## 27: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:13
+## 28: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:13
+## 29: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:13
+## 30: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:13
+## 31: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:13
+## 32: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:13
+## 33: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:13
+## 34: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:13
+## 35: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:13
+## 36: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:13
+## 37: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:13
+## 38: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:13
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 <div class="sourceCode" id="cb107"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb107-1"><a href="#cb107-1"></a><span class="co"># show objects that are both runif and rnorm</span></span>
 <span id="cb107-2"><a href="#cb107-2"></a><span class="co"># (i.e., none in this case, because objecs are either or, not both)</span></span>
@@ -601,44 +601,44 @@
 <pre><code>##   Total (including Rasters): 504 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 504 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 3aef38d1fc02aee5     objectName                     a 2020-02-17 15:26:03
-##  2: 3aef38d1fc02aee5       function                 runif 2020-02-17 15:26:03
-##  3: 3aef38d1fc02aee5          class               numeric 2020-02-17 15:26:03
-##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-17 15:26:03
-##  5: 3aef38d1fc02aee5       accessed   2020-02-17 15:26:03 2020-02-17 15:26:03
-##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-17 15:26:03
-##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-17 15:26:03
-##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-17 15:26:03
-##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-17 15:26:03
-## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-17 15:26:03
-## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-17 15:26:03
-## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-17 15:26:03
-## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-17 15:26:03
-## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-17 15:26:03
-## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-17 15:26:03
-## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-17 15:26:03
-## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:03
-## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:26:03
-## 19: 3aef38d1fc02aee5      file.size                   170 2020-02-17 15:26:03
-## 20: f7bee22047b8d0c1     objectName                     b 2020-02-17 15:26:03
-## 21: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:26:03
-## 22: f7bee22047b8d0c1          class               numeric 2020-02-17 15:26:03
-## 23: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:26:03
-## 24: f7bee22047b8d0c1       accessed   2020-02-17 15:26:03 2020-02-17 15:26:03
-## 25: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:26:03
-## 26: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:26:03
-## 27: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:26:03
-## 28: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:26:03
-## 29: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:26:03
-## 30: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:26:03
-## 31: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:26:03
-## 32: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:26:03
-## 33: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:26:03
-## 34: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:26:03
-## 35: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:26:03
-## 36: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:03
-## 37: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:03
-## 38: f7bee22047b8d0c1      file.size                   176 2020-02-17 15:26:03
+##  1: 3aef38d1fc02aee5     objectName                     a 2020-02-18 20:45:13
+##  2: 3aef38d1fc02aee5       function                 runif 2020-02-18 20:45:13
+##  3: 3aef38d1fc02aee5          class               numeric 2020-02-18 20:45:13
+##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-18 20:45:13
+##  5: 3aef38d1fc02aee5       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-18 20:45:13
+##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-18 20:45:13
+##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-18 20:45:13
+##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-18 20:45:13
+## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-18 20:45:13
+## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-18 20:45:13
+## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-18 20:45:13
+## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-18 20:45:13
+## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-18 20:45:13
+## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-18 20:45:13
+## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-18 20:45:13
+## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:13
+## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:45:13
+## 19: 3aef38d1fc02aee5      file.size                   168 2020-02-18 20:45:13
+## 20: f7bee22047b8d0c1     objectName                     b 2020-02-18 20:45:13
+## 21: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:13
+## 22: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:13
+## 23: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:13
+## 24: f7bee22047b8d0c1       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+## 25: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:13
+## 26: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:13
+## 27: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:13
+## 28: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:13
+## 29: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:13
+## 30: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:13
+## 31: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:13
+## 32: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:13
+## 33: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:13
+## 34: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:13
+## 35: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:13
+## 36: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:13
+## 37: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:13
+## 38: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:13
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 <div class="sourceCode" id="cb117"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1"></a><span class="co"># keep only objects that are either runif or rnorm ("or" search)</span></span>
 <span id="cb117-2"><a href="#cb117-2"></a><span class="kw"><a href="../reference/viewCache.html">keepCache</a></span>(tmpDir, <span class="dt">userTags =</span> <span class="st">"runif|rnorm"</span>, <span class="dt">ask =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
@@ -646,44 +646,44 @@
 <pre><code>##   Total (including Rasters): 504 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 504 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 3aef38d1fc02aee5     objectName                     a 2020-02-17 15:26:03
-##  2: 3aef38d1fc02aee5       function                 runif 2020-02-17 15:26:03
-##  3: 3aef38d1fc02aee5          class               numeric 2020-02-17 15:26:03
-##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-17 15:26:03
-##  5: 3aef38d1fc02aee5       accessed   2020-02-17 15:26:03 2020-02-17 15:26:03
-##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-17 15:26:03
-##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-17 15:26:03
-##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-17 15:26:03
-##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-17 15:26:03
-## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-17 15:26:03
-## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-17 15:26:03
-## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-17 15:26:03
-## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-17 15:26:03
-## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-17 15:26:03
-## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-17 15:26:03
-## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-17 15:26:03
-## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:03
-## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:26:03
-## 19: 3aef38d1fc02aee5      file.size                   170 2020-02-17 15:26:03
-## 20: f7bee22047b8d0c1     objectName                     b 2020-02-17 15:26:03
-## 21: f7bee22047b8d0c1       function                 rnorm 2020-02-17 15:26:03
-## 22: f7bee22047b8d0c1          class               numeric 2020-02-17 15:26:03
-## 23: f7bee22047b8d0c1    object.size                  1008 2020-02-17 15:26:03
-## 24: f7bee22047b8d0c1       accessed   2020-02-17 15:26:03 2020-02-17 15:26:03
-## 25: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-17 15:26:03
-## 26: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-17 15:26:03
-## 27: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-17 15:26:03
-## 28: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-17 15:26:03
-## 29: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-17 15:26:03
-## 30: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-17 15:26:03
-## 31: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-17 15:26:03
-## 32: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-17 15:26:03
-## 33: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-17 15:26:03
-## 34: f7bee22047b8d0c1 otherFunctions                handle 2020-02-17 15:26:03
-## 35: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-17 15:26:03
-## 36: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-17 15:26:03
-## 37: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:03
-## 38: f7bee22047b8d0c1      file.size                   176 2020-02-17 15:26:03
+##  1: 3aef38d1fc02aee5     objectName                     a 2020-02-18 20:45:13
+##  2: 3aef38d1fc02aee5       function                 runif 2020-02-18 20:45:13
+##  3: 3aef38d1fc02aee5          class               numeric 2020-02-18 20:45:13
+##  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-18 20:45:13
+##  5: 3aef38d1fc02aee5       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+##  6: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-18 20:45:13
+##  7: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-18 20:45:13
+##  8: 3aef38d1fc02aee5 otherFunctions          process_file 2020-02-18 20:45:13
+##  9: 3aef38d1fc02aee5 otherFunctions         process_group 2020-02-18 20:45:13
+## 10: 3aef38d1fc02aee5 otherFunctions   process_group.block 2020-02-18 20:45:13
+## 11: 3aef38d1fc02aee5 otherFunctions            call_block 2020-02-18 20:45:13
+## 12: 3aef38d1fc02aee5 otherFunctions            block_exec 2020-02-18 20:45:13
+## 13: 3aef38d1fc02aee5 otherFunctions                in_dir 2020-02-18 20:45:13
+## 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-18 20:45:13
+## 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-18 20:45:13
+## 16: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-18 20:45:13
+## 17: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:13
+## 18: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:45:13
+## 19: 3aef38d1fc02aee5      file.size                   168 2020-02-18 20:45:13
+## 20: f7bee22047b8d0c1     objectName                     b 2020-02-18 20:45:13
+## 21: f7bee22047b8d0c1       function                 rnorm 2020-02-18 20:45:13
+## 22: f7bee22047b8d0c1          class               numeric 2020-02-18 20:45:13
+## 23: f7bee22047b8d0c1    object.size                  1008 2020-02-18 20:45:13
+## 24: f7bee22047b8d0c1       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+## 25: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-18 20:45:13
+## 26: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-18 20:45:13
+## 27: f7bee22047b8d0c1 otherFunctions          process_file 2020-02-18 20:45:13
+## 28: f7bee22047b8d0c1 otherFunctions         process_group 2020-02-18 20:45:13
+## 29: f7bee22047b8d0c1 otherFunctions   process_group.block 2020-02-18 20:45:13
+## 30: f7bee22047b8d0c1 otherFunctions            call_block 2020-02-18 20:45:13
+## 31: f7bee22047b8d0c1 otherFunctions            block_exec 2020-02-18 20:45:13
+## 32: f7bee22047b8d0c1 otherFunctions                in_dir 2020-02-18 20:45:13
+## 33: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-18 20:45:13
+## 34: f7bee22047b8d0c1 otherFunctions                handle 2020-02-18 20:45:13
+## 35: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-18 20:45:13
+## 36: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-18 20:45:13
+## 37: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:13
+## 38: f7bee22047b8d0c1      file.size                   175 2020-02-18 20:45:13
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 <div class="sourceCode" id="cb122"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1"></a><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpDir, <span class="dt">ask =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
 </div>
@@ -740,7 +740,7 @@
 <span id="cb127-18"><a href="#cb127-18"></a><span class="co">#   Cache calls, unless individually overridden ... here inner</span></span>
 <span id="cb127-19"><a href="#cb127-19"></a><span class="co">#   uses tmpdir2 repository</span></span>
 <span id="cb127-20"><a href="#cb127-20"></a><span class="kw"><a href="../reference/cache.html">Cache</a></span>(outer, <span class="dt">n =</span> <span class="dv">2</span>, <span class="dt">cacheRepo =</span> tmpdir1, <span class="dt">notOlderThan =</span> <span class="kw"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span>())</span></code></pre></div>
-<pre><code>## [1]  0.9154566  0.7062268 -0.5696764
+<pre><code>## [1] -0.6030246  0.3397563  0.4006861
 ## attr(,".Cache")
 ## attr(,".Cache")$newCache
 ## [1] TRUE
@@ -754,67 +754,67 @@
 <pre><code>##   Total (including Rasters): 504 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 504 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 4ac2b7c0f42d1e46       function                 rnorm 2020-02-17 15:26:04
-##  2: 4ac2b7c0f42d1e46          class               numeric 2020-02-17 15:26:04
-##  3: 4ac2b7c0f42d1e46    object.size                  1008 2020-02-17 15:26:04
-##  4: 4ac2b7c0f42d1e46       accessed   2020-02-17 15:26:04 2020-02-17 15:26:04
-##  5: 4ac2b7c0f42d1e46 otherFunctions               saveRDS 2020-02-17 15:26:04
-##  6: 4ac2b7c0f42d1e46 otherFunctions               do.call 2020-02-17 15:26:04
-##  7: 4ac2b7c0f42d1e46 otherFunctions          process_file 2020-02-17 15:26:04
-##  8: 4ac2b7c0f42d1e46 otherFunctions         process_group 2020-02-17 15:26:04
-##  9: 4ac2b7c0f42d1e46 otherFunctions   process_group.block 2020-02-17 15:26:04
-## 10: 4ac2b7c0f42d1e46 otherFunctions            call_block 2020-02-17 15:26:04
-## 11: 4ac2b7c0f42d1e46 otherFunctions            block_exec 2020-02-17 15:26:04
-## 12: 4ac2b7c0f42d1e46 otherFunctions                in_dir 2020-02-17 15:26:04
-## 13: 4ac2b7c0f42d1e46 otherFunctions             timing_fn 2020-02-17 15:26:04
-## 14: 4ac2b7c0f42d1e46 otherFunctions                handle 2020-02-17 15:26:04
-## 15: 4ac2b7c0f42d1e46 otherFunctions           withVisible 2020-02-17 15:26:04
-## 16: 4ac2b7c0f42d1e46      preDigest    n:7f12988bd88a0fb8 2020-02-17 15:26:04
-## 17: 4ac2b7c0f42d1e46      preDigest mean:22413394efd9f6a3 2020-02-17 15:26:04
-## 18: 4ac2b7c0f42d1e46      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:04
-## 19: 4ac2b7c0f42d1e46      file.size                   166 2020-02-17 15:26:04
-## 20: a7af5367c13aba8f       function                 outer 2020-02-17 15:26:04
-## 21: a7af5367c13aba8f          class               numeric 2020-02-17 15:26:04
-## 22: a7af5367c13aba8f    object.size                  1008 2020-02-17 15:26:04
-## 23: a7af5367c13aba8f       accessed   2020-02-17 15:26:04 2020-02-17 15:26:04
-## 24: a7af5367c13aba8f otherFunctions               saveRDS 2020-02-17 15:26:04
-## 25: a7af5367c13aba8f otherFunctions               do.call 2020-02-17 15:26:04
-## 26: a7af5367c13aba8f otherFunctions          process_file 2020-02-17 15:26:04
-## 27: a7af5367c13aba8f otherFunctions         process_group 2020-02-17 15:26:04
-## 28: a7af5367c13aba8f otherFunctions   process_group.block 2020-02-17 15:26:04
-## 29: a7af5367c13aba8f otherFunctions            call_block 2020-02-17 15:26:04
-## 30: a7af5367c13aba8f otherFunctions            block_exec 2020-02-17 15:26:04
-## 31: a7af5367c13aba8f otherFunctions                in_dir 2020-02-17 15:26:04
-## 32: a7af5367c13aba8f otherFunctions             timing_fn 2020-02-17 15:26:04
-## 33: a7af5367c13aba8f otherFunctions                handle 2020-02-17 15:26:04
-## 34: a7af5367c13aba8f otherFunctions           withVisible 2020-02-17 15:26:04
-## 35: a7af5367c13aba8f      preDigest    n:82dc709f2b91918a 2020-02-17 15:26:04
-## 36: a7af5367c13aba8f      preDigest .FUN:892a6afc47a63a90 2020-02-17 15:26:04
-## 37: a7af5367c13aba8f      file.size                   166 2020-02-17 15:26:04
+##  1: 4ac2b7c0f42d1e46       function                 rnorm 2020-02-18 20:45:13
+##  2: 4ac2b7c0f42d1e46          class               numeric 2020-02-18 20:45:13
+##  3: 4ac2b7c0f42d1e46    object.size                  1008 2020-02-18 20:45:13
+##  4: 4ac2b7c0f42d1e46       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+##  5: 4ac2b7c0f42d1e46 otherFunctions               saveRDS 2020-02-18 20:45:13
+##  6: 4ac2b7c0f42d1e46 otherFunctions               do.call 2020-02-18 20:45:13
+##  7: 4ac2b7c0f42d1e46 otherFunctions          process_file 2020-02-18 20:45:13
+##  8: 4ac2b7c0f42d1e46 otherFunctions         process_group 2020-02-18 20:45:13
+##  9: 4ac2b7c0f42d1e46 otherFunctions   process_group.block 2020-02-18 20:45:13
+## 10: 4ac2b7c0f42d1e46 otherFunctions            call_block 2020-02-18 20:45:13
+## 11: 4ac2b7c0f42d1e46 otherFunctions            block_exec 2020-02-18 20:45:13
+## 12: 4ac2b7c0f42d1e46 otherFunctions                in_dir 2020-02-18 20:45:13
+## 13: 4ac2b7c0f42d1e46 otherFunctions             timing_fn 2020-02-18 20:45:13
+## 14: 4ac2b7c0f42d1e46 otherFunctions                handle 2020-02-18 20:45:13
+## 15: 4ac2b7c0f42d1e46 otherFunctions           withVisible 2020-02-18 20:45:13
+## 16: 4ac2b7c0f42d1e46      preDigest    n:7f12988bd88a0fb8 2020-02-18 20:45:13
+## 17: 4ac2b7c0f42d1e46      preDigest mean:22413394efd9f6a3 2020-02-18 20:45:13
+## 18: 4ac2b7c0f42d1e46      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:13
+## 19: 4ac2b7c0f42d1e46      file.size                   166 2020-02-18 20:45:13
+## 20: a7af5367c13aba8f       function                 outer 2020-02-18 20:45:13
+## 21: a7af5367c13aba8f          class               numeric 2020-02-18 20:45:13
+## 22: a7af5367c13aba8f    object.size                  1008 2020-02-18 20:45:13
+## 23: a7af5367c13aba8f       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+## 24: a7af5367c13aba8f otherFunctions               saveRDS 2020-02-18 20:45:13
+## 25: a7af5367c13aba8f otherFunctions               do.call 2020-02-18 20:45:13
+## 26: a7af5367c13aba8f otherFunctions          process_file 2020-02-18 20:45:13
+## 27: a7af5367c13aba8f otherFunctions         process_group 2020-02-18 20:45:13
+## 28: a7af5367c13aba8f otherFunctions   process_group.block 2020-02-18 20:45:13
+## 29: a7af5367c13aba8f otherFunctions            call_block 2020-02-18 20:45:13
+## 30: a7af5367c13aba8f otherFunctions            block_exec 2020-02-18 20:45:13
+## 31: a7af5367c13aba8f otherFunctions                in_dir 2020-02-18 20:45:13
+## 32: a7af5367c13aba8f otherFunctions             timing_fn 2020-02-18 20:45:13
+## 33: a7af5367c13aba8f otherFunctions                handle 2020-02-18 20:45:13
+## 34: a7af5367c13aba8f otherFunctions           withVisible 2020-02-18 20:45:13
+## 35: a7af5367c13aba8f      preDigest    n:82dc709f2b91918a 2020-02-18 20:45:13
+## 36: a7af5367c13aba8f      preDigest .FUN:892a6afc47a63a90 2020-02-18 20:45:13
+## 37: a7af5367c13aba8f      file.size                   166 2020-02-18 20:45:13
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 <div class="sourceCode" id="cb134"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb134-1"><a href="#cb134-1"></a><span class="kw"><a href="../reference/viewCache.html">showCache</a></span>(tmpdir2) <span class="co"># 1 function call</span></span></code></pre></div>
 <pre><code>## Cache size:</code></pre>
 <pre><code>##   Total (including Rasters): 252 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 252 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 33ceb4fb525fd08f       function                 inner 2020-02-17 15:26:04
-##  2: 33ceb4fb525fd08f          class               numeric 2020-02-17 15:26:04
-##  3: 33ceb4fb525fd08f    object.size                  1008 2020-02-17 15:26:04
-##  4: 33ceb4fb525fd08f       accessed   2020-02-17 15:26:04 2020-02-17 15:26:04
-##  5: 33ceb4fb525fd08f otherFunctions               saveRDS 2020-02-17 15:26:04
-##  6: 33ceb4fb525fd08f otherFunctions               do.call 2020-02-17 15:26:04
-##  7: 33ceb4fb525fd08f otherFunctions          process_file 2020-02-17 15:26:04
-##  8: 33ceb4fb525fd08f otherFunctions         process_group 2020-02-17 15:26:04
-##  9: 33ceb4fb525fd08f otherFunctions   process_group.block 2020-02-17 15:26:04
-## 10: 33ceb4fb525fd08f otherFunctions            call_block 2020-02-17 15:26:04
-## 11: 33ceb4fb525fd08f otherFunctions            block_exec 2020-02-17 15:26:04
-## 12: 33ceb4fb525fd08f otherFunctions                in_dir 2020-02-17 15:26:04
-## 13: 33ceb4fb525fd08f otherFunctions             timing_fn 2020-02-17 15:26:04
-## 14: 33ceb4fb525fd08f otherFunctions                handle 2020-02-17 15:26:04
-## 15: 33ceb4fb525fd08f otherFunctions           withVisible 2020-02-17 15:26:04
-## 16: 33ceb4fb525fd08f      preDigest mean:22413394efd9f6a3 2020-02-17 15:26:04
-## 17: 33ceb4fb525fd08f      preDigest .FUN:87e2c30917a34d25 2020-02-17 15:26:04
-## 18: 33ceb4fb525fd08f      file.size                   166 2020-02-17 15:26:04</code></pre>
+##  1: 33ceb4fb525fd08f       function                 inner 2020-02-18 20:45:13
+##  2: 33ceb4fb525fd08f          class               numeric 2020-02-18 20:45:13
+##  3: 33ceb4fb525fd08f    object.size                  1008 2020-02-18 20:45:13
+##  4: 33ceb4fb525fd08f       accessed   2020-02-18 20:45:13 2020-02-18 20:45:13
+##  5: 33ceb4fb525fd08f otherFunctions               saveRDS 2020-02-18 20:45:13
+##  6: 33ceb4fb525fd08f otherFunctions               do.call 2020-02-18 20:45:13
+##  7: 33ceb4fb525fd08f otherFunctions          process_file 2020-02-18 20:45:13
+##  8: 33ceb4fb525fd08f otherFunctions         process_group 2020-02-18 20:45:13
+##  9: 33ceb4fb525fd08f otherFunctions   process_group.block 2020-02-18 20:45:13
+## 10: 33ceb4fb525fd08f otherFunctions            call_block 2020-02-18 20:45:13
+## 11: 33ceb4fb525fd08f otherFunctions            block_exec 2020-02-18 20:45:13
+## 12: 33ceb4fb525fd08f otherFunctions                in_dir 2020-02-18 20:45:13
+## 13: 33ceb4fb525fd08f otherFunctions             timing_fn 2020-02-18 20:45:13
+## 14: 33ceb4fb525fd08f otherFunctions                handle 2020-02-18 20:45:13
+## 15: 33ceb4fb525fd08f otherFunctions           withVisible 2020-02-18 20:45:13
+## 16: 33ceb4fb525fd08f      preDigest mean:22413394efd9f6a3 2020-02-18 20:45:13
+## 17: 33ceb4fb525fd08f      preDigest .FUN:87e2c30917a34d25 2020-02-18 20:45:13
+## 18: 33ceb4fb525fd08f      file.size                   166 2020-02-18 20:45:13</code></pre>
 <div class="sourceCode" id="cb139"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1"></a><span class="co"># userTags get appended</span></span>
 <span id="cb139-2"><a href="#cb139-2"></a><span class="co"># all items have the outer tag propagate, plus inner ones only have inner ones</span></span>
 <span id="cb139-3"><a href="#cb139-3"></a><span class="kw"><a href="../reference/viewCache.html">clearCache</a></span>(tmpdir1, <span class="dt">ask =</span> <span class="ot">FALSE</span>)</span>
@@ -833,65 +833,65 @@
 <pre><code>##   Total (including Rasters): 756 bytes</code></pre>
 <pre><code>##   Selected objects (not including Rasters): 756 bytes</code></pre>
 <pre><code>##              cacheId         tagKey              tagValue         createdDate
-##  1: 4ac2b7c0f42d1e46       innerTag              innerTag 2020-02-17 15:26:04
-##  2: 4ac2b7c0f42d1e46       outerTag              outerTag 2020-02-17 15:26:04
-##  3: 4ac2b7c0f42d1e46       function                 rnorm 2020-02-17 15:26:04
-##  4: 4ac2b7c0f42d1e46          class               numeric 2020-02-17 15:26:04
-##  5: 4ac2b7c0f42d1e46    object.size                  1008 2020-02-17 15:26:04
-##  6: 4ac2b7c0f42d1e46       accessed   2020-02-17 15:26:04 2020-02-17 15:26:04
-##  7: 4ac2b7c0f42d1e46 otherFunctions               saveRDS 2020-02-17 15:26:04
-##  8: 4ac2b7c0f42d1e46 otherFunctions               do.call 2020-02-17 15:26:04
-##  9: 4ac2b7c0f42d1e46 otherFunctions          process_file 2020-02-17 15:26:04
-## 10: 4ac2b7c0f42d1e46 otherFunctions         process_group 2020-02-17 15:26:04
-## 11: 4ac2b7c0f42d1e46 otherFunctions   process_group.block 2020-02-17 15:26:04
-## 12: 4ac2b7c0f42d1e46 otherFunctions            call_block 2020-02-17 15:26:04
-## 13: 4ac2b7c0f42d1e46 otherFunctions            block_exec 2020-02-17 15:26:04
-## 14: 4ac2b7c0f42d1e46 otherFunctions                in_dir 2020-02-17 15:26:04
-## 15: 4ac2b7c0f42d1e46 otherFunctions             timing_fn 2020-02-17 15:26:04
-## 16: 4ac2b7c0f42d1e46 otherFunctions                handle 2020-02-17 15:26:04
-## 17: 4ac2b7c0f42d1e46 otherFunctions           withVisible 2020-02-17 15:26:04
-## 18: 4ac2b7c0f42d1e46      preDigest    n:7f12988bd88a0fb8 2020-02-17 15:26:04
-## 19: 4ac2b7c0f42d1e46      preDigest mean:22413394efd9f6a3 2020-02-17 15:26:04
-## 20: 4ac2b7c0f42d1e46      preDigest .FUN:4f604aa46882b368 2020-02-17 15:26:04
-## 21: 4ac2b7c0f42d1e46      file.size                   167 2020-02-17 15:26:04
-## 22: b06af03d5a73dc7d       outerTag              outerTag 2020-02-17 15:26:04
-## 23: b06af03d5a73dc7d       function                 inner 2020-02-17 15:26:04
-## 24: b06af03d5a73dc7d          class               numeric 2020-02-17 15:26:04
-## 25: b06af03d5a73dc7d    object.size                  1008 2020-02-17 15:26:04
-## 26: b06af03d5a73dc7d       accessed   2020-02-17 15:26:04 2020-02-17 15:26:04
-## 27: b06af03d5a73dc7d otherFunctions               saveRDS 2020-02-17 15:26:04
-## 28: b06af03d5a73dc7d otherFunctions               do.call 2020-02-17 15:26:04
-## 29: b06af03d5a73dc7d otherFunctions          process_file 2020-02-17 15:26:04
-## 30: b06af03d5a73dc7d otherFunctions         process_group 2020-02-17 15:26:04
-## 31: b06af03d5a73dc7d otherFunctions   process_group.block 2020-02-17 15:26:04
-## 32: b06af03d5a73dc7d otherFunctions            call_block 2020-02-17 15:26:04
-## 33: b06af03d5a73dc7d otherFunctions            block_exec 2020-02-17 15:26:04
-## 34: b06af03d5a73dc7d otherFunctions                in_dir 2020-02-17 15:26:04
-## 35: b06af03d5a73dc7d otherFunctions             timing_fn 2020-02-17 15:26:04
-## 36: b06af03d5a73dc7d otherFunctions                handle 2020-02-17 15:26:04
-## 37: b06af03d5a73dc7d otherFunctions           withVisible 2020-02-17 15:26:04
-## 38: b06af03d5a73dc7d      preDigest mean:22413394efd9f6a3 2020-02-17 15:26:04
-## 39: b06af03d5a73dc7d      preDigest .FUN:7ad10bc1ae528d8c 2020-02-17 15:26:04
-## 40: b06af03d5a73dc7d      file.size                   167 2020-02-17 15:26:04
-## 41: 88a34e1d033329e5       outerTag              outerTag 2020-02-17 15:26:04
-## 42: 88a34e1d033329e5       function                 outer 2020-02-17 15:26:04
-## 43: 88a34e1d033329e5          class               numeric 2020-02-17 15:26:04
-## 44: 88a34e1d033329e5    object.size                  1008 2020-02-17 15:26:04
-## 45: 88a34e1d033329e5       accessed   2020-02-17 15:26:04 2020-02-17 15:26:04
-## 46: 88a34e1d033329e5 otherFunctions               saveRDS 2020-02-17 15:26:04
-## 47: 88a34e1d033329e5 otherFunctions               do.call 2020-02-17 15:26:04
-## 48: 88a34e1d033329e5 otherFunctions          process_file 2020-02-17 15:26:04
-## 49: 88a34e1d033329e5 otherFunctions         process_group 2020-02-17 15:26:04
-## 50: 88a34e1d033329e5 otherFunctions   process_group.block 2020-02-17 15:26:04
-## 51: 88a34e1d033329e5 otherFunctions            call_block 2020-02-17 15:26:04
-## 52: 88a34e1d033329e5 otherFunctions            block_exec 2020-02-17 15:26:04
-## 53: 88a34e1d033329e5 otherFunctions                in_dir 2020-02-17 15:26:04
-## 54: 88a34e1d033329e5 otherFunctions             timing_fn 2020-02-17 15:26:04
-## 55: 88a34e1d033329e5 otherFunctions                handle 2020-02-17 15:26:04
-## 56: 88a34e1d033329e5 otherFunctions           withVisible 2020-02-17 15:26:04
-## 57: 88a34e1d033329e5      preDigest    n:82dc709f2b91918a 2020-02-17 15:26:04
-## 58: 88a34e1d033329e5      preDigest .FUN:5f06fb5fbffe9e3b 2020-02-17 15:26:04
-## 59: 88a34e1d033329e5      file.size                   167 2020-02-17 15:26:04
+##  1: 4ac2b7c0f42d1e46       innerTag              innerTag 2020-02-18 20:45:14
+##  2: 4ac2b7c0f42d1e46       outerTag              outerTag 2020-02-18 20:45:14
+##  3: 4ac2b7c0f42d1e46       function                 rnorm 2020-02-18 20:45:14
+##  4: 4ac2b7c0f42d1e46          class               numeric 2020-02-18 20:45:14
+##  5: 4ac2b7c0f42d1e46    object.size                  1008 2020-02-18 20:45:14
+##  6: 4ac2b7c0f42d1e46       accessed   2020-02-18 20:45:14 2020-02-18 20:45:14
+##  7: 4ac2b7c0f42d1e46 otherFunctions               saveRDS 2020-02-18 20:45:14
+##  8: 4ac2b7c0f42d1e46 otherFunctions               do.call 2020-02-18 20:45:14
+##  9: 4ac2b7c0f42d1e46 otherFunctions          process_file 2020-02-18 20:45:14
+## 10: 4ac2b7c0f42d1e46 otherFunctions         process_group 2020-02-18 20:45:14
+## 11: 4ac2b7c0f42d1e46 otherFunctions   process_group.block 2020-02-18 20:45:14
+## 12: 4ac2b7c0f42d1e46 otherFunctions            call_block 2020-02-18 20:45:14
+## 13: 4ac2b7c0f42d1e46 otherFunctions            block_exec 2020-02-18 20:45:14
+## 14: 4ac2b7c0f42d1e46 otherFunctions                in_dir 2020-02-18 20:45:14
+## 15: 4ac2b7c0f42d1e46 otherFunctions             timing_fn 2020-02-18 20:45:14
+## 16: 4ac2b7c0f42d1e46 otherFunctions                handle 2020-02-18 20:45:14
+## 17: 4ac2b7c0f42d1e46 otherFunctions           withVisible 2020-02-18 20:45:14
+## 18: 4ac2b7c0f42d1e46      preDigest    n:7f12988bd88a0fb8 2020-02-18 20:45:14
+## 19: 4ac2b7c0f42d1e46      preDigest mean:22413394efd9f6a3 2020-02-18 20:45:14
+## 20: 4ac2b7c0f42d1e46      preDigest .FUN:4f604aa46882b368 2020-02-18 20:45:14
+## 21: 4ac2b7c0f42d1e46      file.size                   166 2020-02-18 20:45:14
+## 22: b06af03d5a73dc7d       outerTag              outerTag 2020-02-18 20:45:14
+## 23: b06af03d5a73dc7d       function                 inner 2020-02-18 20:45:14
+## 24: b06af03d5a73dc7d          class               numeric 2020-02-18 20:45:14
+## 25: b06af03d5a73dc7d    object.size                  1008 2020-02-18 20:45:14
+## 26: b06af03d5a73dc7d       accessed   2020-02-18 20:45:14 2020-02-18 20:45:14
+## 27: b06af03d5a73dc7d otherFunctions               saveRDS 2020-02-18 20:45:14
+## 28: b06af03d5a73dc7d otherFunctions               do.call 2020-02-18 20:45:14
+## 29: b06af03d5a73dc7d otherFunctions          process_file 2020-02-18 20:45:14
+## 30: b06af03d5a73dc7d otherFunctions         process_group 2020-02-18 20:45:14
+## 31: b06af03d5a73dc7d otherFunctions   process_group.block 2020-02-18 20:45:14
+## 32: b06af03d5a73dc7d otherFunctions            call_block 2020-02-18 20:45:14
+## 33: b06af03d5a73dc7d otherFunctions            block_exec 2020-02-18 20:45:14
+## 34: b06af03d5a73dc7d otherFunctions                in_dir 2020-02-18 20:45:14
+## 35: b06af03d5a73dc7d otherFunctions             timing_fn 2020-02-18 20:45:14
+## 36: b06af03d5a73dc7d otherFunctions                handle 2020-02-18 20:45:14
+## 37: b06af03d5a73dc7d otherFunctions           withVisible 2020-02-18 20:45:14
+## 38: b06af03d5a73dc7d      preDigest mean:22413394efd9f6a3 2020-02-18 20:45:14
+## 39: b06af03d5a73dc7d      preDigest .FUN:7ad10bc1ae528d8c 2020-02-18 20:45:14
+## 40: b06af03d5a73dc7d      file.size                   166 2020-02-18 20:45:14
+## 41: 88a34e1d033329e5       outerTag              outerTag 2020-02-18 20:45:14
+## 42: 88a34e1d033329e5       function                 outer 2020-02-18 20:45:14
+## 43: 88a34e1d033329e5          class               numeric 2020-02-18 20:45:14
+## 44: 88a34e1d033329e5    object.size                  1008 2020-02-18 20:45:14
+## 45: 88a34e1d033329e5       accessed   2020-02-18 20:45:14 2020-02-18 20:45:14
+## 46: 88a34e1d033329e5 otherFunctions               saveRDS 2020-02-18 20:45:14
+## 47: 88a34e1d033329e5 otherFunctions               do.call 2020-02-18 20:45:14
+## 48: 88a34e1d033329e5 otherFunctions          process_file 2020-02-18 20:45:14
+## 49: 88a34e1d033329e5 otherFunctions         process_group 2020-02-18 20:45:14
+## 50: 88a34e1d033329e5 otherFunctions   process_group.block 2020-02-18 20:45:14
+## 51: 88a34e1d033329e5 otherFunctions            call_block 2020-02-18 20:45:14
+## 52: 88a34e1d033329e5 otherFunctions            block_exec 2020-02-18 20:45:14
+## 53: 88a34e1d033329e5 otherFunctions                in_dir 2020-02-18 20:45:14
+## 54: 88a34e1d033329e5 otherFunctions             timing_fn 2020-02-18 20:45:14
+## 55: 88a34e1d033329e5 otherFunctions                handle 2020-02-18 20:45:14
+## 56: 88a34e1d033329e5 otherFunctions           withVisible 2020-02-18 20:45:14
+## 57: 88a34e1d033329e5      preDigest    n:82dc709f2b91918a 2020-02-18 20:45:14
+## 58: 88a34e1d033329e5      preDigest .FUN:5f06fb5fbffe9e3b 2020-02-18 20:45:14
+## 59: 88a34e1d033329e5      file.size                   166 2020-02-18 20:45:14
 ##              cacheId         tagKey              tagValue         createdDate</code></pre>
 </div>
 <div id="cacheid" class="section level2">

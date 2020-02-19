@@ -346,7 +346,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 10224 bytes
 #&gt; 
 #&gt; $checkAndMakeCloudFolderID
-#&gt; 8408 bytes
+#&gt; 15840 bytes
 #&gt; 
 #&gt; $checkFutures
 #&gt; 11552 bytes
@@ -379,22 +379,25 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 4000 bytes
 #&gt; 
 #&gt; $cloudDownload
-#&gt; 15264 bytes
+#&gt; 15288 bytes
 #&gt; 
 #&gt; $cloudDownloadRasterBackend
-#&gt; 21280 bytes
+#&gt; 23664 bytes
+#&gt; 
+#&gt; $cloudFolderFromCacheRepo
+#&gt; 6760 bytes
 #&gt; 
 #&gt; $cloudSyncCacheOld
 #&gt; 5616 bytes
 #&gt; 
 #&gt; $cloudUpload
-#&gt; 11104 bytes
+#&gt; 10944 bytes
 #&gt; 
 #&gt; $cloudUploadFromCache
-#&gt; 8696 bytes
+#&gt; 9112 bytes
 #&gt; 
 #&gt; $cloudUploadRasterBackends
-#&gt; 9016 bytes
+#&gt; 6576 bytes
 #&gt; 
 #&gt; $cloudWriteOld
 #&gt; 4808 bytes
@@ -463,7 +466,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 342592 bytes
 #&gt; 
 #&gt; $driveLs
-#&gt; 8552 bytes
+#&gt; 9616 bytes
 #&gt; 
 #&gt; $extractFromArchive
 #&gt; 538808 bytes
@@ -616,7 +619,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 143520 bytes
 #&gt; 
 #&gt; $package_dependenciesMem
-#&gt; 102240 bytes
+#&gt; 106816 bytes
 #&gt; 
 #&gt; $pickFirstVersion
 #&gt; 17000 bytes
@@ -679,16 +682,19 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 232 bytes
 #&gt; 
 #&gt; $reproducibleOptions
-#&gt; 20640 bytes
+#&gt; 22400 bytes
 #&gt; 
 #&gt; $Require
 #&gt; 354824 bytes
 #&gt; 
 #&gt; $retry
-#&gt; 56104 bytes
+#&gt; 57912 bytes
 #&gt; 
 #&gt; $rmFromCache
 #&gt; 48752 bytes
+#&gt; 
+#&gt; $rmFromCloudFolder
+#&gt; 104760 bytes
 #&gt; 
 #&gt; $rndstr
 #&gt; 29240 bytes
@@ -718,7 +724,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 4856 bytes
 #&gt; 
 #&gt; $showLocalRepo3Mem
-#&gt; 88680 bytes
+#&gt; 105464 bytes
 #&gt; 
 #&gt; $tempdir2
 #&gt; 5680 bytes
@@ -788,7 +794,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 
 <span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
 <span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
-(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 648 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 11842104</div><div class='input'>                 # and imported functions
+(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 648 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 11987272</div><div class='input'>                 # and imported functions
 
 </div></pre>
   </div>

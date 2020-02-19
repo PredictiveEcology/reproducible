@@ -88,14 +88,14 @@
 
       
 
-      </header><script src="Cache-using-postgresql_files/jquery-1.11.3/jquery.min.js"></script><script src="Cache-using-postgresql_files/elevate-section-attrs-2.0/elevate-section-attrs.js"></script><div class="row">
+      </header><script src="Cache-using-postgresql_files/header-attrs-2.1.1/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1>Using alternate database backends for Cache</h1>
                         <h4 class="author">Alex M. Chubaty</h4>
                         <h4 class="author">Eliot J. B. McIntire</h4>
             
-            <h4 class="date">February 17 2020</h4>
+            <h4 class="date">February 18 2020</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/vignettes/Cache-using-postgresql.Rmd"><code>vignettes/Cache-using-postgresql.Rmd</code></a></small>
       <div class="hidden name"><code>Cache-using-postgresql.Rmd</code></div>
@@ -131,9 +131,9 @@
 <span id="cb1-7"><a href="#cb1-7"></a>    <span class="ex">port</span>: 5432</span>
 <span id="cb1-8"><a href="#cb1-8"></a>    <span class="ex">database</span>: <span class="st">'mydatabase'</span></span></code></pre></div>
 <p>Then, in your main project script, add the following:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>cachedb &lt;-<span class="st"> </span>config<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/config/man/get.html">get</a></span>(<span class="st">"cachedb"</span>)</span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>cachedb &lt;-<span class="st"> </span>config<span class="op">::</span><span class="kw">get</span>(<span class="st">"cachedb"</span>)</span>
 <span id="cb2-2"><a href="#cb2-2"></a></span>
-<span id="cb2-3"><a href="#cb2-3"></a>conn &lt;-<span class="st"> </span>DBI<span class="op">::</span><span class="kw"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="dt">drv =</span> RPostgres<span class="op">::</span><span class="kw"><a href="https://rpostgres.r-dbi.org/reference/Postgres.html">Postgres</a></span>(),</span>
+<span id="cb2-3"><a href="#cb2-3"></a>conn &lt;-<span class="st"> </span>DBI<span class="op">::</span><span class="kw"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="dt">drv =</span> RPostgres<span class="op">::</span><span class="kw">Postgres</span>(),</span>
 <span id="cb2-4"><a href="#cb2-4"></a>                      <span class="dt">host =</span> cachedb<span class="op">$</span>server,</span>
 <span id="cb2-5"><a href="#cb2-5"></a>                      <span class="dt">port =</span> cachedb<span class="op">$</span>port,</span>
 <span id="cb2-6"><a href="#cb2-6"></a>                      <span class="dt">dbname =</span> cachedb<span class="op">$</span>database,</span>
@@ -154,7 +154,7 @@
 <p>Then, in your main project script, add the following:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw"><a href="https://rdrr.io/r/base/readRenviron.html">readRenviron</a></span>(<span class="st">".Renviron"</span>) <span class="co">## alternatively, use global ~/.Renviron</span></span>
 <span id="cb4-2"><a href="#cb4-2"></a></span>
-<span id="cb4-3"><a href="#cb4-3"></a>conn &lt;-<span class="st">   </span>DBI<span class="op">::</span><span class="kw"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="dt">drv =</span> RPostgres<span class="op">::</span><span class="kw"><a href="https://rpostgres.r-dbi.org/reference/Postgres.html">Postgres</a></span>(),</span>
+<span id="cb4-3"><a href="#cb4-3"></a>conn &lt;-<span class="st">   </span>DBI<span class="op">::</span><span class="kw"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="dt">drv =</span> RPostgres<span class="op">::</span><span class="kw">Postgres</span>(),</span>
 <span id="cb4-4"><a href="#cb4-4"></a>                         <span class="dt">host =</span> <span class="kw"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGHOST"</span>),</span>
 <span id="cb4-5"><a href="#cb4-5"></a>                         <span class="dt">port =</span> <span class="kw"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGPORT"</span>),</span>
 <span id="cb4-6"><a href="#cb4-6"></a>                         <span class="dt">dbname =</span> <span class="kw"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGDATABASE"</span>),</span>

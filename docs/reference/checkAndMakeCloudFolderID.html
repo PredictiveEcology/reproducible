@@ -144,7 +144,12 @@ if one not present on googledrive, with a warning." />
 if one not present on googledrive, with a warning.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>checkAndMakeCloudFolderID</span>(<span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>checkAndMakeCloudFolderID</span>(
+  <span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cloudFolderID"</span>, <span class='kw'>NULL</span>),
+  <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -154,10 +159,19 @@ if one not present on googledrive, with a warning.</p>
       <td><p>The google folder ID where cloud caching will occur.</p></td>
     </tr>
     <tr>
+      <th>cacheRepo</th>
+      <td><p>A repository used for storing cached objects.
+This is optional if <code>Cache</code> is used inside a SpaDES module.</p></td>
+    </tr>
+    <tr>
       <th>create</th>
       <td><p>Logical. If <code>TRUE</code>, then the cloudFolderID will be created.
 This should be used with caution as there are no checks for overwriting.
 See <code><a href='https://googledrive.tidyverse.org/reference/drive_mkdir.html'>googledrive::drive_mkdir</a></code>. Default <code>FALSE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>overwrite</th>
+      <td><p>Logical. Passed to <code><a href='https://googledrive.tidyverse.org/reference/drive_mkdir.html'>googledrive::drive_mkdir</a></code>.</p></td>
     </tr>
     </table>
 

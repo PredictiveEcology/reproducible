@@ -174,10 +174,10 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
     <pre class="examples"><div class='input'><span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"clearStubArtifacts"</span>)
 
 <span class='fu'><a href='https://rdrr.io/r/base/lapply.html'>lapply</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='no'>runif</span>, <span class='no'>rnorm</span>), <span class='kw'>function</span>(<span class='no'>f</span>) {
-  <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/cache.html'>Cache</a></span>(<span class='no'>f</span>, <span class='fl'>10</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
+  <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='https://reproducible.predictiveecology.org/reference/cache.html'>Cache</a></span>(<span class='no'>f</span>, <span class='fl'>10</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 })</div><div class='output co'>#&gt; [[1]]
-#&gt;  [1] 0.81142784 0.21235285 0.74902359 0.82294596 0.89065564 0.01716172
-#&gt;  [7] 0.95006332 0.16434046 0.42742803 0.51368609
+#&gt;  [1] 0.25488832 0.27304942 0.34963563 0.76105336 0.40419679 0.20539778
+#&gt;  [7] 0.58729542 0.59820192 0.06929129 0.79705145
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -188,8 +188,8 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; [1] ""
 #&gt; 
 #&gt; [[2]]
-#&gt;  [1] -1.3792578  1.2506006 -1.8762368 -0.3687876 -2.1292973  0.3376460
-#&gt;  [7] -1.5745748 -0.1963194  0.9150601  1.0786365
+#&gt;  [1]  0.72469120 -2.37751470 -0.06540921 -0.46970481 -0.28051629  0.57483659
+#&gt;  [7] -0.20567685  0.23488051  0.11062832  0.27420223
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -201,127 +201,127 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; </div><div class='input'>
 <span class='co'># clear out any stub artifacts</span>
 <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 552 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 88dabbb6fbb67941       function                     f 2020-02-17 15:24:52
-#&gt;  2: 88dabbb6fbb67941          class               numeric 2020-02-17 15:24:52
-#&gt;  3: 88dabbb6fbb67941    object.size                  1104 2020-02-17 15:24:52
-#&gt;  4: 88dabbb6fbb67941       accessed   2020-02-17 15:24:52 2020-02-17 15:24:52
-#&gt;  5: 88dabbb6fbb67941 otherFunctions               saveRDS 2020-02-17 15:24:52
-#&gt;  6: 88dabbb6fbb67941 otherFunctions               do.call 2020-02-17 15:24:52
-#&gt;  7: 88dabbb6fbb67941 otherFunctions      build_site_local 2020-02-17 15:24:52
-#&gt;  8: 88dabbb6fbb67941 otherFunctions       build_reference 2020-02-17 15:24:52
-#&gt;  9: 88dabbb6fbb67941 otherFunctions  data_reference_topic 2020-02-17 15:24:52
-#&gt; 10: 88dabbb6fbb67941 otherFunctions          run_examples 2020-02-17 15:24:52
-#&gt; 11: 88dabbb6fbb67941 otherFunctions    highlight_examples 2020-02-17 15:24:52
-#&gt; 12: 88dabbb6fbb67941 otherFunctions             timing_fn 2020-02-17 15:24:52
-#&gt; 13: 88dabbb6fbb67941 otherFunctions                handle 2020-02-17 15:24:52
-#&gt; 14: 88dabbb6fbb67941 otherFunctions                   try 2020-02-17 15:24:52
-#&gt; 15: 88dabbb6fbb67941 otherFunctions           withVisible 2020-02-17 15:24:52
-#&gt; 16: 88dabbb6fbb67941 otherFunctions                lapply 2020-02-17 15:24:52
-#&gt; 17: 88dabbb6fbb67941      preDigest    n:c5775c3b366fb719 2020-02-17 15:24:52
-#&gt; 18: 88dabbb6fbb67941      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:24:52
-#&gt; 19: 88dabbb6fbb67941      file.size                   208 2020-02-17 15:24:52
-#&gt; 20: 87eee6212ba1ae0a       function                     f 2020-02-17 15:24:52
-#&gt; 21: 87eee6212ba1ae0a          class               numeric 2020-02-17 15:24:52
-#&gt; 22: 87eee6212ba1ae0a    object.size                  1104 2020-02-17 15:24:52
-#&gt; 23: 87eee6212ba1ae0a       accessed   2020-02-17 15:24:52 2020-02-17 15:24:52
-#&gt; 24: 87eee6212ba1ae0a otherFunctions               saveRDS 2020-02-17 15:24:52
-#&gt; 25: 87eee6212ba1ae0a otherFunctions               do.call 2020-02-17 15:24:52
-#&gt; 26: 87eee6212ba1ae0a otherFunctions      build_site_local 2020-02-17 15:24:52
-#&gt; 27: 87eee6212ba1ae0a otherFunctions       build_reference 2020-02-17 15:24:52
-#&gt; 28: 87eee6212ba1ae0a otherFunctions  data_reference_topic 2020-02-17 15:24:52
-#&gt; 29: 87eee6212ba1ae0a otherFunctions          run_examples 2020-02-17 15:24:52
-#&gt; 30: 87eee6212ba1ae0a otherFunctions    highlight_examples 2020-02-17 15:24:52
-#&gt; 31: 87eee6212ba1ae0a otherFunctions             timing_fn 2020-02-17 15:24:52
-#&gt; 32: 87eee6212ba1ae0a otherFunctions                handle 2020-02-17 15:24:52
-#&gt; 33: 87eee6212ba1ae0a otherFunctions                   try 2020-02-17 15:24:52
-#&gt; 34: 87eee6212ba1ae0a otherFunctions           withVisible 2020-02-17 15:24:52
-#&gt; 35: 87eee6212ba1ae0a otherFunctions                lapply 2020-02-17 15:24:52
-#&gt; 36: 87eee6212ba1ae0a      preDigest    n:c5775c3b366fb719 2020-02-17 15:24:52
-#&gt; 37: 87eee6212ba1ae0a      preDigest .FUN:4f604aa46882b368 2020-02-17 15:24:52
-#&gt; 38: 87eee6212ba1ae0a      file.size                   226 2020-02-17 15:24:52
+#&gt;  1: 88dabbb6fbb67941       function                     f 2020-02-18 20:44:00
+#&gt;  2: 88dabbb6fbb67941          class               numeric 2020-02-18 20:44:00
+#&gt;  3: 88dabbb6fbb67941    object.size                  1104 2020-02-18 20:44:00
+#&gt;  4: 88dabbb6fbb67941       accessed   2020-02-18 20:44:00 2020-02-18 20:44:00
+#&gt;  5: 88dabbb6fbb67941 otherFunctions               saveRDS 2020-02-18 20:44:00
+#&gt;  6: 88dabbb6fbb67941 otherFunctions               do.call 2020-02-18 20:44:00
+#&gt;  7: 88dabbb6fbb67941 otherFunctions      build_site_local 2020-02-18 20:44:00
+#&gt;  8: 88dabbb6fbb67941 otherFunctions       build_reference 2020-02-18 20:44:00
+#&gt;  9: 88dabbb6fbb67941 otherFunctions  data_reference_topic 2020-02-18 20:44:00
+#&gt; 10: 88dabbb6fbb67941 otherFunctions          run_examples 2020-02-18 20:44:00
+#&gt; 11: 88dabbb6fbb67941 otherFunctions    highlight_examples 2020-02-18 20:44:00
+#&gt; 12: 88dabbb6fbb67941 otherFunctions             timing_fn 2020-02-18 20:44:00
+#&gt; 13: 88dabbb6fbb67941 otherFunctions                handle 2020-02-18 20:44:00
+#&gt; 14: 88dabbb6fbb67941 otherFunctions                   try 2020-02-18 20:44:00
+#&gt; 15: 88dabbb6fbb67941 otherFunctions           withVisible 2020-02-18 20:44:00
+#&gt; 16: 88dabbb6fbb67941 otherFunctions                lapply 2020-02-18 20:44:00
+#&gt; 17: 88dabbb6fbb67941      preDigest    n:c5775c3b366fb719 2020-02-18 20:44:00
+#&gt; 18: 88dabbb6fbb67941      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:44:00
+#&gt; 19: 88dabbb6fbb67941      file.size                   204 2020-02-18 20:44:00
+#&gt; 20: 87eee6212ba1ae0a       function                     f 2020-02-18 20:44:00
+#&gt; 21: 87eee6212ba1ae0a          class               numeric 2020-02-18 20:44:00
+#&gt; 22: 87eee6212ba1ae0a    object.size                  1104 2020-02-18 20:44:00
+#&gt; 23: 87eee6212ba1ae0a       accessed   2020-02-18 20:44:00 2020-02-18 20:44:00
+#&gt; 24: 87eee6212ba1ae0a otherFunctions               saveRDS 2020-02-18 20:44:00
+#&gt; 25: 87eee6212ba1ae0a otherFunctions               do.call 2020-02-18 20:44:00
+#&gt; 26: 87eee6212ba1ae0a otherFunctions      build_site_local 2020-02-18 20:44:00
+#&gt; 27: 87eee6212ba1ae0a otherFunctions       build_reference 2020-02-18 20:44:00
+#&gt; 28: 87eee6212ba1ae0a otherFunctions  data_reference_topic 2020-02-18 20:44:00
+#&gt; 29: 87eee6212ba1ae0a otherFunctions          run_examples 2020-02-18 20:44:00
+#&gt; 30: 87eee6212ba1ae0a otherFunctions    highlight_examples 2020-02-18 20:44:00
+#&gt; 31: 87eee6212ba1ae0a otherFunctions             timing_fn 2020-02-18 20:44:00
+#&gt; 32: 87eee6212ba1ae0a otherFunctions                handle 2020-02-18 20:44:00
+#&gt; 33: 87eee6212ba1ae0a otherFunctions                   try 2020-02-18 20:44:00
+#&gt; 34: 87eee6212ba1ae0a otherFunctions           withVisible 2020-02-18 20:44:00
+#&gt; 35: 87eee6212ba1ae0a otherFunctions                lapply 2020-02-18 20:44:00
+#&gt; 36: 87eee6212ba1ae0a      preDigest    n:c5775c3b366fb719 2020-02-18 20:44:00
+#&gt; 37: 87eee6212ba1ae0a      preDigest .FUN:4f604aa46882b368 2020-02-18 20:44:00
+#&gt; 38: 87eee6212ba1ae0a      file.size                   226 2020-02-18 20:44:00
 #&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'>
 <span class='no'>file2Remove</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.files.html'>dir</a></span>(<span class='fu'><a href='CacheHelpers.html'>CacheStorageDir</a></span>(<span class='no'>tmpDir</span>), <span class='kw'>full.name</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>]
 <span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.remove</a></span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 552 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 88dabbb6fbb67941       function                     f 2020-02-17 15:24:52
-#&gt;  2: 88dabbb6fbb67941          class               numeric 2020-02-17 15:24:52
-#&gt;  3: 88dabbb6fbb67941    object.size                  1104 2020-02-17 15:24:52
-#&gt;  4: 88dabbb6fbb67941       accessed   2020-02-17 15:24:52 2020-02-17 15:24:52
-#&gt;  5: 88dabbb6fbb67941 otherFunctions               saveRDS 2020-02-17 15:24:52
-#&gt;  6: 88dabbb6fbb67941 otherFunctions               do.call 2020-02-17 15:24:52
-#&gt;  7: 88dabbb6fbb67941 otherFunctions      build_site_local 2020-02-17 15:24:52
-#&gt;  8: 88dabbb6fbb67941 otherFunctions       build_reference 2020-02-17 15:24:52
-#&gt;  9: 88dabbb6fbb67941 otherFunctions  data_reference_topic 2020-02-17 15:24:52
-#&gt; 10: 88dabbb6fbb67941 otherFunctions          run_examples 2020-02-17 15:24:52
-#&gt; 11: 88dabbb6fbb67941 otherFunctions    highlight_examples 2020-02-17 15:24:52
-#&gt; 12: 88dabbb6fbb67941 otherFunctions             timing_fn 2020-02-17 15:24:52
-#&gt; 13: 88dabbb6fbb67941 otherFunctions                handle 2020-02-17 15:24:52
-#&gt; 14: 88dabbb6fbb67941 otherFunctions                   try 2020-02-17 15:24:52
-#&gt; 15: 88dabbb6fbb67941 otherFunctions           withVisible 2020-02-17 15:24:52
-#&gt; 16: 88dabbb6fbb67941 otherFunctions                lapply 2020-02-17 15:24:52
-#&gt; 17: 88dabbb6fbb67941      preDigest    n:c5775c3b366fb719 2020-02-17 15:24:52
-#&gt; 18: 88dabbb6fbb67941      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:24:52
-#&gt; 19: 88dabbb6fbb67941      file.size                   208 2020-02-17 15:24:52
-#&gt; 20: 87eee6212ba1ae0a       function                     f 2020-02-17 15:24:52
-#&gt; 21: 87eee6212ba1ae0a          class               numeric 2020-02-17 15:24:52
-#&gt; 22: 87eee6212ba1ae0a    object.size                  1104 2020-02-17 15:24:52
-#&gt; 23: 87eee6212ba1ae0a       accessed   2020-02-17 15:24:52 2020-02-17 15:24:52
-#&gt; 24: 87eee6212ba1ae0a otherFunctions               saveRDS 2020-02-17 15:24:52
-#&gt; 25: 87eee6212ba1ae0a otherFunctions               do.call 2020-02-17 15:24:52
-#&gt; 26: 87eee6212ba1ae0a otherFunctions      build_site_local 2020-02-17 15:24:52
-#&gt; 27: 87eee6212ba1ae0a otherFunctions       build_reference 2020-02-17 15:24:52
-#&gt; 28: 87eee6212ba1ae0a otherFunctions  data_reference_topic 2020-02-17 15:24:52
-#&gt; 29: 87eee6212ba1ae0a otherFunctions          run_examples 2020-02-17 15:24:52
-#&gt; 30: 87eee6212ba1ae0a otherFunctions    highlight_examples 2020-02-17 15:24:52
-#&gt; 31: 87eee6212ba1ae0a otherFunctions             timing_fn 2020-02-17 15:24:52
-#&gt; 32: 87eee6212ba1ae0a otherFunctions                handle 2020-02-17 15:24:52
-#&gt; 33: 87eee6212ba1ae0a otherFunctions                   try 2020-02-17 15:24:52
-#&gt; 34: 87eee6212ba1ae0a otherFunctions           withVisible 2020-02-17 15:24:52
-#&gt; 35: 87eee6212ba1ae0a otherFunctions                lapply 2020-02-17 15:24:52
-#&gt; 36: 87eee6212ba1ae0a      preDigest    n:c5775c3b366fb719 2020-02-17 15:24:52
-#&gt; 37: 87eee6212ba1ae0a      preDigest .FUN:4f604aa46882b368 2020-02-17 15:24:52
-#&gt; 38: 87eee6212ba1ae0a      file.size                   226 2020-02-17 15:24:52
+#&gt;  1: 88dabbb6fbb67941       function                     f 2020-02-18 20:44:00
+#&gt;  2: 88dabbb6fbb67941          class               numeric 2020-02-18 20:44:00
+#&gt;  3: 88dabbb6fbb67941    object.size                  1104 2020-02-18 20:44:00
+#&gt;  4: 88dabbb6fbb67941       accessed   2020-02-18 20:44:00 2020-02-18 20:44:00
+#&gt;  5: 88dabbb6fbb67941 otherFunctions               saveRDS 2020-02-18 20:44:00
+#&gt;  6: 88dabbb6fbb67941 otherFunctions               do.call 2020-02-18 20:44:00
+#&gt;  7: 88dabbb6fbb67941 otherFunctions      build_site_local 2020-02-18 20:44:00
+#&gt;  8: 88dabbb6fbb67941 otherFunctions       build_reference 2020-02-18 20:44:00
+#&gt;  9: 88dabbb6fbb67941 otherFunctions  data_reference_topic 2020-02-18 20:44:00
+#&gt; 10: 88dabbb6fbb67941 otherFunctions          run_examples 2020-02-18 20:44:00
+#&gt; 11: 88dabbb6fbb67941 otherFunctions    highlight_examples 2020-02-18 20:44:00
+#&gt; 12: 88dabbb6fbb67941 otherFunctions             timing_fn 2020-02-18 20:44:00
+#&gt; 13: 88dabbb6fbb67941 otherFunctions                handle 2020-02-18 20:44:00
+#&gt; 14: 88dabbb6fbb67941 otherFunctions                   try 2020-02-18 20:44:00
+#&gt; 15: 88dabbb6fbb67941 otherFunctions           withVisible 2020-02-18 20:44:00
+#&gt; 16: 88dabbb6fbb67941 otherFunctions                lapply 2020-02-18 20:44:00
+#&gt; 17: 88dabbb6fbb67941      preDigest    n:c5775c3b366fb719 2020-02-18 20:44:00
+#&gt; 18: 88dabbb6fbb67941      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:44:00
+#&gt; 19: 88dabbb6fbb67941      file.size                   204 2020-02-18 20:44:00
+#&gt; 20: 87eee6212ba1ae0a       function                     f 2020-02-18 20:44:00
+#&gt; 21: 87eee6212ba1ae0a          class               numeric 2020-02-18 20:44:00
+#&gt; 22: 87eee6212ba1ae0a    object.size                  1104 2020-02-18 20:44:00
+#&gt; 23: 87eee6212ba1ae0a       accessed   2020-02-18 20:44:00 2020-02-18 20:44:00
+#&gt; 24: 87eee6212ba1ae0a otherFunctions               saveRDS 2020-02-18 20:44:00
+#&gt; 25: 87eee6212ba1ae0a otherFunctions               do.call 2020-02-18 20:44:00
+#&gt; 26: 87eee6212ba1ae0a otherFunctions      build_site_local 2020-02-18 20:44:00
+#&gt; 27: 87eee6212ba1ae0a otherFunctions       build_reference 2020-02-18 20:44:00
+#&gt; 28: 87eee6212ba1ae0a otherFunctions  data_reference_topic 2020-02-18 20:44:00
+#&gt; 29: 87eee6212ba1ae0a otherFunctions          run_examples 2020-02-18 20:44:00
+#&gt; 30: 87eee6212ba1ae0a otherFunctions    highlight_examples 2020-02-18 20:44:00
+#&gt; 31: 87eee6212ba1ae0a otherFunctions             timing_fn 2020-02-18 20:44:00
+#&gt; 32: 87eee6212ba1ae0a otherFunctions                handle 2020-02-18 20:44:00
+#&gt; 33: 87eee6212ba1ae0a otherFunctions                   try 2020-02-18 20:44:00
+#&gt; 34: 87eee6212ba1ae0a otherFunctions           withVisible 2020-02-18 20:44:00
+#&gt; 35: 87eee6212ba1ae0a otherFunctions                lapply 2020-02-18 20:44:00
+#&gt; 36: 87eee6212ba1ae0a      preDigest    n:c5775c3b366fb719 2020-02-18 20:44:00
+#&gt; 37: 87eee6212ba1ae0a      preDigest .FUN:4f604aa46882b368 2020-02-18 20:44:00
+#&gt; 38: 87eee6212ba1ae0a      file.size                   226 2020-02-18 20:44:00
 #&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'>
 <span class='co'># run clearStubArtifacts</span>
 <span class='fu'><a href='https://rdrr.io/r/base/warning.html'>suppressWarnings</a></span>(<span class='fu'>clearStubArtifacts</span>(<span class='no'>tmpDir</span>))
 <span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># stubs are removed</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 552 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 88dabbb6fbb67941       function                     f 2020-02-17 15:24:52
-#&gt;  2: 88dabbb6fbb67941          class               numeric 2020-02-17 15:24:52
-#&gt;  3: 88dabbb6fbb67941    object.size                  1104 2020-02-17 15:24:52
-#&gt;  4: 88dabbb6fbb67941       accessed   2020-02-17 15:24:52 2020-02-17 15:24:52
-#&gt;  5: 88dabbb6fbb67941 otherFunctions               saveRDS 2020-02-17 15:24:52
-#&gt;  6: 88dabbb6fbb67941 otherFunctions               do.call 2020-02-17 15:24:52
-#&gt;  7: 88dabbb6fbb67941 otherFunctions      build_site_local 2020-02-17 15:24:52
-#&gt;  8: 88dabbb6fbb67941 otherFunctions       build_reference 2020-02-17 15:24:52
-#&gt;  9: 88dabbb6fbb67941 otherFunctions  data_reference_topic 2020-02-17 15:24:52
-#&gt; 10: 88dabbb6fbb67941 otherFunctions          run_examples 2020-02-17 15:24:52
-#&gt; 11: 88dabbb6fbb67941 otherFunctions    highlight_examples 2020-02-17 15:24:52
-#&gt; 12: 88dabbb6fbb67941 otherFunctions             timing_fn 2020-02-17 15:24:52
-#&gt; 13: 88dabbb6fbb67941 otherFunctions                handle 2020-02-17 15:24:52
-#&gt; 14: 88dabbb6fbb67941 otherFunctions                   try 2020-02-17 15:24:52
-#&gt; 15: 88dabbb6fbb67941 otherFunctions           withVisible 2020-02-17 15:24:52
-#&gt; 16: 88dabbb6fbb67941 otherFunctions                lapply 2020-02-17 15:24:52
-#&gt; 17: 88dabbb6fbb67941      preDigest    n:c5775c3b366fb719 2020-02-17 15:24:52
-#&gt; 18: 88dabbb6fbb67941      preDigest .FUN:881ec847b7161f3c 2020-02-17 15:24:52
-#&gt; 19: 88dabbb6fbb67941      file.size                   208 2020-02-17 15:24:52
-#&gt; 20: 87eee6212ba1ae0a       function                     f 2020-02-17 15:24:52
-#&gt; 21: 87eee6212ba1ae0a          class               numeric 2020-02-17 15:24:52
-#&gt; 22: 87eee6212ba1ae0a    object.size                  1104 2020-02-17 15:24:52
-#&gt; 23: 87eee6212ba1ae0a       accessed   2020-02-17 15:24:52 2020-02-17 15:24:52
-#&gt; 24: 87eee6212ba1ae0a otherFunctions               saveRDS 2020-02-17 15:24:52
-#&gt; 25: 87eee6212ba1ae0a otherFunctions               do.call 2020-02-17 15:24:52
-#&gt; 26: 87eee6212ba1ae0a otherFunctions      build_site_local 2020-02-17 15:24:52
-#&gt; 27: 87eee6212ba1ae0a otherFunctions       build_reference 2020-02-17 15:24:52
-#&gt; 28: 87eee6212ba1ae0a otherFunctions  data_reference_topic 2020-02-17 15:24:52
-#&gt; 29: 87eee6212ba1ae0a otherFunctions          run_examples 2020-02-17 15:24:52
-#&gt; 30: 87eee6212ba1ae0a otherFunctions    highlight_examples 2020-02-17 15:24:52
-#&gt; 31: 87eee6212ba1ae0a otherFunctions             timing_fn 2020-02-17 15:24:52
-#&gt; 32: 87eee6212ba1ae0a otherFunctions                handle 2020-02-17 15:24:52
-#&gt; 33: 87eee6212ba1ae0a otherFunctions                   try 2020-02-17 15:24:52
-#&gt; 34: 87eee6212ba1ae0a otherFunctions           withVisible 2020-02-17 15:24:52
-#&gt; 35: 87eee6212ba1ae0a otherFunctions                lapply 2020-02-17 15:24:52
-#&gt; 36: 87eee6212ba1ae0a      preDigest    n:c5775c3b366fb719 2020-02-17 15:24:52
-#&gt; 37: 87eee6212ba1ae0a      preDigest .FUN:4f604aa46882b368 2020-02-17 15:24:52
-#&gt; 38: 87eee6212ba1ae0a      file.size                   226 2020-02-17 15:24:52
+#&gt;  1: 88dabbb6fbb67941       function                     f 2020-02-18 20:44:00
+#&gt;  2: 88dabbb6fbb67941          class               numeric 2020-02-18 20:44:00
+#&gt;  3: 88dabbb6fbb67941    object.size                  1104 2020-02-18 20:44:00
+#&gt;  4: 88dabbb6fbb67941       accessed   2020-02-18 20:44:00 2020-02-18 20:44:00
+#&gt;  5: 88dabbb6fbb67941 otherFunctions               saveRDS 2020-02-18 20:44:00
+#&gt;  6: 88dabbb6fbb67941 otherFunctions               do.call 2020-02-18 20:44:00
+#&gt;  7: 88dabbb6fbb67941 otherFunctions      build_site_local 2020-02-18 20:44:00
+#&gt;  8: 88dabbb6fbb67941 otherFunctions       build_reference 2020-02-18 20:44:00
+#&gt;  9: 88dabbb6fbb67941 otherFunctions  data_reference_topic 2020-02-18 20:44:00
+#&gt; 10: 88dabbb6fbb67941 otherFunctions          run_examples 2020-02-18 20:44:00
+#&gt; 11: 88dabbb6fbb67941 otherFunctions    highlight_examples 2020-02-18 20:44:00
+#&gt; 12: 88dabbb6fbb67941 otherFunctions             timing_fn 2020-02-18 20:44:00
+#&gt; 13: 88dabbb6fbb67941 otherFunctions                handle 2020-02-18 20:44:00
+#&gt; 14: 88dabbb6fbb67941 otherFunctions                   try 2020-02-18 20:44:00
+#&gt; 15: 88dabbb6fbb67941 otherFunctions           withVisible 2020-02-18 20:44:00
+#&gt; 16: 88dabbb6fbb67941 otherFunctions                lapply 2020-02-18 20:44:00
+#&gt; 17: 88dabbb6fbb67941      preDigest    n:c5775c3b366fb719 2020-02-18 20:44:00
+#&gt; 18: 88dabbb6fbb67941      preDigest .FUN:881ec847b7161f3c 2020-02-18 20:44:00
+#&gt; 19: 88dabbb6fbb67941      file.size                   204 2020-02-18 20:44:00
+#&gt; 20: 87eee6212ba1ae0a       function                     f 2020-02-18 20:44:00
+#&gt; 21: 87eee6212ba1ae0a          class               numeric 2020-02-18 20:44:00
+#&gt; 22: 87eee6212ba1ae0a    object.size                  1104 2020-02-18 20:44:00
+#&gt; 23: 87eee6212ba1ae0a       accessed   2020-02-18 20:44:00 2020-02-18 20:44:00
+#&gt; 24: 87eee6212ba1ae0a otherFunctions               saveRDS 2020-02-18 20:44:00
+#&gt; 25: 87eee6212ba1ae0a otherFunctions               do.call 2020-02-18 20:44:00
+#&gt; 26: 87eee6212ba1ae0a otherFunctions      build_site_local 2020-02-18 20:44:00
+#&gt; 27: 87eee6212ba1ae0a otherFunctions       build_reference 2020-02-18 20:44:00
+#&gt; 28: 87eee6212ba1ae0a otherFunctions  data_reference_topic 2020-02-18 20:44:00
+#&gt; 29: 87eee6212ba1ae0a otherFunctions          run_examples 2020-02-18 20:44:00
+#&gt; 30: 87eee6212ba1ae0a otherFunctions    highlight_examples 2020-02-18 20:44:00
+#&gt; 31: 87eee6212ba1ae0a otherFunctions             timing_fn 2020-02-18 20:44:00
+#&gt; 32: 87eee6212ba1ae0a otherFunctions                handle 2020-02-18 20:44:00
+#&gt; 33: 87eee6212ba1ae0a otherFunctions                   try 2020-02-18 20:44:00
+#&gt; 34: 87eee6212ba1ae0a otherFunctions           withVisible 2020-02-18 20:44:00
+#&gt; 35: 87eee6212ba1ae0a otherFunctions                lapply 2020-02-18 20:44:00
+#&gt; 36: 87eee6212ba1ae0a      preDigest    n:c5775c3b366fb719 2020-02-18 20:44:00
+#&gt; 37: 87eee6212ba1ae0a      preDigest .FUN:4f604aa46882b368 2020-02-18 20:44:00
+#&gt; 38: 87eee6212ba1ae0a      file.size                   226 2020-02-18 20:44:00
 #&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'>
 <span class='co'># cleanup</span>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
