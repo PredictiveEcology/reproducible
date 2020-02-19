@@ -4,14 +4,24 @@
 \alias{checkAndMakeCloudFolderID}
 \title{Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})}
 \usage{
-checkAndMakeCloudFolderID(cloudFolderID = NULL, create = FALSE)
+checkAndMakeCloudFolderID(
+  cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
+  cacheRepo = NULL,
+  create = FALSE,
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{cloudFolderID}{The google folder ID where cloud caching will occur.}
 
+\item{cacheRepo}{A repository used for storing cached objects.
+This is optional if \code{Cache} is used inside a SpaDES module.}
+
 \item{create}{Logical. If \code{TRUE}, then the cloudFolderID will be created.
 This should be used with caution as there are no checks for overwriting.
 See \code{googledrive::drive_mkdir}. Default \code{FALSE}.}
+
+\item{overwrite}{Logical. Passed to \code{googledrive::drive_mkdir}.}
 }
 \description{
 Will check for presence of a \code{cloudFolderID} and make a new one

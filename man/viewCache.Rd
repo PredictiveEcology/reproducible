@@ -110,11 +110,13 @@ Objects cached before this time will be shown or deleted.}
 \item{useCloud}{Logical. If \code{TRUE}, then every object that is deleted locally will
 also be deleted in the \code{cloudFolderID}, if it is non-\code{NULL}}
 
-\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}.
-If left as \code{NULL}, the function will create a cloud folder with a warning.
-The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
-It will also be added to \code{options("reproducible.cloudFolderID")},
-but this will not persist across sessions.}
+\item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
+If left as \code{NULL}, the function will create a cloud folder with name from last
+two folder levels of the \code{cacheRepo} path, :
+\code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
+This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
+but this will not persist across sessions. If this is a character string, it will
+treat this as a folder name to create or use on GoogleDrive.}
 
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},
 or an existing \linkS4class{DBIConnection}

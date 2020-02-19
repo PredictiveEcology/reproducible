@@ -267,11 +267,13 @@ if (getRversion() >= "3.1.0") {
 #'   be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
 #'   this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
 #'
-#' @param cloudFolderID A googledrive id of a folder, e.g., using \code{drive_mkdir()}.
-#'   If left as \code{NULL}, the function will create a cloud folder with a warning.
-#'   The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
-#'   It will also be added to \code{options("reproducible.cloudFolderID")},
-#'   but this will not persist across sessions.
+#' @param cloudFolderID A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
+#'   If left as \code{NULL}, the function will create a cloud folder with name from last
+#'   two folder levels of the \code{cacheRepo} path, :
+#'   \code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
+#'   This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
+#'   but this will not persist across sessions. If this is a character string, it will
+#'   treat this as a folder name to create or use on GoogleDrive.
 #'
 #' @param showSimilar A logical or numeric. Useful for debugging.
 #'        If \code{TRUE} or \code{1}, then if the Cache
@@ -538,6 +540,12 @@ setMethod(
         browser(expr = exists("._Cache_2"))
         #message("Retrieving file list in cloud folder")
         #gdriveLs <- retry(quote(drive_ls(path = as_id(cloudFolderID), pattern = outputHash)))
+        if (is.null(cloudFolderID))
+          cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
+        if (is.character(cloudFolderID)) {
+          cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, create = TRUE,
+                                                     overwrite = FALSE)
+        }
         gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = outputHash)))
       }
       # conns <- list()
@@ -652,8 +660,10 @@ setMethod(
           }
 
           if (useCloud) {
+            browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
-            isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output)
+            isInCloud <- cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo,
+                                     cloudFolderID, output)
           }
 
           return(output)
@@ -686,7 +696,7 @@ setMethod(
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                                   drv = drv)
           if (is.null(output)) {
-            retry(quote(drive_rm(as_id(gdriveLs$id[isInCloud]))))
+            retry(quote(drive_rm(gdriveLs[isInCloud,])))
             isInCloud[isInCloud] <- FALSE
           } else {
             .CacheIsNew <- FALSE
@@ -755,7 +765,8 @@ setMethod(
       }
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
-        output <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
+        if (.CacheIsNew)
+          output <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
       }
       outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
 
@@ -911,7 +922,7 @@ setMethod(
         }
       }
 
-      if (useCloud) {
+      if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
         cloudUploadFromCache(isInCloud, outputHash, saved, cacheRepo, cloudFolderID, outputToSave, rasters)
       }
@@ -1656,3 +1667,6 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   }
   return(list(isInRepo = isInRepo, outputHash = outputHash, needFindByTags = needFindByTags))
 }
+
+cloudFolderFromCacheRepo <- function(cacheRepo)
+  paste0(basename2(dirname(cacheRepo)), "_", basename2(cacheRepo))

@@ -180,7 +180,7 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
   }
 
   if (inherits(result, "try-error")) {
-    stop("Failed after ", retries, " attempts.")
+    stop(result, "\nFailed after ", retries, " attempts.")
   } else {
     return(result)
   }
