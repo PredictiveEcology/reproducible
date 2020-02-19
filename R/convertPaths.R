@@ -93,7 +93,10 @@ setMethod(
   "Filenames",
   signature = "Raster",
   definition = function(obj) {
-    filename(obj)
+    fn <- filename(obj)
+    if (endsWith(fn, suffix = "grd"))
+      fn <- c(fn, gsub("grd$", "gri", fn))
+    fn
 })
 
 #' @export

@@ -178,11 +178,13 @@ cloud folder gets large. If a user wishes to keep "high-level" control, set this
 be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
 this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})}
 
-\item{cloudFolderID}{A googledrive id of a folder, e.g., using \code{drive_mkdir()}.
-If left as \code{NULL}, the function will create a cloud folder with a warning.
-The warning will have the \code{cloudFolderID} that should be used in subsequent calls.
-It will also be added to \code{options("reproducible.cloudFolderID")},
-but this will not persist across sessions.}
+\item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
+If left as \code{NULL}, the function will create a cloud folder with name from last
+two folder levels of the \code{cacheRepo} path, :
+\code{paste0(basename(dirname(cacheRepo)), "_", basename(cacheRepo))}.
+This \code{cloudFolderID} will be added to \code{options("reproducible.cloudFolderID")},
+but this will not persist across sessions. If this is a character string, it will
+treat this as a folder name to create or use on GoogleDrive.}
 
 \item{showSimilar}{A logical or numeric. Useful for debugging.
 If \code{TRUE} or \code{1}, then if the Cache
