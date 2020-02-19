@@ -192,7 +192,6 @@ cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudF
                              path = as_id(cloudFolderID), name = newFileName,
                              overwrite = FALSE))))
     if (is(du, "try-error")) {
-      browser()
       return(du)
     }
   }

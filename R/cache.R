@@ -1662,9 +1662,10 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
   if (NROW(isInRepoAlt) > 0 && length(unique(isInRepoAlt[[.cacheTableHashColName()]])) == 1) {
     newLocalTags <- localTags[localTags[[.cacheTableHashColName()]] %in% isInRepoAlt[[.cacheTableHashColName()]],]
     tags1 <- grepl(paste0("(",
-                          paste("accessed", "cacheId", "class", "date", "format", "function",
-                                "name", "object.size", "otherFunctions", "preDigest", "file.size",
-                                sep = "|"),
+                          #paste("accessed", "cacheId", "class", "date", "format", "function", "inCloud",
+                          #      "name", "object.size", "otherFunctions", "preDigest", "file.size",
+                          #      sep = "|"),
+                          paste(.defaultUserTags, collapse = "|"),
                           ")"),
                    newLocalTags[["tagKey"]])
     localTagsAlt <- newLocalTags[!tags1,]
@@ -1708,3 +1709,7 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
 
 cloudFolderFromCacheRepo <- function(cacheRepo)
   paste0(basename2(dirname(cacheRepo)), "_", basename2(cacheRepo))
+
+.defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
+                      "otherFunctions", "preDigest", "file.size", "cacheId")
+
