@@ -14,6 +14,7 @@ version 1.0.0
 * Much better SQLite database handling for concurrent write attempts.
   Tested with dozens of write attempts per second by 3 cores with abundant locked database occurrences.
 * `postProcess` arg `useGDAL` can now take `"force"` as the default behaviour is to not use GDAL if the problem can fit into RAM and `sf` or `raster` tools will be faster than `GDAL` tools
+* `useCloud` argument in `Cache` and family has slightly modified functionality (see ?Cache new section `useCloud`) and now has more tests including edge cases, such as `useCloud = TRUE, useCache = 'overwrite'`. The cloud version now will also follow the `"overwrite"` command.
 
 ## Dependency changes
 
