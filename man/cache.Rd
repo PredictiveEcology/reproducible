@@ -353,16 +353,17 @@ that \code{"devMode"} is most useful if used from the start of a project.
 This is a way to store all or some of the local Cache in the cloud.
 Currently, the only cloud option is Google Drive, via \code{googledrive}
 package. For this to work, the user must be or be able to be authenticated
-with \code{googledrive::drive_auth()}. The principle behind this
+with \code{googledrive::drive_auth}. The principle behind this
 \code{useCloud} is that it will be a full or partial mirror of a local Cache.
 It is not intended to be used independently from a local Cache. To share
 objects that are in the Cloud with another person, it requires 2 steps. 1)
 share the \code{cloudFolderID$id}, which can be retrieved by
 \code{getOption("reproducible.cloudFolderID")$id} after at least one Cache
 call has been made. 2) The other user must then set their
-\code{cacheFolderID} in a \code{Cache(..., reproducible.cloudFolderID = "the
-ID here")} call or set their option manually
-\code{options("reproducible.cloudFolderID" = "the ID here)}.
+\code{cacheFolderID} in a
+\code{Cache\(..., reproducible.cloudFolderID = \"the ID here\"\)} call or
+set their option manually
+\code{options\(\"reproducible.cloudFolderID\" = \"the ID here\"\)}.
 
 If \code{TRUE}, then this Cache call will download
   (if local copy doesn't exist, but cloud copy does exist), upload
