@@ -607,7 +607,7 @@ setMethod(
       }
 
       if (identical("overwrite", useCache)  && NROW(isInRepo) > 0 || needFindByTags) {
-        suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE))
+        suppressMessages(clearCache(x = cacheRepo, userTags = outputHash, ask = FALSE, useCloud = useCloud))
         if (identical("devMode", useCache)) {
           userTagsSimple <- gsub(".*:(.*)", "\\1", userTags)
           isInRepo <- isInRepo[!isInRepo[[.cacheTableTagColName()]] %in% userTagsSimple, , drop = FALSE]
