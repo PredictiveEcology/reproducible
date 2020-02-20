@@ -3,16 +3,19 @@ Type: Package
 Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
 Description: Collection of high-level, robust, machine- and OS-independent tools
     for making deeply reproducible and reusable content in R.
-    This includes light weight package management (similar to 'packrat' and
-    'checkpoint', but more flexible, lightweight, simpler yet less tested than both), 
-    tools for caching, downloading and verifying or writing checksums, post-processing 
-    of common spatial datasets, and accessing GitHub repositories. 
-    Some features are still under active development.
+    The three workhorse functions are Cache, prepInputs, and Require; 
+    these allow for nested caching, robust to environments, and objects with
+    environments (like functions), and data retrieval and processing, and 
+    package handling in continuous workflow environments. In all cases,
+    efforts are made to make the first and subsequent calls of functions have 
+    the same result, but vastly faster at subsequent times by way of checksums
+    and digesting. Several features are still under active development, including
+    cloud storage of cached objects, allowing for sharing between users.
 SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.rar' files.
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2020-02-13
+Date: 2020-02-19
 Version: 1.0.0
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
