@@ -136,16 +136,15 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @section \code{useCloud}:
 #' This is a way to store all or some of the local Cache in the cloud.
-#' Currently, the only cloud option is Google Drive, via \code{googledrive}
-#' package. For this to work, the user must be or be able to be authenticated
+#' Currently, the only cloud option is Google Drive, via \pkg{googledrive}.
+#' For this to work, the user must be or be able to be authenticated
 #' with \code{googledrive::drive_auth}. The principle behind this
 #' \code{useCloud} is that it will be a full or partial mirror of a local Cache.
 #' It is not intended to be used independently from a local Cache. To share
 #' objects that are in the Cloud with another person, it requires 2 steps. 1)
 #' share the \code{cloudFolderID$id}, which can be retrieved by
 #' \code{getOption("reproducible.cloudFolderID")$id} after at least one Cache
-#' call has been made. 2) The other user must then set their
-#' \code{cacheFolderID} in a
+#' call has been made. 2) The other user must then set their  \code{cacheFolderID} in a
 #' \code{Cache\(..., reproducible.cloudFolderID = \"the ID here\"\)} call or
 #' set their option manually
 #' \code{options\(\"reproducible.cloudFolderID\" = \"the ID here\"\)}.
@@ -201,6 +200,7 @@ if (getRversion() >= "3.1.0") {
 #'                within it. Only this/these objects will be considered for caching,
 #'                i.e., only use a subset of
 #'                the list, environment or similar objects.
+#'
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
@@ -212,8 +212,7 @@ if (getRversion() >= "3.1.0") {
 #'        file-backing, then this will be
 #'        passed to \code{digest::digest}, essentially limiting the number of bytes
 #'        to digest (for speed). This will only be used if \code{quick = FALSE}.
-#'        Default is \code{getOption("reproducible.length")},
-#'        which is set to \code{Inf}.
+#'        Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.
 #'
 #' @param compareRasterFileLength Being deprecated; use \code{length}.
 #'
@@ -224,8 +223,7 @@ if (getRversion() >= "3.1.0") {
 #'        to do with.
 #'
 #' @param debugCache Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
-#'        partial matching, so "c" or "q" work). \code{TRUE} is
-#'        equivalent to \code{"complete"}.
+#'        partial matching, so "c" or "q" work). \code{TRUE} is equivalent to \code{"complete"}.
 #'        If \code{"complete"}, then the returned object from the Cache
 #'        function will have two attributes, \code{debugCache1} and \code{debugCache2},
 #'        which are the entire \code{list(...)} and that same object, but after all
@@ -249,7 +247,8 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param userTags A character vector with descriptions of the Cache function call. These
 #'   will be added to the Cache so that this entry in the Cache can be found using
-#'   \code{userTags} e.g., via \code{\link{showCache}}
+#'   \code{userTags} e.g., via \code{\link{showCache}}.
+#'
 #' @param notOlderThan A time. Load an object from the Cache if it was created after this.
 #'
 #' @param quick Logical. If \code{TRUE},
@@ -262,10 +261,9 @@ if (getRversion() >= "3.1.0") {
 #'        not be treated as paths, then \code{quick = TRUE} will be much faster, with no loss
 #'        of information. If it is file or directory, then it will digest the file content,
 #'        or \code{basename(object)}. For class \code{Path} objects, the file's metadata
-#'        (i.e., filename and file size)
-#'        will be hashed instead of the file contents if \code{quick = TRUE}.
-#'        If set to \code{FALSE} (default),
-#'        the contents of the file(s) are hashed.
+#'        (i.e., filename and file size) will be hashed instead of the file contents if
+#'        \code{quick = TRUE}.
+#'        If set to \code{FALSE} (default), the contents of the file(s) are hashed.
 #'        If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
 #'        as paths, if they are file-backed.
 #'
@@ -360,7 +358,7 @@ setGeneric(
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL)) {
     standardGeneric("Cache")
-  })
+})
 
 #' @export
 #' @rdname cache
@@ -400,7 +398,6 @@ setMethod(
         do.call(FUN, args = modifiedDots)
       }
     } else {
-
       startCacheTime <- verboseTime(verbose)
 
       if (!missing(compareRasterFileLength)) {
@@ -480,7 +477,6 @@ setMethod(
             archivist::createLocalRepo(cacheRepos[[cacheRepoInd]],
                                        force = isIntactRepo[cacheRepoInd])
           })
-
       }
 
       # List file prior to cache
@@ -868,8 +864,7 @@ setMethod(
                     paste0("accessed:", Sys.time()),
                     paste0("inCloud:", isTRUE(useCloud)),
                     paste0(otherFns),
-                    paste("preDigest", names(preDigestUnlistTrunc),
-                          preDigestUnlistTrunc, sep = ":")
+                    paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")
       )
 
       written <- 0
@@ -1385,10 +1380,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
       similar2 <- similar[grepl("preDigest", tag)]
       cacheIdOfSimilar <- similar[grepl("cacheId", tag)][[.cacheTableTagColName("tag")]]
       cacheIdOfSimilar <- unlist(strsplit(cacheIdOfSimilar, split = ":"))[2]
-      similar2[, `:=`(fun = unlist(lapply(strsplit(get(cn), split = ":"),
-                                          function(xx) xx[[2]])),
-                      hash = unlist(lapply(strsplit(get(cn), split = ":"),
-                                           function(xx) xx[[3]])))]
+      similar2[, `:=`(fun = unlist(lapply(strsplit(get(cn), split = ":"), function(xx) xx[[2]])),
+                      hash = unlist(lapply(strsplit(get(cn), split = ":"), function(xx) xx[[3]])))]
     } else {
       Tag <- similar[paste(tagKey , get(.cacheTableTagColName()), sep = ":"),
                      on = .cacheTableHashColName()][[hashName]]
@@ -1402,7 +1395,6 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
 
     a <- setDT(as.list(preDigestUnlistTrunc))
     a <- melt(a, measure.vars = seq_along(names(a)), variable.name = "fun", value.name = "hash")
-
 
     similar2 <- similar2[a, on = "fun", nomatch = NA]
     similar2[, differs := (i.hash != hash)]
@@ -1437,7 +1429,6 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
       message(crayon::cyan("... because of (a) new argument(s): ",
                            #"argument currently specified that was not in similar cache: ",
                            paste(as.character(missingArgs), collapse = ", ")))
-
     }
     # message(crayon::cyan("Only the following elements differ (dots are replacements for $ or @)"))
     # oldColsToKeep <- c("fun", "differs")

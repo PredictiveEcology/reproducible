@@ -322,7 +322,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       a <- retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile,
                                                    overwrite = overwrite, verbose = TRUE)))
     }
-
   } else {
     message(skipDownloadMsg)
     needChecksums <- 0
