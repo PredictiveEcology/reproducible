@@ -13,11 +13,14 @@
 <script src="pkgdown.js"></script><meta property="og:title" content="A Set of Tools that Enhance Reproducibility Beyond Package Management">
 <meta property="og:description" content="Collection of high-level, robust, machine- and OS-independent tools
     for making deeply reproducible and reusable content in R.
-    This includes light weight package management (similar to packrat and
-    checkpoint, but more flexible, lightweight, simpler yet less tested than both), 
-    tools for caching, downloading and verifying or writing checksums, post-processing 
-    of common spatial datasets, and accessing GitHub repositories. 
-    Some features are still under active development.">
+    The three workhorse functions are Cache, prepInputs, and Require; 
+    these allow for nested caching, robust to environments, and objects with
+    environments (like functions), and data retrieval and processing, and 
+    package handling in continuous workflow environments. In all cases,
+    efforts are made to make the first and subsequent calls of functions have 
+    the same result, but vastly faster at subsequent times by way of checksums
+    and digesting. Several features are still under active development, including
+    cloud storage of cached objects, allowing for sharing between users.">
 <meta name="twitter:card" content="summary">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
