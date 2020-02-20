@@ -346,7 +346,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 10224 bytes
 #&gt; 
 #&gt; $checkAndMakeCloudFolderID
-#&gt; 15840 bytes
+#&gt; 19088 bytes
 #&gt; 
 #&gt; $checkFutures
 #&gt; 11552 bytes
@@ -391,13 +391,13 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 5616 bytes
 #&gt; 
 #&gt; $cloudUpload
-#&gt; 10944 bytes
+#&gt; 16616 bytes
 #&gt; 
 #&gt; $cloudUploadFromCache
-#&gt; 9112 bytes
+#&gt; 11360 bytes
 #&gt; 
 #&gt; $cloudUploadRasterBackends
-#&gt; 6576 bytes
+#&gt; 7360 bytes
 #&gt; 
 #&gt; $cloudWriteOld
 #&gt; 4808 bytes
@@ -451,7 +451,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 104896 bytes
 #&gt; 
 #&gt; $devModeFn1
-#&gt; 33896 bytes
+#&gt; 32112 bytes
 #&gt; 
 #&gt; $dlGeneric
 #&gt; 46688 bytes
@@ -533,6 +533,9 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 
 #&gt; $isOrHasRaster
 #&gt; 78752 bytes
+#&gt; 
+#&gt; $isTRUEorForce
+#&gt; 5880 bytes
 #&gt; 
 #&gt; $isWindows
 #&gt; 3544 bytes
@@ -694,7 +697,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 48752 bytes
 #&gt; 
 #&gt; $rmFromCloudFolder
-#&gt; 104760 bytes
+#&gt; 93528 bytes
 #&gt; 
 #&gt; $rndstr
 #&gt; 29240 bytes
@@ -794,7 +797,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 
 <span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
 <span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
-(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 584 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 11965848</div><div class='input'>                 # and imported functions
+(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 648 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 11970728</div><div class='input'>                 # and imported functions
 
 </div></pre>
   </div>

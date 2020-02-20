@@ -135,9 +135,9 @@
       <small>Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="version-1-0-0" class="section level1">
+    <div id="version-100" class="section level1">
 <h1 class="page-header">
-<a href="#version-1-0-0" class="anchor"></a>version 1.0.0<small> Unreleased </small>
+<a href="#version-100" class="anchor"></a>version 1.0.0<small> Unreleased </small>
 </h1>
 <div id="new-features" class="section level2">
 <h2 class="hasAnchor">
@@ -152,6 +152,8 @@
 <li>Much better SQLite database handling for concurrent write attempts. Tested with dozens of write attempts per second by 3 cores with abundant locked database occurrences.</li>
 <li>
 <code>postProcess</code> arg <code>useGDAL</code> can now take <code>"force"</code> as the default behaviour is to not use GDAL if the problem can fit into RAM and <code>sf</code> or <code>raster</code> tools will be faster than <code>GDAL</code> tools</li>
+<li>
+<code>useCloud</code> argument in <code>Cache</code> and family has slightly modified functionality (see ?Cache new section <code>useCloud</code>) and now has more tests including edge cases, such as <code>useCloud = TRUE, useCache = 'overwrite'</code>. The cloud version now will also follow the <code>"overwrite"</code> command.</li>
 </ul>
 </div>
 <div id="dependency-changes" class="section level2">
@@ -172,9 +174,9 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-11" class="section level1">
+    <div id="version-0211" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-11" class="anchor"></a>version 0.2.11<small> 2019-11-19 </small>
+<a href="#version-0211" class="anchor"></a>version 0.2.11<small> 2019-11-19 </small>
 </h1>
 <div id="dependency-changes-1" class="section level2">
 <h2 class="hasAnchor">
@@ -200,9 +202,9 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-10" class="section level1">
+    <div id="version-0210" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-10" class="anchor"></a>version 0.2.10<small> 2019-09-11 </small>
+<a href="#version-0210" class="anchor"></a>version 0.2.10<small> 2019-09-11 </small>
 </h1>
 <div id="dependency-changes-2" class="section level2">
 <h2 class="hasAnchor">
@@ -232,9 +234,9 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-9" class="section level1">
+    <div id="version-029" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-9" class="anchor"></a>version 0.2.9<small> 2019-07-09 </small>
+<a href="#version-029" class="anchor"></a>version 0.2.9<small> 2019-07-09 </small>
 </h1>
 <div id="new-features-3" class="section level2">
 <h2 class="hasAnchor">
@@ -251,15 +253,15 @@
 <h2 class="hasAnchor">
 <a href="#bug-fixes-3" class="anchor"></a>Bug fixes</h2>
 <ul>
-<li>fixes for <code>rcnst</code> errors on R-devel, tested using <code><a href="https://devtools.r-lib.org//reference/check.html">devtools::check(env_vars = list("R_COMPILE_PKGS"=1, "R_JIT_STRATEGY"=4, "R_CHECK_CONSTANTS"=5))</a></code>
+<li>fixes for <code>rcnst</code> errors on R-devel, tested using <code><a href="https://rdrr.io/pkg/devtools/man/check.html">devtools::check(env_vars = list("R_COMPILE_PKGS"=1, "R_JIT_STRATEGY"=4, "R_CHECK_CONSTANTS"=5))</a></code>
 </li>
 <li>other minor improvements, including fixes for <a href='https://github.com/PredictiveEcology/reproducible/issues/115'>#115</a></li>
 </ul>
 </div>
 </div>
-    <div id="version-0-2-8" class="section level1">
+    <div id="version-028" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-8" class="anchor"></a>version 0.2.8<small> 2019-03-18 </small>
+<a href="#version-028" class="anchor"></a>version 0.2.8<small> 2019-03-18 </small>
 </h1>
 <div id="new-features-4" class="section level2">
 <h2 class="hasAnchor">
@@ -285,9 +287,9 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-7" class="section level1">
+    <div id="version-027" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-7" class="anchor"></a>version 0.2.7<small> 2019-03-07 </small>
+<a href="#version-027" class="anchor"></a>version 0.2.7<small> 2019-03-07 </small>
 </h1>
 <div id="new-features-5" class="section level2">
 <h2 class="hasAnchor">
@@ -311,9 +313,9 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-6" class="section level1">
+    <div id="version-026" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-6" class="anchor"></a>version 0.2.6<small> 2019-02-01 </small>
+<a href="#version-026" class="anchor"></a>version 0.2.6<small> 2019-02-01 </small>
 </h1>
 <div id="dependency-changes-3" class="section level2">
 <h2 class="hasAnchor">
@@ -356,9 +358,9 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-5" class="section level1">
+    <div id="version-025" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-5" class="anchor"></a>version 0.2.5<small> 2018-11-16 </small>
+<a href="#version-025" class="anchor"></a>version 0.2.5<small> 2018-11-16 </small>
 </h1>
 <div id="dependency-changes-4" class="section level2">
 <h2 class="hasAnchor">
@@ -372,16 +374,13 @@
 <h2 class="hasAnchor">
 <a href="#new-features-7" class="anchor"></a>New features</h2>
 <ul>
-<li>New value possible for <code><a href="https://rdrr.io/r/base/options.html">options(reproducible.useCache = 'overwrite')</a></code>, which allows use of <code>Cache</code> in cases where the function call has an entry in the <code>cacheRepo</code>, will purge it and add the output of the current call instead.</li>
-<li>New option <code>reproducible.inputPaths</code> (default <code>NULL</code>) and <code>reproducible.inputPathsRecursive</code> (default <code>FALSE</code>), which will be used in <code>prepInputs</code> as possible directory sources (searched recursively or not) for files being downloaded/extracted/prepared. This allows the using of local copies of files in (an)other location(s) instead of downloading them. If local location does not have the required files, it will proceed to download so there is little cost in setting this option. If files do exist on local system, the function will attempt to use a hardlink before making a copy.</li>
-<li>
-<code><a href="../reference/dlGoogle.html">dlGoogle()</a></code> now sets <code><a href="https://rdrr.io/r/base/options.html">options(httr_oob_default = TRUE)</a></code> if using Rstudio Server.</li>
-<li>Files in <code>CHECKSUMS</code> now sorted alphabetically.</li>
-<li>
-<code>Checksums</code> can now have a <code>CHECKSUMS.txt</code> file located in a different place than the <code>destinationPath</code>
-</li>
-<li>Attempt to select raster resampling method based on raster type if no method supplied (<a href='https://github.com/PredictiveEcology/reproducible/issues/63'>#63</a>, <a href='https://github.com/ianmseddy'>@ianmseddy</a>)</li>
-<li><code>projectInputs</code></li>
+<li><p>New value possible for <code><a href="https://rdrr.io/r/base/options.html">options(reproducible.useCache = 'overwrite')</a></code>, which allows use of <code>Cache</code> in cases where the function call has an entry in the <code>cacheRepo</code>, will purge it and add the output of the current call instead.</p></li>
+<li><p>New option <code>reproducible.inputPaths</code> (default <code>NULL</code>) and <code>reproducible.inputPathsRecursive</code> (default <code>FALSE</code>), which will be used in <code>prepInputs</code> as possible directory sources (searched recursively or not) for files being downloaded/extracted/prepared. This allows the using of local copies of files in (an)other location(s) instead of downloading them. If local location does not have the required files, it will proceed to download so there is little cost in setting this option. If files do exist on local system, the function will attempt to use a hardlink before making a copy.</p></li>
+<li><p><code><a href="../reference/dlGoogle.html">dlGoogle()</a></code> now sets <code><a href="https://rdrr.io/r/base/options.html">options(httr_oob_default = TRUE)</a></code> if using Rstudio Server.</p></li>
+<li><p>Files in <code>CHECKSUMS</code> now sorted alphabetically.</p></li>
+<li><p><code>Checksums</code> can now have a <code>CHECKSUMS.txt</code> file located in a different place than the <code>destinationPath</code></p></li>
+<li><p>Attempt to select raster resampling method based on raster type if no method supplied (<a href='https://github.com/PredictiveEcology/reproducible/issues/63'>#63</a>, <a href='https://github.com/ianmseddy'>@ianmseddy</a>)</p></li>
+<li><p><code>projectInputs</code></p></li>
 <li>
 <p>new function <code>assessDataTypeGDAL</code>, used in <code>postProcess</code>, to identify smallest <code>datatype</code> for large Raster* objects passed to GDAL system call</p>
 <ul>
@@ -417,17 +416,17 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-3" class="section level1">
+    <div id="version-023" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-3" class="anchor"></a>version 0.2.3<small> 2018-08-07 </small>
+<a href="#version-023" class="anchor"></a>version 0.2.3<small> 2018-08-07 </small>
 </h1>
 <ul>
 <li>fix and skip downloading test on CRAN</li>
 </ul>
 </div>
-    <div id="version-0-2-2" class="section level1">
+    <div id="version-022" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-2" class="anchor"></a>version 0.2.2<small> 2018-08-01 </small>
+<a href="#version-022" class="anchor"></a>version 0.2.2<small> 2018-08-01 </small>
 </h1>
 <div id="dependency-changes-5" class="section level2">
 <h2 class="hasAnchor">
@@ -490,9 +489,9 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-1" class="section level1">
+    <div id="version-021" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-1" class="anchor"></a>version 0.2.1<small> 2018-07-07 </small>
+<a href="#version-021" class="anchor"></a>version 0.2.1<small> 2018-07-07 </small>
 </h1>
 <div id="new-features-9" class="section level2">
 <h2 class="hasAnchor">
@@ -527,9 +526,9 @@
 </ul>
 </div>
 </div>
-    <div id="version-0-2-0" class="section level1">
+    <div id="version-020" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-2-0" class="anchor"></a>version 0.2.0<small> 2018-06-17 </small>
+<a href="#version-020" class="anchor"></a>version 0.2.0<small> 2018-06-17 </small>
 </h1>
 <div id="new-features-10" class="section level2">
 <h2 class="hasAnchor">
@@ -566,46 +565,36 @@
 </li>
 </ul>
 </li>
-<li>
-<code>checksums</code> now returns a data.table with the same columns whether <code>write = TRUE</code> or <code>write = FALSE</code>.</li>
-<li>
-<code>clearCache</code> and <code>showCache</code> now give messages and require user intervention if request to <code>clearCache</code> would be large quantities of data deleted</li>
-<li>
-<code><a href="https://rdrr.io/pkg/memoise/man/memoise.html">memoise::memoise</a></code> now used on 3rd run through an identical <code>Cache</code> call, dramatically speeding up in most cases</li>
-<li>new options: <code>reproducible.cachePath</code>, <code>reproducible.quick</code>, <code>reproducible.useMemoise</code>, <code>reproducible.useCache</code>, <code>reproducible.useragent</code>, <code>reproducible.verbose</code>
-</li>
-<li>
-<code>asPath</code> has a new argument indicating how deep should the path be considered when included in caching (only relevant when <code>quick = TRUE</code>)</li>
-<li>New vignette on using Cache</li>
-<li>Cache is <code>parallel</code>-safe, meaning there are <code>tryCatch</code> around every attempt at writing to SQLite database so it can be used safely on multi-threaded machines</li>
-<li>bug fixes, unit tests, more <code>imports</code> for packages e.g., <code>stats</code>
-</li>
-<li>updates for R 3.6.0 compact storage of sequence vectors</li>
-<li>experimental pipes (<code>%&gt;%</code>, <code><a href="../reference/pipe.html">%C%</a></code>) and assign <code><a href="../reference/cache.html">%&lt;%</a></code>
-</li>
+<li><p><code>checksums</code> now returns a data.table with the same columns whether <code>write = TRUE</code> or <code>write = FALSE</code>.</p></li>
+<li><p><code>clearCache</code> and <code>showCache</code> now give messages and require user intervention if request to <code>clearCache</code> would be large quantities of data deleted</p></li>
+<li><p><code><a href="https://rdrr.io/pkg/memoise/man/memoise.html">memoise::memoise</a></code> now used on 3rd run through an identical <code>Cache</code> call, dramatically speeding up in most cases</p></li>
+<li><p>new options: <code>reproducible.cachePath</code>, <code>reproducible.quick</code>, <code>reproducible.useMemoise</code>, <code>reproducible.useCache</code>, <code>reproducible.useragent</code>, <code>reproducible.verbose</code></p></li>
+<li><p><code>asPath</code> has a new argument indicating how deep should the path be considered when included in caching (only relevant when <code>quick = TRUE</code>)</p></li>
+<li><p>New vignette on using Cache</p></li>
+<li><p>Cache is <code>parallel</code>-safe, meaning there are <code>tryCatch</code> around every attempt at writing to SQLite database so it can be used safely on multi-threaded machines</p></li>
+<li><p>bug fixes, unit tests, more <code>imports</code> for packages e.g., <code>stats</code></p></li>
+<li><p>updates for R 3.6.0 compact storage of sequence vectors</p></li>
+<li><p>experimental pipes (<code>%&gt;%</code>, <code><a href="../reference/pipe.html">%C%</a></code>) and assign <code><a href="../reference/cache.html">%&lt;%</a></code></p></li>
 <li><p>several performance enhancements</p></li>
 </ul>
 </div>
 </div>
-    <div id="version-0-1-4" class="section level1">
+    <div id="version-014" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-1-4" class="anchor"></a>version 0.1.4<small> 2018-01-25 </small>
+<a href="#version-014" class="anchor"></a>version 0.1.4<small> 2018-01-25 </small>
 </h1>
 <ul>
-<li>
-<code>mergeCache</code>: a new function to merge two different Cache repositories</li>
-<li>
-<code><a href="https://rdrr.io/pkg/memoise/man/memoise.html">memoise::memoise</a></code> is now used on <code>loadFromLocalRepo</code>, meaning that the 3rd time <code><a href="../reference/cache.html">Cache()</a></code> is run on the same arguments (and the 2nd time in a session), the returned Cache will be from a RAM object via memoise. To stop this behaviour and use only disk-based Caching, set <code><a href="https://rdrr.io/r/base/options.html">options(reproducible.useMemoise = FALSE)</a></code> .</li>
-<li>Cache assign – <code><a href="../reference/cache.html">%&lt;%</a></code> can be used instead of normal assign, equivalent to <code>lhs &lt;- Cache(rhs)</code>.</li>
-<li>new option: reproducible.verbose, set to FALSE by default, but if set to true may help understand caching behaviour, especially for complex highly nested code.</li>
-<li>all options now described in <code><a href="../reference/reproducible-package.html">?reproducible</a></code>.</li>
-<li>All Cache arguments other than FUN and … will now propagate to internal, nested Cache calls, if they are not specified explicitly in each of the inner Cache calls.</li>
-<li>Cached pipe operator <code><a href="../reference/pipe.html">%C%</a></code> – use to begin a pipe sequence, e.g., <code>Cache() %C% ...</code>
-</li>
-<li>Cache arg <code>sideEffect</code> can now be a path</li>
-<li>Cache arg <code>digestPathContent</code> default changed from FALSE (was for speed) to TRUE (for content accuracy)</li>
-<li>New function, <code>searchFull</code>, which shows the full search path, known alternatively as “scope”, or “binding environments”. It is where R will search for a function when requested by a user.</li>
-<li>Uses <code><a href="https://rdrr.io/pkg/memoise/man/memoise.html">memoise::memoise</a></code> for several functions (<code>loadFromLocalRepo</code>, <code>pkgDep</code>, <code>package_dependencies</code>, <code>available.packages</code>) for speed – will impact memory at the expense of speed.</li>
+<li><p><code>mergeCache</code>: a new function to merge two different Cache repositories</p></li>
+<li><p><code><a href="https://rdrr.io/pkg/memoise/man/memoise.html">memoise::memoise</a></code> is now used on <code>loadFromLocalRepo</code>, meaning that the 3rd time <code><a href="../reference/cache.html">Cache()</a></code> is run on the same arguments (and the 2nd time in a session), the returned Cache will be from a RAM object via memoise. To stop this behaviour and use only disk-based Caching, set <code><a href="https://rdrr.io/r/base/options.html">options(reproducible.useMemoise = FALSE)</a></code> .</p></li>
+<li><p>Cache assign – <code><a href="../reference/cache.html">%&lt;%</a></code> can be used instead of normal assign, equivalent to <code>lhs &lt;- Cache(rhs)</code>.</p></li>
+<li><p>new option: reproducible.verbose, set to FALSE by default, but if set to true may help understand caching behaviour, especially for complex highly nested code.</p></li>
+<li><p>all options now described in <code><a href="../reference/reproducible-package.html">?reproducible</a></code>.</p></li>
+<li><p>All Cache arguments other than FUN and … will now propagate to internal, nested Cache calls, if they are not specified explicitly in each of the inner Cache calls.</p></li>
+<li><p>Cached pipe operator <code><a href="../reference/pipe.html">%C%</a></code> – use to begin a pipe sequence, e.g., <code>Cache() %C% ...</code></p></li>
+<li><p>Cache arg <code>sideEffect</code> can now be a path</p></li>
+<li><p>Cache arg <code>digestPathContent</code> default changed from FALSE (was for speed) to TRUE (for content accuracy)</p></li>
+<li><p>New function, <code>searchFull</code>, which shows the full search path, known alternatively as “scope”, or “binding environments”. It is where R will search for a function when requested by a user.</p></li>
+<li><p>Uses <code><a href="https://rdrr.io/pkg/memoise/man/memoise.html">memoise::memoise</a></code> for several functions (<code>loadFromLocalRepo</code>, <code>pkgDep</code>, <code>package_dependencies</code>, <code>available.packages</code>) for speed – will impact memory at the expense of speed.</p></li>
 <li>
 <p>New <code>Require</code> function</p>
 <ul>
@@ -613,22 +602,22 @@
 <li>can accept uncommented name, if length 1.</li>
 </ul>
 </li>
-<li>remove <code>dplyr</code> from Imports</li>
-<li>Add <code>RCurl</code> to Imports</li>
+<li><p>remove <code>dplyr</code> from Imports</p></li>
+<li><p>Add <code>RCurl</code> to Imports</p></li>
 <li><p>change name of <code>digestRaster</code> to <code>.digestRaster</code></p></li>
 </ul>
 </div>
-    <div id="version-0-1-3" class="section level1">
+    <div id="version-013" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-1-3" class="anchor"></a>version 0.1.3<small> 2017-08-10 </small>
+<a href="#version-013" class="anchor"></a>version 0.1.3<small> 2017-08-10 </small>
 </h1>
 <ul>
 <li>fix R CMD check errors on Solaris that were not previously resolved</li>
 </ul>
 </div>
-    <div id="version-0-1-2" class="section level1">
+    <div id="version-012" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-1-2" class="anchor"></a>version 0.1.2<small> 2017-08-09 </small>
+<a href="#version-012" class="anchor"></a>version 0.1.2<small> 2017-08-09 </small>
 </h1>
 <ul>
 <li>fix R CMD check errors on Solaris</li>
@@ -636,18 +625,18 @@
 <li>move <code>rgdal</code> to Suggests</li>
 </ul>
 </div>
-    <div id="version-0-1-1" class="section level1">
+    <div id="version-011" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-1-1" class="anchor"></a>version 0.1.1<small> 2017-08-05 </small>
+<a href="#version-011" class="anchor"></a>version 0.1.1<small> 2017-08-05 </small>
 </h1>
 <ul>
 <li>cleanup examples and <em>do</em> run them (per CRAN)</li>
 <li>add tests to ensure all exported (non-dot) functions have examples</li>
 </ul>
 </div>
-    <div id="version-0-1-0" class="section level1">
+    <div id="version-010" class="section level1">
 <h1 class="page-header">
-<a href="#version-0-1-0" class="anchor"></a>version 0.1.0<small> Unreleased </small>
+<a href="#version-010" class="anchor"></a>version 0.1.0<small> Unreleased </small>
 </h1>
 <ul>
 <li>A new package, which takes all caching utilities out of the <code>SpaDES</code> package.</li>
@@ -659,23 +648,23 @@
     <div id="tocnav">
       <h2>Contents</h2>
       <ul class="nav nav-pills nav-stacked">
-        <li><a href="#version-1-0-0">1.0.0</a></li>
-        <li><a href="#version-0-2-11">0.2.11</a></li>
-        <li><a href="#version-0-2-10">0.2.10</a></li>
-        <li><a href="#version-0-2-9">0.2.9</a></li>
-        <li><a href="#version-0-2-8">0.2.8</a></li>
-        <li><a href="#version-0-2-7">0.2.7</a></li>
-        <li><a href="#version-0-2-6">0.2.6</a></li>
-        <li><a href="#version-0-2-5">0.2.5</a></li>
-        <li><a href="#version-0-2-3">0.2.3</a></li>
-        <li><a href="#version-0-2-2">0.2.2</a></li>
-        <li><a href="#version-0-2-1">0.2.1</a></li>
-        <li><a href="#version-0-2-0">0.2.0</a></li>
-        <li><a href="#version-0-1-4">0.1.4</a></li>
-        <li><a href="#version-0-1-3">0.1.3</a></li>
-        <li><a href="#version-0-1-2">0.1.2</a></li>
-        <li><a href="#version-0-1-1">0.1.1</a></li>
-        <li><a href="#version-0-1-0">0.1.0</a></li>
+        <li><a href="#version-100">1.0.0</a></li>
+        <li><a href="#version-0211">0.2.11</a></li>
+        <li><a href="#version-0210">0.2.10</a></li>
+        <li><a href="#version-029">0.2.9</a></li>
+        <li><a href="#version-028">0.2.8</a></li>
+        <li><a href="#version-027">0.2.7</a></li>
+        <li><a href="#version-026">0.2.6</a></li>
+        <li><a href="#version-025">0.2.5</a></li>
+        <li><a href="#version-023">0.2.3</a></li>
+        <li><a href="#version-022">0.2.2</a></li>
+        <li><a href="#version-021">0.2.1</a></li>
+        <li><a href="#version-020">0.2.0</a></li>
+        <li><a href="#version-014">0.1.4</a></li>
+        <li><a href="#version-013">0.1.3</a></li>
+        <li><a href="#version-012">0.1.2</a></li>
+        <li><a href="#version-011">0.1.1</a></li>
+        <li><a href="#version-010">0.1.0</a></li>
       </ul>
     </div>
   </div>
