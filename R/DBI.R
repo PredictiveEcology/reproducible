@@ -229,51 +229,98 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                tagValue = character(), createdDate = character())
 
 #' @importFrom DBI dbSendStatement dbClearResult
-.addTagsRepo <- function(isInRepo, cachePath, lastOne,
+.addTagsRepo <- function(cacheId, cachePath, tagKey = character(), tagValue = character(),
                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          conn = getOption("reproducible.conn", NULL)) {
-  browser(expr = exists("xxxx"))
-  if (useDBI()) {
-    if (is.null(conn)) {
-      conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
-      on.exit(dbDisconnect(conn))
-    }
+  browser(expr = exists("._addTagsRepo_1"))
+  if (length(cacheId) > 0) {
+    if (length(cacheId) > 1) stop(".addTagsRepo can only handle appending 1 tag at a time")
+    if (useDBI()) {
+      if (is.null(conn)) {
+        conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
+        on.exit(dbDisconnect(conn))
+      }
+      curTime <- as.character(Sys.time())
+      if (length(tagKey) < length(cacheId))
+        tagKey <- "accessed"
+      if (length(tagValue) < length(cacheId))
+        tagValue <- curTime
 
-    # This is what the next code pair of lines does
-    # dt <- data.table("cacheId" = isInRepo$cacheId[lastOne], "tagKey" = "accessed",
-    #                 "tagValue" = as.character(Sys.time()),
-    #                 "createdDate" = as.character(Sys.time()))
-    #
-    # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
-    rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-      dbSendStatement(
-        conn,
-        paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
-               " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
-               "('", isInRepo$cacheId[lastOne],
-               "', 'accessed', '", as.character(Sys.time()), "', '", as.character(Sys.time()), "')")
-      )))
+      # This is what the next code pair of lines does
+      # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
+      #                 "tagValue" = as.character(Sys.time()),
+      #                 "createdDate" = as.character(Sys.time()))
+      #
+      # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
+      rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
+        dbSendStatement(
+          conn,
+          paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
+                 " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
+                 "('", cacheId,
+                 "', '",tagKey,"', '", tagValue, "', '", curTime, "')"))
+      ))
 
-    dbClearResult(rs)
-  } else {
-    written <- 0
-    while (written >= 0) {
-      saved <- suppressWarnings(try(silent = TRUE,
-                                    archivist::addTagsRepo(isInRepo[[.cacheTableHashColName()]][lastOne],
-                                                repoDir = cachePath,
-                                                tags = paste0("accessed:", Sys.time()))))
-      written <- if (is(saved, "try-error")) {
-        Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-        written + 1
-      } else {
-        -1
+      dbClearResult(rs)
+    } else {
+      written <- 0
+      while (written >= 0) {
+        saved <- suppressWarnings(try(silent = TRUE,
+                                      archivist::addTagsRepo(cacheId,
+                                                             repoDir = cachePath,
+                                                             tags = paste0("accessed:", Sys.time()))))
+        written <- if (is(saved, "try-error")) {
+          Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
+          written + 1
+        } else {
+          -1
+        }
       }
     }
   }
 }
 
+.updateTagsRepo <- function(cacheId, cachePath, tagKey = character(), tagValue = character(),
+                            drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                            conn = getOption("reproducible.conn", NULL)) {
+  browser(expr = exists("._updateTagsRepo_1"))
+  if (length(cacheId) > 0) {
+    if (length(cacheId) > 1) stop(".updateTagsRepo can only handle updating 1 tag at a time")
+    if (useDBI()) {
+      if (is.null(conn)) {
+        conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
+        on.exit(dbDisconnect(conn))
+      }
+      curTime <- as.character(Sys.time())
+      if (length(tagKey) < length(cacheId)) {
+        warning("tagKey and/or tagValue must both be supplied for .updateTagsRepo.")
+        return(invisible())
+      }
+
+      # This is what the next code pair of lines does
+      # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
+      #                 "tagValue" = as.character(Sys.time()),
+      #                 "createdDate" = as.character(Sys.time()))
+      #
+      # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
+      rs <- #retry(retries = 250, exponentialDecayBase = 1.01, quote(
+        dbSendStatement(
+          conn,
+          paste0("update \"", CacheDBTableName(cachePath, drv), "\"",
+                 " set \"tagValue\" = \"",tagValue,"\" where ",
+                 " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
+      #))
+
+      dbClearResult(rs)
+    } else {
+      warning("updateTagsRepo not implemented when useDBI = FALSE")
+    }
+
+  }
+
+}
 .cacheNumDefaultTags <- function() {
-  if (useDBI()) 4 else 8
+  if (useDBI()) 5 else 9
 }
 
 .ignoreTagKeys <- function() {

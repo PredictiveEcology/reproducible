@@ -28,7 +28,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
       }
       cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
     }
-    isID <- isTRUE(32 >= nchar(cloudFolderID) && nchar(cloudFolderID) >= 33)
+    isID <- isTRUE(32 <= nchar(cloudFolderID) && nchar(cloudFolderID) <= 33)
     driveLs <- if (isID) {
       tryCatch(drive_get(as_id(cloudFolderID)), error = function(x) {character()})
     } else {
@@ -37,14 +37,22 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
 
     if (NROW(driveLs) == 0) {
       if (isTRUE(create)) {
+        if (isID) {
+          if (is.null(cacheRepo)) {
+            cacheRepo <- .checkCacheRepo(cacheRepo)
+          }
+          cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
+        }
         newDir <- drive_mkdir(cloudFolderID, path = "~/", overwrite = overwrite)
         cloudFolderID <- newDir
       }
     } else {
       cloudFolderID <- driveLs
     }
-    if (isNullCFI)
-      message("Setting 'reproducible.cloudFolderID' option to be cloudFolder: ", cloudFolderID$name)
+    if (isNullCFI) {
+      message("Setting 'reproducible.cloudFolderID' option to be cloudFolder: ",
+              ifelse(!is.null(names(cloudFolderID)), cloudFolderID$name, cloudFolderID))
+    }
     options('reproducible.cloudFolderID' = cloudFolderID)
   }
   return(cloudFolderID)
@@ -98,9 +106,21 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
   if (!any(isInCloud)) {
     message("Uploading local copy of ", artifactFileName,", with cacheId: ",
             outputHash," to cloud folder")
-    retry(quote(drive_upload(media = artifactFileName, path = cloudFolderID,
-                             name = newFileName)))
-
+    numRetries <- 1
+    while (numRetries < 6) {
+      du <- try(retry(retries = numRetries,
+                      quote(drive_upload(media = artifactFileName, path = cloudFolderID,
+                                         name = newFileName, overwrite = FALSE))))
+      if (is(du, "try-error")) {
+        if (!isTRUE(any(grepl("overwrite", du)))) {
+          numRetries <- numRetries + 4
+        } else {
+          return(du)
+        }
+      } else {
+        numRetries <- 6
+      }
+    }
     cloudUploadRasterBackends(obj = output, cloudFolderID)
   }
 }
@@ -167,9 +187,13 @@ cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudF
     }
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     message("Uploading new cached object ", newFileName,", with cacheId: ",
-            outputHash," to cloud folder id: ", cloudFolderID$id)
-    retry(quote(drive_upload(media = CacheStoredFile(cacheRepo, outputHash),
-                             path = as_id(cloudFolderID), name = newFileName)))
+            outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
+    du <- try(retry(quote(drive_upload(media = CacheStoredFile(cacheRepo, outputHash),
+                             path = as_id(cloudFolderID), name = newFileName,
+                             overwrite = FALSE))))
+    if (is(du, "try-error")) {
+      return(du)
+    }
   }
   cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)
 }
@@ -177,6 +201,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudF
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   browser(expr = exists("._cloudUploadRasterBackends_1"))
   rasterFilename <- Filenames(obj)
+  out <- NULL
   if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
     allRelevantFiles <- unique(rasterFilename)
     # allRelevantFiles <- sapply(rasterFilename, function(file) {
@@ -184,10 +209,11 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
     #              full.names = TRUE))
     # })
     out <- lapply(allRelevantFiles, function(file) {
-      retry(quote(drive_upload(media = file,  path = cloudFolderID, name = basename(file))))
+      try(retry(quote(drive_upload(media = file,  path = cloudFolderID, name = basename(file),
+                               overwrite = FALSE))))
     })
   }
-  return(invisible())
+  return(invisible(out))
 }
 
 cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,

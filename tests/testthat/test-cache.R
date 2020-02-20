@@ -793,7 +793,7 @@ test_that("test cache-helpers", {
   expect_true(identical(normalizePath(filename(b), winslash = "/", mustWork = FALSE),
                         normalizePath(file.path(dirname(filename(r1)),
                                                 nextNumericName(basename(filename(r1)))),
-                                                winslash = "/", mustWork = FALSE)))
+                                      winslash = "/", mustWork = FALSE)))
 
   r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
@@ -918,5 +918,20 @@ test_that("test pre-creating conn", {
   expect_true(file.exists(filename(r2)))
   expect_true(grepl(basename(dirname(filename(r1))), "rasters"))
   expect_true(grepl(basename(dirname(filename(r2))), "rasters"))
+
+})
+
+
+test_that("test .defaultUserTags", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  b <- Cache(rnorm, 1)
+  sc <- showCache()
+  actualTags <- sc$tagKey %in% .defaultUserTags
+  anyNewTags <- any(!actualTags)
+  if (isTRUE(anyNewTags)) stop("A new default userTag was added; please update .defaultUserTags")
 
 })

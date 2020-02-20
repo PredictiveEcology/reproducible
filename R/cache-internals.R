@@ -293,7 +293,10 @@
                 fromMemoise = fromMemoise)
 
   # This is protected from multiple-write to SQL collisions
-  .addTagsRepo(isInRepo, cacheRepo, lastOne, drv, conn = conn)
+  # .addTagsRepo(isInRepo, cacheRepo, lastOne, drv, conn = conn)
+  .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
+               cachePath = cacheRepo,
+               drv = drv, conn = conn)
 
   browser(expr = exists("sideE"))
   if (sideEffect != FALSE) {
