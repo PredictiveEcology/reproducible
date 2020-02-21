@@ -98,7 +98,7 @@ setMethod(
     if (endsWith(fn, suffix = "grd"))
       fn <- c(fn, gsub("grd$", "gri", fn))
     normPath(fn)
-})
+  })
 
 #' @export
 #' @rdname Filenames
@@ -117,7 +117,7 @@ setMethod(
 
     return(fn)
 
-})
+  })
 
 #' @export
 #' @rdname Filenames
@@ -155,7 +155,7 @@ setMethod(
     rasterFilenameDups <- lapply(rasterFilename, duplicated)
     rasterFilename <- lapply(names(rasterFilenameDups), function(nam) rasterFilename[[nam]][!rasterFilenameDups[[nam]]])
     return(rasterFilename)
-})
+  })
 
 #' @export
 #' @rdname Filenames
@@ -165,5 +165,5 @@ setMethod(
   definition = function(obj) {
     ## convert a list to an environment -- this is to align it with a simList and environment
     Filenames(as.environment(obj))
-})
+  })
 

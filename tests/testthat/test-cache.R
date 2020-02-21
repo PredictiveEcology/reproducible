@@ -935,3 +935,18 @@ test_that("test .defaultUserTags", {
   if (isTRUE(anyNewTags)) stop("A new default userTag was added; please update .defaultUserTags")
 
 })
+
+test_that("test failed Cache recovery -- message to delete cacheId", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  b <- Cache(rnorm, 1, cacheRepo = tmpdir)
+  sc <- showCache(tmpdir)
+  ci <- unique(sc$cacheId)
+  unlink(CacheStoredFile(tmpdir, ci))
+  err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir))#,
+  expect_true(grepl(paste0("(trying to recover).*(",ci,")"), err))
+
+})
