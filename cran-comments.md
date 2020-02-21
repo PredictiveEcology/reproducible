@@ -1,6 +1,6 @@
 ## Updated release
 
-This is a major release with key dependencies removed and the backend changed from `archivist` to `DBI`. This will break downstream dependencies. See `NEWS.md`.
+This is a minor bugfix release. See `NEWS.md`.
 
 ## Test environments
 
