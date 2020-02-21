@@ -229,18 +229,44 @@ test_that("Filenames for environment", {
 
   Fns <- Filenames(s)
 
-  fnsGrd <- c(filename(s$b), gsub("grd$", "gri", filename(s$b)))
+  fnsGrd <- normPath(c(filename(s$b), gsub("grd$", "gri", filename(s$b))))
   expect_true(identical(Fns$b, fnsGrd))
-  expect_true(identical(Fns$r, filename(s$r)))
-  expect_true(identical(Fns$r2, filename(s$r2)))
-  expect_true(identical(Fns$s, sapply(seq_len(nlayers(s$s)), function(rInd) filename(s$s[[rInd]]))))
+  expect_true(identical(Fns$r, normPath(filename(s$r))))
+  expect_true(identical(Fns$r2, normPath(filename(s$r2))))
+  expect_true(identical(Fns$s, sapply(seq_len(nlayers(s$s)), function(rInd) normPath(filename(s$s[[rInd]])))))
 
   FnsR <- Filenames(s$r)
-  expect_true(identical(FnsR, filename(s$r)))
+  expect_true(identical(FnsR, normPath(filename(s$r))))
 
   FnsS <- Filenames(s$s)
-  expect_true(identical(FnsS, sapply(seq_len(nlayers(s$s)), function(rInd) filename(s$s[[rInd]]))))
+  expect_true(identical(FnsS, sapply(seq_len(nlayers(s$s)), function(rInd) normPath(filename(s$s[[rInd]])))))
 
   FnsB <- Filenames(s$b)
   expect_true(identical(FnsB, fnsGrd))
+
+  # Another stack with identical files
+  rlogoFiles <- system.file("external/rlogo.grd", package="raster")
+  rlogoFiles <- c(rlogoFiles, gsub("grd$", "gri", rlogoFiles))
+  secondSet <- file.path(tmpdir, c("one.grd", "one.gri"))
+  file.link(rlogoFiles, secondSet)
+  b <- raster::stack(rlogoFiles[1], secondSet[1])
+  expect_true(identical(
+    sort(normPath(c(rlogoFiles, secondSet))),
+    sort(Filenames(b))))
+
+  # Test duplicated filenames in same Stack
+  b <- raster::stack(rlogoFiles[1], rlogoFiles[1])
+  expect_true(identical(
+    sort(normPath(c(rlogoFiles))),
+    sort(Filenames(b))))
+
+  browser()
+
+  rlogoFiles <- system.file("external/rlogo.grd", package="raster")
+  b <- raster::brick(rlogoFiles)
+  rlogoFiles <- c(rlogoFiles <- gsub("grd$", "gri", rlogoFiles))
+  expect_true(identical(
+    sort(normPath(dir(pattern = "rlogo", dirname(rlogoFiles), full.names = TRUE))),
+    sort(Filenames(b))))
+
 })

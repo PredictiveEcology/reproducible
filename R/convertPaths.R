@@ -94,9 +94,10 @@ setMethod(
   signature = "Raster",
   definition = function(obj) {
     fn <- filename(obj)
+    browser(expr = exists("._Filenames_1"))
     if (endsWith(fn, suffix = "grd"))
       fn <- c(fn, gsub("grd$", "gri", fn))
-    fn
+    normPath(fn)
 })
 
 #' @export
@@ -105,7 +106,17 @@ setMethod(
   "Filenames",
   signature = "RasterStack",
   definition = function(obj) {
-    unlist(lapply(seq_along(names(obj)), function(index) filename(obj[[index]])))
+    fn <- unlist(lapply(seq_along(names(obj)), function(index) Filenames(obj[[index]])))
+
+    dups <- duplicated(fn)
+    if (any(dups)) {
+      theNames <- names(fn)
+      fn <- fn[!dups]
+      names(fn) <- theNames[!dups]
+    }
+
+    return(fn)
+
 })
 
 #' @export

@@ -1,5 +1,17 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 1.0.0.9000
+==============
+
+## New features
+
+
+## Dependency changes
+
+## bug fixes
+* `cropInputs.spatialObjects` had a bug when object was a large non-Raster class; fixed
+* `Filenames` bugfix related to `RasterBrick`
+
 version 1.0.0
 ==============
 
