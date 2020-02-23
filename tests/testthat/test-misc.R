@@ -45,7 +45,7 @@ test_that("test miscellaneous fns", {
 
   # convertRasterPaths
   filenames <- normalizePath(c("/home/user1/Documents/file.txt", "/Users/user1/Documents/file.txt"),
-                              winslash = "/", mustWork = FALSE)
+                             winslash = "/", mustWork = FALSE)
   oldPaths <- dirname(filenames)
   newPaths <- normalizePath(c("/home/user2/Desktop", "/Users/user2/Desktop"),
                             winslash = "/", mustWork = FALSE)

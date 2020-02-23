@@ -16,16 +16,26 @@ test_that("prepInputs doesn't work (part 3)", {
     # Create a "study area"
     coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
                         .Dim = c(5L, 2L))
+    coords2 <- structure(c(-115.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                        .Dim = c(5L, 2L))
     Sr1 <- Polygon(coords)
     Srs1 <- Polygons(list(Sr1), "s1")
     StudyArea <- SpatialPolygons(list(Srs1), 1L)
     crs(StudyArea) <- crsToUse
 
+    Sr1 <- Polygon(coords2)
+    Srs1 <- Polygons(list(Sr1), "s1")
+    StudyArea2 <- SpatialPolygons(list(Srs1), 1L)
+    crs(StudyArea2) <- crsToUse
+
     nonLatLongProj <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
     #dPath <- file.path(tmpdir, "ecozones")
     nc <- st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
     nc1 <- st_transform(nc, nonLatLongProj)
-    ncSmall <- st_buffer(nc1, dist = -10000)
+    #ncSmall <- st_buffer(nc1, dist = -10000)
+    ncSmall <- st_as_sf(StudyArea2)
+    ncSmall <- st_transform(ncSmall, nonLatLongProj)
+    ncSmall <- st_buffer(ncSmall, dist = -10000)
     b <- postProcess(nc1, studyArea = ncSmall, filename2 = NULL)
     expect_true(is(b, "sf"))
     expect_true(identical(extent(b), extent(ncSmall)))

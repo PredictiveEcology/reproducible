@@ -119,11 +119,11 @@ testOnExit <- function(testInitOut) {
   if (grepl("Pq", class(getOption("reproducible.conn", NULL)))) {
     tabs <- DBI::dbListTables(conn = getOption("reproducible.conn", NULL))
     tab1 <- grep(value = TRUE, tabs, pattern =
-           paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
-                                   basename2(testInitOut$tmpCache))))
+                   paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
+                                           basename2(testInitOut$tmpCache))))
     tab2 <- grep(value = TRUE, tabs, pattern =
-                  paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
-                                          basename2(testInitOut$tmpdir))))
+                   paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
+                                           basename2(testInitOut$tmpdir))))
     if (length(tab1))
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab1))
     if (length(tab2))

@@ -85,7 +85,7 @@ setMethod(
   signature = "ANY",
   definition = function(obj) {
     NULL
-})
+  })
 
 #' @export
 #' @rdname Filenames
