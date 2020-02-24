@@ -142,6 +142,7 @@ postProcess.list <- function(x, ...) {
 #' }
 #'
 #' @export
+#' @importFrom raster removeTmpFiles
 #' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
 postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
@@ -150,6 +151,8 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        useSAcrs = FALSE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
+  on.exit(removeTmpFiles(h = 0), add = TRUE)
+
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   browser(expr = exists("._postProcess.spatialobjects_1"))
   x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
