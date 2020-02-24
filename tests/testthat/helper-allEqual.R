@@ -119,11 +119,11 @@ testOnExit <- function(testInitOut) {
   if (grepl("Pq", class(getOption("reproducible.conn", NULL)))) {
     tabs <- DBI::dbListTables(conn = getOption("reproducible.conn", NULL))
     tab1 <- grep(value = TRUE, tabs, pattern =
-           paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
-                                   basename2(testInitOut$tmpCache))))
+                   paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
+                                           basename2(testInitOut$tmpCache))))
     tab2 <- grep(value = TRUE, tabs, pattern =
-                  paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
-                                          basename2(testInitOut$tmpdir))))
+                   paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
+                                           basename2(testInitOut$tmpdir))))
     if (length(tab1))
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab1))
     if (length(tab2))
@@ -359,7 +359,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
   suppressMessages(expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)),
-                          by = .cacheTableHashColName()))==1))
+                                           by = .cacheTableHashColName()))==1))
 
   ####################################################
   # both cloud and local exist -- take local only -- no change to cloud

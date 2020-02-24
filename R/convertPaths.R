@@ -85,7 +85,7 @@ setMethod(
   signature = "ANY",
   definition = function(obj) {
     NULL
-})
+  })
 
 #' @export
 #' @rdname Filenames
@@ -94,10 +94,11 @@ setMethod(
   signature = "Raster",
   definition = function(obj) {
     fn <- filename(obj)
+    browser(expr = exists("._Filenames_1"))
     if (endsWith(fn, suffix = "grd"))
       fn <- c(fn, gsub("grd$", "gri", fn))
-    fn
-})
+    normPath(fn)
+  })
 
 #' @export
 #' @rdname Filenames
@@ -105,8 +106,18 @@ setMethod(
   "Filenames",
   signature = "RasterStack",
   definition = function(obj) {
-    unlist(lapply(seq_along(names(obj)), function(index) filename(obj[[index]])))
-})
+    fn <- unlist(lapply(seq_along(names(obj)), function(index) Filenames(obj[[index]])))
+
+    dups <- duplicated(fn)
+    if (any(dups)) {
+      theNames <- names(fn)
+      fn <- fn[!dups]
+      names(fn) <- theNames[!dups]
+    }
+
+    return(fn)
+
+  })
 
 #' @export
 #' @rdname Filenames
@@ -144,7 +155,7 @@ setMethod(
     rasterFilenameDups <- lapply(rasterFilename, duplicated)
     rasterFilename <- lapply(names(rasterFilenameDups), function(nam) rasterFilename[[nam]][!rasterFilenameDups[[nam]]])
     return(rasterFilename)
-})
+  })
 
 #' @export
 #' @rdname Filenames
@@ -154,5 +165,5 @@ setMethod(
   definition = function(obj) {
     ## convert a list to an environment -- this is to align it with a simList and environment
     Filenames(as.environment(obj))
-})
+  })
 

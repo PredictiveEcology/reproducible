@@ -304,7 +304,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         attemptGDAL <- attemptGDAL(x, useGDAL) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
 
         cropExtentRounded <- roundToRes(cropExtent, x)
-        if (attemptGDAL) {
+        if (attemptGDAL && is(x, "Raster")) {
           tmpfile <- paste0(tempfile(fileext = ".tif"));
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.

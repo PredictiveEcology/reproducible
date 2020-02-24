@@ -130,7 +130,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     browser(expr = exists("._fastMask_2"))
 
     if (attemptGDAL) {
-     # call gdal
+      # call gdal
       message("fastMask is using gdalwarp")
 
       # rasters need to go to same directory that can be unlinked at end without losing other temp files

@@ -678,7 +678,10 @@ setMethod(
                                      ...))
           browser(expr = exists("._Cache_7"))
           if (is(output, "try-error")) {
-            cID <- gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
+            cID <- if (useDBI())
+              isInRepo[[.cacheTableHashColName()]]
+            else
+              gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
             stop("Error in trying to recover cacheID: ", cID,
                  "\nYou will likely need to remove that item from Cache, e.g., ",
                  "\nclearCache(userTags = '", cID, "')")
@@ -1474,7 +1477,7 @@ getLocalTags <- function(cacheRepo) {
                            "notOlderThan", ".objects", "outputObjects", "algo", "cacheRepo",
                            "length", "compareRasterFileLength", "userTags", "digestPathContent",
                            "omitArgs", "classOptions", "debugCache", "sideEffect", "makeCopy",
-                           "quick", "verbose", "cacheId", "useCache", "showSimilar")
+                           "quick", "verbose", "cacheId", "useCache", "showSimilar", "cl")
 
 #' @keywords internal
 verboseTime <- function(verbose) {

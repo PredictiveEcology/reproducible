@@ -25,9 +25,9 @@ test_that("test file-backed raster caching", {
   val1 <- .cacheNumDefaultTags() + 1 # adding a userTag here
   ik <- .ignoreTagKeys()
   with_mock(
-   "reproducible::isInteractive" = function() TRUE,
-   {
-  aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
+    "reproducible::isInteractive" = function() TRUE,
+    {
+      aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
       # Test clearCache by tags
 
       expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
@@ -147,7 +147,7 @@ test_that("test file-backed raster caching", {
       expect_true(NROW(raster::levels(bb)[[1]]) == 30)
 
       clearCache(tmpdir, ask = FALSE)
-   })
+    })
 })
 
 test_that("test memory backed raster robustDigest", {
@@ -933,5 +933,20 @@ test_that("test .defaultUserTags", {
   actualTags <- sc$tagKey %in% .defaultUserTags
   anyNewTags <- any(!actualTags)
   if (isTRUE(anyNewTags)) stop("A new default userTag was added; please update .defaultUserTags")
+
+})
+
+test_that("test failed Cache recovery -- message to delete cacheId", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  b <- Cache(rnorm, 1, cacheRepo = tmpdir)
+  sc <- showCache(tmpdir)
+  ci <- unique(sc$cacheId)
+  unlink(CacheStoredFile(tmpdir, ci))
+  err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir))#,
+  expect_true(grepl(paste0("(trying to recover).*(",ci,")"), err))
 
 })
