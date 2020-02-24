@@ -4,7 +4,7 @@ version 1.0.0.9000
 ==============
 
 ## New features
-
+* automatically cleanup temporary (intermediate) raster files (with #110)
 
 ## Dependency changes
 
