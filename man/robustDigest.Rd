@@ -58,8 +58,7 @@ object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
 file-backing, then this will be
 passed to \code{digest::digest}, essentially limiting the number of bytes
 to digest (for speed). This will only be used if \code{quick = FALSE}.
-Default is \code{getOption("reproducible.length")},
-which is set to \code{Inf}.}
+Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
@@ -76,10 +75,9 @@ the object as a character string. If it is known that character strings should
 not be treated as paths, then \code{quick = TRUE} will be much faster, with no loss
 of information. If it is file or directory, then it will digest the file content,
 or \code{basename(object)}. For class \code{Path} objects, the file's metadata
-(i.e., filename and file size)
-will be hashed instead of the file contents if \code{quick = TRUE}.
-If set to \code{FALSE} (default),
-the contents of the file(s) are hashed.
+(i.e., filename and file size) will be hashed instead of the file contents if
+\code{quick = TRUE}.
+If set to \code{FALSE} (default), the contents of the file(s) are hashed.
 If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
 as paths, if they are file-backed.}
 
