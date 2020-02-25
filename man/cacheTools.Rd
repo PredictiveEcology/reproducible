@@ -49,7 +49,7 @@ the database file(s)}
 
 \item{userTags}{A character vector with descriptions of the Cache function call. These
 will be added to the Cache so that this entry in the Cache can be found using
-\code{userTags} e.g., via \code{\link{showCache}}}
+\code{userTags} e.g., via \code{\link{showCache}}.}
 
 \item{cacheId}{The hash string representing the result of \code{.robustDigest}}
 }
