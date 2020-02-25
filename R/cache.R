@@ -308,7 +308,8 @@ if (getRversion() >= "3.1.0") {
 #' function call or the cached version (i.e., the result from a previous call
 #' to this same cached function with identical arguments).
 #'
-#' @seealso \code{archivist::cache}, \code{\link{.robustDigest}}
+#' @seealso \code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
+#'   \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}}
 #'
 #' @author Eliot McIntire
 #' @export
@@ -675,7 +676,7 @@ setMethod(
                                      quick = quick, algo = algo,
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
-                                     ...))
+                                     ...), silent = TRUE)
           browser(expr = exists("._Cache_7"))
           if (is(output, "try-error")) {
             cID <- if (useDBI())

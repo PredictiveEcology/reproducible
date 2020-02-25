@@ -459,7 +459,8 @@ b \%<\% rnorm(1)
 
 }
 \seealso{
-\code{archivist::cache}, \code{\link{.robustDigest}}
+\code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
+  \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire

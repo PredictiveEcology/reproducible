@@ -4,6 +4,8 @@ version 1.0.0.9000
 ==============
 
 ## New features
+* Copying or moving of Cache folders now works after manual moving/copying, followed by `movedCache`
+* Cache now treats file-backed Rasters as though they had a relative path instead of their absolute path. This means that Cache directories can be copied from one location to another and the file-backed Raster* will have their filenames updated on the fly during a Cache recovery. User doesn't need to do anything.
 * automatically cleanup temporary (intermediate) raster files (with #110)
 
 ## Dependency changes

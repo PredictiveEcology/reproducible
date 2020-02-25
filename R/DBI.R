@@ -476,3 +476,74 @@ CacheIsACache <- function(cachePath, create = FALSE,
   }
   return(ret)
 }
+
+#' Deal with moved cache issues
+#'
+#' If a user manually copies a complete Cache folder (including the db file and rasters folder),
+#' there are issues that must be addressed. Primarily, the db table must be renamed. Run
+#' this function after a manual copy of a cache folder. See examples for one way to do that.
+#'
+#' @param  new Either the path of the new cachePath where the cache was moved or copied to, or
+#'   the new DB Table Name
+#' @param  old Optional, if there is only one table in the \code{new} cache path.
+#'   Either the path of the previous cachePath where the cache was moved or copied from, or
+#'   the old DB Table Name
+#' @inheritParams Cache
+#' @importFrom DBI dbListTables
+#' @export
+#' @examples
+#' tmpCache <- file.path(tempdir(), "tmpCache")
+#' tmpdir <- file.path(tempdir(), "tmpdir")
+#' bb <- Cache(rnorm, 1, cacheRepo = tmpCache)
+#'
+#' # Copy all files from tmpCache to tmpdir
+#' froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
+#' checkPath(file.path(tmpdir, "rasters"), create = TRUE)
+#' checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
+#' file.copy(from = froms, overwrite = TRUE,
+#'           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+#'
+#' # Must use 'movedCache' to update the database table
+#' movedCache(new = tmpdir, old = tmpCache)
+#' bb <- Cache(rnorm, 1, cacheRepo = tmpdir) # should recover the previous call
+#'
+movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                       conn = getOption("reproducible.conn", NULL)) {
+  if (useDBI()) {
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, cachePath = new)
+      on.exit(dbDisconnect(conn))
+    }
+  }
+  tables <- dbListTables(conn)
+  browser(expr = exists("._movedCache_2"))
+  if (missing(old)) {
+    if (length(tables) == 1) {
+      message("Assuming old database table is ", tables)
+    } else {
+      dbname <- try(conn@dbname, silent = TRUE)
+      if (is(dbname, "try-error"))
+        dbname <- "conn"
+      stop("old not provided and there are more than one database table in ", )
+    }
+    old <- tables
+    oldTable <- old
+  } else {
+    oldTable <- CacheDBTableName(old, drv = drv)
+  }
+
+  if (!identical(normPath(tables), normPath(oldTable))) {
+    stop("The 'old' table name does not appear inside the path to the 'new'")
+  }
+  newTable <- CacheDBTableName(new, drv = drv)
+
+  qry <- glue::glue_sql("ALTER TABLE {old} RENAME TO {new}",
+                        old = oldTable,
+                        new = newTable,
+                        .con = conn)
+  res <- retry(retries = 15, exponentialDecayBase = 1.01,
+               quote(dbSendQuery(conn, qry)))
+  dbFetch(res)
+  dbClearResult(res)
+
+}

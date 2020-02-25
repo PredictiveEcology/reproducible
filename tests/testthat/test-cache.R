@@ -24,9 +24,9 @@ test_that("test file-backed raster caching", {
   #   solves the error about not being in the testthat package
   val1 <- .cacheNumDefaultTags() + 1 # adding a userTag here
   ik <- .ignoreTagKeys()
-  with_mock(
-    "reproducible::isInteractive" = function() TRUE,
-    {
+  # with_mock(
+  #   "reproducible::isInteractive" = function() TRUE,
+  #   {
       aa <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2")
       # Test clearCache by tags
 
@@ -54,6 +54,66 @@ test_that("test file-backed raster caching", {
                                                 basename(tmpfile[1])), split = "[\\/]")))
       expect_true(any(grepl(pattern = basename(tmpfile[1]),
                             dir(file.path(tmpCache, "rasters")))))
+
+      clearCache(x = tmpCache)
+      bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2",
+                  quick = TRUE)
+      #bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2")
+      #clearCache(x = tmpdir)
+      clearCache(x = tmpdir)
+      try(unlink(CacheDBFile(tmpdir)), silent =  TRUE)
+      try(unlink(CacheStorageDir(tmpdir), recursive = TRUE), silent =  TRUE)
+      froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
+      checkPath(file.path(tmpdir, "rasters"), create = TRUE)
+      checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
+      file.copy(from = froms, overwrite = TRUE,
+                to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+      movedCache(tmpdir)
+      # ._prepareOutputs_1 <<- ._prepareOutputs_2 <<- ._getFromRepo <<- 1
+      # Will silently update the filename of the RasterLayer, and recover it
+      bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
+                  quick = TRUE)
+      expect_false(attr(bb, ".Cache")$newCache)
+      expect_true(file.exists(filename(bb)))
+      expect_silent(bb[] <- bb[])
+
+      # Delete the old everything to make sure previous didn't succeed because old pointer
+      clearCache(x = tmpCache)
+      try(unlink(CacheDBFile(tmpCache)), silent =  TRUE)
+      try(unlink(CacheStorageDir(tmpCache), recursive = TRUE), silent =  TRUE)
+
+      # ._Cache_6 <<- 1
+      bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
+                  quick = TRUE)
+      expect_false(attr(bb, ".Cache")$newCache)
+      expect_true(file.exists(filename(bb)))
+      expect_silent(bb[] <- bb[])
+
+      ###############
+      clearCache(tmpCache)
+      clearCache(tmpdir)
+      cc <- Cache(randomPolyToDisk, tmpfile[2], cacheRepo = tmpCache, userTags = "something2",
+                  quick = TRUE)
+      bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2",
+                  quick = TRUE)
+      try(movedCache(tmpdir, tmpCache), silent = TRUE)
+
+      ######
+      bbS <- raster::stack(bb, cc)
+      fn2 <- function(stk) {
+        stk
+      }
+      out <- Cache(fn2, bbS, cacheRepo = tmpCache, userTags = "something2")
+      froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
+      checkPath(file.path(tmpdir, "rasters"), create = TRUE)
+      checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
+      file.copy(from = froms, overwrite = TRUE,
+                to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+      movedCache(tmpdir, tmpCache)
+      out <- Cache(fn2, bbS, cacheRepo = tmpdir, userTags = "something2")
+
+      clearCache(tmpdir)
+      clearCache(tmpCache)
 
       ### Test for 2 caching events with same file-backing name
       randomPolyToDisk2 <- function(tmpfile, rand) {
@@ -147,7 +207,7 @@ test_that("test file-backed raster caching", {
       expect_true(NROW(raster::levels(bb)[[1]]) == 30)
 
       clearCache(tmpdir, ask = FALSE)
-    })
+    #})
 })
 
 test_that("test memory backed raster robustDigest", {
@@ -946,7 +1006,8 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
   sc <- showCache(tmpdir)
   ci <- unique(sc$cacheId)
   unlink(CacheStoredFile(tmpdir, ci))
-  err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir))#,
+  warn <- capture_warnings(err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir)))
   expect_true(grepl(paste0("(trying to recover).*(",ci,")"), err))
+  expect_true(grepl(paste0("cannot open compressed file"), warn))
 
 })
