@@ -494,7 +494,8 @@ CacheIsACache <- function(cachePath, create = FALSE,
 #' @examples
 #' tmpCache <- file.path(tempdir(), "tmpCache")
 #' tmpdir <- file.path(tempdir(), "tmpdir")
-#' bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2",
+#' tmpfile <- tempfile(fileext = ".tif")
+#' bb <- Cache(randomPolyToDisk, tmpfile, cacheRepo = tmpCache, userTags = "something2",
 #' quick = TRUE)
 #' try(unlink(CacheDBFile(tmpdir)), silent =  TRUE)
 #' try(unlink(CacheStorageDir(tmpdir), recursive = TRUE), silent =  TRUE)
@@ -505,7 +506,7 @@ CacheIsACache <- function(cachePath, create = FALSE,
 #'           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
 #' movedCache(new = tmpdir, old = tmpCache)
 #' # Will silently update the filename of the RasterLayer, and recover it
-#' bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
+#' bb <- Cache(randomPolyToDisk, tmpfile, cacheRepo = tmpdir, userTags = "something2",
 #'             quick = TRUE)
 #'
 movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQLite()),

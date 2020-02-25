@@ -27,7 +27,8 @@ this function after a manual copy of a cache folder. See examples for one way to
 \examples{
 tmpCache <- file.path(tempdir(), "tmpCache")
 tmpdir <- file.path(tempdir(), "tmpdir")
-bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2",
+tmpfile <- tempfile(fileext = ".tif")
+bb <- Cache(randomPolyToDisk, tmpfile, cacheRepo = tmpCache, userTags = "something2",
 quick = TRUE)
 try(unlink(CacheDBFile(tmpdir)), silent =  TRUE)
 try(unlink(CacheStorageDir(tmpdir), recursive = TRUE), silent =  TRUE)
@@ -38,7 +39,7 @@ file.copy(from = froms, overwrite = TRUE,
           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
 movedCache(new = tmpdir, old = tmpCache)
 # Will silently update the filename of the RasterLayer, and recover it
-bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
+bb <- Cache(randomPolyToDisk, tmpfile, cacheRepo = tmpdir, userTags = "something2",
             quick = TRUE)
 
 }
