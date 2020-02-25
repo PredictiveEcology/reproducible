@@ -68,7 +68,7 @@ test_that("test file-backed raster caching", {
       checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
       file.copy(from = froms, overwrite = TRUE,
                 to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
-      movedCache(tmpCache, tmpdir)
+      movedCache(tmpdir)
       # ._prepareOutputs_1 <<- ._prepareOutputs_2 <<- ._getFromRepo <<- 1
       # Will silently update the filename of the RasterLayer, and recover it
       bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
@@ -96,7 +96,7 @@ test_that("test file-backed raster caching", {
                   quick = TRUE)
       bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpCache, userTags = "something2",
                   quick = TRUE)
-      try(movedCache(tmpCache, tmpdir), silent = TRUE)
+      try(movedCache(tmpdir, tmpCache), silent = TRUE)
 
       ######
       bbS <- raster::stack(bb, cc)
@@ -109,7 +109,7 @@ test_that("test file-backed raster caching", {
       checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
       file.copy(from = froms, overwrite = TRUE,
                 to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
-      movedCache(tmpCache, tmpdir)
+      movedCache(tmpdir, tmpCache)
       out <- Cache(fn2, bbS, cacheRepo = tmpdir, userTags = "something2")
 
       clearCache(tmpdir)
@@ -1006,7 +1006,8 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
   sc <- showCache(tmpdir)
   ci <- unique(sc$cacheId)
   unlink(CacheStoredFile(tmpdir, ci))
-  err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir))#,
+  warn <- capture_warn(err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir)))
   expect_true(grepl(paste0("(trying to recover).*(",ci,")"), err))
+  expect_true(grepl(paste0("cannot open compressed file"), warn))
 
 })

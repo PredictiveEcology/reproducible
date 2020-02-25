@@ -483,10 +483,12 @@ CacheIsACache <- function(cachePath, create = FALSE,
 #' there are issues that must be addressed. Primarily, the db table must be renamed. Run
 #' this function after a manual copy of a cache folder. See examples for one way to do that.
 #'
-#' @params old Either the path of the previous cachePath where the cache was moved or copied from, or
-#'   the old DB Table Name
 #' @params new Either the path of the new cachePath where the cache was moved or copied to, or
 #'   the new DB Table Name
+#' @params old Optional, if there is only one table in the \code{new} cache path.
+#'   Either the path of the previous cachePath where the cache was moved or copied from, or
+#'   the old DB Table Name
+#' @inheritParams Cache
 #' @importFrom DBI dbListTables
 #' @export
 #' @examples
@@ -501,12 +503,12 @@ CacheIsACache <- function(cachePath, create = FALSE,
 #' checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
 #' file.copy(from = froms, overwrite = TRUE,
 #'           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
-#' movedCache(tmpCache, tmpdir)
+#' movedCache(new = tmpdir, old = tmpCache)
 #' # Will silently update the filename of the RasterLayer, and recover it
 #' bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
 #'             quick = TRUE)
 #'
-movedCache <- function(old, new, drv = getOption("reproducible.drv", RSQLite::SQLite()),
+movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                        conn = getOption("reproducible.conn", NULL)) {
   if (useDBI()) {
     if (is.null(conn)) {
@@ -515,7 +517,22 @@ movedCache <- function(old, new, drv = getOption("reproducible.drv", RSQLite::SQ
     }
   }
   tables <- dbListTables(conn)
-  oldTable <- CacheDBTableName(old, drv = drv)
+  browser("._movedCache_2")
+  if (missing(old)) {
+    if (length(tables) == 1) {
+      message("Assuming old database table is ", tables)
+    } else {
+      dbname <- try(conn@dbname, silent = TRUE)
+      if (is(dbname, "try-error"))
+        dbname <- "conn"
+      stop("old not provided and there are more than one database table in ", )
+    }
+    old <- tables
+    oldTable <- old
+  } else {
+    oldTable <- CacheDBTableName(old, drv = drv)
+  }
+
   if (!identical(normPath(tables), normPath(oldTable))) {
     stop("The 'old' table name does not appear inside the path to the 'new'")
   }

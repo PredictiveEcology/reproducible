@@ -2,13 +2,13 @@
 % Please edit documentation in R/cache-helpers.R
 \name{.prepareOutput}
 \alias{.prepareOutput}
-\alias{.prepareOutput,RasterLayer-method}
+\alias{.prepareOutput,Raster-method}
 \alias{.prepareOutput,ANY-method}
 \title{Make any modifications to object recovered from cacheRepo}
 \usage{
 .prepareOutput(object, cacheRepo, ...)
 
-\S4method{.prepareOutput}{RasterLayer}(
+\S4method{.prepareOutput}{Raster}(
   object,
   cacheRepo,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),

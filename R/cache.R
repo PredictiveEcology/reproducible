@@ -675,7 +675,7 @@ setMethod(
                                      quick = quick, algo = algo,
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
-                                     ...))
+                                     ...), silent = TRUE)
           browser(expr = exists("._Cache_7"))
           if (is(output, "try-error")) {
             cID <- if (useDBI())
