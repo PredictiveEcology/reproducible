@@ -4,6 +4,7 @@ version 1.0.0.9000
 ==============
 
 ## New features
+* Copying or moving of Cache folders now works after manual moving/copying, followed by `movedCache`
 * automatically cleanup temporary (intermediate) raster files (with #110)
 
 ## Dependency changes

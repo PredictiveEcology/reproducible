@@ -298,7 +298,7 @@
                cachePath = cacheRepo,
                drv = drv, conn = conn)
 
-  browser(expr = exists("sideE"))
+  browser(expr = exists("._getFromRepo_1"))
   if (sideEffect != FALSE) {
     #if(isTRUE(sideEffect)) {
     .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, ...)
