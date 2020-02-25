@@ -1006,7 +1006,7 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
   sc <- showCache(tmpdir)
   ci <- unique(sc$cacheId)
   unlink(CacheStoredFile(tmpdir, ci))
-  warn <- capture_warn(err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir)))
+  warn <- capture_warnings(err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir)))
   expect_true(grepl(paste0("(trying to recover).*(",ci,")"), err))
   expect_true(grepl(paste0("cannot open compressed file"), warn))
 
