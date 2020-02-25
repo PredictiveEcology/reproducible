@@ -541,9 +541,7 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
                         old = oldTable,
                         new = newTable,
                         .con = conn)
-  res <- retry(retries = 15, exponentialDecayBase = 1.01,
-               quote(dbSendQuery(conn, qry)))
+  res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(dbSendQuery(conn, qry)))
   dbFetch(res)
   dbClearResult(res)
-
 }

@@ -24,7 +24,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) {
     NULL
-  })
+})
 
 ################################################################################
 #' Create a custom cache message by class
@@ -55,8 +55,7 @@ setGeneric(".cacheMessage", function(object, functionName,
 setMethod(
   ".cacheMessage",
   signature = "ANY",
-  definition = function(object, functionName,
-                        fromMemoise) {
+  definition = function(object, functionName, fromMemoise) {
     if (isTRUE(fromMemoise)) {
       message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
                            sep = ""))
@@ -67,8 +66,7 @@ setMethod(
       message(crayon::blue("  loading cached result from previous ", functionName, " call.",
                            sep = ""))
     }
-  })
-
+})
 
 ################################################################################
 #' Add tags to object
@@ -101,7 +99,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, outputObjects, FUN, preDigestByClass) { # nolint
     object
-  })
+})
 
 ################################################################################
 #' Any miscellaneous things to do before \code{.robustDigest} and after \code{FUN} call
@@ -131,7 +129,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) { # nolint
     NULL
-  })
+})
 
 ################################################################################
 #' Check for cache repository info in ...
@@ -165,8 +163,8 @@ setMethod(
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
         tmpDir <- tempdir()
         if (identical(normPath(getOption("reproducible.cachePath")), normPath(tmpDir))) {
-          message("No cacheRepo supplied and getOption('reproducible.cachePath') is the temporary directory;\n  ",
-                  "this will not persist across R sessions.")
+          message("No cacheRepo supplied and getOption('reproducible.cachePath') is the temporary directory;\n",
+                  "  this will not persist across R sessions.")
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
@@ -175,7 +173,7 @@ setMethod(
       }
       checkPath(path = cacheRepo, create = create)
     })
-  })
+})
 
 ################################################################################
 #' Make any modifications to object recovered from cacheRepo
@@ -237,15 +235,13 @@ setMethod(
           for (i in seq(nlayers(object))) {
             object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name), fpShould, object@layers[[i]]@file@name)
           }
-
         } else {
           object@file@name <- gsub(dirname(fns), fpShould, fns)
         }
       }
-
     }
     object
-  })
+})
 
 #' @export
 #' @rdname prepareOutput
@@ -260,10 +256,8 @@ setMethod(
       }
     }
     object
-  })
+})
 
-
-#####################################
 ################################################################################
 #' Add an attribute to an object indicating which named elements change
 #'
@@ -295,7 +289,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, preDigest, origArguments, ...) {
     object
-  })
+})
 
 #' A set of helpers for Cache
 #'
@@ -450,8 +444,7 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
 
 #' @exportClass Path
 #' @rdname Path-class
-setClass("Path", slots = c(.Data = "character"), contains = "character",
-         prototype = NA_character_)
+setClass("Path", slots = c(.Data = "character"), contains = "character", prototype = NA_character_)
 
 #' Coerce a character string to a class "Path"
 #'
@@ -585,7 +578,7 @@ setMethod(
       ret <- md5hashInBackpack[toRemove]
     }
     return(invisible(ret))
-  })
+})
 
 #' Copy the file-backing of a file-backed Raster* object
 #'
@@ -981,7 +974,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   dig
 }
 
-
 ################################################################################
 #' Sort or order any named object with dotted names and underscores first
 #'
@@ -1139,8 +1131,6 @@ nextNumericName <- function(string) {
   scallsFirstElement <- lapply(sysCalls, function(x) x[1])
   grep(scallsFirstElement, pattern = pattern)
 }
-
-
 
 #' @importFrom raster fromDisk
 dealWithRasters <- function(obj, cachePath, drv, conn) {
