@@ -27,19 +27,17 @@ this function after a manual copy of a cache folder. See examples for one way to
 \examples{
 tmpCache <- file.path(tempdir(), "tmpCache")
 tmpdir <- file.path(tempdir(), "tmpdir")
-tmpfile <- tempfile(fileext = ".tif")
-bb <- Cache(randomPolyToDisk, tmpfile, cacheRepo = tmpCache, userTags = "something2",
-quick = TRUE)
-try(unlink(CacheDBFile(tmpdir)), silent =  TRUE)
-try(unlink(CacheStorageDir(tmpdir), recursive = TRUE), silent =  TRUE)
+bb <- Cache(rnorm, 1, cacheRepo = tmpCache)
+
+# Copy all files from tmpCache to tmpdir
 froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
 checkPath(file.path(tmpdir, "rasters"), create = TRUE)
 checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
 file.copy(from = froms, overwrite = TRUE,
           to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+
+# Must use 'movedCache' to update the database table
 movedCache(new = tmpdir, old = tmpCache)
-# Will silently update the filename of the RasterLayer, and recover it
-bb <- Cache(randomPolyToDisk, tmpfile, cacheRepo = tmpdir, userTags = "something2",
-            quick = TRUE)
+bb <- Cache(rnorm, 1, cacheRepo = tmpdir) # should recover the previous call
 
 }
