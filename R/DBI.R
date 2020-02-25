@@ -483,9 +483,9 @@ CacheIsACache <- function(cachePath, create = FALSE,
 #' there are issues that must be addressed. Primarily, the db table must be renamed. Run
 #' this function after a manual copy of a cache folder. See examples for one way to do that.
 #'
-#' @params new Either the path of the new cachePath where the cache was moved or copied to, or
+#' @param  new Either the path of the new cachePath where the cache was moved or copied to, or
 #'   the new DB Table Name
-#' @params old Optional, if there is only one table in the \code{new} cache path.
+#' @param  old Optional, if there is only one table in the \code{new} cache path.
 #'   Either the path of the previous cachePath where the cache was moved or copied from, or
 #'   the old DB Table Name
 #' @inheritParams Cache
