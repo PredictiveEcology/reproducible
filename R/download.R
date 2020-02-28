@@ -426,8 +426,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           downloadResults <- dlGeneric(url = url, needChecksums = needChecksums)
         }
         # if destinationPath is tempdir, then don't copy and remove
-        if (!(identical(dirname(normPath(downloadResults$destFile)),
-                        normPath(destinationPath)))) {
+        if (!(identical(dirname(normPath(downloadResults$destFile)), normPath(destinationPath)))) {
           desiredPath <- file.path(destinationPath, basename(downloadResults$destFile))
 
           desiredPathExists <- file.exists(desiredPath)
