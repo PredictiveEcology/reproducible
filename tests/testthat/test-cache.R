@@ -600,9 +600,9 @@ test_that("test Cache argument inheritance to inner functions", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  tmpDirFiles <- dir(tempdir())
+  tmpDirFiles <- dir(tmpdir)
   on.exit({
-    newOnes <- setdiff(tmpDirFiles, dir(tempdir()))
+    newOnes <- setdiff(tmpDirFiles, dir(tmpdir))
     unlink(newOnes, recursive = TRUE)
   }, add = TRUE)
 
@@ -613,7 +613,7 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_silent(Cache(outer, n = 2, cacheRepo = tmpdir))
   clearCache(ask = FALSE, x = tmpdir)
 
-  options(reproducible.cachePath = tempdir())
+  options(reproducible.cachePath = .reproducibleTempCacheDir())
   out <- capture_messages(Cache(outer, n = 2))
   expect_true(all(unlist(lapply(
     c("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary",
@@ -838,6 +838,7 @@ test_that("test cache-helpers", {
   # Test wrong folder names
   tmpfile <- file.path(tmpCache, basename(tempfile(tmpdir = tmpdir, fileext = ".grd")))
   r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  browser()
   r@file@name <- gsub(pattern = normalizePath(tempdir(), winslash = "/", mustWork = FALSE),
                       normalizePath(tmpfile, winslash = "/", mustWork = FALSE),
                       replacement = basename(tempdir()))
@@ -912,7 +913,9 @@ test_that("test rm large non-file-backed rasters", {
     if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
       skip("This is not for non-SQLite")
 
-  testInitOut <- testInit(ask = FALSE, opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
+  testInitOut <- testInit(ask = FALSE,
+                          opts = list("reproducible.tempPath" = .reproducibleTempPath(),
+                                      "reproducible.cachePath" = .reproducibleTempCacheDir()))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

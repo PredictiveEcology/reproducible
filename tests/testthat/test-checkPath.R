@@ -2,7 +2,7 @@ test_that("checkPath: normPath consistency", {
   cwd <- getwd()
 
   # don't use checkPath here because we are testing normPath!
-  tmpdir <- file.path(tempdir(), "test_normPath")
+  tmpdir <- tempdir2("test_normPath")
   dir.create(tmpdir, recursive = TRUE) # create dir before normalizePath (SpaDES#267)
   tmpdir <- normalizePath(tmpdir, winslash = "/", mustWork = FALSE)
 
@@ -36,7 +36,7 @@ test_that("checkPath: checkPath consistency", {
   currdir <- getwd()
 
   # don't use checkPath here because we are testing checkPath
-  tmpdir <- file.path(tempdir(), "test_checkPath")
+  tmpdir <- tempdir2("test_checkPath")
   dir.create(tmpdir, recursive = TRUE) # create dir before normalizePath (SpaDES#267)
   tmpdir <- normalizePath(tmpdir, winslash = "/", mustWork = FALSE)
 

@@ -26,7 +26,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
     options(opt11)
   }, add = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cacheRepo supplied. Using tempdir()", mess)))
+  expect_true(any(grepl("No cacheRepo supplied. Using", mess)))
 
   # getFunctionName
   fn <- function(FUN) {

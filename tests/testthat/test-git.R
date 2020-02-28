@@ -6,7 +6,7 @@ test_that("git-related functions work", {
 
     ## don't bother running checks if they'll all fail due to .gitconfig SSH issue
     if (gitConfigOK) {
-      tmpDir <- file.path(tempdir(), "test_git")
+      tmpDir <- tempdir2("test_git")
       on.exit({
         unlink(tmpDir, recursive = TRUE)
       }, add = TRUE) # nolint

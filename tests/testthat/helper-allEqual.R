@@ -28,7 +28,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (missing(libraries)) libraries <- list()
   unlist(lapply(libraries, require, character.only = TRUE))
   require("testthat")
-  tmpdir <- normPath(file.path(tempdir(), rndstr(1, 6)))
+  tmpdir <- normPath(tempdir2(rndstr(1, 6)))
 
   if (isTRUE(needGoogle)) {
     if (utils::packageVersion("googledrive") >= "1.0.0")
@@ -66,7 +66,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
 
   opts <- append(list(reproducible.overwrite = TRUE,
                       reproducible.useNewDigestAlgorithm = TRUE,
-                      reproducible.cachePath = tmpCache), opts)
+                      reproducible.cachePath = tmpCache,
+                      reproducible.tempPath = file.path(tmpdir, rndstr(1,6))), opts)
 
   if (!is.null(opts)) {
     if (needGoogle) {

@@ -1,11 +1,11 @@
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
   opts <- options()
-  assignInMyNamespace(".reproducibleTempCacheDir", file.path(tempdir(), "reproducible", "cache"))
-  assignInMyNamespace(".reproducibleTempInputDir",  file.path(tempdir(), "reproducible", "inputs"))
+  #assignInMyNamespace(".reproducibleTempCacheDir", file.path(tempdir(), "reproducible", "cache"))
+  #assignInMyNamespace(".reproducibleTempInputDir",  file.path(tempdir(), "reproducible", "inputs"))
 
-  checkPath(.reproducibleTempCacheDir, create = TRUE)
-  checkPath(.reproducibleTempInputDir, create = TRUE)
+  checkPath(.reproducibleTempCacheDir(), create = TRUE)
+  checkPath(.reproducibleTempInputDir(), create = TRUE)
   opts.reproducible <- reproducibleOptions()
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
@@ -38,8 +38,9 @@
   # }
 }
 
-.reproducibleTempCacheDir <- file.path(tempdir(), "reproducible", "cache")
-.reproducibleTempInputDir <- file.path(tempdir(), "reproducible", "inputs")
+.reproducibleTempPath <- function() normPath(file.path(tempdir(), "reproducible"))
+.reproducibleTempCacheDir <- function() normPath(file.path(.reproducibleTempPath(), "cache"))
+.reproducibleTempInputDir <- function() normPath(file.path(.reproducibleTempPath(), "inputs"))
 
 .argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
                                           names(formals(cropInputs)),
