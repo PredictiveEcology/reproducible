@@ -122,9 +122,12 @@ test_that("testing prepInputs with deauthorized googledrive", {
       url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
       overwrite = TRUE,
       #targetFile = "NFDB_point_20181129.shp",
-      alsoExtract = "similar",
+    #  alsoExtract = "similar",
       fun = "sf::st_read"
     )
+    expect_is(NFDB_PT, "sf")
+    expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
+                      file_ext(dir(pattern = "NFDB_point"))))
 
     warn <- capture_warnings(NFDB_PT_BCR6 <- Cache(
       postProcess,
