@@ -28,7 +28,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (missing(libraries)) libraries <- list()
   unlist(lapply(libraries, require, character.only = TRUE))
   require("testthat")
-  tmpdir <- normPath(file.path(tempdir(), rndstr(1, 6)))
+  tmpdir <- tempdir2(rndstr(1, 6))
 
   if (isTRUE(needGoogle)) {
     if (utils::packageVersion("googledrive") >= "1.0.0")
@@ -64,9 +64,14 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpCache <- normPath(file.path(tmpdir, "testCache"))
   checkPath(tmpCache, create = TRUE)
 
-  opts <- append(list(reproducible.overwrite = TRUE,
+  defaultOpts <- list(reproducible.showSimilar = FALSE,
+                      reproducible.overwrite = TRUE,
                       reproducible.useNewDigestAlgorithm = TRUE,
-                      reproducible.cachePath = tmpCache), opts)
+                      reproducible.cachePath = tmpCache,
+                      reproducible.tempPath = file.path(tmpdir, rndstr(1,6)))
+  if (length(opts) > 0)
+    defaultOpts[names(opts)] <- opts
+  opts <- defaultOpts
 
   if (!is.null(opts)) {
     if (needGoogle) {
@@ -419,3 +424,5 @@ crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 rmDotUnderline <- function(envir = .GlobalEnv)
   rm(list = ls(all.names = TRUE, envir = envir)[startsWith(ls(all.names = TRUE, envir = envir), "._")],
      envir = envir)
+
+messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is inside"

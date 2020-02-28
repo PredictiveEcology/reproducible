@@ -613,16 +613,15 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_silent(Cache(outer, n = 2, cacheRepo = tmpdir))
   clearCache(ask = FALSE, x = tmpdir)
 
-  options(reproducible.cachePath = tempdir())
+  options(reproducible.cachePath = .reproducibleTempPath())
   out <- capture_messages(Cache(outer, n = 2))
   expect_true(all(unlist(lapply(
-    c("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary",
-      "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary"),
+    c(messageNoCacheRepo, messageNoCacheRepo),
     function(mess) any(grepl(mess, out))))))
 
   # does Sys.time() propagate to outer ones
   out <- capture_messages(Cache(outer, n = 2, notOlderThan = Sys.time()))
-  expect_true(all(grepl("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary", out)))
+  expect_true(all(grepl(messageNoCacheRepo, out)))
 
   # does Sys.time() propagate to outer ones -- no message about cacheRepo being tempdir()
   expect_silent(Cache(outer, n = 2, notOlderThan = Sys.time(), cacheRepo = tmpdir))
@@ -912,7 +911,9 @@ test_that("test rm large non-file-backed rasters", {
     if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
       skip("This is not for non-SQLite")
 
-  testInitOut <- testInit(ask = FALSE, opts = list("reproducible.cachePath" = .reproducibleTempCacheDir))
+  testInitOut <- testInit(ask = FALSE,
+                          opts = list("reproducible.tempPath" = tempdir2(),
+                                      "reproducible.cachePath" = .reproducibleTempCacheDir()))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)

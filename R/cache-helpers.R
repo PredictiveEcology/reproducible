@@ -161,15 +161,17 @@ setMethod(
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
-        tmpDir <- tempdir()
-        if (identical(normPath(getOption("reproducible.cachePath")), normPath(tmpDir))) {
-          message("No cacheRepo supplied and getOption('reproducible.cachePath') is the temporary directory;\n",
+        tmpDir <- .reproducibleTempPath()
+        # Test whether the user has accepted the default. If yes, then give message.
+        #  If no, then user is aware and doesn't need a message
+        if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
+          message("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
                   "  this will not persist across R sessions.")
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        message("No cacheRepo supplied. Using tempdir()")
-        tempdir()
+        message("No cacheRepo supplied. Using ",.reproducibleTempPath())
+        .reproducibleTempPath()
       }
       checkPath(path = cacheRepo, create = create)
     })
@@ -196,10 +198,6 @@ setMethod(
 #' b <- "Null"
 #' .prepareOutput(b) # converts to NULL
 #'
-#' # For rasters, it is same as .prepareFileBackedRaster
-#' requireNamespace("archivist", quietly = TRUE)
-#'   try(archivist::createLocalRepo(tempdir()))
-#'
 #' library(raster)
 #' r <- raster(extent(0,10,0,10), vals = 1:100)
 #'
@@ -225,18 +223,19 @@ setMethod(
     # .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
     browser(expr = exists("._prepareOutputs_1"))
     if (isTRUE(fromDisk(object))) {
-      fns <- Filenames(object)
-      fpShould <- file.path(cacheRepo, "rasters")
+      fns <- Filenames(object, allowMultiple = FALSE)
+      fpShould <- normPath(file.path(cacheRepo, "rasters"))
       isCorrect <- unlist(lapply(normPath(file.path(fpShould, basename(fns))),
                                  function(x) any(grepl(x, fns))))
       if (!any(isCorrect)) {
         if (is(object, "RasterStack")) {
           browser(expr = exists("._prepareOutputs_2"))
           for (i in seq(nlayers(object))) {
-            object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name), fpShould, object@layers[[i]]@file@name)
+            object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name),
+                                                 fpShould, object@layers[[i]]@file@name)
           }
         } else {
-          object@file@name <- gsub(dirname(fns), fpShould, fns)
+          object@file@name <- gsub(unique(dirname(fns)), fpShould, fns)
         }
       }
     }
@@ -833,7 +832,7 @@ setMethod(
 #' tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
 #' tmpFile1 <- tempfile("file1", tmpDirFrom, ".csv")
 #' tmpFile2 <- tempfile("file2", tmpDirFrom, ".csv")
-#' dir.create(tmpDirFrom)
+#' checkPath(tmpDirFrom, create = TRUE)
 #' f1 <- normalizePath(tmpFile1, mustWork = FALSE)
 #' f2 <- normalizePath(tmpFile2, mustWork = FALSE)
 #' t1 <- normalizePath(file.path(tmpDirTo, basename(tmpFile1)), mustWork = FALSE)

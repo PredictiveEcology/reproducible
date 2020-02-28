@@ -1,14 +1,24 @@
-#' Make a temporary sub-directory
+#' Make a temporary sub-directory or file in that subdirectory
 #'
-#' Create a temporary subdirectory in \code{tempdir()}.
+#' Create a temporary subdirectory in \code{.reproducibleTempPath()}, or a
+#' temporary file in that temporary subdirectory.
 #'
 #' @param sub Character string, length 1. Can be a result of
 #'   \code{file.path("smth", "smth2")} for nested temporary sub
 #'   directories.
 #'
+#' @rdname tempFilesAndFolders
 #' @export
-tempdir2 <- function(sub) {
-  checkPath(file.path(tempdir(), sub), create = TRUE)
+tempdir2 <- function(sub = "", tempdir = getOption("reproducible.tempPath", .reproducibleTempPath())) {
+  checkPath(normPath(file.path(tempdir, sub)), create = TRUE)
+}
+
+#' @param ... passed to \code{tempfile}, e.g., \code{fileext}
+#'
+#' @rdname tempFilesAndFolders
+#' @export
+tempfile2 <- function(sub = "", ...) {
+  normPath(file.path(tempdir2(sub = sub), basename(tempfile(...))))
 }
 
 #' Recursive copying of nested environments, and other "hard to copy" objects
@@ -22,7 +32,7 @@ tempdir2 <- function(sub) {
 #'
 #' @param filebackedDir A directory to copy any files that are backing R objects,
 #'                      currently only valid for \code{Raster} classes. Defaults
-#'                      to \code{tempdir()}, which is unlikely to be very useful.
+#'                      to \code{.reproducibleTempPath()}, which is unlikely to be very useful.
 #'                      Can be \code{NULL}, which means that the file will not be
 #'                      copied and could therefore cause a collision as the
 #'                      pre-copied object and post-copied object would have the same

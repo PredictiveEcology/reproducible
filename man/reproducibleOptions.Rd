@@ -117,7 +117,7 @@ The following options are likely of interest to most users
 
 The following options are likely not needed by a user.
 \tabular{lcl}{
-  \code{cloudChecksumsFilename} \tab \code{file.path(dirname(.reproducibleTempCacheDir), "checksums.rds")}
+  \code{cloudChecksumsFilename} \tab \code{file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")}
                      \tab Used in \code{\link{cloudCache}} \cr
   \code{length} \tab \code{Inf} \tab Used in \code{\link{Cache}}, specifically to the internal
                      calls to \code{\link{CacheDigest}}. This is passed to \code{digest::digest}.

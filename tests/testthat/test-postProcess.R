@@ -2,7 +2,7 @@ test_that("prepInputs doesn't work (part 3)", {
 
   if (requireNamespace("rgeos")) {
     testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
-      "rasterTmpDir" = file.path(tempdir(), "raster"),
+      "rasterTmpDir" = tempdir2(rndstr(1,6)),
       "reproducible.inputPaths" = NULL,
       "reproducible.overwrite" = TRUE)
     )

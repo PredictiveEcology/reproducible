@@ -84,7 +84,7 @@ test_that("test miscellaneous fns", {
   a1 <- a[sapply(a, function(x) !is.null(x))]
   b <- options()
   expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(match(names(b),names(a1)))]))))
-  omit <- c("reproducible.ask", "reproducible.overwrite", "reproducible.cachePath")
+  omit <- c(names(testInitOut$opts), names(testInitOut$optsAsk))
   b1 <- b[names(a1)]
   b1 <- b1[!names(b1) %in% omit]
   a2 <- a1[!names(a1) %in% omit]
@@ -259,8 +259,6 @@ test_that("Filenames for environment", {
   expect_true(identical(
     sort(normPath(c(rlogoFiles))),
     sort(Filenames(b))))
-
-  browser()
 
   rlogoFiles <- system.file("external/rlogo.grd", package="raster")
   b <- raster::brick(rlogoFiles)

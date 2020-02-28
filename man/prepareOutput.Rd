@@ -46,10 +46,6 @@ a <- 1
 b <- "Null"
 .prepareOutput(b) # converts to NULL
 
-# For rasters, it is same as .prepareFileBackedRaster
-requireNamespace("archivist", quietly = TRUE)
-  try(archivist::createLocalRepo(tempdir()))
-
 library(raster)
 r <- raster(extent(0,10,0,10), vals = 1:100)
 

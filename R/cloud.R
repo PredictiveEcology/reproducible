@@ -138,7 +138,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
                           conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("._cloudDownload_1"))
   message("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
-  localNewFilename <- file.path(tempdir(), basename2(newFileName))
+  localNewFilename <- file.path(tempdir2(), basename2(newFileName))
   isInCloud <- gsub(gdriveLs$name,
                     pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
                     replacement = "") %in% outputHash

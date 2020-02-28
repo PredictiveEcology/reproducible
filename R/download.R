@@ -274,8 +274,8 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                                    destinationPath = destinationPath)
 
   #destFile <- tempfile(fileext = paste0(".", tools::file_ext(downloadFilename)))
-  destFile <- file.path(tempdir(), rndstr(len = 5), basename(downloadFilename))
-  checkPath(dirname(destFile), create = TRUE)
+  destFile <- file.path(tempdir2(rndstr(1,6)), basename(downloadFilename))
+  # checkPath(dirname(destFile), create = TRUE) # don't need with tempdir2
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     message("  Downloading from Google Drive.")
     fs <- attr(archive, "fileSize")
@@ -341,7 +341,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @importFrom crayon magenta
 #' @importFrom httr GET http_error progress stop_for_status user_agent write_disk
 dlGeneric <- function(url, needChecksums) {
-  destFile <- file.path(tempdir(), basename(url))
+  destFile <- file.path(tempdir2(rndstr(1,6)), basename(url))
 
   if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
     stop("Can not access url ", url)
@@ -395,7 +395,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               destFile <- targetFile <- possibleTargetFile
               needSave <- FALSE
             } else {
-              destFile <- file.path(destinationPath, tempfile(fileext = ".rds"))
+              destFile <- file.path(destinationPath, basename(tempfile(fileext = ".rds")))
             }
           } else {
             destFile <- file.path(destinationPath, targetFile)
@@ -449,7 +449,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
           tmpFile <- downloadResults$destFile
           on.exit({
-            suppressWarnings(unlink(normPath(tmpFile), recursive = TRUE))
+            suppressWarnings(unlink(dirname(normPath(tmpFile)), recursive = TRUE))
           }, add = TRUE)
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }

@@ -9,20 +9,25 @@
 \alias{Filenames,list-method}
 \title{Return the filename(s) from a \code{Raster*} object}
 \usage{
-Filenames(obj)
+Filenames(obj, allowMultiple = TRUE)
 
-\S4method{Filenames}{ANY}(obj)
+\S4method{Filenames}{ANY}(obj, allowMultiple = TRUE)
 
-\S4method{Filenames}{Raster}(obj)
+\S4method{Filenames}{Raster}(obj, allowMultiple = TRUE)
 
-\S4method{Filenames}{RasterStack}(obj)
+\S4method{Filenames}{RasterStack}(obj, allowMultiple = TRUE)
 
-\S4method{Filenames}{environment}(obj)
+\S4method{Filenames}{environment}(obj, allowMultiple = TRUE)
 
-\S4method{Filenames}{list}(obj)
+\S4method{Filenames}{list}(obj, allowMultiple = TRUE)
 }
 \arguments{
 \item{obj}{A \code{Raster*} object (i.e., \code{RasterLayer}, \code{RasterStack}, \code{RasterBrick})}
+
+\item{allowMultiple}{Logical. If \code{TRUE}, the default, then all relevant
+filenames will be returned, i.e., in cases such as \code{.grd} where multiple files
+are required. If \code{FALSE}, then only the first file will be returned,
+e.g., \code{filename.grd}, in the case of default Raster format in R.}
 }
 \description{
 This is mostly just a wrapper around \code{filename} from the \pkg{raster} package, except that

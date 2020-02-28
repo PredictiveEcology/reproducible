@@ -17,16 +17,16 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(all(grepl("adding", mess)))
 
   # .checkCacheRepo
-  options(reproducible.cachePath = dirname(tmpdir))
+  options(reproducible.cachePath = .reproducibleTempPath())
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary", mess)))
+  expect_true(any(grepl(messageNoCacheRepo, mess)))
 
   opt11 <- options("reproducible.cachePath" = NULL)
   on.exit({
     options(opt11)
   }, add = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cacheRepo supplied. Using tempdir()", mess)))
+  expect_true(any(grepl("No cacheRepo supplied. Using", mess)))
 
   # getFunctionName
   fn <- function(FUN) {
