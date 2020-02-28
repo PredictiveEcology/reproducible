@@ -448,7 +448,10 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             result <- file.copy(downloadResults$destFile, desiredPath)
           }
 
-          suppressWarnings(file.remove(downloadResults$destFile))
+          tmpFolder <- dirname(downloadResults$destFile)
+          on.exit({
+            suppressWarnings(unlink(normPath(tmpFolder), recursive = TRUE))
+          }, add = TRUE)
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }
       #}
