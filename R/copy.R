@@ -6,6 +6,8 @@
 #' @param sub Character string, length 1. Can be a result of
 #'   \code{file.path("smth", "smth2")} for nested temporary sub
 #'   directories.
+#' @param tempdir Optional character string where the temporary dir should be placed.
+#'   Defaults to \code{.reproducibleTempPath()}
 #'
 #' @rdname tempFilesAndFolders
 #' @export
