@@ -437,7 +437,7 @@ setMethod(
       if (useDBI()) {
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = cacheRepo)
-          on.exit(dbDisconnect(conn), add = TRUE)
+          on.exit({dbDisconnect(conn)}, add = TRUE)
         }
       }
 
@@ -463,8 +463,21 @@ setMethod(
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
+      browser(expr = exists("._Cache_17"))
+      conns <- list()
+      on.exit({done <- lapply(conns, function(co) {
+        if (!identical(co, conns[[1]])) {
+          try(dbDisconnect(co), silent = TRUE)
+        }})}, add = TRUE)
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-        CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE, conn = conn)
+        browser(expr = exists("._Cache_18"))
+        conns[[cacheRepo]] <<- if (cacheRepo == cacheRepos[[1]]) {
+          conn
+        } else {
+          dbConnectAll(drv, cachePath = cacheRepo)
+        }
+        CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE,
+                      conn = conns[[cacheRepo]])
       }))
 
       if (any(!isIntactRepo)) {
