@@ -68,11 +68,12 @@ test_that("test file-backed raster caching", {
       checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
       file.copy(from = froms, overwrite = TRUE,
                 to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
-      movedCache(tmpdir)
+      # movedCache(tmpdir)
       # ._prepareOutputs_1 <<- ._prepareOutputs_2 <<- ._getFromRepo <<- 1
       # Will silently update the filename of the RasterLayer, and recover it
-      bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
-                  quick = TRUE)
+      warn <- capture_warnings(bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
+                  quick = TRUE))
+
       expect_false(attr(bb, ".Cache")$newCache)
       expect_true(file.exists(filename(bb)))
       expect_silent(bb[] <- bb[])

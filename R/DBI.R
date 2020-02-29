@@ -446,7 +446,7 @@ CacheDBTableName <- function(cachePath,
 CacheIsACache <- function(cachePath, create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
-  browser(expr = exists("._CacheIsACache"))
+  browser(expr = exists("._CacheIsACache_1"))
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -460,10 +460,24 @@ CacheIsACache <- function(cachePath, create = FALSE,
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
                list.files(cachePath))
   if (useDBI()) {
+    browser(expr = exists("._CacheIsACache_2"))
     if (ret) {
-      ret <- ret && any(grepl(CacheDBTableName(cachePath),
-                              retry(retries = 250, exponentialDecayBase = 1.01,
-                                    quote(dbListTables(conn)))))
+      tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
+                          quote(dbListTables(conn)))
+      tableShouldBe <- CacheDBTableName(cachePath)
+      if (length(tablesInDB) == 1) {
+        if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
+          warning(paste0("The table in the Cache repo does not match the cacheRepo. ",
+                     "If this is because of a moved repository (i.e., files ",
+                     "copied), press 'Enter' and it will be updated. ",
+                     "If not, cache is in an error state. ",
+                     "You may need to delete the Cache"))
+          movedCache(cachePath, #old = tablesInDB,
+                     drv = drv, conn = conn)
+        }
+
+      }
+      ret <- ret && any(grepl(tableShouldBe, tablesInDB))
     }
   }
 
