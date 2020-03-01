@@ -250,7 +250,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
-
+  on.exit({unlink(getOption("reproducible.tempPath"), recursive = TRUE)},
+          add = TRUE)
   # Download, Checksum, Extract from Archive
   browser(expr = exists("._prepInputs_1"))
   message("Running preProcess")
@@ -676,7 +677,7 @@ extractFromArchive <- function(archive,
       c(argList)
     }
     opt <- options("warn")$warn
-    on.exit(options(warn = opt))
+    on.exit(options(warn = opt), add = TRUE)
     options(warn = 1)
     mess <- capture.output(type = "message", extractedFiles <- do.call(fun, c(args, argList)))
     worked <- if (isUnzip) {

@@ -58,6 +58,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
                        useCache = getOption("reproducible.useCache", FALSE), ...) {
+  on.exit({unlink(getOption("reproducible.tempPath"), recursive = TRUE)},
+          add = TRUE)
   dots <- list(...)
 
   fun <- .checkFunInDots(fun = fun, dots = dots)
