@@ -789,12 +789,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     } else {
       setDT(cs)
       nonCurrentFiles <- cs[!file %in% filesToChecksum]
-      if (requireNamespace("dplyr")) {
-        nonCurrentFiles1 <- cs %>%
-          dplyr::filter(!file %in% filesToChecksum)
-        browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
-        stopifnot(identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
-      }
+      # browser()
+      # if (requireNamespace("dplyr")) {
+      #   nonCurrentFiles1 <- cs %>%
+      #     dplyr::filter(!file %in% filesToChecksum)
+      #   browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
+      #   stopifnot(identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
+      # }
       setDF(cs)
 
     }
