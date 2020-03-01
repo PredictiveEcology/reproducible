@@ -191,3 +191,29 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
 #' This is used so that unit tests can override this using \code{testthat::with_mock}.
 #' @keywords internal
 isWindows <- function() identical(.Platform$OS.type, "windows")
+
+#' Provide standard messaging for missing package dependencies
+#'
+#' This provides a standard message format for missing packages, e.g.,
+#' detected via \code{requireNamespace}.
+#'
+#' @export
+#' @param pkg Character string indicating name of package required
+#' @param minVersion Character string indicating minimum version of package
+#'   that is needed
+#' @param messageStart A character string with a prefix of message to provide
+.requireNamespace <- function(pkg = "methods", minVersion = NULL,
+                        messageStart = paste0(pkg, if (!is.null(minVersion)) paste0("(>=", minVersion, ")"), " is required. Try: ")) {
+  need <- FALSE
+  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE, warn.conflicts = FALSE))) {
+    need <- TRUE
+  } else {
+    if (isTRUE(packageVersion(pkg) < minVersion))
+      need <- TRUE
+  }
+  if (need) {
+    message(messageStart,
+         "install.packages('",pkg,"')")
+  }
+  !need
+}

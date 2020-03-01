@@ -283,7 +283,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       fs <- attr(assessGoogle(url),"fileSize")
     class(fs) <- "object_size"
     isLargeFile <- if (is.null(fs)) FALSE else fs > 1e6
-    if (!isWindows() && requireNamespace("future") && isLargeFile &&
+    if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
         !isFALSE(getOption("reproducible.futurePlan"))) {
       message("Downloading a large file")
       fp <- future::plan()

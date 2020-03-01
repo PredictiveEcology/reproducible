@@ -740,7 +740,7 @@ test_that("test future", {
 
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
   if (.onLinux) {
-    if (requireNamespace("future", quietly = TRUE)) {
+    if (requireNamespace("future")) {
       testInitOut <- testInit("raster", verbose = TRUE, tmpFileExt = ".rds")
       optsFuture <- options("future.supportsMulticore.unstable" = "quiet")
       on.exit({

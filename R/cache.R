@@ -890,7 +890,7 @@ setMethod(
       .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
       if (.onLinux) {
         if (!isFALSE(getOption("reproducible.futurePlan")) &&
-            requireNamespace("future", quietly = TRUE)) {
+            .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
           useFuture <- TRUE
         }
       }

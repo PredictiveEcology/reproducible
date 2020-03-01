@@ -7,7 +7,7 @@
 #' @importFrom magrittr %>%
 #'
 getGDALVersion <-  function() {
-  if (requireNamespaces("rgdal")) {
+  if (.requireNamespace("rgdal", "2.0.0")) {
     vers <- tryCatch(rgdal::getGDALVersionInfo(), error = function(e) NA_real_)
     if (!is.na(vers)) {
       vers <- strsplit(vers, split = ",")[[1]][1] %>%
@@ -17,7 +17,6 @@ getGDALVersion <-  function() {
         as.numeric_version(.)
     }
   } else {
-    message("To use gdal, you need to install rgdal; install.packages('rgdal')")
     vers <- '0.0.0'
   }
   return(vers)
@@ -110,7 +109,8 @@ checkGDALVersion <- function(version) {
 #' }
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE), ...) {
-  if (is(x, "RasterLayer") && requireNamespace("sf") && requireNamespace("fasterize")) {
+  if (is(x, "RasterLayer") && requireNamespace("sf", quietly = TRUE) &&
+      requireNamespace("fasterize", quietly = TRUE)) {
     message("fastMask is using sf and fasterize")
 
     if (!identical(crs(y), crs(x))) {
@@ -242,7 +242,7 @@ bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.ti
 dealWithCores <- function(cores) {
   browser(expr = exists("._dealWithCores_1"))
   if (is.null(cores) || cores == "AUTO") {
-    if (requireNamespace("parallel")) {
+    if (requireNamespace("parallel", quietly = TRUE)) {
       cores <- as.integer(parallel::detectCores() * 0.9)
     } else {
       cores <- 1L
@@ -260,7 +260,7 @@ dealWithCores <- function(cores) {
 }
 
 findGDAL <- function() {
-  if (requireNamespace("gdalUtils")) {
+  if (.requireNamespace("gdalUtils")) {
     gdalPath <- NULL
     attemptGDAL <- TRUE
     if (isWindows()) {
@@ -288,13 +288,11 @@ findGDAL <- function() {
     if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
       attemptGDAL <- FALSE
     attemptGDAL
-  } else {
-    stop("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')")
   }
 }
 
 attemptGDAL <- function(x, useGDAL) {
-  if (requireNamespace("gdalUtils")) {
+  if (requireNamespace("gdalUtils", quietly = TRUE)) {
     browser(expr = exists("._attemptGDAL_1"))
     crsIsNA <- is.na(crs(x))
     cpim <- canProcessInMemory(x, 3)

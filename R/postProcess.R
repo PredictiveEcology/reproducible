@@ -779,7 +779,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 projectInputs.sf <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
     warning("sf class objects not fully tested Use with caution.")
-    if (requireNamespace("sf")) {
+    if (requireNamespace("sf", quietly = TRUE)) {
       isValid <- sf::st_is_valid(x)
       if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid)) {
         x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
