@@ -83,20 +83,29 @@ test_that("fastMask produces correct results", {
 
     # test non-spatial polygons data frame
     newStack2 <- fastMask(x = origStack[[2]], y = shp)
+}})
 
-    ### getGDALversion
-    expect_silent(a <- getGDALVersion())
-    if (is.na(a)) {
-      expect_true(is.numeric(a))
-    } else {
-      expect_true(is(a, "numeric_version"))
+
+test_that("checkGDALVersion", {
+  testInitOut <- testInit(needGoogle = FALSE, c("sp", "raster"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  ### getGDALversion
+    if (.requireNamespace("rgdal", "2.0.0")) {
+      expect_silent(a <- getGDALVersion())
+      if (is.na(a)) {
+        expect_true(is.numeric(a))
+      } else {
+        expect_true(is(a, "numeric_version"))
+      }
+
+      expect_true(checkGDALVersion("1.0.0"))
+      expect_error(checkGDALVersion())
+      expect_false(checkGDALVersion("4.0.0"))
     }
 
-    expect_true(checkGDALVersion("1.0.0"))
-    expect_error(checkGDALVersion())
-    expect_false(checkGDALVersion("4.0.0"))
 
-  }
 })
 
 test_that("testing prepInputs with deauthorized googledrive", {
