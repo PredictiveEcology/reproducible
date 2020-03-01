@@ -308,7 +308,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           tmpfile <- paste0(tempfile(fileext = ".tif"));
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
-          gdalwarp(srcfile = filename(x),
+          gdalUtils::gdalwarp(srcfile = filename(x),
                    dstfile = tmpfile,
                    tr = c(res(x)[1], res(x)[2]),
                    overwrite = TRUE,
@@ -568,7 +568,6 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'     use GDAL regardless of the memory test described here.
 #'
 #' @importFrom fpCompare %==%
-#' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom raster crs dataType res res<- dataType<-
 #' @importFrom testthat capture_warnings
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,

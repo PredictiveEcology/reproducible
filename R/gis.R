@@ -5,16 +5,20 @@
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
 #' @importFrom magrittr %>%
-#' @importFrom rgdal getGDALVersionInfo
 #'
 getGDALVersion <-  function() {
-  vers <- tryCatch(getGDALVersionInfo(), error = function(e) NA_real_)
-  if (!is.na(vers)) {
-    vers <- strsplit(vers, split = ",")[[1]][1] %>%
-      strsplit(., split = " ") %>%
-      `[[`(1) %>%
-      `[`(2) %>%
-      as.numeric_version(.)
+  if (requireNamespaces("rgdal")) {
+    vers <- tryCatch(rgdal::getGDALVersionInfo(), error = function(e) NA_real_)
+    if (!is.na(vers)) {
+      vers <- strsplit(vers, split = ",")[[1]][1] %>%
+        strsplit(., split = " ") %>%
+        `[[`(1) %>%
+        `[`(2) %>%
+        as.numeric_version(.)
+    }
+  } else {
+    message("To use gdal, you need to install rgdal; install.packages('rgdal')")
+    vers <- '0.0.0'
   }
   return(vers)
 }
@@ -256,52 +260,61 @@ dealWithCores <- function(cores) {
 }
 
 findGDAL <- function() {
-  gdalPath <- NULL
-  attemptGDAL <- TRUE
-  if (isWindows()) {
-    # Handle all QGIS possibilities
-    a <- dir("C:/", pattern = "Progra", full.names = TRUE)
-    a <- grep("Program Files", a, value = TRUE)
-    a <- unlist(lapply(a, dir, pattern = "QGIS", full.name = TRUE))
-    a <- unlist(lapply(a, dir, pattern = "bin", full.name = TRUE))
+  if (requireNamespace("gdalUtils")) {
+    gdalPath <- NULL
+    attemptGDAL <- TRUE
+    if (isWindows()) {
+      # Handle all QGIS possibilities
+      a <- dir("C:/", pattern = "Progra", full.names = TRUE)
+      a <- grep("Program Files", a, value = TRUE)
+      a <- unlist(lapply(a, dir, pattern = "QGIS", full.name = TRUE))
+      a <- unlist(lapply(a, dir, pattern = "bin", full.name = TRUE))
 
 
-    possibleWindowsPaths <- c(a, "C:/OSGeo4W64/bin",
-                              "C:/GuidosToolbox/QGIS/bin",
-                              "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
-                              "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
-                              "C:/Program Files/GDAL",
-                              "C:/Program Files (x86)/GDAL")
-    message("Searching for gdal installation")
-    gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
-    if (any(gdalInfoExists))
-      gdalPath <- possibleWindowsPaths[gdalInfoExists]
+      possibleWindowsPaths <- c(a, "C:/OSGeo4W64/bin",
+                                "C:/GuidosToolbox/QGIS/bin",
+                                "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
+                                "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
+                                "C:/Program Files/GDAL",
+                                "C:/Program Files (x86)/GDAL")
+      message("Searching for gdal installation")
+      gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
+      if (any(gdalInfoExists))
+        gdalPath <- possibleWindowsPaths[gdalInfoExists]
+    }
+    gdalPath
+    gdalUtils::gdal_setInstallation(gdalPath)
+
+    if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
+      attemptGDAL <- FALSE
+    attemptGDAL
+  } else {
+    stop("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')")
   }
-  gdalPath
-  gdalUtils::gdal_setInstallation(gdalPath)
-
-  if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
-    attemptGDAL <- FALSE
-  attemptGDAL
 }
 
 attemptGDAL <- function(x, useGDAL) {
-  browser(expr = exists("._attemptGDAL_1"))
-  crsIsNA <- is.na(crs(x))
-  cpim <- canProcessInMemory(x, 3)
-  isTRUEuseGDAL <- isTRUE(useGDAL)
-  forceGDAL <- identical(useGDAL, "force")
-  shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
-  attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
-    findGDAL()
-  } else {
-    if (crsIsNA && shouldUseGDAL)
-      message("Can't use GDAL because crs is NA")
-    if (cpim && isTRUEuseGDAL)
-      message("useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
-              "use GDAL = 'force' to override")
+  if (requireNamespace("gdalUtils")) {
+    browser(expr = exists("._attemptGDAL_1"))
+    crsIsNA <- is.na(crs(x))
+    cpim <- canProcessInMemory(x, 3)
+    isTRUEuseGDAL <- isTRUE(useGDAL)
+    forceGDAL <- identical(useGDAL, "force")
+    shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
+    attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
+      findGDAL()
+    } else {
+      if (crsIsNA && shouldUseGDAL)
+        message("Can't use GDAL because crs is NA")
+      if (cpim && isTRUEuseGDAL)
+        message("useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
+                "use GDAL = 'force' to override")
 
-    FALSE
+      FALSE
+    }
+  } else {
+    message("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')")
+    attemptGDAL <- FALSE
   }
   attemptGDAL
 }
