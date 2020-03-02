@@ -1020,10 +1020,42 @@ test_that("test file link with duplicate Cache", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  b <- Cache(seq, 1, 1e6)
-  mess <- capture_messages(d <- Cache(`:`, 1, 1e6))
+  sam <- function(...) {
+    sample(...)
+  }
+  N <- 4e5
+  set.seed(123)
+  mess1 <- capture_messages(b <- Cache(sam, N))
+  set.seed(123)
+  mess2 <- capture_messages(d <- Cache(sample, N))
 
-  expect_true(grepl("A file with identical", mess))
+  expect_true(grepl("A file with identical", mess2))
+
+  set.seed(123)
+  mess1 <- capture_messages(b <- Cache(sam, N))
+  set.seed(123)
+  mess2 <- capture_messages(d <- Cache(sample, N))
+  expect_true(any(grepl("loading cached", mess2)))
+  expect_true(any(grepl("loading cached", mess1)))
+  if (identical(tolower(.Platform$OS.type), "unix")) {
+    out1 <- system2("du", tmpCache, stdout = TRUE)
+    fs1 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out1))
+  }
+
+
+  # It must be same output, not same input
+  clearCache(tmpCache)
+  set.seed(123)
+  mess1 <- capture_messages(b <- Cache(sam, N))
+  set.seed(1234)
+  mess2 <- capture_messages(d <- Cache(sample, N))
+  # Different inputs AND different output -- so no cache recovery and no file link
+  expect_true(length(mess2) == 0)
+  if (identical(tolower(.Platform$OS.type), "unix")) {
+    out2 <- system2("du", tmpCache, stdout = TRUE)
+    fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
+  }
+  expect_true(all(fs1 * 1.9 < fs2))
 
 })
 
