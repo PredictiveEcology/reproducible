@@ -48,9 +48,13 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 #' @inheritParams Cache
 #' @param cacheId The hash string representing the result of \code{.robustDigest}
 #' @param obj The R object to save to the cache
+#' @param linkToCacheId Optional. If a cacheId is provided here, then a file.link will
+#'   be made to the file with that cacheId name in the cache repo. This is used when
+#'   identical outputs exist in the cache. This will save disk space.
 #' @importFrom qs qsave
 saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                        conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId) {
+                        conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
+                        linkToCacheId = NULL) {
   browser(expr = exists("._saveToCache_1"))
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -126,10 +130,18 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   fts <- CacheStoredFile(cachePath, cacheId)
 
   browser(expr = exists("._saveToCache_2"))
-  if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
-    fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
-  else {
-    saveRDS(obj, file = fts)
+  if (is.null(linkToCacheId)) {
+    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
+      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
+    else {
+      saveRDS(obj, file = fts)
+      fs <- file.size(fts)
+    }
+  } else {
+    ftL <- CacheStoredFile(cachePath, linkToCacheId)
+    message("  (A file with identical properties already exists in the Cache; ",
+            "creating a file.link instead of a new file)")
+    file.link(from = ftL, to = fts)
     fs <- file.size(fts)
   }
   fsChar <- as.character(fs)
@@ -326,11 +338,11 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 
 }
 .cacheNumDefaultTags <- function() {
-  if (useDBI()) 7 else 11
+  if (useDBI()) 8 else 12
 }
 
 .ignoreTagKeys <- function() {
-  c("preDigest", "otherFunctions", "accessed")
+  c("preDigest", "otherFunctions", "accessed", "elapsedTimeLoad")
 }
 
 .cacheTableHashColName <- function() {

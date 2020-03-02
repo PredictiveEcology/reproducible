@@ -96,7 +96,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
       # The download step
       failed <- 1
-      browser()
       while(failed > 0  && failed < 4) {
         downloadResults <- try(downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
                                           targetFile = targetFile, fileToDownload = fileToDownload,

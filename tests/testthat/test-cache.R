@@ -1013,3 +1013,15 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
   expect_true(grepl(paste0("cannot open compressed file"), warn))
 
 })
+
+test_that("test file link with duplicate Cache", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  b <- Cache(seq, 1, 1e6)
+  mess <- capture_messages(d <- Cache(`:`, 1, 1e6))
+
+})
+

@@ -710,10 +710,11 @@ setMethod(
                  "\nclearCache(userTags = '", cID, "')")
           }
 
-          .updateTagsRepo(outputHash, cacheRepo, "elapsedTimeLoad",
-                       format(elapsedTimeLoad, units = "secs"),
-                       add = TRUE,
-                       drv = drv, conn = conn)
+          if (useDBI())
+            .updateTagsRepo(outputHash, cacheRepo, "elapsedTimeLoad",
+                         format(elapsedTimeLoad, units = "secs"),
+                         add = TRUE,
+                         drv = drv, conn = conn)
           if (useCloud) {
             browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
@@ -891,11 +892,31 @@ setMethod(
       #   (i.e., keep trying until it is written)
 
       objSize <- sum(unlist(objSize(outputToSave)))
+      resultHash <- ""
+      linkToCacheId <- NULL
+      if (objSize > 1e6) {
+        resultHash <- CacheDigest(list(outputToSave))$outputHash
+        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
+                              dbTabName = dbTabNam,
+                              .con = conn)
+        res <- retry(retries = 15, exponentialDecayBase = 1.01,
+                     quote(dbSendQuery(conn, qry)))
+        allCache <- setDT(dbFetch(res))
+        dbClearResult(res)
+        if (NROW(allCache)) {
+          alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
+          if (NROW(alreadyExists)) {
+            linkToCacheId <- alreadyExists[["cacheId"]][[1]]
+          }
+        }
+      }
+
       userTags <- c(userTags,
                     paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0("inCloud:", isTRUE(useCloud)),
+                    paste0("resultHash:", resultHash),
                     paste0("elapsedTimeDigest:", format(elapsedTimeCacheDigest, units = "secs")),
                     paste0("elapsedTimeFirstRun:", format(elapsedTimeFUN, units = "secs")),
                     paste0(otherFns),
@@ -956,7 +977,8 @@ setMethod(
         if (useDBI()) {
           browser(expr = exists("._Cache_13"))
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                                      conn = conn, obj = outputToSave, cacheId = outputHash)
+                                      conn = conn, obj = outputToSave, cacheId = outputHash,
+                                      linkToCacheId = linkToCacheId)
         } else {
           while (written >= 0) {
             browser(expr = exists("._Cache_14"))
@@ -1737,7 +1759,8 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
   paste0(basename2(dirname(cacheRepo)), "_", basename2(cacheRepo))
 
 .defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
-                      "otherFunctions", "preDigest", "file.size", "cacheId")
+                      "otherFunctions", "preDigest", "file.size", "cacheId",
+                      "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash")
 
 .defaultOtherFunctionsOmit <- c("(test_","with_reporter", "force", "Restart", "with_mock",
                                      "eval", "::", "\\$", "\\.\\.", "standardGeneric",
