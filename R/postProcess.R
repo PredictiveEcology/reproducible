@@ -1266,7 +1266,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
   if (is.null(datatype)) {
 
     if (ncell(ras) > N) {
-      rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
+      rasVals <- tryCatch(suppressWarnings(raster::sampleRandom(x = ras, size = N)),
+                     error = function(x) rep(NA_integer_, N))
     } else {
       rasVals <- raster::getValues(ras)
     }
