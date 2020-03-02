@@ -344,7 +344,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                            destinationPath = destinationPath,
                            append = (needChecksums == 2))
     }
-  })
+    needChecksums <- 0
+  }, add = TRUE)
 
   # Stage 1 - Extract from archive
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
@@ -426,7 +427,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                              destinationPath = destinationPath,
                              append = (needChecksums == 2))
       }
-    })
+      needChecksums <- 0
+    }, add = TRUE)
     extractedFiles <- .tryExtractFromArchive(archive = nestedArchives, neededFiles = neededFiles,
                                              alsoExtract = alsoExtract, destinationPath = destinationPath,
                                              checkSums = checkSums, needChecksums = needChecksums,
@@ -489,9 +491,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         append = needChecksums == 2
       ))
     }
-
-
-    on.exit({browser()}) # remove on.exit because it is done here
+    on.exit({
+      needChecksums <- 0
+    }, add = TRUE, after = FALSE) # effectively remove appendChecksums in other
+                                  # on.exit because it is done here
   }
 
   browser(expr = exists("._postProcess_10"))
