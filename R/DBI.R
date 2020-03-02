@@ -141,7 +141,11 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
     ftL <- CacheStoredFile(cachePath, linkToCacheId)
     message("  (A file with identical properties already exists in the Cache; ",
             "creating a file.link instead of a new file)")
-    file.link(from = ftL, to = fts)
+    if (identical(tolower(.Platform$OS.type), "windows")) {
+      file.link(from = ftL, to = fts)
+    } else {
+      file.symlink(from = ftL, to = fts)
+    }
     fs <- file.size(fts)
   }
   fsChar <- as.character(fs)
