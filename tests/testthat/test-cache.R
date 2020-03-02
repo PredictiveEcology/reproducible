@@ -1037,10 +1037,9 @@ test_that("test file link with duplicate Cache", {
   mess2 <- capture_messages(d <- Cache(sample, N))
   expect_true(any(grepl("loading cached", mess2)))
   expect_true(any(grepl("loading cached", mess1)))
-  if (identical(tolower(.Platform$OS.type), "unix")) {
-    out1 <- system2("du", tmpCache, stdout = TRUE)
+  out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
+  if (!is(out1, "try-error"))
     fs1 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out1))
-  }
 
 
   # It must be same output, not same input
@@ -1051,11 +1050,11 @@ test_that("test file link with duplicate Cache", {
   mess2 <- capture_messages(d <- Cache(sample, N))
   # Different inputs AND different output -- so no cache recovery and no file link
   expect_true(length(mess2) == 0)
-  if (identical(tolower(.Platform$OS.type), "unix")) {
-    out2 <- system2("du", tmpCache, stdout = TRUE)
+  out2 <- try(system2("du", tmpCache, stdout = TRUE))
+  if (!is(out2, "try-error")) {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
+    expect_true(all(fs1 * 1.9 < fs2))
   }
-  expect_true(all(fs1 * 1.9 < fs2))
 
 })
 
