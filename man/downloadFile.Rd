@@ -17,6 +17,7 @@ downloadFile(
   needChecksums,
   overwrite = getOption("reproducible.overwrite", TRUE),
   purge = FALSE,
+  .tempPath,
   ...
 )
 }
@@ -77,6 +78,9 @@ even if they pass the checksums or the files are all there.}
 \code{CHECKSUMS.txt} file and
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
+
+\item{.tempPath}{Optional temporary path for internal file intermediate steps.
+Will be cleared on.exit from this function.}
 
 \item{...}{Passed to \code{dlFun}. Still experimental.}
 }

@@ -400,6 +400,8 @@ extractFromArchive <- function(archive,
                                neededFiles = NULL, extractedArchives = NULL, checkSums = NULL,
                                needChecksums = 0, filesExtracted = character(),
                                checkSumFilePath = character(), quick = FALSE, .tempPath, ...) {
+
+  browser(expr = exists('._extractFromArchive_1'))
   if (!is.null(archive)) {
     if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% file_ext(archive)))) {
       stop("Archives of type ", file_ext(archive), " are not currently supported. ",
@@ -422,6 +424,7 @@ extractFromArchive <- function(archive,
     FALSE
   }
 
+  browser(expr = exists('._extractFromArchive_2'))
   if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
     if (!is.null(archive)) {
       if (!file.exists(archive[1]))

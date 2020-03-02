@@ -7,7 +7,7 @@
 #' @importFrom magrittr %>%
 #'
 getGDALVersion <-  function() {
-  if (.requireNamespace("rgdal", "2.0.0")) {
+  if (.requireNamespace("rgdal")) {
     vers <- tryCatch(rgdal::getGDALVersionInfo(), error = function(e) NA_real_)
     if (!is.na(vers)) {
       vers <- strsplit(vers, split = ",")[[1]][1] %>%

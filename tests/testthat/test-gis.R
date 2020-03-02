@@ -92,7 +92,7 @@ test_that("checkGDALVersion", {
     testOnExit(testInitOut)
   }, add = TRUE)
   ### getGDALversion
-    if (.requireNamespace("rgdal", "2.0.0")) {
+    if (.requireNamespace("rgdal")) {
       expect_silent(a <- getGDALVersion())
       if (is.na(a)) {
         expect_true(is.numeric(a))
