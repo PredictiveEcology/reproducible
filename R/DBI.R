@@ -281,6 +281,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 }
 
 .updateTagsRepo <- function(cacheId, cachePath, tagKey = character(), tagValue = character(),
+                            add = TRUE,
                             drv = getOption("reproducible.drv", RSQLite::SQLite()),
                             conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("._updateTagsRepo_1"))
@@ -310,8 +311,13 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                  " set \"tagValue\" = \"",tagValue,"\" where ",
                  " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
       #))
-
+      affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
       dbClearResult(rs)
+      if (!affectedAnyRows) {
+        if (isTRUE(add)) {
+          .addTagsRepo(cacheId, cachePath, tagKey, tagValue, drv = drv, conn = conn)
+        }
+      }
     } else {
       warning("updateTagsRepo not implemented when useDBI = FALSE")
     }
