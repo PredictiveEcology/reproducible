@@ -520,9 +520,13 @@ setMethod(
       # remove some of the arguments passed to Cache, which are irrelevant for digest
       argsToOmitForDigest <- dotPipe | (names(modifiedDots) %in% .defaultCacheOmitArgs)
 
+      preCacheDigestTime <- Sys.time()
       cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
+      postCacheDigestTime <- Sys.time()
+      elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
+
       preDigest <- cacheDigest$preDigest
       outputHash <- cacheDigest$outputHash
 
@@ -681,6 +685,8 @@ setMethod(
                                         basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
                                         ") is large: ",
                                         format(objSize, units = "auto"), ")")))
+
+          preLoadTime <- Sys.time()
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
                                      lastOne = lastOne, cacheRepo = cacheRepo,
                                      fnDetails = fnDetails,
@@ -690,6 +696,9 @@ setMethod(
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
+          postLoadTime <- Sys.time()
+          elapsedTimeLoad <- postLoadTime - preLoadTime
+
           browser(expr = exists("._Cache_7"))
           if (is(output, "try-error")) {
             cID <- if (useDBI())
@@ -701,6 +710,10 @@ setMethod(
                  "\nclearCache(userTags = '", cID, "')")
           }
 
+          .updateTagsRepo(outputHash, cacheRepo, "elapsedTimeLoad",
+                       format(elapsedTimeLoad, units = "secs"),
+                       add = TRUE,
+                       drv = drv, conn = conn)
           if (useCloud) {
             browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
@@ -751,6 +764,7 @@ setMethod(
       browser(expr = exists("._Cache_10"))
       if (!exists("output", inherits = FALSE) || is.null(output)) {
         # Run the FUN
+        preRunFUNTime <- Sys.time()
         if (fnDetails$isPipe) {
           output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
         } else {
@@ -758,6 +772,8 @@ setMethod(
           # output <- eval_tidy(theCall)
           output <- FUN(...)
         }
+        postRunFUNTime <- Sys.time()
+        elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
@@ -880,6 +896,8 @@ setMethod(
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0("inCloud:", isTRUE(useCloud)),
+                    paste0("elapsedTimeDigest:", format(elapsedTimeCacheDigest, units = "secs")),
+                    paste0("elapsedTimeFirstRun:", format(elapsedTimeFUN, units = "secs")),
                     paste0(otherFns),
                     paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")
       )
@@ -1721,3 +1739,7 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
 .defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
                       "otherFunctions", "preDigest", "file.size", "cacheId")
 
+.defaultOtherFunctionsOmit <- c("(test_","with_reporter", "force", "Restart", "with_mock",
+                                     "eval", "::", "\\$", "\\.\\.", "standardGeneric",
+                                     "Cache", "tryCatch", "doTryCatch", "withCallingHandlers",
+                                     "FUN", "capture", "withVisible)")
