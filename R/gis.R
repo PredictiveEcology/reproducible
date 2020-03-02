@@ -109,29 +109,32 @@ checkGDALVersion <- function(version) {
 #' }
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE), ...) {
+  if (!identical(crs(y), crs(x))) {
+    if (!is(y, "sf")) {
+      y <- spTransform(x = y, CRSobj = crs(x))
+    } else {
+      rn <- .requireNamespace("sf")
+      if (isFALSE(fn)) stop("Must install sf package")
+      y <- st_transform(x = y, crs = crs(x))
+    }
+  }
+
+  if (is(y, "SpatialPolygons")) {
+    if (!is(y, "SpatialPolygonsDataFrame")) {
+      y <- SpatialPolygonsDataFrame(Sr = y, data = data.frame(ID = seq(length(y))),
+                                    match.ID = FALSE)
+    }
+  }
+
+  # need to double check that gdal executable exists before going down this path
+  attemptGDAL <- attemptGDAL(x, useGDAL)
+
+  browser(expr = exists("._fastMask_2"))
+
   if (is(x, "RasterLayer") && requireNamespace("sf", quietly = TRUE) &&
       requireNamespace("fasterize", quietly = TRUE)) {
     message("fastMask is using sf and fasterize")
 
-    if (!identical(crs(y), crs(x))) {
-      if (!is(y, "sf")) {
-        y <- spTransform(x = y, CRSobj = crs(x))
-      } else {
-        y <- st_transform(x = y, crs = crs(x))
-      }
-    }
-
-    if (is(y, "SpatialPolygons")) {
-      if (!is(y, "SpatialPolygonsDataFrame")) {
-        y <- SpatialPolygonsDataFrame(Sr = y, data = data.frame(ID = seq(length(y))),
-                                      match.ID = FALSE)
-      }
-    }
-
-    # need to double check that gdal executable exists before going down this path
-    attemptGDAL <- attemptGDAL(x, useGDAL)
-
-    browser(expr = exists("._fastMask_2"))
 
     if (attemptGDAL) {
       # call gdal
