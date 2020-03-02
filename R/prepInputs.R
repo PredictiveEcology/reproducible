@@ -159,6 +159,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom rlang quo
 #' @importFrom R.utils isAbsolutePath isFile
 #' @importFrom utils methods
+#' @importFrom testthat capture_error
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
 #' @seealso \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
@@ -313,8 +314,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         if (returnAsList)
           as.list(tmpEnv, all.names = TRUE)
       } else {
-        mess <- capture.output(type = "message", obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-              useCache = useCache))
+        browser(expr = exists("._prepInputs_3"))
+        err <- capture_error(
+          mess <- capture.output(
+            type = "message",
+            obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                         useCache = useCache)))
+        if (!is.null(err)) stop(err)
+
         mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
         if (length(mess) > 0)
           message(mess)
@@ -347,14 +354,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
     xquo <- rlang::quo(x)
 
-    #argList$x <- rlang::quo(x)
-    # x <- Cache(.Cache, quote(do.call(postProcess, argList)), envir = environment(),
-    #            robustDigest = .robustDigest(argList))
-    #env <- environment()
-    #x <- Cache(.Cache, quote(do.call(postProcess, argList)), envir = env,
-    #           robustDigest = rdal, useCache = useCache)
-    #x <- Cache(do.call, postProcess, argList, useCache = useCache # used here
-    #)
     x <- Cache(
       do.call, postProcess, append(list(x = xquo, filename1 = out$targetFilePath,
                                         overwrite = overwrite,
