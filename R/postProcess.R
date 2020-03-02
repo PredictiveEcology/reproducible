@@ -151,8 +151,6 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        useSAcrs = FALSE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
-  on.exit({unlink(getOption("reproducible.tempPath"), recursive = TRUE)},
-          add = TRUE)
 
   on.exit(removeTmpFiles(h = 0), add = TRUE)
 
