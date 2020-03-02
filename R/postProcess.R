@@ -728,6 +728,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           })
         } else {
           # projectRaster does silly things with integers, i.e., it converts to numeric
+          if (is.na(targetCRS))
+            stop("rasterToMatch needs to have a projection (crs)")
           tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS)
           Args <- append(dots, list(from = x, to = tempRas))
           warn <- capture_warnings({
