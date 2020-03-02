@@ -1023,5 +1023,7 @@ test_that("test file link with duplicate Cache", {
   b <- Cache(seq, 1, 1e6)
   mess <- capture_messages(d <- Cache(`:`, 1, 1e6))
 
+  expect_true(grepl("A file with identical", mess))
+
 })
 
