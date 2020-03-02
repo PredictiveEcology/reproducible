@@ -114,7 +114,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       y <- spTransform(x = y, CRSobj = crs(x))
     } else {
       rn <- .requireNamespace("sf")
-      if (isFALSE(fn)) stop("Must install sf package")
+      if (isFALSE(rn)) stop("Must install sf package")
       y <- st_transform(x = y, crs = crs(x))
     }
   }
