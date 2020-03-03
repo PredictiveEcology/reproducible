@@ -68,11 +68,12 @@ test_that("test file-backed raster caching", {
       checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
       file.copy(from = froms, overwrite = TRUE,
                 to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
-      movedCache(tmpdir)
+      # movedCache(tmpdir)
       # ._prepareOutputs_1 <<- ._prepareOutputs_2 <<- ._getFromRepo <<- 1
       # Will silently update the filename of the RasterLayer, and recover it
-      bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
-                  quick = TRUE)
+      warn <- capture_warnings(bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
+                  quick = TRUE))
+
       expect_false(attr(bb, ".Cache")$newCache)
       expect_true(file.exists(filename(bb)))
       expect_silent(bb[] <- bb[])
@@ -739,7 +740,7 @@ test_that("test future", {
 
   .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
   if (.onLinux) {
-    if (requireNamespace("future", quietly = TRUE)) {
+    if (requireNamespace("future")) {
       testInitOut <- testInit("raster", verbose = TRUE, tmpFileExt = ".rds")
       optsFuture <- options("future.supportsMulticore.unstable" = "quiet")
       on.exit({
@@ -1012,3 +1013,48 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
   expect_true(grepl(paste0("cannot open compressed file"), warn))
 
 })
+
+test_that("test file link with duplicate Cache", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  sam <- function(...) {
+    sample(...)
+  }
+  N <- 4e5
+  set.seed(123)
+  mess1 <- capture_messages(b <- Cache(sam, N))
+  set.seed(123)
+  mess2 <- capture_messages(d <- Cache(sample, N))
+
+  expect_true(grepl("A file with identical", mess2))
+
+  set.seed(123)
+  mess1 <- capture_messages(b <- Cache(sam, N))
+  set.seed(123)
+  mess2 <- capture_messages(d <- Cache(sample, N))
+  expect_true(any(grepl("loading cached", mess2)))
+  expect_true(any(grepl("loading cached", mess1)))
+  out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
+  if (!is(out1, "try-error"))
+    fs1 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out1))
+
+
+  # It must be same output, not same input
+  clearCache(tmpCache)
+  set.seed(123)
+  mess1 <- capture_messages(b <- Cache(sam, N))
+  set.seed(1234)
+  mess2 <- capture_messages(d <- Cache(sample, N))
+  # Different inputs AND different output -- so no cache recovery and no file link
+  expect_true(length(mess2) == 0)
+  out2 <- try(system2("du", tmpCache, stdout = TRUE))
+  if (!is(out2, "try-error")) {
+    fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
+    expect_true(all(fs1 * 1.9 < fs2))
+  }
+
+})
+

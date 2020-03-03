@@ -151,6 +151,7 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
                                        useSAcrs = FALSE,
                                        useCache = getOption("reproducible.useCache", FALSE),
                                        ...) {
+
   on.exit(removeTmpFiles(h = 0), add = TRUE)
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
@@ -308,7 +309,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           tmpfile <- paste0(tempfile(fileext = ".tif"));
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
-          gdalwarp(srcfile = filename(x),
+          gdalUtils::gdalwarp(srcfile = filename(x),
                    dstfile = tmpfile,
                    tr = c(res(x)[1], res(x)[2]),
                    overwrite = TRUE,
@@ -568,7 +569,6 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'     use GDAL regardless of the memory test described here.
 #'
 #' @importFrom fpCompare %==%
-#' @importFrom gdalUtils gdal_setInstallation gdalwarp
 #' @importFrom raster crs dataType res res<- dataType<-
 #' @importFrom testthat capture_warnings
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
@@ -780,7 +780,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 projectInputs.sf <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
     warning("sf class objects not fully tested Use with caution.")
-    if (requireNamespace("sf")) {
+    if (requireNamespace("sf", quietly = TRUE)) {
       isValid <- sf::st_is_valid(x)
       if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid)) {
         x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
@@ -1266,7 +1266,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
   if (is.null(datatype)) {
 
     if (ncell(ras) > N) {
-      rasVals <- suppressWarnings(raster::sampleRandom(x = ras, size = N))
+      rasVals <- tryCatch(suppressWarnings(raster::sampleRandom(x = ras, size = N)),
+                     error = function(x) rep(NA_integer_, N))
     } else {
       rasVals <- raster::getValues(ras)
     }

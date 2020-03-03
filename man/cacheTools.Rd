@@ -20,7 +20,8 @@ saveToCache(
   conn = getOption("reproducible.conn", NULL),
   obj,
   userTags,
-  cacheId
+  cacheId,
+  linkToCacheId = NULL
 )
 
 loadFromCache(cachePath, cacheId)
@@ -52,6 +53,10 @@ will be added to the Cache so that this entry in the Cache can be found using
 \code{userTags} e.g., via \code{\link{showCache}}.}
 
 \item{cacheId}{The hash string representing the result of \code{.robustDigest}}
+
+\item{linkToCacheId}{Optional. If a cacheId is provided here, then a file.link will
+be made to the file with that cacheId name in the cache repo. This is used when
+identical outputs exist in the cache. This will save disk space.}
 }
 \description{
 Create a new cache

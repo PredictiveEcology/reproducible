@@ -48,9 +48,13 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 #' @inheritParams Cache
 #' @param cacheId The hash string representing the result of \code{.robustDigest}
 #' @param obj The R object to save to the cache
+#' @param linkToCacheId Optional. If a cacheId is provided here, then a file.link will
+#'   be made to the file with that cacheId name in the cache repo. This is used when
+#'   identical outputs exist in the cache. This will save disk space.
 #' @importFrom qs qsave
 saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                        conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId) {
+                        conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
+                        linkToCacheId = NULL) {
   browser(expr = exists("._saveToCache_1"))
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -126,10 +130,22 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   fts <- CacheStoredFile(cachePath, cacheId)
 
   browser(expr = exists("._saveToCache_2"))
-  if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
-    fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
-  else {
-    saveRDS(obj, file = fts)
+  if (is.null(linkToCacheId)) {
+    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
+      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
+    else {
+      saveRDS(obj, file = fts)
+      fs <- file.size(fts)
+    }
+  } else {
+    ftL <- CacheStoredFile(cachePath, linkToCacheId)
+    message("  (A file with identical properties already exists in the Cache; ",
+            "creating a file.link instead of a new file)")
+    if (identical(tolower(.Platform$OS.type), "windows")) {
+      file.link(from = ftL, to = fts)
+    } else {
+      file.symlink(from = ftL, to = fts)
+    }
     fs <- file.size(fts)
   }
   fsChar <- as.character(fs)
@@ -281,6 +297,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 }
 
 .updateTagsRepo <- function(cacheId, cachePath, tagKey = character(), tagValue = character(),
+                            add = TRUE,
                             drv = getOption("reproducible.drv", RSQLite::SQLite()),
                             conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("._updateTagsRepo_1"))
@@ -310,8 +327,13 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                  " set \"tagValue\" = \"",tagValue,"\" where ",
                  " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
       #))
-
+      affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
       dbClearResult(rs)
+      if (!affectedAnyRows) {
+        if (isTRUE(add)) {
+          .addTagsRepo(cacheId, cachePath, tagKey, tagValue, drv = drv, conn = conn)
+        }
+      }
     } else {
       warning("updateTagsRepo not implemented when useDBI = FALSE")
     }
@@ -320,11 +342,11 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
 
 }
 .cacheNumDefaultTags <- function() {
-  if (useDBI()) 5 else 9
+  if (useDBI()) 8 else 12
 }
 
 .ignoreTagKeys <- function() {
-  c("preDigest", "otherFunctions", "accessed")
+  c("preDigest", "otherFunctions", "accessed", "elapsedTimeLoad")
 }
 
 .cacheTableHashColName <- function() {
@@ -446,7 +468,7 @@ CacheDBTableName <- function(cachePath,
 CacheIsACache <- function(cachePath, create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
-  browser(expr = exists("._CacheIsACache"))
+  browser(expr = exists("._CacheIsACache_1"))
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -460,10 +482,24 @@ CacheIsACache <- function(cachePath, create = FALSE,
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
                list.files(cachePath))
   if (useDBI()) {
+    browser(expr = exists("._CacheIsACache_2"))
     if (ret) {
-      ret <- ret && any(grepl(CacheDBTableName(cachePath),
-                              retry(retries = 250, exponentialDecayBase = 1.01,
-                                    quote(dbListTables(conn)))))
+      tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
+                          quote(dbListTables(conn)))
+      tableShouldBe <- CacheDBTableName(cachePath)
+      if (length(tablesInDB) == 1) {
+        if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
+          warning(paste0("The table in the Cache repo does not match the cacheRepo. ",
+                     "If this is because of a moved repository (i.e., files ",
+                     "copied), press 'Enter' and it will be updated. ",
+                     "If not, cache is in an error state. ",
+                     "You may need to delete the Cache"))
+          movedCache(cachePath, #old = tablesInDB,
+                     drv = drv, conn = conn)
+        }
+
+      }
+      ret <- ret && any(grepl(tableShouldBe, tablesInDB))
     }
   }
 

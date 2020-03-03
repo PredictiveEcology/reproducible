@@ -4,10 +4,12 @@ version 1.0.0.9000
 ==============
 
 ## New features
+* Cache will do `file.link` or `file.symlink` if an existing Cache entry with identical output exists and it is large (currently 1e6 bytes); this will save disk space. 
+* Cache database now has tags for elapsed time of "digest", "original call", and "subsequent recovery from file", `elapsedTimeDigest`, `elapsedTimeFirstRun`, and `elapsedTimeLoad`, respectively.
 * Better management of temporary files in package and tests, e.g., during downloading (`preProcess`). Includes 2 new functions, `tempdir2` and `tempfile2` for use with `reproducible` package
 * New option: `reproducible.tempPath`, which is used for the new control of temporary files. Defaults to `file.path(tempdir(), "reproducible")`. This feature was requested to help manage large amounts of 
 temporary objects that were not being easily and automatically cleaned
-* Copying or moving of Cache directories now works after manual moving/copying, followed by `movedCache`.
+* Copying or moving of Cache directories now works automatically if using default `drv` and `conn`; user may need to manually call `movedCache` if cache is not responding correctly. File-backed Rasters are automatically updated with new paths.
 * Cache now treats file-backed Rasters as though they had a relative path instead of their absolute path.
   This means that Cache directories can be copied from one location to another and the file-backed `Raster*` will have their filenames updated on the fly during a Cache recovery.
   User doesn't need to do anything.
@@ -19,6 +21,7 @@ temporary objects that were not being easily and automatically cleaned
 ## bug fixes
 * `cropInputs.spatialObjects` had a bug when object was a large non-Raster class; fixed
 * `Filenames` bugfix related to `RasterBrick`
+* `prepInputs` does a better job of keeping all temporary files in a temporary folder; and cleans up after itself better
 
 version 1.0.0
 ==============

@@ -57,7 +57,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
-                       useCache = getOption("reproducible.useCache", FALSE), ...) {
+                       useCache = getOption("reproducible.useCache", FALSE),
+                       .tempPath, ...) {
+  if (missing(.tempPath)) {
+    .tempPath <- tempdir2(rndstr(1, 6))
+    on.exit({unlink(.tempPath, recursive = TRUE)},
+            add = TRUE)
+  }
   dots <- list(...)
 
   fun <- .checkFunInDots(fun = fun, dots = dots)
@@ -222,7 +228,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                       alsoExtract = alsoExtract, destinationPath = dp,
                                       checkSums = checkSums, needChecksums = needChecksums,
                                       checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-                                      targetFile = targetFile, quick = quick)
+                                      targetFile = targetFile, quick = quick, .tempPath = .tempPath)
 
     checkSums <- results$checkSums
     needChecksums <- results$needChecksums
@@ -279,6 +285,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
+  browser(expr = exists("._preProcess_7"))
   downloadFileResult <- downloadFile(
     archive = archive,
     targetFile = targetFile,
@@ -293,6 +300,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     overwrite = overwrite,
     purge = purge, # may need to try purging again if no target,
                    #    archive or alsoExtract were known yet
+    .tempPath = .tempPath,
     ...
   )
 
@@ -337,7 +345,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                            destinationPath = destinationPath,
                            append = (needChecksums == 2))
     }
-  })
+    needChecksums <- 0
+  }, add = TRUE)
 
   # Stage 1 - Extract from archive
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
@@ -346,7 +355,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                              alsoExtract = alsoExtract, destinationPath = destinationPath,
                                              checkSums = checkSums, needChecksums = needChecksums,
                                              checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-                                             targetFile = targetFile, quick = quick)
+                                             targetFile = targetFile, quick = quick, .tempPath = .tempPath)
 
     filesExtr <- filesExtracted$filesExtr
     filesToChecksum <- filesExtracted$filesToChecksum
@@ -390,7 +399,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
   # if it was a nested file
-  browser(expr = exists("._postProcess_8"))
+  browser(expr = exists("._preProcess_8"))
 
   if (any(file_ext(neededFiles) %in% c("zip", "tar", "rar"))) {
     nestedArchives <- .basename(neededFiles[file_ext(neededFiles) %in% c("zip", "tar", "rar")])
@@ -419,12 +428,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                              destinationPath = destinationPath,
                              append = (needChecksums == 2))
       }
-    })
+      needChecksums <- 0
+    }, add = TRUE)
     extractedFiles <- .tryExtractFromArchive(archive = nestedArchives, neededFiles = neededFiles,
                                              alsoExtract = alsoExtract, destinationPath = destinationPath,
                                              checkSums = checkSums, needChecksums = needChecksums,
                                              checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-                                             targetFile = targetFile, quick = quick)
+                                             targetFile = targetFile, quick = quick, .tempPath = .tempPath)
     filesExtr <- c(filesExtr, extractedFiles$filesExtr)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
@@ -447,7 +457,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (is.null(targetFile) && !is.null(targetFilePath)) {
     targetFile <- .basename(targetFilePath)
   }
-  browser(expr = exists("._postProcess_9"))
+  browser(expr = exists("._preProcess_9"))
 
   ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)
@@ -482,12 +492,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         append = needChecksums == 2
       ))
     }
-
-
-    on.exit() # remove on.exit because it is done here
+    on.exit({
+      needChecksums <- 0
+    }, add = TRUE, after = FALSE) # effectively remove appendChecksums in other
+                                  # on.exit because it is done here
   }
 
-  browser(expr = exists("._postProcess_10"))
+  browser(expr = exists("._preProcess_10"))
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
@@ -869,7 +880,12 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
                                    needChecksums,
                                    checkSumFilePath,
                                    targetFile,
-                                   quick) {
+                                   quick, .tempPath) {
+  if (missing(.tempPath)) {
+    .tempPath <- tempdir2(rndstr(1, 6))
+    on.exit({unlink(.tempPath, recursive = TRUE)},
+            add = TRUE)
+  }
   neededFiles <- unique(c(neededFiles, if (!is.null(alsoExtract)) .basename(alsoExtract)))
   neededFiles <- setdiff(neededFiles, "similar") # remove "similar" from neededFiles; for extracting
 
@@ -879,7 +895,8 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
       filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                            neededFiles = neededFiles,
                                            checkSums = checkSums, needChecksums = needChecksums,
-                                           checkSumFilePath = checkSumFilePath, quick = quick)
+                                           checkSumFilePath = checkSumFilePath, quick = quick,
+                                           .tempPath = .tempPath)
 
       checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                     newFilesToCheck = .basename(filesExtracted$filesExtracted),

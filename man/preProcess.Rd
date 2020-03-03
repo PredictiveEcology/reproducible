@@ -16,6 +16,7 @@ preProcess(
   overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE,
   useCache = getOption("reproducible.useCache", FALSE),
+  .tempPath,
   ...
 )
 }
@@ -80,6 +81,9 @@ even if they pass the checksums or the files are all there.}
 
 \item{useCache}{Passed to \code{Cache} in various places.
 Defaults to \code{getOption("reproducible.useCache")}.}
+
+\item{.tempPath}{Optional temporary path for internal file intermediate steps.
+Will be cleared on.exit from this function.}
 
 \item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
  \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
