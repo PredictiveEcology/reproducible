@@ -310,15 +310,15 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
           gdalUtils::gdalwarp(srcfile = filename(x),
-                   dstfile = tmpfile,
-                   tr = c(res(x)[1], res(x)[2]),
-                   overwrite = TRUE,
-                   s_srs = crsX,
-                   t_srs = crsX,
-                   te = c(cropExtentRounded[1], cropExtentRounded[3],
-                          cropExtentRounded[2], cropExtentRounded[4]),
-                   te_srs = crsX,
-                   tap = TRUE)
+                              dstfile = tmpfile,
+                              tr = c(res(x)[1], res(x)[2]),
+                              overwrite = TRUE,
+                              s_srs = crsX,
+                              t_srs = crsX,
+                              te = c(cropExtentRounded[1], cropExtentRounded[3],
+                                     cropExtentRounded[2], cropExtentRounded[4]),
+                              te_srs = crsX,
+                              tap = TRUE)
           x <- raster(tmpfile)
           x <- setMinMaxIfNeeded(x)
 
@@ -333,7 +333,6 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           #        "-tr ", paste(tr, collapse = " "), " ",
           #        "\"", tempSrcRaster, "\"", " ",
           #        "\"", tempDstRaster, "\""),
-
         } else {
           if (canProcessInMemory(x, 3)) {
             x <- do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots))
@@ -1269,7 +1268,7 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
 
     if (ncell(ras) > N) {
       rasVals <- tryCatch(suppressWarnings(raster::sampleRandom(x = ras, size = N)),
-                     error = function(x) rep(NA_integer_, N))
+                          error = function(x) rep(NA_integer_, N))
     } else {
       rasVals <- raster::getValues(ras)
     }
