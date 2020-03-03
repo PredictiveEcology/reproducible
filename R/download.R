@@ -20,6 +20,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          checkSums, url, needChecksums,
                          overwrite = getOption("reproducible.overwrite", TRUE),
                          purge = FALSE, .tempPath, ...) {
+  browser(expr = exists("._downloadFile_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit({unlink(.tempPath, recursive = TRUE)},
@@ -79,6 +80,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
     if (missingNeededFiles) {
       if (needChecksums == 0) needChecksums <- 2 # use binary addition -- 1 is new file, 2 is append
     }
+
+    browser(expr = exists("._downloadFile_2"))
 
     if (missingNeededFiles) {
       fileToDownload <- if (is.null(archive[1])) {
@@ -379,6 +382,7 @@ dlGeneric <- function(url, needChecksums, destinationPath) {
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, skipDownloadMsg,
                            destinationPath, overwrite, needChecksums, .tempPath, ...) {
+  browser(expr = exists("downloadRemote_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit({unlink(.tempPath, recursive = TRUE)},
@@ -418,20 +422,21 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               destFile <- targetFile <- possibleTargetFile
               needSave <- FALSE
             } else {
-              destFile <- file.path(destinationPath, basename(tempfile(fileext = ".rds")))
+              destFile <- normPath(file.path(destinationPath, basename(tempfile(fileext = ".rds"))))
             }
           } else {
-            destFile <- file.path(destinationPath, targetFile)
+            destFile <- normPath(file.path(destinationPath, targetFile))
           }
 
           # some functions will load the object, not just download them, since we may not know
           #   where the function actually downloaded the file, we save it as an RDS file
           if (needSave) {
-            saveRDS(out, file = destFile)
+            if (!file.exists(destFile))
+              saveRDS(out, file = destFile)
           }
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
         } else if (grepl("drive.google.com", url)) {
-          browser()
+          browser(expr = exists("._downloadRemote_2"))
           downloadResults <- dlGoogle(
             url = url,
             archive = archive,
@@ -451,8 +456,10 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                                        destinationPath = .tempPath)
         }
         # if destinationPath is tempdir, then don't copy and remove
-        if (!(identical(.tempPath, normPath(destinationPath)))) {
-          desiredPath <- file.path(destinationPath, basename(downloadResults$destFile))
+
+        # Don't use .tempPath directly because of non-google approaches too
+        if (!(identical(dirname(normPath(downloadResults$destFile)), normPath(destinationPath)))) {
+          desiredPath <- normPath(file.path(destinationPath, basename(downloadResults$destFile)))
 
           desiredPathExists <- file.exists(desiredPath)
           if (desiredPathExists && !isTRUE(overwrite)) {

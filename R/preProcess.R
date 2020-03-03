@@ -285,6 +285,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
+  browser(expr = exists("._preProcess_7"))
   downloadFileResult <- downloadFile(
     archive = archive,
     targetFile = targetFile,
@@ -398,7 +399,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
   # if it was a nested file
-  browser(expr = exists("._postProcess_8"))
+  browser(expr = exists("._preProcess_8"))
 
   if (any(file_ext(neededFiles) %in% c("zip", "tar", "rar"))) {
     nestedArchives <- .basename(neededFiles[file_ext(neededFiles) %in% c("zip", "tar", "rar")])
@@ -456,7 +457,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (is.null(targetFile) && !is.null(targetFilePath)) {
     targetFile <- .basename(targetFilePath)
   }
-  browser(expr = exists("._postProcess_9"))
+  browser(expr = exists("._preProcess_9"))
 
   ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)
@@ -497,7 +498,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                   # on.exit because it is done here
   }
 
-  browser(expr = exists("._postProcess_10"))
+  browser(expr = exists("._preProcess_10"))
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
