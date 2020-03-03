@@ -437,7 +437,7 @@ setMethod(
       if (useDBI()) {
         if (is.null(conn)) {
           conn <- dbConnectAll(drv, cachePath = cacheRepo)
-          on.exit(dbDisconnect(conn), add = TRUE)
+          on.exit({dbDisconnect(conn)}, add = TRUE)
         }
       }
 
@@ -463,8 +463,21 @@ setMethod(
 
       if (sideEffect != FALSE) if (isTRUE(sideEffect)) sideEffect <- cacheRepo
 
+      browser(expr = exists("._Cache_17"))
+      conns <- list()
+      on.exit({done <- lapply(conns, function(co) {
+        if (!identical(co, conns[[1]])) {
+          try(dbDisconnect(co), silent = TRUE)
+        }})}, add = TRUE)
       isIntactRepo <- unlist(lapply(cacheRepos, function(cacheRepo) {
-        CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE, conn = conn)
+        browser(expr = exists("._Cache_18"))
+        conns[[cacheRepo]] <<- if (cacheRepo == cacheRepos[[1]]) {
+          conn
+        } else {
+          dbConnectAll(drv, cachePath = cacheRepo)
+        }
+        CacheIsACache(cachePath = cacheRepo, drv = drv, create = TRUE,
+                      conn = conns[[cacheRepo]])
       }))
 
       if (any(!isIntactRepo)) {
@@ -507,9 +520,13 @@ setMethod(
       # remove some of the arguments passed to Cache, which are irrelevant for digest
       argsToOmitForDigest <- dotPipe | (names(modifiedDots) %in% .defaultCacheOmitArgs)
 
+      preCacheDigestTime <- Sys.time()
       cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
+      postCacheDigestTime <- Sys.time()
+      elapsedTimeCacheDigest <- postCacheDigestTime - preCacheDigestTime
+
       preDigest <- cacheDigest$preDigest
       outputHash <- cacheDigest$outputHash
 
@@ -668,6 +685,8 @@ setMethod(
                                         basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
                                         ") is large: ",
                                         format(objSize, units = "auto"), ")")))
+
+          preLoadTime <- Sys.time()
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
                                      lastOne = lastOne, cacheRepo = cacheRepo,
                                      fnDetails = fnDetails,
@@ -677,6 +696,9 @@ setMethod(
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
+          postLoadTime <- Sys.time()
+          elapsedTimeLoad <- postLoadTime - preLoadTime
+
           browser(expr = exists("._Cache_7"))
           if (is(output, "try-error")) {
             cID <- if (useDBI())
@@ -688,6 +710,11 @@ setMethod(
                  "\nclearCache(userTags = '", cID, "')")
           }
 
+          if (useDBI())
+            .updateTagsRepo(outputHash, cacheRepo, "elapsedTimeLoad",
+                         format(elapsedTimeLoad, units = "secs"),
+                         add = TRUE,
+                         drv = drv, conn = conn)
           if (useCloud) {
             browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
@@ -738,6 +765,7 @@ setMethod(
       browser(expr = exists("._Cache_10"))
       if (!exists("output", inherits = FALSE) || is.null(output)) {
         # Run the FUN
+        preRunFUNTime <- Sys.time()
         if (fnDetails$isPipe) {
           output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
         } else {
@@ -745,6 +773,8 @@ setMethod(
           # output <- eval_tidy(theCall)
           output <- FUN(...)
         }
+        postRunFUNTime <- Sys.time()
+        elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
       }
 
       output <- .addChangedAttr(output, preDigest, origArguments = modifiedDots[!dotPipe],
@@ -862,11 +892,33 @@ setMethod(
       #   (i.e., keep trying until it is written)
 
       objSize <- sum(unlist(objSize(outputToSave)))
+      resultHash <- ""
+      linkToCacheId <- NULL
+      if (objSize > 1e6) {
+        resultHash <- CacheDigest(list(outputToSave))$outputHash
+        qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
+                              dbTabName = dbTabNam,
+                              .con = conn)
+        res <- retry(retries = 15, exponentialDecayBase = 1.01,
+                     quote(dbSendQuery(conn, qry)))
+        allCache <- setDT(dbFetch(res))
+        dbClearResult(res)
+        if (NROW(allCache)) {
+          alreadyExists <- allCache[allCache$tagKey == "resultHash" & allCache$tagValue %in% resultHash]
+          if (NROW(alreadyExists)) {
+            linkToCacheId <- alreadyExists[["cacheId"]][[1]]
+          }
+        }
+      }
+
       userTags <- c(userTags,
                     paste0("class:", class(outputToSave)[1]),
                     paste0("object.size:", objSize),
                     paste0("accessed:", Sys.time()),
                     paste0("inCloud:", isTRUE(useCloud)),
+                    paste0("resultHash:", resultHash),
+                    paste0("elapsedTimeDigest:", format(elapsedTimeCacheDigest, units = "secs")),
+                    paste0("elapsedTimeFirstRun:", format(elapsedTimeFUN, units = "secs")),
                     paste0(otherFns),
                     paste("preDigest", names(preDigestUnlistTrunc), preDigestUnlistTrunc, sep = ":")
       )
@@ -877,7 +929,7 @@ setMethod(
       .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
       if (.onLinux) {
         if (!isFALSE(getOption("reproducible.futurePlan")) &&
-            requireNamespace("future", quietly = TRUE)) {
+            .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
           useFuture <- TRUE
         }
       }
@@ -925,7 +977,8 @@ setMethod(
         if (useDBI()) {
           browser(expr = exists("._Cache_13"))
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                                      conn = conn, obj = outputToSave, cacheId = outputHash)
+                                      conn = conn, obj = outputToSave, cacheId = outputHash,
+                                      linkToCacheId = linkToCacheId)
         } else {
           while (written >= 0) {
             browser(expr = exists("._Cache_14"))
@@ -1706,5 +1759,10 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
   paste0(basename2(dirname(cacheRepo)), "_", basename2(cacheRepo))
 
 .defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
-                      "otherFunctions", "preDigest", "file.size", "cacheId")
+                      "otherFunctions", "preDigest", "file.size", "cacheId",
+                      "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash")
 
+.defaultOtherFunctionsOmit <- c("(test_","with_reporter", "force", "Restart", "with_mock",
+                                     "eval", "::", "\\$", "\\.\\.", "standardGeneric",
+                                     "Cache", "tryCatch", "doTryCatch", "withCallingHandlers",
+                                     "FUN", "capture", "withVisible)")

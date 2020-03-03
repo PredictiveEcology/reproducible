@@ -14,6 +14,7 @@ extractFromArchive(
   filesExtracted = character(),
   checkSumFilePath = character(),
   quick = FALSE,
+  .tempPath,
   ...
 )
 }
@@ -39,6 +40,9 @@ extracted. Defaults to the archive directory.}
 \item{checkSumFilePath}{The full path to the checksum.txt file}
 
 \item{quick}{Passed to \code{Checksums}}
+
+\item{.tempPath}{Optional temporary path for internal file intermediate steps.
+Will be cleared on.exit from this function.}
 
 \item{...}{Passed to \code{unzip} or \code{untar}, e.g., \code{overwrite}}
 }

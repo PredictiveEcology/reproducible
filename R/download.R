@@ -19,7 +19,13 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          checksumFile, dlFun = NULL,
                          checkSums, url, needChecksums,
                          overwrite = getOption("reproducible.overwrite", TRUE),
-                         purge = FALSE, ...) {
+                         purge = FALSE, .tempPath, ...) {
+  browser(expr = exists("._downloadFile_1"))
+  if (missing(.tempPath)) {
+    .tempPath <- tempdir2(rndstr(1, 6))
+    on.exit({unlink(.tempPath, recursive = TRUE)},
+            add = TRUE)
+  }
 
   if (!is.null(url) || !is.null(dlFun)) {
     missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
@@ -45,7 +51,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
                                                        neededFiles = neededFiles, checkSums = checkSums,
                                                        needChecksums = needChecksums,
                                                        checkSumFilePath = checksumFile,
-                                                       quick = quick)
+                                                       quick = quick,
+                                                       .tempPath = .tempPath)
             checkSums <- if (!file.exists(checksumFile) || is.null(neededFiles)) {
               needChecksums <- 1
               .emptyChecksumsResult
@@ -74,6 +81,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
       if (needChecksums == 0) needChecksums <- 2 # use binary addition -- 1 is new file, 2 is append
     }
 
+    browser(expr = exists("._downloadFile_2"))
+
     if (missingNeededFiles) {
       fileToDownload <- if (is.null(archive[1])) {
         neededFiles
@@ -98,7 +107,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                                           dlFun = dlFun,
                                           destinationPath = destinationPath,
                                           overwrite = overwrite,
-                                          needChecksums = needChecksums, ...))
+                                          needChecksums = needChecksums, .tempPath = .tempPath, ...))
         if (is(downloadResults, "try-error")) {
           failed <- failed + 1
           if (failed >= 4)
@@ -265,16 +274,20 @@ downloadFile <- function(archive, targetFile, neededFiles,
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
 #' @importFrom googledrive as_id drive_get
+#' @inheritParams preProcess
 #'
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
+  if (missing(destinationPath)) {
+    destinationPath <- tempdir2(rndstr(1, 6))
+  }
   downloadFilename <- assessGoogle(url = url, archive = archive,
                                    targetFile = targetFile,
                                    destinationPath = destinationPath)
 
   #destFile <- tempfile(fileext = paste0(".", tools::file_ext(downloadFilename)))
-  destFile <- file.path(tempdir2(rndstr(1,6)), basename(downloadFilename))
+  destFile <- file.path(destinationPath, basename(downloadFilename))
   # checkPath(dirname(destFile), create = TRUE) # don't need with tempdir2
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     message("  Downloading from Google Drive.")
@@ -283,7 +296,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       fs <- attr(assessGoogle(url),"fileSize")
     class(fs) <- "object_size"
     isLargeFile <- if (is.null(fs)) FALSE else fs > 1e6
-    if (!isWindows() && requireNamespace("future") && isLargeFile &&
+    if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
         !isFALSE(getOption("reproducible.futurePlan"))) {
       message("Downloading a large file")
       fp <- future::plan()
@@ -340,8 +353,13 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @keywords internal
 #' @importFrom crayon magenta
 #' @importFrom httr GET http_error progress stop_for_status user_agent write_disk
-dlGeneric <- function(url, needChecksums) {
-  destFile <- file.path(tempdir2(rndstr(1,6)), basename(url))
+#' @inheritParams preProcess
+dlGeneric <- function(url, needChecksums, destinationPath) {
+  if (missing(destinationPath)) {
+    destinationPath <- tempdir2(rndstr(1, 6))
+  }
+
+  destFile <- file.path(destinationPath, basename(url))
 
   if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
     stop("Can not access url ", url)
@@ -360,9 +378,17 @@ dlGeneric <- function(url, needChecksums) {
 }
 
 #' @importFrom testthat capture_warnings
+#' @inheritParams prepInputs
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, skipDownloadMsg,
-                           destinationPath, overwrite, needChecksums, ...) {
+                           destinationPath, overwrite, needChecksums, .tempPath, ...) {
+  browser(expr = exists("downloadRemote_1"))
+  if (missing(.tempPath)) {
+    .tempPath <- tempdir2(rndstr(1, 6))
+    on.exit({unlink(.tempPath, recursive = TRUE)},
+            add = TRUE)
+  }
+
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
       if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  {
@@ -386,6 +412,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           if (is.null(targetFile)) {
             fileInfo <- file.info(dir(destinationPath))
           }
+          browser(expr = exists("._downloadRemote_1"))
           out <- do.call(dlFun, args = args)
           needSave <- TRUE
           if (is.null(targetFile)) {
@@ -395,26 +422,28 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               destFile <- targetFile <- possibleTargetFile
               needSave <- FALSE
             } else {
-              destFile <- file.path(destinationPath, basename(tempfile(fileext = ".rds")))
+              destFile <- normPath(file.path(destinationPath, basename(tempfile(fileext = ".rds"))))
             }
           } else {
-            destFile <- file.path(destinationPath, targetFile)
+            destFile <- normPath(file.path(destinationPath, targetFile))
           }
 
           # some functions will load the object, not just download them, since we may not know
           #   where the function actually downloaded the file, we save it as an RDS file
           if (needSave) {
-            saveRDS(out, file = destFile)
+            if (!file.exists(destFile))
+              saveRDS(out, file = destFile)
           }
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
         } else if (grepl("drive.google.com", url)) {
+          browser(expr = exists("._downloadRemote_2"))
           downloadResults <- dlGoogle(
             url = url,
             archive = archive,
             targetFile = targetFile,
             checkSums = checkSums,
             skipDownloadMsg = skipDownloadMsg,
-            destinationPath = destinationPath,
+            destinationPath = .tempPath,
             overwrite = overwrite,
             needChecksums = needChecksums
           )
@@ -423,11 +452,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         } else if (grepl("onedrive.live.com", url)) {
           stop("Onedrive downloading is currently not supported")
         } else {
-          downloadResults <- dlGeneric(url = url, needChecksums = needChecksums)
+          downloadResults <- dlGeneric(url = url, needChecksums = needChecksums,
+                                       destinationPath = .tempPath)
         }
         # if destinationPath is tempdir, then don't copy and remove
+
+        # Don't use .tempPath directly because of non-google approaches too
         if (!(identical(dirname(normPath(downloadResults$destFile)), normPath(destinationPath)))) {
-          desiredPath <- file.path(destinationPath, basename(downloadResults$destFile))
+          desiredPath <- normPath(file.path(destinationPath, basename(downloadResults$destFile)))
 
           desiredPathExists <- file.exists(desiredPath)
           if (desiredPathExists && !isTRUE(overwrite)) {
@@ -448,9 +480,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           }
 
           tmpFile <- downloadResults$destFile
-          on.exit({
-            suppressWarnings(unlink(dirname(normPath(tmpFile)), recursive = TRUE))
-          }, add = TRUE)
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))
         }
       #}

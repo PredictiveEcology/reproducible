@@ -360,7 +360,9 @@ setMethod(
       !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
       if (exists("futureEnv", envir = .reproEnv))
-        if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE))) {
+        hasFuture <- .requireNamespace("future",
+                                       messageStart = "To use reproducible.futurePlan, ")
+        if (hasFuture) {
           checkFutures()
         }
     }

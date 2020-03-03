@@ -10,7 +10,7 @@
 #'
 .checkGitConfig <- function() {
   .Deprecated(msg = ".checkGitConfig is not sufficiently tested or developed to be useful")
-  if (requireNamespace("git2r")) {
+  if (requireNamespace("git2r", quietly = TRUE)) {
     gitConfig <- unlist(git2r::config(global = TRUE))
     usingSSH <- any(grepl("url.ssh://git@github.com/.insteadof", names(gitConfig)))
     if (usingSSH) {
@@ -77,7 +77,7 @@
 #'
 checkoutVersion <- function(repo, localRepoPath = ".", cred = "", ...) {
   .Deprecated(msg = "checkoutVersions is not sufficiently tested or developed to be useful")
-  if (requireNamespace("git2r")) {
+  if (requireNamespace("git2r", quietly = TRUE)) {
     .checkGitConfig()
 
     localRepoPath <- normalizePath(path.expand(localRepoPath), mustWork = FALSE)
