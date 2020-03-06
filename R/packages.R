@@ -130,6 +130,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     stop("packages should be a character vector or a name")
   }
 
+  browser()
   if (!is.null(packages)) {
     githubPkgs <- grep("\\/", packages, value = TRUE)
     githubPkgNames <- sapply(strsplit(githubPkgs, split = "/|@"), function(x) x[2])
@@ -159,6 +160,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       Sys.setlocale(locale = "")
       allPkgsNeeded <- aa$instPkgs
     } else {
+
       aa <- .installPackages(packages, githubPkgs = githubPkgs,
                              githubPkgNames = githubPkgNames,
                              install_githubArgs = install_githubArgs,
@@ -979,9 +981,75 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     assignInMyNamespace("available.packagesMem", memoise(available.packages, ~timeout(360))) # nolint
   }
 
+  # Check min version
+  grepVersionNumber <- " *\\(.*"
+  pkgsWithMinVersion <- grep(grepVersionNumber, packages, value = TRUE)
+  packages <- gsub(grepVersionNumber, "", pkgsWithMinVersion)
+
+  githubpkgsWithMinVersion <- grep(grepVersionNumber, githubPkgs, value = TRUE)
+  githubPkgs <- gsub(grepVersionNumber, "", githubpkgsWithMinVersion)
+
+  upgrades <- character()
+  browser(expr = exists("._installPackages_1"))
+  if (length(pkgsWithMinVersion)) {
+    aa <- lapply(libPath, installed.packages)
+    aa <- do.call(rbind, aa)
+    names(pkgsWithMinVersion) <- packages
+    minVersions <- gsub(".*\\((>*=*)(.*)\\)", "\\2", pkgsWithMinVersion)
+    inequality <- gsub(".*\\((>*=*)(.*)\\)", "\\1", pkgsWithMinVersion)
+    installedVersions <- aa[aa[, "Package"] %in% names(pkgsWithMinVersion),"Version"]
+    seqIV <- seq(installedVersions)
+    names(seqIV) <- names(pkgsWithMinVersion)
+    correctVersions <- unlist(lapply(seqIV, function(ind) {
+      eval(parse(text = paste0(compareVersion(installedVersions[ind], minVersions[ind]),
+                               " ", inequality[ind]," 0")))
+    }))
+    if (any(!correctVersions)) {
+      apm <- available.packagesMem()
+      availableVersions <- apm[apm[, "Package"] %in% names(pkgsWithMinVersion),"Version"]
+      correctVersionsAvail <- unlist(lapply(seqIV, function(ind) {
+        eval(parse(text = paste0(compareVersion(availableVersions[ind], minVersions[ind]),
+                                 " ", inequality[ind]," 0")))
+#        eval(parse(text = paste0("'",minVersions[ind],"'", inequality[ind],"'", availableVersions[ind],"'")))
+      }))
+
+      df1 <- data.frame(row.names = "", stringsAsFactors = FALSE,
+        package = pkgsWithMinVersion[!correctVersions],
+                 currentOnCRAN = availableVersions[!correctVersions],
+                 availableOnCRAN = correctVersionsAvail[!correctVersions])
+      #df1 <- rbind(data.frame(row.names = "", package = "all", currentOnCRAN = "",
+      #                 availableOnCRAN = "", stringsAsFactors = FALSE), df1)
+
+      message("The following packages are installed, but not sufficiently recent version:\n")
+      message(paste0(capture.output(df1), collapse = "\n"))
+      if (any(!(correctVersionsAvail[!correctVersions]))) {
+        stop("Please manually install missing packages", call. = FALSE)
+      }
+      df2 <- data.frame( row.names = NULL, stringsAsFactors = FALSE,
+                 "Upgrade" = c("All", "CRAN packages only", "None", df1$package[df1$availableOnCRAN]))
+      row.names(df2) <- paste0(seq(NROW(df2)), ":")
+      message(paste0(capture.output(df2), collapse = "\n"))
+      out <- if (isInteractive()) {
+        as.numeric(readline("Pick a number to upgrade: "))
+      } else {
+        1
+      }
+      if (identical(out, 3) || is.na(out)) {
+        message("Not upgrading packages; this may cause undesired effects")
+      } else {
+        upgrades <- names(pkgsWithMinVersion)[correctVersionsAvail & !correctVersions]
+        if (out > 3)
+          upgrades <- upgrades[as.numeric(out) - 3]
+      }
+
+    }
+
+  }
+
   #forget(pkgDep)
   #if (forget) forget(pkgDep2)
-  deps <- unlist(pkgDep(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
+  deps <- unlist(pkgDep(packages,
+                        unique(c(libPath, .libPaths())), recursive = TRUE))
   #deps <- unlist(pkgDep2(packages, unique(c(libPath, .libPaths())), recursive = TRUE))
   if (length(deps) == 0) deps <- NULL
   allPkgsNeeded <- na.omit(unique(c(deps, packages)))
@@ -993,6 +1061,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   libPathPkgs <- unlist(lapply(libPath, dir))
   needInstall <- allPkgsNeeded[!(allPkgsNeeded %in% unique(libPathPkgs))]
   needInstall <- needInstall[!(needInstall %in% nonLibPathPkgs)]
+  needInstall <- unique(c(needInstall, upgrades))
   if (length(needInstall)) {
     internetExists <- internetExists()
     gitPkgs <- githubPkgs[githubPkgNames %in% needInstall]
@@ -1046,12 +1115,38 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       }
 
       if (internetExists) {
+        dop <- tools::dependsOnPkgs(needInstall, recursive = TRUE)
+        needUnload <- dop[unlist(lapply(dop, function(p) isNamespaceLoaded(p)))]
+        needDetach <- dop[dop %in% gsub("package:", "", search())]
+        if (isTRUE(any(grepl("SpaDES|^reproducible$", c(needUnload, needDetach)))))
+          stop("Please restart R and install '", paste(needInstall, collapse = "', '"),
+               "' manually in a clean session", call. = FALSE)
+        if (FALSE) { # an attempt to unload things first -- can't unload reproducible or else rest of function fails
+          moreToUnload <- TRUE
+          while (moreToUnload) {
+            needUnload <- dop[unlist(lapply(dop, function(p) isNamespaceLoaded(p)))]
+            needDetach <- dop[dop %in% gsub("package:", "", search())]
+            if (length(needDetach)) {
+              message("Will attemp to detach and unload ", paste0(needDetach, collapse = ", "))
+              out1 <- lapply(rev(needDetach), function(p)
+                try(detach(paste0("package:", p), character.only = TRUE, unload = TRUE), silent = TRUE))
+            }
+            if (length(c(needUnload, needDetach))) {
+              message("Will attemp to unload ", paste0(needUnload, collapse = ", "))
+              out2 <- lapply(rev(needUnload), function(p) try(unloadNamespace(p), silent = TRUE))
+            }
+            out1 <- unlist(lapply(out1, function(x) is(x, "try-error")))
+            out2 <- unlist(lapply(out2, function(x) is(x, "try-error")))
+            moreToUnload <- any(c(out1, out2))
+          }
+        }
         aa <- lapply(needInstall[!(needInstall %in% githubPkgNames)], function(pkg) {
           syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('", pkg,
                             "',dependencies=FALSE,lib='", libPath, "',repos=c('",
                             paste(repos, collapse = "','"), "'))\"")
           system(paste(rpath, syscall), wait = TRUE)
         })
+        browser()
       } else {
         message("No connection to the internet. Can't install packages.")
       }
