@@ -15,6 +15,8 @@ test_that("package-related functions work", {
     unlink(packageDir, recursive = TRUE)
     unlink(packageDir1, recursive = TRUE)
   }, add = TRUE)
+  # ._installPackages_1 <<- ._installPackages_2 <<- ._installPackages_3 <<- ._Require_1 <<- 1
+  browser()
   suppressWarnings(Require("TimeWarp", libPath = packageDir1, standAlone = TRUE))
   expect_true(any(grepl(pattern = "package:TimeWarp", search())))
   expect_true(require("TimeWarp", lib.loc = packageDir1))
