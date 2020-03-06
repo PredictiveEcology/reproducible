@@ -4,7 +4,7 @@ version 1.0.0.9000
 ==============
 
 ## New features
-* `Require` can now handle minimum version numbers
+* `Require` can now handle minimum version numbers, e.g., `Require("bit (>=1.1-15.2)")`
 * Cache will do `file.link` or `file.symlink` if an existing Cache entry with identical output exists and it is large (currently 1e6 bytes); this will save disk space. 
 * Cache database now has tags for elapsed time of "digest", "original call", and "subsequent recovery from file", `elapsedTimeDigest`, `elapsedTimeFirstRun`, and `elapsedTimeLoad`, respectively.
 * Better management of temporary files in package and tests, e.g., during downloading (`preProcess`). Includes 2 new functions, `tempdir2` and `tempfile2` for use with `reproducible` package

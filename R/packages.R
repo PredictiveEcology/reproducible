@@ -1392,7 +1392,7 @@ RCurlMess <- paste0("install.packages('RCurl') may give a more reliable detectio
 "of internet connection")
 
 extractPkgGitHub <- function(pkgs) {
-  unlist(lapply(strsplit(pkgs, split = "/|@"), function(x) x[2]))
+  unlist(lapply(strsplit(trimVersionNumber(pkgs), split = "/|@"), function(x) x[2]))
   #sapply(strsplit(sapply(strsplit(pkgs, split = "/"),
   #                       function(x) x[2]), split = "@"), function(x) x[1])
 }
