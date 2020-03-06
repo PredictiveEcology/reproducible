@@ -334,14 +334,25 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           #        "\"", tempSrcRaster, "\"", " ",
           #        "\"", tempDstRaster, "\""),
         } else {
-          if (canProcessInMemory(x, 3)) {
-            x <- do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots))
-          } else {
-            x <- do.call(raster::crop,
-                         args = append(list(x = x, y = cropExtentRounded,
-                                            filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-                                       dots))
+          completed <- FALSE
+          while(!completed) {
+            if (canProcessInMemory(x, 3)) {
+              yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots)),
+                        silent = TRUE)
+            } else {
+              yy <- try(do.call(raster::crop,
+                           args = append(list(x = x, y = cropExtentRounded,
+                                              filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
+                                         dots)), silent = TRUE)
+            }
+            if (is(yy, "try-error")) {
+              x <- fixErrors(x)
+            } else {
+              completed <- TRUE
+              x <- yy
+            }
           }
+
 
         }
 
