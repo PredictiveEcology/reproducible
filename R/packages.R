@@ -1001,7 +1001,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     names(pkgsAllTypes) <- pkgsAllTypes
     minVersions <- gsub(".*\\((>*=*)(.*)\\)", "\\2", pkgsAllMinVersion)
     inequality <- gsub(".*\\((>*=*)(.*)\\)", "\\1", pkgsAllMinVersion)
-    installedVersions <- aa[aa[, "Package"] %in% names(pkgsAllTypes),"Version"][names(pkgsAllTypes)]
+    installedVersions <- aa[aa[, "Package"] %in% names(pkgsAllTypes),"Version"]
+    if (length(installedVersions) > 1) installedVersions <- installedVersions[names(pkgsAllTypes)]
     seqIV <- seq(installedVersions)
     names(seqIV) <- names(pkgsAllTypes)
     correctVersions <- unlist(lapply(seqIV, function(ind) {
@@ -1010,13 +1011,16 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     }))
     if (any(!correctVersions)) {
       apm <- available.packagesMem()
-      availableVersions <- apm[apm[, "Package"] %in% names(pkgsAllTypes),"Version"][names(pkgsAllTypes)]
+      availableVersions <- apm[apm[, "Package"] %in% names(pkgsAllTypes),"Version"]
+      if (length(availableVersions) > 1) availableVersions <- availableVersions[names(pkgsAllTypes)]
       correctVersionsAvail <- unlist(lapply(seqIV, function(ind) {
         eval(parse(text = paste0(compareVersion(availableVersions[ind], minVersions[ind]),
                                  " ", inequality[ind]," 0")))
 #        eval(parse(text = paste0("'",minVersions[ind],"'", inequality[ind],"'", availableVersions[ind],"'")))
       }))
 
+      areGitHub1 <- FALSE
+      areGitHub2 <- rep(FALSE, length(correctVersionsAvail[!correctVersions]))
       if (length(githubPkgNameWithMinVersion)) {
         areGitHub1 <- pkgsAllTypes[!correctVersions] %in% githubPkgNameWithMinVersion
       }
@@ -1025,7 +1029,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       }
 
       df1 <- data.frame(row.names = "", stringsAsFactors = FALSE,
-                        package = pkgsAllTypes[!correctVersions],
+                        package = unname(pkgsAllTypes[!correctVersions]),
                         currentInstalled = installedVersions[!correctVersions],
                         neededVersion = minVersions[!correctVersions],
                         currentOnCRAN = availableVersions[!correctVersions],
@@ -1161,9 +1165,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         dop <- tools::dependsOnPkgs(needInstall, recursive = TRUE)
         needUnload <- dop[unlist(lapply(dop, function(p) isNamespaceLoaded(p)))]
         needDetach <- dop[dop %in% gsub("package:", "", search())]
-        if (isTRUE(any(grepl("SpaDES|^reproducible$", c(needUnload, needDetach)))))
-          stop("Please restart R and install '", paste(needInstall, collapse = "', '"),
-               "' manually in a clean session", call. = FALSE)
+        if (isTRUE(any(grepl("SpaDES|^reproducible$", unique(c(needUnload, needDetach))))))
+          message("Because '",paste(needInstall, collapse = "', '"), "' or a package that uses it (",
+                  paste(unique(c(needUnload, needDetach)), collapse = ", "),") is/are currently loaded, ",
+               "it may be necessary to restart R and install it/them",
+               "' manually in a clean session")
         if (FALSE) { # an attempt to unload things first -- can't unload reproducible or else rest of function fails
           moreToUnload <- TRUE
           while (moreToUnload) {
@@ -1386,7 +1392,7 @@ RCurlMess <- paste0("install.packages('RCurl') may give a more reliable detectio
 "of internet connection")
 
 extractPkgGitHub <- function(pkgs) {
-  sapply(strsplit(pkgs, split = "/|@"), function(x) x[2])
+  unlist(lapply(strsplit(pkgs, split = "/|@"), function(x) x[2]))
   #sapply(strsplit(sapply(strsplit(pkgs, split = "/"),
   #                       function(x) x[2]), split = "@"), function(x) x[1])
 }
