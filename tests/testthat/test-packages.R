@@ -256,6 +256,7 @@ test_that("test pkgDep2", {
 test_that("package-related functions work", {
   skip_on_cran()
   skip_on_appveyor()
+  skip_on_travis()
 
   testInitOut <- testInit(libraries = c("data.table", "versions"))
   on.exit({
