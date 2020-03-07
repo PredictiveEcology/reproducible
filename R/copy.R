@@ -87,6 +87,26 @@ setMethod(
         warning("Copy will not do a copy of a DBI connection object; no copy being made")
     }
 
+    if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
+      return(proto(object))
+    }
+
+    # keep this environment method here, as it will intercept "proto"
+    #   and other environments that it shouldn't
+    if (is.environment(object)) {
+      if (missing(filebackedDir)) {
+        filebackedDir <- tempdir2(rndstr(1, 8))
+      }
+      listVersion <- Copy(as.list(object, all.names = TRUE),
+                          filebackedDir = filebackedDir, ...)
+
+      parentEnv <- parent.env(object)
+      newEnv <- new.env(parent = parentEnv)
+      list2env(listVersion, envir = newEnv)
+      attr(newEnv, "name") <- attr(object, "name")
+      return(newEnv)
+
+    }
     return(object)
   })
 
@@ -109,22 +129,6 @@ setMethod("Copy",
           })
 
 
-#' @rdname Copy
-setMethod("Copy",
-          signature(object = "environment"),
-          definition = function(object,  filebackedDir, ...) {
-            if (missing(filebackedDir)) {
-              filebackedDir <- tempdir2(rndstr(1, 8))
-            }
-            listVersion <- Copy(as.list(object, all.names = TRUE),
-                                filebackedDir = filebackedDir, ...)
-
-            parentEnv <- parent.env(object)
-            newEnv <- new.env(parent = parentEnv)
-            list2env(listVersion, envir = newEnv)
-            attr(newEnv, "name") <- attr(object, "name")
-            newEnv
-          })
 
 #' @rdname Copy
 setMethod("Copy",

@@ -5,7 +5,6 @@
 \alias{Copy,ANY-method}
 \alias{Copy,SQLiteConnection-method}
 \alias{Copy,data.table-method}
-\alias{Copy,environment-method}
 \alias{Copy,list-method}
 \alias{Copy,refClass-method}
 \alias{Copy,data.frame-method}
@@ -19,8 +18,6 @@ Copy(object, filebackedDir, ...)
 \S4method{Copy}{SQLiteConnection}(object, filebackedDir, ...)
 
 \S4method{Copy}{data.table}(object, filebackedDir, ...)
-
-\S4method{Copy}{environment}(object, filebackedDir, ...)
 
 \S4method{Copy}{list}(object, filebackedDir, ...)
 
