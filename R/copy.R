@@ -83,8 +83,23 @@ setMethod(
   "Copy",
   signature(object = "ANY"),
   definition = function(object, filebackedDir, ...) {
+    if (any(grepl("DBIConnection", is(object)))) {
+        warning("Copy will not do a copy of a DBI connection object; no copy being made")
+    }
+
     return(object)
   })
+
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "SQLiteConnection"),
+          definition = function(object, ...) {
+            con <- dbConnect(RSQLite::SQLite(), ":memory:")
+            message("Making a copy of the entire SQLite database: ",object@dbname,
+                    "; this may not be desireable ...")
+            RSQLite::sqliteCopyDatabase(object, con)
+          })
 
 #' @rdname Copy
 setMethod("Copy",
@@ -92,6 +107,7 @@ setMethod("Copy",
           definition = function(object, ...) {
             data.table::copy(object)
           })
+
 
 #' @rdname Copy
 setMethod("Copy",
@@ -102,7 +118,7 @@ setMethod("Copy",
             }
             listVersion <- Copy(as.list(object, all.names = TRUE),
                                 filebackedDir = filebackedDir, ...)
-            #as.environment(listVersion)
+
             parentEnv <- parent.env(object)
             newEnv <- new.env(parent = parentEnv)
             list2env(listVersion, envir = newEnv)
@@ -118,7 +134,22 @@ setMethod("Copy",
               filebackedDir <- tempdir2(rndstr(1, 8))
             }
 
-            lapply(object, function(x) Copy(x, filebackedDir, ...))
+            lapply(object, function(x) {
+              Copy(x, filebackedDir, ...)
+            })
+          })
+
+
+#' @rdname Copy
+setMethod("Copy",
+          signature(object = "refClass"),
+          definition = function(object,  filebackedDir, ...) {
+            if (exists("copy", envir = object)) {
+              object$copy()
+            } else {
+              stop("There is no method to copy this refClass object; ",
+                   "see developers of reproducible package")
+            }
           })
 
 #' @rdname Copy
