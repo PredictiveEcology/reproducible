@@ -268,10 +268,41 @@ test_that("package-related functions work", {
     },
     {
       a <- Require("glue (>=1.3.1)", libPath = tmpCache, standAlone = TRUE)
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
+
       expect_true(a)
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
       expect_error(a <- Require("glue (>=1000.3.1)", libPath = tmpCache, standAlone = TRUE))
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
       a <- Require(c("glue (>=0.3.1)", "fpCompare"), libPath = tmpCache, standAlone = TRUE)
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
       expect_true(length(a) == 2)
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
       expect_true(all(a))
     }
   )

@@ -88,7 +88,7 @@ setMethod(
     }
 
     if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
-      return(proto(object))
+      return(get(class(object)[1])(object))
     }
 
     # keep this environment method here, as it will intercept "proto"

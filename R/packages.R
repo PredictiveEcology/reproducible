@@ -969,7 +969,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #' @importFrom data.table data.table setDT setnames
 #' @importFrom memoise forget is.memoised memoise
 #' @importFrom utils assignInMyNamespace available.packages install.packages installed.packages
-#' @importFrom utils read.table
+#' @importFrom utils read.table compareVersion
 #' @importFrom versions install.versions
 #' @rdname installPackages
 #'
