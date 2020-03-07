@@ -30,6 +30,11 @@ tempfile2 <- function(sub = "", ...) {
 #' needed, and sometimes, this must be recursive (i.e., environments inside
 #' environments).
 #'
+#' @details
+#' To create a new Copy method for a class that needs its own method, try something like
+#' shown in example and put it in your package (or other R structure).
+#'
+#'
 #' @param object  An R object (likely containing environments) or an environment.
 #'
 #' @param filebackedDir A directory to copy any files that are backing R objects,
@@ -74,6 +79,13 @@ tempfile2 <- function(sub = "", ...) {
 #' f$one
 #' e$one
 #'
+#' \dontrun{
+#' setMethod("Copy", signature = "the class", # where = specify here if not in a package,
+#'   definition = function(object, filebackendDir, ...) {
+#'   # write deep copy code here
+#' })
+#' }
+
 setGeneric("Copy", function(object, filebackedDir, ...) {
   standardGeneric("Copy")
 })
@@ -84,7 +96,8 @@ setMethod(
   signature(object = "ANY"),
   definition = function(object, filebackedDir, ...) {
     if (any(grepl("DBIConnection", is(object)))) {
-        warning("Copy will not do a copy of a DBI connection object; no copy being made")
+      message("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
+              "This may have unexpected consequences...")
     }
 
     if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
@@ -93,6 +106,13 @@ setMethod(
 
     # keep this environment method here, as it will intercept "proto"
     #   and other environments that it shouldn't
+    if (!identical(is(object)[1], "environment") && is.environment(object)) {
+      message("Trying to do a deep copy (Copy) of object of class ", class(object),
+              "which does not appear to be a normal environment. If it can be copied ",
+              "like a normal environment, ignore this message; otherwise, may need to create ",
+              "a Copy method for this class. See ?Copy")
+
+    }
     if (is.environment(object)) {
       if (missing(filebackedDir)) {
         filebackedDir <- tempdir2(rndstr(1, 8))

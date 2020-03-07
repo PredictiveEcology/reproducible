@@ -59,6 +59,10 @@ no copies made: it is a pass-by-reference operation. Sometimes, a deep copy is
 needed, and sometimes, this must be recursive (i.e., environments inside
 environments).
 }
+\details{
+To create a new Copy method for a class that needs its own method, try something like
+shown in example and put it in your package (or other R structure).
+}
 \examples{
 e <- new.env()
 e$abc <- letters
@@ -84,6 +88,12 @@ g$one
 f$one
 e$one
 
+\dontrun{
+setMethod("Copy", signature = "the class", # where = specify here if not in a package,
+  definition = function(object, filebackendDir, ...) {
+  # write deep copy code here
+})
+}
 }
 \seealso{
 \code{\link{.robustDigest}}
