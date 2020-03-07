@@ -68,7 +68,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
                       reproducible.overwrite = TRUE,
                       reproducible.useNewDigestAlgorithm = TRUE,
                       reproducible.cachePath = tmpCache,
-                      reproducible.tempPath = file.path(tmpdir, rndstr(1,6)))
+                      reproducible.tempPath = tmpdir)
   if (length(opts) > 0)
     defaultOpts[names(opts)] <- opts
   opts <- defaultOpts

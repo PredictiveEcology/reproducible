@@ -200,8 +200,12 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
 
     oldLibPath <- .libPaths()
     if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
+    on.exit({
+      .libPaths(oldLibPath)
+    }, add = TRUE)
 
     # Actual package loading
+    browser(expr = exists("._Require_3"))
     warns <- capture_warnings({
       mess <- capture.output(type = "message", {
         packagesLoaded <- unlist(lapply(trimVersionNumber(packages), function(p) {
@@ -209,11 +213,15 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
         }))
       })
     })
-    .libPaths(oldLibPath)
 
     if (any(!packagesLoaded)) {
-      if (length(warns) > 0) {
-        warning(warns)
+      warns2 <- capture_warnings(
+        packagesLoaded2 <- unlist(lapply(trimVersionNumber(packages)[!packagesLoaded], function(p) {
+          try(require(p, character.only = TRUE, quietly = TRUE))
+        }))
+      )
+      if (length(warns) > 0 || length(warns2)) {
+        warning(unique(warns, warns2))
       } else if (any(grepl("Failed with error", mess))) {
         message(paste(mess, collapse = "\n"))
       } else {
@@ -221,9 +229,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
                 " Can only load first version(s) loaded in this session:\n",
                 paste(packages[!packagesLoaded], collapse = ", "))
       }
-      packagesLoaded2 <- unlist(lapply(packages[!packagesLoaded], function(p) {
-        try(require(p, character.only = TRUE, quietly = TRUE))
-      }))
+
     }
   } else {
     packagesLoaded <- NULL
@@ -1005,7 +1011,10 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     aa <- do.call(rbind, aa)
     minVersions <- gsub(".*\\((>*=*)(.*)\\)", "\\2", pkgsAllMinVersion)
     inequality <- gsub(".*\\((>*=*)(.*)\\)", "\\1", pkgsAllMinVersion)
-    installedVersions <- aa[aa[, "Package"] %in% names(pkgsAllMinVersion),"Version"]
+    installedVersions <- pkgsAllMinVersion
+    installed <- names(installedVersions) %in% aa[, "Package"]
+    installedVersions[!installed] <- NA_character_
+    installedVersions[installed] <- aa[aa[, "Package"] %in% names(installedVersions), "Version"]
     if (length(installedVersions) > 1) installedVersions <- installedVersions[names(pkgsAllMinVersion)]
     seqIV <- seq(installedVersions)
     names(seqIV) <- names(pkgsAllMinVersion)
@@ -1053,14 +1062,14 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       row.names(df2) <- paste0(seq(NROW(df2)), ":")
       message(paste0(capture.output(df2), collapse = "\n"))
       out <- if (isInteractive()) {
-        as.numeric(readline("Pick a number to upgrade: "))
+        as.numeric(.readline("Pick a number to upgrade: "))
       } else {
         1
       }
       if (out > NROW(df2)) stop("Please choose one of the options")
       choice <- df2[out,]
       if (identical(choice, "None") || is.na(out)) {
-        message("Not upgrading packages; this may cause undesired effects")
+        message("Not installing/upgrading packages; this may cause undesired effects")
       } else {
         upgrades <- df2[-(1:3),]
         upgradesGit <- names(areGitHub2)
@@ -1073,6 +1082,8 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
     }
 
+    upgrades <- trimVersionNumber(upgrades)
+    packages <- setdiff(packages, names(pkgsAllMinVersion))
   }
 
   #forget(pkgDep)
@@ -1404,4 +1415,8 @@ extractPkgGitHub <- function(pkgs) {
 
 trimVersionNumber <- function(pkgs) {
   gsub(.grepVersionNumber, "", pkgs)
+}
+
+.readline <- function(prompt) {
+  readline(prompt)
 }
