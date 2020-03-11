@@ -266,7 +266,7 @@
   } else {
     loadFromMgs <- "Loading from repo"
     if (useDBI()) {
-      output <- loadFromCache(cacheRepo, isInRepo$cacheId[lastOne])
+      output <- loadFromCache(cacheRepo, isInRepo$cacheId[lastOne], drv = drv, conn = conn)
     } else {
       output <- archivist::loadFromLocalRepo(cacheObj, repoDir = cacheRepo, value = TRUE)
     }

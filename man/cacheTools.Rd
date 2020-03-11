@@ -24,13 +24,20 @@ saveToCache(
   linkToCacheId = NULL
 )
 
-loadFromCache(cachePath, cacheId)
+loadFromCache(
+  cachePath,
+  cacheId,
+  format = getOption("reproducible.cacheSaveFormat", "rds"),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL)
+)
 
 rmFromCache(
   cachePath,
   cacheId,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  format = getOption("reproducible.cacheSaveFormat", "rds")
 )
 }
 \arguments{

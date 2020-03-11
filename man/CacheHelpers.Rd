@@ -16,7 +16,11 @@ CacheDBFile(
 
 CacheStorageDir(cachePath)
 
-CacheStoredFile(cachePath, hash)
+CacheStoredFile(
+  cachePath,
+  hash,
+  format = getOption("reproducible.cacheSaveFormat", "rds")
+)
 
 CacheDBTableName(
   cachePath,
@@ -42,6 +46,10 @@ object (in order to clone an existing connection).}
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{hash}{The cacheId or otherwise digested hash value, as character string.}
+
+\item{format}{The text string representing the file extension used normally by
+different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
+to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{create}{Logical. Currently only affects non RQSLite default drivers. If this
 is \code{TRUE} and there is no Cache database, the function will create one.}
