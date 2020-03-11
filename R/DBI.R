@@ -132,7 +132,8 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   browser(expr = exists("._saveToCache_2"))
   if (is.null(linkToCacheId)) {
     if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
-      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1))
+      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
+                      preset = getOption("reproducible.qsavePreset", "high"))
     else {
       saveRDS(obj, file = fts)
       fs <- file.size(fts)
