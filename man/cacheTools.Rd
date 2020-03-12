@@ -64,6 +64,10 @@ will be added to the Cache so that this entry in the Cache can be found using
 \item{linkToCacheId}{Optional. If a cacheId is provided here, then a file.link will
 be made to the file with that cacheId name in the cache repo. This is used when
 identical outputs exist in the cache. This will save disk space.}
+
+\item{format}{The text string representing the file extension used normally by
+different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
+to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 }
 \description{
 Create a new cache

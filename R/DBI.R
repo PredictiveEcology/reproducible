@@ -188,6 +188,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 #' @export
 #' @rdname cacheTools
 #' @importFrom qs qread
+#' @inheritParams CacheStoredFile
 loadFromCache <- function(cachePath, cacheId,
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -198,8 +199,8 @@ loadFromCache <- function(cachePath, cacheId,
   if (!file.exists(f)) {
     sameCacheID <- dir(dirname(f), pattern = file_path_sans_ext(basename(f)))
     if (length(sameCacheID)) {
-      message("Changing format of Cache entry from ", file_ext(sameCacheID), " to ",
-              file_ext(f))
+      message(blue("  ...(Changing format of Cache entry from ", file_ext(sameCacheID), " to ",
+              file_ext(f), ")"))
       obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
                            format = file_ext(sameCacheID))
       fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
