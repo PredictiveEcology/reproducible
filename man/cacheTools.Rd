@@ -43,8 +43,8 @@ the database file(s)}
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
-  even if it already exists, overwriting.
-# replaces archivist::createLocalRepo}
+even if it already exists, overwriting.
+(Replaces \code{archivist::createLocalRepo}.)}
 
 \item{obj}{The R object to save to the cache}
 
@@ -54,9 +54,9 @@ will be added to the Cache so that this entry in the Cache can be found using
 
 \item{cacheId}{The hash string representing the result of \code{.robustDigest}}
 
-\item{linkToCacheId}{Optional. If a cacheId is provided here, then a file.link will
-be made to the file with that cacheId name in the cache repo. This is used when
-identical outputs exist in the cache. This will save disk space.}
+\item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}
+will be made to the file with that \code{cacheId} name in the cache repo.
+This is used when identical outputs exist in the cache. This will save disk space.}
 }
 \description{
 Create a new cache

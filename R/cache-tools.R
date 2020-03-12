@@ -247,7 +247,7 @@ setMethod(
     memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
-  })
+})
 
 #' @details
 #' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
@@ -317,7 +317,7 @@ cc <- function(secs, ...) {
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
 #' @seealso \code{\link{mergeCache}}, \code{archivist::splitTagsLocal}. Many more examples
-#' in \code{\link{Cache}}
+#' in \code{\link{Cache}}.
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),

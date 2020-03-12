@@ -436,7 +436,7 @@ pkgDep <- function(packages, libPath, recursive = TRUE, depends = TRUE,
       parentFramePackages <- tryCatch(get("packages", envir = parent.frame()), error = function(x) NULL)
 
       if (!is.null(parentFramePackages))
-        message(paste(parentFramePackages, collapse = ", "), " depencies: ")
+        message(paste(parentFramePackages, collapse = ", "), " dependencies: ")
       message("  ", paste(names(ll2[notInstalled]), collapse = ", "),
               " not installed locally; check for dependencies on CRAN")
       availPackagesDb <- available.packagesMem(repos = repos)

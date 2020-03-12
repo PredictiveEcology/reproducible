@@ -12,11 +12,11 @@ movedCache(
 )
 }
 \arguments{
-\item{new}{Either the path of the new cachePath where the cache was moved or copied to, or
+\item{new}{Either the path of the new \code{cachePath} where the cache was moved or copied to, or
 the new DB Table Name}
 
 \item{old}{Optional, if there is only one table in the \code{new} cache path.
-Either the path of the previous cachePath where the cache was moved or copied from, or
+Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
 the old DB Table Name}
 
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},

@@ -5,10 +5,10 @@ if (getRversion() >= "3.1.0") {
 #' Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})
 #'
 #' Will check for presence of a \code{cloudFolderID} and make a new one
-#' if one not present on googledrive, with a warning.
+#' if one not present on Google Drive, with a warning.
 #'
 #' @param cloudFolderID The google folder ID where cloud caching will occur.
-#' @param create Logical. If \code{TRUE}, then the cloudFolderID will be created.
+#' @param create Logical. If \code{TRUE}, then the \code{cloudFolderID} will be created.
 #'     This should be used with caution as there are no checks for overwriting.
 #'     See \code{googledrive::drive_mkdir}. Default \code{FALSE}.
 #' @param overwrite Logical. Passed to \code{googledrive::drive_mkdir}.

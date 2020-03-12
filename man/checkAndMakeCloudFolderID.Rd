@@ -17,7 +17,7 @@ checkAndMakeCloudFolderID(
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
-\item{create}{Logical. If \code{TRUE}, then the cloudFolderID will be created.
+\item{create}{Logical. If \code{TRUE}, then the \code{cloudFolderID} will be created.
 This should be used with caution as there are no checks for overwriting.
 See \code{googledrive::drive_mkdir}. Default \code{FALSE}.}
 
@@ -25,5 +25,5 @@ See \code{googledrive::drive_mkdir}. Default \code{FALSE}.}
 }
 \description{
 Will check for presence of a \code{cloudFolderID} and make a new one
-if one not present on googledrive, with a warning.
+if one not present on Google Drive, with a warning.
 }

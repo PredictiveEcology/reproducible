@@ -220,5 +220,5 @@ cc(ask = FALSE, x = tmpDir) # Cache is already empty
 }
 \seealso{
 \code{\link{mergeCache}}, \code{archivist::splitTagsLocal}. Many more examples
-in \code{\link{Cache}}
+in \code{\link{Cache}}.
 }

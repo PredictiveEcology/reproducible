@@ -5,9 +5,9 @@
 #' @param drv A driver, passed to \code{dbConnect}
 #' @param force Logical. Should it create a cache in the \code{cachePath},
 #'   even if it already exists, overwriting.
-#' # replaces archivist::createLocalRepo
-#' @importFrom DBI dbConnect dbDisconnect dbWriteTable
+#'   (Replaces \code{archivist::createLocalRepo}.)
 #' @importFrom data.table data.table
+#' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
 #' @rdname cacheTools
@@ -41,16 +41,15 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
                    field.types = c(cacheId = "text", tagKey = "text",
                                    tagValue = "text", createdDate = "text")), silent = TRUE)
     #)
-
 }
 
 #' @rdname cacheTools
 #' @inheritParams Cache
 #' @param cacheId The hash string representing the result of \code{.robustDigest}
 #' @param obj The R object to save to the cache
-#' @param linkToCacheId Optional. If a cacheId is provided here, then a file.link will
-#'   be made to the file with that cacheId name in the cache repo. This is used when
-#'   identical outputs exist in the cache. This will save disk space.
+#' @param linkToCacheId Optional. If a \code{cacheId} is provided here, then a \code{file.link}
+#'   will be made to the file with that \code{cacheId} name in the cache repo.
+#'   This is used when identical outputs exist in the cache. This will save disk space.
 #' @importFrom qs qsave
 saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
@@ -519,10 +518,10 @@ CacheIsACache <- function(cachePath, create = FALSE,
 #' there are issues that must be addressed. Primarily, the db table must be renamed. Run
 #' this function after a manual copy of a cache folder. See examples for one way to do that.
 #'
-#' @param  new Either the path of the new cachePath where the cache was moved or copied to, or
+#' @param  new Either the path of the new \code{cachePath} where the cache was moved or copied to, or
 #'   the new DB Table Name
 #' @param  old Optional, if there is only one table in the \code{new} cache path.
-#'   Either the path of the previous cachePath where the cache was moved or copied from, or
+#'   Either the path of the previous \code{cachePath} where the cache was moved or copied from, or
 #'   the old DB Table Name
 #' @inheritParams Cache
 #' @importFrom DBI dbListTables
