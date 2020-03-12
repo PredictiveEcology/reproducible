@@ -763,6 +763,7 @@ setMethod(
 
       # check that it didn't come from cloud or failed to find complete cloud (i.e., output is NULL)
       browser(expr = exists("._Cache_10"))
+      elapsedTimeFUN <- NA
       if (!exists("output", inherits = FALSE) || is.null(output)) {
         # Run the FUN
         preRunFUNTime <- Sys.time()
