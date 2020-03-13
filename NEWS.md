@@ -25,6 +25,7 @@ version 1.0.0.9000
 * `cropInputs` may have failed due to "self intersection" error when x was a `SpatialPolygons*` object; now catches error, runs `fixErrors` and retries `crop`. Great reprex by Tati Micheletti. Fixed in commit `89e652ef111af7de91a17a613c66312c1b848847 `.
 * `Filenames` bugfix related to `RasterBrick`
 * `prepInputs` does a better job of keeping all temporary files in a temporary folder; and cleans up after itself better
+* `prepInputs` now will not show message that it is loading object into R if `fun = NULL`. Issue #135.
 
 version 1.0.0
 ==============
