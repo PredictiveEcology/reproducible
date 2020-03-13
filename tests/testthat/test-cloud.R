@@ -168,7 +168,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     retry(quote(drive_rm(as_id(newDir$id))))
     clearCache(x = tmpdir)
     newDir <- retry(quote(drive_mkdir(rndstr(1,6))))
-    cloudFolderID = newDir$id
+    cloudFolderID = newDir
 
     testRasterInCloud(".grd", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
                       type = "Raster")
@@ -190,7 +190,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     clearCache(x = tmpCache)
     clearCache(x = tmpdir)
     newDir <- retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
-    cloudFolderID = newDir$id
+    cloudFolderID = newDir
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 2, tmpdir = tmpdir,
                       type = "Stack")
@@ -218,7 +218,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
       #} else { # this is slow for emcintir because googledrive is large
       retry(quote(drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
     #}
-    cloudFolderID = newDir$id
+    cloudFolderID = newDir
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Brick")

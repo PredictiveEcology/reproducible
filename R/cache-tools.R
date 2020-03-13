@@ -780,6 +780,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
     # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
     #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
   }
+  browser(expr = exists("._rmFromCloudFolder_1"))
 
   gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)
