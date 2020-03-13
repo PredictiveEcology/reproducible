@@ -2,6 +2,7 @@
 % Please edit documentation in R/packages.R
 \name{.installPackages}
 \alias{.installPackages}
+\alias{trimVersionNumber}
 \title{Internal function to install packages}
 \usage{
 .installPackages(
@@ -16,6 +17,8 @@
   standAlone = standAlone,
   forget = FALSE
 )
+
+trimVersionNumber(packages)
 }
 \arguments{
 \item{packages}{Character vector of packages to install via

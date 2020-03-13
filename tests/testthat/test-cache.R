@@ -1014,6 +1014,31 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
 
 })
 
+test_that("test changing reproducible.cacheSaveFormat midstream", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  opts <- options("reproducible.cacheSaveFormat" = "rds")
+  b <- Cache(rnorm, 1, cacheRepo = tmpdir)
+  sc <- showCache(tmpdir)
+  ci <- unique(sc$cacheId)
+  options("reproducible.cacheSaveFormat" = "qs")
+  on.exit({
+    options(opts)
+  }, add = TRUE)
+  mess <- capture_messages(b <- Cache(rnorm, 1, cacheRepo = tmpdir))
+
+  expect_true(sum(grepl("Changing format of Cache entry from rds to qs", mess)) == 1)
+
+  options("reproducible.cacheSaveFormat" = "rds")
+  mess <- capture_messages(b <- Cache(rnorm, 1, cacheRepo = tmpdir))
+
+  expect_true(sum(grepl("Changing format of Cache entry from qs to rds", mess)) == 1)
+
+})
+
 test_that("test file link with duplicate Cache", {
   testInitOut <- testInit()
   on.exit({

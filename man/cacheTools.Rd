@@ -24,13 +24,20 @@ saveToCache(
   linkToCacheId = NULL
 )
 
-loadFromCache(cachePath, cacheId)
+loadFromCache(
+  cachePath,
+  cacheId,
+  format = getOption("reproducible.cacheSaveFormat", "rds"),
+  drv = getOption("reproducible.drv", RSQLite::SQLite()),
+  conn = getOption("reproducible.conn", NULL)
+)
 
 rmFromCache(
   cachePath,
   cacheId,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  format = getOption("reproducible.cacheSaveFormat", "rds")
 )
 }
 \arguments{
@@ -54,9 +61,13 @@ will be added to the Cache so that this entry in the Cache can be found using
 
 \item{cacheId}{The hash string representing the result of \code{.robustDigest}}
 
-\item{linkToCacheId}{Optional. If a \code{cacheId} is provided here, then a \code{file.link}
-will be made to the file with that \code{cacheId} name in the cache repo.
-This is used when identical outputs exist in the cache. This will save disk space.}
+\item{linkToCacheId}{Optional. If a cacheId is provided here, then a file.link will
+be made to the file with that cacheId name in the cache repo. This is used when
+identical outputs exist in the cache. This will save disk space.}
+
+\item{format}{The text string representing the file extension used normally by
+different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
+to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 }
 \description{
 Create a new cache

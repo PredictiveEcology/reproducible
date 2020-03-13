@@ -187,12 +187,34 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 #' @export
 #' @rdname cacheTools
 #' @importFrom qs qread
-loadFromCache <- function(cachePath, cacheId) {
-  if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
-    qs::qread(file = CacheStoredFile(cachePath, cacheId),
-              nthreads = getOption("reproducible.nThreads", 1))
-  else
-    readRDS(file = CacheStoredFile(cachePath, cacheId))
+#' @inheritParams CacheStoredFile
+loadFromCache <- function(cachePath, cacheId,
+                          format = getOption("reproducible.cacheSaveFormat", "rds"),
+                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                          conn = getOption("reproducible.conn", NULL) ) {
+  f <- CacheStoredFile(cachePath, cacheId, format)
+
+  # First test if it is correct format
+  if (!file.exists(f)) {
+    sameCacheID <- dir(dirname(f), pattern = file_path_sans_ext(basename(f)))
+    if (length(sameCacheID)) {
+      message(blue("  ...( Changing format of Cache entry from", file_ext(sameCacheID), "to",
+              file_ext(f), ")"))
+      obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
+                           format = file_ext(sameCacheID))
+      fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
+                        cacheId = cacheId)
+      rmFromCache(cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+                  format = file_ext(sameCacheID))
+      return(fs)
+    }
+  }
+
+  if (format == "qs") {
+    obj <- qs::qread(file = f, nthreads = getOption("reproducible.nThreads", 1))
+  } else {
+    obj <- readRDS(file = f)
+  }
 }
 
 #' Low level tools to work with Cache
@@ -201,7 +223,8 @@ loadFromCache <- function(cachePath, cacheId) {
 #' @export
 #' @rdname cacheTools
 rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                        conn = getOption("reproducible.conn", NULL)) {
+                        conn = getOption("reproducible.conn", NULL),
+                        format = getOption("reproducible.cacheSaveFormat", "rds")) {
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
     on.exit(dbDisconnect(conn))
@@ -222,8 +245,7 @@ rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", 
 
   dbClearResult(res)
 
-  unlink(file.path(cachePath, "cacheObjects",
-                   paste0(cacheId, ".", getOption("reproducible.cacheSaveFormat", "rds"))))
+  unlink(CacheStoredFile(cachePath, hash = cacheId, format = format))
 }
 
 dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()), cachePath,
@@ -416,11 +438,15 @@ CacheStorageDir <- function(cachePath) {
 #' @rdname CacheHelpers
 #' @export
 #' @param hash The cacheId or otherwise digested hash value, as character string.
-CacheStoredFile <- function(cachePath, hash) {
+#' @param format The text string representing the file extension used normally by
+#'   different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
+#'   to \code{getOption("reproducible.cacheSaveFormat", "rds")}
+CacheStoredFile <- function(cachePath, hash,
+                            format = getOption("reproducible.cacheSaveFormat", "rds")) {
   csf <- if (isTRUE(useDBI()) == FALSE) {
     "rda"
   } else {
-    getOption("reproducible.cacheSaveFormat", "rds")
+    format
   }
   csExtension <- if (csf == "qs") {
     "qs"

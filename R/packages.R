@@ -1413,8 +1413,10 @@ extractPkgGitHub <- function(pkgs) {
 }
 .grepVersionNumber <- " *\\(.*"
 
-trimVersionNumber <- function(pkgs) {
-  gsub(.grepVersionNumber, "", pkgs)
+#' @export
+#' @rdname installPackages
+trimVersionNumber <- function(packages) {
+  gsub(.grepVersionNumber, "", packages)
 }
 
 .readline <- function(prompt) {
