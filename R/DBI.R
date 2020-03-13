@@ -199,7 +199,7 @@ loadFromCache <- function(cachePath, cacheId,
   if (!file.exists(f)) {
     sameCacheID <- dir(dirname(f), pattern = file_path_sans_ext(basename(f)))
     if (length(sameCacheID)) {
-      message(blue("  ...(Changing format of Cache entry from ", file_ext(sameCacheID), " to ",
+      message(blue("  ...( Changing format of Cache entry from", file_ext(sameCacheID), "to",
               file_ext(f), ")"))
       obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
                            format = file_ext(sameCacheID))

@@ -1020,10 +1020,11 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
+  opts <- options("reproducible.cacheSaveFormat" = "rds")
   b <- Cache(rnorm, 1, cacheRepo = tmpdir)
   sc <- showCache(tmpdir)
   ci <- unique(sc$cacheId)
-  opts <- options("reproducible.cacheSaveFormat" = "qs")
+  options("reproducible.cacheSaveFormat" = "qs")
   on.exit({
     options(opts)
   }, add = TRUE)
