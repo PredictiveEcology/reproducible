@@ -4,9 +4,10 @@ version 1.0.0.9000
 ==============
 
 ## New features
+* can now change `options('reproducible.cacheSaveFormat')` on the fly; cache will look for the file by `cacheId` and write it using `options('reproducible.cacheSaveFormat')`. If it is in another format, Cache will load it and resave it with the new format. Experimental still.
 * new `Copy` methods for `refClass` objects, `SQLite` and moved `environment` method into `ANY` as it would be dispatched for unknown classes that inherit from `environment`, of which there are many and this should be intercepted
-* `Require` can now handle minimum version numbers, e.g., `Require("bit (>=1.1-15.2)")`; this can be worked into downstream tools
-* Cache will do `file.link` or `file.symlink` if an existing Cache entry with identical output exists and it is large (currently $1e6$ bytes); this will save disk space. 
+* `Require` can now handle minimum version numbers, e.g., `Require("bit (>=1.1-15.2)")`; this can be worked into downstream tools. Experimental still.
+* Cache will do `file.link` or `file.symlink` if an existing Cache entry with identical output exists and it is large (currently 1e6 bytes); this will save disk space. 
 * Cache database now has tags for elapsed time of "digest", "original call", and "subsequent recovery from file", `elapsedTimeDigest`, `elapsedTimeFirstRun`, and `elapsedTimeLoad`, respectively.
 * Better management of temporary files in package and tests, e.g., during downloading (`preProcess`). Includes 2 new functions, `tempdir2` and `tempfile2` for use with `reproducible` package
 * New option: `reproducible.tempPath`, which is used for the new control of temporary files. Defaults to `file.path(tempdir(), "reproducible")`. This feature was requested to help manage large amounts of temporary objects that were not being easily and automatically cleaned
