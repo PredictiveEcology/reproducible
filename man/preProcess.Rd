@@ -61,7 +61,8 @@ search for the file before attempting to download. Default for that option is
 
 \item{fun}{Function or character string indicating the function to use to load
 \code{targetFile} into an \code{R} object, e.g., in form with package name:
-\code{"raster::raster"}.}
+\code{"raster::raster"}. NOTE: passing \code{NULL} will skip loading object
+into R.}
 
 \item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
 custom downloading, in addition to loading into R. Still experimental.}

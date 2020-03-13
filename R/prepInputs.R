@@ -124,7 +124,8 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param fun Function or character string indicating the function to use to load
 #'   \code{targetFile} into an \code{R} object, e.g., in form with package name:
-#'   \code{"raster::raster"}.
+#'   \code{"raster::raster"}. NOTE: passing \code{NULL} will skip loading object
+#'   into R.
 #'
 #' @param quick Logical. This is passed internally to \code{\link{Checksums}}
 #'   (the quickCheck argument), and to
@@ -289,47 +290,50 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   args <- args[(names(args) %in% fun$formalArgs)]
   if (length(args) == 0) args <- NULL
 
-  # Stage 1 - load into R
-  x <- if (is.null(out$object)) {
-    message("Loading object into R")
-    if (identical(out$fun, raster::raster) |
-        identical(out$fun, raster::stack) |
-        identical(out$fun, raster::brick)) {
-      ## Don't cache the reading of a raster
-      ## -- normal reading of raster on disk is fast b/c only reads metadata
-      do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
-    } else {
-      if (identical(out$fun, base::load)) {
-        if (is.null(args$envir)) {
-          message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
-                  "if you would like it loaded to a specific environment")
-          tmpEnv <- new.env(parent = emptyenv())
-          returnAsList <- TRUE
-        } else {
-          tmpEnv <- args$envir
-          args$envir <- NULL
-          returnAsList <- FALSE
-        }
-        objs <- do.call(out$fun, append(list(file = out$targetFilePath, envir = tmpEnv), args))
-        if (returnAsList)
-          as.list(tmpEnv, all.names = TRUE)
+  if (!is.null(out$fun)) {
+    x <- if (is.null(out$object)) {
+      message("Loading object into R")
+      if (identical(out$fun, raster::raster) |
+          identical(out$fun, raster::stack) |
+          identical(out$fun, raster::brick)) {
+        ## Don't cache the reading of a raster
+        ## -- normal reading of raster on disk is fast b/c only reads metadata
+        do.call(out$fun, append(list(asPath(out$targetFilePath)), args))
       } else {
-        browser(expr = exists("._prepInputs_3"))
-        err <- capture_error(
-          mess <- capture.output(
-            type = "message",
-            obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                         useCache = useCache)))
-        if (!is.null(err)) stop(err)
+        if (identical(out$fun, base::load)) {
+          if (is.null(args$envir)) {
+            message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
+                    "if you would like it loaded to a specific environment")
+            tmpEnv <- new.env(parent = emptyenv())
+            returnAsList <- TRUE
+          } else {
+            tmpEnv <- args$envir
+            args$envir <- NULL
+            returnAsList <- FALSE
+          }
+          objs <- do.call(out$fun, append(list(file = out$targetFilePath, envir = tmpEnv), args))
+          if (returnAsList)
+            as.list(tmpEnv, all.names = TRUE)
+        } else {
+          browser(expr = exists("._prepInputs_3"))
+          err <- capture_error(
+            mess <- capture.output(
+              type = "message",
+              obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                           useCache = useCache)))
+          if (!is.null(err)) stop(err)
 
-        mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
-        if (length(mess) > 0)
-          message(mess)
-        obj
+          mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
+          if (length(mess) > 0)
+            message(mess)
+          obj
+        }
       }
+    } else {
+      out$object
     }
   } else {
-    out$object
+    message("No loading of object into R; fun = NULL")
   }
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise

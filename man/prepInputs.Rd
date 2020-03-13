@@ -60,7 +60,8 @@ search for the file before attempting to download. Default for that option is
 
 \item{fun}{Function or character string indicating the function to use to load
 \code{targetFile} into an \code{R} object, e.g., in form with package name:
-\code{"raster::raster"}.}
+\code{"raster::raster"}. NOTE: passing \code{NULL} will skip loading object
+into R.}
 
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to
