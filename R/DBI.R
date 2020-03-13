@@ -164,7 +164,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   whichOS <- which(tagKey == "object.size")
   if (length(whichOS)) {
     fsBig <- (as.numeric(tagValue[whichOS]) * 4 ) < fs
-    if (fsBig) {
+    if (isTRUE(fsBig)) {
       browser(expr = exists("._saveToCache_3"))
       message("Object with cacheId ", cacheId, " appears to have a much larger size ",
               "on disk than in memory. ",
