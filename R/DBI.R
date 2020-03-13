@@ -209,12 +209,7 @@ loadFromCache <- function(cachePath, cacheId,
       return(fs)
     }
   }
-
-  if (format == "qs") {
-    obj <- qs::qread(file = f, nthreads = getOption("reproducible.nThreads", 1))
-  } else {
-    obj <- readRDS(file = f)
-  }
+  obj <- loadFile(f, format = format)
 }
 
 #' Low level tools to work with Cache
@@ -606,4 +601,16 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
   res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(dbSendQuery(conn, qry)))
   dbFetch(res)
   dbClearResult(res)
+}
+
+#' @importFrom tools file_ext
+#' @importFrom qs qread
+loadFile <- function(file, format) {
+  if (missing(format))
+    format <- file_ext(file)
+  if (format == "qs") {
+    obj <- qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
+  } else {
+    obj <- readRDS(file = file)
+  }
 }
