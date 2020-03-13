@@ -94,7 +94,8 @@ setGeneric("Copy", function(object, filebackedDir, ...) {
 setMethod(
   "Copy",
   signature(object = "ANY"),
-  definition = function(object, filebackedDir, ...) {
+  definition = function(object, # filebackedDir,
+                        ...) {
     if (any(grepl("DBIConnection", is(object)))) {
       message("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
               "This may have unexpected consequences...")
@@ -114,11 +115,12 @@ setMethod(
 
     }
     if (is.environment(object)) {
-      if (missing(filebackedDir)) {
-        filebackedDir <- tempdir2(rndstr(1, 8))
-      }
+      # if (missing(filebackedDir)) {
+      #   filebackedDir <- tempdir2(rndstr(1, 9))
+      # }
       listVersion <- Copy(as.list(object, all.names = TRUE),
-                          filebackedDir = filebackedDir, ...)
+                          #filebackedDir = filebackedDir,
+                          ...)
 
       parentEnv <- parent.env(object)
       newEnv <- new.env(parent = parentEnv)
@@ -153,13 +155,13 @@ setMethod("Copy",
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "list"),
-          definition = function(object,  filebackedDir, ...) {
-            if (missing(filebackedDir)) {
-              filebackedDir <- tempdir2(rndstr(1, 8))
-            }
-
+          definition = function(object,  ...) {
+            #if (missing(filebackedDir)) {
+            #  browser()
+            #  filebackedDir <- tempdir2(rndstr(1, 10))
+            #}
             lapply(object, function(x) {
-              Copy(x, filebackedDir, ...)
+              Copy(x, ...)
             })
           })
 
@@ -190,11 +192,13 @@ setMethod("Copy",
           definition = function(object, filebackedDir,
                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                 conn = getOption("reproducible.conn", NULL), ...) {
-            if (missing(filebackedDir)) {
-              filebackedDir <- tempdir2(rndstr(1, 8))
+            if (fromDisk(object)) {
+              if (missing(filebackedDir)) {
+                filebackedDir <- tempdir2(rndstr(1, 11))
+              }
+              if (!is.null(filebackedDir))
+                object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
             }
-            if (!is.null(filebackedDir))
-              object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
             object
           })
 

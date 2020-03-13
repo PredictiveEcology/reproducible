@@ -21,6 +21,7 @@ version 1.0.0.9000
 * none
 
 ## bug fixes
+* `Copy` only creates a temporary directory for filebacked rasters; previously any `Copy` command was creating a temporary directory, regardless of whether it was needed
 * `cropInputs.spatialObjects` had a bug when object was a large non-Raster class; fixed
 * `cropInputs` may have failed due to "self intersection" error when x was a `SpatialPolygons*` object; now catches error, runs `fixErrors` and retries `crop`. Great reprex by Tati Micheletti. Fixed in commit `89e652ef111af7de91a17a613c66312c1b848847 `.
 * `Filenames` bugfix related to `RasterBrick`
