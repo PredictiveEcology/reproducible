@@ -512,7 +512,7 @@ CacheIsACache <- function(cachePath, create = FALSE,
         if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
           warning(paste0("The table in the Cache repo does not match the cacheRepo. ",
                      "If this is because of a moved repository (i.e., files ",
-                     "copied), press 'Enter' and it will be updated. ",
+                     "copied), then it is being updated automatically. ",
                      "If not, cache is in an error state. ",
                      "You may need to delete the Cache"))
           movedCache(cachePath, #old = tablesInDB,
@@ -589,17 +589,17 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
     oldTable <- CacheDBTableName(old, drv = drv)
   }
 
-  if (!identical(normPath(tables), normPath(oldTable))) {
+  if (!any(tables == oldTable)) {
     stop("The 'old' table name does not appear inside the path to the 'new'")
   }
   newTable <- CacheDBTableName(new, drv = drv)
 
-  qry <- glue::glue_sql("ALTER TABLE {old} RENAME TO {new}",
+  qry <- glue::glue_sql("ALTER TABLE {`old`} RENAME TO {`new`}",
                         old = oldTable,
                         new = newTable,
                         .con = conn)
   res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(dbSendQuery(conn, qry)))
-  dbFetch(res)
+  # dbFetch(res)
   dbClearResult(res)
 }
 

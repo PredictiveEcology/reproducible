@@ -71,6 +71,13 @@ test_that("test file-backed raster caching", {
       # movedCache(tmpdir)
       # ._prepareOutputs_1 <<- ._prepareOutputs_2 <<- ._getFromRepo <<- 1
       # Will silently update the filename of the RasterLayer, and recover it
+      type <- gsub("Connection", "", class(getOption("reproducible.conn")))
+      isSQLite <- grepl(type, "NULL")
+      if (!isSQLite) {
+        warn1 <- capture_warnings(movedCache(tmpdir, old = tmpCache))
+
+      }
+
       warn <- capture_warnings(bb <- Cache(randomPolyToDisk, tmpfile[1], cacheRepo = tmpdir, userTags = "something2",
                   quick = TRUE))
 
