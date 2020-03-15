@@ -341,7 +341,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
         dbSendStatement(
           conn,
           paste0("update \"", CacheDBTableName(cachePath, drv), "\"",
-                 " set \"tagValue\" = \"",tagValue,"\" where ",
+                 " set \"tagValue\" = '",tagValue,"' where ",
                  " \"cacheId\" = '",cacheId, "'", " AND \"tagKey\" = '",tagKey, "'"))
       #))
       affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
