@@ -291,7 +291,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
           paste0("insert into \"", CacheDBTableName(cachePath, drv), "\"",
                  " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
                  "('", cacheId,
-                 "', '",tagKey,"', '", tagValue, "', '", curTime, "')"))
+                 "', '", tagKey, "', '", tagValue, "', '", curTime, "')"))
       ))
 
       dbClearResult(rs)
