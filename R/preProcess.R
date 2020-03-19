@@ -160,6 +160,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     needChecksums <- 1
     checkSums <- .emptyChecksumsResult
   }
+  browser(expr = exists("._preProcess_5"))
 
   # This will populate a NULL archive if archive is local or
   if (is.null(archive)) {
@@ -220,6 +221,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums <- outFromSimilar$checkSums
   }
 
+  browser(expr = exists("._preProcess_6"))
 
   filesToChecksum <- if (is.null(archive))  NULL else .basename(archive)
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))

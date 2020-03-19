@@ -606,6 +606,7 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
 #' @importFrom tools file_ext
 #' @importFrom qs qread
 loadFile <- function(file, format) {
+  browser(expr = exists("._loadFile_1"))
   if (missing(format))
     format <- file_ext(file)
   if (format == "qs") {

@@ -416,7 +416,17 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
         message("    cropping ...")
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
-        x <- do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots))
+        completed <- FALSE
+        while(!completed) {
+          yy <- try(do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots)),
+                    silent = TRUE)
+          if (is(yy, "try-error")) {
+            x <- fixErrors(x, useCache = FALSE) # this will likely be a large file
+          } else {
+            completed <- TRUE
+            x <- yy
+          }
+        }
         if (all(sapply(extent(x), function(xx) is.na(xx)))) {
           message("    polygons do not intersect.")
         }

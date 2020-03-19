@@ -118,6 +118,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
+    browser(expr = exists("._robustDigest_1"))
     if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
       object <- eval_tidy(object)
     }
@@ -256,6 +257,7 @@ setMethod(
   signature = "list",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
+    browser(expr = exists("._robustDigest_2"))
     lapply(.sortDotsUnderscoreFirst(object), function(x) {
       .robustDigest(object = x, .objects = .objects,
                    length = length,
