@@ -117,6 +117,9 @@ test_that("test file-backed raster caching", {
       checkPath(file.path(tmpdir, "cacheOutputs"), create = TRUE)
       file.copy(from = froms, overwrite = TRUE,
                 to = gsub(normPath(tmpCache), normPath(tmpdir), froms))
+      if (!isSQLite) {
+        DBI::dbRemoveTable(conn, CacheDBTableName(tmpdir))
+      }
       movedCache(tmpdir, tmpCache)
       out <- Cache(fn2, bbS, cacheRepo = tmpdir, userTags = "something2")
 
@@ -174,6 +177,7 @@ test_that("test file-backed raster caching", {
       expect_true(inMemory(bb))
 
       bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
+      browser()
       expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
 
       # Test that factors are saved correctly
@@ -491,6 +495,7 @@ test_that("test asPath", {
   expect_true(grepl("loading cached result", a3))
 
   unlink("filename.RData")
+  browser()
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
   a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
                                quick = TRUE, cacheRepo = tmpdir))
