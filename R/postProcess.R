@@ -1528,7 +1528,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     }
 
     browser(expr = exists("._postProcess.spatialobjects_2"))
-    if (isFALSE(all.equal(extent(x), extRTM))) {
+    if (!isTRUE(all.equal(extent(x), extRTM))) {
       x <- Cache(cropInputs, x = x, studyArea = studyArea,
                  extentToMatch = extRTM,
                  extentCRS = crsRTM,
