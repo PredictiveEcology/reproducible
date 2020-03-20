@@ -1142,7 +1142,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
               "\n consider changing to ", datatype2)
     }
 
-    if (raster::is.factor(x)) {
+    if (any(raster::is.factor(x))) {
       filename3 <- gsub(filename2, pattern = "\\.tif", replacement = ".grd")
       if (!identical(filename2, filename3)) {
         warning(".tif format does not preserve factor levels using rgdal. Using ",
@@ -1291,8 +1291,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
     } else {
       rasVals <- raster::getValues(ras)
     }
-    minVal <- ras@data@min
-    maxVal <- ras@data@max
+    minVal <- min(ras@data@min)
+    maxVal <- max(ras@data@max)
     signVal <- minVal < 0
     doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
 
