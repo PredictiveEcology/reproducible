@@ -892,13 +892,9 @@ maskInputs <- function(x, studyArea, ...) {
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   message("    masking...")
   browser(expr = exists("._maskInputs_1"))
+  isStack <- is(x, "RasterStack")
   if (isTRUE(maskWithRTM)) {
     x <- maskWithRasterNAs(x = x, y = rasterToMatch)
-    # if (canProcessInMemory(x, 3) && fromDisk(x))
-    #   x[] <- x[]
-    # m <- which(is.na(rasterToMatch[]))
-    # x[m] <- NA
-    # x[is.na(rasterToMatch)] <- NA
   } else {
     if (!is.null(studyArea)) {
       # dots <- list(...)
@@ -907,6 +903,10 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
       message("studyArea not provided, skipping masking.")
     }
   }
+  if (isStack) { # do this even if no masking; it takes 10 microseconds if already a RasterStack
+    x <- raster::stack(x)
+  }
+
   return(x)
 }
 
