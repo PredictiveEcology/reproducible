@@ -680,11 +680,13 @@ setMethod(
             file.size(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]]))
           }
           class(objSize) <- "object_size"
-          if ( isTRUE(objSize > 1e6) )
-            message(crayon::blue(paste0("  ...(Object to retrieve (",
-                                        basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
-                                        ") is large: ",
-                                        format(objSize, units = "auto"), ")")))
+          bigFile <- isTRUE(objSize > 1e6)
+          message(crayon::blue(paste0("  ...(Object to retrieve (",
+                                      basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
+                                      ")",
+                                      if (bigFile) " is large: ",
+                                      if (bigFile) format(objSize, units = "auto"),
+                                      ")")))
 
           preLoadTime <- Sys.time()
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
