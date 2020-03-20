@@ -625,15 +625,19 @@ setMethod(
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
-  browser(expr = exists("._prepareFieBackedRaster_1"))
+  browser(expr = exists("._prepareFileBackedRaster_1"))
   isRasterLayer <- TRUE
+  isBrick <- is(obj, "RasterBrick")
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {
-    inMemory(obj)
+    if (isBrick)
+      rep(inMemory(obj), raster::nlayers(obj))
+    else
+      inMemory(obj)
   } else {
     sapply(obj@layers, inMemory)
   }
@@ -645,7 +649,11 @@ setMethod(
   isFilebacked <- !(whichInMemory | !whichHasValues)
 
   ## create a storage vector of file names to be filled
-  curFilename <- rep("", length(isFilebacked))
+  curFilename <- if (isBrick) {
+    rep("", raster::nlayers(obj))
+  } else {
+    rep("", length(isFilebacked))
+  }
 
   if (any(!isFilebacked)) {
     fileExt <- if (!isStack) {
@@ -782,7 +790,7 @@ setMethod(
     }
     if (any(!notSameButBacked)) {
       ## deal with files that haven't been backed
-      checkPath(unique(dirname(saveFilename[!notSameButBacked])), create = TRUE) #SpaDES dependency
+      checkPath(unique(dirname(saveFilename[!notSameButBacked])), create = TRUE)
       if (any(!whichInMemory[!notSameButBacked])) {
         if (!isStack) {
           obj <- writeRaster(obj, filename = saveFilename[!notSameButBacked], datatype = dataType(obj))
