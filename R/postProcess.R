@@ -613,9 +613,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
     doProjection <- FALSE
     if (is.null(rasterToMatch)) {
       if (!identical(crs(x), targetCRS))  doProjection <- TRUE
-    } else if (!isTRUE(all.equal(crs(x), targetCRS)) |
-               !isTRUE(all.equal(res(x), res(rasterToMatch))) |
-               !isTRUE(all.equal(extent(x), extent(rasterToMatch)))) {
+    } else if (differentRasters(x, rasterToMatch, targetCRS)) {
       doProjection <- TRUE
     }
 
@@ -1455,6 +1453,7 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
   list(dots = dots, filename1 = filename1)
 }
 
+#' @importFrom crayon cyan
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
@@ -1529,10 +1528,14 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     }
 
     browser(expr = exists("._postProcess.spatialobjects_2"))
-    x <- Cache(cropInputs, x = x, studyArea = studyArea,
-               extentToMatch = extRTM,
-               extentCRS = crsRTM,
-               useCache = useCache, ...)
+    if (isFALSE(all.equal(extent(x), extRTM))) {
+      x <- Cache(cropInputs, x = x, studyArea = studyArea,
+                 extentToMatch = extRTM,
+                 extentCRS = crsRTM,
+                 useCache = useCache, ...)
+    } else {
+      message(cyan("  Skipping cropInputs; already same extents"))
+    }
 
     if (bufferSA) {
       studyArea <- origStudyArea
@@ -1552,11 +1555,15 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                                  targetCRS)
 
       browser(expr = exists("._postProcess.spatialobjects_4"))
-      x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
-                 rasterToMatch = rasterToMatch, useCache = useCache, ...)
+      if (differentRasters(x, rasterToMatch, targetCRS)) {
+        x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
+                   rasterToMatch = rasterToMatch, useCache = useCache, ...)
+        x <- fixErrors(x = x, objectName = objectName,
+                       useCache = useCache, ...)
+      } else {
+        message(cyan("  Skipping projectInputs; identical crs, res, extent"))
+      }
       # may need to fix again
-      x <- fixErrors(x = x, objectName = objectName,
-                     useCache = useCache, ...)
 
       ##################################
       # maskInputs
@@ -1573,8 +1580,12 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # writeOutputs
       ##################################
-      x <- do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
-                                             overwrite = overwrite), dots))
+      if (!is.null(filename2)) {
+        x <- do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
+                                               overwrite = overwrite), dots))
+      } else {
+        message(cyan("  Skipping writeOutputs; filename2 is NULL"))
+      }
 
       browser(expr = exists("._postProcess.spatialobjects_6"))
       if (dir.exists(bigRastersTmpFolder())) {
@@ -1637,4 +1648,10 @@ setMinMaxIfNeeded <- function(ras) {
     suppressWarnings(ras <- setMinMax(ras))
   }
   ras
+}
+
+differentRasters <- function(ras1, ras2, targetCRS) {
+  (!isTRUE(all.equal(crs(ras1), targetCRS)) |
+     !isTRUE(all.equal(res(ras1), res(ras2))) |
+     !isTRUE(all.equal(extent(ras1), extent(ras2))))
 }
