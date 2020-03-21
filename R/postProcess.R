@@ -477,6 +477,31 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
   x
 }
 
+#' @export
+#' @keywords internal
+#' @rdname fixErrors
+fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
+                              useCache = getOption("reproducible.useCache", FALSE), ...) {
+  origin(x) <- roundTo6Dec(origin(x))
+  xmin(x) <- roundTo6Dec(xmin(x))
+  ymin(x) <- roundTo6Dec(ymin(x))
+  xmax(x) <- roundTo6Dec(xmax(x))
+  ymax(x) <- roundTo6Dec(ymax(x))
+  res(x) <- roundTo6Dec(res(x))
+  # if (!identical(origin(x), round(origin(x), .Machine$double.eps))) {
+  #   roundedOrigin <- round(origin(x),6)
+  #   if (identical(origin(x), roundedOrigin))
+  #     origin(x) <- roundedOrigin
+  # }
+  # roundedRes <- round(res(x),6)
+  # if (identical(res(x), roundedRes))
+  #   res(x) <- roundedRes
+  # roundedExtent <- round(extent(x),6)
+  # if (identical(extent(x), roundedExtent))
+  #   extent(x) <- roundedExtent
+  x
+}
+
 #' Fix \code{rgeos::gIsValid} failures in \code{SpatialPolygons}
 #'
 #' This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
