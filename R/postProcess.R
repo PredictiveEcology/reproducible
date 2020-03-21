@@ -1633,8 +1633,10 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           x <- fixErrors(x = x, objectName = objectName,
                          useCache = useCache, ...)
         } else {
-          message(cyan("  Skipping projectInputs; identical crs, res, extent, or no rasterToMatch"))
+          message(cyan("  Skipping projectInputs; identical crs, res, extent"))
         }
+      } else {
+        message(cyan("  Skipping projectInputs; no rasterToMatch"))
       }
       # may need to fix again
 
