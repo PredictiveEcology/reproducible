@@ -1626,7 +1626,11 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                                  targetCRS)
 
       browser(expr = exists("._postProcess.spatialobjects_4"))
-      if (differentRasters(x, rasterToMatch, targetCRS)) {
+      runIt <- if (is(x, "Raster") && !is.null(rasterToMatch))
+        differentRasters(x, rasterToMatch, targetCRS)
+      else
+        TRUE
+      if (runIt) {
         x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
                    rasterToMatch = rasterToMatch, useCache = useCache, ...)
         x <- fixErrors(x = x, objectName = objectName,
@@ -1722,6 +1726,7 @@ setMinMaxIfNeeded <- function(ras) {
 }
 
 differentRasters <- function(ras1, ras2, targetCRS) {
+
   (!isTRUE(all.equal(crs(ras1), targetCRS)) |
      !isTRUE(all.equal(res(ras1), res(ras2))) |
      !isTRUE(all.equal(extent(ras1), extent(ras2))))
