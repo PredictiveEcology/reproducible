@@ -1205,7 +1205,44 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         dataType(x) <- dots$datatype
       }
     } else {
-      xTmp <- do.call(writeRaster, args = c(x = x, filename = filename2, overwrite = overwrite, dots))
+      argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)
+      if (is(x, "RasterStack")) {
+        longerThanOne <- unlist(lapply(argsForWrite, function(x) length(x) > 1))
+        nLayers <- raster::nlayers(x)
+        if (length(argsForWrite$filename) == 1) {
+          argsForWrite <- lapply(argsForWrite, function(x) x[1])
+          xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
+          names(xTmp) <- names(x)
+          message("Object was a RasterStack; only one filename provided so returning a RasterBrick;")
+          message("  layer names will likely be wrong")
+
+        } else if (length(argsForWrite$filename) == nLayers) {
+          dups <- duplicated(argsForWrite$filename)
+          if (any(dups)) {
+            a <- argsForWrite$filename
+            out <- unlist(lapply(seq_along(a), function(ind) {
+              if (ind == 1)
+                a[[1]] <<- file.path(dirname(a[[1]]), nextNumericName(basename(a[[1]])))
+              else
+                a[[ind]] <<- file.path(dirname(a[[ind]]), basename(nextNumericName(basename(a[[ind - 1]]))))
+            }))
+            argsForWrite$filename <- out
+          }
+          argsForWrite[!longerThanOne] <- lapply(argsForWrite[!longerThanOne], function(x) rep(x, nLayers))
+          xTmp <- lapply(seq_len(nLayers), function(ind) {
+            inside <- do.call(writeRaster, args = c(x = x[[ind]], lapply(argsForWrite, function(y) y[ind])))
+            names(inside) <- names(x)[ind]
+            inside
+          })
+          xTmp <- raster::stack(xTmp)
+          # a <- Map(f = writeRaster, argsForWrite, MoreArgs = list(x = x))
+        } else {
+          stop("filename2 must be length 1 or length nlayers(...)")
+        }
+
+      } else {
+        xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
+      }
       #Before changing to do.call, dots were not being added.
       # This is a bug in writeRaster was spotted with crs of xTmp became
       # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
