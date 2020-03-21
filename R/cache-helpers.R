@@ -634,10 +634,12 @@ setMethod(
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {
-    if (isBrick)
-      rep(inMemory(obj), raster::nlayers(obj))
-    else
-      inMemory(obj)
+    im <- inMemory(obj)
+    if (isBrick) {
+      if (isTRUE(im))
+        im <- rep(im, raster::nlayers(obj))
+    }
+    im
   } else {
     sapply(obj@layers, inMemory)
   }
