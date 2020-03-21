@@ -1561,7 +1561,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     useBuffer <- FALSE
     bufferSA <- FALSE
 
-    if (is(x, "RasterLayer")) {
+    if (is(x, "Raster")) {
       #if all CRS are projected, then check if buffer is necessary
       projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
       projections <- na.omit(projections)
