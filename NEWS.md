@@ -15,6 +15,8 @@ version 1.0.0.9000
 * Cache now treats file-backed Rasters as though they had a relative path instead of their absolute path.
   This means that Cache directories can be copied from one location to another and the file-backed `Raster*` will have their filenames updated on the fly during a Cache recovery.
   User doesn't need to do anything.
+* `postProcess` now will perform simple tests and skip `cropInputs` and `projectInputs` with a message if it can, rather than using `Cache` to "skip". This should speed up `postProcess` in many cases.
+* messaging with `Cache` has change. Now, `cacheId` is shown in all cases, making it easier to identify specific items in the cache.
 * Automatically cleanup temporary (intermediate) raster files (with #110).
 
 ## Dependency changes
