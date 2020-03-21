@@ -362,10 +362,10 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         }
       }
     }
-  }
-  if (isStack) {
-    if (!is(x, "RasterStack"))
-      x <- raster::stack(x)
+    if (isStack) {
+      if (!is(x, "RasterStack"))
+        x <- raster::stack(x)
+    }
   }
   return(x)
 }
