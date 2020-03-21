@@ -1626,14 +1626,15 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                                  targetCRS)
 
       browser(expr = exists("._postProcess.spatialobjects_4"))
-      if (!is.null(rasterToMatch) &
-          differentRasters(x, rasterToMatch, targetCRS)) {
-        x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
-                   rasterToMatch = rasterToMatch, useCache = useCache, ...)
-        x <- fixErrors(x = x, objectName = objectName,
-                       useCache = useCache, ...)
-      } else {
-        message(cyan("  Skipping projectInputs; identical crs, res, extent, or no rasterToMatch"))
+      if (!is.null(rasterToMatch)) {
+        if (differentRasters(x, rasterToMatch, targetCRS)) {
+          x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
+                     rasterToMatch = rasterToMatch, useCache = useCache, ...)
+          x <- fixErrors(x = x, objectName = objectName,
+                         useCache = useCache, ...)
+        } else {
+          message(cyan("  Skipping projectInputs; identical crs, res, extent, or no rasterToMatch"))
+        }
       }
       # may need to fix again
 
