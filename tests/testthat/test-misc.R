@@ -268,3 +268,25 @@ test_that("Filenames for environment", {
     sort(Filenames(b))))
 
 })
+
+test_that("test miscellaneous fns", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  x1 <- append(as.list(c(0, 1, -1, 10^(-(1:10)))), as.list(c(0L, 1L)))
+  a <- lapply(x1, roundTo6Dec)
+
+  # Keeps class
+  expect_true(all(unlist(lapply(seq_along(x1), function(y) identical(class(x1[[y]]), class(a[[y]]))))))
+  whBig <- which(x1 >= 10e-7)
+  expect_true(identical(x1[whBig], a[whBig]))
+  whSmall <- which(abs(unlist(x1)) < 10e-7 & unlist(x1) != 0)
+  expect_false(all(unlist(lapply(whSmall, function(ws) identical(x1[[ws]], a[[ws]])))))
+  whWhole <- which(unlist(x1) %% 1 != unlist(x1))
+  expect_true(all(unlist(lapply(whWhole, function(ws) identical(x1[[ws]], a[[ws]])))))
+  whZero <- which(unlist(x1) == 0 )
+  expect_true(all(unlist(lapply(whZero, function(ws) identical(x1[[ws]], a[[ws]])))))
+
+})
