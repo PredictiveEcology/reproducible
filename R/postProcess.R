@@ -1105,9 +1105,13 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
         }
         .prefix(filename1, prefix)
       } else {
-        if (isAbsolutePath(filename2)) {
+        iap <- isAbsolutePath(filename2)
+        if (all(iap)) {
           filename2
         } else {
+          if (any(iap)) {
+            stop("filename2 must be all relative or all absolute paths")
+          }
           if (!is.null(destinationPath)) {
             file.path(destinationPath, basename(filename2))
           } else {
