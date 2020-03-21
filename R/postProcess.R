@@ -1726,3 +1726,15 @@ differentRasters <- function(ras1, ras2, targetCRS) {
      !isTRUE(all.equal(res(ras1), res(ras2))) |
      !isTRUE(all.equal(extent(ras1), extent(ras2))))
 }
+
+roundTo6Dec <- function(x) {
+  # check if integer
+  if (all(x %% 1 != 0)) {
+    # First test whether they are remotely close to each other
+    rounded <- round(x,6)
+    if (!identical(x, rounded)) {
+      x <- rounded
+    }
+  }
+  x
+}
