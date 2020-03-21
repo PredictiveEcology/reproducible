@@ -287,6 +287,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
       }
     }
 
+    isStack <- is(x, "RasterStack") # will return a RasterBrick -- keep track of this
     browser(expr = exists("._cropInputs_2"))
     if (!is.null(cropExtent)) {
       # crop it
@@ -361,6 +362,10 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
         }
       }
     }
+  }
+  if (isStack) {
+    if (!is(x, "RasterStack"))
+      x <- raster::stack(x)
   }
   return(x)
 }
