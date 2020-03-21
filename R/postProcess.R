@@ -247,7 +247,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       ...) {
   browser(expr = exists("._cropInputs_1"))
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
-  if (useExtentToMatch) {
+  if (!useExtentToMatch) {
     extentToMatch <- NULL
     extentCRS <- NULL
   }
