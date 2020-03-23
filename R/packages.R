@@ -1012,16 +1012,25 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     minVersions <- gsub(".*\\((>*=*)(.*)\\)", "\\2", pkgsAllMinVersion)
     inequality <- gsub(".*\\((>*=*)(.*)\\)", "\\1", pkgsAllMinVersion)
     installedVersions <- pkgsAllMinVersion
+    trimmedPackages <- extractPkgGitHub(names(installedVersions))
+    if (!all(is.na(trimmedPackages)))
+      names(installedVersions)[!is.na(trimmedPackages)] <- trimmedPackages[!is.na(trimmedPackages)]
     installed <- names(installedVersions) %in% aa[, "Package"]
-    installedVersions[!installed] <- NA_character_
-    installedVersions[installed] <- aa[aa[, "Package"] %in% names(installedVersions), "Version"]
-    if (length(installedVersions) > 1) installedVersions <- installedVersions[names(pkgsAllMinVersion)]
+    if (!all(installed))
+      installedVersions[!installed] <- NA_character_
+    installedVersions[installed] <- aa[aa[, "Package"] %in% names(installedVersions), "Version"][names(installedVersions)[installed]]
+    # if (length(installedVersions) > 1) installedVersions <- installedVersions[names(pkgsAllMinVersion)]
     seqIV <- seq(installedVersions)
     names(seqIV) <- names(pkgsAllMinVersion)
     correctVersions <- unlist(lapply(seqIV, function(ind) {
       eval(parse(text = paste0(compareVersion(installedVersions[ind], minVersions[ind]),
                                " ", inequality[ind]," 0")))
     }))
+
+    areGH <- names(correctVersions) %in% trimVersionNumber(githubPkgs)
+    correctVersionsAreGH <- if (any(areGH)) correctVersions[areGH] else character()
+    if (length(correctVersionsAreGH))
+      correctVersions <- correctVersions[!areGH]
     if (any(!correctVersions)) {
       apm <- available.packagesMem()
       availableVersions <- apm[apm[, "Package"] %in% names(pkgsAllMinVersion),"Version"]
@@ -1081,7 +1090,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       }
 
     }
-
+    if (any(areGH)) {
+      upgrades <- c(upgrades, names(correctVersionsAreGH)[!correctVersionsAreGH])
+    }
     upgrades <- trimVersionNumber(upgrades)
     packages <- setdiff(packages, names(pkgsAllMinVersion))
   }
@@ -1106,7 +1117,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   if (length(needInstall)) {
     internetExists <- internetExists()
     githubPkgsTrimmed <- trimVersionNumber(githubPkgs) #gsub(.grepVersionNumber, "", githubPkgs)
-    gitPkgs <- githubPkgsTrimmed[githubPkgNames %in% needInstall]
+    gitPkgs <- githubPkgsTrimmed[githubPkgNames %in% na.omit(extractPkgGitHub(needInstall))]
     if (length(gitPkgs)) {
       oldLibPaths <- .libPaths()
       .libPaths(unique(c(libPath, oldLibPaths)))
@@ -1125,9 +1136,10 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 
         do.call(install_github, args)
 
-        if (length(githubPkgNameWithMinVersion)) {
+        if (length(gitPkgs)) {
           aa <- lapply(libPath, installed.packages)
           aa <- do.call(rbind, aa)
+          githubpkgsWithMinVersion <- githubpkgsWithMinVersion[trimVersionNumber(githubpkgsWithMinVersion) %in% gitPkgs]
           minVersions <- gsub(".*\\((>*=*)(.*)\\)", "\\2", githubpkgsWithMinVersion)
           inequality <- gsub(".*\\((>*=*)(.*)\\)", "\\1", githubpkgsWithMinVersion)
           installedVersions <- aa[aa[, "Package"] %in% extractPkgGitHub(gitPkgs),"Version"]
@@ -1137,9 +1149,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
                                      " ", inequality[ind]," 0")))
           }))
           if (any(!correctVersions))
-            stop("Failed to find sufficient version(s) of\n  - ", paste(gitPkgs, collapse = "\n  - "))
-
-
+            stop("Failed to find sufficient version(s) of\n  - ",
+                 paste(githubpkgsWithMinVersion[!correctVersions], collapse = "\n"),
+                 "\non GitHub (just installed ",installedVersions,"); it looks like the ",
+                 "HEAD of the indicated branch have the correct minimum version?",
+                 call. = FALSE)
         }
 
         browser(expr = exists("._installPackages_3"))
