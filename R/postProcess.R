@@ -480,6 +480,7 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #' @export
 #' @keywords internal
 #' @rdname fixErrors
+#' @importFrom raster origin origin<- xmax<- xmin<- ymax<- ymin<-
 fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
                               useCache = getOption("reproducible.useCache", FALSE), ...) {
   origin(x) <- roundTo6Dec(origin(x))
