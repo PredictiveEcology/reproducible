@@ -177,7 +177,6 @@ test_that("test file-backed raster caching", {
       expect_true(inMemory(bb))
 
       bb <- Cache(randomPolyToMemory, cacheRepo = tmpdir)
-      browser()
       expect_true(NROW(showCache(tmpdir)[!tagKey %in% .ignoreTagKeys()]) == .cacheNumDefaultTags())
 
       # Test that factors are saved correctly
@@ -318,7 +317,7 @@ test_that("test 'quick' argument", {
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   })
-  expect_true(any(grepl("loading cached result from previous quickFun call, adding to memoised copy", mess1 )))
+  expect_true(any(grepl("loaded cached result from previous quickFun call, adding to memoised copy", mess1 )))
   expect_silent({
     out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = FALSE)
   })
@@ -331,11 +330,11 @@ test_that("test 'quick' argument", {
   out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
   r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
-  mess1 <- capture_message({
+  mess1 <- capture_messages({
     out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   })
-  expect_true(grepl("loading cached result from previous quickFun call, adding to memoised copy",
-                    mess1))
+  expect_true(sum(grepl("loaded cached result from previous quickFun call, adding to memoised copy",
+                    mess1)) == 1)
 
   #mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE) })
   expect_silent({
@@ -492,10 +491,9 @@ test_that("test asPath", {
 
   expect_true(length(a1) == 0)
   expect_true(length(a2) == 0)
-  expect_true(grepl("loading cached result", a3))
+  expect_true(sum(grepl("loaded cached result", a3)) == 1)
 
   unlink("filename.RData")
-  browser()
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
   a1 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
                                quick = TRUE, cacheRepo = tmpdir))
@@ -504,8 +502,8 @@ test_that("test asPath", {
   a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
-  expect_true(grepl("loading cached result", a2))
-  expect_true(grepl("loading memoised result from previous saveRDS call", a3))
+  expect_true(sum(grepl("loaded cached result", a2)) == 1)
+  expect_true(sum(grepl("loaded memoised result from previous saveRDS call", a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -516,8 +514,8 @@ test_that("test asPath", {
   a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
-  expect_true(grepl("loading cached result", a2))
-  expect_true(grepl("loading memoised result from previous saveRDS call", a3))
+  expect_true(sum(grepl("loaded cached result", a2)) == 1)
+  expect_true(sum(grepl("loaded memoised result from previous saveRDS call", a3)) == 1)
 
   # setwd(origDir)
   # unlink(tmpdir, recursive = TRUE)
@@ -641,8 +639,8 @@ test_that("test Cache argument inheritance to inner functions", {
 
   # does cacheRepo propagate to outer ones -- no message about cacheRepo being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out) == 1)
-  expect_true(all(grepl("loading cached result from previous outer call", out)))
+  expect_true(length(out) == 2)
+  expect_true(sum(grepl("loaded cached result from previous outer call", out)) == 1)
 
   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
   outer <- function(n) {
@@ -650,11 +648,11 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(rnorm, n)
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out) == 1)
-  msgGrep <- paste("loading cached result from previous rnorm call",
+  expect_true(length(out) == 2)
+  msgGrep <- paste("loaded cached result from previous rnorm call",
                    "There is no similar item in the cacheRepo",
                    sep = "|")
-  expect_true(all(grepl(msgGrep, out)))
+  expect_true(sum(grepl(msgGrep, out)) == 1)
 
   # Override with explicit argument
   outer <- function(n) {
@@ -663,7 +661,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
   expect_true(length(out) == 0)
-  expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
+  # expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
 
   # change the outer function, so no cache on that, & have notOlderThan on rnorm,
   #    so no Cache on that
@@ -673,11 +671,11 @@ test_that("test Cache argument inheritance to inner functions", {
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
   expect_true(length(out) == 0)
-  expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
+  # expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(length(out) == 1)
-  expect_true(all(grepl("loading cached result from previous outer call", out)))
+  expect_true(length(out) == 2)
+  expect_true(sum(grepl("loaded cached result from previous outer call", out)) == 1)
 
   # doubly nested
   inner <- function(mean) {
@@ -688,18 +686,18 @@ test_that("test Cache argument inheritance to inner functions", {
     Cache(inner, 0.1)
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
-  expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
-  #expect_true(all(grepl("loading cached result from previous outer call", out)))
+  #expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
+  #expect_true(all(grepl("loaded cached result from previous outer call", out)))
 
   outer <- function(n) {
     Cache(inner, 0.1, notOlderThan = Sys.time() - 1e4)
   }
 
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste("loading cached result from previous inner call",
+  msgGrep <- paste("loaded cached result from previous inner call",
                    "There is no similar item in the cacheRepo",
                    sep = "|")
-  expect_true(all(grepl(msgGrep, out)))
+  expect_true(sum(grepl(msgGrep, out)) == 1)
 
   outer <- function(n) {
     Cache(inner, 0.1, notOlderThan = Sys.time())
@@ -710,10 +708,10 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste("loading cached result from previous rnorm call",
+  msgGrep <- paste("loaded cached result from previous rnorm call",
                    "There is no similar item in the cacheRepo",
                    sep = "|")
-  expect_true(all(grepl(msgGrep, out)))
+  expect_true(sum(grepl(msgGrep, out)) == 1)
 
   # Check userTags -- all items have it
   clearCache(tmpdir, ask = FALSE)
@@ -1027,7 +1025,7 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1072,8 +1070,8 @@ test_that("test file link with duplicate Cache", {
   mess1 <- capture_messages(b <- Cache(sam, N))
   set.seed(123)
   mess2 <- capture_messages(d <- Cache(sample, N))
-  expect_true(any(grepl("loading cached", mess2)))
-  expect_true(any(grepl("loading cached", mess1)))
+  expect_true(any(grepl("loaded cached", mess2)))
+  expect_true(any(grepl("loaded cached", mess1)))
   out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out1, "try-error"))
     fs1 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out1))
