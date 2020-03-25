@@ -317,7 +317,7 @@ test_that("test 'quick' argument", {
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   })
-  expect_true(any(grepl("loaded cached result from previous quickFun call, adding to memoised copy", mess1 )))
+  expect_true(any(grepl(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"), mess1 )))
   expect_silent({
     out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = FALSE)
   })
@@ -333,7 +333,7 @@ test_that("test 'quick' argument", {
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   })
-  expect_true(sum(grepl("loaded cached result from previous quickFun call, adding to memoised copy",
+  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"),
                     mess1)) == 1)
 
   #mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE) })
@@ -503,7 +503,7 @@ test_that("test asPath", {
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(sum(grepl("loaded cached result", a2)) == 1)
-  expect_true(sum(grepl("loaded memoised result from previous saveRDS call", a3)) == 1)
+  expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -515,7 +515,7 @@ test_that("test asPath", {
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
   expect_true(sum(grepl("loaded cached result", a2)) == 1)
-  expect_true(sum(grepl("loaded memoised result from previous saveRDS call", a3)) == 1)
+  expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
 
   # setwd(origDir)
   # unlink(tmpdir, recursive = TRUE)
@@ -640,7 +640,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # does cacheRepo propagate to outer ones -- no message about cacheRepo being tempdir()
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl("loaded cached result from previous outer call", out)) == 1)
+  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "outer call"), out)) == 1)
 
   # check that the rnorm inside "outer" returns cached value even if outer "outer" function is changed
   outer <- function(n) {
@@ -649,7 +649,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
   expect_true(length(out) == 2)
-  msgGrep <- paste("loaded cached result from previous rnorm call",
+  msgGrep <- paste(paste(.loadedCacheResultMsg, "rnorm call"),
                    "There is no similar item in the cacheRepo",
                    sep = "|")
   expect_true(sum(grepl(msgGrep, out)) == 1)
@@ -675,7 +675,7 @@ test_that("test Cache argument inheritance to inner functions", {
   # Second time will get a cache on outer
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
   expect_true(length(out) == 2)
-  expect_true(sum(grepl("loaded cached result from previous outer call", out)) == 1)
+  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "outer call"), out)) == 1)
 
   # doubly nested
   inner <- function(mean) {
@@ -687,14 +687,14 @@ test_that("test Cache argument inheritance to inner functions", {
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
   #expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
-  #expect_true(all(grepl("loaded cached result from previous outer call", out)))
+  #expect_true(all(grepl(paste(.loadedCacheResultMsg, "outer call"), out)))
 
   outer <- function(n) {
     Cache(inner, 0.1, notOlderThan = Sys.time() - 1e4)
   }
 
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste("loaded cached result from previous inner call",
+  msgGrep <- paste(paste(.loadedCacheResultMsg, "inner call"),
                    "There is no similar item in the cacheRepo",
                    sep = "|")
   expect_true(sum(grepl(msgGrep, out)) == 1)
@@ -708,7 +708,7 @@ test_that("test Cache argument inheritance to inner functions", {
   }
 
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir, notOlderThan = Sys.time()))
-  msgGrep <- paste("loaded cached result from previous rnorm call",
+  msgGrep <- paste(paste(.loadedCacheResultMsg, "rnorm call"),
                    "There is no similar item in the cacheRepo",
                    sep = "|")
   expect_true(sum(grepl(msgGrep, out)) == 1)

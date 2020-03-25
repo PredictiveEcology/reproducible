@@ -57,14 +57,12 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName, fromMemoise) {
     if (isTRUE(fromMemoise)) {
-      message(crayon::blue("     loaded memoised result from previous ", functionName, " call...",
-                           sep = ""))
+      message(crayon::blue(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName)))
     } else if (!is.na(fromMemoise)) {
-      message(crayon::blue("     loaded cached result from previous ", functionName, " call, ",
+      message(crayon::blue(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
                            "adding to memoised copy...", sep = ""))
     } else {
-      message(crayon::blue("     loaded cached result from previous ", functionName, " call...",
-                           sep = ""))
+      message(crayon::blue(.loadedCacheMsg(.loadedCacheResultMsg, functionName)))
     }
 })
 
@@ -1180,9 +1178,14 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
       if (!identical(attr(obj, "function"), atts[["function"]]))
         stop("There is an unknown error 04")
     }
-    # attr(obj, "function") <- attr(output, "function")
-
-    #output <- obj
   }
   obj
+}
+
+.loadedCacheResultMsg <- "loaded cached result from previous"
+
+.loadedMemoisedResultMsg <- "loaded memoised result from previous"
+
+.loadedCacheMsg <- function(root, functionName) {
+  paste0("     ", root," ", functionName, " call, ")
 }
