@@ -1,5 +1,13 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c(".SD", "instPkgs"))
+  utils::globalVariables(c(".SD", "instPkgs",
+                           "..colsToKeep", "Account", "availableOnCRAN",
+                           "availableOnGitHub", "AvailableVersion", "Branch",
+                           "compareVersionAvail", "compareVersionAvailGH",
+                           "correctVersion", "correctVersionAvail",
+                           "correctVersionAvailGH", "fullGit",
+                           "githubPkgName", "inequality", "isGH",
+                           "minVersion", "Package", "Repo", "RepoWBranch",
+                           "Version", "versionOnGH"))
 }
 
 #' Repeatability-safe install and load packages, optionally with specific versions
@@ -323,11 +331,12 @@ installedVersions <- function(packages, libPath) {
   if (!file.exists(desc_path)) {
     return(NA)
   } else {
-    lines <- readLines(desc_path);
-    Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
-    on.exit(Sys.setlocale(locale = ""))
-    vers_line <- lines[grep("^Version: *", lines)] # nolint
-    vers <- gsub("Version: ", "", vers_line)
+    vers <- DESCRIPTIONFileVersion(desc_path)
+    # lines <- readLines(desc_path);
+    # Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
+    # on.exit(Sys.setlocale(locale = ""))
+    # vers_line <- lines[grep("^Version: *", lines)] # nolint
+    # vers <- gsub("Version: ", "", vers_line)
     vers <- list(vers)
     names(vers) <- packages
     return(vers)
@@ -1102,9 +1111,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
               httr::GET(url, ua, #httr::progress(),
                         httr::write_disk(destFile, overwrite = TRUE)) ## TODO: overwrite?
             )
-            desc <- desc::description$new(destFile)
-            a <- as.character(desc$get_version())
-            a
+            DESCRIPTIONFileVersion(destFile)
           }
         }, by = "Package"]
 
@@ -1495,3 +1502,11 @@ grepExtractPkgs <- ".*\\((>*=*)(.*)\\)"
 .compareVersionV <- Vectorize(compareVersion)
 .evalV <- Vectorize(eval, vectorize.args = "expr")
 .parseV <- Vectorize(parse, vectorize.args = "text")
+
+DESCRIPTIONFileVersion <- function(file) {
+  lines <- readLines(file);
+  Sys.setlocale(locale = "C") # required to deal with non English characters in Author names
+  on.exit(Sys.setlocale(locale = ""))
+  vers_line <- lines[grep("^Version: *", lines)] # nolint
+  gsub("Version: ", "", vers_line)
+}
