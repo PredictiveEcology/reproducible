@@ -222,7 +222,8 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       )
       if (length(warns) > 0 || length(warns2)) {
         warning(unique(warns, warns2))
-      } else if (any(grepl("Failed with error", mess))) {
+      }
+      if (any(grepl("Failed with error", mess))) {
         message(paste(mess, collapse = "\n"))
       } else {
         message("Simultaneous package versions being used.",
@@ -1009,7 +1010,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   if (length(pkgsAllMinVersion)) {
     aa <- lapply(libPath, installed.packages)
     aa <- do.call(rbind, aa)
-    aa <- as.data.table(aa[, c("Package", "LibPath", "Version")])
+    aa <- as.data.table(aa[, c("Package", "LibPath", "Version"), drop = FALSE])
 
     dt <- as.data.table(pkgsAllMinVersion, keep.rownames = "Package")
     dt[, minVersion := gsub(grepExtractPkgs, "\\2", pkgsAllMinVersion)]
@@ -1083,49 +1084,60 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       #                  possiblyOnGitHub = areGitHub1)
       #df1 <- rbind(data.frame(row.names = "", package = "all", currentOnCRAN = "",
       #                 availableOnCRAN = "", stringsAsFactors = FALSE), df1)
-
-      notCorrectVersions[isGH == TRUE,
-        url := file.path("https://raw.githubusercontent.com", Account,
-                  Repo, Branch, "DESCRIPTION", fsep = "/")
-      ]
-      ua <- httr::user_agent(getOption("reproducible.useragent"))
-      notCorrectVersions[isGH == TRUE, {
-        versionOnGH := {
-          destFile <- tempfile()
-          suppressWarnings(
-            httr::GET(url, ua, #httr::progress(),
-                      httr::write_disk(destFile, overwrite = TRUE)) ## TODO: overwrite?
-          )
-          desc <- desc::description$new(destFile)
-          a <- as.character(desc$get_version())
-          a
-        }
-      }, by = "Package"]
-
-      notCorrectVersions[, compareVersionAvailGH := .compareVersionV(versionOnGH, minVersion)]
-      notCorrectVersions[, correctVersionAvailGH :=
-                           .evalV(.parseV(text = paste(compareVersionAvailGH, inequality, "0")))]
-
       colsToKeep <- c("Package", "Version", "minVersion",
-                      "AvailableVersion", "correctVersionAvail", "correctVersionAvailGH")
+                      "AvailableVersion", "correctVersionAvail")
+      newColNames <- c("package", "currentInstalled", "neededVersion",
+                           "currentOnCRAN", "availableOnCRAN")
+
+      if (any(notCorrectVersions$isGH)) {
+        notCorrectVersions[isGH == TRUE,
+          url := file.path("https://raw.githubusercontent.com", Account,
+                    Repo, Branch, "DESCRIPTION", fsep = "/")
+        ]
+        ua <- httr::user_agent(getOption("reproducible.useragent"))
+        notCorrectVersions[isGH == TRUE, {
+          versionOnGH := {
+            destFile <- tempfile()
+            suppressWarnings(
+              httr::GET(url, ua, #httr::progress(),
+                        httr::write_disk(destFile, overwrite = TRUE)) ## TODO: overwrite?
+            )
+            desc <- desc::description$new(destFile)
+            a <- as.character(desc$get_version())
+            a
+          }
+        }, by = "Package"]
+
+        notCorrectVersions[, compareVersionAvailGH := .compareVersionV(versionOnGH, minVersion)]
+        notCorrectVersions[, correctVersionAvailGH :=
+                             .evalV(.parseV(text = paste(compareVersionAvailGH, inequality, "0")))]
+        colsToKeep <- c(colsToKeep, "correctVersionAvailGH")
+        newColNames <- c(newColNames, "availableOnGitHub")
+
+      }
+
       ncv <- Copy(notCorrectVersions[, ..colsToKeep])
 
       setnames(ncv,
-               old = c("Package", "Version", "minVersion",
-                       "AvailableVersion", "correctVersionAvail", "correctVersionAvailGH"),
-               new = c("package", "currentInstalled", "neededVersion",
-                       "currentOnCRAN", "availableOnCRAN", "availableOnGitHub") )
+               old = colsToKeep,
+               new = newColNames )
       message("The following packages are installed, but not sufficiently recent version:\n")
       message(paste0(capture.output(ncv), collapse = "\n"))
 
-      if (!any(ncv$availableOnCRAN & ncv$availableOnGitHub)) {
-        stop("Please manually install packages that are not available on CRAN or GitHub", call. = FALSE)
+      test <- ncv$availableOnCRAN
+      vals <- c("All", "CRAN packages only", "None", ncv[availableOnCRAN == TRUE]$package)
+
+      onGit <- grepl("availableOnGH", colnames(ncv))
+      if (any(onGit)) {
+        test <- any(test) & any(ncv$availableOnGitHub)
+        vals <- c(vals, ncv[availableOnGitHub == TRUE]$package)
       }
-      df2 <- data.frame( row.names = NULL, stringsAsFactors = FALSE,
-                 "Upgrade" = c("All", "CRAN packages only", "None", ncv[availableOnCRAN == TRUE]$package,
-                               ncv[availableOnGitHub == TRUE]$package))
+      df2 <- data.frame( row.names = NULL, stringsAsFactors = FALSE, "Upgrade" = vals)
       row.names(df2) <- paste0(seq(NROW(df2)), ":")
       message(paste0(capture.output(df2), collapse = "\n"))
+      if (!all(test)) {
+        stop("Please manually install packages that are not available on CRAN or GitHub", call. = FALSE)
+      }
       out <- if (isInteractive()) {
         as.numeric(.readline("Pick a number to upgrade: "))
       } else {
@@ -1137,7 +1149,10 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         message("Not installing/upgrading packages; this may cause undesired effects")
       } else {
         upgrades <- df2[-(1:3),]
-        upgradesGit <- ncv[availableOnGitHub == TRUE]$package
+        upgradesGit <- if (any(onGit))
+          ncv[availableOnGitHub == TRUE]$package
+        else
+          character()
         if (identical(out, 2)) {
           upgrades <- upgrades[!upgrades %in% upgradesGit]
         } else if (out > 3) {
@@ -1150,7 +1165,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       upgrades <- c(upgrades, areGH)
     }
     upgrades <- trimVersionNumber(upgrades)
-    packages <- setdiff(packages, names(pkgsAllMinVersion))
+    packages <- c(packages, setdiff(packages, names(pkgsAllMinVersion)))
   }
 
   #forget(pkgDep)
@@ -1173,7 +1188,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   if (length(needInstall)) {
     internetExists <- internetExists()
     githubPkgsTrimmed <- trimVersionNumber(githubPkgs) #gsub(.grepVersionNumber, "", githubPkgs)
-    gitPkgs <- githubPkgsTrimmed[githubPkgNames %in% na.omit(extractPkgGitHub(needInstall))]
+    gitPkgsToInstall <- extractPkgGitHub(githubPkgsTrimmed)[match(extractPkgGitHub(githubPkgsTrimmed),
+                                                                  needInstall)]
+    gitPkgs <- githubPkgsTrimmed[githubPkgNames %in% na.omit(gitPkgsToInstall)]
     if (length(gitPkgs)) {
       oldLibPaths <- .libPaths()
       .libPaths(unique(c(libPath, oldLibPaths)))
@@ -1191,26 +1208,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         args <- args[!duplicated(names(args))]
 
         do.call(install_github, args)
-
-        if (length(gitPkgs)) {
-          aa <- lapply(libPath, installed.packages)
-          aa <- do.call(rbind, aa)
-          githubpkgsWithMinVersion <- githubpkgsWithMinVersion[trimVersionNumber(githubpkgsWithMinVersion) %in% gitPkgs]
-          minVersions <- gsub(grepExtractPkgs, "\\2", githubpkgsWithMinVersion)
-          inequality <- gsub(grepExtractPkgs, "\\1", githubpkgsWithMinVersion)
-          installedVersions <- aa[aa[, "Package"] %in% extractPkgGitHub(gitPkgs),"Version"]
-          seqIV <- seq(installedVersions)
-          correctVersions <- unlist(lapply(seqIV, function(ind) {
-            eval(parse(text = paste0(compareVersion(installedVersions[ind], minVersions[ind]),
-                                     " ", inequality[ind]," 0")))
-          }))
-          if (any(!correctVersions))
-            stop("Failed to find sufficient version(s) of\n  - ",
-                 paste(githubpkgsWithMinVersion[!correctVersions], collapse = "\n"),
-                 "\non GitHub (just installed ",installedVersions,"); it looks like the ",
-                 "HEAD of the indicated branch have the correct minimum version?",
-                 call. = FALSE)
-        }
 
         browser(expr = exists("._installPackages_3"))
 
