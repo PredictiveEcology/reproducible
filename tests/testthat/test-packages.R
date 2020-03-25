@@ -301,6 +301,48 @@ test_that("package-related functions work", {
   expect_true(sum(grepl("Please manually", err)) == 0)
   expect_true(all(b))
 
+  # Multiple conflicting version numbers, and with NO version number
+  b <- Require(c("fastdigest (>=0.0.0.8)", "fastdigest (>=0.0.0.9)", "fastdigest", "quickPlot", "testthat"))
+  expect_true(all(b))
+
+  mess <- capture_messages(
+    err <- capture_error(
+      b <- Require(c("fastdigest (>=1000.0.0.8)", "fastdigest (>=0.0.0.9)", "fastdigest",
+                     "quickPlot", "testthat"))
+    ))
+  expect_true(all(b))
+  expect_true(sum(grepl("following packages", mess)) == 1)
+  expect_true(sum(grepl("Please manually", err)) == 1)
+
+  # Same as above for GitHub packages
+  mess <- capture_messages(
+    err <- capture_error(
+      b <- Require(c("fastdigest (>=0.0.0.9)",
+                     "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.9)",
+                     "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.10)",
+                     "PredictiveEcology/reproducible@development (>= 1110.0.0.9)",
+                     "achubaty/amc@development (>=0.0.0.9)",
+                     "data.table (>=0.0.0.9)",
+                     paste0("digest (>=", packageVersion("digest"),")"),
+                     "PredictiveEcology/LandR (>= 0.0.0.9)"))))
+  expect_true(sum(grepl("following packages", mess)) == 1)
+  expect_true(sum(grepl("Please manually", err)) == 1)
+
+  mess <- capture_messages(
+    err <- capture_error(
+      b <- Require(c("fastdigest (>=0.0.0.9)",
+                     "PredictiveEcology/reproducible@development (>= 0.0.0.9)",
+                     "PredictiveEcology/reproducible@development (>= 0.0.0.10)",
+                     "PredictiveEcology/reproducible@development (>= 0.0.0.11)",
+                     "achubaty/amc@development (>=0.0.0.9)",
+                     "data.table (>=0.0.0.9)",
+                     paste0("digest (>=", packageVersion("digest"),")"),
+                     "PredictiveEcology/LandR (>= 0.0.0.9)"))))
+  expect_true(all(b))
+  expect_true(sum(grepl("following packages", mess)) == 0)
+  expect_true(sum(grepl("Please manually", err)) == 0)
+
+
   testthat::with_mock(
     "isInteractive" = function() {
       FALSE

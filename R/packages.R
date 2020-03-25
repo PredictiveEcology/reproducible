@@ -214,9 +214,11 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
 
     # Actual package loading
     browser(expr = exists("._Require_3"))
+    packages <- rev(names(pkgDepTopoSort(trimVersionNumber(packages), reverse = TRUE, returnFull = FALSE)))
+    packages <- unique(packages)
     warns <- capture_warnings({
       mess <- capture.output(type = "message", {
-        packagesLoaded <- unlist(lapply(trimVersionNumber(packages), function(p) {
+        packagesLoaded <- unlist(lapply(packages, function(p) {
           try(require(p, character.only = TRUE))
         }))
       })
@@ -224,7 +226,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
 
     if (any(!packagesLoaded)) {
       warns2 <- capture_warnings(
-        packagesLoaded2 <- unlist(lapply(trimVersionNumber(packages)[!packagesLoaded], function(p) {
+        packagesLoaded2 <- unlist(lapply(packages[!packagesLoaded], function(p) {
           try(require(p, character.only = TRUE, quietly = TRUE))
         }))
       )
@@ -1021,6 +1023,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   pkgsAllTypes <- c(packages, githubPkgNameWithMinVersion)
   names(pkgsAllTypes) <- pkgsAllTypes
 
+  # trim packages to contain only ones that are uniquely NOT min version numbered
+  packages <- setdiff(packages, names(pkgsAllMinVersion))
+
   upgrades <- character()
   browser(expr = exists("._installPackages_2"))
   if (length(pkgsAllMinVersion)) {
@@ -1031,6 +1036,11 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     dt <- as.data.table(pkgsAllMinVersion, keep.rownames = "Package")
     dt[, minVersion := gsub(grepExtractPkgs, "\\2", pkgsAllMinVersion)]
     dt[, inequality := gsub(grepExtractPkgs, "\\1", pkgsAllMinVersion)]
+
+    # any duplicates with different minimum version number to be dealt with here
+    dt <- dt[dt[, list(minVersion = max(minVersion)), by = "Package"],
+             on = c("Package", "minVersion")]
+
     dt[ , githubPkgName := extractPkgGitHub(Package)]
     dt[, isGH := !is.na(githubPkgName)]
     dt[isGH == TRUE, fullGit := trimVersionNumber(Package)]
