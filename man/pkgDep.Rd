@@ -3,6 +3,7 @@
 \name{pkgDep}
 \alias{pkgDep}
 \alias{pkgDep2}
+\alias{pkgDepTopoSort}
 \title{Determine package dependencies, first looking at local filesystem}
 \usage{
 pkgDep(
@@ -13,6 +14,7 @@ pkgDep(
   imports = TRUE,
   suggests = FALSE,
   linkingTo = TRUE,
+  topoSort = FALSE,
   repos = getOption("repos"),
   refresh = FALSE,
   verbose = getOption("reproducible.verbose")
@@ -29,6 +31,15 @@ pkgDep2(
   refresh = FALSE,
   verbose = getOption("reproducible.verbose"),
   sorted = TRUE
+)
+
+pkgDepTopoSort(
+  pkgs,
+  deps,
+  reverse = FALSE,
+  topoSort = TRUE,
+  useAllInSearch = FALSE,
+  returnFull = TRUE
 )
 }
 \arguments{
@@ -48,6 +59,11 @@ NOTE: Dependencies of suggests will not be recursive. Default \code{TRUE}.}
 
 \item{linkingTo}{Logical. Include packages listed in "LinkingTo". Default \code{TRUE}.}
 
+\item{topoSort}{Logical. If \code{TRUE}, the default, then
+the returned list of packages will be in order with the
+least number of dependencies listed in \code{pkgs} at
+the top of the list.}
+
 \item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
 \code{install.packages}, \code{install_github} or \code{installVersions}.}
 
@@ -59,6 +75,30 @@ set \code{refresh = TRUE}.}
 
 \item{sorted}{Logical. If \code{TRUE}, the default, the packages will be sorted in
 the returned list from most number of dependencies to least.}
+
+\item{pkgs}{A vector of package names to evaluate their
+reverse depends (i.e., the packages that \emph{use} each
+of these packages)}
+
+\item{deps}{An optional named list of (reverse) dependencies.
+If not supplied, then \code{tools::dependsOnPkgs(..., recursive = TRUE)}
+will be used}
+
+\item{reverse}{logical: if \code{FALSE} (default), regular
+    dependencies are calculated, otherwise reverse dependencies.}
+
+\item{useAllInSearch}{Logical. If \code{TRUE}, then all non-core
+R packages in \code{search()} will be appended to \code{pkgs}
+to allow those to also be identified}
+
+\item{returnFull}{Logical. If \code{TRUE}, then the full reverse
+dependencies will be returned; if \code{FALSE}, the default,
+only the reverse dependencies that are found within the \code{pkgs}
+(and \code{search()} if \code{useAllInSearch = TRUE}) will be returned.}
+}
+\value{
+A possibly ordered, named (with pkgs as names) list where list elements
+are either full reverse depends
 }
 \description{
 This is intended to replace \code{\link[tools]{package_dependencies}} or
@@ -70,6 +110,15 @@ the function cannot find the packages there, then it will use
 \code{pkgDep2} is a convenience wrapper of \code{pkgDep} that
 "goes one level in" i.e., the first order dependencies, and runs
 the \code{pkgDep} on those.
+
+This is a wrapper around \code{tools::dependsOnPkgs},
+but with the added option of \code{sorted}, which
+will sort them such that the packages at the top will have
+the least number of dependencies that are in \code{pkgs}.
+This is essentially a topological sort, but it is done
+heuristically. This can be used to e.g., \code{detach} or
+\code{unloadNamespace} packages in order so that they each
+of their dependencies are detached or unloaded first.
 }
 \note{
 \code{package_dependencies} and \code{pkgDep} will differ under the following

@@ -344,3 +344,48 @@ test_that("package-related functions work", {
   )
 
 })
+
+
+test_that("package topoSort", {
+  testInitOut <- testInit(libraries = c("data.table", "versions"))
+  on.exit({
+    try(testOnExit(testInitOut))
+  }, add = TRUE)
+
+  vals <- c("fastdigest",
+            #"reproducible",
+            "glue",
+            "data.table",
+            "digest",
+            "quickPlot")
+  correctOrder <- c("fastdigest", "quickPlot", "glue", "data.table", "digest")
+  names(vals) <- vals
+  out <- pkgDepTopoSort(vals, reverse = TRUE, returnFull = FALSE,
+                 useAllInSearch = FALSE)
+  expect_true(is.list(out))
+  expect_true(any(names(out) != names(vals))) # reordered
+  expect_true(all(names(out) == correctOrder)) # reordered
+
+  out <- pkgDepTopoSort(vals, reverse = TRUE, returnFull = FALSE,
+                        useAllInSearch = TRUE)
+  inSrch <- setdiff(search(), .defaultPackages)
+  inSrch <- setdiff(gsub("package:", "", inSrch), vals)
+  toCheck <- c(vals, inSrch)
+  expect_true(all(names(out) %in% toCheck))
+
+  out <- pkgDepTopoSort(vals, reverse = FALSE, returnFull = FALSE,
+                        useAllInSearch = FALSE)
+  expect_true(all(names(out) %in% vals))
+  expect_true(length(out$quickPlot) == 3)
+  expect_true(sum(unlist(lapply(out, function(x) length(x) == 0))) == 4)
+
+  out1 <- pkgDepTopoSort(vals, reverse = TRUE, returnFull = TRUE,
+                         useAllInSearch = FALSE)
+  expect_true(all(unlist(lapply(vals, function(v) length(out1[[v]] >= length(out[[v]]))))))
+
+  out <- pkgDep(vals, topoSort = TRUE)
+  expect_true(tail(names(out), 1) == "quickPlot")
+
+
+
+})
