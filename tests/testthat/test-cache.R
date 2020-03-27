@@ -1058,18 +1058,23 @@ test_that("test file link with duplicate Cache", {
   sam <- function(...) {
     sample(...)
   }
+
+  sam1 <- function(...) {
+    1
+    sample(...)
+  }
   N <- 4e5
   set.seed(123)
-  mess1 <- capture_messages(b <- Cache(sam, N))
+  mess1 <- capture_messages(b <- Cache(sam, N, cacheRepo = tmpCache))
   set.seed(123)
-  mess2 <- capture_messages(d <- Cache(sample, N))
+  mess2 <- capture_messages(d <- Cache(sample, N, cacheRepo = tmpCache))
 
   expect_true(grepl("A file with identical", mess2))
 
   set.seed(123)
-  mess1 <- capture_messages(b <- Cache(sam, N))
+  mess1 <- capture_messages(b <- Cache(sam, N, cacheRepo = tmpCache))
   set.seed(123)
-  mess2 <- capture_messages(d <- Cache(sample, N))
+  mess2 <- capture_messages(d <- Cache(sample, N, cacheRepo = tmpCache))
   expect_true(any(grepl("loaded cached", mess2)))
   expect_true(any(grepl("loaded cached", mess1)))
   out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
@@ -1080,9 +1085,9 @@ test_that("test file link with duplicate Cache", {
   # It must be same output, not same input
   clearCache(tmpCache)
   set.seed(123)
-  mess1 <- capture_messages(b <- Cache(sam, N))
+  mess1 <- capture_messages(b <- Cache(sam, N, cacheRepo = tmpCache))
   set.seed(1234)
-  mess2 <- capture_messages(d <- Cache(sample, N))
+  mess2 <- capture_messages(d <- Cache(sample, N, cacheRepo = tmpCache))
   # Different inputs AND different output -- so no cache recovery and no file link
   expect_true(length(mess2) == 0)
   out2 <- try(system2("du", tmpCache, stdout = TRUE))
@@ -1090,6 +1095,15 @@ test_that("test file link with duplicate Cache", {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
     expect_true(all(fs1 * 1.9 < fs2))
   }
+  # Test if the `try` works if the file.link is not to a meaningful file
+  cacheIds <- unique(showCache(tmpCache)$cacheId)
+  unlink(dir(CacheStorageDir(tmpCache), pattern = cacheIds[1], full.names = TRUE))
+  unlink(dir(CacheStorageDir(tmpCache), pattern = cacheIds[2], full.names = TRUE))
+  set.seed(1234)
+
+  warn <- capture_warnings(d1 <- Cache(sam1, N, cacheRepo = tmpCache))
+  expect_true(length(warn) == 0)
+
 
 })
 

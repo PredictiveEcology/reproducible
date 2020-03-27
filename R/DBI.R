@@ -129,6 +129,24 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   fts <- CacheStoredFile(cachePath, cacheId)
 
   browser(expr = exists("._saveToCache_2"))
+
+  # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
+  if (!is.null(linkToCacheId)) {
+    ftL <- CacheStoredFile(cachePath, linkToCacheId)
+    if (identical(tolower(.Platform$OS.type), "windows")) {
+      suppressWarnings(out <- try(file.link(from = ftL, to = fts), silent = TRUE))
+    } else {
+      suppressWarnings(out <- try(file.symlink(from = ftL, to = fts), silent = TRUE))
+    }
+    if (is(out, "try-error"))
+      linkToCacheId <- NULL
+    else {
+      message("  (A file with identical properties already exists in the Cache; ",
+              "creating a file.link instead of a new file)")
+    }
+    fs <- file.size(fts)
+  }
+
   if (is.null(linkToCacheId)) {
     if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
       fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
@@ -138,15 +156,6 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
       fs <- file.size(fts)
     }
   } else {
-    ftL <- CacheStoredFile(cachePath, linkToCacheId)
-    message("  (A file with identical properties already exists in the Cache; ",
-            "creating a file.link instead of a new file)")
-    if (identical(tolower(.Platform$OS.type), "windows")) {
-      file.link(from = ftL, to = fts)
-    } else {
-      file.symlink(from = ftL, to = fts)
-    }
-    fs <- file.size(fts)
   }
   fsChar <- as.character(fs)
 
