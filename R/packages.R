@@ -1151,9 +1151,9 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       test <- ncv$availableOnCRAN
       vals <- c("All", "CRAN packages only", "None", ncv[availableOnCRAN == TRUE]$package)
 
-      onGit <- grepl("availableOnGH", colnames(ncv))
+      onGit <- grepl("availableOnGitHub", colnames(ncv))
       if (any(onGit)) {
-        test <- any(test) & any(ncv$availableOnGitHub)
+        test <- any(test) | any(ncv$availableOnGitHub)
         vals <- c(vals, ncv[availableOnGitHub == TRUE]$package)
       }
       df2 <- data.frame( row.names = NULL, stringsAsFactors = FALSE, "Upgrade" = vals)
