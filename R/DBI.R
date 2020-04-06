@@ -138,7 +138,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
     } else {
       suppressWarnings(out <- try(file.symlink(from = ftL, to = fts), silent = TRUE))
     }
-    if (is(out, "try-error"))
+    if (is(out, "try-error") | !out)
       linkToCacheId <- NULL
     else {
       message("  (A file with identical properties already exists in the Cache; ",
