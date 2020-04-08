@@ -1526,6 +1526,7 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 }
 
 #' @importFrom crayon cyan
+#' @importFrom raster projectExtent
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)

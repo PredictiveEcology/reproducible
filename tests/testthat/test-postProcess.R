@@ -1,5 +1,4 @@
 test_that("prepInputs doesn't work (part 3)", {
-
   if (requireNamespace("rgeos")) {
     testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
       "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -28,7 +27,8 @@ test_that("prepInputs doesn't work (part 3)", {
     StudyArea2 <- SpatialPolygons(list(Srs1), 1L)
     crs(StudyArea2) <- crsToUse
 
-    nonLatLongProj <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
+    nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
+                            "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
     #dPath <- file.path(tmpdir, "ecozones")
     nc <- st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
     nc1 <- st_transform(nc, nonLatLongProj)
@@ -50,22 +50,22 @@ test_that("prepInputs doesn't work (part 3)", {
       r2 <- postProcess(r1, studyArea = ncSmall, filename2 = NULL)
       expect_true(is(r2, "RasterLayer"))
       expect_true(ncell(r2) < ncell(r1))
-      expect_true( (xmin(extent(ncSmall)) - xmin(r2)) < res(r2)[1] * 2)
-      expect_true( (ymin(extent(ncSmall)) - ymin(r2)) < res(r2)[2] * 2)
-      expect_true( (ymax(extent(ncSmall)) - ymax(r2)) > -(res(r2)[2] * 2))
-      expect_true( (xmax(extent(ncSmall)) - xmax(r2)) > -(res(r2)[2] * 2))
-
+      expect_true((xmin(extent(ncSmall)) - xmin(r2)) < res(r2)[1] * 2)
+      expect_true((ymin(extent(ncSmall)) - ymin(r2)) < res(r2)[2] * 2)
+      expect_true((ymax(extent(ncSmall)) - ymax(r2)) > -(res(r2)[2] * 2))
+      expect_true((xmax(extent(ncSmall)) - xmax(r2)) > -(res(r2)[2] * 2))
 
       # postProcess
       expect_true(identical(1, postProcess(1)))
       expect_true(identical(list(1, 1), postProcess(list(1, 1))))
-      expect_error(postProcess(nc1, rasterToMatch = r), "sf class objects are not yet")
+      expect_error(postProcess(nc1, rasterToMatch = r))
       nc2 <- postProcess(nc1, studyArea = as(ncSmall, "Spatial"))
       expect_true(identical(st_area(nc2), st_area(ncSmall)))
 
       # cropInputs
       expect_true(identical(1, cropInputs(1)))
-      nonLatLongProj2 <- "+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
+      nonLatLongProj2 <- paste("+proj=lcc +lat_1=51 +lat_2=77 +lat_0=0 +lon_0=-95",
+                               "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
       nc3 <- spTransform(as(nc1, "Spatial"), CRSobj = CRS(nonLatLongProj2))
       nc4 <- cropInputs(nc3, studyArea = ncSmall)
       ncSmall2 <- spTransform(as(ncSmall, "Spatial"), CRSobj = CRS(nonLatLongProj2))
@@ -82,7 +82,6 @@ test_that("prepInputs doesn't work (part 3)", {
       mess <- capture_messages(cropInputs(as(ncSmall, "Spatial"), studyArea = ncSmallShifted))
       expect_true(any(grepl("polygons do not intersect", mess)))
       expect_true(any(grepl("with no data", mess)))
-
 
       #LINEARRING Example
       p6 = readWKT("POLYGON ((0 60, 0 0, 60 0, 60 20, 100 20, 60 20, 60 60, 0 60))")
