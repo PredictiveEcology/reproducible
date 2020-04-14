@@ -249,8 +249,6 @@ test_that("test pkgDep2", {
   b <- pkgDep("reproducible", recursive = TRUE, suggests = FALSE, depends = TRUE,
               imports = TRUE)
   expect_identical(sort(unique(c(names(a), unique(unlist(a))))), sort(b$reproducible))
-
-
 })
 
 test_that("package-related functions work", {
@@ -280,23 +278,29 @@ test_that("package-related functions work", {
       expect_true(a)
     })
 
-  mess <- capture_messages(err <- capture_error(b <- Require(c("SpaDES.core (>=0.9)",
-            "PredictiveEcology/reproducible@messagingOverhaul (>= 4.1.1)",
-            "achubaty/amc@development (>=0.1.5)",
-            "data.table (>=100.0)",
-            paste0("digest (>=", packageVersion("digest"),")"),
-            "PredictiveEcology/LandR (>= 0.0.2)"))))
+  mess <- capture_messages({
+    err <- capture_error({
+      b <- Require(c("SpaDES.core (>=0.9)",
+                     "PredictiveEcology/reproducible@messagingOverhaul (>= 4.1.1)",
+                     "achubaty/amc@development (>=0.1.5)",
+                     "data.table (>=100.0)",
+                     paste0("digest (>=", packageVersion("digest"),")"),
+                     "PredictiveEcology/LandR (>= 0.0.2)"))
+    })
+  })
   expect_true(sum(grepl("following packages", mess)) == 1)
   expect_true(sum(grepl("Please manually", err)) == 1)
 
-  mess <- capture_messages(
-    err <- capture_error(
+  mess <- capture_messages({
+    err <- capture_error({
       b <- Require(c("fastdigest (>=0.0.0.9)",
                      "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.9)",
                      "achubaty/amc@development (>=0.0.0.9)",
                      "data.table (>=0.0.0.9)",
                      paste0("digest (>=", packageVersion("digest"),")"),
-                     "PredictiveEcology/LandR (>= 0.0.0.9)"))))
+                     "PredictiveEcology/LandR (>= 0.0.0.9)"))
+    })
+  })
   expect_true(sum(grepl("following packages", mess)) == 0)
   expect_true(sum(grepl("Please manually", err)) == 0)
   expect_true(all(b))
@@ -377,14 +381,14 @@ test_that("package-related functions work", {
       3
     },
     {
-      warn <- capture_warnings(
-        mess <- capture_messages(a <- Require("glue (>=1.3.1)",
-                                              libPath = tmpdir, standAlone = TRUE))
-      )
+      warn <- capture_warnings({
+        mess <- capture_messages({
+          a <- Require("glue (>=1.3.1)", libPath = tmpdir, standAlone = TRUE)
+        })
+      })
       expect_true(sum(grepl("Not installing", mess))==1)
     }
   )
-
 })
 
 
@@ -427,7 +431,4 @@ test_that("package topoSort", {
 
   out <- pkgDep(vals, topoSort = TRUE)
   expect_true(tail(names(out), 1) == "quickPlot")
-
-
-
 })
