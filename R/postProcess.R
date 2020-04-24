@@ -336,7 +336,8 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           #        "\"", tempDstRaster, "\""),
         } else {
           completed <- FALSE
-          while(!completed) {
+          i <- 1
+          while(!completed & i < 3) {
             if (canProcessInMemory(x, 3)) {
               yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots)),
                         silent = TRUE)
@@ -352,6 +353,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
               completed <- TRUE
               x <- yy
             }
+            i <- i + 1
           }
 
 
