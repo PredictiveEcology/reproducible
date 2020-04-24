@@ -355,6 +355,18 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
             }
             i <- i + 1
           }
+          if (!completed) {
+            ## if not completed because file doesn't exist, let the user know with a sensible error.
+            noFileError <- grepl("Error in .local(.Object, ...)", yy, fixed = TRUE)
+            fileExists <- file.exists(filename(x))
+            if (noFileError | !fileExists) {
+              stop("The following file-backed raster is supposed to be on disk ",
+                   "but appears to to be missing:\n",
+                   paste("    ", filename(x), collapse = "\n"))
+            } else {
+              stop(as.character(yy))
+            }
+          }
 
 
         }
