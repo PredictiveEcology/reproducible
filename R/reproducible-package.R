@@ -10,8 +10,6 @@
 #' \pkg{checkpoint} that attempts to be more seamless. The package also includes
 #' tools for caching, preparing data files and accessing GitHub repositories.
 #'
-#' @details
-#'
 #' @section Main Tools:
 #'
 #' There are many elements within the reproducible package. However, there are currently

@@ -15,9 +15,6 @@ different take on package management, such as \pkg{renv}, \pkg{packrat} and
 \pkg{checkpoint} that attempts to be more seamless. The package also includes
 tools for caching, preparing data files and accessing GitHub repositories.
 }
-\details{
-
-}
 \section{Main Tools}{
 
 

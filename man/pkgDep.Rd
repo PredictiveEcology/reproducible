@@ -97,8 +97,8 @@ only the reverse dependencies that are found within the \code{pkgs}
 (and \code{search()} if \code{useAllInSearch = TRUE}) will be returned.}
 }
 \value{
-A possibly ordered, named (with pkgs as names) list where list elements
-are either full reverse depends
+A possibly ordered, named (with packages as names) list where list elements
+are either full reverse depends.
 }
 \description{
 This is intended to replace \code{\link[tools]{package_dependencies}} or
@@ -107,9 +107,8 @@ It will first check local package directories in \code{libPath}, and it if
 the function cannot find the packages there, then it will use
 \code{\link[tools]{package_dependencies}}.
 
-\code{pkgDep2} is a convenience wrapper of \code{pkgDep} that
-"goes one level in" i.e., the first order dependencies, and runs
-the \code{pkgDep} on those.
+\code{pkgDep2} is a convenience wrapper of \code{pkgDep} that "goes one level in",
+i.e., the first order dependencies, and runs the \code{pkgDep} on those.
 
 This is a wrapper around \code{tools::dependsOnPkgs},
 but with the added option of \code{sorted}, which

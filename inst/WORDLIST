@@ -19,8 +19,6 @@ CacheDigest
 cacheId
 cachePath
 cacheRepo
-checksum
-Checksum
 checksummed
 checksumming
 Checksumming
@@ -41,6 +39,7 @@ dir
 doesn
 evalutating
 fastdigest
+filebacked
 filepath
 filesystem
 GDAL
@@ -49,8 +48,6 @@ gdalwarp
 getData
 getFunctionName
 github
-GitHub
-google
 googledrive
 GoogleDrive
 grd
@@ -79,7 +76,6 @@ mysql
 neededFile
 ORCID
 OSs
-packageName
 Params
 postgresql
 PostgreSQL
@@ -100,8 +96,6 @@ RasterStack
 rds
 refered
 reimplemented
-repeatability
-Repeatability
 repo
 reprex
 reproducibility
@@ -110,6 +104,7 @@ reproject
 reprojected
 reprojecting
 reprojects
+resave
 robocopy
 RQSLite
 rstudio
@@ -119,7 +114,6 @@ S4
 sbn
 sbx
 shx
-sim
 simList
 SpaDES
 spatialObjects
@@ -137,5 +131,3 @@ unrar
 unrarPath
 useCache
 userTags
-workflow
-Workflow

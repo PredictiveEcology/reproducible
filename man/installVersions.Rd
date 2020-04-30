@@ -13,7 +13,7 @@ installVersions(
 )
 }
 \arguments{
-\item{gitHubPackages}{Character vectors indicating repository/packageName@branch}
+\item{gitHubPackages}{Character vectors indicating \code{repository/packageName@branch}}
 
 \item{packageVersionFile}{Path to the package version file, defaults to
        the \file{.packageVersions.txt}.

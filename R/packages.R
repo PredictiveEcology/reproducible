@@ -626,9 +626,8 @@ pkgDep <- function(packages, libPath, recursive = TRUE, depends = TRUE,
 }
 
 #' @description
-#' \code{pkgDep2} is a convenience wrapper of \code{pkgDep} that
-#' "goes one level in" i.e., the first order dependencies, and runs
-#' the \code{pkgDep} on those.
+#' \code{pkgDep2} is a convenience wrapper of \code{pkgDep} that "goes one level in",
+#' i.e., the first order dependencies, and runs the \code{pkgDep} on those.
 #' @rdname pkgDep
 #' @export
 #' @param sorted Logical. If \code{TRUE}, the default, the packages will be sorted in
@@ -683,7 +682,7 @@ available.packagesMem <- function(contriburl, method, fields, type, filters, rep
 #' Install exact package versions from a package version text file & GitHub
 #'
 #' @inheritParams Require
-#' @param gitHubPackages Character vectors indicating repository/packageName@branch
+#' @param gitHubPackages Character vectors indicating \code{repository/packageName@branch}
 #' @param packageVersionFile Path to the package version file, defaults to
 #'        the \file{.packageVersions.txt}.
 #'
@@ -1562,8 +1561,8 @@ DESCRIPTIONFileVersion <- function(file) {
 #' @export
 #' @rdname pkgDep
 #' @return
-#' A possibly ordered, named (with pkgs as names) list where list elements
-#' are either full reverse depends
+#' A possibly ordered, named (with packages as names) list where list elements
+#' are either full reverse depends.
 #'
 pkgDepTopoSort <- function(pkgs, deps, reverse = FALSE, topoSort = TRUE, useAllInSearch = FALSE,
                       returnFull = TRUE) {
