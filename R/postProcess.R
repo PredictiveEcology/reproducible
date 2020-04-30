@@ -1,5 +1,7 @@
 #' Generic function to post process objects
 #'
+#' \lifecycle{maturing}
+#'
 #' @export
 #' @param x  An object of postProcessing, e.g., \code{spatialObjects}.
 #'           See individual methods. This can be provided as a

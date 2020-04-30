@@ -105,6 +105,8 @@ in details below.}
 Defaults to \code{getOption("reproducible.useCache")}.}
 }
 \description{
+\lifecycle{maturing}
+
 The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
 crop, reproject, and mask, in that order.
 This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},

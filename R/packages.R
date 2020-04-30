@@ -12,6 +12,8 @@ if (getRversion() >= "3.1.0") {
 
 #' Repeatability-safe install and load packages, optionally with specific versions
 #'
+#' \lifecycle{maturing}
+#'
 #' This is an "all in one" function that will run \code{install.packages} for
 #' CRAN packages, \code{remotes::install_github} for \url{https://github.com/} packages and
 #' will install specific versions of each package if there is a

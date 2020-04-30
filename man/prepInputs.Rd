@@ -89,6 +89,9 @@ Since \code{...} is passed to \code{\link{postProcess}}, these will
 functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 }
 \description{
+\lifecycle{maturing}
+}
+\details{
 This function can be used to prepare R objects from remote or local data
 sources. The object of this function is to provide a reproducible version of
 a series of commonly used steps for getting, loading, and processing data.
