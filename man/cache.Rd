@@ -197,20 +197,29 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
+\lifecycle{maturing}
+
 Still experimental and may change. This form cannot pass any arguments to
 ]code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
 it is a clean alternative for simple cases.
 }
 \details{
-Caching R objects using \code{archivist::cache} has five important limitations:
-\enumerate{
-  \item the \code{archivist} package detects different environments as different;
-  \item it also does not detect S4 methods correctly due to method inheritance;
-  \item it does not detect objects that have file-base storage of information
-        (specifically \code{\link[raster]{RasterLayer-class}} objects);
-  \item the default hashing algorithm is relatively slow.
-  \item heavily nested function calls may want Cache arguments to propagate through
-}
+A function that can be used to wrap around other functions to cache function calls
+for later use. This is normally most effective when the function to cache is
+slow to run, yet the inputs and outputs are small. The benefit of caching, therefore,
+will decline when the computational time of the "first" function call is fast and/or
+the argument values and return objects are large. The default setting (and first
+call to Cache) will always save to disk. The 2nd call to the same function will return
+from disk. If the \code{options("reproducible.useMemoise" = TRUE)}, then the 3rd time
+will recover the object from RAM and is normally much faster.
+
+
+
+There are other similar functions in the R universe. This version of Cache has
+been used as part of a robust continuous workflow approach. As a result, we have
+tested it with many "non-standard" R objects (e.g., RasterLayer objects) and
+environments, which tend to be challenging for caching as they are always unique.
+
 This version of the \code{Cache} function accommodates those four special,
 though quite common, cases by:
 \enumerate{
@@ -231,7 +240,18 @@ though quite common, cases by:
         Caching}.
 }
 
-If \code{Cache} is called within a SpaDES module, then the cached entry will automatically
+Caching R objects using \code{archivist::cache} has five important limitations:
+\enumerate{
+  \item the \code{archivist} package detects different environments as different;
+  \item it also does not detect S4 methods correctly due to method inheritance;
+  \item it does not detect objects that have file-base storage of information
+        (specifically \code{\link[raster]{RasterLayer-class}} objects);
+  \item the default hashing algorithm is relatively slow.
+  \item heavily nested function calls may want Cache arguments to propagate through
+}
+
+As part of the SpaDES ecosystem of R packages, \code{Cache} can be used
+within SpaDES modules. If it is, then the cached entry will automatically
 get 3 extra \code{userTags}: \code{eventTime}, \code{eventType}, and \code{moduleName}.
 These can then be used in \code{clearCache} to selectively remove cached objects
 by \code{eventTime}, \code{eventType} or \code{moduleName}.

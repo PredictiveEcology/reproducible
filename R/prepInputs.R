@@ -4,6 +4,8 @@ if (getRversion() >= "3.1.0") {
 
 #' Download and optionally post process files
 #'
+#' \lifecycle{maturing}
+#'
 #' This function can be used to prepare R objects from remote or local data
 #' sources. The object of this function is to provide a reproducible version of
 #' a series of commonly used steps for getting, loading, and processing data.

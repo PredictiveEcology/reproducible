@@ -1,10 +1,16 @@
 #' The \code{reproducible} package
 #'
-#' Built on top of \pkg{git2r} and \pkg{archivist}, this package aims at making
+#' @description
+#' \lifecycle{maturing}
+#'
+#' This package aims at making
 #' high-level, robust, machine and OS independent tools for making deeply
-#' reproducible and reusable content in R. This extends beyond the package
-#' management utilities of \pkg{packrat} and \pkg{checkpoint} by including
-#' tools for caching, and accessing GitHub repositories.
+#' reproducible and reusable content in R. The \code{Require} function is a
+#' different take on package management, such as \pkg{renv}, \pkg{packrat} and
+#' \pkg{checkpoint} that attempts to be more seamless. The package also includes
+#' tools for caching, preparing data files and accessing GitHub repositories.
+#'
+#' @details
 #'
 #' @section Main Tools:
 #'

@@ -48,6 +48,9 @@ if packages were installed manually by a user. Set this to \code{TRUE} to
 refresh that dependency calculation.}
 }
 \description{
+\lifecycle{maturing}
+}
+\details{
 This is an "all in one" function that will run \code{install.packages} for
 CRAN packages, \code{remotes::install_github} for \url{https://github.com/} packages and
 will install specific versions of each package if there is a
@@ -59,8 +62,7 @@ called on the \code{packages}. If packages are already installed
 (\code{packages} supplied), and their version numbers are exact (when
 \code{packageVersionFile} is supplied), then the "install" component will be
 skipped very quickly with a message.
-}
-\details{
+
 \code{standAlone} will either put the \code{Require}d packages and their
 dependencies \emph{all} within the libPath (if \code{TRUE}) or if
 \code{FALSE} will only install packages and their dependencies that are
