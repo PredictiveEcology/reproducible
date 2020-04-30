@@ -44,6 +44,7 @@ Imports:
     glue,
     googledrive,
     httr,
+    lifecycle,
     magrittr,
     memoise,
     methods,
@@ -59,8 +60,7 @@ Imports:
     testthat,
     tools,
     utils,
-    versions,
-    lifecycle
+    versions
 Suggests:
     archivist (>= 2.1.2),
     covr,
