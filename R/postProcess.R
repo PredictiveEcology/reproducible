@@ -239,7 +239,7 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #'                      \code{extentTomatch} instead of \code{rasterToMatch}
 #'
 #' @export
-#' @importFrom raster projectExtent tmpDir
+#' @importFrom raster compareCRS projectExtent tmpDir
 #' @rdname cropInputs
 cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL,
@@ -265,9 +265,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
     #   once cropped, then cropExtent should be rm
     crsX <- crs(x)
     crsCropTo <- crs(cropTo)
-    if (is(crsX, "CRS")) crsX <- proj4string(x)
-    if (is(crsCropTo, "CRS")) crsCropTo <- proj4string(cropTo)
-    cropExtent <- if (identical(crsX, crsCropTo)) {
+    cropExtent <- if (compareCRS(crsX, crsCropTo)) {
       extent(cropTo)
     } else {
       if (!is.null(rasterToMatch)) {
@@ -385,7 +383,7 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
 }
 
 #' @export
-#' @importFrom raster crs extent projectExtent raster
+#' @importFrom raster compareCRS crs extent projectExtent raster
 #' @importFrom sf st_crop st_crs st_transform
 #' @rdname cropInputs
 cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
@@ -408,7 +406,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
     # have to project the extent to the x projection so crop will work -- this is temporary
     #   once cropped, then cropExtent should be rm
-    cropExtent <- if (identical(crs(x), crs(cropTo))) {
+    cropExtent <- if (compareCRS(x, cropTo)) {
       extent(cropTo)
     } else {
       if (!is.null(rasterToMatch)) {
