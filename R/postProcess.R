@@ -1205,9 +1205,9 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     if (fromDisk(x)) {
       if (tools::file_ext(filename(x)) == "grd") {
         if (!tools::file_ext(filename2) == "grd") {
-          warning("filename2 file type (",tools::file_ext(filename2),") was not same type (",tools::file_ext(filename(x)),") ",
-                  "as the filename of the raster; ",
-                  "Changing filename2 so that it is ",tools::file_ext(filename(x)))
+          warning("filename2 file type (", tools::file_ext(filename2), ") was not same type (",
+                  tools::file_ext(filename(x)),") ", "as the filename of the raster; ",
+                  "Changing filename2 so that it is ", tools::file_ext(filename(x)))
           filename2 <- gsub(tools::file_ext(filename2), "grd", filename2)
         }
         file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
@@ -1229,8 +1229,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
           names(xTmp) <- names(x)
           message("Object was a RasterStack; only one filename provided so returning a RasterBrick;")
-          message("  layer names will likely be wrong")
-
+          message("  layer names will likely be wrong.")
         } else if (length(argsForWrite$filename) == nLayers) {
           dups <- duplicated(argsForWrite$filename)
           if (any(dups)) {
@@ -1254,7 +1253,6 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         } else {
           stop("filename2 must be length 1 or length nlayers(...)")
         }
-
       } else {
         xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
       }
