@@ -131,7 +131,6 @@ setMethod(
       return(out)
     }
 
-
     # passByReference -- while doing pass by reference attribute setting is faster, is
     #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
     object1 <- .removeCacheAtts(object, passByReference = FALSE)
@@ -141,7 +140,6 @@ setMethod(
       fastdigest(object1)
 })
 
-
 #' @rdname robustDigest
 #' @export
 setMethod(
@@ -150,8 +148,6 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     .robustDigestFormatOnly(object, algo = algo)
 })
-
-
 
 #' @rdname robustDigest
 #' @export

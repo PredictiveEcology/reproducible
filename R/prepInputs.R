@@ -2,15 +2,15 @@ if (getRversion() >= "3.1.0") {
   utils::globalVariables(c("expectedFile", "objName", "V1"))
 }
 
-#' Download and optionally post process files
+#' Download and optionally post-process files
 #'
 #' \lifecycle{maturing}
 #'
-#' This function can be used to prepare R objects from remote or local data
-#' sources. The object of this function is to provide a reproducible version of
+#' This function can be used to prepare R objects from remote or local data sources.
+#' The object of this function is to provide a reproducible version of
 #' a series of commonly used steps for getting, loading, and processing data.
 #' This function has two stages: Getting data (download, extracting from archives,
-#' loading into R) and postProcessing (for \code{Spatial*} and \code{Raster*}
+#' loading into R) and post-processing (for \code{Spatial*} and \code{Raster*}
 #' objects, this is crop, reproject, mask/intersect).
 #' To trigger the first stage, provide \code{url} or \code{archive}.
 #' To trigger the second stage, provide \code{studyArea} or \code{rasterToMatch}.

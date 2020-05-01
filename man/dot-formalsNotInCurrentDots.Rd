@@ -2,7 +2,7 @@
 % Please edit documentation in R/helpers.R
 \name{.formalsNotInCurrentDots}
 \alias{.formalsNotInCurrentDots}
-\title{Identify which formals to a function are not in the current ...}
+\title{Identify which formals to a function are not in the current \code{...}}
 \usage{
 .formalsNotInCurrentDots(fun, ..., dots)
 }
