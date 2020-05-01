@@ -78,7 +78,29 @@ chooseCRANmirror2 <- function() {
                                ".", tools::file_ext(f)))
 }
 
-#' Identify which formals to a function are not in the current ...
+#' Get a unique name for a given study area
+#'
+#' Digest a spatial object to get a unique character string (hash) of the study area.
+#' Use \code{.suffix()} to append the hash to a filename, e.g., when using \code{filename2} in \code{prepInputs}.
+#'
+#' @param studyArea Spatial object.
+#' @param ... Other arguments (not currently used)
+#'
+#' @export
+#' @importFrom digest digest
+setGeneric("studyAreaName", function(studyArea, ...) {
+  standardGeneric("studyAreaName")
+})
+
+#' @export
+setMethod(
+  "studyAreaName",
+  signature = "SpatialPolygonsDataFrame",
+  definition = function (studyArea, ...) {
+    digest(studyArea[, -c(1:ncol(studyArea))], algo = "xxhash64") ## TODO: use `...` to pass `algo`
+})
+
+#' Identify which formals to a function are not in the current \code{...}
 #'
 #' This is for advanced use.
 #' @keywords internal
