@@ -124,20 +124,14 @@ setMethod(
     }
 
     if (is(object, "cluster")) {# can't get this class from rlang via importClass rlang quosure
-      out <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-        digest(NULL, algo = algo)
-      else
-        fastdigest(NULL)
+      out <- .doDigest(NULL, algo)
       return(out)
     }
 
     # passByReference -- while doing pass by reference attribute setting is faster, is
     #   may be wrong. This caused issue #115 -- now fixed because it doesn't do pass by reference
     object1 <- .removeCacheAtts(object, passByReference = FALSE)
-    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-      digest(object1, algo = algo)
-    else
-      fastdigest(object1)
+    .doDigest(object1, algo)
 })
 
 #' @rdname robustDigest
@@ -172,30 +166,18 @@ setMethod(
           unlist(lapply(object, function(x) {
             browser(expr = exists("hhhh"))
             if (dir.exists(x)) {
-              if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-                digest(basename(x), algo = algo)
-              else
-                fastdigest(basename(x))
+              .doDigest(basename(x), algo)
             } else if (file.exists(x)) {
                 digest(file = x, length = length, algo = algo)
             } else {
-              if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-                digest(x, algo = algo)
-              else
-                fastdigest(x)
+              .doDigest(x, algo)
             }
           }))
         } else {
-          if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-            digest(object, algo = algo)
-          else
-            fastdigest(object)
+          .doDigest(object, algo = algo)
         }
       } else {
-        if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-          digest(object, algo = algo)
-        else
-          fastdigest(object)
+        .doDigest(object, algo = algo)
       }
 })
 
@@ -220,17 +202,11 @@ setMethod(
           digest::digest(file = x, length = length, algo = algo)
         } else {
           # just do file basename as a character string, if file does not exist
-          if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-            digest(.basenames(x, nParentDirs), algo = algo)
-          else
-            fastdigest(.basenames(x, nParentDirs))
+          .doDigest(.basenames(x, nParentDirs), algo = algo)
         }
       })
     } else {
-      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-        digest(.basenames(object, nParentDirs), algo = algo)
-      else
-        fastdigest(.basenames(object, nParentDirs))
+      .doDigest(.basenames(object, nParentDirs), algo = algo)
     }
 })
 
@@ -269,10 +245,7 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     #  Need a specific method for data.frame or else it get "list" method, which is wrong
     object <- .removeCacheAtts(object)
-    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-      digest(object, algo = algo)
-    else
-      fastdigest(object)
+    .doDigest(object, algo = algo)
 })
 
 #' @rdname robustDigest
@@ -326,10 +299,7 @@ setMethod(
     }
 
     #
-    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-      digest(aaa, algo = algo)
-    else
-      fastdigest(aaa)
+    .doDigest(aaa, algo = algo)
 })
 
 .basenames <- function(object, nParentDirs) {
@@ -376,8 +346,34 @@ setMethod(
 .robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
                                classOptions) {
   object <- .removeCacheAtts(object)
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    digest(format(object), algo = algo)
-  else
-    fastdigest(format(object))
+  .doDigest(format(object), algo = algo)
+}
+
+.doDigest <- function(x, algo, length = Inf, file,
+                      newAlgo = getOption("reproducible.useNewDigestAlgorithm"),
+                      cacheSpeed = getOption("reproducible.cacheSpeed", "slow")) {
+  if (missing(algo)) algo = formals(.robustDigest)$algo
+
+  out <- if (!missing(file)) {
+    digest::digest(file = x, algo = algo, length = length)
+  } else {
+    if (isTRUE(newAlgo)) {
+      if (cacheSpeed == "fast") {
+        cacheSpeed <- 2L
+      } else if (cacheSpeed == "slow") {
+        cacheSpeed <- 1L
+      }
+    } else {
+      cacheSpeed <- 2L
+    }
+    out <- if (cacheSpeed == 1) {
+      digest(x, algo = algo)
+    } else if (cacheSpeed == 2) {
+      fastdigest(x)
+    } else {
+      stop("options('reproducible.cacheSpeed') must be 1, 2, 'slow' or 'fast'")
+    }
+    out
+  }
+  out
 }

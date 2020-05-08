@@ -81,7 +81,7 @@ keepCache(
 )
 }
 \arguments{
-\item{x}{A simList or a directory containing a valid archivist repository. Note:
+\item{x}{A simList or a directory containing a valid Cache repository. Note:
 For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
 used instead of \code{x}, though \code{x} will take precedence.}
 
@@ -219,6 +219,6 @@ cc(ask = FALSE, x = tmpDir) # Cache is
 cc(ask = FALSE, x = tmpDir) # Cache is already empty
 }
 \seealso{
-\code{\link{mergeCache}}, \code{archivist::splitTagsLocal}. Many more examples
+\code{\link{mergeCache}}. Many more examples
 in \code{\link{Cache}}.
 }

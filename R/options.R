@@ -22,6 +22,11 @@
 #'                    The default path for repositories if not passed as an argument.\cr
 #'   \code{cacheSaveFormat} \tab "rds" \tab What save format to use; currently,
 #'                          "qs" or "rds" \cr
+#'   \code{cacheSpeed} \tab "slow" \tab either "slow" or "fast" (1 or 2). "slow" uses
+#'                        digest::digest internally, which is transferable across Operating
+#'                        systems, but much slower than fastdigest::fastdigest. So,
+#'                        if all caching is happening on a single machine, "fast" would
+#'                        be a good setting \cr
 #'   \code{conn} \tab \code{NULL} \tab Sets a specific connection to a database, e.g.,
 #'                       \code{dbConnect(drv = RSQLite::SQLite())} or
 #'                       \code{dbConnect(drv = RPostgres::Postgres()}. For remote
@@ -126,6 +131,7 @@ reproducibleOptions <- function() {
     reproducible.ask = TRUE,
     reproducible.cachePath = normPath(tempdir2("cache")),
     reproducible.cacheSaveFormat = "rds",
+    reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = RSQLite::SQLite(),
