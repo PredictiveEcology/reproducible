@@ -17,7 +17,8 @@ pkgDep(
   topoSort = FALSE,
   repos = getOption("repos"),
   refresh = FALSE,
-  verbose = getOption("reproducible.verbose")
+  verbose = getOption("reproducible.verbose"),
+  keepVersionNumber = FALSE
 )
 
 pkgDep2(
@@ -72,6 +73,9 @@ set \code{refresh = TRUE}.}
 
 \item{verbose}{logical indicating if output should monitor the package
     search cycles.}
+
+\item{keepVersionNumber}{Logical. If \code{TRUE}, then the package dependencies returned
+will include version number. Default is \code{FALSE}}
 
 \item{sorted}{Logical. If \code{TRUE}, the default, the packages will be sorted in
 the returned list from most number of dependencies to least.}

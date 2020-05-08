@@ -304,20 +304,6 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
       ))
 
       dbClearResult(rs)
-    } else {
-      written <- 0
-      while (written >= 0) {
-        saved <- suppressWarnings(try(silent = TRUE,
-                                      archivist::addTagsRepo(cacheId,
-                                                             repoDir = cachePath,
-                                                             tags = paste0("accessed:", Sys.time()))))
-        written <- if (is(saved, "try-error")) {
-          Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-          written + 1
-        } else {
-          -1
-        }
-      }
     }
   }
 }

@@ -18,6 +18,9 @@ which metadata will be returned. If \code{NULL} (default), it will use the
 Invoked for its side effect on the \code{repoDir}.
 }
 \description{
+\lifecycle{defunct}
+}
+\details{
 Stub artifacts can result from several causes. The most common being
 erroneous removal of a file in the SQLite database. This can be caused
 sometimes if an archive object is being saved multiple times by multiple

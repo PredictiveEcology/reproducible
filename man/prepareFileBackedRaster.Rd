@@ -27,11 +27,11 @@ object (in order to clone an existing connection).}
 \item{conn}{A \linkS4class{DBIConnection} object, as returned by
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 
-\item{...}{passed to \code{archivist::saveToRepo}}
+\item{...}{Not used}
 }
 \value{
 A raster object and its newly located file backing.
-        Note that if this is a legitimate archivist repository, the new location
+        Note that if this is a legitimate Cache repository, the new location
         will be a subdirectory called \file{rasters/} of \file{repoDir/}.
         If this is not a repository, the new location will be within \code{repoDir}.
 }
@@ -44,7 +44,8 @@ to the new file.
 }
 \examples{
 library(raster)
-archivist::createLocalRepo(tempdir())
+# make a cache repository
+a <- Cache(rnorm, 1)
 
 r <- raster(extent(0,10,0,10), vals = 1:100)
 

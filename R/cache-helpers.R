@@ -514,6 +514,8 @@ setAs(from = "character", to = "Path", function(from) {
 ################################################################################
 #' Clear erroneous archivist artifacts
 #'
+#' \lifecycle{defunct}
+#'
 #' Stub artifacts can result from several causes. The most common being
 #' erroneous removal of a file in the SQLite database. This can be caused
 #' sometimes if an archive object is being saved multiple times by multiple
@@ -562,19 +564,7 @@ setGeneric("clearStubArtifacts", function(repoDir = NULL) {
 setMethod(
   "clearStubArtifacts",
   definition = function(repoDir) {
-    if (useDBI()) {
-      ret <- NULL
-    } else {
-      md5hashInBackpack <- archivist::showLocalRepo(repoDir = repoDir)$md5hash
-      listFiles <- dir(CacheStorageDir(repoDir)) %>%
-        strsplit(".rda") %>%
-        unlist()
-      toRemove <- !(md5hashInBackpack %in% listFiles)
-      md5hashInBackpack[toRemove] %>%
-        sapply(., archivist::rmFromLocalRepo, repoDir = repoDir)
-      ret <- md5hashInBackpack[toRemove]
-    }
-    return(invisible(ret))
+    .Deprecated()
 })
 
 #' Copy the file-backing of a file-backed Raster* object
@@ -591,10 +581,10 @@ setMethod(
 #'
 #' @param overwrite Logical. Should the raster be saved to disk, overwriting existing file.
 #'
-#' @param ... passed to \code{archivist::saveToRepo}
+#' @param ... Not used
 #'
 #' @return A raster object and its newly located file backing.
-#'         Note that if this is a legitimate archivist repository, the new location
+#'         Note that if this is a legitimate Cache repository, the new location
 #'         will be a subdirectory called \file{rasters/} of \file{repoDir/}.
 #'         If this is not a repository, the new location will be within \code{repoDir}.
 #'
@@ -607,7 +597,8 @@ setMethod(
 #' @rdname prepareFileBackedRaster
 #' @examples
 #' library(raster)
-#' archivist::createLocalRepo(tempdir())
+#' # make a cache repository
+#' a <- Cache(rnorm, 1)
 #'
 #' r <- raster(extent(0,10,0,10), vals = 1:100)
 #'

@@ -505,11 +505,6 @@ setMethod(
             createCache(cacheRepos[[cacheRepoInd]], drv = drv, conn = conn,
                         force = isIntactRepo[cacheRepoInd])
           })
-        else
-          ret <- lapply(seq(cacheRepos)[!isIntactRepo], function(cacheRepoInd) {
-            archivist::createLocalRepo(cacheRepos[[cacheRepoInd]],
-                                       force = isIntactRepo[cacheRepoInd])
-          })
       }
 
       # List file prior to cache
@@ -607,11 +602,9 @@ setMethod(
         if (useDBI()) {
           browser(expr = exists("._Cache_3"))
           dbTabNam <- CacheDBTableName(repo, drv = drv)
-          if (useDBI()) {
-            if (tries > 1) {
-              dbDisconnect(conn)
-              conn <- dbConnectAll(drv, cachePath = repo)
-            }
+          if (tries > 1) {
+            dbDisconnect(conn)
+            conn <- dbConnectAll(drv, cachePath = repo)
           }
           qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
                                 dbTabName = dbTabNam,
@@ -621,9 +614,6 @@ setMethod(
                        quote(dbSendQuery(conn, qry)))
           isInRepo <- setDT(dbFetch(res))
           dbClearResult(res)
-        } else {
-          localTags <- getLocalTags(repo)
-          isInRepo <- localTags[localTags$tag == paste0("cacheId:", outputHash), , drop = FALSE]
         }
         fullCacheTableForObj <- isInRepo
         if (NROW(isInRepo) > 1) isInRepo <- isInRepo[NROW(isInRepo),]
@@ -976,7 +966,6 @@ setMethod(
             FUN = writeFuture,
             args = list(written, outputToSave, cacheRepo, userTags, drv),
             globals = list(written = written,
-                           saveToLocalRepo = archivist::saveToLocalRepo,
                            outputToSave = outputToSave,
                            cacheRepo = cacheRepo,
                            userTags = userTags,
@@ -1001,31 +990,6 @@ setMethod(
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                                       conn = conn, obj = outputToSave, cacheId = outputHash,
                                       linkToCacheId = linkToCacheId)
-        } else {
-          while (written >= 0) {
-            browser(expr = exists("._Cache_14"))
-            saved <- suppressWarnings(try(silent = TRUE,
-                                          archivist::saveToLocalRepo(
-                                            outputToSave,
-                                            repoDir = cacheRepo,
-                                            artifactName = NULL,
-                                            archiveData = FALSE,
-                                            archiveSessionInfo = FALSE,
-                                            archiveMiniature = FALSE,
-                                            rememberName = FALSE,
-                                            silent = TRUE,
-                                            userTags = userTags
-                                          )
-            ))
-
-            # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-            written <- if (is(saved, "try-error")) {
-              Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-              written + 1
-            } else {
-              -1
-            }
-          }
         }
       }
 
@@ -1061,8 +1025,6 @@ setMethod(
   browser(expr = exists("._loadFromLocalRepoMem2_1"))
   if (useDBI()) {
     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
-  } else {
-    out <- archivist::loadFromLocalRepo(md5hash, repoDir = repoDir, ...)
   }
   out <- makeMemoisable(out)
   return(out)
@@ -1125,22 +1087,6 @@ unmakeMemoisable.default <- function(x) {
   x
 }
 
-#' @importFrom fastdigest fastdigest
-showLocalRepo2 <- function(repoDir, algo = "xxhash64") {
-  #if (requireNamespace("future"))
-  #  checkFutures() # will pause until all futures are done
-  aa <- archivist::showLocalRepo(repoDir) # much faster than showLocalRepo(repoDir, "tags")
-  dig <- fastdigest(aa$md5hash) # this is only on local computer, don't use digest::digest; too slow
-  bb <- showLocalRepo3Mem(repoDir, dig)
-  return(bb)
-}
-
-showLocalRepo3 <- function(repoDir, dig) {
-  archivist::showLocalRepo(repoDir, "tags")
-}
-
-showLocalRepo3Mem <- memoise::memoise(showLocalRepo3)
-
 #' Write to archivist repository, using \code{future::future}
 #'
 #' This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.
@@ -1172,37 +1118,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
     output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
                           conn = conn, obj = outputToSave, cacheId = cacheId)
     saved <- cacheId
-  } else {
-    while (written >= 0) {
-      #future::plan(multiprocess)
-      saved <- #suppressWarnings(
-        try(#silent = TRUE,
-          archivist::saveToLocalRepo(
-            outputToSave,
-            repoDir = cacheRepo,
-            artifactName = NULL,
-            archiveData = FALSE,
-            archiveSessionInfo = FALSE,
-            archiveMiniature = FALSE,
-            rememberName = FALSE,
-            silent = TRUE,
-            userTags = userTags
-          )
-          #)
-        )
-
-      # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-      written <- if (is(saved, "try-error")) {
-        Sys.sleep(sum(runif(written + 1, 0.05, 0.1)))
-        written + 1
-      } else {
-        -1
-      }
-      counter <- counter + 1
-      if (isTRUE(startsWith(saved[1], "Error in checkDirectory")))
-        stop(saved)
-      if (counter > 10) stop("Can't write to cacheRepo")
-    }
   }
   return(saved)
 }
@@ -1529,24 +1444,6 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   }
 }
 
-#' @keywords internal
-getLocalTags <- function(cacheRepo) {
-  written <- 0
-  while (written >= 0) {
-    localTags <- suppressWarnings(try(showLocalRepo2(cacheRepo), silent = TRUE))
-    #localTags <- suppressWarnings(try(showLocalRepo(cacheRepo, "tags"), silent = TRUE))
-    written <- if (is(localTags, "try-error")) {
-      if (grepl("Error in checkDirectory", localTags)) {
-        stop(localTags, "\nThis likely means the cacheRepo must be deleted")
-      }
-      Sys.sleep(sum(runif(written + 1,0.05, 0.2)))
-      written + 1
-    } else {
-      -1
-    }
-  }
-  localTags
-}
 
 #' @keywords internal
 .defaultCacheOmitArgs <- c("useCloud", "checksumsFileID", "cloudFolderID",
