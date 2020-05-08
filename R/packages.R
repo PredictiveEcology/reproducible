@@ -57,9 +57,9 @@ if (getRversion() >= "3.1.0") {
 #' @note This function will use \code{memoise} internally to determine the
 #'   dependencies of all \code{packages}. This will speed up subsequent calls to
 #'   \code{Require} dramatically. However, it will not take into account version
-#'   numbers for this memoised step. If package versions are updated manually by
-#'   the user, then this cached element should be wiped, using \code{forget =
-#'   TRUE}.
+#'   numbers for this memoised step. #If package versions are updated manually by
+#'   #the user, then this cached element should be wiped, using \code{forget =
+#'   #TRUE}.
 #'
 #' @param packages Character vector of packages to install via
 #'        \code{install.packages}, then load (i.e., with \code{library}). If it is
@@ -80,10 +80,10 @@ if (getRversion() >= "3.1.0") {
 #'                   place in the \code{libPath} directory that lists all the packages
 #'                   that were needed during the \code{Require} call. Default \code{FALSE} to
 #'                   minimize package installing.
-#' @param forget Internally, this function identifies package dependencies using a memoised
-#'               function for speed on reuse. But, it may be inaccurate in some cases,
-#'               if packages were installed manually by a user. Set this to \code{TRUE} to
-#'               refresh that dependency calculation.
+#' #param forget Internally, this function identifies package dependencies using a memoised
+#' #               function for speed on reuse. But, it may be inaccurate in some cases,
+#' #               if packages were installed manually by a user. Set this to \code{TRUE} to
+#' #               refresh that dependency calculation.
 #'
 #' @export
 #' @importFrom remotes install_github
@@ -127,9 +127,10 @@ if (getRversion() >= "3.1.0") {
 Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # nolint
                     install_githubArgs = list(),       # nolint
                     install.packagesArgs = list(), standAlone = FALSE,      # nolint
-                    repos = getOption("repos"), forget = FALSE) {
+                    repos = getOption("repos")){#}, forget = FALSE) {
 
   browser(expr = exists("._Require_1"))
+  ##################################################################
   # Convert a single name to a character
   subpackages <- substitute(packages)
   if (is.name(subpackages)) { # single, non quoted object
@@ -137,29 +138,18 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     if (!exists(subpackages, envir = parent.frame())) # if it does exist, then it is not a name, but an object
       packages <- subpackages
   }
-
   if (!is.character(packages)) {
     stop("packages should be a character vector or a name")
   }
 
   if (!is.null(packages)) {
-    # pkgNames <- extractPkgName(packages)
     githubPkgs <- grep("\\/", packages, value = TRUE)
-    githubPkgNames <- extractPkgGitHub(githubPkgs)
+    #githubPkgNames <- extractPkgGitHub(githubPkgs)
 
-    if (!dir.exists(libPath)) dir.create(libPath)
-    libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
-
-    if (standAlone) {
-      # include only base if standAlone
-      nonLibPathPaths <- .libPaths()[length(.libPaths())]
-      ips <- unname(installed.packages(priority = "high")[, "Package"])
-      nonLibPathPkgs <- ips # unlist(lapply(nonLibPathPaths, dir))
-    } else {
-      nonLibPathPaths <- setdiff(.libPaths(), libPath)
-      nonLibPathPkgs <- unique(unlist(lapply(nonLibPathPaths, dir)))
-    }
-
+    ##################################################################
+    # Set up libPath
+    origLibPaths <- setLibPaths(libPath, standAlone)
+    on.exit({.libPaths(origLibPaths)}, add = TRUE)
     # Two parts: 1) if there is a packageVersionFile (this calls the external file installVersions)
     #            2) if there is no packageVersionFile
     if (!missing(packageVersionFile)) {
@@ -173,18 +163,24 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       aa <- .installPackages(packages, #githubPkgs = githubPkgs,
                              #githubPkgNames = githubPkgNames,
                              install_githubArgs = install_githubArgs,
-                             nonLibPathPkgs = nonLibPathPkgs, libPath = libPath,
-                             standAlone = standAlone, forget = forget)
+                             #nonLibPathPkgs = nonLibPathPkgs,
+                             libPath = libPath,
+                             standAlone = standAlone)#, forget = forget)
       allPkgsNeeded <- aa$allPkgsNeeded
       libPathListFiles <- .libPathListFiles(standAlone, libPath)
 
       libPathListFiles <- libPathListFiles[basename(libPathListFiles) %in% allPkgsNeeded]
-      currentVersions <- installedVersionsQuick(libPathListFiles, libPath, standAlone = standAlone,
-                             basename(libPathListFiles))
-      if (is.null(names(currentVersions)))
-        if (identical(length(currentVersions), length(allPkgsNeeded))) {
-          names(currentVersions) <- allPkgsNeeded
-        }
+      currentVersionsDT <- as.data.table(installed.packages())
+      currentVersionsDT <- currentVersionsDT[Package %in% allPkgsNeeded]
+      currentVersionsDT <- currentVersionsDT[, .SD[which.min(match(LibPath, .libPaths()))], by = "Package"]
+      currentVersions <- currentVersionsDT$Version
+      names(currentVersions) <- currentVersionsDT$Package
+    #   currentVersions <- installedVersionsQuick(libPathListFiles, libPath, standAlone = standAlone,
+    #                          basename(libPathListFiles))
+    #   if (is.null(names(currentVersions)))
+    #     if (identical(length(currentVersions), length(allPkgsNeeded))) {
+    #       names(currentVersions) <- allPkgsNeeded
+    #     }
     }
 
     collapsedLibPath <- gsub("\\/", replacement = "_", libPath)
@@ -194,19 +190,20 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
     autoFile <- paste0(pathToRequireFolder, "._packageVersionsAuto.txt")
     if (is.null(aa$haveVers)) {
       if (length(currentVersions)) {
-        pkgsToSnapshot <- pickFirstVersion(names(currentVersions), unlist(currentVersions))
-        .pkgSnapshot(pkgsToSnapshot$instPkgs, pkgsToSnapshot$instVers, packageVersionFile = autoFile)
+        checkPath(dirname(autoFile), create = TRUE)
+        # pkgsToSnapshot <- pickFirstVersion(names(currentVersions), unlist(currentVersions))
+        .pkgSnapshot(names(currentVersions), currentVersions, packageVersionFile = autoFile)
       }
     } else {
       .pkgSnapshot(aa$instPkgs, aa$haveVers, packageVersionFile = autoFile)
       pkgSnapshot <- aa
     }
 
-    oldLibPath <- .libPaths()
-    if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
-    on.exit({
-      .libPaths(oldLibPath)
-    }, add = TRUE)
+    # oldLibPath <- .libPaths()
+    # if (standAlone) .libPaths(libPath) else .libPaths(c(libPath, .libPaths()))
+    # on.exit({
+    #   .libPaths(oldLibPath)
+    # }, add = TRUE)
 
     # Actual package loading
     browser(expr = exists("._Require_3"))
@@ -327,27 +324,6 @@ compareNA <- function(v1, v2) {
   return(same)
 }
 
-#' A shortcut to create a \code{.libPaths()} with only two directories
-#'
-#' This will remove all but the top level of \code{.libPaths()}, which should be
-#' the core packages installed with R, and adds a second directory, the \code{libPath}.
-#'
-#' @param libPath A path that will be the new .libPaths()[1]
-#'
-#' @return Invisibly, the new \code{.libPaths()}.
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' newLibPaths("testPackages")
-#' .libPaths() # new .libPaths
-#' }
-newLibPaths <- function(libPath) {
-  .libPaths(.libPaths()[length(.libPaths())])
-  suppressWarnings(dir.create(libPath))
-  .libPaths(libPath)
-  invisible(.libPaths())
-}
 
 #' Determine versions all installed packages
 #'
@@ -928,7 +904,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
             message("No connection to the internet. Can't install packages.")
           }
 
-          AP <- installed.packages(lib.loc = libPath) # nolint
+          AP <- installed.packages() # nolint
           actuallyInstalled <- data.table(AP[(AP[, "Package"] %in% canInstDirectFromCRAN$instPkgs),
                                              c("Package", "Version"), drop = FALSE])
           setnames(actuallyInstalled, old = c("Package", "Version"),
@@ -969,7 +945,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
             if (archiveReposAttempts > 1) archiveReposSuccess <- TRUE
           }
 
-          AP <- installed.packages(lib.loc = libPath) # nolint
+          AP <- installed.packages() # nolint
           actuallyInstalled <- data.table(AP[(AP[, "Package"] %in% tryCRANarchive$instPkgs),
                                              c("Package", "Version"), drop = FALSE])
           setnames(actuallyInstalled, old = c("Package", "Version"),
@@ -997,6 +973,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       if (length(whPkgsNeededGH)) {
         whPkgsNeededGHNames <- ghPackages[pkgsOmitted]
         lapply(whPkgsNeededGH, function(pkg) {
+          browser()
           oldLibPaths <- .libPaths()
           .libPaths(c(libPath, oldLibPaths))
           remotes::install_github(pkg, upgrade_dependencies = FALSE, local = FALSE, force = TRUE)
@@ -1037,15 +1014,15 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'
 #' @inheritParams Require
 #' @param repos The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},
-#' @param githubPkgs Character vector of github repositories and packages, in the
-#'                   form \code{username/package@branch}, with branch being optional.
-#' @param githubPkgNames Character vector of the package names, i.e., just the R package name.
+#' #param githubPkgs Character vector of github repositories and packages, in the
+#' #                   form \code{username/package@branch}, with branch being optional.
+#' #param githubPkgNames Character vector of the package names, i.e., just the R package name.
 #' @param nonLibPathPkgs Character vector of all installed packages that are in \code{.libPaths},
 #'                       but not in \code{libPath}. This would normally include a listing of
 #'                       base packages, but may also include other library paths if
 #'                       \code{standAlone} if \code{FALSE}
 #' @importFrom data.table data.table setDT setnames
-#' @importFrom memoise forget is.memoised memoise
+#' @importFrom memoise is.memoised memoise
 #' @importFrom utils assignInMyNamespace available.packages install.packages installed.packages
 #' @importFrom utils read.table compareVersion
 #' @importFrom versions install.versions
@@ -1056,186 +1033,213 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'   .installPackages("crayon")
 #' }
 .installPackages <- function(packages, repos = getOption("repos"),
-                             githubPkgs = character(0), githubPkgNames,
+                             #githubPkgs = character(0),
+                             #githubPkgNames,
                              nonLibPathPkgs = character(0), install_githubArgs, # nolint
                              install.packagesArgs = list(), # nolint
-                             libPath = .libPaths()[1], standAlone = standAlone,
-                             forget = FALSE) {
+                             libPath = .libPaths(), standAlone = standAlone) {
 
   browser(expr = exists("._installPackages_1"))
 
   pkgNames <- extractPkgName(packages)
   # Check if installed
-  installedPkgsCurrent <- installed.packages(unique(c(libPath, tail(.libPaths(),1))))
+  origLibPaths <- setLibPaths(libPath, standAlone)
+  on.exit({.libPaths(origLibPaths)}, add = TRUE)
+
+  installedPkgsCurrent <- installed.packages()
   installedPkgsCurrent <- as.data.table(installedPkgsCurrent[, c("Package", "LibPath", "Version"), drop = FALSE])
 
   messFromDeps <- capture_messages(
-    depsAll <- pkgDep(unique(pkgNames), unique(c(libPath, .libPaths())), recursive = TRUE))
+    depsAll <- pkgDep(unique(pkgNames), #lib = .libPaths()[-length(.libPaths())],
+                      recursive = TRUE))
   deps <- unique(unlist(depsAll))
+  baseRPackages <- dir(tail(.libPaths(),1)) # remove base packages
+  deps <- setdiff(deps, baseRPackages)
 
   if (length(deps) == 0) deps <- NULL
 
   pkgDT <- data.table(Package = c(pkgNames, deps), packageFullName = c(packages, deps))
   pkgDT[, hasMinVersion := grepl(.grepVersionNumber, packageFullName)]
   pkgDT[, installed := Package %in% installedPkgsCurrent$Package]
-  pkgDT[, `:=`(availableOnCRAN = NA, availableOnGitHub = NA, currentInstalled = NA, correctVersionAvailGH = NA,
-               correctVersionAvail = NA)]
+  pkgDT[, `:=`(availableOnCRAN = NA, AvailableVersionCRAN = NA, versionOnGH = NA,
+               currentInstalled = NA, correctVersionAvailGH = NA,
+               correctVersionAvail = NA, minVersion = NA, upgrade = NA)]
   notAvailableAnywhere <- character()
 
   # # Check min version
   upgrades <- character()
   pkgDT <- installedPkgsCurrent[pkgDT, on = "Package"]
 
-  # if (any(pkgDT$hasMinVersion)) {
-  pkgDTMV <- pkgDT[hasMinVersion == TRUE][, minVersion := gsub(grepExtractPkgs, "\\2", packageFullName)]
-  pkgDTNoMV <- pkgDT[hasMinVersion == FALSE]
-  pkgDTMV[hasMinVersion == TRUE, inequality := gsub(grepExtractPkgs, "\\1", packageFullName)]
+  colsToKeep <- c("Package", "Version", "hasMinVersion", "minVersion", "AvailableVersionCRAN",
+                  "correctVersionAvail", "installed", "packageFullName", "versionOnGH", "correctVersionAvailGH",
+                  "upgrade")
+  newColNames <- c("Package", "currentInstalled", "hasMinVersion", "neededVersion", "currentOnCRAN",
+                   "availableOnCRAN", "installed", "packageFullName", "currentOnGH", "availableOnGitHub", "upgrade")
 
-  # any duplicates with different minimum version number to be dealt with here
-  pkgDTMV <- pkgDTMV[pkgDTMV[, list(minVersion = as.character(max(package_version(minVersion)))),
-                             by = "Package"],
-                     on = c("Package", "minVersion")]
+  if (NROW(pkgDT)) {
+    pkgDT[ , githubPkgName := extractPkgGitHub(packageFullName)]
+    pkgDT[, isGH := !is.na(githubPkgName)]
+    pkgDT[isGH == TRUE, fullGit := trimVersionNumber(packageFullName)]
+    pkgDT[isGH == TRUE, Account := gsub("^(.*)/.*$", "\\1", fullGit)]
+    pkgDT[isGH == TRUE, RepoWBranch := gsub("^(.*)/(.*)@*.*$", "\\2", fullGit)]
+    pkgDT[isGH == TRUE, Repo := gsub("^(.*)@(.*)$", "\\1", RepoWBranch)]
+    pkgDT[isGH == TRUE, Branch := "master"]
+    pkgDT[isGH == TRUE & grepl("@", RepoWBranch), Branch := gsub("^.*@(.*)$", "\\1", RepoWBranch)]
+    pkgDT[isGH == TRUE, Package := githubPkgName]
+    set(pkgDT, NULL, c("RepoWBranch", "fullGit"), NULL)
 
-  if (NROW(pkgDTMV)) {
-    pkgDTMV[ , githubPkgName := extractPkgGitHub(packageFullName)]
-    pkgDTMV[, isGH := !is.na(githubPkgName)]
-    pkgDTMV[isGH == TRUE, fullGit := trimVersionNumber(packageFullName)]
-    pkgDTMV[isGH == TRUE, Account := gsub("^(.*)/.*$", "\\1", fullGit)]
-    pkgDTMV[isGH == TRUE, RepoWBranch := gsub("^(.*)/(.*)@*.*$", "\\2", fullGit)]
-    pkgDTMV[isGH == TRUE, Repo := gsub("^(.*)@(.*)$", "\\1", RepoWBranch)]
-    pkgDTMV[isGH == TRUE, Branch := "master"]
-    pkgDTMV[isGH == TRUE & grepl("@", RepoWBranch), Branch := gsub("^.*@(.*)$", "\\1", RepoWBranch)]
-    pkgDTMV[isGH == TRUE, Package := githubPkgName]
-    set(pkgDTMV, NULL, c("RepoWBranch", "fullGit"), NULL)
-    pkgDTMV[, compareVersion := .compareVersionV(Version, minVersion)]
-    pkgDTMV[, correctVersion := .evalV(.parseV(text = paste(compareVersion, inequality, "0")))]
+    pkgDTNoMV <- pkgDT[hasMinVersion == FALSE]
+    pkgDTNoMV[isGH == TRUE, correctVersionAvailGH := TRUE]
 
-    notCorrectVersions <- pkgDTMV[correctVersion == FALSE]
-    areGH <- pkgDTMV[correctVersion == FALSE & isGH == TRUE]$Package
+    pkgDTMV <- pkgDT[hasMinVersion == TRUE][, minVersion := gsub(grepExtractPkgs, "\\2", packageFullName)]
+    pkgDTMV[hasMinVersion == TRUE, inequality := gsub(grepExtractPkgs, "\\1", packageFullName)]
 
-    if (NROW(notCorrectVersions)) {#} && sum(notCorrectVersions$installed) > 0) {
-      if (!is.memoised(available.packagesMem)) {
-        assignInMyNamespace("available.packagesMem", memoise(available.packages, ~timeout(360))) # nolint
-      }
-      apm <- available.packagesMem()
-      apm <- as.data.table(apm[, c("Package", "Version")])
-      setnames(apm, "Version", "AvailableVersionCRAN")
-      notCorrectVersions <- apm[notCorrectVersions, on = "Package"]
-      notCorrectVersions[, compareVersionAvail := .compareVersionV(AvailableVersionCRAN, minVersion)]
-      notCorrectVersions[, correctVersionAvail := .evalV(.parseV(text = paste(compareVersionAvail, inequality, "0")))]
+    # any duplicates with different minimum version number to be dealt with here
+    pkgDTMV <- pkgDTMV[pkgDTMV[, list(minVersion = as.character(max(package_version(minVersion)))),
+                               by = "Package"],
+                       on = c("Package", "minVersion")]
 
-      colsToKeep <- c("Package", "Version", "minVersion",
-                      "AvailableVersionCRAN", "correctVersionAvail", "installed", "packageFullName")
-      newColNames <- c("Package", "currentInstalled", "neededVersion",
-                       "currentOnCRAN", "availableOnCRAN", "installed", "packageFullName")
 
-      if (any(notCorrectVersions$isGH)) {
-        notCorrectVersions[isGH == TRUE,
-                           url := file.path("https://raw.githubusercontent.com", Account,
-                                            Repo, Branch, "DESCRIPTION", fsep = "/")
-                           ]
-        ua <- httr::user_agent(getOption("reproducible.useragent"))
-        notCorrectVersions[isGH == TRUE, {
-          versionOnGH := {
-            destFile <- tempfile()
-            suppressWarnings(
-              httr::GET(url, ua,
-                        httr::write_disk(destFile, overwrite = TRUE)) ## TODO: overwrite?
-            )
-            DESCRIPTIONFileVersion(destFile)
-          }
-        }, by = c("Package", "Branch")]
+    if (NROW(pkgDTMV)) {
+      # pkgDTMV[ , githubPkgName := extractPkgGitHub(packageFullName)]
+      # pkgDTMV[, isGH := !is.na(githubPkgName)]
+      # pkgDTMV[isGH == TRUE, fullGit := trimVersionNumber(packageFullName)]
+      # pkgDTMV[isGH == TRUE, Account := gsub("^(.*)/.*$", "\\1", fullGit)]
+      # pkgDTMV[isGH == TRUE, RepoWBranch := gsub("^(.*)/(.*)@*.*$", "\\2", fullGit)]
+      # pkgDTMV[isGH == TRUE, Repo := gsub("^(.*)@(.*)$", "\\1", RepoWBranch)]
+      # pkgDTMV[isGH == TRUE, Branch := "master"]
+      # pkgDTMV[isGH == TRUE & grepl("@", RepoWBranch), Branch := gsub("^.*@(.*)$", "\\1", RepoWBranch)]
+      # pkgDTMV[isGH == TRUE, Package := githubPkgName]
+      # set(pkgDTMV, NULL, c("RepoWBranch", "fullGit"), NULL)
+      pkgDTMV[, compareVersion := .compareVersionV(Version, minVersion)]
+      pkgDTMV[, correctVersion := .evalV(.parseV(text = paste(compareVersion, inequality, "0")))]
 
-        notCorrectVersions[, compareVersionAvailGH := .compareVersionV(versionOnGH, minVersion)]
-        notCorrectVersions[, correctVersionAvailGH :=
-                             .evalV(.parseV(text = paste(compareVersionAvailGH, inequality, "0")))]
-        colsToKeep <- c(colsToKeep, "versionOnGH", "correctVersionAvailGH")
-        newColNames <- c(newColNames, "currentOnGH", "availableOnGitHub")
+      notCorrectVersions <- pkgDTMV[correctVersion == FALSE]
+      areGH <- pkgDTMV[correctVersion == FALSE & isGH == TRUE]$Package
 
-      }
-
-      # If correct version is available, and it wasn't already installed, remove it from here and
-      #   let the "normal" install mechanism take place - Don't ask about these
-      notInstalledCorrectAvail <- notCorrectVersions[(installed == FALSE &
-                                                        (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
-                                                     ..colsToKeep]
-      upgradeAvailable <- notCorrectVersions[(installed == TRUE &
-                                                (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
-                                             ..colsToKeep]
-      upgradeAvailable[, upgrade := FALSE]
-      impossibleToInstall <- notCorrectVersions[!(installed == FALSE &
-                                                    (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
-                                                ..colsToKeep]
-
-      setnames(impossibleToInstall, old = colsToKeep, new = newColNames )
-      setnames(notInstalledCorrectAvail, old = colsToKeep, new = newColNames )
-      setnames(upgradeAvailable, old = colsToKeep, new = newColNames )
-      notAvailableAnywhere <- impossibleToInstall$Package
-      if (length(notAvailableAnywhere)) {
-        message(magenta("These are not upgradable to required versions: ", paste(notAvailableAnywhere, collapse = ", ")))
-        message(magenta(" -->  Please manually install these packages or check minimum version requirements"))
-        messageDF(impossibleToInstall, colour = "magenta")
-      }
-      if (NROW(upgradeAvailable)) {
-
-        availableOnGH <- upgradeAvailable[availableOnGitHub == TRUE]$Package
-        availableOnCRAN <- upgradeAvailable[availableOnCRAN == TRUE]$Package
-        upgradeAvailable[availableOnGitHub == TRUE, installFrom := "GitHub"]
-        upgradeAvailable[availableOnCRAN == TRUE, installFrom := "CRAN"]
-        if (NROW(upgradeAvailable)) {
-          message(crayon::green("These are upgradable: "))
-          messageDF(upgradeAvailable, colour = "green")
+      if (NROW(notCorrectVersions)) {#} && sum(notCorrectVersions$installed) > 0) {
+        if (!is.memoised(available.packagesMem)) {
+          assignInMyNamespace("available.packagesMem", memoise(available.packages, ~timeout(360))) # nolint
         }
+        apm <- available.packagesMem()
+        apm <- as.data.table(apm[, c("Package", "Version")])
+        setnames(apm, "Version", "AvailableVersionCRAN")
+        notCorrectVersions <- apm[notCorrectVersions, on = "Package"]
+        notCorrectVersions[, compareVersionAvail := .compareVersionV(AvailableVersionCRAN, minVersion)]
+        notCorrectVersions[, correctVersionAvail := .evalV(.parseV(text = paste(compareVersionAvail, inequality, "0")))]
 
-        if (length(availableOnGH))
-          capture_messages(message("Packages available on GitHub: ", paste(availableOnGH, collapse = ", ")))
-        if (length(availableOnCRAN))
-          capture_messages(message("Packages available on CRAN: ", paste(availableOnCRAN, collapse = ", ")))
 
-        upgradeAvailable <- upgradeAvailable[!is.na(installFrom)]
-        if (NROW(upgradeAvailable)) {
-
-          vals <- c("All", "CRAN packages only", "None", upgradeAvailable[installFrom == "CRAN"]$Package,
-                    upgradeAvailable[installFrom == "GitHub"]$Package)
-
-          df2 <- data.frame( row.names = NULL, stringsAsFactors = FALSE, "Upgrade" = vals)
-          row.names(df2) <- paste0(seq(NROW(df2)), ":")
-          messageDF(df2)
-          out <- if (isInteractive() && is.null(getOption("reproducible.Require.upgrade"))) {
-            as.numeric(.readline("Pick a number to upgrade: "))
-          } else {
-            getOption("reproducible.Require.upgrade", 3)
-          }
-          if (out > NROW(df2)) stop("Please choose one of the options")
-          choice <- df2[out,]
-          if (identical(choice, "None") || is.na(out)) {
-            message("Not installing/upgrading ",paste(upgradeAvailable$Package, collapse = ", "),
-                    "; this may cause undesired effects")
-          } else {
-            upgrades <- df2[-(1:3),]
-            upgradesGit <- upgradeAvailable[installFrom == "GitHub"]$Package
-            if (identical(out, 2)) {
-              upgrades <- upgrades[!upgrades %in% upgradesGit]
-            } else if (out > 3) {
-              upgrades <- upgrades[as.numeric(out) - 3]
+        if (any(notCorrectVersions$isGH)) {
+          notCorrectVersions[isGH == TRUE,
+                             url := file.path("https://raw.githubusercontent.com", Account,
+                                              Repo, Branch, "DESCRIPTION", fsep = "/")
+                             ]
+          ua <- httr::user_agent(getOption("reproducible.useragent"))
+          notCorrectVersions[isGH == TRUE, {
+            versionOnGH := {
+              destFile <- tempfile()
+              suppressWarnings(
+                httr::GET(url, ua,
+                          httr::write_disk(destFile, overwrite = TRUE)) ## TODO: overwrite?
+              )
+              DESCRIPTIONFileVersion(destFile)
             }
-          }
-          missingPkg <- upgradeAvailable[is.na(currentInstalled)]
-          if (NROW(missingPkg)) {
-            packages <- c(packages, missingPkg$Package)
+          }, by = c("Package", "Branch")]
+
+          notCorrectVersions[, compareVersionAvailGH := .compareVersionV(versionOnGH, minVersion)]
+          notCorrectVersions[, correctVersionAvailGH :=
+                               .evalV(.parseV(text = paste(compareVersionAvailGH, inequality, "0")))]
+          #colsToKeep <- c(colsToKeep, "versionOnGH", "correctVersionAvailGH")
+          #newColNames <- c(newColNames, "currentOnGH", "availableOnGitHub")
+
+        }
+
+        # If correct version is available, and it wasn't already installed, remove it from here and
+        #   let the "normal" install mechanism take place - Don't ask about these
+        notInstalledCorrectAvail <- notCorrectVersions[(installed == FALSE &
+                                                          (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
+                                                       ..colsToKeep]
+        upgradeAvailable <- notCorrectVersions[(installed == TRUE &
+                                                  (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
+                                               ..colsToKeep]
+        upgradeAvailable[, upgrade := FALSE]
+        impossibleToInstall <- notCorrectVersions[!(installed == FALSE &
+                                                      (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
+                                                  ..colsToKeep]
+
+        setnames(impossibleToInstall, old = colsToKeep, new = newColNames )
+        setnames(notInstalledCorrectAvail, old = colsToKeep, new = newColNames )
+        setnames(upgradeAvailable, old = colsToKeep, new = newColNames )
+        notAvailableAnywhere <- impossibleToInstall$Package
+        if (length(notAvailableAnywhere)) {
+          message(magenta("These are not upgradable to required versions: ", paste(notAvailableAnywhere, collapse = ", ")))
+          message(magenta(" -->  Please manually install these packages or check minimum version requirements"))
+          messageDF(impossibleToInstall, colour = "magenta")
+        }
+        if (NROW(upgradeAvailable)) {
+
+          availableOnGH <- upgradeAvailable[availableOnGitHub == TRUE]$Package
+          availableOnCRAN <- upgradeAvailable[availableOnCRAN == TRUE]$Package
+          upgradeAvailable[availableOnGitHub == TRUE, installFrom := "GitHub"]
+          upgradeAvailable[availableOnCRAN == TRUE, installFrom := "CRAN"]
+          if (NROW(upgradeAvailable)) {
+            message(crayon::green("These are upgradable: "))
+            messageDF(upgradeAvailable, colour = "green")
           }
 
-          upgrades <- trimVersionNumber(upgrades)
-          upgradeAvailable[, upgrade := Package %in% upgrades]
-          upgradeAvailable <- upgradeAvailable[upgrade == TRUE]
+          if (length(availableOnGH))
+            capture_messages(message("Packages available on GitHub: ", paste(availableOnGH, collapse = ", ")))
+          if (length(availableOnCRAN))
+            capture_messages(message("Packages available on CRAN: ", paste(availableOnCRAN, collapse = ", ")))
+
+          upgradeAvailable <- upgradeAvailable[!is.na(installFrom)]
+          if (NROW(upgradeAvailable)) {
+
+            vals <- c("All", "CRAN packages only", "None", upgradeAvailable[installFrom == "CRAN"]$Package,
+                      upgradeAvailable[installFrom == "GitHub"]$Package)
+
+            df2 <- data.frame( row.names = NULL, stringsAsFactors = FALSE, "Upgrade" = vals)
+            row.names(df2) <- paste0(seq(NROW(df2)), ":")
+            messageDF(df2)
+            out <- if (isInteractive() && is.null(getOption("reproducible.Require.upgrade"))) {
+              as.numeric(.readline("Pick a number to upgrade: "))
+            } else {
+              getOption("reproducible.Require.upgrade", 3)
+            }
+            if (out > NROW(df2)) stop("Please choose one of the options")
+            choice <- df2[out,]
+            if (identical(choice, "None") || is.na(out)) {
+              message("Not installing/upgrading ",paste(upgradeAvailable$Package, collapse = ", "),
+                      "; this may cause undesired effects")
+            } else {
+              upgrades <- df2[-(1:3),]
+              upgradesGit <- upgradeAvailable[installFrom == "GitHub"]$Package
+              if (identical(out, 2)) {
+                upgrades <- upgrades[!upgrades %in% upgradesGit]
+              } else if (out > 3) {
+                upgrades <- upgrades[as.numeric(out) - 3]
+              }
+            }
+            missingPkg <- upgradeAvailable[is.na(currentInstalled)]
+            if (NROW(missingPkg)) {
+              packages <- c(packages, missingPkg$Package)
+            }
+
+            upgrades <- trimVersionNumber(upgrades)
+            upgradeAvailable[, upgrade := Package %in% upgrades]
+            upgradeAvailable <- upgradeAvailable[upgrade == TRUE]
+          }
         }
+        pkgDTMV <- rbindlist(list(notInstalledCorrectAvail, upgradeAvailable), fill = TRUE, use.names = TRUE)
       }
-      pkgDTMV <- rbindlist(list(notInstalledCorrectAvail, upgradeAvailable), fill = TRUE, use.names = TRUE)
     }
+    pkgDT <- rbindlist(list(pkgDTMV, pkgDTNoMV), fill = TRUE, use.names = TRUE)
+    pkgDT <- pkgDT[!duplicated(pkgDT$Package)] # now that version numbering is dealt with
+  } else {
+    pkgDTMV <- Copy(pkgDT) # if empty pkgDT --> need this in pkgDTMV also
   }
-  pkgDT <- rbindlist(list(pkgDTMV, pkgDTNoMV), fill = TRUE, use.names = TRUE)
-  pkgDT <- pkgDT[!duplicated(pkgDT$Package)] # now that version numbering is dealt with
-  #}
+  pkgDT <- pkgDT[, ..colsToKeep]
+  setnames(pkgDT, old = colsToKeep, new = newColNames )
 
   allPkgsNeeded <- pkgDT$Package
   # allPkgsNeeded <- na.omit(unique(c(deps, packages, upgrades)))
@@ -1262,6 +1266,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
     loaded <- names(loadedNS)[loadedNS]
     cantLoad <- unlist(Map(dep = depsAll, nam = names(depsAll),
         function(dep, nam) any(loaded %in% c(nam, dep))))
+    browser(expr = exists("._installPackages_5"))
     pkgToInstallManually <- pkgDT[installed == FALSE | upgrade == TRUE][Package %in% loaded]
     message("Package(s) already loaded into RAM: (",paste(loaded, collapse = ", "),"). This may cause installation to fail ",
             "and will cause loading of ", paste(names(cantLoad)[cantLoad], collapse = ", "), " to fail.")
@@ -1279,7 +1284,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
   }
   if (length(needInstall) && getOption("reproducible.Require.install", TRUE)) {
     internetExists <- internetExists()
-    if (missing(githubPkgs)) {
+    #if (missing(githubPkgs)) {
       githubPkgs <- character()
       githubPkgNames <- githubPkgs
       if (any(names(pkgDT) %in% "availableOnGitHub")) {
@@ -1287,15 +1292,23 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         githubPkgs <- unlist(lapply(githubPkgNames, function(ghpn)
           trimVersionNumber(grep(ghpn, pkgDT$packageFullName, value = TRUE))))
       }
-    }
+    #}
     if (length(githubPkgs)) {
-      oldLibPaths <- .libPaths()
-      .libPaths(unique(c(libPath, oldLibPaths)))
+      #oldLibPaths <- .libPaths()
+      #.libPaths(unique(c(libPath, oldLibPaths)))
 
       # use xforce = TRUE because we have already eliminated
       args <- append(install_githubArgs, list(dependencies = NA,
                                               # upgrade_dependencies = TRUE,
                                               force = TRUE))#, local = FALSE))
+      if (isTRUE(standAlone)) {
+        oldLibPaths2 <- .libPaths()
+        .libPaths(libPath)
+      } else {
+        oldLibPaths2 <- .libPaths()
+        .libPaths(unique(libPath, .libPaths()))
+      }
+      on.exit(.libPaths(oldLibPaths2), add = TRUE)
       if (internetExists) {
         sapply(githubPkgs, function(pk) {
           args <- append(args, list(pk))
@@ -1317,7 +1330,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       } else {
         message("No connection to the internet. Can't install packages.")
       }
-      .libPaths(oldLibPaths)
+      # .libPaths(oldLibPaths)
 
       # This sends it back in with all the install_github calls which may or may not
       #   include dependencies correctly -- especially with standAlone = TRUE
@@ -1329,7 +1342,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
       ip <- as.data.table(installed.packages(noCache = TRUE))[[1]]
       packagesAgain <- setdiff(unique(c(needInstall[!(needInstall %in% githubPkgNames)], githubPkgNames)),ip)
       Require(packagesAgain,
-              libPath = libPath, forget = TRUE,
+              libPath = libPath, #forget = TRUE,
               install_githubArgs = install_githubArgs, standAlone = standAlone,
               install.packagesArgs = install.packagesArgs)
     } else {
@@ -1377,7 +1390,7 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
         names(needInstall2) <- needInstall2
         aa <- lapply(needInstall2, function(pkg) {
           syscall <- paste0("--quiet --vanilla -e \"utils::install.packages('", pkg,
-                            "',dependencies=FALSE,lib='", libPath, "',repos=c('",
+                            "',dependencies=FALSE,lib='", .libPaths()[1], "',repos=c('",
                             paste(repos, collapse = "','"), "'))\"")
           system(paste(rpath, syscall), wait = TRUE)
         })
@@ -1551,13 +1564,10 @@ installedVersionsQuick <- function(libPathListFiles, libPath, standAlone = FALSE
 .snap <- data.frame()
 .installedVersions <- list()
 
-.libPathListFiles <- function(standAlone, libPath) {
-  if (standAlone) {
-    unlist(lapply(unique(c(libPath, .libPaths()[length(.libPaths())])),
-                                      dir, full.names = TRUE))
-  } else {
-    unlist(lapply(unique(c(libPath, .libPaths())), dir, full.names = TRUE))
-  }
+.libPathListFiles <- function(standAlone, libPath = .libPaths()) {
+  origLibPaths <- setLibPaths(libPath, standAlone)
+  on.exit({.libPaths(origLibPaths)}, add = TRUE)
+  unlist(lapply(.libPaths(), dir, full.names = TRUE))
 }
 
 
@@ -1732,3 +1742,12 @@ pkgDepTopoSort <- function(pkgs, deps, reverse = FALSE, topoSort = TRUE, useAllI
 .defaultPackages <- c(".GlobalEnv", "tools:rstudio", "package:stats", "package:graphics",
                       "package:grDevices", "package:utils", "package:datasets", "package:methods",
                       "Autoloads", "package:base", "devtools_shims")
+
+setLibPaths <- function(libPath = .libPaths(), standAlone = FALSE) {
+  out <- lapply(libPath, checkPath, create = TRUE)
+  libPath <- normalizePath(libPath, winslash = "/") # the system call requires this
+
+  origLibPaths <- .libPaths()
+  if (standAlone) .libPaths(c(libPath, tail(.libPaths(), 1))) else .libPaths(c(libPath, libPath, .libPaths()))
+  return(invisible(origLibPaths))
+}
