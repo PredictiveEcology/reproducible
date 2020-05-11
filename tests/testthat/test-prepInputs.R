@@ -129,7 +129,7 @@ test_that("prepInputs doesn't work (part 1)", {
       useCache = TRUE
     )
   })
-  expect_true(any(grepl("loading", mess)))
+  expect_true(any(grepl("loaded", mess)))
 
   # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
   #   but the StudyArea does get reprojected, need to use rasterToMatch
