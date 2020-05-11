@@ -11,8 +11,7 @@ Require(
   install_githubArgs = list(),
   install.packagesArgs = list(),
   standAlone = FALSE,
-  repos = getOption("repos"),
-  forget = FALSE
+  repos = getOption("repos")
 )
 }
 \arguments{
@@ -31,21 +30,20 @@ calls with \code{versions::install.versions}}
 \item{install.packagesArgs}{List of optional named arguments, passed to \code{install.packages}.}
 
 \item{standAlone}{Logical. If \code{TRUE}, all packages will be installed and loaded strictly
-from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
-be used to find the correct versions. This can be create dramatically faster
-installs if the user has a substantial number of the packages already in their
-personal library. In the case of \code{TRUE}, there will be a hidden file
-place in the \code{libPath} directory that lists all the packages
-that were needed during the \code{Require} call. Default \code{FALSE} to
-minimize package installing.}
+                  from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
+                  be used to find the correct versions. This can be create dramatically faster
+                  installs if the user has a substantial number of the packages already in their
+                  personal library. In the case of \code{TRUE}, there will be a hidden file
+                  place in the \code{libPath} directory that lists all the packages
+                  that were needed during the \code{Require} call. Default \code{FALSE} to
+                  minimize package installing.
+#param forget Internally, this function identifies package dependencies using a memoised
+#               function for speed on reuse. But, it may be inaccurate in some cases,
+#               if packages were installed manually by a user. Set this to \code{TRUE} to
+#               refresh that dependency calculation.}
 
 \item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
 \code{install.packages}, \code{install_github} or \code{installVersions}.}
-
-\item{forget}{Internally, this function identifies package dependencies using a memoised
-function for speed on reuse. But, it may be inaccurate in some cases,
-if packages were installed manually by a user. Set this to \code{TRUE} to
-refresh that dependency calculation.}
 }
 \description{
 \lifecycle{maturing}
@@ -94,9 +92,9 @@ more permanent record of versions can be made.
 This function will use \code{memoise} internally to determine the
   dependencies of all \code{packages}. This will speed up subsequent calls to
   \code{Require} dramatically. However, it will not take into account version
-  numbers for this memoised step. If package versions are updated manually by
-  the user, then this cached element should be wiped, using \code{forget =
-  TRUE}.
+  numbers for this memoised step. #If package versions are updated manually by
+  #the user, then this cached element should be wiped, using \code{forget =
+  #TRUE}.
 }
 \examples{
 \dontrun{

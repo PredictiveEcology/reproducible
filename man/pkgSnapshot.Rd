@@ -14,13 +14,17 @@ installed version numbers. Defaults to \code{".packageVersions.txt"}.}
 Defaults to the .libPaths()[1]}
 
 \item{standAlone}{Logical. If \code{TRUE}, all packages will be installed and loaded strictly
-from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
-be used to find the correct versions. This can be create dramatically faster
-installs if the user has a substantial number of the packages already in their
-personal library. In the case of \code{TRUE}, there will be a hidden file
-place in the \code{libPath} directory that lists all the packages
-that were needed during the \code{Require} call. Default \code{FALSE} to
-minimize package installing.}
+                  from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
+                  be used to find the correct versions. This can be create dramatically faster
+                  installs if the user has a substantial number of the packages already in their
+                  personal library. In the case of \code{TRUE}, there will be a hidden file
+                  place in the \code{libPath} directory that lists all the packages
+                  that were needed during the \code{Require} call. Default \code{FALSE} to
+                  minimize package installing.
+#param forget Internally, this function identifies package dependencies using a memoised
+#               function for speed on reuse. But, it may be inaccurate in some cases,
+#               if packages were installed manually by a user. Set this to \code{TRUE} to
+#               refresh that dependency calculation.}
 }
 \description{
 This can be used later by \code{installVersions} to install or re-install the correct versions.

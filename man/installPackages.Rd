@@ -8,14 +8,11 @@
 .installPackages(
   packages,
   repos = getOption("repos"),
-  githubPkgs = character(0),
-  githubPkgNames,
   nonLibPathPkgs = character(0),
   install_githubArgs,
   install.packagesArgs = list(),
-  libPath = .libPaths()[1],
-  standAlone = standAlone,
-  forget = FALSE
+  libPath = .libPaths(),
+  standAlone = standAlone
 )
 
 trimVersionNumber(packages)
@@ -25,12 +22,10 @@ trimVersionNumber(packages)
 \code{install.packages}, then load (i.e., with \code{library}). If it is
 one package, it can be unquoted (as in \code{require})}
 
-\item{repos}{The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},}
-
-\item{githubPkgs}{Character vector of github repositories and packages, in the
-form \code{username/package@branch}, with branch being optional.}
-
-\item{githubPkgNames}{Character vector of the package names, i.e., just the R package name.}
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},
+#param githubPkgs Character vector of github repositories and packages, in the
+#                   form \code{username/package@branch}, with branch being optional.
+#param githubPkgNames Character vector of the package names, i.e., just the R package name.}
 
 \item{nonLibPathPkgs}{Character vector of all installed packages that are in \code{.libPaths},
 but not in \code{libPath}. This would normally include a listing of
@@ -45,18 +40,17 @@ base packages, but may also include other library paths if
 (i.e., call \code{library})}
 
 \item{standAlone}{Logical. If \code{TRUE}, all packages will be installed and loaded strictly
-from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
-be used to find the correct versions. This can be create dramatically faster
-installs if the user has a substantial number of the packages already in their
-personal library. In the case of \code{TRUE}, there will be a hidden file
-place in the \code{libPath} directory that lists all the packages
-that were needed during the \code{Require} call. Default \code{FALSE} to
-minimize package installing.}
-
-\item{forget}{Internally, this function identifies package dependencies using a memoised
-function for speed on reuse. But, it may be inaccurate in some cases,
-if packages were installed manually by a user. Set this to \code{TRUE} to
-refresh that dependency calculation.}
+                  from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
+                  be used to find the correct versions. This can be create dramatically faster
+                  installs if the user has a substantial number of the packages already in their
+                  personal library. In the case of \code{TRUE}, there will be a hidden file
+                  place in the \code{libPath} directory that lists all the packages
+                  that were needed during the \code{Require} call. Default \code{FALSE} to
+                  minimize package installing.
+#param forget Internally, this function identifies package dependencies using a memoised
+#               function for speed on reuse. But, it may be inaccurate in some cases,
+#               if packages were installed manually by a user. Set this to \code{TRUE} to
+#               refresh that dependency calculation.}
 }
 \description{
 Internal function to install packages
