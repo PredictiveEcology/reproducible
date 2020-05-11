@@ -18,7 +18,7 @@ which metadata will be returned. If \code{NULL} (default), it will use the
 Invoked for its side effect on the \code{repoDir}.
 }
 \description{
-\lifecycle{defunct}
+\lifecycle{deprecated}
 }
 \details{
 Stub artifacts can result from several causes. The most common being

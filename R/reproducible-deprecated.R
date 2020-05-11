@@ -1,6 +1,6 @@
 #' Clear erroneous archivist artifacts
 #'
-#' \lifecycle{defunct}
+#' \lifecycle{deprecated}
 #'
 #' Stub artifacts can result from several causes. The most common being
 #' erroneous removal of a file in the SQLite database. This can be caused
