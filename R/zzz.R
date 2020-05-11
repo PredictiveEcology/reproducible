@@ -20,8 +20,7 @@
     packageStartupMessage("Using reproducible version ",
                           utils::packageVersion("reproducible"), ".",
                           "\n  'reproducible' has changed the default database backend.",
-                          "\n  See ?reproducibleOptions for details. To revert to the old:",
-                          "\n  options('reproducible.useDBI' = FALSE)")
+                          "\n  See ?reproducibleOptions for details.")
   }
 }
 
