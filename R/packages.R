@@ -1,12 +1,12 @@
 if (getRversion() >= "3.1.0") {
   utils::globalVariables(c(
-    ".SD", "instPkgs", "..colsToKeep",
+    ".SD", "instPkgs", "..colsToKeep", "..colsToKeepNow",
     "Account", "availableOnCRAN", "availableOnGitHub", "AvailableVersion", "AvailableVersionCRAN",
-    "Branch", "compareVersionAvail", "compareVersionAvailGH", "correctVersion",
+    "Branch", "colsToKeep", "compareVersionAvail", "compareVersionAvailGH", "correctVersion",
     "correctVersionAvail", "correctVersionAvailGH", "currentInstalled", "fullGit", "githubPkgName",
-    "hasMinVersion", "hasVersionSpec", "inequality", "installed", "isGH", "minVersion",
-    "Package", "packageFullName", "Repo", "RepoWBranch",
-    "upgrade", "Version", "versionOnGH", "versionSpec"
+    "hasMinVersion", "hasVersionSpec", "inequality", "installed", "installFrom", "isGH",
+    "minVersion", "newColNames", "notCorrectVersions", "Package", "packageFullName",
+    "Repo", "RepoWBranch", "upgrade", "Version", "versionOnGH", "versionSpec"
   ))
 }
 
@@ -158,7 +158,6 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       Sys.setlocale(locale = "")
       allPkgsNeeded <- aa$instPkgs
     } else {
-
       aa <- .installPackages(packages, #githubPkgs = githubPkgs,
                              #githubPkgNames = githubPkgNames,
                              install_githubArgs = install_githubArgs,
@@ -171,7 +170,7 @@ Require <- function(packages, packageVersionFile, libPath = .libPaths()[1], # no
       libPathListFiles <- libPathListFiles[basename(libPathListFiles) %in% allPkgsNeeded]
       currentVersionsDT <- as.data.table(installed.packages())
       currentVersionsDT <- currentVersionsDT[Package %in% allPkgsNeeded]
-      currentVersionsDT <- currentVersionsDT[, .SD[which.min(match(LibPath, .libPaths()))], by = "Package"]
+      currentVersionsDT <- currentVersionsDT[, .SD[which.min(match(libPath, .libPaths()))], by = "Package"]
       currentVersions <- currentVersionsDT$Version
       names(currentVersions) <- currentVersionsDT$Package
     #   currentVersions <- installedVersionsQuick(libPathListFiles, libPath, standAlone = standAlone,
@@ -1896,81 +1895,81 @@ getAvailable <- function(pkgDT) {
 
   pkgDT
 }
-a <- function(x) {
-    notInstalledCorrectAvail <- notCorrectVersions[(installed == FALSE &
-                                                      (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
-                                                   ]
-    upgradeAvailable <- notCorrectVersions[(installed == TRUE &
-                                              (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
-                                           ]
-    upgradeAvailable[, upgrade := FALSE]
-    impossibleToInstall <- notCorrectVersions[!(installed == FALSE &
-                                                  (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
-                                              ]
 
-    setnames(impossibleToInstall, old = colsToKeep, new = newColNames )
-    setnames(notInstalledCorrectAvail, old = colsToKeep, new = newColNames )
-    setnames(upgradeAvailable, old = colsToKeep, new = newColNames )
-    notAvailableAnywhere <- impossibleToInstall$Package
-    if (length(notAvailableAnywhere)) {
-      message(magenta("These are not upgradable to required versions: ", paste(notAvailableAnywhere, collapse = ", ")))
-      message(magenta(" -->  Please manually install these packages or check minimum version requirements"))
-      messageDF(impossibleToInstall, colour = "magenta")
+a <- function(x) {
+  notInstalledCorrectAvail <- notCorrectVersions[(installed == FALSE &
+                                                    (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
+  ]
+  upgradeAvailable <- notCorrectVersions[(installed == TRUE &
+                                            (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
+  ]
+  upgradeAvailable[, upgrade := FALSE]
+  impossibleToInstall <- notCorrectVersions[!(installed == FALSE &
+                                                (correctVersionAvail == TRUE | correctVersionAvailGH == TRUE)),
+  ]
+
+  setnames(impossibleToInstall, old = colsToKeep, new = newColNames )
+  setnames(notInstalledCorrectAvail, old = colsToKeep, new = newColNames )
+  setnames(upgradeAvailable, old = colsToKeep, new = newColNames )
+  notAvailableAnywhere <- impossibleToInstall$Package
+  if (length(notAvailableAnywhere)) {
+    message(magenta("These are not upgradable to required versions: ", paste(notAvailableAnywhere, collapse = ", ")))
+    message(magenta(" -->  Please manually install these packages or check minimum version requirements"))
+    messageDF(impossibleToInstall, colour = "magenta")
+  }
+  if (NROW(upgradeAvailable)) {
+
+    availableOnGH <- upgradeAvailable[availableOnGitHub == TRUE]$Package
+    availableOnCRAN <- upgradeAvailable[availableOnCRAN == TRUE]$Package
+    upgradeAvailable[availableOnGitHub == TRUE, installFrom := "GitHub"]
+    upgradeAvailable[availableOnCRAN == TRUE, installFrom := "CRAN"]
+    if (NROW(upgradeAvailable)) {
+      message(crayon::green("These are upgradable: "))
+      messageDF(upgradeAvailable, colour = "green")
     }
+
+    if (length(availableOnGH))
+      capture_messages(message("Packages available on GitHub: ", paste(availableOnGH, collapse = ", ")))
+    if (length(availableOnCRAN))
+      capture_messages(message("Packages available on CRAN: ", paste(availableOnCRAN, collapse = ", ")))
+
+    upgradeAvailable <- upgradeAvailable[!is.na(installFrom)]
     if (NROW(upgradeAvailable)) {
 
-      availableOnGH <- upgradeAvailable[availableOnGitHub == TRUE]$Package
-      availableOnCRAN <- upgradeAvailable[availableOnCRAN == TRUE]$Package
-      upgradeAvailable[availableOnGitHub == TRUE, installFrom := "GitHub"]
-      upgradeAvailable[availableOnCRAN == TRUE, installFrom := "CRAN"]
-      if (NROW(upgradeAvailable)) {
-        message(crayon::green("These are upgradable: "))
-        messageDF(upgradeAvailable, colour = "green")
+      vals <- c("All", "CRAN packages only", "None", upgradeAvailable[installFrom == "CRAN"]$Package,
+                upgradeAvailable[installFrom == "GitHub"]$Package)
+
+      df2 <- data.frame( row.names = NULL, stringsAsFactors = FALSE, "Upgrade" = vals)
+      row.names(df2) <- paste0(seq(NROW(df2)), ":")
+      messageDF(df2)
+      out <- if (isInteractive() && is.null(getOption("reproducible.Require.upgrade"))) {
+        as.numeric(.readline("Pick a number to upgrade: "))
+      } else {
+        getOption("reproducible.Require.upgrade", 3)
+      }
+      if (out > NROW(df2)) stop("Please choose one of the options")
+      choice <- df2[out,]
+      if (identical(choice, "None") || is.na(out)) {
+        message("Not installing/upgrading ",paste(upgradeAvailable$Package, collapse = ", "),
+                "; this may cause undesired effects")
+      } else {
+        upgrades <- df2[-(1:3),]
+        upgradesGit <- upgradeAvailable[installFrom == "GitHub"]$Package
+        if (identical(out, 2)) {
+          upgrades <- upgrades[!upgrades %in% upgradesGit]
+        } else if (out > 3) {
+          upgrades <- upgrades[as.numeric(out) - 3]
+        }
+      }
+      missingPkg <- upgradeAvailable[is.na(currentInstalled)]
+      if (NROW(missingPkg)) {
+        packages <- c(packages, missingPkg$Package)
       }
 
-      if (length(availableOnGH))
-        capture_messages(message("Packages available on GitHub: ", paste(availableOnGH, collapse = ", ")))
-      if (length(availableOnCRAN))
-        capture_messages(message("Packages available on CRAN: ", paste(availableOnCRAN, collapse = ", ")))
-
-      upgradeAvailable <- upgradeAvailable[!is.na(installFrom)]
-      if (NROW(upgradeAvailable)) {
-
-        vals <- c("All", "CRAN packages only", "None", upgradeAvailable[installFrom == "CRAN"]$Package,
-                  upgradeAvailable[installFrom == "GitHub"]$Package)
-
-        df2 <- data.frame( row.names = NULL, stringsAsFactors = FALSE, "Upgrade" = vals)
-        row.names(df2) <- paste0(seq(NROW(df2)), ":")
-        messageDF(df2)
-        out <- if (isInteractive() && is.null(getOption("reproducible.Require.upgrade"))) {
-          as.numeric(.readline("Pick a number to upgrade: "))
-        } else {
-          getOption("reproducible.Require.upgrade", 3)
-        }
-        if (out > NROW(df2)) stop("Please choose one of the options")
-        choice <- df2[out,]
-        if (identical(choice, "None") || is.na(out)) {
-          message("Not installing/upgrading ",paste(upgradeAvailable$Package, collapse = ", "),
-                  "; this may cause undesired effects")
-        } else {
-          upgrades <- df2[-(1:3),]
-          upgradesGit <- upgradeAvailable[installFrom == "GitHub"]$Package
-          if (identical(out, 2)) {
-            upgrades <- upgrades[!upgrades %in% upgradesGit]
-          } else if (out > 3) {
-            upgrades <- upgrades[as.numeric(out) - 3]
-          }
-        }
-        missingPkg <- upgradeAvailable[is.na(currentInstalled)]
-        if (NROW(missingPkg)) {
-          packages <- c(packages, missingPkg$Package)
-        }
-
-        upgrades <- trimVersionNumber(upgrades)
-        upgradeAvailable[, upgrade := Package %in% upgrades]
-        upgradeAvailable <- upgradeAvailable[upgrade == TRUE]
-      }
+      upgrades <- trimVersionNumber(upgrades)
+      upgradeAvailable[, upgrade := Package %in% upgrades]
+      upgradeAvailable <- upgradeAvailable[upgrade == TRUE]
     }
-    pkgDTMV <- rbindlist(list(notInstalledCorrectAvail, upgradeAvailable), fill = TRUE, use.names = TRUE)
   }
-
+  pkgDTMV <- rbindlist(list(notInstalledCorrectAvail, upgradeAvailable), fill = TRUE, use.names = TRUE)
+}
