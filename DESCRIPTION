@@ -106,6 +106,7 @@ Collate:
     'postProcess.R'
     'preProcess.R'
     'prepInputs.R'
+    'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'
     'zzz.R'
