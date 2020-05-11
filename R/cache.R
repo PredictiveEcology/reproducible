@@ -1000,7 +1000,6 @@ setMethod(
                                          outputToSave, rasters))
         if (is(cufc, "try-error"))
           .updateTagsRepo(outputHash, cacheRepo, "inCloud", "FALSE", drv = drv, conn = conn)
-
       }
 
       verboseDF2(verbose, fnDetails$functionName, startSaveTime)
@@ -1684,8 +1683,8 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
                       "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash")
 
 .defaultOtherFunctionsOmit <- c("(test_","with_reporter", "force", "Restart", "with_mock",
-                                     "eval", "::", "\\$", "\\.\\.", "standardGeneric",
-                                     "Cache", "tryCatch", "doTryCatch", "withCallingHandlers",
-                                     "FUN", "capture", "withVisible)")
+                                "eval", "::", "\\$", "\\.\\.", "standardGeneric",
+                                "Cache", "tryCatch", "doTryCatch", "withCallingHandlers",
+                                "FUN", "capture", "withVisible)")
 
 usethis::use_lifecycle()

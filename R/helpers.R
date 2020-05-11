@@ -24,12 +24,8 @@ getCRANrepos <- function(repos = NULL) {
     repos <- if (nzchar(cranRepo)) {
       cranRepo
     } else {
-      if (isInteractive()) {
-        chooseCRANmirror2() ## sets repo option
-        getOption("repos")["CRAN"]
-      } else {
-        "https://cloud.r-project.org"
-      }
+      chooseCRANmirror2() ## sets repo option
+      getOption("repos")["CRAN"]
     }
   }
 
@@ -39,7 +35,11 @@ getCRANrepos <- function(repos = NULL) {
 #' @importFrom utils chooseCRANmirror
 #' @keywords internal
 chooseCRANmirror2 <- function() {
-  chooseCRANmirror()
+  if (isInteractive()) {
+    chooseCRANmirror()
+  } else {
+    chooseCRANmirror(ind = 1) ## https://cloud.r-project.org
+  }
 }
 #' Add a prefix or suffix to the basename part of a file path
 #'

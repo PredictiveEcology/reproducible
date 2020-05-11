@@ -1,4 +1,4 @@
-test_that("test miscellaneous fns", {
+test_that("test miscellaneous fns (part 1)", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
@@ -83,7 +83,7 @@ test_that("test miscellaneous fns", {
   a <- reproducibleOptions()
   a1 <- a[sapply(a, function(x) !is.null(x))]
   b <- options()
-  expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(match(names(b),names(a1)))]))))
+  expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(match(names(b), names(a1)))]))))
   omit <- c(names(testInitOut$opts), names(testInitOut$optsAsk))
   b1 <- b[names(a1)]
   b1 <- b1[!names(b1) %in% omit]
@@ -104,9 +104,8 @@ test_that("test miscellaneous fns", {
   unrar <- .whichExtractFn(archive = rarPath, args = "")
   expect_true(identical(unrar$fun, "unrar"))
   suppressWarnings(
-    expect_error( .callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
+    expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
   )
-
 
   testthat::with_mock(
     "reproducible::getGDALVersion" = function() NA,
@@ -135,11 +134,9 @@ test_that("test miscellaneous fns", {
       expect_true(identical("https://cloud.r-project.org", unname(out)))
     }
   )
-
 })
 
-
-test_that("test miscellaneous fns", {
+test_that("test miscellaneous fns (part 2)", {
   skip_if_no_token()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
