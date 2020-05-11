@@ -93,7 +93,7 @@
 #'   \code{useGDAL} \tab Passed to \code{useGDAL} in \code{projectInputs.Raster}.
 #'                   Default \code{TRUE}.\cr
 #'   \code{useMemoise} \tab \code{FALSE} \tab Used in \code{\link{Cache}}. If \code{TRUE},
-#'                   recovery of cached elements from the cacheRepo will use
+#'                   recovery of cached elements from the \code{cacheRepo} will use
 #'                   \code{memoise::memoise}. This means that the 3rd time running a function
 #'                   will be much faster than the 1st (create cache entry) or 2nd (recover
 #'                   from the SQLite database on dist). NOTE: memoised values are removed
@@ -106,7 +106,7 @@
 #'                    will be defunct. This new algorithm will make \code{Cache} less
 #'                    sensitive to minor but irrelevant changes (like changing the
 #'                    order of arguments) and will work successfully across operating
-#'                    systems (especially relevant for the new 'cloudCache' function \cr
+#'                    systems (especially relevant for the new \code{cloudCache} function \cr
 #'   \code{verbose} \tab \code{FALSE} \tab If set to \code{TRUE} then every Cache
 #'      call will show a summary of the objects being cached, their \code{object.size}
 #'      and the time it took to digest them and also the time it took to run
