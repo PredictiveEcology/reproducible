@@ -97,15 +97,28 @@ test_that("test miscellaneous fns (part 1)", {
                  "targetFile was not specified.  Trying readRDS")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = c("hi.rds", "hello.rds"), fun = "readRDS"),
                  "More than one possible files to load")
+})
 
-  # unrar
+test_that("unrar is a happy camper", {
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
   rarPath <- file.path(tmpdir, "tmp.rar")
-  zip(zipfile = rarPath, files = tmpfile)
+  utils::zip(zipfile = rarPath, files = tmpfile)
   unrar <- .whichExtractFn(archive = rarPath, args = "")
   expect_true(identical(unrar$fun, "unrar"))
   suppressWarnings(
     expect_error(.callArchiveExtractFn(unrar$fun, files = "", args = list(exdir = tmpCache)))
   )
+})
+
+test_that("check GDAL version", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   testthat::with_mock(
     "reproducible::getGDALVersion" = function() NA,
@@ -113,8 +126,16 @@ test_that("test miscellaneous fns (part 1)", {
       expect_false(checkGDALVersion("3.0"))
     }
   )
+})
 
+test_that("repo stuff works", {
   skip_on_appveyor() # can't tell what the CRAN repo is
+
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
   # helpers.R
   a <- getCRANrepos(NULL)
   expect_true(is.character(a))
@@ -149,9 +170,9 @@ test_that("test miscellaneous fns (part 2)", {
   ras <- writeRaster(ras, file = tmpfile[1], overwrite = TRUE)
 
   gdriveLs1 <- data.frame(name = "GADM", id = "sdfsd", drive_resource = list(sdfsd = 1))
-  expect_warning(
-    tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE),
-    "No cloudFolderID supplied")
+  expect_warning({
+    tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
+  }, "No cloudFolderID supplied")
   gdriveLs <- driveLs(cloudFolderID = NULL, "sdfsdf")
   expect_true(NROW(gdriveLs) == 0)
   expect_is(checkAndMakeCloudFolderID("testy"), "character")
