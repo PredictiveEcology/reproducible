@@ -1,5 +1,5 @@
 utils::globalVariables(c(
-  ".", "createdDate", "deeperThan3", "differs", "fun", "hash",
+  ".", "artifact", "createdDate", "deeperThan3", "differs", "fun", "hash",
   "i.hash", "iden", "N", "tag", "tagKey", "tagValue"
 ))
 
