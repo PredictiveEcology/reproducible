@@ -63,7 +63,7 @@ Imports:
     utils,
     versions
 Suggests:
-    arcovr,
+    covr,
     fasterize,
     future,
     gdalUtils,
