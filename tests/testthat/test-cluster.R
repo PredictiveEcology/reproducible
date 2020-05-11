@@ -14,7 +14,7 @@ test_that("test parallel collisions", {
       createCache(tmpdir)
     }
 
-    # make function that will write to archivist repository from with clusters
+    # make function that will write to cache repository from with clusters
     fun <- function(x, cacheRepo) {
       #print(x)
       Cache(rnorm, 10, sd = x, cacheRepo = cacheRepo)

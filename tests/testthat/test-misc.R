@@ -64,8 +64,8 @@ test_that("test miscellaneous fns (part 1)", {
     sort(normPath(file.path(newPaths, basename(unlist(lapply(list(r1, r2), raster::filename))))))
   ))
 
-  r3 <- writeRaster(r1, tmpfile[1], overwrite = TRUE)
-  r4 <- convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths)
+  r3 <- suppressWarnings(writeRaster(r1, tmpfile[1], overwrite = TRUE)) ## TODO: raster needs updating for crs stuff
+  r4 <- suppressWarnings(convertRasterPaths(tmpfile[1], dirname(tmpfile[1]), newPaths))  ## TODO: raster needs updating for crs stuff
 
   expect_true(identical(
     normPath(file.path(newPaths, basename(filename(r4)))),
