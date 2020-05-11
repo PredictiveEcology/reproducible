@@ -1,5 +1,4 @@
-test_that("package-related functions work", {
-
+test_that("package-related functions work (part 1)", {
   skip_on_cran()
 
   testInitOut <- testInit()
@@ -120,7 +119,7 @@ test_that("package-related functions work", {
 
 })
 
-test_that("package-related functions work", {
+test_that("package-related functions work (part 2)", {
   skip_on_cran()
   skip_on_appveyor()
 
@@ -251,7 +250,7 @@ test_that("test pkgDep2", {
   expect_identical(sort(unique(c(names(a), unique(unlist(a))))), sort(b$reproducible))
 })
 
-test_that("package-related functions work", {
+test_that("package-related functions work (part 3)", {
   skip_on_cran()
   skip_on_appveyor()
   skip_on_travis()
@@ -319,9 +318,11 @@ test_that("package-related functions work", {
   ip <- as.data.table(installed.packages(noCache = TRUE))[[1]]
   if ("LandR" %in% ip)
     remove.packages("LandR")
-  out1 <- capture.output(out <- unloadRandom(unique(extractPkgName(unlist(pkgs))),
-                                             keepDepsOf = c("reproducible", "devtools"),
-                                             num = 10))
+  out1 <- capture.output({
+    out <- unloadRandom(unique(extractPkgName(unlist(pkgs))),
+                        keepDepsOf = c("reproducible", "devtools"),
+                        num = 10)
+  })
   options("reproducible.Require.install" = TRUE)
   Sys.setenv("R_REMOTES_UPGRADE" = "never")
   i <- 0
@@ -341,12 +342,13 @@ test_that("package-related functions work", {
 
     ipPre <- as.data.table(installed.packages(noCache = TRUE))[[1]]
     # ._installPackages_1 <<- ._installPackages_2 <<- ._installPackages_3 <<- ._Require_1 <<- 1
-    err <- capture_error(
-      warn <- capture_warnings(
-        mess <- capture_messages(
+    err <- capture_error({
+      warn <- capture_warnings({
+        mess <- capture_messages({
           outFromRequire <- Require(pkg, repos = repo, standAlone = FALSE)
-        ))
-    )
+        })
+      })
+    })
     if (length(err) == 0) {
       ipPost <- as.data.table(installed.packages(noCache = TRUE))[[1]]
       if (!"PredictiveEcology/LandR@development (>= 1.0.2)" %in% pkg && "PredictiveEcology/LandR@development(>= 0.0.0.9)" %in% pkg) {
@@ -369,7 +371,6 @@ test_that("package-related functions work", {
       out <- capture.output(try(detach(paste0("package:",j), unload = TRUE), silent = TRUE))
       out <- capture.output(try(remove.packages(j), silent = TRUE))
     }
-
   }
 
   # if (FALSE) {
@@ -654,7 +655,6 @@ test_that("package-related functions work", {
   # }
 })
 
-
 test_that("package topoSort", {
   testInitOut <- testInit(libraries = c("data.table", "versions"))
   on.exit({
@@ -675,21 +675,18 @@ test_that("package topoSort", {
   expect_true(any(names(out) != names(vals))) # reordered
   expect_true(all(names(out) == correctOrder)) # reordered
 
-  out <- pkgDepTopoSort(vals, reverse = TRUE, returnFull = FALSE,
-                        useAllInSearch = TRUE)
+  out <- pkgDepTopoSort(vals, reverse = TRUE, returnFull = FALSE, useAllInSearch = TRUE)
   inSrch <- setdiff(search(), .defaultPackages)
   inSrch <- setdiff(gsub("package:", "", inSrch), vals)
   toCheck <- c(vals, inSrch)
   expect_true(all(names(out) %in% toCheck))
 
-  out <- pkgDepTopoSort(vals, reverse = FALSE, returnFull = FALSE,
-                        useAllInSearch = FALSE)
+  out <- pkgDepTopoSort(vals, reverse = FALSE, returnFull = FALSE, useAllInSearch = FALSE)
   expect_true(all(names(out) %in% vals))
   expect_true(length(out$quickPlot) == 3)
   expect_true(sum(unlist(lapply(out, function(x) length(x) == 0))) == 4)
 
-  out1 <- pkgDepTopoSort(vals, reverse = TRUE, returnFull = TRUE,
-                         useAllInSearch = FALSE)
+  out1 <- pkgDepTopoSort(vals, reverse = TRUE, returnFull = TRUE, useAllInSearch = FALSE)
   expect_true(all(unlist(lapply(vals, function(v) length(out1[[v]] >= length(out[[v]]))))))
 
   out <- pkgDep(vals, topoSort = TRUE)
