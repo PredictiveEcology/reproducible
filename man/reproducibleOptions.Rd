@@ -130,7 +130,7 @@ The following options are likely not needed by a user.
                      Mostly this would be changed from default \code{Inf} if the digesting is
                      taking too long. Use this with caution, as some objects will have MANY
                      NA values in their first MANY elements\cr
-  \code{useragent} \tab \code{"http://github.com/PredictiveEcology/reproducible"}
+  \code{useragent} \tab \code{"https://github.com/PredictiveEcology/reproducible"}
           \tab User agent for downloads using this package.\cr
 }
 }
