@@ -86,14 +86,15 @@ The following options are likely of interest to most users
                         are changing frequently, so any entry in the cache repository will
                         be stale following changes to functions, i.e., they will likely never
                         be relevant again. This will therefore keep the cache repository
-                        clean of stale objects. If there is ambiguity in the \code{userTags}, i.e
-                        they do not uniquely identify a single entry in the cacheRepo, then
-                        this option will default back to the non devMode behaviour to avoid
-                        deleting objects. This, therefore, is most useful if the user is
-                        using unique values for \code{userTags}\cr
+                        clean of stale objects. If there is ambiguity in the \code{userTags},
+                        i.e., they do not uniquely identify a single entry in the
+                        \code{cacheRepo}, then this option will default back to the non-dev-mode
+                        behaviour to avoid deleting objects.
+                        This, therefore, is most useful if the user is using unique values for
+                        \code{userTags}\cr
   \code{useCloud} \tab Passed to \code{Cache}. Default \code{FALSE}.\cr
-  \code{useDBI} \tab \code{TRUE} \tab As of reproducible 0.3, the backend is now \code{DBI}
-                     package instead of \code{archivist}\cr
+  \code{useDBI} \tab \code{TRUE} \tab As of reproducible 0.3, the backend is now \pkg{DBI}
+                     package instead of \pkg{archivist}\cr
   \code{useGDAL} \tab Passed to \code{useGDAL} in \code{projectInputs.Raster}.
                   Default \code{TRUE}.\cr
   \code{useMemoise} \tab \code{FALSE} \tab Used in \code{\link{Cache}}. If \code{TRUE},
@@ -101,7 +102,7 @@ The following options are likely of interest to most users
                   \code{memoise::memoise}. This means that the 3rd time running a function
                   will be much faster than the 1st (create cache entry) or 2nd (recover
                   from the SQLite database on dist). NOTE: memoised values are removed
-                  when the R session is restarted. \bold{This option will use more RAM} and
+                  when the R session is restarted. \strong{This option will use more RAM} and
                   so may need to be turned off if RAM is limiting.  \code{clearCache}
                   of any sort will cause all memoising to be 'forgotten'
                   (\code{memoise::forget})\cr

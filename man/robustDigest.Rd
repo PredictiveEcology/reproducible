@@ -97,30 +97,28 @@ argument is the \code{simList} class from \code{SpaDES.core}.}
 A hash i.e., digest of the object passed in.
 }
 \description{
-Not all aspects of R objects are captured by current hashing tools in R (e.g.
-\code{digest::digest}, \code{knitr} caching,
-\code{archivist::cache}). This is mostly because many objects have "transient"
-(e.g., functions have environments), or "disk-backed" features. Since
-the goal of using reproducibility is to have tools that are not session specific,
-this function
-attempts to strip all session specific information so that the digest
-works between sessions and operating systems. It is tested under many
-conditions and object types, there are bound to be others that don't
+Not all aspects of R objects are captured by current hashing tools in R
+(e.g. \code{digest::digest}, \code{knitr} caching, \code{archivist::cache}).
+This is mostly because many objects have "transient"
+(e.g., functions have environments), or "disk-backed" features.
+Since the goal of using reproducibility is to have tools that are not session specific,
+this function attempts to strip all session specific information so that the digest
+works between sessions and operating systems.
+It is tested under many conditions and object types, there are bound to be others that don't
 work correctly.
 }
 \section{Classes}{
 
 
-\code{Raster*} objects have the potential for disk-backed storage.
-If the object in the R session is cached using \code{archivist::cache}, only
-the header component will be assessed for caching. Thus, objects like this
-require more work. Also, because \code{Raster*} can have a built-in representation
-for having their data content located on disk, this format will be maintained if the
-raster already is file-backed, i.e., to create \code{.tif} or \code{.grd} backed rasters,
-use \code{writeRaster} first, then Cache. The .tif or .grd will be copied to the "raster"
-subdirectory of the \code{cacheRepo}.
-Their RAM representation (as an R object) will still be in the usual
-\file{cacheOutputs/} (or formerly \file{gallery/}) directory.
+\code{Raster*} objects have the potential for disk-backed storage, thus, require more work.
+Also, because \code{Raster*} can have a built-in representation for having their data content
+located on disk, this format will be maintained if the raster already is file-backed,
+i.e., to create \code{.tif} or \code{.grd} backed rasters, use \code{writeRaster} first,
+then \code{Cache}.
+The \file{.tif} or \file{.grd} will be copied to the \file{raster/} subdirectory of the
+\code{cacheRepo}.
+Their RAM representation (as an R object) will still be in the usual  \file{cacheOutputs/}
+(or formerly \file{gallery/}) directory.
 For \code{inMemory} raster objects, they will remain as binary \code{.RData} files.
 
 Functions (which are contained within environments) are
@@ -180,9 +178,6 @@ digest::digest(r2) # different
 .robustDigest(r)
 .robustDigest(r1) # different
 
-}
-\seealso{
-\code{archivist::cache}.
 }
 \author{
 Eliot McIntire

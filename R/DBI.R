@@ -5,7 +5,6 @@
 #' @param drv A driver, passed to \code{dbConnect}
 #' @param force Logical. Should it create a cache in the \code{cachePath},
 #'   even if it already exists, overwriting.
-#'   (Replaces \code{archivist::createLocalRepo}.)
 #' @importFrom data.table data.table
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #' @inheritParams DBI::dbConnect

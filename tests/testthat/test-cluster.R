@@ -10,12 +10,8 @@ test_that("test parallel collisions", {
     #   which works on Linux, Mac, Windows
     N <- min(2, detectCores())
 
-    # make archivist repository
     if (!file.exists(CacheDBFile(tmpdir))) {
-      if (useDBI())
-        createCache(tmpdir)
-      else
-        archivist::createLocalRepo(tmpdir)
+      createCache(tmpdir)
     }
 
     # make function that will write to archivist repository from with clusters

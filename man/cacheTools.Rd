@@ -50,8 +50,7 @@ the database file(s)}
 \code{\link[DBI:dbConnect]{dbConnect()}}.}
 
 \item{force}{Logical. Should it create a cache in the \code{cachePath},
-even if it already exists, overwriting.
-(Replaces \code{archivist::createLocalRepo}.)}
+even if it already exists, overwriting.}
 
 \item{obj}{The R object to save to the cache}
 

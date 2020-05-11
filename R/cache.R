@@ -48,9 +48,9 @@ if (getRversion() >= "3.1.0") {
 #'
 #' Caching R objects using \code{archivist::cache} has five important limitations:
 #' \enumerate{
-#'   \item the \code{archivist} package detects different environments as different;
+#'   \item the \pkg{archivist} package detects different environments as different;
 #'   \item it also does not detect S4 methods correctly due to method inheritance;
-#'   \item it does not detect objects that have file-base storage of information
+#'   \item it does not detect objects that have file-based storage of information
 #'         (specifically \code{\link[raster]{RasterLayer-class}} objects);
 #'   \item the default hashing algorithm is relatively slow.
 #'   \item heavily nested function calls may want Cache arguments to propagate through
@@ -1087,7 +1087,7 @@ unmakeMemoisable.default <- function(x) {
   x
 }
 
-#' Write to archivist repository, using \code{future::future}
+#' Write to cache repository, using \code{future::future}
 #'
 #' This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.
 #' This is still experimental.
@@ -1103,7 +1103,8 @@ unmakeMemoisable.default <- function(x) {
 #' @importFrom stats runif
 #' @inheritParams Cache
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
-                        drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL),
+                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                        conn = getOption("reproducible.conn", NULL),
                         cacheId) {
   counter <- 0
   browser(expr = exists("._writeFuture_1"))
@@ -1186,7 +1187,9 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
           # signatures will match (no trailing "ANY"), even if another currently loaded
           # package had signatures with more arguments.
           numArgsInSig <- try({
-            suppressWarnings(info <- attr(utils::methods(fnName), "info")) # from hadley/sloop package s3_method_generic
+            suppressWarnings({
+              info <- attr(utils::methods(fnName), "info")# from hadley/sloop package s3_method_generic
+            })
             max(unlist(lapply(strsplit(rownames(info), split = ","), length) ) - 1)
           }, silent = TRUE)
           matchOn <- doCallFUN@signature[seq(numArgsInSig)]
@@ -1223,7 +1226,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
             } else {
               names(formals(whatArg))
             }
-
           }
         }
       }

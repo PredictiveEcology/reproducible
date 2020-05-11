@@ -242,9 +242,9 @@ though quite common, cases by:
 
 Caching R objects using \code{archivist::cache} has five important limitations:
 \enumerate{
-  \item the \code{archivist} package detects different environments as different;
+  \item the \pkg{archivist} package detects different environments as different;
   \item it also does not detect S4 methods correctly due to method inheritance;
-  \item it does not detect objects that have file-base storage of information
+  \item it does not detect objects that have file-based storage of information
         (specifically \code{\link[raster]{RasterLayer-class}} objects);
   \item the default hashing algorithm is relatively slow.
   \item heavily nested function calls may want Cache arguments to propagate through

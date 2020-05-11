@@ -292,8 +292,7 @@ cc <- function(secs, ...) {
 
 #' Examining and modifying the cache
 #'
-#' These are convenience wrappers around \code{DBI}
-#' (formerly \code{archivist}) package functions.
+#' These are convenience wrappers around \code{DBI} package functions.
 #' They allow the user a bit of control over what is being cached.
 #'
 #' \describe{
@@ -307,11 +306,10 @@ cc <- function(secs, ...) {
 #' @inheritParams clearCache
 #'
 #' @export
-#' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
+#' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @rdname viewCache
-#' @seealso \code{\link{mergeCache}}. Many more examples
-#' in \code{\link{Cache}}.
+#' @seealso \code{\link{mergeCache}}. Many more examples in \code{\link{Cache}}.
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
