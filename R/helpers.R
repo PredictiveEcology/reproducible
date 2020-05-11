@@ -93,6 +93,7 @@ setGeneric("studyAreaName", function(studyArea, ...) {
 })
 
 #' @export
+#' @rdname studyAreaName
 setMethod(
   "studyAreaName",
   signature = "SpatialPolygonsDataFrame",
@@ -102,13 +103,14 @@ setMethod(
 
 #' Identify which formals to a function are not in the current \code{...}
 #'
-#' This is for advanced use.
+#' Advanced use.
+#'
 #' @keywords internal
 #' @export
 #' @param fun A function
 #' @param ... The ... from inside a function. Will be ignored if \code{dots} is
 #'        provided explicitly.
-#' @param dots Optional. If this is provided via say dots = list(...),
+#' @param dots Optional. If this is provided via say \code{dots = list(...)},
 #'             then this will cause the \code{...} to be ignored.
 .formalsNotInCurrentDots <- function(fun, ..., dots) {
   if (!missing(dots)) {
@@ -146,7 +148,7 @@ rndstr <- function(n = 1, len = 8) {
 #'   # Test clearCache -- has an internal isInteractive() call
 #'   clearCache(tmpdir, ask = FALSE)
 #'   })
-#'   }
+#' }
 isInteractive <- function() interactive()
 
 #' A version of \code{base::basename} that is \code{NULL} resistant
@@ -239,7 +241,6 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
   }
   !need
 }
-
 
 #' Use message to print a clean square data structure
 #'

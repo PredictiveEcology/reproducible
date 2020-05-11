@@ -218,5 +218,6 @@ cc(ask = FALSE, x = tmpDir) # Cache is
 cc(ask = FALSE, x = tmpDir) # Cache is already empty
 }
 \seealso{
-\code{\link{mergeCache}}. Many more examples in \code{\link{Cache}}.
+\code{\link{mergeCache}}. Many more examples
+in \code{\link{Cache}}.
 }

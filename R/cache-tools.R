@@ -306,10 +306,11 @@ cc <- function(secs, ...) {
 #' @inheritParams clearCache
 #'
 #' @export
-#' @importFrom data.table data.table set setkeyv
 #' @importFrom DBI dbSendQuery dbFetch dbClearResult
+#' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
-#' @seealso \code{\link{mergeCache}}. Many more examples in \code{\link{Cache}}.
+#' @seealso \code{\link{mergeCache}}. Many more examples
+#' in \code{\link{Cache}}.
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -479,6 +480,8 @@ setMethod(
 
 #' Merge two cache repositories together
 #'
+#' \lifecycle{experimental}
+#'
 #' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
 #' repository. All \code{userTags} will be copied verbatim, including
 #' \code{accessed}, with 1 exception: \code{date} will be the
@@ -496,9 +499,6 @@ setMethod(
 #'   a new one will be made from \code{drvTo} and \code{cacheTo}
 #' @param connFrom The database for the \code{cacheFrom}. If not provided, then
 #'   a new one will be made from \code{drvFrom} and \code{cacheFrom}
-#'
-#' @details
-#' This is still experimental
 #'
 #' @return The character string of the path of \code{cacheTo}, i.e., not the
 #' objects themselves.

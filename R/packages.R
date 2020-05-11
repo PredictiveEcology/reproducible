@@ -1,14 +1,13 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c(".SD", "instPkgs",
-                           "..colsToKeep", "Account", "availableOnCRAN",
-                           "availableOnGitHub", "AvailableVersionCRAN", "Branch",
-                           "compareVersionAvail", "compareVersionAvailGH",
-                           "correctVersion", "correctVersionAvail",
-                           "correctVersionAvailGH", "fullGit",
-                           "githubPkgName", "inequality", "isGH",
-                           "minVersion", "Package", "Repo", "RepoWBranch",
-                           "Version", "versionOnGH", "hasMinVersion", "packageFullName",
-                           "currentInstalled", "upgrade", "installed"))
+  utils::globalVariables(c(
+    ".SD", "instPkgs", "..colsToKeep",
+    "Account", "availableOnCRAN", "availableOnGitHub", "AvailableVersion", "AvailableVersionCRAN",
+    "Branch", "compareVersionAvail", "compareVersionAvailGH", "correctVersion",
+    "correctVersionAvail", "correctVersionAvailGH", "currentInstalled", "fullGit", "githubPkgName",
+    "hasMinVersion", "hasVersionSpec", "inequality", "installed", "isGH", "minVersion",
+    "Package", "packageFullName", "Repo", "RepoWBranch",
+    "upgrade", "Version", "versionOnGH", "versionSpec"
+  ))
 }
 
 #' Repeatability-safe install and load packages, optionally with specific versions
@@ -45,8 +44,8 @@ if (getRversion() >= "3.1.0") {
 #' of the most recent call to \code{Require}.
 #'
 #' To build a snapshot of the desired packages and their versions, first run
-#' \code{Require} with all packages, then \code{pkgSnapshot}. If a
-#' \code{libPath} is used, it must be used in both functions.
+#' \code{Require} with all packages, then \code{pkgSnapshot}.
+#'  If a \code{libPath} is used, it must be used in both functions.
 #'
 #' This function works best if all required packages are called within one
 #' \code{Require} call, as all dependencies can be identified together, and all
@@ -1821,6 +1820,7 @@ parseGitHub <- function(pkgDT) {
   pkgDT
 }
 
+#' @importFrom data.table setorderv
 getPkgVersions <- function(pkgDT) {
   if (!is.data.table(pkgDT))
     pkgDT <- data.table(Package = extractPkgName(pkgDT), packageFullName = c(pkgDT))

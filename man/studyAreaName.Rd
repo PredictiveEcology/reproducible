@@ -2,9 +2,12 @@
 % Please edit documentation in R/helpers.R
 \name{studyAreaName}
 \alias{studyAreaName}
+\alias{studyAreaName,SpatialPolygonsDataFrame-method}
 \title{Get a unique name for a given study area}
 \usage{
 studyAreaName(studyArea, ...)
+
+\S4method{studyAreaName}{SpatialPolygonsDataFrame}(studyArea, ...)
 }
 \arguments{
 \item{studyArea}{Spatial object.}

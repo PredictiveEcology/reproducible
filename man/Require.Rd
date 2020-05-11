@@ -79,8 +79,8 @@ file in a \code{libPath}, any call to \code{pkgSnapshot} will make a snapshot
 of the most recent call to \code{Require}.
 
 To build a snapshot of the desired packages and their versions, first run
-\code{Require} with all packages, then \code{pkgSnapshot}. If a
-\code{libPath} is used, it must be used in both functions.
+\code{Require} with all packages, then \code{pkgSnapshot}.
+ If a \code{libPath} is used, it must be used in both functions.
 
 This function works best if all required packages are called within one
 \code{Require} call, as all dependencies can be identified together, and all

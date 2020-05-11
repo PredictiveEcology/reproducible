@@ -12,10 +12,10 @@
 \item{...}{The ... from inside a function. Will be ignored if \code{dots} is
 provided explicitly.}
 
-\item{dots}{Optional. If this is provided via say dots = list(...),
+\item{dots}{Optional. If this is provided via say \code{dots = list(...)},
 then this will cause the \code{...} to be ignored.}
 }
 \description{
-This is for advanced use.
+Advanced use.
 }
 \keyword{internal}
