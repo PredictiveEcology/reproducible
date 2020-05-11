@@ -19,27 +19,27 @@ test_that("test miscellaneous fns", {
   expect_is(objSize(asPath(b), quick = TRUE), "object_size")
 
   # objSizeSession
-  mess <- capture.output(d <- objSizeSession())
+  mess <- capture.output({d <- objSizeSession()})
   expect_true(is.list(d))
   g <- unlist(d)
   expect_true(is.numeric(g))
   expect_true(any(grepl("package", names(g))))
 
-  mess <- capture.output(d <- objSizeSession(1))
+  mess <- capture.output({d <- objSizeSession(1)})
   expect_true(is.list(d))
   g <- unlist(d)
   expect_true(is.numeric(g))
   expect_true(any(grepl("package", names(g))))
   expect_true(all(names(g) %in% search() ))
 
-  mess <- capture.output(d1 <- objSizeSession(enclosingEnvs = FALSE))
+  mess <- capture.output({d1 <- objSizeSession(enclosingEnvs = FALSE)})
   expect_true(is.list(d1))
   g <- unlist(d1)
   expect_true(is.numeric(g))
   expect_true(any(grepl("package", names(g))))
   expect_true(sum(unlist(d1)) < sum(unlist(d)))
 
-  mess <- capture.output(d <- objSizeSession(0))
+  mess <- capture.output({d <- objSizeSession(0)})
   expect_true(!is.list(d))
   expect_true(is.numeric(d))
 
@@ -72,8 +72,8 @@ test_that("test miscellaneous fns", {
     normPath(filename(r4))
   ))
 
-  expect_silent(b <- retry(quote(rnorm(1)), retries = 1, silent = TRUE))
-  expect_error(b <- retry(quote(stop()), retries = 1, silent = TRUE))
+  expect_silent({b <- retry(quote(rnorm(1)), retries = 1, silent = TRUE)})
+  expect_error({b <- retry(quote(stop()), retries = 1, silent = TRUE)})
 
   expect_true(identical(NULL, basename2(NULL)))
   a <- .formalsNotInCurrentDots(rnorm, n = 1, b = 2)
