@@ -1,4 +1,5 @@
 test_that("package-related functions work (part 1)", {
+  skip("Require() needs to be reworked") ## TODO: remove once Require() gets fixed/reworked
   skip_on_cran()
 
   testInitOut <- testInit()
