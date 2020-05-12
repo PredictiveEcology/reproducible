@@ -79,6 +79,13 @@ test_that("test miscellaneous fns (part 1)", {
   a <- .formalsNotInCurrentDots(rnorm, n = 1, b = 2)
   b <- .formalsNotInCurrentDots(rnorm, dots = list(n = 1, b = 2))
   expect_identical(a,b)
+})
+
+test_that("setting options works correctly", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   a <- reproducibleOptions()
   a1 <- a[sapply(a, function(x) !is.null(x))]
@@ -88,7 +95,15 @@ test_that("test miscellaneous fns (part 1)", {
   b1 <- b[names(a1)]
   b1 <- b1[!names(b1) %in% omit]
   a2 <- a1[!names(a1) %in% omit]
-  expect_true(identical(b1, a2))
+  for (i in 1:length(b1)) message(b1[i], " ", a2[i])
+  expect_true(identical(b1, a2)) ## TODO: failures when non-interactive
+})
+
+test_that("guessAtTargetAndFun works correctly", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
   expect_error(.guessAtTargetAndFun(fun = rnorm), "fun must be a")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "", fun = "load"),
@@ -99,7 +114,7 @@ test_that("test miscellaneous fns (part 1)", {
                  "More than one possible files to load")
 })
 
-test_that("unrar is a happy camper", {
+test_that("unrar is working as expected", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
