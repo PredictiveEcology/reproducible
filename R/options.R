@@ -130,7 +130,7 @@
 reproducibleOptions <- function() {
   list( # nolint
     reproducible.ask = TRUE,
-    reproducible.cachePath = normPath(tempdir2("cache")),
+    reproducible.cachePath = .reproducibleTempCacheDir(),
     reproducible.cacheSaveFormat = "rds",
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,

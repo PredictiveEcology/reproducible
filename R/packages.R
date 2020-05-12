@@ -1019,9 +1019,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'
 #' @inheritParams Require
 #' @param repos The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},
-#' #param githubPkgs Character vector of github repositories and packages, in the
-#' #                   form \code{username/package@branch}, with branch being optional.
-#' #param githubPkgNames Character vector of the package names, i.e., just the R package name.
 #' @param nonLibPathPkgs Character vector of all installed packages that are in \code{.libPaths},
 #'                       but not in \code{libPath}. This would normally include a listing of
 #'                       base packages, but may also include other library paths if
@@ -1038,8 +1035,6 @@ installVersions <- function(gitHubPackages, packageVersionFile = ".packageVersio
 #'   .installPackages("crayon")
 #' }
 .installPackages <- function(packages, repos = getOption("repos"),
-                             #githubPkgs = character(0),
-                             #githubPkgNames,
                              nonLibPathPkgs = character(0), install_githubArgs, # nolint
                              install.packagesArgs = list(), # nolint
                              libPath = .libPaths(), standAlone = standAlone) {

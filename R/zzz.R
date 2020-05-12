@@ -1,11 +1,9 @@
 .onLoad <- function(libname, pkgname) {
-  ## set options using the approach used by devtools
-  opts <- options()
-  #assignInMyNamespace(".reproducibleTempCacheDir", file.path(tempdir(), "reproducible", "cache"))
-  #assignInMyNamespace(".reproducibleTempInputDir",  file.path(tempdir(), "reproducible", "inputs"))
-
   checkPath(.reproducibleTempCacheDir(), create = TRUE)
   checkPath(.reproducibleTempInputDir(), create = TRUE)
+
+  ## set options using the approach used by devtools
+  opts <- options()
   opts.reproducible <- reproducibleOptions()
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
@@ -29,12 +27,6 @@
   o <- options()
   o[startsWith(names(o), prefix = "reproducible.")] <- NULL
   options(o)
-  # if (getOption("reproducible.cachePath") == file.path(.reproducibleTempCacheDir)) {
-  #   options(reproducible.cachePath = NULL)
-  # }
-  # if (getOption("reproducible.inputPaths") == file.path(.reproducibleTempInputDir)) {
-  #   options(reproducible.inputPaths = NULL)
-  # }
 }
 
 .reproducibleTempPath <- function() normPath(file.path(tempdir(), "reproducible"))

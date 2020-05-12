@@ -22,10 +22,7 @@ trimVersionNumber(packages)
 \code{install.packages}, then load (i.e., with \code{library}). If it is
 one package, it can be unquoted (as in \code{require})}
 
-\item{repos}{The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},
-#param githubPkgs Character vector of github repositories and packages, in the
-#                   form \code{username/package@branch}, with branch being optional.
-#param githubPkgNames Character vector of the package names, i.e., just the R package name.}
+\item{repos}{The remote repository (e.g., a CRAN mirror), passed to \code{install.packages},}
 
 \item{nonLibPathPkgs}{Character vector of all installed packages that are in \code{.libPaths},
 but not in \code{libPath}. This would normally include a listing of
