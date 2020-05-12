@@ -95,7 +95,7 @@ test_that("setting options works correctly", {
   b1 <- b[names(a1)]
   b1 <- b1[!names(b1) %in% omit]
   a2 <- a1[!names(a1) %in% omit]
-  expect_identical(b1, a2) ## TODO: reproducible.cachePath failures when non-interactive
+  expect_identical(b1, a2) ## TODO: reproducible.cachePath failures when non-interactive; see testInit()
 })
 
 test_that("guessAtTargetAndFun works correctly", {

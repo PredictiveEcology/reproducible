@@ -64,9 +64,12 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpCache <- normPath(file.path(tmpdir, "testCache"))
   checkPath(tmpCache, create = TRUE)
 
-  defaultOpts <- list(reproducible.showSimilar = FALSE,
-                      reproducible.overwrite = TRUE,
-                      reproducible.useNewDigestAlgorithm = TRUE)
+  defaultOpts <- list(
+    reproducible.cachePath = .reproducibleTempCacheDir(), ## TODO: deal with cachePath issues in non-interactive tests
+    reproducible.showSimilar = FALSE,
+    reproducible.overwrite = TRUE,
+    reproducible.useNewDigestAlgorithm = TRUE
+  )
   if (length(opts) > 0)
     defaultOpts[names(opts)] <- opts
   opts <- defaultOpts
