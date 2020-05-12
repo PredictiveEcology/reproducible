@@ -1,9 +1,10 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 1.0.0.9000
+version 1.1.0
 ==============
 
 ## New features
+* accommodate changes in GDAL/PROJ and associated updates to other spatial packages.
 * can now change `options('reproducible.cacheSaveFormat')` on the fly; cache will look for the file by `cacheId` and write it using `options('reproducible.cacheSaveFormat')`. If it is in another format, Cache will load it and resave it with the new format. Experimental still.
 * new `Copy` methods for `refClass` objects, `SQLite` and moved `environment` method into `ANY` as it would be dispatched for unknown classes that inherit from `environment`, of which there are many and this should be intercepted
 * `Require` can now handle minimum version numbers, e.g., `Require("bit (>=1.1-15.2)")`; this can be worked into downstream tools. Experimental still.
