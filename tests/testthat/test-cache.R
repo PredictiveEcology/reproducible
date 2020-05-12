@@ -15,8 +15,7 @@ test_that("test file-backed raster caching", {
 
   a <- randomPolyToDisk(tmpfile[1])
   # confirm that the raster has the given tmp filename
-  expect_identical(strsplit(tmpfile[1], split = "[\\/]"),
-                   strsplit(a@file@name, split = "[\\/]"))
+  expect_identical(strsplit(tmpfile[1], split = "[\\/]"), strsplit(a@file@name, split = "[\\/]"))
 
   # Using mock interactive function
   # https://www.mango-solutions.com/blog/testing-without-the-internet-using-mock-functions
@@ -75,7 +74,6 @@ test_that("test file-backed raster caching", {
       isSQLite <- grepl(type, "NULL")
       if (!isSQLite) {
         warn1 <- capture_warnings(movedCache(tmpdir, old = tmpCache))
-
       }
 
       warn <- capture_warnings({
@@ -152,7 +150,7 @@ test_that("test file-backed raster caching", {
 
       for (i in 1:2) {
         assign(paste0("b", i), system.time(
-          assign(paste0("a", i), Cache(rasterTobinary, aa, cacheRepo = tmpCache, notOlderThan = nOT))
+          assign(paste0("a", i), Cache(rasterTobinary, a, cacheRepo = tmpCache, notOlderThan = nOT))
         ))
         nOT <- Sys.time() - 100
       }
