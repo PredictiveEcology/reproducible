@@ -133,9 +133,13 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   if (!is.null(linkToCacheId)) {
     ftL <- CacheStoredFile(cachePath, linkToCacheId)
     if (identical(tolower(.Platform$OS.type), "windows")) {
-      suppressWarnings(out <- try(file.link(from = ftL, to = fts), silent = TRUE))
+      suppressWarnings({
+        out <- try(file.link(from = ftL, to = fts), silent = TRUE)
+      })
     } else {
-      suppressWarnings(out <- try(file.symlink(from = ftL, to = fts), silent = TRUE))
+      suppressWarnings({
+        out <- try(file.symlink(from = ftL, to = fts), silent = TRUE)
+      })
     }
     if (is(out, "try-error") | !out)
       linkToCacheId <- NULL

@@ -7,7 +7,6 @@
 cloudUploadFromCache(
   isInCloud,
   outputHash,
-  saved,
   cacheRepo,
   cloudFolderID,
   outputToSave,
@@ -18,8 +17,6 @@ cloudUploadFromCache(
 \item{isInCloud}{A logical indicating whether an \code{outputHash} is in the cloud already.}
 
 \item{outputHash}{The \code{cacheId} of the object to upload}
-
-\item{saved}{The character string of the saved file's digest value.}
 
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}

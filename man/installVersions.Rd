@@ -32,17 +32,13 @@ Because of potential conflicts with loaded packages, this function will run
 (i.e., call \code{library})}
 
 \item{standAlone}{Logical. If \code{TRUE}, all packages will be installed and loaded strictly
-                  from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
-                  be used to find the correct versions. This can be create dramatically faster
-                  installs if the user has a substantial number of the packages already in their
-                  personal library. In the case of \code{TRUE}, there will be a hidden file
-                  place in the \code{libPath} directory that lists all the packages
-                  that were needed during the \code{Require} call. Default \code{FALSE} to
-                  minimize package installing.
-#param forget Internally, this function identifies package dependencies using a memoised
-#               function for speed on reuse. But, it may be inaccurate in some cases,
-#               if packages were installed manually by a user. Set this to \code{TRUE} to
-#               refresh that dependency calculation.}
+from the \code{libPaths} only. If \code{FALSE}, all \code{.libPaths} will
+be used to find the correct versions. This can be create dramatically faster
+installs if the user has a substantial number of the packages already in their
+personal library. In the case of \code{TRUE}, there will be a hidden file
+place in the \code{libPath} directory that lists all the packages
+that were needed during the \code{Require} call. Default \code{FALSE} to
+minimize package installing.}
 
 \item{repos}{The remote repository (e.g., a CRAN mirror), passed to either
 \code{install.packages}, \code{install_github} or \code{installVersions}.}

@@ -995,7 +995,7 @@ setMethod(
       if (useCloud && .CacheIsNew) {
         # Here, upload local copy to cloud folder if it isn't already there
         browser(expr = exists("._Cache_15"))
-        cufc <- try(cloudUploadFromCache(isInCloud, outputHash, saved, cacheRepo, cloudFolderID, ## TODO: saved not found
+        cufc <- try(cloudUploadFromCache(isInCloud, outputHash, cacheRepo, cloudFolderID, ## TODO: saved not found
                                          outputToSave, rasters))
         if (is(cufc, "try-error"))
           .updateTagsRepo(outputHash, cacheRepo, "inCloud", "FALSE", drv = drv, conn = conn)

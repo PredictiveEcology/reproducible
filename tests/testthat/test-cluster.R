@@ -13,7 +13,8 @@ test_that("test parallel collisions", {
     N <- min(2, detectCores())
 
     if (!file.exists(CacheDBFile(tmpdir))) {
-      createCache(tmpdir)
+      if (useDBI())
+        createCache(tmpdir)
     }
 
     # make function that will write to cache repository from with clusters
