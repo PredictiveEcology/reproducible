@@ -1,5 +1,7 @@
 test_that("test parallel collisions", {
   skip_on_cran() # testing multi-threaded things on CRAN
+  skip_on_os("mac")
+
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd", ".txt"))
   on.exit({
     testOnExit(testInitOut)
@@ -36,13 +38,13 @@ test_that("test parallel collisions", {
     #   devtools::load_all()
     # })
     numToRun <- 40
-    skip_on_os("mac")
-    # THere is a creating Cache at the same time problem -- haven't resolved
+
+    # There is a 'creating Cache at the same time' problem -- haven't resolved
     #  Just make cache first and it seems fine
     Cache(rnorm, 1, cacheRepo = tmpdir)
     a <- try(clusterMap(cl = cl, fun, seq(numToRun), cacheRepo = tmpdir, .scheduling = "dynamic"),
              silent = FALSE)
-    expect_false(is(a, "try-error"))
+    expect_false(is(a, "try-error")) ## TODO: intermittent locked database failures cause errors here and below
     expect_true(is.list(a))
     expect_true(length(a) == numToRun)
   }
