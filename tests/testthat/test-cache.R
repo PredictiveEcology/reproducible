@@ -1016,9 +1016,13 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
 
   b <- Cache(rnorm, 1, cacheRepo = tmpdir)
   sc <- showCache(tmpdir)
-  ci <- unique(sc$cacheId)
+  ci <- unique(sc[[.cacheTableHashColName()]])
   unlink(CacheStoredFile(tmpdir, ci))
-  warn <- capture_warnings(err <- capture_error(b <- Cache(rnorm, 1, cacheRepo = tmpdir)))
+  warn <- capture_warnings({
+    err <- capture_error({
+      b <- Cache(rnorm, 1, cacheRepo = tmpdir)
+    })
+  })
   expect_true(grepl(paste0("(trying to recover).*(",ci,")"), err))
   expect_true(grepl(paste0("cannot open compressed file"), warn))
 
@@ -1033,20 +1037,21 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
   opts <- options("reproducible.cacheSaveFormat" = "rds")
   b <- Cache(rnorm, 1, cacheRepo = tmpdir)
   sc <- showCache(tmpdir)
-  ci <- unique(sc$cacheId)
+  ci <- unique(sc[[.cacheTableHashColName()]])
   options("reproducible.cacheSaveFormat" = "qs")
   on.exit({
     options(opts)
   }, add = TRUE)
-  mess <- capture_messages(b <- Cache(rnorm, 1, cacheRepo = tmpdir))
-
+  mess <- capture_messages({
+    b <- Cache(rnorm, 1, cacheRepo = tmpdir)
+  })
   expect_true(sum(grepl("Changing format of Cache entry from rds to qs", mess)) == 1)
 
   options("reproducible.cacheSaveFormat" = "rds")
-  mess <- capture_messages(b <- Cache(rnorm, 1, cacheRepo = tmpdir))
-
+  mess <- capture_messages({
+    b <- Cache(rnorm, 1, cacheRepo = tmpdir)
+  })
   expect_true(sum(grepl("Changing format of Cache entry from qs to rds", mess)) == 1)
-
 })
 
 test_that("test file link with duplicate Cache", {
@@ -1065,29 +1070,32 @@ test_that("test file link with duplicate Cache", {
   }
   N <- 4e5
   set.seed(123)
-  mess1 <- capture_messages(b <- Cache(sam, N, cacheRepo = tmpCache))
+  mess1 <- capture_messages({
+    b <- Cache(sam, N, cacheRepo = tmpCache)
+  })
   set.seed(123)
-  mess2 <- capture_messages(d <- Cache(sample, N, cacheRepo = tmpCache))
+  mess2 <- capture_messages({
+    d <- Cache(sample, N, cacheRepo = tmpCache)
+  })
 
   expect_true(grepl("A file with identical", mess2))
 
   set.seed(123)
-  mess1 <- capture_messages(b <- Cache(sam, N, cacheRepo = tmpCache))
+  mess1 <- capture_messages({b <- Cache(sam, N, cacheRepo = tmpCache)})
   set.seed(123)
-  mess2 <- capture_messages(d <- Cache(sample, N, cacheRepo = tmpCache))
+  mess2 <- capture_messages({d <- Cache(sample, N, cacheRepo = tmpCache)})
   expect_true(any(grepl("loaded cached", mess2)))
   expect_true(any(grepl("loaded cached", mess1)))
   out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out1, "try-error"))
     fs1 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out1))
 
-
   # It must be same output, not same input
   clearCache(tmpCache)
   set.seed(123)
-  mess1 <- capture_messages(b <- Cache(sam, N, cacheRepo = tmpCache))
+  mess1 <- capture_messages({b <- Cache(sam, N, cacheRepo = tmpCache)})
   set.seed(1234)
-  mess2 <- capture_messages(d <- Cache(sample, N, cacheRepo = tmpCache))
+  mess2 <- capture_messages({d <- Cache(sample, N, cacheRepo = tmpCache)})
   # Different inputs AND different output -- so no cache recovery and no file link
   expect_true(length(mess2) == 0)
   out2 <- try(system2("du", tmpCache, stdout = TRUE))
@@ -1096,14 +1104,11 @@ test_that("test file link with duplicate Cache", {
     expect_true(all(fs1 * 1.9 < fs2))
   }
   # Test if the `try` works if the file.link is not to a meaningful file
-  cacheIds <- unique(showCache(tmpCache)$cacheId)
+  cacheIds <- unique(showCache(tmpCache)[[.cacheTableHashColName()]])
   unlink(dir(CacheStorageDir(tmpCache), pattern = cacheIds[1], full.names = TRUE))
   unlink(dir(CacheStorageDir(tmpCache), pattern = cacheIds[2], full.names = TRUE))
   set.seed(1234)
 
-  warn <- capture_warnings(d1 <- Cache(sam1, N, cacheRepo = tmpCache))
+  warn <- capture_warnings({d1 <- Cache(sam1, N, cacheRepo = tmpCache)})
   expect_true(length(warn) == 0)
-
-
 })
-

@@ -224,7 +224,7 @@ setMethod(
       }
 
       # remove file-backed files
-      if (all(!is.na(rastersInRepo$cacheId)) && NROW(rastersInRepo) > 0) {
+      if (all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0) {
         unlink(filesToRemove)
       }
 
@@ -399,7 +399,8 @@ setMethod(
           # objsDT3 <- objsDT3[!duplicated(cacheId)]
           browser(expr = exists("zzzz"))
           # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
-          objsDT <- objsDT[objsDT$cacheId %in% unique(objsDT3$cacheId)] # faster than data.table join
+          objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
+                             unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
         }
       }
       if (length(userTags) > 0) {
