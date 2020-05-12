@@ -143,8 +143,6 @@ reproducibleOptions <- function() {
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
     reproducible.quick = FALSE,
-    reproducible.Require.install = TRUE,
-    reproducible.Require.upgrade = 3,
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = .reproducibleTempPath(),

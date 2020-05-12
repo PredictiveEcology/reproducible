@@ -256,404 +256,140 @@ test_that("package-related functions work (part 3)", {
   skip_on_cran()
   skip_on_appveyor()
   skip_on_travis()
-  testInitOut <- testInit(libraries = c("data.table"))#,
-                          #opts = list("reproducible.Require.install" = FALSE))
-  tmpdir <- checkPath(file.path("~", "TempLib3"), create = TRUE) # need a persistent folder ## TODO: use tempdir
+
+  testInitOut <- testInit(libraries = c("data.table", "versions"))
   on.exit({
     try(testOnExit(testInitOut))
   }, add = TRUE)
 
-  repo <- getCRANrepos()
-  opts <- options(repos = repo)
-  on.exit(opts, add = TRUE)
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
+      a <- Require(paste0("glue (>=", packageVersion("glue"), ")"),
+                   #libPath = tmpCache,
+                   standAlone = FALSE)
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
+      expect_true(a)
+    })
 
-  origLibPaths <- .libPaths()
-  on.exit(
-    .libPaths(origLibPaths)
-  )
-  .libPaths(tmpdir)
-  # ._test111 <<- 1
-  # pedev::rmDotUnderline()
-  ######## NEW FULL
-  pkgs <- list(
-    c("SpaDES.core (>=0.9)", "PredictiveEcology/reproducible@messagingOverhaul (>= 4.1.1)",
-      "achubaty/amc@development (>=0.1.5)", "data.table (>=100.0)",
-      "digest (>=0.6.23)", "PredictiveEcology/LandR@development (>= 1.0.2)", "versions (>=0.3)",
-      "fastdigest (>=0.0.0.9)", "PredictiveEcology/reproducible@development (>= 0.0.0.9)",
-      "achubaty/amc@development (>=0.0.0.9)", "data.table (>=0.0.0.9)",
-      "PredictiveEcology/LandR@development(>= 0.0.0.9)", "fastdigest (>=1000.0.0.8)",
-      "fastdigest", "quickPlot", "testthat",
-      "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.9)",
-      "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.10)",
-      "PredictiveEcology/reproducible@development (>= 1110.0.0.9)",
-      "PredictiveEcology/reproducible@development (>= 0.0.0.10)",
-      "PredictiveEcology/reproducible@development (>= 0.0.0.11)"
-    ),
-    c("SpaDES.core (>=0.9)",
-      "PredictiveEcology/reproducible@messagingOverhaul (>= 4.1.1)",
-      "achubaty/amc@development (>=0.1.5)", "data.table (>=100.0)",
-      paste0("digest (>=", packageVersion("digest"), ")"),
-      "PredictiveEcology/LandR@development (>= 1.0.2)"),
-    c("fastdigest (>=0.0.0.9)",
-      "PredictiveEcology/reproducible@development (>= 0.0.0.9)",
-      "achubaty/amc@development (>=0.0.0.9)", "data.table (>=0.0.0.9)",
-      paste0("digest (>=", packageVersion("digest"), ")"),
-      "PredictiveEcology/LandR@development(>= 0.0.0.9)"),
-    # Multiple conflicting version numbers, and with NO version number
-    c("fastdigest (>=0.0.0.8)", "fastdigest (>=0.0.0.9)", "fastdigest", "quickPlot", "testthat"),
-    c("fastdigest (>=1000.0.0.8)", "fastdigest (>=0.0.0.9)", "fastdigest", "quickPlot", "testthat"),
-    c("fastdigest (>=0.0.0.9)",
-      "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.9)",
-      "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.10)",
-      "PredictiveEcology/reproducible@development (>= 1110.0.0.9)",
-      "achubaty/amc@development (>=0.0.0.9)",
-      "data.table (>=0.0.0.9)",
-      paste0("digest (>=", packageVersion("digest"),")"),
-      "PredictiveEcology/LandR@development(>= 0.0.0.9)"),
-    "glue (>=1000.3.1)",
-    c("glue (>=0.3.1)", "fpCompare"),
-    "glue (>=1.3.1)"
-  )
-
-  ip <- as.data.table(installed.packages(noCache = TRUE))[[1]]
-  if ("LandR" %in% ip)
-    remove.packages("LandR")
-  out1 <- capture.output({
-    out <- unloadRandom(unique(extractPkgName(unlist(pkgs))),
-                        keepDepsOf = c("reproducible", "devtools"),
-                        num = 10)
-  })
-  options("reproducible.Require.install" = TRUE)
-  Sys.setenv("R_REMOTES_UPGRADE" = "never")
-  i <- 0
-  for (pkg in sample(pkgs)) {
-    i <- i + 1
-    #._Require_3 <<- ._installPackages_1 <<-
-    #   ._installPackages_4 <<- 1
-    # Remove another package, but only after SpaDES.core is no long being Require-d
-    # if (!any(grepl("SpaDES.core", pkg))) {
-    #   kdo <- c("reproducible")
-    #   if (any(grepl("amc", pkg)))
-    #     kdo <- c("amc", kdo)
-    #   out1 <- capture.output(out <- unloadRandom(pkg, keepDepsOf = kdo))
-    #   message("removed ", paste(out, collapse = ", "))
-    # }
-    suppressWarnings(rm(list = "outFromRequire", inherits = FALSE))
-
-    ipPre <- as.data.table(installed.packages(noCache = TRUE))[[1]]
-    # ._installPackages_1 <<- ._installPackages_2 <<- ._installPackages_3 <<- ._Require_1 <<- 1
+  mess <- capture_messages({
     err <- capture_error({
+      b <- Require(c("SpaDES.core (>=0.9)",
+                     "PredictiveEcology/reproducible@messagingOverhaul (>= 4.1.1)",
+                     "achubaty/amc@development (>=0.1.5)",
+                     "data.table (>=100.0)",
+                     paste0("digest (>=", packageVersion("digest"),")"),
+                     "PredictiveEcology/LandR (>= 0.0.2)"))
+    })
+  })
+  expect_true(sum(grepl("following packages", mess)) == 1)
+  expect_true(sum(grepl("Please manually", err)) == 1)
+
+  mess <- capture_messages({
+    err <- capture_error({
+      b <- Require(c("fastdigest (>=0.0.0.9)",
+                     "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.9)",
+                     "achubaty/amc@development (>=0.0.0.9)",
+                     "data.table (>=0.0.0.9)",
+                     paste0("digest (>=", packageVersion("digest"),")"),
+                     "PredictiveEcology/LandR (>= 0.0.0.9)"))
+    })
+  })
+  expect_true(sum(grepl("following packages", mess)) == 0)
+  expect_true(sum(grepl("Please manually", err)) == 0)
+  expect_true(all(b))
+
+  # Multiple conflicting version numbers, and with NO version number
+  b <- Require(c("fastdigest (>=0.0.0.8)", "fastdigest (>=0.0.0.9)", "fastdigest", "quickPlot", "testthat"))
+  expect_true(all(b))
+
+  mess <- capture_messages(
+    err <- capture_error(
+      b <- Require(c("fastdigest (>=1000.0.0.8)", "fastdigest (>=0.0.0.9)", "fastdigest",
+                     "quickPlot", "testthat"))
+    ))
+  expect_true(all(b))
+  expect_true(sum(grepl("following packages", mess)) == 1)
+  expect_true(sum(grepl("Please manually", err)) == 1)
+
+  # Same as above for GitHub packages
+  mess <- capture_messages(
+    err <- capture_error(
+      b <- Require(c("fastdigest (>=0.0.0.9)",
+                     "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.9)",
+                     "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.10)",
+                     "PredictiveEcology/reproducible@development (>= 1110.0.0.9)",
+                     "achubaty/amc@development (>=0.0.0.9)",
+                     "data.table (>=0.0.0.9)",
+                     paste0("digest (>=", packageVersion("digest"),")"),
+                     "PredictiveEcology/LandR (>= 0.0.0.9)"))))
+  expect_true(sum(grepl("following packages", mess)) == 1)
+  expect_true(sum(grepl("Please manually", err)) == 1)
+
+  mess <- capture_messages(
+    err <- capture_error(
+      b <- Require(c("fastdigest (>=0.0.0.9)",
+                     "PredictiveEcology/reproducible@development (>= 0.0.0.9)",
+                     "PredictiveEcology/reproducible@development (>= 0.0.0.10)",
+                     "PredictiveEcology/reproducible@development (>= 0.0.0.11)",
+                     "achubaty/amc@development (>=0.0.0.9)",
+                     "data.table (>=0.0.0.9)",
+                     paste0("digest (>=", packageVersion("digest"),")"),
+                     "PredictiveEcology/LandR (>= 0.0.0.9)"))))
+  expect_true(all(b))
+  expect_true(sum(grepl("following packages", mess)) == 0)
+  expect_true(sum(grepl("Please manually", err)) == 0)
+
+
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
+      expect_error(a <- Require("glue (>=1000.3.1)", libPath = tmpCache, standAlone = TRUE))
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
+      a <- Require(c("glue (>=0.3.1)", "fpCompare"), libPath = tmpCache, standAlone = TRUE)
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
+      expect_true(length(a) == 2)
+    })
+  testthat::with_mock(
+    "isInteractive" = function() {
+      FALSE
+    },
+    {
+      expect_true(all(a))
+    }
+  )
+  testthat::with_mock(
+    ".readline" = function(prompt) {
+      3
+    },
+    {
       warn <- capture_warnings({
         mess <- capture_messages({
-          outFromRequire <- Require(pkg, repos = repo, standAlone = FALSE)
+          a <- Require("glue (>=1.3.1)", libPath = tmpdir, standAlone = TRUE)
         })
       })
-    })
-    if (length(err) == 0) {
-      ipPost <- as.data.table(installed.packages(noCache = TRUE))[[1]]
-      if (!"PredictiveEcology/LandR@development (>= 1.0.2)" %in% pkg &&
-          "PredictiveEcology/LandR@development(>= 0.0.0.9)" %in% pkg) {
-        expect_true("LandR" %in% ipPost)
-      } else {
-        expect_false("LandR" %in% ipPost)
-      }
-      if (!exists("warn", inherits = FALSE))
-        warn <- character()
-      if (!exists("mess", inherits = FALSE))
-        mess <- character()
-      if (length(warn) == 0)
-        warn <- ""
-      if (length(mess) == 0)
-        mess <- ""
-      dealWithWarns(c(mess, warn), outFromRequire)
+      expect_true(sum(grepl("Not installing", mess))==1)
     }
-    toDetachAndRm <- c("amc", "LandR")
-    for (j in toDetachAndRm) {
-      out <- capture.output(try(detach(paste0("package:",j), unload = TRUE), silent = TRUE))
-      out <- capture.output(try(remove.packages(j), silent = TRUE))
-    }
-  }
-
-  # if (FALSE) {
-  #
-  #   for (lp in rev(c(origLibPaths[1], tmpdir))) {
-  #     # To emulate a near vanilla install, make a hard link to reproducible dependencies
-  #     .libPaths(lp)
-  #     if (lp == origLibPaths[1])
-  #       options("reproducible.Require.install" = TRUE)
-  #     else {
-  #       options("reproducible.Require.install" = FALSE)
-  #       pkgDirs <- dir(setdiff(origLibPaths, tail(.libPaths(), 1)), full.names = TRUE)
-  #       pkgDirs <- pkgDirs[grepl("curl", pkgDirs)]
-  #       #pkgDirs <- pkgDirs[basename(pkgDirs) %in% reproducibleDeps$reproducible]
-  #       pkgDirs2 <- lapply(pkgDirs, dir, recursive = TRUE, full.names = TRUE)
-  #
-  #       newPaths <- lapply(origLibPaths[-length(origLibPaths)], function(lp) {
-  #         lapply(pkgDirs2, function(pk) gsub(lp, tmpdir, pk))
-  #       })
-  #       allDirs <- unique(dirname(unlist(newPaths)))
-  #       out <- lapply(basename(pkgDirs), function(p) {
-  #         dir.create(file.path(tmpdir, p))
-  #       })
-  #
-  #       warn <- capture_warnings(out2 <- lapply(allDirs, dir.create, recursive = TRUE))
-  #       warn2 <- capture_warnings(out <- file.link(unlist(pkgDirs2), unlist(newPaths)))
-  #
-  #     }
-  #
-  #
-  #     ######## NEW FULL
-  #     pkgs <- c("SpaDES.core (>=0.9)", "PredictiveEcology/reproducible@messagingOverhaul (>= 4.1.1)",
-  #               "achubaty/amc@development (>=0.1.5)", "data.table (>=100.0)",
-  #               "digest (>=0.6.23)", "PredictiveEcology/LandR@development (>= 1.0.2)", "versions (>=0.3)",
-  #               "fastdigest (>=0.0.0.9)", "PredictiveEcology/reproducible@development (>= 0.0.0.9)",
-  #               "achubaty/amc@development (>=0.0.0.9)", "data.table (>=0.0.0.9)",
-  #               "PredictiveEcology/LandR@development(>= 0.0.0.9)", "fastdigest (>=1000.0.0.8)",
-  #               "fastdigest", "quickPlot", "testthat",
-  #               "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.9)",
-  #               "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.10)",
-  #               "PredictiveEcology/reproducible@development (>= 1110.0.0.9)",
-  #               "PredictiveEcology/reproducible@development (>= 0.0.0.10)",
-  #               "PredictiveEcology/reproducible@development (>= 0.0.0.11)"
-  #     )
-  #     Require(pkgs, repos = repo, standAlone = FALSE)
-  #
-  #     # There is no point in installing dependencies if the package version is insufficient
-  #
-  #     ip <- installed.packages(noCache = TRUE)
-  #     assignInNamespace("isInteractive", ns = "reproducible", function() {FALSE})
-  #     suppressWarnings(rm(a))
-  #     warn <- capture_warnings(
-  #       a <- Require(paste0("versions (>=", packageVersion("versions"), ")"),
-  #                    repos = repo,
-  #                    #libPath = tmpCache,
-  #                    standAlone = FALSE)
-  #     )
-  #
-  #     noPackageWarn <- any(grepl("there is no package", warn))
-  #     if ("curl" %in% ip[,1]) {
-  #       if (noPackageWarn) {
-  #         expect_false(a)
-  #       } else {
-  #         expect_true(a)
-  #       }
-  #     }
-  #
-  #
-  #
-  #     ################################################################
-  #     ################################################################
-  #     pkgs <- c("SpaDES.core (>=0.9)",
-  #               "PredictiveEcology/reproducible@messagingOverhaul (>= 4.1.1)",
-  #               "achubaty/amc@development (>=0.1.5)",
-  #               "data.table (>=100.0)",
-  #               paste0("digest (>=", packageVersion("digest"),")"),
-  #               "PredictiveEcology/LandR@development (>= 1.0.2)")
-  #     mess <- capture_messages({
-  #       warn <- capture_warnings({
-  #         err <- capture_error({
-  #           b <- Require(repos = repo, pkgs)})
-  #       })
-  #     })
-  #     cat(mess, file = "c:/Eliot/tmp/testMess.txt")
-  #     cat(as.character(err), file = "c:/Eliot/tmp/testErr.txt")
-  #
-  #     noPackageWarn <- any(grepl("there is no package", warn))
-  #     if (any(noPackageWarn)) {
-  #       noPackage <- strsplit(warn, "there is no package")
-  #       noPackage <- gsub("^.* \'(.*)\'.*", "\\1", noPackage[[1]])
-  #       noPackage <- noPackage[nzchar(noPackage)]
-  #       expect_true(sum(b) == sum(!names(b) %in% noPackage))
-  #     } else {
-  #
-  #       expect_true(sum(grepl("following packages", mess)) == 1)
-  #       if (any(!extractPkgName(pkgs) %in% ip[,1])) {
-  #         if (sum(grepl("not sufficiently", mess))==1) {
-  #           expect_true(sum(grepl("Please manually", err)) == 1)
-  #         } else
-  #           expect_true(sum(grepl("Please manually", err)) == 0)
-  #       } else {
-  #         expect_true(sum(grepl("Please manually", err)) == 1)
-  #       }
-  #     }
-  #
-  #     ################################################################
-  #     ################################################################
-  #     pkgs <- c("fastdigest (>=0.0.0.9)",
-  #               "PredictiveEcology/reproducible@development (>= 0.0.0.9)",
-  #               "achubaty/amc@development (>=0.0.0.9)",
-  #               "data.table (>=0.0.0.9)",
-  #               paste0("digest (>=", packageVersion("digest"),")"),
-  #               "PredictiveEcology/LandR@development(>= 0.0.0.9)")
-  #
-  #     suppressWarnings(rm(b))
-  #     warn <- capture_warnings(
-  #       mess <- capture_messages({
-  #         err <- capture_error({
-  #           b <- Require(repos = repo, pkgs)
-  #         })
-  #       })
-  #     )
-  #
-  #     noPackageWarn <- grepl("there is no package", warn)
-  #     if (any(noPackageWarn)) {
-  #       noPackage <- strsplit(warn, "there is no package")
-  #       noPackage <- gsub("^.* \'(.*)\'.*", "\\1", noPackage[[1]])
-  #       noPackage <- noPackage[nzchar(noPackage)]
-  #       expect_true(sum(b) == sum(!names(b) %in% noPackage))
-  #     } else {
-  #       ip <- installed.packages(.libPaths())
-  #       pkgNames <- extractPkgName(pkgs)
-  #       deps <- pkgDep(pkgNames, recursive = TRUE)
-  #       out <- unlist(Map(d = deps, n = names(deps), function(d, n) {
-  #         all(d %in% ip[,1]) && n %in% c(gsub("^.*:", "", search()), ip[, 1])
-  #       }))
-  #       out[["reproducible"]] <- TRUE
-  #       expect_true(sum(b) == sum(out))
-  #     }
-  #
-  #     ################################################################
-  #     # Multiple conflicting version numbers, and with NO version number
-  #     pkgs <- c("fastdigest (>=0.0.0.8)", "fastdigest (>=0.0.0.9)", "fastdigest", "quickPlot", "testthat")
-  #     pkgName <- unique(extractPkgName(pkgs))
-  #     loadedPkgs <- unlist(lapply(pkgName, isNamespaceLoaded))
-  #     sumIL <- sum(installedAndLoaded(pkgName))
-  #     warn <- capture_warnings(
-  #       mess <- capture_messages(
-  #         b <- Require(repos = repo, pkgs))
-  #     )
-  #     if (sum(loadedPkgs)) {
-  #       expect_true(sum(b) == sumIL)
-  #     }
-  #
-  #     ################################################################
-  #     ################################################################
-  #     pkgs <- c("fastdigest (>=1000.0.0.8)", "fastdigest (>=0.0.0.9)", "fastdigest",
-  #               "quickPlot", "testthat")
-  #     mess <- capture_messages(
-  #       err <- capture_error(
-  #         b <- Require(repos = repo, pkgs)
-  #       ))
-  #     pkgName <- unique(extractPkgName(pkgs))
-  #     loadedPkgs <- unlist(lapply(pkgName, isNamespaceLoaded))
-  #     sumIL <- sum(installedAndLoaded(pkgName))
-  #
-  #     expect_true(sum(b) == sumIL)
-  #
-  #     expect_true(sum(grepl("following packages", mess)) == 1)
-  #     expect_true(sum(grepl("Please manually", err)) == 1)
-  #
-  #     # Same as above for GitHub packages
-  #     pkgs <- c("fastdigest (>=0.0.0.9)",
-  #               "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.9)",
-  #               "PredictiveEcology/reproducible@messagingOverhaul (>= 0.0.0.10)",
-  #               "PredictiveEcology/reproducible@development (>= 1110.0.0.9)",
-  #               "achubaty/amc@development (>=0.0.0.9)",
-  #               "data.table (>=0.0.0.9)",
-  #               paste0("digest (>=", packageVersion("digest"),")"),
-  #               "PredictiveEcology/LandR@development(>= 0.0.0.9)")
-  #     suppressWarnings(rm(b, mess, warn, a))
-  #     warn <- capture_warnings(
-  #       mess <- capture_messages(
-  #         err <- capture_error(
-  #           b <- Require(repos = repo, pkgs))))
-  #
-  #     expect_true(sum(grepl("following packages", mess)) == 1)
-  #
-  #     pkgName <- unique(extractPkgName(pkgs))
-  #     loadedPkgs <- unlist(lapply(pkgName, isNamespaceLoaded))
-  #     sumIL <- sum(installedAndLoaded(pkgName))
-  #
-  #
-  #     if (any(grepl("not sufficiently", mess)) && getOption("reproducible.Require.upgrade") != 3) {
-  #       expect_true(grepl("Please manually", err)  )
-  #     }
-  #
-  #     expect_true(sum(b) == sumIL)
-  #
-  #
-  #     pkgs <- c("fastdigest (>=0.0.0.9)",
-  #               "PredictiveEcology/reproducible@development (>= 0.0.0.9)",
-  #               "PredictiveEcology/reproducible@development (>= 0.0.0.10)",
-  #               "PredictiveEcology/reproducible@development (>= 0.0.0.11)",
-  #               "achubaty/amc@development (>=0.0.0.9)",
-  #               "data.table (>=0.0.0.9)",
-  #               paste0("digest (>=", packageVersion("digest"),")"),
-  #               "PredictiveEcology/LandR@development(>= 0.0.0.9)")
-  #     suppressWarnings(rm(b))
-  #     warn <- capture_warnings(
-  #       mess <- capture_messages(
-  #         err <- capture_error(
-  #           b <- Require(repos = repo, pkgs))))
-  #
-  #     if (any(grepl("package or namespace load failed", mess))) {
-  #       expect_true(sum(grepl("following packages", mess)) == 0)
-  #     } else {
-  #       expect_true(sum(grepl("following packages", mess)) == 1)
-  #     }
-  #
-  #     pkgNames <- unique(extractPkgName(pkgs))
-  #     pkgNames <- pkgNames[pkgNames %in% c(gsub("^.*:", "", search()), ip[, 1])]
-  #     theGrep <- grepl("package or namespace load failed", mess)
-  #     if (any(theGrep)) {
-  #       cantLoad <- unique(gsub("^.*failed for '(.*)' in .*$", "\\1", mess[theGrep]))
-  #       if (length(cantLoad))
-  #         expect_true(all(setdiff(pkgNames, cantLoad) %in% names(b)[b]))
-  #     } else {
-  #       expect_true(all(pkgNames %in% names(b)[b]))
-  #     }
-  #
-  #
-  #
-  #     pkgs <- "glue (>=1000.3.1)"
-  #     err <- capture_error(a <- Require(repos = repo,
-  #                                       pkgs, libPath = tmpCache, standAlone = TRUE))
-  #     expect_true(grepl("manually install", err))
-  #
-  #     pkgs <- c("glue (>=0.3.1)", "fpCompare")
-  #     warn <- capture_warnings(
-  #       mess <- capture_messages(
-  #         a <- Require(repos = repo,
-  #                      pkgs, libPath = tmpCache, standAlone = TRUE)
-  #       ))
-  #
-  #     theGrep <- grepl("cannot be unloaded", mess)
-  #     if (any(theGrep)) {
-  #       pkgNotLoaded <- gsub("^.*Package \'(.*)\' version.*$", "\\1", mess[theGrep])
-  #       expect_true(sum(a) == sum(a[!names(a) %in% pkgNotLoaded]))
-  #     } else {
-  #       pkgNames <- unique(extractPkgName(pkgs))
-  #       pkgNames <- pkgNames[pkgNames %in% c(gsub("^.*:", "", search()), ip[, 1])]
-  #       expect_true(all(pkgNames %in% names(a)[a]))
-  #     }
-  #
-  #     pkgs <- "glue (>=1.3.1)"
-  #     pkgName <- extractPkgName(pkgs)
-  #     currentVers <- packageVersion(pkgName)
-  #     ap <- available.packages()
-  #     pkgNames <- ap[ap[,1] %in% pkgName,2]
-  #     names(pkgName) <- pkgName
-  #     loadedPkgs <- lapply(pkgName, isNamespaceLoaded)
-  #
-  #     ._test111 <<- 1
-  #     err <- capture_error(
-  #       warn <- capture_warnings({
-  #         mess <- capture_messages({
-  #           a <- Require(repos = repo,
-  #                        pkgs, libPath = tmpdir, standAlone = TRUE)
-  #         })
-  #       })
-  #     )
-  #
-  #     if (length(loadedPkgs)) {
-  #       expect_true(sum(grepl("Not installing", mess)) ==  length(loadedPkgs))
-  #     } else {
-  #       pkgNames <- unique(extractPkgName(pkgs))
-  #       pkgNames <- pkgNames[pkgNames %in% c(gsub("^.*:", "", search()), ip[, 1])]
-  #       expect_true(all(pkgNames %in% names(a)[a]))
-  #     }
-  #   }
-  # }
+  )
 })
 
 test_that("package topoSort", {
