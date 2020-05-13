@@ -320,7 +320,6 @@ attemptGDAL <- function(x, useGDAL) {
   attemptGDAL
 }
 
-
 maskWithRasterNAs <- function(x, y) {
   if (canProcessInMemory(x, 3) && fromDisk(x))
     x[] <- x[]
