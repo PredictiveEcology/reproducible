@@ -652,17 +652,19 @@ pkgDep2 <- function(packages, recursive = TRUE, depends = TRUE,
   return(a)
 }
 
-#' Memoised version of \code{package_dependencies}
-#'
-#' This has a 6 minute memory time window.
-#'
-#' @inheritParams tools::package_dependencies
-#'
-#' @param db character matrix as from \code{\link[utils]{available.packages}}
-#'
-#' @importFrom memoise memoise timeout
-#' @importFrom tools package_dependencies
-package_dependenciesMem <- memoise::memoise(tools::package_dependencies, ~timeout(360)) # nolint
+# Memoised version of \code{package_dependencies}
+#
+# This has a 6 minute memory time window.
+#
+# @inheritParams tools::package_dependencies
+#
+# @importFrom memoise memoise timeout
+# @importFrom tools package_dependencies
+# @keywords internal
+#
+# NOTE: leave this undocumented, as changes to tools::package_dependencies between R 4.0.0 & R 4.1.0
+#       result in WARNING during R CMD check in versions of R not used to build the help docs.
+package_dependenciesMem <- memoise::memoise(tools::package_dependencies, ~memoise::timeout(360))
 
 #' Memoised version of \code{available.packages}
 #'
