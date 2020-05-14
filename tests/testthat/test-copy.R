@@ -11,7 +11,7 @@ test_that("test Copy", {
   expect_false(filename(ras2) == filename(ras))
 
   dt <- data.table(a = 1:2, b = rev(LETTERS[1:2]))
-  tmpdir <- normPath(file.path(tempdir(), "ras2"))
+  tmpdir <- normPath(tempdir2("ras2"))
   checkPath(tmpdir, create = TRUE); on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
   li <- list(dt = dt, ras = ras, ras2 = ras2)
   li2 <- Copy(li, tmpdir)
@@ -39,7 +39,7 @@ test_that("test Copy", {
   li <- list(dt = dt, ras = ras, ras2 = ras2)
   li <- list2env(li, env = new.env(parent = emptyenv()))
 
-  tmpdir <- file.path(tempdir(), "ras3")
+  tmpdir <- tempdir2("ras3")
   li2 <- Copy(li, tmpdir)
 
   expect_true(all(unlist(lapply(names(li), function(i) {
@@ -67,7 +67,7 @@ test_that("test Copy", {
   liEnv <- list2env(li, env = env1)
   liEnv[["env"]] <- li
 
-  tmpdir <- file.path(tempdir(), "ras3")
+  tmpdir <- tempdir2("ras3")
   liEnv2 <- Copy(liEnv, tmpdir)
 
   expect_true(all(unlist(lapply(names(liEnv[["env"]]), function(i) {

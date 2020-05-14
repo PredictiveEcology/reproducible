@@ -5,10 +5,10 @@ if (getRversion() >= "3.1.0") {
 #' Check for presence of \code{checkFolderID} (for \code{Cache(useCloud)})
 #'
 #' Will check for presence of a \code{cloudFolderID} and make a new one
-#' if one not present on googledrive, with a warning.
+#' if one not present on Google Drive, with a warning.
 #'
 #' @param cloudFolderID The google folder ID where cloud caching will occur.
-#' @param create Logical. If \code{TRUE}, then the cloudFolderID will be created.
+#' @param create Logical. If \code{TRUE}, then the \code{cloudFolderID} will be created.
 #'     This should be used with caution as there are no checks for overwriting.
 #'     See \code{googledrive::drive_mkdir}. Default \code{FALSE}.
 #' @param overwrite Logical. Passed to \code{googledrive::drive_mkdir}.
@@ -138,7 +138,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
                           conn = getOption("reproducible.conn", NULL)) {
   browser(expr = exists("._cloudDownload_1"))
   message("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
-  localNewFilename <- file.path(tempdir(), basename2(newFileName))
+  localNewFilename <- file.path(tempdir2(), basename2(newFileName))
   isInCloud <- gsub(gdriveLs$name,
                     pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
                     replacement = "") %in% outputHash
@@ -147,11 +147,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
                              path = localNewFilename, # take first if there are duplicates
                              overwrite = TRUE)))
   if (useDBI()) {
-    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
-      output <- qread(localNewFilename, nthreads = getOption("reproducible.nThreads", 1))
-    else
-      output <- readRDS(localNewFilename)
-
+    output <- loadFile(localNewFilename)
   } else {
     ee <- new.env(parent = emptyenv())
     loadedObjName <- load(localNewFilename)
@@ -166,7 +162,6 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
 #' Meant for internal use, as there are internal objects as arguments.
 #'
 #' @param isInCloud     A logical indicating whether an \code{outputHash} is in the cloud already.
-#' @param saved         The character string of the saved file's digest value.
 #' @param outputToSave  Only required if \code{any(rasters) == TRUE}.
 #'                      This is the \code{Raster*} object.
 #' @param rasters       A logical vector of length >= 1 indicating which elements in
@@ -175,22 +170,20 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
 #'
 #' @importFrom googledrive drive_download
 #' @keywords internal
-cloudUploadFromCache <- function(isInCloud, outputHash, saved, cacheRepo, cloudFolderID,
+cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
                                  outputToSave, rasters) {
   browser(expr = exists("._cloudUploadFromCache_1"))
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
     newFileName <- if (useDBI()) {
       basename2(cacheIdFileName)
-    } else {
-      paste0(saved, ".rda")
     }
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = TRUE)
     message("Uploading new cached object ", newFileName,", with cacheId: ",
             outputHash," to cloud folder id: ", cloudFolderID$name, " or ", cloudFolderID$id)
     du <- try(retry(quote(drive_upload(media = CacheStoredFile(cacheRepo, outputHash),
-                             path = as_id(cloudFolderID), name = newFileName,
-                             overwrite = FALSE))))
+                                       path = as_id(cloudFolderID), name = newFileName,
+                                       overwrite = FALSE))))
     if (is(du, "try-error")) {
       return(du)
     }

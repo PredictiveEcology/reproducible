@@ -4,7 +4,7 @@ test_that("prepInputs doesn't work (part 1)", {
   testthat::skip_on_appveyor()
 
   testInitOut <- testInit("raster", opts = list(
-    "rasterTmpDir" = file.path(tempdir(), "raster"),
+    "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE)
   )
@@ -129,7 +129,7 @@ test_that("prepInputs doesn't work (part 1)", {
       useCache = TRUE
     )
   })
-  expect_true(any(grepl("loading", mess)))
+  expect_true(any(grepl("loaded", mess)))
 
   # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
   #   but the StudyArea does get reprojected, need to use rasterToMatch
@@ -279,7 +279,7 @@ test_that("prepInputs doesn't work (part 1)", {
 test_that("interactive prepInputs", {
   testInitOut <- testInit("raster",
                           opts = list(
-                            "rasterTmpDir" = file.path(tempdir(), "raster"),
+                            "rasterTmpDir" = tempdir2(rndstr(1,6)),
                             "reproducible.overwrite" = TRUE,
                             "reproducible.inputPaths" = NULL
                           ),
@@ -1099,7 +1099,7 @@ test_that("prepInputs doesn't work (part 2)", {
 
   if (getRversion() > "3.3.0") {
     testInitOut <- testInit(c("RCurl", "raster"), opts = list(
-      "rasterTmpDir" = file.path(tempdir(), "raster"),
+      "rasterTmpDir" = tempdir2(rndstr(1,6)),
       "reproducible.overwrite" = TRUE,
       "reproducible.inputPaths" = NULL
     ), needGoogle = TRUE)
@@ -1770,14 +1770,18 @@ test_that("rasters aren't properly resampled", {
 
   a <- raster(extent(0, 20, 0, 20), res = 1, vals = 1:400)
   b <- raster(extent(0, 20, 0, 20), res = c(2,2), vals = 1:100)
-  crs(a) <- crsToUse
-  crs(b) <- crsToUse
+  suppressWarnings({
+    crs(a) <- crsToUse
+    crs(b) <- crsToUse
+  }) ## TODO: temporary until raster fixes all crs issues
 
   tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  writeRaster(a, filename = tiftemp1)
-
   tiftemp2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  writeRaster(b, filename = tiftemp2)
+
+  suppressWarnings({
+    writeRaster(a, filename = tiftemp1)
+    writeRaster(b, filename = tiftemp2)
+  }) ## TODO: temporary until raster fixes all crs issues
 
   out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
                     destinationPath = dirname(tiftemp1), useCache = FALSE)
@@ -1809,22 +1813,25 @@ test_that("System call gdal works", {
 
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
   crs(ras) <- crsToUse
-  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+  rnStr <- rndstr(1,6)
+  ras <- writeRaster(ras, filename = file.path(tempdir2(rnStr), basename(tempfile())),
+                     format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- crsToUse
 
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
-  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE)
   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
   expect_true(dataType(test1) == "INT1U") #properly resampled
 
   ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
-  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+  rnStr <- rndstr(1,6)
+  ras <- writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff")
   test2 <- prepInputs(targetFile = ras@file@name,
-                      destinationPath = tempdir(),
+                      destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
   expect_true(dataType(test2) == "FLT4S")
 
@@ -1841,7 +1848,8 @@ test_that("System call gdal works using multicores for both projecting and maski
 
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
   crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+  rnStr <- rndstr(1, 6)
+  ras <- writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- crsToUse
@@ -1856,29 +1864,29 @@ test_that("System call gdal works using multicores for both projecting and maski
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
   # Passing a specific integer for cores
-  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2)
   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
   # Passing as float for cores
-  test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+  test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3)
   expect_true(file.exists(test2@file@name)) #exists on disk after gdalwarp
   # Not passing cores
-  test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+  test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea)
   expect_true(file.exists(test3@file@name)) #exists on disk after gdalwarp
   # Passing cores as AUTO
-  test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+  test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO")
   expect_true(file.exists(test4@file@name)) #exists on disk after gdalwarp
   # Passing cores as any other character than 'AUTO'
   expect_error({
-    test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir(),
+    test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
                         rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA")
   })
 
-  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
-  ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+  # ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
+  # ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
@@ -1897,14 +1905,15 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   #closing unused connection 3 (C:/Temp/RtmpU5EOTS/raster/r_tmp_2018-12-03_143339_14468_30160.gri)
   ras1 <- suppressWarnings(raster::projectRaster(from = ras, crs = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0", method = "ngb"))
 
-  ras1 <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+  rnStr <- rndstr(1, 6)
+  ras1 <- writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff")
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
-  test1 <- prepInputs(targetFile = ras1@file@name, destinationPath = tempdir(),
+  test1 <- prepInputs(targetFile = ras1@file@name, destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE, method = 'ngb')
 
   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
@@ -1920,7 +1929,7 @@ test_that("cropInputs crops too closely when input projections are different", {
   skip_on_cran()
 
   testInitOut <- testInit("raster", opts = list(
-    "rasterTmpDir" = file.path(tempdir(), "raster"),
+    "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.overwrite" = TRUE,
     "reproducible.inputPaths" = NULL
   ), needGoogle = TRUE)

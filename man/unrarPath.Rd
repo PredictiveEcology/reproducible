@@ -5,7 +5,9 @@
 \alias{unrarPath}
 \alias{.unrarPath}
 \title{The known path for unrar or 7z}
-\format{An object of class \code{NULL} of length 0.}
+\format{
+An object of class \code{NULL} of length 0.
+}
 \usage{
 .unrarPath
 }

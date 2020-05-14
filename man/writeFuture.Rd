@@ -2,7 +2,7 @@
 % Please edit documentation in R/cache.R
 \name{writeFuture}
 \alias{writeFuture}
-\title{Write to archivist repository, using \code{future::future}}
+\title{Write to cache repository, using \code{future::future}}
 \usage{
 writeFuture(
   written,

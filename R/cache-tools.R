@@ -1,4 +1,4 @@
-#' @param x A simList or a directory containing a valid archivist repository. Note:
+#' @param x A simList or a directory containing a valid Cache repository. Note:
 #'   For compatibility with \code{Cache} argument, \code{cacheRepo} can also be
 #'   used instead of \code{x}, though \code{x} will take precedence.
 #' @param after A time (POSIX, character understandable by data.table).
@@ -171,8 +171,6 @@ setMethod(
       checkPath(x, create = TRUE)
       if (useDBI()) {
         createCache(x, drv = drv, force = TRUE)
-      } else {
-        archivist::createLocalRepo(x)
       }
       memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
@@ -196,8 +194,6 @@ setMethod(
         filesToRemove <- lapply(fileBackedRastersInRepo, function(ras) {
           if (useDBI()) {
             r <- loadFromCache(x, ras)
-          } else {
-            r <- suppressWarnings(archivist::loadFromLocalRepo(ras, repoDir = x, value = TRUE))
           }
           tryCatch(filename(r), error = function(e) NULL)
         })
@@ -228,7 +224,7 @@ setMethod(
       }
 
       # remove file-backed files
-      if (all(!is.na(rastersInRepo$cacheId)) && NROW(rastersInRepo) > 0) {
+      if (all(!is.na(rastersInRepo[[.cacheTableHashColName()]])) && NROW(rastersInRepo) > 0) {
         unlink(filesToRemove)
       }
 
@@ -240,14 +236,12 @@ setMethod(
         }
         rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
         browser(expr = exists("rmFC"))
-      } else {
-        suppressWarnings(archivist::rmFromLocalRepo(objToGet, x, many = TRUE))
       }
     }
     memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
-  })
+})
 
 #' @details
 #' \code{cc(secs)} is just a shortcut for \code{clearCache(repo = Paths$cachePath, after = secs)},
@@ -298,8 +292,7 @@ cc <- function(secs, ...) {
 
 #' Examining and modifying the cache
 #'
-#' These are convenience wrappers around \code{DBI}
-#' (formerly \code{archivist}) package functions.
+#' These are convenience wrappers around \code{DBI} package functions.
 #' They allow the user a bit of control over what is being cached.
 #'
 #' \describe{
@@ -316,8 +309,8 @@ cc <- function(secs, ...) {
 #' @importFrom DBI dbSendQuery dbFetch dbClearResult
 #' @importFrom data.table data.table set setkeyv
 #' @rdname viewCache
-#' @seealso \code{\link{mergeCache}}, \code{archivist::splitTagsLocal}. Many more examples
-#' in \code{\link{Cache}}
+#' @seealso \code{\link{mergeCache}}. Many more examples
+#' in \code{\link{Cache}}.
 #'
 setGeneric("showCache", function(x, userTags = character(), after = NULL, before = NULL,
                                  drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -360,7 +353,9 @@ setMethod(
       !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
       if (exists("futureEnv", envir = .reproEnv))
-        if (suppressWarnings(requireNamespace("future", quietly = TRUE, warn.conflicts = FALSE))) {
+        hasFuture <- .requireNamespace("future",
+                                       messageStart = "To use reproducible.futurePlan, ")
+        if (hasFuture) {
           checkFutures()
         }
     }
@@ -391,9 +386,6 @@ setMethod(
       else
         objsDT <- setDT(tab)
       #setkeyv(objsDT, "cacheId")
-    } else {
-      objsDT <- archivist::showLocalRepo(x) %>% data.table()
-      #setkeyv(objsDT, "md5hash")
     }
 
     if (NROW(objsDT) > 0) {
@@ -407,13 +399,9 @@ setMethod(
           # objsDT3 <- objsDT3[!duplicated(cacheId)]
           browser(expr = exists("zzzz"))
           # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
-          objsDT <- objsDT[objsDT$cacheId %in% unique(objsDT3$cacheId)] # faster than data.table join
+          objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
+                             unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
         }
-      } else {
-        objsDT <- data.table(archivist::splitTagsLocal(x), key = "artifact")
-        objsDT3 <- objsDT[tagKey == "accessed"][(tagValue <= before) &
-                                                  (tagValue >= after)][!duplicated(artifact)]
-        objsDT <- objsDT[artifact %in% objsDT3[[.cacheTableHashColName()]]]
       }
       if (length(userTags) > 0) {
         if (isTRUE(list(...)$regexp) | is.null(list(...)$regexp)) {
@@ -493,6 +481,8 @@ setMethod(
 
 #' Merge two cache repositories together
 #'
+#' \lifecycle{experimental}
+#'
 #' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
 #' repository. All \code{userTags} will be copied verbatim, including
 #' \code{accessed}, with 1 exception: \code{date} will be the
@@ -510,9 +500,6 @@ setMethod(
 #'   a new one will be made from \code{drvTo} and \code{cacheTo}
 #' @param connFrom The database for the \code{cacheFrom}. If not provided, then
 #'   a new one will be made from \code{drvFrom} and \code{cacheFrom}
-#'
-#' @details
-#' This is still experimental
 #'
 #' @return The character string of the path of \code{cacheTo}, i.e., not the
 #' objects themselves.
@@ -555,8 +542,6 @@ setMethod(
         browser(expr = exists("gggg"))
         outputToSave <- if (useDBI()) {
           try(loadFromCache(cacheFrom, artifact))
-        } else {
-          try(archivist::loadFromLocalRepo(artifact, repoDir = cacheFrom, value = TRUE))
         }
         if (is(outputToSave, "try-error")) {
           message("Continuing to load others")
@@ -568,29 +553,6 @@ setMethod(
           !tagKey %in% c("format", "name", "date", "cacheId"), list(tagKey, tagValue)]
         if (useDBI()) {
           output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
-        } else {
-          written <- FALSE
-          if (is(outputToSave, "Raster")) {
-            outputToSave <- .prepareFileBackedRaster(outputToSave, repoDir = cacheTo)
-          }
-          userTags <- c(paste0(userTags$tagKey, ":", userTags$tagValue))
-          while (!written) {
-            saved <- suppressWarnings(try(
-              archivist::saveToLocalRepo(outputToSave, repoDir = cacheTo,
-                                         artifactName = NULL,
-                                         archiveData = FALSE, archiveSessionInfo = FALSE,
-                                         archiveMiniature = FALSE, rememberName = FALSE,
-                                         silent = TRUE, userTags = userTags),
-              silent = TRUE
-            ))
-            # This is for simultaneous write conflicts. SQLite on Windows can't handle them.
-            written <- if (is(saved, "try-error")) {
-              Sys.sleep(0.05)
-              FALSE
-            } else {
-              TRUE
-            }
-          }
         }
         message(artifact, " copied")
         outputToSave
@@ -611,9 +573,6 @@ setMethod(
   if (missing(cacheTable)) {
     if (useDBI()) {
       a <- showCache(x, verboseMessaging = FALSE)
-    } else {
-      a <- showLocalRepo2(x)
-      tagCol <- "tag"
     }
 
   } else {
@@ -763,12 +722,11 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
 
 useDBI <- function() {
   ud <- getOption("reproducible.useDBI", TRUE)
-  rn <- requireNamespace("archivist", quietly = TRUE)
-  if (!ud && !rn)
-    message("Trying to not use DBI as database engine, but archivist is not ",
-            "installed. Please install.packages('archivist') or ",
-            "set options('reproducible.useDBI' = TRUE)")
-  ud || !rn
+  if (isFALSE(ud)) {
+    stop("options('reproducible.useDBI') can only be TRUE in this and future versions of reproducible",
+         call. = FALSE)
+  }
+  ud
 }
 
 rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
@@ -778,6 +736,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
     # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
     #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
   }
+  browser(expr = exists("._rmFromCloudFolder_1"))
 
   gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)

@@ -42,58 +42,69 @@ test_that("fastMask produces correct results", {
   names(newStack3) <- names(newStack1)
   expect_equivalent(newStack1, newStack3)
   # Run same as above but with different internal pathway
-  gdalUtils::gdal_setInstallation()
+  if (requireNamespace("gdalUtils")) {
+    gdalUtils::gdal_setInstallation()
 
-  # if it doesn't find gdal installed
-  hasGDALInstalled <- !is.null(getOption("gdalUtils_gdalPath"))
+    # if it doesn't find gdal installed
+    hasGDALInstalled <- !is.null(getOption("gdalUtils_gdalPath"))
 
-  testthat::with_mock(
-    "raster::canProcessInMemory" = function(x, n) {
-      FALSE
-    },
-    "reproducible::isWindows" = function() {
-      TRUE
-    },
-    # The warning is "data type "LOG" is not available in GDAL -- not relevant here
-    {
-      if (hasGDALInstalled) {
-        mess <- capture_messages(
+    testthat::with_mock(
+      "raster::canProcessInMemory" = function(x, n) {
+        FALSE
+      },
+      "reproducible::isWindows" = function() {
+        TRUE
+      },
+      # The warning is "data type "LOG" is not available in GDAL -- not relevant here
+      {
+        if (hasGDALInstalled) {
+          mess <- capture_messages(
             out <- fastMask(x = origStack[[2]], y = shpDF))
-        expect_true(any(grepl("GDAL because crs", mess)))
+          expect_true(any(grepl("GDAL because crs", mess)))
 
+        }
       }
+
+    )
+    mess <- capture_messages(
+      out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"))
+    expect_true(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
+
+    crs(shpDF) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
+    crs(shp) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
+    crs(origStack[[2]]) <- "+proj=lcc +lat_1=49 +lat_2=33 +lon_0=-100 +ellps=WGS84"
+
+    # Test "force" even for a small problem
+    warn <- capture_warnings(mess <- capture_messages(out <- fastMask(x = origStack[[2]], y = shpDF, useGDAL = "force")))
+    expect_false(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
+
+
+    newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
+
+    # test non-spatial polygons data frame
+    newStack2 <- fastMask(x = origStack[[2]], y = shp)
+}})
+
+
+test_that("checkGDALVersion", {
+  testInitOut <- testInit(needGoogle = FALSE, c("sp", "raster"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  ### getGDALversion
+    if (.requireNamespace("rgdal")) {
+      expect_silent(a <- getGDALVersion())
+      if (is.na(a)) {
+        expect_true(is.numeric(a))
+      } else {
+        expect_true(is(a, "numeric_version"))
+      }
+
+      expect_true(checkGDALVersion("1.0.0"))
+      expect_error(checkGDALVersion())
+      expect_false(checkGDALVersion("4.0.0"))
     }
 
-  )
-  mess <- capture_messages(
-    out <- fastMask(x = origStack[[2]], y = shpDF, cores = "none"))
-  expect_true(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
-
-  crs(shpDF) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
-  crs(shp) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
-  crs(origStack[[2]]) <- "+proj=lcc +lat_1=49 +lat_2=33 +lon_0=-100 +ellps=WGS84"
-
-  # Test "force" even for a small problem
-  warn <- capture_warnings(mess <- capture_messages(out <- fastMask(x = origStack[[2]], y = shpDF, useGDAL = "force")))
-  expect_false(any(grepl("useGDAL is TRUE, but problem is small enough for RA", mess)))
-
-
-  newStack2 <- fastMask(x = origStack[[2]], y = shpDF)
-
-  # test non-spatial polygons data frame
-  newStack2 <- fastMask(x = origStack[[2]], y = shp)
-
-  ### getGDALversion
-  expect_silent(a <- getGDALVersion())
-  if (is.na(a)) {
-    expect_true(is.numeric(a))
-  } else {
-    expect_true(is(a, "numeric_version"))
-  }
-
-  expect_true(checkGDALVersion("1.0.0"))
-  expect_error(checkGDALVersion())
-  expect_false(checkGDALVersion("4.0.0"))
 
 })
 
@@ -122,9 +133,12 @@ test_that("testing prepInputs with deauthorized googledrive", {
       url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
       overwrite = TRUE,
       #targetFile = "NFDB_point_20181129.shp",
-      alsoExtract = "similar",
+    #  alsoExtract = "similar",
       fun = "sf::st_read"
     )
+    expect_is(NFDB_PT, "sf")
+    expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
+                      file_ext(dir(pattern = "NFDB_point"))))
 
     warn <- capture_warnings(NFDB_PT_BCR6 <- Cache(
       postProcess,

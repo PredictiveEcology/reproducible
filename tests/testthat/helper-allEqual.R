@@ -28,7 +28,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (missing(libraries)) libraries <- list()
   unlist(lapply(libraries, require, character.only = TRUE))
   require("testthat")
-  tmpdir <- normPath(file.path(tempdir(), rndstr(1, 6)))
+  tmpdir <- tempdir2(rndstr(1, 6))
 
   if (isTRUE(needGoogle)) {
     if (utils::packageVersion("googledrive") >= "1.0.0")
@@ -64,9 +64,15 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpCache <- normPath(file.path(tmpdir, "testCache"))
   checkPath(tmpCache, create = TRUE)
 
-  opts <- append(list(reproducible.overwrite = TRUE,
-                      reproducible.useNewDigestAlgorithm = TRUE,
-                      reproducible.cachePath = tmpCache), opts)
+  defaultOpts <- list(
+    reproducible.cachePath = .reproducibleTempCacheDir(), ## TODO: deal with cachePath issues in non-interactive tests
+    reproducible.showSimilar = FALSE,
+    reproducible.overwrite = TRUE,
+    reproducible.useNewDigestAlgorithm = TRUE
+  )
+  if (length(opts) > 0)
+    defaultOpts[names(opts)] <- opts
+  opts <- defaultOpts
 
   if (!is.null(opts)) {
     if (needGoogle) {
@@ -119,11 +125,11 @@ testOnExit <- function(testInitOut) {
   if (grepl("Pq", class(getOption("reproducible.conn", NULL)))) {
     tabs <- DBI::dbListTables(conn = getOption("reproducible.conn", NULL))
     tab1 <- grep(value = TRUE, tabs, pattern =
-           paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
-                                   basename2(testInitOut$tmpCache))))
+                   paste(collapse = "_", c(basename2(dirname(testInitOut$tmpCache)),
+                                           basename2(testInitOut$tmpCache))))
     tab2 <- grep(value = TRUE, tabs, pattern =
-                  paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
-                                          basename2(testInitOut$tmpdir))))
+                   paste(collapse = "_", c(basename2(dirname(testInitOut$tmpdir)),
+                                           basename2(testInitOut$tmpdir))))
     if (length(tab1))
       try(DBI::dbRemoveTable(conn = getOption("reproducible.conn", NULL), tab1))
     if (length(tab2))
@@ -359,7 +365,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
   suppressMessages(expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)),
-                          by = .cacheTableHashColName()))==1))
+                                           by = .cacheTableHashColName()))==1))
 
   ####################################################
   # both cloud and local exist -- take local only -- no change to cloud
@@ -416,6 +422,4 @@ fnCacheHelper <- function(a, cacheRepo2) {
 
 crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-rmDotUnderline <- function(envir = .GlobalEnv)
-  rm(list = ls(all.names = TRUE, envir = envir)[startsWith(ls(all.names = TRUE, envir = envir), "._")],
-     envir = envir)
+messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is inside"

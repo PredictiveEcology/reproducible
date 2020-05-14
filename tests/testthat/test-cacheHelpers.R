@@ -7,26 +7,26 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   a <- 1
   mess <- capture_message(.cacheMessage(a, "test", TRUE))
-  expect_true(any(grepl("loading memoised", mess)))
+  expect_true(any(grepl(.loadedMemoisedResultMsg, mess)))
 
   mess <- capture_message(.cacheMessage(a, "test", FALSE))
-  expect_true(any(grepl("loading cached.*adding", mess)))
+  expect_true(any(grepl(paste0(.loadedCacheResultMsg, ".*adding"), mess)))
 
   mess <- capture_message(.cacheMessage(a, "test", NA))
-  expect_true(any(grepl("loading cached", mess)))
+  expect_true(any(grepl(.loadedCacheResultMsg, mess)))
   expect_false(all(grepl("adding", mess)))
 
   # .checkCacheRepo
-  options(reproducible.cachePath = dirname(tmpdir))
+  options(reproducible.cachePath = .reproducibleTempPath())
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is the temporary", mess)))
+  expect_true(any(grepl(messageNoCacheRepo, mess)))
 
   opt11 <- options("reproducible.cachePath" = NULL)
   on.exit({
     options(opt11)
   }, add = TRUE)
   mess <- capture_message(.checkCacheRepo(a))
-  expect_true(any(grepl("No cacheRepo supplied. Using tempdir()", mess)))
+  expect_true(any(grepl("No cacheRepo supplied. Using", mess)))
 
   # getFunctionName
   fn <- function(FUN) {

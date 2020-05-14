@@ -266,9 +266,8 @@
   } else {
     loadFromMgs <- "Loading from repo"
     if (useDBI()) {
-      output <- loadFromCache(cacheRepo, isInRepo$cacheId[lastOne])
-    } else {
-      output <- archivist::loadFromLocalRepo(cacheObj, repoDir = cacheRepo, value = TRUE)
+      output <- loadFromCache(cacheRepo, isInRepo[[.cacheTableHashColName()[lastOne]]],
+                              drv = drv, conn = conn)
     }
   }
 
@@ -289,18 +288,15 @@
 
   # Class-specific message
   browser(expr = exists("dddd"))
-  .cacheMessage(output, fnDetails$functionName,
-                fromMemoise = fromMemoise)
+  .cacheMessage(output, fnDetails$functionName, fromMemoise = fromMemoise)
 
   # This is protected from multiple-write to SQL collisions
   # .addTagsRepo(isInRepo, cacheRepo, lastOne, drv, conn = conn)
   .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
-               cachePath = cacheRepo,
-               drv = drv, conn = conn)
+               cachePath = cacheRepo, drv = drv, conn = conn)
 
-  browser(expr = exists("sideE"))
+  browser(expr = exists("._getFromRepo_1"))
   if (sideEffect != FALSE) {
-    #if(isTRUE(sideEffect)) {
     .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, ...)
   }
 

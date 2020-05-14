@@ -2,7 +2,7 @@
 % Please edit documentation in R/helpers.R
 \name{.formalsNotInCurrentDots}
 \alias{.formalsNotInCurrentDots}
-\title{Identify which formals to a function are not in the current ...}
+\title{Identify which formals to a function are not in the current \code{...}}
 \usage{
 .formalsNotInCurrentDots(fun, ..., dots)
 }
@@ -12,10 +12,10 @@
 \item{...}{The ... from inside a function. Will be ignored if \code{dots} is
 provided explicitly.}
 
-\item{dots}{Optional. If this is provided via say dots = list(...),
+\item{dots}{Optional. If this is provided via say \code{dots = list(...)},
 then this will cause the \code{...} to be ignored.}
 }
 \description{
-This is for advanced use.
+Advanced use.
 }
 \keyword{internal}

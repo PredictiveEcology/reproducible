@@ -10,6 +10,9 @@ cloudCache(...)
 \item{...}{Passed to \code{\link{Cache}}}
 }
 \description{
+\lifecycle{defunct}
+}
+\details{
 Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 }
 \seealso{

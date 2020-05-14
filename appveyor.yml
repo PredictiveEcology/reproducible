@@ -31,7 +31,7 @@ environment:
   - R_VERSION: release
 
   - R_VERSION: oldrel
-    RTOOLS_VERSION: 35
+    RTOOLS_VERSION: 36
 
 clone_depth: 5
 

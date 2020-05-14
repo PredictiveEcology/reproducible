@@ -24,7 +24,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) {
     NULL
-  })
+})
 
 ################################################################################
 #' Create a custom cache message by class
@@ -55,20 +55,16 @@ setGeneric(".cacheMessage", function(object, functionName,
 setMethod(
   ".cacheMessage",
   signature = "ANY",
-  definition = function(object, functionName,
-                        fromMemoise) {
+  definition = function(object, functionName, fromMemoise) {
     if (isTRUE(fromMemoise)) {
-      message(crayon::blue("  loading memoised result from previous ", functionName, " call.",
-                           sep = ""))
+      message(crayon::blue(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName)))
     } else if (!is.na(fromMemoise)) {
-      message(crayon::blue("  loading cached result from previous ", functionName, " call, ",
-                           "adding to memoised copy", sep = ""))
+      message(crayon::blue(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
+                           "adding to memoised copy...", sep = ""))
     } else {
-      message(crayon::blue("  loading cached result from previous ", functionName, " call.",
-                           sep = ""))
+      message(crayon::blue(.loadedCacheMsg(.loadedCacheResultMsg, functionName)))
     }
-  })
-
+})
 
 ################################################################################
 #' Add tags to object
@@ -101,7 +97,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, outputObjects, FUN, preDigestByClass) { # nolint
     object
-  })
+})
 
 ################################################################################
 #' Any miscellaneous things to do before \code{.robustDigest} and after \code{FUN} call
@@ -131,7 +127,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) { # nolint
     NULL
-  })
+})
 
 ################################################################################
 #' Check for cache repository info in ...
@@ -163,19 +159,21 @@ setMethod(
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
-        tmpDir <- tempdir()
-        if (identical(normPath(getOption("reproducible.cachePath")), normPath(tmpDir))) {
-          message("No cacheRepo supplied and getOption('reproducible.cachePath') is the temporary directory;\n  ",
-                  "this will not persist across R sessions.")
+        tmpDir <- .reproducibleTempPath()
+        # Test whether the user has accepted the default. If yes, then give message.
+        #  If no, then user is aware and doesn't need a message
+        if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
+          message("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
+                  "  this will not persist across R sessions.")
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        message("No cacheRepo supplied. Using tempdir()")
-        tempdir()
+        message("No cacheRepo supplied. Using ",.reproducibleTempPath())
+        .reproducibleTempPath()
       }
       checkPath(path = cacheRepo, create = create)
     })
-  })
+})
 
 ################################################################################
 #' Make any modifications to object recovered from cacheRepo
@@ -198,10 +196,6 @@ setMethod(
 #' b <- "Null"
 #' .prepareOutput(b) # converts to NULL
 #'
-#' # For rasters, it is same as .prepareFileBackedRaster
-#' requireNamespace("archivist", quietly = TRUE)
-#'   try(archivist::createLocalRepo(tempdir()))
-#'
 #' library(raster)
 #' r <- raster(extent(0,10,0,10), vals = 1:100)
 #'
@@ -219,14 +213,32 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
 #' @importFrom RSQLite SQLite
 setMethod(
   ".prepareOutput",
-  signature = "RasterLayer",
+  signature = "Raster",
   definition = function(object, cacheRepo, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), ...) {
     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
     #  overwrite is ok
     # .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
+    browser(expr = exists("._prepareOutputs_1"))
+    if (isTRUE(fromDisk(object))) {
+      fns <- Filenames(object, allowMultiple = FALSE)
+      fpShould <- normPath(file.path(cacheRepo, "rasters"))
+      isCorrect <- unlist(lapply(normPath(file.path(fpShould, basename(fns))),
+                                 function(x) any(grepl(x, fns))))
+      if (!any(isCorrect)) {
+        if (is(object, "RasterStack")) {
+          browser(expr = exists("._prepareOutputs_2"))
+          for (i in seq(nlayers(object))) {
+            object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name),
+                                                 fpShould, object@layers[[i]]@file@name)
+          }
+        } else {
+          object@file@name <- gsub(unique(dirname(fns)), fpShould, fns)
+        }
+      }
+    }
     object
-  })
+})
 
 #' @export
 #' @rdname prepareOutput
@@ -241,10 +253,8 @@ setMethod(
       }
     }
     object
-  })
+})
 
-
-#####################################
 ################################################################################
 #' Add an attribute to an object indicating which named elements change
 #'
@@ -276,7 +286,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, preDigest, origArguments, ...) {
     object
-  })
+})
 
 #' A set of helpers for Cache
 #'
@@ -431,8 +441,7 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
 
 #' @exportClass Path
 #' @rdname Path-class
-setClass("Path", slots = c(.Data = "character"), contains = "character",
-         prototype = NA_character_)
+setClass("Path", slots = c(.Data = "character"), contains = "character", prototype = NA_character_)
 
 #' Coerce a character string to a class "Path"
 #'
@@ -502,72 +511,6 @@ setAs(from = "character", to = "Path", function(from) {
   asPath(from, 0)
 })
 
-################################################################################
-#' Clear erroneous archivist artifacts
-#'
-#' Stub artifacts can result from several causes. The most common being
-#' erroneous removal of a file in the SQLite database. This can be caused
-#' sometimes if an archive object is being saved multiple times by multiple
-#' threads. This function will clear entries in the SQLite database which
-#' have no actual file with data.
-#'
-#' @return Invoked for its side effect on the \code{repoDir}.
-#'
-#' @param repoDir A character denoting an existing directory of the repository for
-#' which metadata will be returned. If \code{NULL} (default), it will use the
-#' \code{repoDir} specified in \code{archivist::setLocalRepo}.
-#'
-#' @author Eliot McIntire
-#' @export
-#' @rdname clearStubArtifacts
-#'
-#' @examples
-#' tmpDir <- file.path(tempdir(), "reproducible_examples", "clearStubArtifacts")
-#'
-#' lapply(c(runif, rnorm), function(f) {
-#'   reproducible::Cache(f, 10, cacheRepo = tmpDir)
-#' })
-#'
-#' # clear out any stub artifacts
-#' showCache(tmpDir)
-#'
-#' file2Remove <- dir(CacheStorageDir(tmpDir), full.name = TRUE)[1]
-#' file.remove(file2Remove)
-#' showCache(tmpDir) # repository directory still thinks files are there
-#'
-#' # run clearStubArtifacts
-#' suppressWarnings(clearStubArtifacts(tmpDir))
-#' showCache(tmpDir) # stubs are removed
-#'
-#' # cleanup
-#' clearCache(tmpDir, ask = FALSE)
-#' unlink(tmpDir, recursive = TRUE)
-#'
-setGeneric("clearStubArtifacts", function(repoDir = NULL) {
-  standardGeneric("clearStubArtifacts")
-})
-
-#' @export
-#' @rdname clearStubArtifacts
-#' @importFrom magrittr %>%
-setMethod(
-  "clearStubArtifacts",
-  definition = function(repoDir) {
-    if (useDBI()) {
-      ret <- NULL
-    } else {
-      md5hashInBackpack <- archivist::showLocalRepo(repoDir = repoDir)$md5hash
-      listFiles <- dir(CacheStorageDir(repoDir)) %>%
-        strsplit(".rda") %>%
-        unlist()
-      toRemove <- !(md5hashInBackpack %in% listFiles)
-      md5hashInBackpack[toRemove] %>%
-        sapply(., archivist::rmFromLocalRepo, repoDir = repoDir)
-      ret <- md5hashInBackpack[toRemove]
-    }
-    return(invisible(ret))
-  })
-
 #' Copy the file-backing of a file-backed Raster* object
 #'
 #' Rasters are sometimes file-based, so the normal save and copy and assign
@@ -582,10 +525,10 @@ setMethod(
 #'
 #' @param overwrite Logical. Should the raster be saved to disk, overwriting existing file.
 #'
-#' @param ... passed to \code{archivist::saveToRepo}
+#' @param ... Not used
 #'
 #' @return A raster object and its newly located file backing.
-#'         Note that if this is a legitimate archivist repository, the new location
+#'         Note that if this is a legitimate Cache repository, the new location
 #'         will be a subdirectory called \file{rasters/} of \file{repoDir/}.
 #'         If this is not a repository, the new location will be within \code{repoDir}.
 #'
@@ -598,7 +541,8 @@ setMethod(
 #' @rdname prepareFileBackedRaster
 #' @examples
 #' library(raster)
-#' archivist::createLocalRepo(tempdir())
+#' # make a cache repository
+#' a <- Cache(rnorm, 1)
 #'
 #' r <- raster(extent(0,10,0,10), vals = 1:100)
 #'
@@ -614,15 +558,21 @@ setMethod(
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
-  browser(expr = exists("._prepareFieBackedRaster_1"))
+  browser(expr = exists("._prepareFileBackedRaster_1"))
   isRasterLayer <- TRUE
+  isBrick <- is(obj, "RasterBrick")
   isStack <- is(obj, "RasterStack")
   repoDir <- checkPath(repoDir, create = TRUE)
   isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
 
   ## check which files are backed
   whichInMemory <- if (!isStack) {
-    inMemory(obj)
+    im <- inMemory(obj)
+    if (isBrick) {
+      if (isTRUE(im))
+        im <- rep(im, raster::nlayers(obj))
+    }
+    im
   } else {
     sapply(obj@layers, inMemory)
   }
@@ -634,7 +584,11 @@ setMethod(
   isFilebacked <- !(whichInMemory | !whichHasValues)
 
   ## create a storage vector of file names to be filled
-  curFilename <- rep("", length(isFilebacked))
+  curFilename <- if (isBrick) {
+    rep("", raster::nlayers(obj))
+  } else {
+    rep("", length(isFilebacked))
+  }
 
   if (any(!isFilebacked)) {
     fileExt <- if (!isStack) {
@@ -771,7 +725,7 @@ setMethod(
     }
     if (any(!notSameButBacked)) {
       ## deal with files that haven't been backed
-      checkPath(unique(dirname(saveFilename[!notSameButBacked])), create = TRUE) #SpaDES dependency
+      checkPath(unique(dirname(saveFilename[!notSameButBacked])), create = TRUE)
       if (any(!whichInMemory[!notSameButBacked])) {
         if (!isStack) {
           obj <- writeRaster(obj, filename = saveFilename[!notSameButBacked], datatype = dataType(obj))
@@ -821,7 +775,7 @@ setMethod(
 #' tmpDirTo <- file.path(tempdir(), "example_fileCopy_to")
 #' tmpFile1 <- tempfile("file1", tmpDirFrom, ".csv")
 #' tmpFile2 <- tempfile("file2", tmpDirFrom, ".csv")
-#' dir.create(tmpDirFrom)
+#' checkPath(tmpDirFrom, create = TRUE)
 #' f1 <- normalizePath(tmpFile1, mustWork = FALSE)
 #' f2 <- normalizePath(tmpFile2, mustWork = FALSE)
 #' t1 <- normalizePath(file.path(tmpDirTo, basename(tmpFile1)), mustWork = FALSE)
@@ -962,7 +916,6 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   dig
 }
 
-
 ################################################################################
 #' Sort or order any named object with dotted names and underscores first
 #'
@@ -1048,12 +1001,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     scalls <- sys.calls()
   }
 
+  patt <- paste(.defaultOtherFunctionsOmit, collapse = ")|(")
   otherFns <- .grepSysCalls(
     scalls,
-    pattern = paste0("(test_)|(with_reporter)|(force)|(Restart)|(with_mock)|",
-                     "(eval)|(::)|(\\$)|(\\.\\.)|(standardGeneric)|",
-                     "(Cache)|(tryCatch)|(doTryCatch)|(withCallingHandlers)|",
-                     "(FUN)"))
+    pattern = patt)
   if (length(otherFns)) {
     otherFns <- unlist(lapply(scalls[-otherFns], function(x) {
       tryCatch(as.character(x[[1]]), error = function(y) "")
@@ -1121,8 +1072,6 @@ nextNumericName <- function(string) {
   grep(scallsFirstElement, pattern = pattern)
 }
 
-
-
 #' @importFrom raster fromDisk
 dealWithRasters <- function(obj, cachePath, drv, conn) {
   browser(expr = exists("._dealWithRasters_1"))
@@ -1164,9 +1113,14 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
       if (!identical(attr(obj, "function"), atts[["function"]]))
         stop("There is an unknown error 04")
     }
-    # attr(obj, "function") <- attr(output, "function")
-
-    #output <- obj
   }
   obj
+}
+
+.loadedCacheResultMsg <- "loaded cached result from previous"
+
+.loadedMemoisedResultMsg <- "loaded memoised result from previous"
+
+.loadedCacheMsg <- function(root, functionName) {
+  paste0("     ", root," ", functionName, " call, ")
 }

@@ -58,8 +58,7 @@ object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
 file-backing, then this will be
 passed to \code{digest::digest}, essentially limiting the number of bytes
 to digest (for speed). This will only be used if \code{quick = FALSE}.
-Default is \code{getOption("reproducible.length")},
-which is set to \code{Inf}.}
+Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
@@ -76,10 +75,9 @@ the object as a character string. If it is known that character strings should
 not be treated as paths, then \code{quick = TRUE} will be much faster, with no loss
 of information. If it is file or directory, then it will digest the file content,
 or \code{basename(object)}. For class \code{Path} objects, the file's metadata
-(i.e., filename and file size)
-will be hashed instead of the file contents if \code{quick = TRUE}.
-If set to \code{FALSE} (default),
-the contents of the file(s) are hashed.
+(i.e., filename and file size) will be hashed instead of the file contents if
+\code{quick = TRUE}.
+If set to \code{FALSE} (default), the contents of the file(s) are hashed.
 If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
 as paths, if they are file-backed.}
 
@@ -99,30 +97,28 @@ argument is the \code{simList} class from \code{SpaDES.core}.}
 A hash i.e., digest of the object passed in.
 }
 \description{
-Not all aspects of R objects are captured by current hashing tools in R (e.g.
-\code{digest::digest}, \code{knitr} caching,
-\code{archivist::cache}). This is mostly because many objects have "transient"
-(e.g., functions have environments), or "disk-backed" features. Since
-the goal of using reproducibility is to have tools that are not session specific,
-this function
-attempts to strip all session specific information so that the digest
-works between sessions and operating systems. It is tested under many
-conditions and object types, there are bound to be others that don't
+Not all aspects of R objects are captured by current hashing tools in R
+(e.g. \code{digest::digest}, \code{knitr} caching, \code{archivist::cache}).
+This is mostly because many objects have "transient"
+(e.g., functions have environments), or "disk-backed" features.
+Since the goal of using reproducibility is to have tools that are not session specific,
+this function attempts to strip all session specific information so that the digest
+works between sessions and operating systems.
+It is tested under many conditions and object types, there are bound to be others that don't
 work correctly.
 }
 \section{Classes}{
 
 
-\code{Raster*} objects have the potential for disk-backed storage.
-If the object in the R session is cached using \code{archivist::cache}, only
-the header component will be assessed for caching. Thus, objects like this
-require more work. Also, because \code{Raster*} can have a built-in representation
-for having their data content located on disk, this format will be maintained if the
-raster already is file-backed, i.e., to create \code{.tif} or \code{.grd} backed rasters,
-use \code{writeRaster} first, then Cache. The .tif or .grd will be copied to the "raster"
-subdirectory of the \code{cacheRepo}.
-Their RAM representation (as an R object) will still be in the usual
-\file{cacheOutputs/} (or formerly \file{gallery/}) directory.
+\code{Raster*} objects have the potential for disk-backed storage, thus, require more work.
+Also, because \code{Raster*} can have a built-in representation for having their data content
+located on disk, this format will be maintained if the raster already is file-backed,
+i.e., to create \code{.tif} or \code{.grd} backed rasters, use \code{writeRaster} first,
+then \code{Cache}.
+The \file{.tif} or \file{.grd} will be copied to the \file{raster/} subdirectory of the
+\code{cacheRepo}.
+Their RAM representation (as an R object) will still be in the usual  \file{cacheOutputs/}
+(or formerly \file{gallery/}) directory.
 For \code{inMemory} raster objects, they will remain as binary \code{.RData} files.
 
 Functions (which are contained within environments) are
@@ -182,9 +178,6 @@ digest::digest(r2) # different
 .robustDigest(r)
 .robustDigest(r1) # different
 
-}
-\seealso{
-\code{archivist::cache}.
 }
 \author{
 Eliot McIntire

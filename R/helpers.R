@@ -24,12 +24,8 @@ getCRANrepos <- function(repos = NULL) {
     repos <- if (nzchar(cranRepo)) {
       cranRepo
     } else {
-      if (isInteractive()) {
-        chooseCRANmirror2() ## sets repo option
-        getOption("repos")["CRAN"]
-      } else {
-        "https://cloud.r-project.org"
-      }
+      chooseCRANmirror2() ## sets repo option
+      getOption("repos")["CRAN"]
     }
   }
 
@@ -39,7 +35,11 @@ getCRANrepos <- function(repos = NULL) {
 #' @importFrom utils chooseCRANmirror
 #' @keywords internal
 chooseCRANmirror2 <- function() {
-  chooseCRANmirror()
+  if (isInteractive()) {
+    chooseCRANmirror()
+  } else {
+    chooseCRANmirror(ind = 1) ## https://cloud.r-project.org
+  }
 }
 #' Add a prefix or suffix to the basename part of a file path
 #'
@@ -78,15 +78,39 @@ chooseCRANmirror2 <- function() {
                                ".", tools::file_ext(f)))
 }
 
-#' Identify which formals to a function are not in the current ...
+#' Get a unique name for a given study area
 #'
-#' This is for advanced use.
+#' Digest a spatial object to get a unique character string (hash) of the study area.
+#' Use \code{.suffix()} to append the hash to a filename, e.g., when using \code{filename2} in \code{prepInputs}.
+#'
+#' @param studyArea Spatial object.
+#' @param ... Other arguments (not currently used)
+#'
+#' @export
+#' @importFrom digest digest
+setGeneric("studyAreaName", function(studyArea, ...) {
+  standardGeneric("studyAreaName")
+})
+
+#' @export
+#' @rdname studyAreaName
+setMethod(
+  "studyAreaName",
+  signature = "SpatialPolygonsDataFrame",
+  definition = function (studyArea, ...) {
+    digest(studyArea[, -c(1:ncol(studyArea))], algo = "xxhash64") ## TODO: use `...` to pass `algo`
+})
+
+#' Identify which formals to a function are not in the current \code{...}
+#'
+#' Advanced use.
+#'
 #' @keywords internal
 #' @export
 #' @param fun A function
 #' @param ... The ... from inside a function. Will be ignored if \code{dots} is
 #'        provided explicitly.
-#' @param dots Optional. If this is provided via say dots = list(...),
+#' @param dots Optional. If this is provided via say \code{dots = list(...)},
 #'             then this will cause the \code{...} to be ignored.
 .formalsNotInCurrentDots <- function(fun, ..., dots) {
   if (!missing(dots)) {
@@ -124,7 +148,7 @@ rndstr <- function(n = 1, len = 8) {
 #'   # Test clearCache -- has an internal isInteractive() call
 #'   clearCache(tmpdir, ask = FALSE)
 #'   })
-#'   }
+#' }
 isInteractive <- function() interactive()
 
 #' A version of \code{base::basename} that is \code{NULL} resistant
@@ -191,3 +215,29 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
 #' This is used so that unit tests can override this using \code{testthat::with_mock}.
 #' @keywords internal
 isWindows <- function() identical(.Platform$OS.type, "windows")
+
+#' Provide standard messaging for missing package dependencies
+#'
+#' This provides a standard message format for missing packages, e.g.,
+#' detected via \code{requireNamespace}.
+#'
+#' @export
+#' @param pkg Character string indicating name of package required
+#' @param minVersion Character string indicating minimum version of package
+#'   that is needed
+#' @param messageStart A character string with a prefix of message to provide
+.requireNamespace <- function(pkg = "methods", minVersion = NULL,
+                        messageStart = paste0(pkg, if (!is.null(minVersion)) paste0("(>=", minVersion, ")"), " is required. Try: ")) {
+  need <- FALSE
+  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE, warn.conflicts = FALSE))) {
+    need <- TRUE
+  } else {
+    if (isTRUE(packageVersion(pkg) < minVersion))
+      need <- TRUE
+  }
+  if (need) {
+    message(messageStart,
+         "install.packages('",pkg,"')")
+  }
+  !need
+}

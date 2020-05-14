@@ -16,6 +16,7 @@ preProcess(
   overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE,
   useCache = getOption("reproducible.useCache", FALSE),
+  .tempPath,
   ...
 )
 }
@@ -60,7 +61,8 @@ search for the file before attempting to download. Default for that option is
 
 \item{fun}{Function or character string indicating the function to use to load
 \code{targetFile} into an \code{R} object, e.g., in form with package name:
-\code{"raster::raster"}.}
+\code{"raster::raster"}. NOTE: passing \code{NULL} will skip loading object
+into R.}
 
 \item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
 custom downloading, in addition to loading into R. Still experimental.}
@@ -80,6 +82,9 @@ even if they pass the checksums or the files are all there.}
 
 \item{useCache}{Passed to \code{Cache} in various places.
 Defaults to \code{getOption("reproducible.useCache")}.}
+
+\item{.tempPath}{Optional temporary path for internal file intermediate steps.
+Will be cleared on.exit from this function.}
 
 \item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
  \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.

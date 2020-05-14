@@ -15,8 +15,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2020-02-19
-Version: 1.0.0
+Date: 2020-05-13
+Version: 1.1.0
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -41,10 +41,10 @@ Imports:
     digest,
     fastdigest,
     fpCompare,
-    gdalUtils,
     glue,
     googledrive,
     httr,
+    lifecycle,
     magrittr,
     memoise,
     methods,
@@ -54,24 +54,24 @@ Imports:
     raster,
     RSQLite,
     remotes,
-    rgdal,
     rlang,
     sf,
     sp,
     testthat,
     tools,
+    usethis,
     utils,
     versions
 Suggests:
-    archivist (>= 2.1.2),
     covr,
-    dplyr,
     fasterize,
     future,
+    gdalUtils,
     git2r (>= 0.18),
     knitr,
     parallel,
     RCurl (>= 1.95-4.8),
+    rgdal,
     rgeos,
     rmarkdown,
     TimeWarp
@@ -81,7 +81,7 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Collate: 
     'DBI.R'
     'cache-helpers.R'
@@ -106,6 +106,8 @@ Collate:
     'postProcess.R'
     'preProcess.R'
     'prepInputs.R'
+    'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'
     'zzz.R'
+RdMacros: lifecycle

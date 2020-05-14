@@ -94,14 +94,13 @@ object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
 file-backing, then this will be
 passed to \code{digest::digest}, essentially limiting the number of bytes
 to digest (for speed). This will only be used if \code{quick = FALSE}.
-Default is \code{getOption("reproducible.length")},
-which is set to \code{Inf}.}
+Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 
 \item{compareRasterFileLength}{Being deprecated; use \code{length}.}
 
 \item{userTags}{A character vector with descriptions of the Cache function call. These
 will be added to the Cache so that this entry in the Cache can be found using
-\code{userTags} e.g., via \code{\link{showCache}}}
+\code{userTags} e.g., via \code{\link{showCache}}.}
 
 \item{digestPathContent}{Being deprecated. Use \code{quick}.}
 
@@ -112,8 +111,7 @@ specific classes. Should be options that the \code{.robustDigest} knows what
 to do with.}
 
 \item{debugCache}{Character or Logical. Either \code{"complete"} or \code{"quick"} (uses
-partial matching, so "c" or "q" work). \code{TRUE} is
-equivalent to \code{"complete"}.
+partial matching, so "c" or "q" work). \code{TRUE} is equivalent to \code{"complete"}.
 If \code{"complete"}, then the returned object from the Cache
 function will have two attributes, \code{debugCache1} and \code{debugCache2},
 which are the entire \code{list(...)} and that same object, but after all
@@ -145,10 +143,9 @@ the object as a character string. If it is known that character strings should
 not be treated as paths, then \code{quick = TRUE} will be much faster, with no loss
 of information. If it is file or directory, then it will digest the file content,
 or \code{basename(object)}. For class \code{Path} objects, the file's metadata
-(i.e., filename and file size)
-will be hashed instead of the file contents if \code{quick = TRUE}.
-If set to \code{FALSE} (default),
-the contents of the file(s) are hashed.
+(i.e., filename and file size) will be hashed instead of the file contents if
+\code{quick = TRUE}.
+If set to \code{FALSE} (default), the contents of the file(s) are hashed.
 If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
 as paths, if they are file-backed.}
 
@@ -200,20 +197,29 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
+\lifecycle{maturing}
+
 Still experimental and may change. This form cannot pass any arguments to
 ]code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
 it is a clean alternative for simple cases.
 }
 \details{
-Caching R objects using \code{archivist::cache} has five important limitations:
-\enumerate{
-  \item the \code{archivist} package detects different environments as different;
-  \item it also does not detect S4 methods correctly due to method inheritance;
-  \item it does not detect objects that have file-base storage of information
-        (specifically \code{\link[raster]{RasterLayer-class}} objects);
-  \item the default hashing algorithm is relatively slow.
-  \item heavily nested function calls may want Cache arguments to propagate through
-}
+A function that can be used to wrap around other functions to cache function calls
+for later use. This is normally most effective when the function to cache is
+slow to run, yet the inputs and outputs are small. The benefit of caching, therefore,
+will decline when the computational time of the "first" function call is fast and/or
+the argument values and return objects are large. The default setting (and first
+call to Cache) will always save to disk. The 2nd call to the same function will return
+from disk. If the \code{options("reproducible.useMemoise" = TRUE)}, then the 3rd time
+will recover the object from RAM and is normally much faster.
+
+
+
+There are other similar functions in the R universe. This version of Cache has
+been used as part of a robust continuous workflow approach. As a result, we have
+tested it with many "non-standard" R objects (e.g., RasterLayer objects) and
+environments, which tend to be challenging for caching as they are always unique.
+
 This version of the \code{Cache} function accommodates those four special,
 though quite common, cases by:
 \enumerate{
@@ -234,7 +240,18 @@ though quite common, cases by:
         Caching}.
 }
 
-If \code{Cache} is called within a SpaDES module, then the cached entry will automatically
+Caching R objects using \code{archivist::cache} has five important limitations:
+\enumerate{
+  \item the \pkg{archivist} package detects different environments as different;
+  \item it also does not detect S4 methods correctly due to method inheritance;
+  \item it does not detect objects that have file-based storage of information
+        (specifically \code{\link[raster]{RasterLayer-class}} objects);
+  \item the default hashing algorithm is relatively slow.
+  \item heavily nested function calls may want Cache arguments to propagate through
+}
+
+As part of the SpaDES ecosystem of R packages, \code{Cache} can be used
+within SpaDES modules. If it is, then the cached entry will automatically
 get 3 extra \code{userTags}: \code{eventTime}, \code{eventType}, and \code{moduleName}.
 These can then be used in \code{clearCache} to selectively remove cached objects
 by \code{eventTime}, \code{eventType} or \code{moduleName}.
@@ -351,16 +368,15 @@ that \code{"devMode"} is most useful if used from the start of a project.
 \section{\code{useCloud}}{
 
 This is a way to store all or some of the local Cache in the cloud.
-Currently, the only cloud option is Google Drive, via \code{googledrive}
-package. For this to work, the user must be or be able to be authenticated
+Currently, the only cloud option is Google Drive, via \pkg{googledrive}.
+For this to work, the user must be or be able to be authenticated
 with \code{googledrive::drive_auth}. The principle behind this
 \code{useCloud} is that it will be a full or partial mirror of a local Cache.
 It is not intended to be used independently from a local Cache. To share
 objects that are in the Cloud with another person, it requires 2 steps. 1)
 share the \code{cloudFolderID$id}, which can be retrieved by
 \code{getOption("reproducible.cloudFolderID")$id} after at least one Cache
-call has been made. 2) The other user must then set their
-\code{cacheFolderID} in a
+call has been made. 2) The other user must then set their  \code{cacheFolderID} in a
 \code{Cache\(..., reproducible.cloudFolderID = \"the ID here\"\)} call or
 set their option manually
 \code{options\(\"reproducible.cloudFolderID\" = \"the ID here\"\)}.
@@ -382,21 +398,21 @@ If \code{TRUE}, then this Cache call will download
 
 If \code{sideEffect} is not \code{FALSE}, then metadata about any files that
 added to \code{sideEffect} will be added as an attribute to the cached copy.
-Subsequent calls to this function
-       will assess for the presence of the new files in the \code{sideEffect} location.
-       If the files are identical (\code{quick = FALSE}) or their file size is
-       identical (\code{quick = TRUE}), then the cached copy of the function will
-       be returned (and no files changed). If there are missing or incorrect files,
-       then the function will re-run. This will accommodate the situation where the
-       function call is identical, but somehow the side effect files were modified.
-       If \code{sideEffect} is logical, then the function will check the
-       \code{cacheRepo}; if it is a path, then it will check the path. The function will
-       assess whether the files to be downloaded are found locally
-       prior to download. If it fails the local test, then it will try to recover from a
-       local copy if (\code{makeCopy} had been set to \code{TRUE} the first time
-       the function was run. Currently, local recovery will only work if\code{makeCOpy} was
-       set to \code{TRUE} the first time \code{Cache}
-       was run). Default is \code{FALSE}.
+Subsequent calls to this function will assess for the presence of the new files in the
+\code{sideEffect} location.
+If the files are identical (\code{quick = FALSE}) or their file size is identical
+(\code{quick = TRUE}), then the cached copy of the function will be returned
+(and no files changed).
+If there are missing or incorrect files, then the function will re-run.
+This will accommodate the situation where the function call is identical, but somehow the side
+effect files were modified.
+If \code{sideEffect} is logical, then the function will check the \code{cacheRepo};
+if it is a path, then it will check the path.
+The function will assess whether the files to be downloaded are found locally prior to download.
+If it fails the local test, then it will try to recover from a local copy if (\code{makeCopy}
+had been set to \code{TRUE} the first time the function was run.
+Currently, local recovery will only work if\code{makeCOpy} was set to \code{TRUE} the first time
+\code{Cache} was run). Default is \code{FALSE}.
 }
 
 \examples{
@@ -463,7 +479,8 @@ b \%<\% rnorm(1)
 
 }
 \seealso{
-\code{archivist::cache}, \code{\link{.robustDigest}}
+\code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
+  \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}}
 }
 \author{
 Eliot McIntire

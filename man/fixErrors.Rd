@@ -3,6 +3,7 @@
 \name{fixErrors}
 \alias{fixErrors}
 \alias{fixErrors.default}
+\alias{fixErrors.Raster}
 \alias{fixErrors.SpatialPolygons}
 \alias{fixErrors.sf}
 \title{Do some minor error fixing}
@@ -16,6 +17,14 @@ fixErrors(
 )
 
 \method{fixErrors}{default}(
+  x,
+  objectName,
+  attemptErrorFixes = TRUE,
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
+
+\method{fixErrors}{Raster}(
   x,
   objectName,
   attemptErrorFixes = TRUE,

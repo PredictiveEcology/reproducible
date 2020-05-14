@@ -24,6 +24,6 @@ testthat::with_mock(
   # Test clearCache -- has an internal isInteractive() call
   clearCache(tmpdir, ask = FALSE)
   })
-  }
+}
 }
 \keyword{internal}

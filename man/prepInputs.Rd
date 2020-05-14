@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepInputs.R
 \name{prepInputs}
 \alias{prepInputs}
-\title{Download and optionally post process files}
+\title{Download and optionally post-process files}
 \usage{
 prepInputs(
   targetFile = NULL,
@@ -15,6 +15,7 @@ prepInputs(
   overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE,
   useCache = getOption("reproducible.useCache", FALSE),
+  .tempPath,
   ...
 )
 }
@@ -59,7 +60,8 @@ search for the file before attempting to download. Default for that option is
 
 \item{fun}{Function or character string indicating the function to use to load
 \code{targetFile} into an \code{R} object, e.g., in form with package name:
-\code{"raster::raster"}.}
+\code{"raster::raster"}. NOTE: passing \code{NULL} will skip loading object
+into R.}
 
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to
@@ -77,6 +79,9 @@ even if they pass the checksums or the files are all there.}
 \item{useCache}{Passed to \code{Cache} in various places.
 Defaults to \code{getOption("reproducible.useCache")}.}
 
+\item{.tempPath}{Optional temporary path for internal file intermediate steps.
+Will be cleared on.exit from this function.}
+
 \item{...}{Additional arguments passed to \code{fun} (i.e,. user supplied),
  \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
 Since \code{...} is passed to \code{\link{postProcess}}, these will
@@ -84,11 +89,14 @@ Since \code{...} is passed to \code{\link{postProcess}}, these will
 functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 }
 \description{
-This function can be used to prepare R objects from remote or local data
-sources. The object of this function is to provide a reproducible version of
+\lifecycle{maturing}
+}
+\details{
+This function can be used to prepare R objects from remote or local data sources.
+The object of this function is to provide a reproducible version of
 a series of commonly used steps for getting, loading, and processing data.
 This function has two stages: Getting data (download, extracting from archives,
-loading into R) and postProcessing (for \code{Spatial*} and \code{Raster*}
+loading into R) and post-processing (for \code{Spatial*} and \code{Raster*}
 objects, this is crop, reproject, mask/intersect).
 To trigger the first stage, provide \code{url} or \code{archive}.
 To trigger the second stage, provide \code{studyArea} or \code{rasterToMatch}.

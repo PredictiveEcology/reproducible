@@ -1,9 +1,8 @@
 if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c("checksum.x", "checksum.y", "filesize.x", "filesize.y", "result",
-                           "i.checksum", "checksum", "i.filesize", "filesize", "actualFile",
-                           "algorithm", "i.algorithm"))
+  utils::globalVariables(c("actualFile", "algorithm", "checksum", "checksum.x", "checksum.y",
+                           "filesize", "filesize.x", "filesize.y",
+                           "i.algorithm", "i.checksum", "i.filesize", "result"))
 }
-
 
 ################################################################################
 #' Calculate checksum

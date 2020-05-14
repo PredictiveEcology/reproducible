@@ -2,13 +2,13 @@
 % Please edit documentation in R/cache-helpers.R
 \name{.prepareOutput}
 \alias{.prepareOutput}
-\alias{.prepareOutput,RasterLayer-method}
+\alias{.prepareOutput,Raster-method}
 \alias{.prepareOutput,ANY-method}
 \title{Make any modifications to object recovered from cacheRepo}
 \usage{
 .prepareOutput(object, cacheRepo, ...)
 
-\S4method{.prepareOutput}{RasterLayer}(
+\S4method{.prepareOutput}{Raster}(
   object,
   cacheRepo,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -45,10 +45,6 @@ a <- 1
 
 b <- "Null"
 .prepareOutput(b) # converts to NULL
-
-# For rasters, it is same as .prepareFileBackedRaster
-requireNamespace("archivist", quietly = TRUE)
-  try(archivist::createLocalRepo(tempdir()))
 
 library(raster)
 r <- raster(extent(0,10,0,10), vals = 1:100)

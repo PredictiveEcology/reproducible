@@ -3,7 +3,7 @@ test_that("Checksums read and written correctly", {
 
   sampleDir <- system.file("maps", package = "quickPlot")
   sampleFiles <- list.files(sampleDir, pattern = "[.]tif", full.names = TRUE)
-  tmpdir <- file.path(tempdir(), "test_checksums") %>% checkPath(create = TRUE)
+  tmpdir <- tempdir2("test_checksums") %>% checkPath(create = TRUE)
   on.exit(unlink(dirname(tmpdir), recursive = TRUE), add = TRUE)
 
   expect_true(all(file.copy(sampleFiles, tmpdir)))

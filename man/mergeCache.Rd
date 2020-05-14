@@ -45,13 +45,13 @@ The character string of the path of \code{cacheTo}, i.e., not the
 objects themselves.
 }
 \description{
+\lifecycle{experimental}
+}
+\details{
 All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
 repository. All \code{userTags} will be copied verbatim, including
 \code{accessed}, with 1 exception: \code{date} will be the
 current \code{Sys.time()} at the time of merging. The
 \code{createdDate} column will be similarly the current time
 of merging.
-}
-\details{
-This is still experimental
 }

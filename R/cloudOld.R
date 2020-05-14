@@ -46,6 +46,8 @@ cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, check
 
 #' Deprecated
 #'
+#' \lifecycle{defunct}
+#'
 #' Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 #'
 #' @param ... Passed to \code{\link{Cache}}
