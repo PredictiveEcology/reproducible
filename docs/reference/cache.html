@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -36,10 +40,10 @@
 
 
 <meta property="og:title" content="Cache method that accommodates environments, S4 methods, Rasters, &amp; nested caching — Cache" />
-<meta property="og:description" content="Still experimental and may change. This form cannot pass any arguments to
+<meta property="og:description" content="
+Still experimental and may change. This form cannot pass any arguments to
 ]codeCache, such as cacheRepo, thus it is of limited utility. However,
 it is a clean alternative for simple cases." />
-<meta name="twitter:card" content="summary" />
 
 
 
@@ -67,7 +71,7 @@ it is a clean alternative for simple cases." />
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -81,7 +85,7 @@ it is a clean alternative for simple cases." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -117,7 +121,7 @@ it is a clean alternative for simple cases." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/PredictiveEcology/reproducible">
+  <a href="https://github.com/PredictiveEcology/reproducible/">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -141,7 +145,8 @@ it is a clean alternative for simple cases." />
     </div>
 
     <div class="ref-description">
-    <p>Still experimental and may change. This form cannot pass any arguments to
+    <p><a href='https://www.tidyverse.org/lifecycle/#maturing'><img src='figures/lifecycle-maturing.svg' alt='Maturing lifecycle'></a></p>
+<p>Still experimental and may change. This form cannot pass any arguments to
 ]codeCache, such as <code>cacheRepo</code>, thus it is of limited utility. However,
 it is a clean alternative for simple cases.</p>
     </div>
@@ -253,8 +258,7 @@ object (from e.g., <code><a href='Path-class.html'>asPath(filename)</a></code>) 
 file-backing, then this will be
 passed to <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>, essentially limiting the number of bytes
 to digest (for speed). This will only be used if <code>quick = FALSE</code>.
-Default is <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.length")</a></code>,
-which is set to <code>Inf</code>.</p></td>
+Default is <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.length")</a></code>, which is set to <code>Inf</code>.</p></td>
     </tr>
     <tr>
       <th>compareRasterFileLength</th>
@@ -264,7 +268,7 @@ which is set to <code>Inf</code>.</p></td>
       <th>userTags</th>
       <td><p>A character vector with descriptions of the Cache function call. These
 will be added to the Cache so that this entry in the Cache can be found using
-<code>userTags</code> e.g., via <code><a href='viewCache.html'>showCache</a></code></p></td>
+<code>userTags</code> e.g., via <code><a href='viewCache.html'>showCache</a></code>.</p></td>
     </tr>
     <tr>
       <th>digestPathContent</th>
@@ -283,8 +287,7 @@ to do with.</p></td>
     <tr>
       <th>debugCache</th>
       <td><p>Character or Logical. Either <code>"complete"</code> or <code>"quick"</code> (uses
-partial matching, so "c" or "q" work). <code>TRUE</code> is
-equivalent to <code>"complete"</code>.
+partial matching, so "c" or "q" work). <code>TRUE</code> is equivalent to <code>"complete"</code>.
 If <code>"complete"</code>, then the returned object from the Cache
 function will have two attributes, <code>debugCache1</code> and <code>debugCache2</code>,
 which are the entire <code><a href='https://rdrr.io/r/base/list.html'>list(...)</a></code> and that same object, but after all
@@ -322,10 +325,9 @@ the object as a character string. If it is known that character strings should
 not be treated as paths, then <code>quick = TRUE</code> will be much faster, with no loss
 of information. If it is file or directory, then it will digest the file content,
 or <code><a href='https://rdrr.io/r/base/basename.html'>basename(object)</a></code>. For class <code>Path</code> objects, the file's metadata
-(i.e., filename and file size)
-will be hashed instead of the file contents if <code>quick = TRUE</code>.
-If set to <code>FALSE</code> (default),
-the contents of the file(s) are hashed.
+(i.e., filename and file size) will be hashed instead of the file contents if
+<code>quick = TRUE</code>.
+If set to <code>FALSE</code> (default), the contents of the file(s) are hashed.
 If <code>quick = TRUE</code>, <code>length</code> is ignored. <code>Raster</code> objects are treated
 as paths, if they are file-backed.</p></td>
     </tr>
@@ -400,14 +402,21 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Caching R objects using <code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code> has five important limitations:</p><ol>
-<li><p>the <code>archivist</code> package detects different environments as different;</p></li>
-<li><p>it also does not detect S4 methods correctly due to method inheritance;</p></li>
-<li><p>it does not detect objects that have file-base storage of information
-        (specifically <code><a href='https://rdrr.io/pkg/raster/man/Raster-classes.html'>RasterLayer-class</a></code> objects);</p></li>
-<li><p>the default hashing algorithm is relatively slow.</p></li>
-<li><p>heavily nested function calls may want Cache arguments to propagate through</p></li>
-</ol><p>This version of the <code>Cache</code> function accommodates those four special,
+    <p>A function that can be used to wrap around other functions to cache function calls
+for later use. This is normally most effective when the function to cache is
+slow to run, yet the inputs and outputs are small. The benefit of caching, therefore,
+will decline when the computational time of the "first" function call is fast and/or
+the argument values and return objects are large. The default setting (and first
+call to Cache) will always save to disk. The 2nd call to the same function will return
+from disk. If the <code><a href='https://rdrr.io/r/base/options.html'>options("reproducible.useMemoise" = TRUE)</a></code>, then the 3rd time
+will recover the object from RAM and is normally much faster.</p>
+
+
+<p>There are other similar functions in the R universe. This version of Cache has
+been used as part of a robust continuous workflow approach. As a result, we have
+tested it with many "non-standard" R objects (e.g., RasterLayer objects) and
+environments, which tend to be challenging for caching as they are always unique.</p>
+<p>This version of the <code>Cache</code> function accommodates those four special,
 though quite common, cases by:</p><ol>
 <li><p>converting any environments into list equivalents;</p></li>
 <li><p>identifying the dispatched S4 method (including those made through
@@ -426,7 +435,17 @@ though quite common, cases by:</p><ol>
         Caching</em>.</p></li>
 </ol>
 
-<p>If <code>Cache</code> is called within a SpaDES module, then the cached entry will automatically
+<p>Caching R objects using <code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code> has five important limitations:</p><ol>
+<li><p>the <span class="pkg">archivist</span> package detects different environments as different;</p></li>
+<li><p>it also does not detect S4 methods correctly due to method inheritance;</p></li>
+<li><p>it does not detect objects that have file-based storage of information
+        (specifically <code><a href='https://rdrr.io/pkg/raster/man/Raster-classes.html'>RasterLayer-class</a></code> objects);</p></li>
+<li><p>the default hashing algorithm is relatively slow.</p></li>
+<li><p>heavily nested function calls may want Cache arguments to propagate through</p></li>
+</ol>
+
+<p>As part of the SpaDES ecosystem of R packages, <code>Cache</code> can be used
+within SpaDES modules. If it is, then the cached entry will automatically
 get 3 extra <code>userTags</code>: <code>eventTime</code>, <code>eventType</code>, and <code>moduleName</code>.
 These can then be used in <code>clearCache</code> to selectively remove cached objects
 by <code>eventTime</code>, <code>eventType</code> or <code>moduleName</code>.</p>
@@ -537,16 +556,15 @@ that <code>"devMode"</code> is most useful if used from the start of a project.<
     
 
 <p>This is a way to store all or some of the local Cache in the cloud.
-Currently, the only cloud option is Google Drive, via <code>googledrive</code>
-package. For this to work, the user must be or be able to be authenticated
+Currently, the only cloud option is Google Drive, via <span class="pkg">googledrive</span>.
+For this to work, the user must be or be able to be authenticated
 with <code><a href='https://googledrive.tidyverse.org/reference/drive_auth.html'>googledrive::drive_auth</a></code>. The principle behind this
 <code>useCloud</code> is that it will be a full or partial mirror of a local Cache.
 It is not intended to be used independently from a local Cache. To share
 objects that are in the Cloud with another person, it requires 2 steps. 1)
 share the <code>cloudFolderID$id</code>, which can be retrieved by
 <code>getOption("reproducible.cloudFolderID")$id</code> after at least one Cache
-call has been made. 2) The other user must then set their
-<code>cacheFolderID</code> in a
+call has been made. 2) The other user must then set their  <code>cacheFolderID</code> in a
 <code>Cache\(..., reproducible.cloudFolderID = \"the ID here\"\)</code> call or
 set their option manually
 <code>options\(\"reproducible.cloudFolderID\" = \"the ID here\"\)</code>.</p>
@@ -567,24 +585,25 @@ set their option manually
 
 <p>If <code>sideEffect</code> is not <code>FALSE</code>, then metadata about any files that
 added to <code>sideEffect</code> will be added as an attribute to the cached copy.
-Subsequent calls to this function
-       will assess for the presence of the new files in the <code>sideEffect</code> location.
-       If the files are identical (<code>quick = FALSE</code>) or their file size is
-       identical (<code>quick = TRUE</code>), then the cached copy of the function will
-       be returned (and no files changed). If there are missing or incorrect files,
-       then the function will re-run. This will accommodate the situation where the
-       function call is identical, but somehow the side effect files were modified.
-       If <code>sideEffect</code> is logical, then the function will check the
-       <code>cacheRepo</code>; if it is a path, then it will check the path. The function will
-       assess whether the files to be downloaded are found locally
-       prior to download. If it fails the local test, then it will try to recover from a
-       local copy if (<code>makeCopy</code> had been set to <code>TRUE</code> the first time
-       the function was run. Currently, local recovery will only work if<code>makeCOpy</code> was
-       set to <code>TRUE</code> the first time <code>Cache</code>
-       was run). Default is <code>FALSE</code>.</p>
+Subsequent calls to this function will assess for the presence of the new files in the
+<code>sideEffect</code> location.
+If the files are identical (<code>quick = FALSE</code>) or their file size is identical
+(<code>quick = TRUE</code>), then the cached copy of the function will be returned
+(and no files changed).
+If there are missing or incorrect files, then the function will re-run.
+This will accommodate the situation where the function call is identical, but somehow the side
+effect files were modified.
+If <code>sideEffect</code> is logical, then the function will check the <code>cacheRepo</code>;
+if it is a path, then it will check the path.
+The function will assess whether the files to be downloaded are found locally prior to download.
+If it fails the local test, then it will try to recover from a local copy if (<code>makeCopy</code>
+had been set to <code>TRUE</code> the first time the function was run.
+Currently, local recovery will only work if<code>makeCOpy</code> was set to <code>TRUE</code> the first time
+<code>Cache</code> was run). Default is <code>FALSE</code>.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code>, <code><a href='robustDigest.html'>.robustDigest</a></code></p></div>
+    <div class='dont-index'><p><code><a href='viewCache.html'>showCache</a></code>, <code><a href='viewCache.html'>clearCache</a></code>, <code><a href='viewCache.html'>keepCache</a></code>,
+  <code><a href='CacheDigest.html'>CacheDigest</a></code>, <code><a href='movedCache.html'>movedCache</a></code>, <code><a href='robustDigest.html'>.robustDigest</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>())
@@ -593,7 +612,7 @@ Subsequent calls to this function
 <span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 
 <span class='co'># All same</span>
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading cached result from previous rnorm call.</span><span></span></div><div class='input'><span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>)  <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='fu'><a href='https://rdrr.io/r/base/substitute.html'>quote</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span>)), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading cached result from previous rnorm call.</span><span></span></div><div class='input'>
+<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous rnorm call, </span></div><div class='input'><span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>)  <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='fu'><a href='https://rdrr.io/r/base/substitute.html'>quote</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span>)), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous rnorm call, </span></div><div class='input'>
 <span class='co'>###############################################</span>
 <span class='co'># experimental devMode</span>
 <span class='co'>###############################################</span>
@@ -605,29 +624,56 @@ Subsequent calls to this function
 <span class='no'>uniqueUserTags</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"thisIsUnique"</span>, <span class='st'>"reallyUnique"</span>)
 <span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>,
                   <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>) <span class='co'># sets new value to Cache</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 71cd24ec3b0d0cac   thisIsUnique          thisIsUnique 2020-02-19 16:38:17
-#&gt;  2: 71cd24ec3b0d0cac   reallyUnique          reallyUnique 2020-02-19 16:38:17
-#&gt;  3: 71cd24ec3b0d0cac       function       centralTendency 2020-02-19 16:38:17
-#&gt;  4: 71cd24ec3b0d0cac          class               numeric 2020-02-19 16:38:17
-#&gt;  5: 71cd24ec3b0d0cac    object.size                   984 2020-02-19 16:38:17
-#&gt;  6: 71cd24ec3b0d0cac       accessed   2020-02-19 16:38:16 2020-02-19 16:38:17
-#&gt;  7: 71cd24ec3b0d0cac        inCloud                 FALSE 2020-02-19 16:38:17
-#&gt;  8: 71cd24ec3b0d0cac otherFunctions               saveRDS 2020-02-19 16:38:17
-#&gt;  9: 71cd24ec3b0d0cac otherFunctions               do.call 2020-02-19 16:38:17
-#&gt; 10: 71cd24ec3b0d0cac otherFunctions      build_site_local 2020-02-19 16:38:17
-#&gt; 11: 71cd24ec3b0d0cac otherFunctions       build_reference 2020-02-19 16:38:17
-#&gt; 12: 71cd24ec3b0d0cac otherFunctions  data_reference_topic 2020-02-19 16:38:17
-#&gt; 13: 71cd24ec3b0d0cac otherFunctions          run_examples 2020-02-19 16:38:17
-#&gt; 14: 71cd24ec3b0d0cac otherFunctions    highlight_examples 2020-02-19 16:38:17
-#&gt; 15: 71cd24ec3b0d0cac otherFunctions             timing_fn 2020-02-19 16:38:17
-#&gt; 16: 71cd24ec3b0d0cac otherFunctions                handle 2020-02-19 16:38:17
-#&gt; 17: 71cd24ec3b0d0cac otherFunctions                   try 2020-02-19 16:38:17
-#&gt; 18: 71cd24ec3b0d0cac otherFunctions           withVisible 2020-02-19 16:38:17
-#&gt; 19: 71cd24ec3b0d0cac      preDigest    x:e4aa8de28dc6c1bb 2020-02-19 16:38:17
-#&gt; 20: 71cd24ec3b0d0cac      preDigest .FUN:d5f5f91cbb662db9 2020-02-19 16:38:17
-#&gt; 21: 71cd24ec3b0d0cac      file.size                   144 2020-02-19 16:38:17
-#&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'>
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 71cd24ec3b0d0cac        thisIsUnique          thisIsUnique
+#&gt;  2: 71cd24ec3b0d0cac        reallyUnique          reallyUnique
+#&gt;  3: 71cd24ec3b0d0cac            function       centralTendency
+#&gt;  4: 71cd24ec3b0d0cac               class               numeric
+#&gt;  5: 71cd24ec3b0d0cac         object.size                   984
+#&gt;  6: 71cd24ec3b0d0cac            accessed   2020-05-14 10:33:24
+#&gt;  7: 71cd24ec3b0d0cac             inCloud                 FALSE
+#&gt;  8: 71cd24ec3b0d0cac          resultHash                      
+#&gt;  9: 71cd24ec3b0d0cac   elapsedTimeDigest     0.0006034374 secs
+#&gt; 10: 71cd24ec3b0d0cac elapsedTimeFirstRun     0.0004417896 secs
+#&gt; 11: 71cd24ec3b0d0cac      otherFunctions               saveRDS
+#&gt; 12: 71cd24ec3b0d0cac      otherFunctions               do.call
+#&gt; 13: 71cd24ec3b0d0cac      otherFunctions      build_site_local
+#&gt; 14: 71cd24ec3b0d0cac      otherFunctions       build_reference
+#&gt; 15: 71cd24ec3b0d0cac      otherFunctions  data_reference_topic
+#&gt; 16: 71cd24ec3b0d0cac      otherFunctions          run_examples
+#&gt; 17: 71cd24ec3b0d0cac      otherFunctions    highlight_examples
+#&gt; 18: 71cd24ec3b0d0cac      otherFunctions             timing_fn
+#&gt; 19: 71cd24ec3b0d0cac      otherFunctions                handle
+#&gt; 20: 71cd24ec3b0d0cac      otherFunctions                   try
+#&gt; 21: 71cd24ec3b0d0cac           preDigest    x:e4aa8de28dc6c1bb
+#&gt; 22: 71cd24ec3b0d0cac           preDigest .FUN:d5f5f91cbb662db9
+#&gt; 23: 71cd24ec3b0d0cac           file.size                   142
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-05-14 10:33:24
+#&gt;  2: 2020-05-14 10:33:24
+#&gt;  3: 2020-05-14 10:33:24
+#&gt;  4: 2020-05-14 10:33:24
+#&gt;  5: 2020-05-14 10:33:24
+#&gt;  6: 2020-05-14 10:33:24
+#&gt;  7: 2020-05-14 10:33:24
+#&gt;  8: 2020-05-14 10:33:24
+#&gt;  9: 2020-05-14 10:33:24
+#&gt; 10: 2020-05-14 10:33:24
+#&gt; 11: 2020-05-14 10:33:24
+#&gt; 12: 2020-05-14 10:33:24
+#&gt; 13: 2020-05-14 10:33:24
+#&gt; 14: 2020-05-14 10:33:24
+#&gt; 15: 2020-05-14 10:33:24
+#&gt; 16: 2020-05-14 10:33:24
+#&gt; 17: 2020-05-14 10:33:24
+#&gt; 18: 2020-05-14 10:33:24
+#&gt; 19: 2020-05-14 10:33:24
+#&gt; 20: 2020-05-14 10:33:24
+#&gt; 21: 2020-05-14 10:33:24
+#&gt; 22: 2020-05-14 10:33:24
+#&gt; 23: 2020-05-14 10:33:24
+#&gt;             createdDate</div><div class='input'>
 <span class='co'># During development, we often redefine function internals</span>
 <span class='no'>centralTendency</span> <span class='kw'>&lt;-</span> <span class='kw'>function</span>(<span class='no'>x</span>)
   <span class='fu'><a href='https://rdrr.io/r/stats/median.html'>median</a></span>(<span class='no'>x</span>)
@@ -635,31 +681,58 @@ Subsequent calls to this function
 <span class='co'>#   never again be defined that way. Here, because of userTags being the same,</span>
 <span class='co'>#   it will replace the entry in the Cache, effetively overwriting it, even though</span>
 <span class='co'>#   it has a different cacheId</span>
-<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'> ------ devMode -------</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>This call to cache will replace</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>... artifact with cacheId 71cd24ec3b0d0cac</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>... different .FUN</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'> ------ end devMode -------</span><span></span></div><div class='output co'>#&gt; <span class='message'>Overwriting Cache entry with userTags: 'thisIsUnique, reallyUnique, centralTendency'</span></div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 632cd06f30e111be   thisIsUnique          thisIsUnique 2020-02-19 16:38:17
-#&gt;  2: 632cd06f30e111be   reallyUnique          reallyUnique 2020-02-19 16:38:17
-#&gt;  3: 632cd06f30e111be       function       centralTendency 2020-02-19 16:38:17
-#&gt;  4: 632cd06f30e111be          class               numeric 2020-02-19 16:38:17
-#&gt;  5: 632cd06f30e111be    object.size                   984 2020-02-19 16:38:17
-#&gt;  6: 632cd06f30e111be       accessed   2020-02-19 16:38:17 2020-02-19 16:38:17
-#&gt;  7: 632cd06f30e111be        inCloud                 FALSE 2020-02-19 16:38:17
-#&gt;  8: 632cd06f30e111be otherFunctions               saveRDS 2020-02-19 16:38:17
-#&gt;  9: 632cd06f30e111be otherFunctions               do.call 2020-02-19 16:38:17
-#&gt; 10: 632cd06f30e111be otherFunctions      build_site_local 2020-02-19 16:38:17
-#&gt; 11: 632cd06f30e111be otherFunctions       build_reference 2020-02-19 16:38:17
-#&gt; 12: 632cd06f30e111be otherFunctions  data_reference_topic 2020-02-19 16:38:17
-#&gt; 13: 632cd06f30e111be otherFunctions          run_examples 2020-02-19 16:38:17
-#&gt; 14: 632cd06f30e111be otherFunctions    highlight_examples 2020-02-19 16:38:17
-#&gt; 15: 632cd06f30e111be otherFunctions             timing_fn 2020-02-19 16:38:17
-#&gt; 16: 632cd06f30e111be otherFunctions                handle 2020-02-19 16:38:17
-#&gt; 17: 632cd06f30e111be otherFunctions                   try 2020-02-19 16:38:17
-#&gt; 18: 632cd06f30e111be otherFunctions           withVisible 2020-02-19 16:38:17
-#&gt; 19: 632cd06f30e111be      preDigest    x:e4aa8de28dc6c1bb 2020-02-19 16:38:17
-#&gt; 20: 632cd06f30e111be      preDigest .FUN:af11d20d957667d9 2020-02-19 16:38:17
-#&gt; 21: 632cd06f30e111be      file.size                   143 2020-02-19 16:38:17
-#&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'>
+<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>)</div><div class='output co'>#&gt; <span class='message'> ------ devMode -------</span></div><div class='output co'>#&gt; <span class='message'>This call to cache will replace</span></div><div class='output co'>#&gt; <span class='message'>... artifact with cacheId 71cd24ec3b0d0cac</span></div><div class='output co'>#&gt; <span class='message'>... different .FUN</span></div><div class='output co'>#&gt; <span class='message'> ------ end devMode -------</span></div><div class='output co'>#&gt; <span class='message'>Overwriting Cache entry with userTags: 'thisIsUnique, reallyUnique, centralTendency'</span></div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 632cd06f30e111be        thisIsUnique          thisIsUnique
+#&gt;  2: 632cd06f30e111be        reallyUnique          reallyUnique
+#&gt;  3: 632cd06f30e111be            function       centralTendency
+#&gt;  4: 632cd06f30e111be               class               numeric
+#&gt;  5: 632cd06f30e111be         object.size                   984
+#&gt;  6: 632cd06f30e111be            accessed   2020-05-14 10:33:25
+#&gt;  7: 632cd06f30e111be             inCloud                 FALSE
+#&gt;  8: 632cd06f30e111be          resultHash                      
+#&gt;  9: 632cd06f30e111be   elapsedTimeDigest     0.0005779266 secs
+#&gt; 10: 632cd06f30e111be elapsedTimeFirstRun     0.0005972385 secs
+#&gt; 11: 632cd06f30e111be      otherFunctions               saveRDS
+#&gt; 12: 632cd06f30e111be      otherFunctions               do.call
+#&gt; 13: 632cd06f30e111be      otherFunctions      build_site_local
+#&gt; 14: 632cd06f30e111be      otherFunctions       build_reference
+#&gt; 15: 632cd06f30e111be      otherFunctions  data_reference_topic
+#&gt; 16: 632cd06f30e111be      otherFunctions          run_examples
+#&gt; 17: 632cd06f30e111be      otherFunctions    highlight_examples
+#&gt; 18: 632cd06f30e111be      otherFunctions             timing_fn
+#&gt; 19: 632cd06f30e111be      otherFunctions                handle
+#&gt; 20: 632cd06f30e111be      otherFunctions                   try
+#&gt; 21: 632cd06f30e111be           preDigest    x:e4aa8de28dc6c1bb
+#&gt; 22: 632cd06f30e111be           preDigest .FUN:af11d20d957667d9
+#&gt; 23: 632cd06f30e111be           file.size                   141
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-05-14 10:33:25
+#&gt;  2: 2020-05-14 10:33:25
+#&gt;  3: 2020-05-14 10:33:25
+#&gt;  4: 2020-05-14 10:33:25
+#&gt;  5: 2020-05-14 10:33:25
+#&gt;  6: 2020-05-14 10:33:25
+#&gt;  7: 2020-05-14 10:33:25
+#&gt;  8: 2020-05-14 10:33:25
+#&gt;  9: 2020-05-14 10:33:25
+#&gt; 10: 2020-05-14 10:33:25
+#&gt; 11: 2020-05-14 10:33:25
+#&gt; 12: 2020-05-14 10:33:25
+#&gt; 13: 2020-05-14 10:33:25
+#&gt; 14: 2020-05-14 10:33:25
+#&gt; 15: 2020-05-14 10:33:25
+#&gt; 16: 2020-05-14 10:33:25
+#&gt; 17: 2020-05-14 10:33:25
+#&gt; 18: 2020-05-14 10:33:25
+#&gt; 19: 2020-05-14 10:33:25
+#&gt; 20: 2020-05-14 10:33:25
+#&gt; 21: 2020-05-14 10:33:25
+#&gt; 22: 2020-05-14 10:33:25
+#&gt; 23: 2020-05-14 10:33:25
+#&gt;             createdDate</div><div class='input'>
 <span class='co'># If it finds it by cacheID, doesn't matter what the userTags are</span>
-<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"thisIsUnique"</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading cached result from previous centralTendency call.</span><span></span></div><div class='input'>
+<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"thisIsUnique"</span>)</div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (632cd06f30e111be.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous centralTendency call, </span></div><div class='input'>
 <span class='fu'><a href='https://rdrr.io/r/base/options.html'>options</a></span>(<span class='no'>opt</span>)
 
 <span class='co'># For more in depth uses, see vignette</span>
@@ -683,29 +756,13 @@ Subsequent calls to this function
 }
 <span class='co'># Equivalent</span>
 <span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)
-<span class='no'>b</span> <span class='kw'>%&lt;%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading cached result from previous rnorm call.</span><span></span></div><div class='input'>
-</div></span></pre>
+<span class='no'>b</span> <span class='kw'>%&lt;%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (7072c305d8c69df0.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous rnorm call, </span></div><div class='input'>
+</div></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
-      <li><a href="#details">Details</a></li>
-      <li><a href="#note">Note</a></li>
-      <li><a href="#nested-caching">Nested Caching</a></li>
-      <li><a href="#caching-speed">Caching Speed</a></li>
-      <li><a href="#filepaths">Filepaths</a></li>
-      <li><a href="#stochasticity">Stochasticity</a></li>
-      <li><a href="#usecache">useCache</a></li>
-      <li><a href="#usecloud"><code>useCloud</code></a></li>
-      <li><a href="#sideeffect"><code>sideEffect</code></a></li>
-      <li><a href="#see-also">See also</a></li>
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
-    <h2>Author</h2>
-    <p>Eliot McIntire</p>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -716,7 +773,7 @@ Subsequent calls to this function
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>

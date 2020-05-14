@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -42,7 +46,6 @@ Also, for lists and environments, it will return the object size separately for 
 These are estimates only, and could be inaccurate.
 Alternative, similar functions include object.size and pryr::object_size.
 See Details for the special case of functions and their enclosing environments." />
-<meta name="twitter:card" content="summary" />
 
 
 
@@ -70,7 +73,7 @@ See Details for the special case of functions and their enclosing environments."
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -84,7 +87,7 @@ See Details for the special case of functions and their enclosing environments."
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -120,7 +123,7 @@ See Details for the special case of functions and their enclosing environments."
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/PredictiveEcology/reproducible">
+  <a href="https://github.com/PredictiveEcology/reproducible/">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -264,17 +267,17 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $foo
 #&gt; 56 bytes
 #&gt; </div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='no'>foo</span>) <span class='co'># different - only measuring the environment as an object</span></div><div class='output co'>#&gt; 56 bytes</div><div class='input'>
-<span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='no'>prepInputs</span>) <span class='co'># only the function, without its enclosing environment</span></div><div class='output co'>#&gt; 46984 bytes</div><div class='input'><span class='fu'>objSize</span>(<span class='no'>prepInputs</span>)     <span class='co'># the function, plus its enclosing environment</span></div><div class='output co'>#&gt; $`%&lt;%`
+<span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='no'>prepInputs</span>) <span class='co'># only the function, without its enclosing environment</span></div><div class='output co'>#&gt; 53248 bytes</div><div class='input'><span class='fu'>objSize</span>(<span class='no'>prepInputs</span>)     <span class='co'># the function, plus its enclosing environment</span></div><div class='output co'>#&gt; $`%&lt;%`
 #&gt; 24120 bytes
 #&gt; 
 #&gt; $`%C%`
 #&gt; 292504 bytes
 #&gt; 
 #&gt; $appendChecksumsTable
-#&gt; 28480 bytes
+#&gt; 134288 bytes
 #&gt; 
 #&gt; $argsToRemove
-#&gt; 1896 bytes
+#&gt; 1968 bytes
 #&gt; 
 #&gt; $asPath
 #&gt; 1928 bytes
@@ -292,7 +295,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 3808 bytes
 #&gt; 
 #&gt; $assessDataType.Raster
-#&gt; 38024 bytes
+#&gt; 39424 bytes
 #&gt; 
 #&gt; $assessDataType.RasterStack
 #&gt; 21832 bytes
@@ -304,7 +307,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 70304 bytes
 #&gt; 
 #&gt; $attemptGDAL
-#&gt; 8928 bytes
+#&gt; 10792 bytes
 #&gt; 
 #&gt; $available.packagesMem
 #&gt; 3792 bytes
@@ -334,13 +337,13 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 112568 bytes
 #&gt; 
 #&gt; $CacheIsACache
-#&gt; 15240 bytes
+#&gt; 21240 bytes
 #&gt; 
 #&gt; $CacheStorageDir
 #&gt; 7720 bytes
 #&gt; 
 #&gt; $CacheStoredFile
-#&gt; 29224 bytes
+#&gt; 27864 bytes
 #&gt; 
 #&gt; $cc
 #&gt; 10224 bytes
@@ -355,7 +358,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 12808 bytes
 #&gt; 
 #&gt; $checkoutVersion
-#&gt; 247600 bytes
+#&gt; 248200 bytes
 #&gt; 
 #&gt; $checkPath
 #&gt; 5256 bytes
@@ -364,7 +367,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 7840 bytes
 #&gt; 
 #&gt; $chooseCRANmirror2
-#&gt; 1120 bytes
+#&gt; 4128 bytes
 #&gt; 
 #&gt; $clearCache
 #&gt; 12360 bytes
@@ -379,7 +382,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 4000 bytes
 #&gt; 
 #&gt; $cloudDownload
-#&gt; 15288 bytes
+#&gt; 13168 bytes
 #&gt; 
 #&gt; $cloudDownloadRasterBackend
 #&gt; 23664 bytes
@@ -394,7 +397,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 16616 bytes
 #&gt; 
 #&gt; $cloudUploadFromCache
-#&gt; 11360 bytes
+#&gt; 10576 bytes
 #&gt; 
 #&gt; $cloudUploadRasterBackends
 #&gt; 7360 bytes
@@ -430,22 +433,25 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1592 bytes
 #&gt; 
 #&gt; $cropInputs.sf
-#&gt; 154696 bytes
+#&gt; 182808 bytes
 #&gt; 
 #&gt; $cropInputs.spatialObjects
-#&gt; 41280 bytes
+#&gt; 53616 bytes
 #&gt; 
 #&gt; $dbConnectAll
 #&gt; 5712 bytes
 #&gt; 
 #&gt; $dealWithCores
-#&gt; 7688 bytes
+#&gt; 7856 bytes
 #&gt; 
 #&gt; $dealWithRasters
 #&gt; 27920 bytes
 #&gt; 
+#&gt; $DESCRIPTIONFileVersion
+#&gt; 12944 bytes
+#&gt; 
 #&gt; $determineFilename
-#&gt; 102848 bytes
+#&gt; 114704 bytes
 #&gt; 
 #&gt; $determineNestedTags
 #&gt; 104896 bytes
@@ -453,38 +459,47 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $devModeFn1
 #&gt; 32112 bytes
 #&gt; 
+#&gt; $differentRasters
+#&gt; 33592 bytes
+#&gt; 
 #&gt; $dlGeneric
-#&gt; 46688 bytes
+#&gt; 53024 bytes
 #&gt; 
 #&gt; $dlGoogle
-#&gt; 197976 bytes
+#&gt; 199920 bytes
 #&gt; 
 #&gt; $downloadFile
-#&gt; 677272 bytes
+#&gt; 81032 bytes
 #&gt; 
 #&gt; $downloadRemote
-#&gt; 342592 bytes
+#&gt; 50352 bytes
 #&gt; 
 #&gt; $driveLs
 #&gt; 9616 bytes
 #&gt; 
 #&gt; $extractFromArchive
-#&gt; 538808 bytes
+#&gt; 68544 bytes
+#&gt; 
+#&gt; $extractPkgGitHub
+#&gt; 13208 bytes
 #&gt; 
 #&gt; $fastMask
-#&gt; 54528 bytes
+#&gt; 56288 bytes
 #&gt; 
 #&gt; $Filenames
-#&gt; 4744 bytes
+#&gt; 5264 bytes
 #&gt; 
 #&gt; $findGDAL
-#&gt; 58424 bytes
+#&gt; 71848 bytes
 #&gt; 
 #&gt; $fixErrors
 #&gt; 2584 bytes
 #&gt; 
 #&gt; $fixErrors.default
 #&gt; 2120 bytes
+#&gt; 
+#&gt; $fixErrors.Raster
+#&gt; 36184 bytes
 #&gt; 
 #&gt; $fixErrors.sf
 #&gt; 80776 bytes
@@ -502,28 +517,28 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 23040 bytes
 #&gt; 
 #&gt; $getCRANrepos
-#&gt; 34016 bytes
+#&gt; 28440 bytes
 #&gt; 
 #&gt; $getFunctionName
 #&gt; 552952 bytes
 #&gt; 
 #&gt; $getGDALVersion
-#&gt; 43216 bytes
-#&gt; 
-#&gt; $getLocalTags
-#&gt; 40808 bytes
+#&gt; 54400 bytes
 #&gt; 
 #&gt; $getUserTags
 #&gt; 57008 bytes
 #&gt; 
+#&gt; $grepExtractPkgs
+#&gt; 136 bytes
+#&gt; 
 #&gt; $installedVersions
-#&gt; 110480 bytes
+#&gt; 96720 bytes
 #&gt; 
 #&gt; $installedVersionsQuick
 #&gt; 116976 bytes
 #&gt; 
 #&gt; $installVersions
-#&gt; 946320 bytes
+#&gt; 918280 bytes
 #&gt; 
 #&gt; $internetExists
 #&gt; 46896 bytes
@@ -555,8 +570,11 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $linkOrCopy
 #&gt; 121392 bytes
 #&gt; 
+#&gt; $loadFile
+#&gt; 4792 bytes
+#&gt; 
 #&gt; $loadFromCache
-#&gt; 16552 bytes
+#&gt; 80528 bytes
 #&gt; 
 #&gt; $makeMemoisable
 #&gt; 1552 bytes
@@ -568,7 +586,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1888 bytes
 #&gt; 
 #&gt; $maskInputs.Raster
-#&gt; 5992 bytes
+#&gt; 8016 bytes
 #&gt; 
 #&gt; $maskInputs.sf
 #&gt; 107768 bytes
@@ -590,6 +608,9 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 
 #&gt; $moveAttributes
 #&gt; 28808 bytes
+#&gt; 
+#&gt; $movedCache
+#&gt; 16992 bytes
 #&gt; 
 #&gt; $newLibPaths
 #&gt; 9816 bytes
@@ -628,10 +649,13 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 17000 bytes
 #&gt; 
 #&gt; $pkgDep
-#&gt; 1066856 bytes
+#&gt; 150336 bytes
 #&gt; 
 #&gt; $pkgDep2
 #&gt; 62152 bytes
+#&gt; 
+#&gt; $pkgDepTopoSort
+#&gt; 139920 bytes
 #&gt; 
 #&gt; $pkgSnapshot
 #&gt; 30712 bytes
@@ -652,19 +676,19 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 44200 bytes
 #&gt; 
 #&gt; $postProcess.spatialObjects
-#&gt; 5336 bytes
+#&gt; 6008 bytes
 #&gt; 
 #&gt; $postProcessAllSpatial
-#&gt; 52976 bytes
+#&gt; 59712 bytes
 #&gt; 
 #&gt; $postProcessChecks
 #&gt; 49936 bytes
 #&gt; 
 #&gt; $prepInputs
-#&gt; 46984 bytes
+#&gt; 53248 bytes
 #&gt; 
 #&gt; $preProcess
-#&gt; 1024000 bytes
+#&gt; 185304 bytes
 #&gt; 
 #&gt; $projectInputs
 #&gt; 1888 bytes
@@ -673,10 +697,10 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1424 bytes
 #&gt; 
 #&gt; $projectInputs.Raster
-#&gt; 84552 bytes
+#&gt; 83024 bytes
 #&gt; 
 #&gt; $projectInputs.sf
-#&gt; 91944 bytes
+#&gt; 92712 bytes
 #&gt; 
 #&gt; $projectInputs.Spatial
 #&gt; 43432 bytes
@@ -685,28 +709,31 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 232 bytes
 #&gt; 
 #&gt; $reproducibleOptions
-#&gt; 22400 bytes
+#&gt; 15344 bytes
 #&gt; 
 #&gt; $Require
-#&gt; 354824 bytes
+#&gt; 55952 bytes
 #&gt; 
 #&gt; $retry
 #&gt; 57912 bytes
 #&gt; 
 #&gt; $rmFromCache
-#&gt; 48752 bytes
+#&gt; 43616 bytes
 #&gt; 
 #&gt; $rmFromCloudFolder
-#&gt; 93528 bytes
+#&gt; 18640 bytes
 #&gt; 
 #&gt; $rndstr
 #&gt; 29240 bytes
+#&gt; 
+#&gt; $roundTo6Dec
+#&gt; 14568 bytes
 #&gt; 
 #&gt; $roundToRes
 #&gt; 44720 bytes
 #&gt; 
 #&gt; $saveToCache
-#&gt; 30216 bytes
+#&gt; 40432 bytes
 #&gt; 
 #&gt; $searchFull
 #&gt; 37224 bytes
@@ -720,17 +747,17 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $showCache
 #&gt; 9648 bytes
 #&gt; 
-#&gt; $showLocalRepo2
-#&gt; 13200 bytes
-#&gt; 
-#&gt; $showLocalRepo3
-#&gt; 4856 bytes
-#&gt; 
-#&gt; $showLocalRepo3Mem
-#&gt; 88680 bytes
+#&gt; $studyAreaName
+#&gt; 5200 bytes
 #&gt; 
 #&gt; $tempdir2
-#&gt; 5680 bytes
+#&gt; 7816 bytes
+#&gt; 
+#&gt; $tempfile2
+#&gt; 9160 bytes
+#&gt; 
+#&gt; $trimVersionNumber
+#&gt; 4600 bytes
 #&gt; 
 #&gt; $unmakeMemoisable
 #&gt; 1584 bytes
@@ -739,7 +766,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1088 bytes
 #&gt; 
 #&gt; $useDBI
-#&gt; 12904 bytes
+#&gt; 7936 bytes
 #&gt; 
 #&gt; $useETM
 #&gt; 14544 bytes
@@ -769,7 +796,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 24960 bytes
 #&gt; 
 #&gt; $writeFuture
-#&gt; 17832 bytes
+#&gt; 8648 bytes
 #&gt; 
 #&gt; $writeOutputs
 #&gt; 2360 bytes
@@ -781,7 +808,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 6032 bytes
 #&gt; 
 #&gt; $writeOutputs.Raster
-#&gt; 205488 bytes
+#&gt; 553304 bytes
 #&gt; 
 #&gt; $writeOutputs.sf
 #&gt; 68192 bytes
@@ -797,18 +824,14 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 
 <span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
 <span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
-(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 648 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 11970728</div><div class='input'>                 # and imported functions
+(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 584 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 9194184</div><div class='input'>                 # and imported functions
 
 </div></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#details">Details</a></li>
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -819,7 +842,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>

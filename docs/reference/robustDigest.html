@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -36,17 +40,15 @@
 
 
 <meta property="og:title" content="Create reproducible digests of objects in R — .robustDigest" />
-<meta property="og:description" content="Not all aspects of R objects are captured by current hashing tools in R (e.g.
-digest::digest, knitr caching,
-archivist::cache). This is mostly because many objects have &quot;transient&quot;
-(e.g., functions have environments), or &quot;disk-backed&quot; features. Since
-the goal of using reproducibility is to have tools that are not session specific,
-this function
-attempts to strip all session specific information so that the digest
-works between sessions and operating systems. It is tested under many
-conditions and object types, there are bound to be others that don't
+<meta property="og:description" content="Not all aspects of R objects are captured by current hashing tools in R
+(e.g. digest::digest, knitr caching, archivist::cache).
+This is mostly because many objects have &quot;transient&quot;
+(e.g., functions have environments), or &quot;disk-backed&quot; features.
+Since the goal of using reproducibility is to have tools that are not session specific,
+this function attempts to strip all session specific information so that the digest
+works between sessions and operating systems.
+It is tested under many conditions and object types, there are bound to be others that don't
 work correctly." />
-<meta name="twitter:card" content="summary" />
 
 
 
@@ -74,7 +76,7 @@ work correctly." />
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -88,7 +90,7 @@ work correctly." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -124,7 +126,7 @@ work correctly." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/PredictiveEcology/reproducible">
+  <a href="https://github.com/PredictiveEcology/reproducible/">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -148,15 +150,14 @@ work correctly." />
     </div>
 
     <div class="ref-description">
-    <p>Not all aspects of R objects are captured by current hashing tools in R (e.g.
-<code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>, <code>knitr</code> caching,
-<code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code>). This is mostly because many objects have "transient"
-(e.g., functions have environments), or "disk-backed" features. Since
-the goal of using reproducibility is to have tools that are not session specific,
-this function
-attempts to strip all session specific information so that the digest
-works between sessions and operating systems. It is tested under many
-conditions and object types, there are bound to be others that don't
+    <p>Not all aspects of R objects are captured by current hashing tools in R
+(e.g. <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>, <code>knitr</code> caching, <code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code>).
+This is mostly because many objects have "transient"
+(e.g., functions have environments), or "disk-backed" features.
+Since the goal of using reproducibility is to have tools that are not session specific,
+this function attempts to strip all session specific information so that the digest
+works between sessions and operating systems.
+It is tested under many conditions and object types, there are bound to be others that don't
 work correctly.</p>
     </div>
 
@@ -222,8 +223,7 @@ object (from e.g., <code><a href='Path-class.html'>asPath(filename)</a></code>) 
 file-backing, then this will be
 passed to <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>, essentially limiting the number of bytes
 to digest (for speed). This will only be used if <code>quick = FALSE</code>.
-Default is <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.length")</a></code>,
-which is set to <code>Inf</code>.</p></td>
+Default is <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.length")</a></code>, which is set to <code>Inf</code>.</p></td>
     </tr>
     <tr>
       <th>algo</th>
@@ -244,10 +244,9 @@ the object as a character string. If it is known that character strings should
 not be treated as paths, then <code>quick = TRUE</code> will be much faster, with no loss
 of information. If it is file or directory, then it will digest the file content,
 or <code><a href='https://rdrr.io/r/base/basename.html'>basename(object)</a></code>. For class <code>Path</code> objects, the file's metadata
-(i.e., filename and file size)
-will be hashed instead of the file contents if <code>quick = TRUE</code>.
-If set to <code>FALSE</code> (default),
-the contents of the file(s) are hashed.
+(i.e., filename and file size) will be hashed instead of the file contents if
+<code>quick = TRUE</code>.
+If set to <code>FALSE</code> (default), the contents of the file(s) are hashed.
 If <code>quick = TRUE</code>, <code>length</code> is ignored. <code>Raster</code> objects are treated
 as paths, if they are file-backed.</p></td>
     </tr>
@@ -279,16 +278,15 @@ argument is the <code>simList</code> class from <code>SpaDES.core</code>.</p></t
     
 
 
-<p><code>Raster*</code> objects have the potential for disk-backed storage.
-If the object in the R session is cached using <code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code>, only
-the header component will be assessed for caching. Thus, objects like this
-require more work. Also, because <code>Raster*</code> can have a built-in representation
-for having their data content located on disk, this format will be maintained if the
-raster already is file-backed, i.e., to create <code>.tif</code> or <code>.grd</code> backed rasters,
-use <code>writeRaster</code> first, then Cache. The .tif or .grd will be copied to the "raster"
-subdirectory of the <code>cacheRepo</code>.
-Their RAM representation (as an R object) will still be in the usual
-<code class="file">cacheOutputs/</code> (or formerly <code class="file">gallery/</code>) directory.
+<p><code>Raster*</code> objects have the potential for disk-backed storage, thus, require more work.
+Also, because <code>Raster*</code> can have a built-in representation for having their data content
+located on disk, this format will be maintained if the raster already is file-backed,
+i.e., to create <code>.tif</code> or <code>.grd</code> backed rasters, use <code>writeRaster</code> first,
+then <code>Cache</code>.
+The <code class="file">.tif</code> or <code class="file">.grd</code> will be copied to the <code class="file">raster/</code> subdirectory of the
+<code>cacheRepo</code>.
+Their RAM representation (as an R object) will still be in the usual  <code class="file">cacheOutputs/</code>
+(or formerly <code class="file">gallery/</code>) directory.
 For <code>inMemory</code> raster objects, they will remain as binary <code>.RData</code> files.</p>
 <p>Functions (which are contained within environments) are
 converted to a text representation via a call to <code><a href='https://rdrr.io/r/base/format.html'>format(FUN)</a></code>.</p>
@@ -299,9 +297,6 @@ environments.</p>
 to check for paths. If they are found to be paths, then the path is hashed with
 only its filename via <code><a href='https://rdrr.io/r/base/basename.html'>basename(filename)</a></code>. If it is actually a path, we suggest
 using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
-    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
-
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code>.</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
@@ -312,16 +307,16 @@ using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
 <span class='fu'><a href='https://rdrr.io/r/base/save.html'>save</a></span>(<span class='no'>a</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
 <span class='co'># treats as character string, so 2 filenames are different</span>
-<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "1d4f963dc2e88e3f700016445e21387f"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "773c27111b68da28e09c9a94f07e0e4a"</div><div class='input'>
+<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "7a7753c99b2fa36fe8163a771a3cbd42"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>tmpfile2</span>)</div><div class='output co'>#&gt; [1] "63d46d568d6a8624c690deed9c340112"</div><div class='input'>
 <span class='co'># tests to see whether character string is representing a file</span>
-<span class='fu'>.robustDigest</span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "6b2b463c5603ba39"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>tmpfile2</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [1] "6b2b463c5603ba39"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='no'>tmpfile1</span>)</div><div class='output co'>#&gt; [1] "72b3a234c2b3b8a2"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>tmpfile2</span>) <span class='co'># same</span></div><div class='output co'>#&gt; [1] "72b3a234c2b3b8a2"</div><div class='input'>
 <span class='co'># if you tell it that it is a path, then you can decide if you want it to be</span>
 <span class='co'>#  treated as a character string or as a file path</span>
-<span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "1c19b0c0cd891fcc"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "a7492481ae84da30"</div><div class='input'>
+<span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "20b74be9af5904ac"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># different because using file info</span></div><div class='output co'>#&gt; [1] "d49d34b211af915e"</div><div class='input'>
 <span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile1</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; [[1]]
-#&gt; [1] "6b2b463c5603ba39"
+#&gt; [1] "72b3a234c2b3b8a2"
 #&gt; </div><div class='input'><span class='fu'>.robustDigest</span>(<span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>tmpfile2</span>), <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>) <span class='co'># same because using file content</span></div><div class='output co'>#&gt; [[1]]
-#&gt; [1] "6b2b463c5603ba39"
+#&gt; [1] "72b3a234c2b3b8a2"
 #&gt; </div><div class='input'>
 <span class='co'># Rasters are interesting because it is not know a priori if it</span>
 <span class='co'>#   it has a file name associated with it.</span>
@@ -332,23 +327,15 @@ using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
 <span class='no'>r1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile1</span>)
 <span class='no'>r2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></span>(<span class='no'>r</span>, <span class='kw'>file</span> <span class='kw'>=</span> <span class='no'>tmpfile2</span>)
 
-<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "bacd0509291f9357e3bfaa2679e0c6f8"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "03e55ebbf09607d2e0a6a8120ea219fe"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "bacd0509291f9357e3bfaa2679e0c6f8"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "03e55ebbf09607d2e0a6a8120ea219fe"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'>
+<span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "189236f93e662f022eaaded4560fa148"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "7ff6768910a7b795096829f7cfc91cb6"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "189236f93e662f022eaaded4560fa148"</div><div class='input'><span class='kw pkg'>digest</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest</a></span>(<span class='no'>r2</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "7ff6768910a7b795096829f7cfc91cb6"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>)</div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r2</span>) <span class='co'># same... data are the same in the file</span></div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'>
 <span class='co'># note, this is not true for comparing memory and file-backed rasters</span>
 <span class='fu'>.robustDigest</span>(<span class='no'>r</span>)</div><div class='output co'>#&gt; [1] "e4c91c4fbea055a8"</div><div class='input'><span class='fu'>.robustDigest</span>(<span class='no'>r1</span>) <span class='co'># different</span></div><div class='output co'>#&gt; [1] "21b62fd3c5049bc7"</div><div class='input'>
 </div></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
-      <li><a href="#classes">Classes</a></li>
-      <li><a href="#see-also">See also</a></li>
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
-    <h2>Author</h2>
-    <p>Eliot McIntire</p>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -359,7 +346,7 @@ using <code><a href='Path-class.html'>asPath(thePath)</a></code></p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>

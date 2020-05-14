@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -36,10 +40,8 @@
 
 
 <meta property="og:title" content="Examining and modifying the cache — clearCache" />
-<meta property="og:description" content="These are convenience wrappers around DBI
-(formerly archivist) package functions.
+<meta property="og:description" content="These are convenience wrappers around DBI package functions.
 They allow the user a bit of control over what is being cached." />
-<meta name="twitter:card" content="summary" />
 
 
 
@@ -67,7 +69,7 @@ They allow the user a bit of control over what is being cached." />
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -81,7 +83,7 @@ They allow the user a bit of control over what is being cached." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -117,7 +119,7 @@ They allow the user a bit of control over what is being cached." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/PredictiveEcology/reproducible">
+  <a href="https://github.com/PredictiveEcology/reproducible/">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -141,8 +143,7 @@ They allow the user a bit of control over what is being cached." />
     </div>
 
     <div class="ref-description">
-    <p>These are convenience wrappers around <code>DBI</code>
-(formerly <code>archivist</code>) package functions.
+    <p>These are convenience wrappers around <code>DBI</code> package functions.
 They allow the user a bit of control over what is being cached.</p>
     </div>
 
@@ -224,7 +225,7 @@ They allow the user a bit of control over what is being cached.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>A simList or a directory containing a valid archivist repository. Note:
+      <td><p>A simList or a directory containing a valid Cache repository. Note:
 For compatibility with <code>Cache</code> argument, <code>cacheRepo</code> can also be
 used instead of <code>x</code>, though <code>x</code> will take precedence.</p></td>
     </tr>
@@ -317,7 +318,7 @@ If both <code>after</code> and <code>before</code> are specified, then all objec
 If <code>userTags</code> is used, this will override <code>after</code> or <code>before</code>.</p>
 <p><code>cc(secs)</code> is just a shortcut for <code>clearCache(repo = Paths$cachePath, after = secs)</code>,
 i.e., to remove any cache entries touched in the last <code>secs</code> seconds.</p>
-<dl class='dl-horizontal'>
+<dl'>
   <dt><code>clearCache</code></dt><dd><p>remove items from the cache based on their
                            <code>userTag</code> or <code>times</code> values.</p></dd>
   <dt><code>keepCache</code></dt><dd><p>remove all cached items <em>except</em> those based on
@@ -333,8 +334,8 @@ a message and a pause, if interactive, to prevent accidentally deleting of a
 large cache repository.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='mergeCache.html'>mergeCache</a></code>, <code><a href='https://rdrr.io/pkg/archivist/man/splitTags.html'>archivist::splitTagsLocal</a></code>. Many more examples
-in <code><a href='cache.html'>Cache</a></code></p></div>
+    <div class='dont-index'><p><code><a href='mergeCache.html'>mergeCache</a></code>. Many more examples
+in <code><a href='cache.html'>Cache</a></code>.</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
@@ -346,7 +347,7 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 <span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 
 <span class='co'># All same</span>
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  loading cached result from previous rnorm call.</span><span></span></div><div class='input'><span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>)  <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/substitute.html'>quote</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span>)), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  loading cached result from previous rnorm call.</span><span></span></div><div class='input'>
+<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous rnorm call, </span></div><div class='input'><span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>)  <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/substitute.html'>quote</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span>)), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous rnorm call, </span></div><div class='input'>
 <span class='co'># Any minor change makes it different</span>
 <span class='no'>ranNumsE</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>6</span>)<span class='co'># different</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'>
 <span class='co'>## Example 1: basic cache use with tags</span>
@@ -354,95 +355,196 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 <span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>runif</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
 <span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>runif</span>, <span class='fl'>40</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
 
-<span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"objectName"</span>))</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 828 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 828 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 3aef38d1fc02aee5     objectName                     b 2020-02-19 16:39:24
-#&gt;  2: 3aef38d1fc02aee5       function                 runif 2020-02-19 16:39:24
-#&gt;  3: 3aef38d1fc02aee5          class               numeric 2020-02-19 16:39:24
-#&gt;  4: 3aef38d1fc02aee5    object.size                  1008 2020-02-19 16:39:24
-#&gt;  5: 3aef38d1fc02aee5       accessed   2020-02-19 16:39:24 2020-02-19 16:39:24
-#&gt;  6: 3aef38d1fc02aee5        inCloud                 FALSE 2020-02-19 16:39:24
-#&gt;  7: 3aef38d1fc02aee5 otherFunctions               saveRDS 2020-02-19 16:39:24
-#&gt;  8: 3aef38d1fc02aee5 otherFunctions               do.call 2020-02-19 16:39:24
-#&gt;  9: 3aef38d1fc02aee5 otherFunctions      build_site_local 2020-02-19 16:39:24
-#&gt; 10: 3aef38d1fc02aee5 otherFunctions       build_reference 2020-02-19 16:39:24
-#&gt; 11: 3aef38d1fc02aee5 otherFunctions  data_reference_topic 2020-02-19 16:39:24
-#&gt; 12: 3aef38d1fc02aee5 otherFunctions          run_examples 2020-02-19 16:39:24
-#&gt; 13: 3aef38d1fc02aee5 otherFunctions    highlight_examples 2020-02-19 16:39:24
-#&gt; 14: 3aef38d1fc02aee5 otherFunctions             timing_fn 2020-02-19 16:39:24
-#&gt; 15: 3aef38d1fc02aee5 otherFunctions                handle 2020-02-19 16:39:24
-#&gt; 16: 3aef38d1fc02aee5 otherFunctions                   try 2020-02-19 16:39:24
-#&gt; 17: 3aef38d1fc02aee5 otherFunctions           withVisible 2020-02-19 16:39:24
-#&gt; 18: 3aef38d1fc02aee5      preDigest    n:7eef4eae85fd9229 2020-02-19 16:39:24
-#&gt; 19: 3aef38d1fc02aee5      preDigest .FUN:881ec847b7161f3c 2020-02-19 16:39:24
-#&gt; 20: 3aef38d1fc02aee5      file.size                   168 2020-02-19 16:39:24
-#&gt; 21: 7225b47fe5dc51d0     objectName                     b 2020-02-19 16:39:24
-#&gt; 22: 7225b47fe5dc51d0       function                 runif 2020-02-19 16:39:24
-#&gt; 23: 7225b47fe5dc51d0          class               numeric 2020-02-19 16:39:24
-#&gt; 24: 7225b47fe5dc51d0    object.size                  1296 2020-02-19 16:39:24
-#&gt; 25: 7225b47fe5dc51d0       accessed   2020-02-19 16:39:24 2020-02-19 16:39:24
-#&gt; 26: 7225b47fe5dc51d0        inCloud                 FALSE 2020-02-19 16:39:24
-#&gt; 27: 7225b47fe5dc51d0 otherFunctions               saveRDS 2020-02-19 16:39:24
-#&gt; 28: 7225b47fe5dc51d0 otherFunctions               do.call 2020-02-19 16:39:24
-#&gt; 29: 7225b47fe5dc51d0 otherFunctions      build_site_local 2020-02-19 16:39:24
-#&gt; 30: 7225b47fe5dc51d0 otherFunctions       build_reference 2020-02-19 16:39:24
-#&gt; 31: 7225b47fe5dc51d0 otherFunctions  data_reference_topic 2020-02-19 16:39:24
-#&gt; 32: 7225b47fe5dc51d0 otherFunctions          run_examples 2020-02-19 16:39:24
-#&gt; 33: 7225b47fe5dc51d0 otherFunctions    highlight_examples 2020-02-19 16:39:24
-#&gt; 34: 7225b47fe5dc51d0 otherFunctions             timing_fn 2020-02-19 16:39:24
-#&gt; 35: 7225b47fe5dc51d0 otherFunctions                handle 2020-02-19 16:39:24
-#&gt; 36: 7225b47fe5dc51d0 otherFunctions                   try 2020-02-19 16:39:24
-#&gt; 37: 7225b47fe5dc51d0 otherFunctions           withVisible 2020-02-19 16:39:24
-#&gt; 38: 7225b47fe5dc51d0      preDigest    n:1393aef18608c8be 2020-02-19 16:39:24
-#&gt; 39: 7225b47fe5dc51d0      preDigest .FUN:881ec847b7161f3c 2020-02-19 16:39:24
-#&gt; 40: 7225b47fe5dc51d0      file.size                   396 2020-02-19 16:39:24
-#&gt; 41: f7bee22047b8d0c1     objectName                     a 2020-02-19 16:39:24
-#&gt; 42: f7bee22047b8d0c1       function                 rnorm 2020-02-19 16:39:24
-#&gt; 43: f7bee22047b8d0c1          class               numeric 2020-02-19 16:39:24
-#&gt; 44: f7bee22047b8d0c1    object.size                  1008 2020-02-19 16:39:24
-#&gt; 45: f7bee22047b8d0c1       accessed   2020-02-19 16:39:24 2020-02-19 16:39:24
-#&gt; 46: f7bee22047b8d0c1        inCloud                 FALSE 2020-02-19 16:39:24
-#&gt; 47: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-19 16:39:24
-#&gt; 48: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-19 16:39:24
-#&gt; 49: f7bee22047b8d0c1 otherFunctions      build_site_local 2020-02-19 16:39:24
-#&gt; 50: f7bee22047b8d0c1 otherFunctions       build_reference 2020-02-19 16:39:24
-#&gt; 51: f7bee22047b8d0c1 otherFunctions  data_reference_topic 2020-02-19 16:39:24
-#&gt; 52: f7bee22047b8d0c1 otherFunctions          run_examples 2020-02-19 16:39:24
-#&gt; 53: f7bee22047b8d0c1 otherFunctions    highlight_examples 2020-02-19 16:39:24
-#&gt; 54: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-19 16:39:24
-#&gt; 55: f7bee22047b8d0c1 otherFunctions                handle 2020-02-19 16:39:24
-#&gt; 56: f7bee22047b8d0c1 otherFunctions                   try 2020-02-19 16:39:24
-#&gt; 57: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-19 16:39:24
-#&gt; 58: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-19 16:39:24
-#&gt; 59: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:24
-#&gt; 60: f7bee22047b8d0c1      file.size                   176 2020-02-19 16:39:24
-#&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'><span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"^a$"</span>)) <span class='co'># regular expression ... "a" exactly</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 252 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 252 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: f7bee22047b8d0c1     objectName                     a 2020-02-19 16:39:24
-#&gt;  2: f7bee22047b8d0c1       function                 rnorm 2020-02-19 16:39:24
-#&gt;  3: f7bee22047b8d0c1          class               numeric 2020-02-19 16:39:24
-#&gt;  4: f7bee22047b8d0c1    object.size                  1008 2020-02-19 16:39:24
-#&gt;  5: f7bee22047b8d0c1       accessed   2020-02-19 16:39:24 2020-02-19 16:39:24
-#&gt;  6: f7bee22047b8d0c1        inCloud                 FALSE 2020-02-19 16:39:24
-#&gt;  7: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-19 16:39:24
-#&gt;  8: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-19 16:39:24
-#&gt;  9: f7bee22047b8d0c1 otherFunctions      build_site_local 2020-02-19 16:39:24
-#&gt; 10: f7bee22047b8d0c1 otherFunctions       build_reference 2020-02-19 16:39:24
-#&gt; 11: f7bee22047b8d0c1 otherFunctions  data_reference_topic 2020-02-19 16:39:24
-#&gt; 12: f7bee22047b8d0c1 otherFunctions          run_examples 2020-02-19 16:39:24
-#&gt; 13: f7bee22047b8d0c1 otherFunctions    highlight_examples 2020-02-19 16:39:24
-#&gt; 14: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-19 16:39:24
-#&gt; 15: f7bee22047b8d0c1 otherFunctions                handle 2020-02-19 16:39:24
-#&gt; 16: f7bee22047b8d0c1 otherFunctions                   try 2020-02-19 16:39:24
-#&gt; 17: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-19 16:39:24
-#&gt; 18: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-19 16:39:24
-#&gt; 19: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:24
-#&gt; 20: f7bee22047b8d0c1      file.size                   176 2020-02-19 16:39:24</div><div class='input'>
+<span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"objectName"</span>))</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 828 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 828 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 3aef38d1fc02aee5          objectName                     b
+#&gt;  2: 3aef38d1fc02aee5            function                 runif
+#&gt;  3: 3aef38d1fc02aee5               class               numeric
+#&gt;  4: 3aef38d1fc02aee5         object.size                  1008
+#&gt;  5: 3aef38d1fc02aee5            accessed   2020-05-14 10:33:56
+#&gt;  6: 3aef38d1fc02aee5             inCloud                 FALSE
+#&gt;  7: 3aef38d1fc02aee5          resultHash                      
+#&gt;  8: 3aef38d1fc02aee5   elapsedTimeDigest     0.0005927086 secs
+#&gt;  9: 3aef38d1fc02aee5 elapsedTimeFirstRun     1.811981e-05 secs
+#&gt; 10: 3aef38d1fc02aee5      otherFunctions               saveRDS
+#&gt; 11: 3aef38d1fc02aee5      otherFunctions               do.call
+#&gt; 12: 3aef38d1fc02aee5      otherFunctions      build_site_local
+#&gt; 13: 3aef38d1fc02aee5      otherFunctions       build_reference
+#&gt; 14: 3aef38d1fc02aee5      otherFunctions  data_reference_topic
+#&gt; 15: 3aef38d1fc02aee5      otherFunctions          run_examples
+#&gt; 16: 3aef38d1fc02aee5      otherFunctions    highlight_examples
+#&gt; 17: 3aef38d1fc02aee5      otherFunctions             timing_fn
+#&gt; 18: 3aef38d1fc02aee5      otherFunctions                handle
+#&gt; 19: 3aef38d1fc02aee5      otherFunctions                   try
+#&gt; 20: 3aef38d1fc02aee5           preDigest    n:7eef4eae85fd9229
+#&gt; 21: 3aef38d1fc02aee5           preDigest .FUN:881ec847b7161f3c
+#&gt; 22: 3aef38d1fc02aee5           file.size                   166
+#&gt; 23: 7225b47fe5dc51d0          objectName                     b
+#&gt; 24: 7225b47fe5dc51d0            function                 runif
+#&gt; 25: 7225b47fe5dc51d0               class               numeric
+#&gt; 26: 7225b47fe5dc51d0         object.size                  1296
+#&gt; 27: 7225b47fe5dc51d0            accessed   2020-05-14 10:33:56
+#&gt; 28: 7225b47fe5dc51d0             inCloud                 FALSE
+#&gt; 29: 7225b47fe5dc51d0          resultHash                      
+#&gt; 30: 7225b47fe5dc51d0   elapsedTimeDigest     0.0006136894 secs
+#&gt; 31: 7225b47fe5dc51d0 elapsedTimeFirstRun      1.66893e-05 secs
+#&gt; 32: 7225b47fe5dc51d0      otherFunctions               saveRDS
+#&gt; 33: 7225b47fe5dc51d0      otherFunctions               do.call
+#&gt; 34: 7225b47fe5dc51d0      otherFunctions      build_site_local
+#&gt; 35: 7225b47fe5dc51d0      otherFunctions       build_reference
+#&gt; 36: 7225b47fe5dc51d0      otherFunctions  data_reference_topic
+#&gt; 37: 7225b47fe5dc51d0      otherFunctions          run_examples
+#&gt; 38: 7225b47fe5dc51d0      otherFunctions    highlight_examples
+#&gt; 39: 7225b47fe5dc51d0      otherFunctions             timing_fn
+#&gt; 40: 7225b47fe5dc51d0      otherFunctions                handle
+#&gt; 41: 7225b47fe5dc51d0      otherFunctions                   try
+#&gt; 42: 7225b47fe5dc51d0           preDigest    n:1393aef18608c8be
+#&gt; 43: 7225b47fe5dc51d0           preDigest .FUN:881ec847b7161f3c
+#&gt; 44: 7225b47fe5dc51d0           file.size                   394
+#&gt; 45: f7bee22047b8d0c1          objectName                     a
+#&gt; 46: f7bee22047b8d0c1            function                 rnorm
+#&gt; 47: f7bee22047b8d0c1               class               numeric
+#&gt; 48: f7bee22047b8d0c1         object.size                  1008
+#&gt; 49: f7bee22047b8d0c1            accessed   2020-05-14 10:33:55
+#&gt; 50: f7bee22047b8d0c1             inCloud                 FALSE
+#&gt; 51: f7bee22047b8d0c1          resultHash                      
+#&gt; 52: f7bee22047b8d0c1   elapsedTimeDigest     0.0007796288 secs
+#&gt; 53: f7bee22047b8d0c1 elapsedTimeFirstRun     1.716614e-05 secs
+#&gt; 54: f7bee22047b8d0c1      otherFunctions               saveRDS
+#&gt; 55: f7bee22047b8d0c1      otherFunctions               do.call
+#&gt; 56: f7bee22047b8d0c1      otherFunctions      build_site_local
+#&gt; 57: f7bee22047b8d0c1      otherFunctions       build_reference
+#&gt; 58: f7bee22047b8d0c1      otherFunctions  data_reference_topic
+#&gt; 59: f7bee22047b8d0c1      otherFunctions          run_examples
+#&gt; 60: f7bee22047b8d0c1      otherFunctions    highlight_examples
+#&gt; 61: f7bee22047b8d0c1      otherFunctions             timing_fn
+#&gt; 62: f7bee22047b8d0c1      otherFunctions                handle
+#&gt; 63: f7bee22047b8d0c1      otherFunctions                   try
+#&gt; 64: f7bee22047b8d0c1           preDigest    n:7eef4eae85fd9229
+#&gt; 65: f7bee22047b8d0c1           preDigest .FUN:4f604aa46882b368
+#&gt; 66: f7bee22047b8d0c1           file.size                   173
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-05-14 10:33:56
+#&gt;  2: 2020-05-14 10:33:56
+#&gt;  3: 2020-05-14 10:33:56
+#&gt;  4: 2020-05-14 10:33:56
+#&gt;  5: 2020-05-14 10:33:56
+#&gt;  6: 2020-05-14 10:33:56
+#&gt;  7: 2020-05-14 10:33:56
+#&gt;  8: 2020-05-14 10:33:56
+#&gt;  9: 2020-05-14 10:33:56
+#&gt; 10: 2020-05-14 10:33:56
+#&gt; 11: 2020-05-14 10:33:56
+#&gt; 12: 2020-05-14 10:33:56
+#&gt; 13: 2020-05-14 10:33:56
+#&gt; 14: 2020-05-14 10:33:56
+#&gt; 15: 2020-05-14 10:33:56
+#&gt; 16: 2020-05-14 10:33:56
+#&gt; 17: 2020-05-14 10:33:56
+#&gt; 18: 2020-05-14 10:33:56
+#&gt; 19: 2020-05-14 10:33:56
+#&gt; 20: 2020-05-14 10:33:56
+#&gt; 21: 2020-05-14 10:33:56
+#&gt; 22: 2020-05-14 10:33:56
+#&gt; 23: 2020-05-14 10:33:56
+#&gt; 24: 2020-05-14 10:33:56
+#&gt; 25: 2020-05-14 10:33:56
+#&gt; 26: 2020-05-14 10:33:56
+#&gt; 27: 2020-05-14 10:33:56
+#&gt; 28: 2020-05-14 10:33:56
+#&gt; 29: 2020-05-14 10:33:56
+#&gt; 30: 2020-05-14 10:33:56
+#&gt; 31: 2020-05-14 10:33:56
+#&gt; 32: 2020-05-14 10:33:56
+#&gt; 33: 2020-05-14 10:33:56
+#&gt; 34: 2020-05-14 10:33:56
+#&gt; 35: 2020-05-14 10:33:56
+#&gt; 36: 2020-05-14 10:33:56
+#&gt; 37: 2020-05-14 10:33:56
+#&gt; 38: 2020-05-14 10:33:56
+#&gt; 39: 2020-05-14 10:33:56
+#&gt; 40: 2020-05-14 10:33:56
+#&gt; 41: 2020-05-14 10:33:56
+#&gt; 42: 2020-05-14 10:33:56
+#&gt; 43: 2020-05-14 10:33:56
+#&gt; 44: 2020-05-14 10:33:56
+#&gt; 45: 2020-05-14 10:33:55
+#&gt; 46: 2020-05-14 10:33:55
+#&gt; 47: 2020-05-14 10:33:55
+#&gt; 48: 2020-05-14 10:33:55
+#&gt; 49: 2020-05-14 10:33:55
+#&gt; 50: 2020-05-14 10:33:55
+#&gt; 51: 2020-05-14 10:33:55
+#&gt; 52: 2020-05-14 10:33:55
+#&gt; 53: 2020-05-14 10:33:55
+#&gt; 54: 2020-05-14 10:33:55
+#&gt; 55: 2020-05-14 10:33:55
+#&gt; 56: 2020-05-14 10:33:55
+#&gt; 57: 2020-05-14 10:33:55
+#&gt; 58: 2020-05-14 10:33:55
+#&gt; 59: 2020-05-14 10:33:55
+#&gt; 60: 2020-05-14 10:33:55
+#&gt; 61: 2020-05-14 10:33:55
+#&gt; 62: 2020-05-14 10:33:55
+#&gt; 63: 2020-05-14 10:33:55
+#&gt; 64: 2020-05-14 10:33:55
+#&gt; 65: 2020-05-14 10:33:55
+#&gt; 66: 2020-05-14 10:33:55
+#&gt;             createdDate</div><div class='input'><span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"^a$"</span>)) <span class='co'># regular expression ... "a" exactly</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 252 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 252 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: f7bee22047b8d0c1          objectName                     a
+#&gt;  2: f7bee22047b8d0c1            function                 rnorm
+#&gt;  3: f7bee22047b8d0c1               class               numeric
+#&gt;  4: f7bee22047b8d0c1         object.size                  1008
+#&gt;  5: f7bee22047b8d0c1            accessed   2020-05-14 10:33:55
+#&gt;  6: f7bee22047b8d0c1             inCloud                 FALSE
+#&gt;  7: f7bee22047b8d0c1          resultHash                      
+#&gt;  8: f7bee22047b8d0c1   elapsedTimeDigest     0.0007796288 secs
+#&gt;  9: f7bee22047b8d0c1 elapsedTimeFirstRun     1.716614e-05 secs
+#&gt; 10: f7bee22047b8d0c1      otherFunctions               saveRDS
+#&gt; 11: f7bee22047b8d0c1      otherFunctions               do.call
+#&gt; 12: f7bee22047b8d0c1      otherFunctions      build_site_local
+#&gt; 13: f7bee22047b8d0c1      otherFunctions       build_reference
+#&gt; 14: f7bee22047b8d0c1      otherFunctions  data_reference_topic
+#&gt; 15: f7bee22047b8d0c1      otherFunctions          run_examples
+#&gt; 16: f7bee22047b8d0c1      otherFunctions    highlight_examples
+#&gt; 17: f7bee22047b8d0c1      otherFunctions             timing_fn
+#&gt; 18: f7bee22047b8d0c1      otherFunctions                handle
+#&gt; 19: f7bee22047b8d0c1      otherFunctions                   try
+#&gt; 20: f7bee22047b8d0c1           preDigest    n:7eef4eae85fd9229
+#&gt; 21: f7bee22047b8d0c1           preDigest .FUN:4f604aa46882b368
+#&gt; 22: f7bee22047b8d0c1           file.size                   173
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-05-14 10:33:55
+#&gt;  2: 2020-05-14 10:33:55
+#&gt;  3: 2020-05-14 10:33:55
+#&gt;  4: 2020-05-14 10:33:55
+#&gt;  5: 2020-05-14 10:33:55
+#&gt;  6: 2020-05-14 10:33:55
+#&gt;  7: 2020-05-14 10:33:55
+#&gt;  8: 2020-05-14 10:33:55
+#&gt;  9: 2020-05-14 10:33:55
+#&gt; 10: 2020-05-14 10:33:55
+#&gt; 11: 2020-05-14 10:33:55
+#&gt; 12: 2020-05-14 10:33:55
+#&gt; 13: 2020-05-14 10:33:55
+#&gt; 14: 2020-05-14 10:33:55
+#&gt; 15: 2020-05-14 10:33:55
+#&gt; 16: 2020-05-14 10:33:55
+#&gt; 17: 2020-05-14 10:33:55
+#&gt; 18: 2020-05-14 10:33:55
+#&gt; 19: 2020-05-14 10:33:55
+#&gt; 20: 2020-05-14 10:33:55
+#&gt; 21: 2020-05-14 10:33:55
+#&gt; 22: 2020-05-14 10:33:55
+#&gt;             createdDate</div><div class='input'>
 <span class='co'># Fine control of cache elements -- pick out only the large runif object, and remove it</span>
 <span class='no'>cache1</span> <span class='kw'>&lt;-</span> <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"runif"</span>)) <span class='co'># show only cached objects made during runif</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 576 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 576 bytes</span></div><div class='input'><span class='no'>toRemove</span> <span class='kw'>&lt;-</span> <span class='no'>cache1</span>[<span class='no'>tagKey</span> <span class='kw'>==</span> <span class='st'>"object.size"</span>][<span class='fu'><a href='https://rdrr.io/r/base/numeric.html'>as.numeric</a></span>(<span class='no'>tagValue</span>) <span class='kw'>&gt;</span> <span class='fl'>700</span>]$<span class='no'>cacheId</span>
 <span class='fu'>clearCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>toRemove</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 0 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 0 bytes</span></div><div class='input'><span class='no'>cacheAfter</span> <span class='kw'>&lt;-</span> <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"runif"</span>)) <span class='co'># Only the small one is left</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 576 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 576 bytes</span></div><div class='input'>
 <span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"Cache"</span>)
 <span class='fu'><a href='https://rdrr.io/r/base/try.html'>try</a></span>(<span class='fu'>clearCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>), <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># just to make sure it is clear</span>
 
-<span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] -0.8554131
+<span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] 1.251884
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -451,7 +553,7 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 #&gt; [1] "cacheId:7072c305d8c69df0"
 #&gt; attr(,"call")
 #&gt; [1] ""</div><div class='input'><span class='no'>thisTime</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time</a></span>()
-<span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>2</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] -0.1449016 -0.3244470
+<span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>2</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1]  0.2503195 -1.7055817
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -459,7 +561,7 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:3b347dee8f6305c7"
 #&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'><span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>3</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] -0.1725649 -1.2360629 -1.9023042
+#&gt; [1] ""</div><div class='input'><span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>3</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] -0.8554131 -0.1449016 -0.3244470
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -467,7 +569,7 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:f0da91a44b839434"
 #&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'><span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] -0.09450402  0.03255579  0.46129012  1.38140030
+#&gt; [1] ""</div><div class='input'><span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] -0.17256490 -1.23606292 -1.90230421 -0.09450402
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -475,193 +577,441 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:f7bee22047b8d0c1"
 #&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># shows all 4 entries</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 998 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 998 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 7072c305d8c69df0       function                 rnorm 2020-02-19 16:39:25
-#&gt;  2: 7072c305d8c69df0          class               numeric 2020-02-19 16:39:25
-#&gt;  3: 7072c305d8c69df0    object.size                   984 2020-02-19 16:39:25
-#&gt;  4: 7072c305d8c69df0       accessed   2020-02-19 16:39:25 2020-02-19 16:39:25
-#&gt;  5: 7072c305d8c69df0        inCloud                 FALSE 2020-02-19 16:39:25
-#&gt;  6: 7072c305d8c69df0 otherFunctions               saveRDS 2020-02-19 16:39:25
-#&gt;  7: 7072c305d8c69df0 otherFunctions               do.call 2020-02-19 16:39:25
-#&gt;  8: 7072c305d8c69df0 otherFunctions      build_site_local 2020-02-19 16:39:25
-#&gt;  9: 7072c305d8c69df0 otherFunctions       build_reference 2020-02-19 16:39:25
-#&gt; 10: 7072c305d8c69df0 otherFunctions  data_reference_topic 2020-02-19 16:39:25
-#&gt; 11: 7072c305d8c69df0 otherFunctions          run_examples 2020-02-19 16:39:25
-#&gt; 12: 7072c305d8c69df0 otherFunctions    highlight_examples 2020-02-19 16:39:25
-#&gt; 13: 7072c305d8c69df0 otherFunctions             timing_fn 2020-02-19 16:39:25
-#&gt; 14: 7072c305d8c69df0 otherFunctions                handle 2020-02-19 16:39:25
-#&gt; 15: 7072c305d8c69df0 otherFunctions                   try 2020-02-19 16:39:25
-#&gt; 16: 7072c305d8c69df0 otherFunctions           withVisible 2020-02-19 16:39:25
-#&gt; 17: 7072c305d8c69df0      preDigest    n:853b1797f54b229c 2020-02-19 16:39:25
-#&gt; 18: 7072c305d8c69df0      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:25
-#&gt; 19: 7072c305d8c69df0      file.size                   149 2020-02-19 16:39:25
-#&gt; 20: 3b347dee8f6305c7       function                 rnorm 2020-02-19 16:39:25
-#&gt; 21: 3b347dee8f6305c7          class               numeric 2020-02-19 16:39:25
-#&gt; 22: 3b347dee8f6305c7    object.size                   992 2020-02-19 16:39:25
-#&gt; 23: 3b347dee8f6305c7       accessed   2020-02-19 16:39:25 2020-02-19 16:39:25
-#&gt; 24: 3b347dee8f6305c7        inCloud                 FALSE 2020-02-19 16:39:25
-#&gt; 25: 3b347dee8f6305c7 otherFunctions               saveRDS 2020-02-19 16:39:25
-#&gt; 26: 3b347dee8f6305c7 otherFunctions               do.call 2020-02-19 16:39:25
-#&gt; 27: 3b347dee8f6305c7 otherFunctions      build_site_local 2020-02-19 16:39:25
-#&gt; 28: 3b347dee8f6305c7 otherFunctions       build_reference 2020-02-19 16:39:25
-#&gt; 29: 3b347dee8f6305c7 otherFunctions  data_reference_topic 2020-02-19 16:39:25
-#&gt; 30: 3b347dee8f6305c7 otherFunctions          run_examples 2020-02-19 16:39:25
-#&gt; 31: 3b347dee8f6305c7 otherFunctions    highlight_examples 2020-02-19 16:39:25
-#&gt; 32: 3b347dee8f6305c7 otherFunctions             timing_fn 2020-02-19 16:39:25
-#&gt; 33: 3b347dee8f6305c7 otherFunctions                handle 2020-02-19 16:39:25
-#&gt; 34: 3b347dee8f6305c7 otherFunctions                   try 2020-02-19 16:39:25
-#&gt; 35: 3b347dee8f6305c7 otherFunctions           withVisible 2020-02-19 16:39:25
-#&gt; 36: 3b347dee8f6305c7      preDigest    n:82dc709f2b91918a 2020-02-19 16:39:25
-#&gt; 37: 3b347dee8f6305c7      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:25
-#&gt; 38: 3b347dee8f6305c7      file.size                   159 2020-02-19 16:39:25
-#&gt; 39: f0da91a44b839434       function                 rnorm 2020-02-19 16:39:26
-#&gt; 40: f0da91a44b839434          class               numeric 2020-02-19 16:39:26
-#&gt; 41: f0da91a44b839434    object.size                  1008 2020-02-19 16:39:26
-#&gt; 42: f0da91a44b839434       accessed   2020-02-19 16:39:26 2020-02-19 16:39:26
-#&gt; 43: f0da91a44b839434        inCloud                 FALSE 2020-02-19 16:39:26
-#&gt; 44: f0da91a44b839434 otherFunctions               saveRDS 2020-02-19 16:39:26
-#&gt; 45: f0da91a44b839434 otherFunctions               do.call 2020-02-19 16:39:26
-#&gt; 46: f0da91a44b839434 otherFunctions      build_site_local 2020-02-19 16:39:26
-#&gt; 47: f0da91a44b839434 otherFunctions       build_reference 2020-02-19 16:39:26
-#&gt; 48: f0da91a44b839434 otherFunctions  data_reference_topic 2020-02-19 16:39:26
-#&gt; 49: f0da91a44b839434 otherFunctions          run_examples 2020-02-19 16:39:26
-#&gt; 50: f0da91a44b839434 otherFunctions    highlight_examples 2020-02-19 16:39:26
-#&gt; 51: f0da91a44b839434 otherFunctions             timing_fn 2020-02-19 16:39:26
-#&gt; 52: f0da91a44b839434 otherFunctions                handle 2020-02-19 16:39:26
-#&gt; 53: f0da91a44b839434 otherFunctions                   try 2020-02-19 16:39:26
-#&gt; 54: f0da91a44b839434 otherFunctions           withVisible 2020-02-19 16:39:26
-#&gt; 55: f0da91a44b839434      preDigest    n:7f12988bd88a0fb8 2020-02-19 16:39:26
-#&gt; 56: f0da91a44b839434      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:26
-#&gt; 57: f0da91a44b839434      file.size                   167 2020-02-19 16:39:26
-#&gt; 58: f7bee22047b8d0c1       function                 rnorm 2020-02-19 16:39:27
-#&gt; 59: f7bee22047b8d0c1          class               numeric 2020-02-19 16:39:27
-#&gt; 60: f7bee22047b8d0c1    object.size                  1008 2020-02-19 16:39:27
-#&gt; 61: f7bee22047b8d0c1       accessed   2020-02-19 16:39:27 2020-02-19 16:39:27
-#&gt; 62: f7bee22047b8d0c1        inCloud                 FALSE 2020-02-19 16:39:27
-#&gt; 63: f7bee22047b8d0c1 otherFunctions               saveRDS 2020-02-19 16:39:27
-#&gt; 64: f7bee22047b8d0c1 otherFunctions               do.call 2020-02-19 16:39:27
-#&gt; 65: f7bee22047b8d0c1 otherFunctions      build_site_local 2020-02-19 16:39:27
-#&gt; 66: f7bee22047b8d0c1 otherFunctions       build_reference 2020-02-19 16:39:27
-#&gt; 67: f7bee22047b8d0c1 otherFunctions  data_reference_topic 2020-02-19 16:39:27
-#&gt; 68: f7bee22047b8d0c1 otherFunctions          run_examples 2020-02-19 16:39:27
-#&gt; 69: f7bee22047b8d0c1 otherFunctions    highlight_examples 2020-02-19 16:39:27
-#&gt; 70: f7bee22047b8d0c1 otherFunctions             timing_fn 2020-02-19 16:39:27
-#&gt; 71: f7bee22047b8d0c1 otherFunctions                handle 2020-02-19 16:39:27
-#&gt; 72: f7bee22047b8d0c1 otherFunctions                   try 2020-02-19 16:39:27
-#&gt; 73: f7bee22047b8d0c1 otherFunctions           withVisible 2020-02-19 16:39:27
-#&gt; 74: f7bee22047b8d0c1      preDigest    n:7eef4eae85fd9229 2020-02-19 16:39:27
-#&gt; 75: f7bee22047b8d0c1      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:27
-#&gt; 76: f7bee22047b8d0c1      file.size                   175 2020-02-19 16:39:27
-#&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>No time provided; removing the most recent entry to the Cache</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 252 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 252 bytes</span></div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># most recent is gone</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 746 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 746 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 7072c305d8c69df0       function                 rnorm 2020-02-19 16:39:25
-#&gt;  2: 7072c305d8c69df0          class               numeric 2020-02-19 16:39:25
-#&gt;  3: 7072c305d8c69df0    object.size                   984 2020-02-19 16:39:25
-#&gt;  4: 7072c305d8c69df0       accessed   2020-02-19 16:39:25 2020-02-19 16:39:25
-#&gt;  5: 7072c305d8c69df0        inCloud                 FALSE 2020-02-19 16:39:25
-#&gt;  6: 7072c305d8c69df0 otherFunctions               saveRDS 2020-02-19 16:39:25
-#&gt;  7: 7072c305d8c69df0 otherFunctions               do.call 2020-02-19 16:39:25
-#&gt;  8: 7072c305d8c69df0 otherFunctions      build_site_local 2020-02-19 16:39:25
-#&gt;  9: 7072c305d8c69df0 otherFunctions       build_reference 2020-02-19 16:39:25
-#&gt; 10: 7072c305d8c69df0 otherFunctions  data_reference_topic 2020-02-19 16:39:25
-#&gt; 11: 7072c305d8c69df0 otherFunctions          run_examples 2020-02-19 16:39:25
-#&gt; 12: 7072c305d8c69df0 otherFunctions    highlight_examples 2020-02-19 16:39:25
-#&gt; 13: 7072c305d8c69df0 otherFunctions             timing_fn 2020-02-19 16:39:25
-#&gt; 14: 7072c305d8c69df0 otherFunctions                handle 2020-02-19 16:39:25
-#&gt; 15: 7072c305d8c69df0 otherFunctions                   try 2020-02-19 16:39:25
-#&gt; 16: 7072c305d8c69df0 otherFunctions           withVisible 2020-02-19 16:39:25
-#&gt; 17: 7072c305d8c69df0      preDigest    n:853b1797f54b229c 2020-02-19 16:39:25
-#&gt; 18: 7072c305d8c69df0      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:25
-#&gt; 19: 7072c305d8c69df0      file.size                   149 2020-02-19 16:39:25
-#&gt; 20: 3b347dee8f6305c7       function                 rnorm 2020-02-19 16:39:25
-#&gt; 21: 3b347dee8f6305c7          class               numeric 2020-02-19 16:39:25
-#&gt; 22: 3b347dee8f6305c7    object.size                   992 2020-02-19 16:39:25
-#&gt; 23: 3b347dee8f6305c7       accessed   2020-02-19 16:39:25 2020-02-19 16:39:25
-#&gt; 24: 3b347dee8f6305c7        inCloud                 FALSE 2020-02-19 16:39:25
-#&gt; 25: 3b347dee8f6305c7 otherFunctions               saveRDS 2020-02-19 16:39:25
-#&gt; 26: 3b347dee8f6305c7 otherFunctions               do.call 2020-02-19 16:39:25
-#&gt; 27: 3b347dee8f6305c7 otherFunctions      build_site_local 2020-02-19 16:39:25
-#&gt; 28: 3b347dee8f6305c7 otherFunctions       build_reference 2020-02-19 16:39:25
-#&gt; 29: 3b347dee8f6305c7 otherFunctions  data_reference_topic 2020-02-19 16:39:25
-#&gt; 30: 3b347dee8f6305c7 otherFunctions          run_examples 2020-02-19 16:39:25
-#&gt; 31: 3b347dee8f6305c7 otherFunctions    highlight_examples 2020-02-19 16:39:25
-#&gt; 32: 3b347dee8f6305c7 otherFunctions             timing_fn 2020-02-19 16:39:25
-#&gt; 33: 3b347dee8f6305c7 otherFunctions                handle 2020-02-19 16:39:25
-#&gt; 34: 3b347dee8f6305c7 otherFunctions                   try 2020-02-19 16:39:25
-#&gt; 35: 3b347dee8f6305c7 otherFunctions           withVisible 2020-02-19 16:39:25
-#&gt; 36: 3b347dee8f6305c7      preDigest    n:82dc709f2b91918a 2020-02-19 16:39:25
-#&gt; 37: 3b347dee8f6305c7      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:25
-#&gt; 38: 3b347dee8f6305c7      file.size                   159 2020-02-19 16:39:25
-#&gt; 39: f0da91a44b839434       function                 rnorm 2020-02-19 16:39:26
-#&gt; 40: f0da91a44b839434          class               numeric 2020-02-19 16:39:26
-#&gt; 41: f0da91a44b839434    object.size                  1008 2020-02-19 16:39:26
-#&gt; 42: f0da91a44b839434       accessed   2020-02-19 16:39:26 2020-02-19 16:39:26
-#&gt; 43: f0da91a44b839434        inCloud                 FALSE 2020-02-19 16:39:26
-#&gt; 44: f0da91a44b839434 otherFunctions               saveRDS 2020-02-19 16:39:26
-#&gt; 45: f0da91a44b839434 otherFunctions               do.call 2020-02-19 16:39:26
-#&gt; 46: f0da91a44b839434 otherFunctions      build_site_local 2020-02-19 16:39:26
-#&gt; 47: f0da91a44b839434 otherFunctions       build_reference 2020-02-19 16:39:26
-#&gt; 48: f0da91a44b839434 otherFunctions  data_reference_topic 2020-02-19 16:39:26
-#&gt; 49: f0da91a44b839434 otherFunctions          run_examples 2020-02-19 16:39:26
-#&gt; 50: f0da91a44b839434 otherFunctions    highlight_examples 2020-02-19 16:39:26
-#&gt; 51: f0da91a44b839434 otherFunctions             timing_fn 2020-02-19 16:39:26
-#&gt; 52: f0da91a44b839434 otherFunctions                handle 2020-02-19 16:39:26
-#&gt; 53: f0da91a44b839434 otherFunctions                   try 2020-02-19 16:39:26
-#&gt; 54: f0da91a44b839434 otherFunctions           withVisible 2020-02-19 16:39:26
-#&gt; 55: f0da91a44b839434      preDigest    n:7f12988bd88a0fb8 2020-02-19 16:39:26
-#&gt; 56: f0da91a44b839434      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:26
-#&gt; 57: f0da91a44b839434      file.size                   167 2020-02-19 16:39:26
-#&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='no'>thisTime</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 252 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 252 bytes</span></div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># all those after thisTime gone, i.e., only 1 left</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 494 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 494 bytes</span></div><div class='output co'>#&gt;              cacheId         tagKey              tagValue         createdDate
-#&gt;  1: 7072c305d8c69df0       function                 rnorm 2020-02-19 16:39:25
-#&gt;  2: 7072c305d8c69df0          class               numeric 2020-02-19 16:39:25
-#&gt;  3: 7072c305d8c69df0    object.size                   984 2020-02-19 16:39:25
-#&gt;  4: 7072c305d8c69df0       accessed   2020-02-19 16:39:25 2020-02-19 16:39:25
-#&gt;  5: 7072c305d8c69df0        inCloud                 FALSE 2020-02-19 16:39:25
-#&gt;  6: 7072c305d8c69df0 otherFunctions               saveRDS 2020-02-19 16:39:25
-#&gt;  7: 7072c305d8c69df0 otherFunctions               do.call 2020-02-19 16:39:25
-#&gt;  8: 7072c305d8c69df0 otherFunctions      build_site_local 2020-02-19 16:39:25
-#&gt;  9: 7072c305d8c69df0 otherFunctions       build_reference 2020-02-19 16:39:25
-#&gt; 10: 7072c305d8c69df0 otherFunctions  data_reference_topic 2020-02-19 16:39:25
-#&gt; 11: 7072c305d8c69df0 otherFunctions          run_examples 2020-02-19 16:39:25
-#&gt; 12: 7072c305d8c69df0 otherFunctions    highlight_examples 2020-02-19 16:39:25
-#&gt; 13: 7072c305d8c69df0 otherFunctions             timing_fn 2020-02-19 16:39:25
-#&gt; 14: 7072c305d8c69df0 otherFunctions                handle 2020-02-19 16:39:25
-#&gt; 15: 7072c305d8c69df0 otherFunctions                   try 2020-02-19 16:39:25
-#&gt; 16: 7072c305d8c69df0 otherFunctions           withVisible 2020-02-19 16:39:25
-#&gt; 17: 7072c305d8c69df0      preDigest    n:853b1797f54b229c 2020-02-19 16:39:25
-#&gt; 18: 7072c305d8c69df0      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:25
-#&gt; 19: 7072c305d8c69df0      file.size                   149 2020-02-19 16:39:25
-#&gt; 20: 3b347dee8f6305c7       function                 rnorm 2020-02-19 16:39:25
-#&gt; 21: 3b347dee8f6305c7          class               numeric 2020-02-19 16:39:25
-#&gt; 22: 3b347dee8f6305c7    object.size                   992 2020-02-19 16:39:25
-#&gt; 23: 3b347dee8f6305c7       accessed   2020-02-19 16:39:25 2020-02-19 16:39:25
-#&gt; 24: 3b347dee8f6305c7        inCloud                 FALSE 2020-02-19 16:39:25
-#&gt; 25: 3b347dee8f6305c7 otherFunctions               saveRDS 2020-02-19 16:39:25
-#&gt; 26: 3b347dee8f6305c7 otherFunctions               do.call 2020-02-19 16:39:25
-#&gt; 27: 3b347dee8f6305c7 otherFunctions      build_site_local 2020-02-19 16:39:25
-#&gt; 28: 3b347dee8f6305c7 otherFunctions       build_reference 2020-02-19 16:39:25
-#&gt; 29: 3b347dee8f6305c7 otherFunctions  data_reference_topic 2020-02-19 16:39:25
-#&gt; 30: 3b347dee8f6305c7 otherFunctions          run_examples 2020-02-19 16:39:25
-#&gt; 31: 3b347dee8f6305c7 otherFunctions    highlight_examples 2020-02-19 16:39:25
-#&gt; 32: 3b347dee8f6305c7 otherFunctions             timing_fn 2020-02-19 16:39:25
-#&gt; 33: 3b347dee8f6305c7 otherFunctions                handle 2020-02-19 16:39:25
-#&gt; 34: 3b347dee8f6305c7 otherFunctions                   try 2020-02-19 16:39:25
-#&gt; 35: 3b347dee8f6305c7 otherFunctions           withVisible 2020-02-19 16:39:25
-#&gt; 36: 3b347dee8f6305c7      preDigest    n:82dc709f2b91918a 2020-02-19 16:39:25
-#&gt; 37: 3b347dee8f6305c7      preDigest .FUN:4f604aa46882b368 2020-02-19 16:39:25
-#&gt; 38: 3b347dee8f6305c7      file.size                   159 2020-02-19 16:39:25
-#&gt;              cacheId         tagKey              tagValue         createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># Cache is</span></div><div class='output co'>#&gt; <span class='message'>No time provided; removing the most recent entry to the Cache</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 248 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 248 bytes</span></div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># Cache is already empty</span></div><div class='output co'>#&gt; <span class='message'>No time provided; removing the most recent entry to the Cache</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div></span></pre>
+#&gt; [1] ""</div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># shows all 4 entries</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 998 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 998 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 7072c305d8c69df0            function                 rnorm
+#&gt;  2: 7072c305d8c69df0               class               numeric
+#&gt;  3: 7072c305d8c69df0         object.size                   984
+#&gt;  4: 7072c305d8c69df0            accessed   2020-05-14 10:33:57
+#&gt;  5: 7072c305d8c69df0             inCloud                 FALSE
+#&gt;  6: 7072c305d8c69df0          resultHash                      
+#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest     0.0009357929 secs
+#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun     1.645088e-05 secs
+#&gt;  9: 7072c305d8c69df0      otherFunctions               saveRDS
+#&gt; 10: 7072c305d8c69df0      otherFunctions               do.call
+#&gt; 11: 7072c305d8c69df0      otherFunctions      build_site_local
+#&gt; 12: 7072c305d8c69df0      otherFunctions       build_reference
+#&gt; 13: 7072c305d8c69df0      otherFunctions  data_reference_topic
+#&gt; 14: 7072c305d8c69df0      otherFunctions          run_examples
+#&gt; 15: 7072c305d8c69df0      otherFunctions    highlight_examples
+#&gt; 16: 7072c305d8c69df0      otherFunctions             timing_fn
+#&gt; 17: 7072c305d8c69df0      otherFunctions                handle
+#&gt; 18: 7072c305d8c69df0      otherFunctions                   try
+#&gt; 19: 7072c305d8c69df0           preDigest    n:853b1797f54b229c
+#&gt; 20: 7072c305d8c69df0           preDigest .FUN:4f604aa46882b368
+#&gt; 21: 7072c305d8c69df0           file.size                   147
+#&gt; 22: 3b347dee8f6305c7            function                 rnorm
+#&gt; 23: 3b347dee8f6305c7               class               numeric
+#&gt; 24: 3b347dee8f6305c7         object.size                   992
+#&gt; 25: 3b347dee8f6305c7            accessed   2020-05-14 10:33:57
+#&gt; 26: 3b347dee8f6305c7             inCloud                 FALSE
+#&gt; 27: 3b347dee8f6305c7          resultHash                      
+#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest     0.0005972385 secs
+#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun     1.907349e-05 secs
+#&gt; 30: 3b347dee8f6305c7      otherFunctions               saveRDS
+#&gt; 31: 3b347dee8f6305c7      otherFunctions               do.call
+#&gt; 32: 3b347dee8f6305c7      otherFunctions      build_site_local
+#&gt; 33: 3b347dee8f6305c7      otherFunctions       build_reference
+#&gt; 34: 3b347dee8f6305c7      otherFunctions  data_reference_topic
+#&gt; 35: 3b347dee8f6305c7      otherFunctions          run_examples
+#&gt; 36: 3b347dee8f6305c7      otherFunctions    highlight_examples
+#&gt; 37: 3b347dee8f6305c7      otherFunctions             timing_fn
+#&gt; 38: 3b347dee8f6305c7      otherFunctions                handle
+#&gt; 39: 3b347dee8f6305c7      otherFunctions                   try
+#&gt; 40: 3b347dee8f6305c7           preDigest    n:82dc709f2b91918a
+#&gt; 41: 3b347dee8f6305c7           preDigest .FUN:4f604aa46882b368
+#&gt; 42: 3b347dee8f6305c7           file.size                   157
+#&gt; 43: f0da91a44b839434            function                 rnorm
+#&gt; 44: f0da91a44b839434               class               numeric
+#&gt; 45: f0da91a44b839434         object.size                  1008
+#&gt; 46: f0da91a44b839434            accessed   2020-05-14 10:33:57
+#&gt; 47: f0da91a44b839434             inCloud                 FALSE
+#&gt; 48: f0da91a44b839434          resultHash                      
+#&gt; 49: f0da91a44b839434   elapsedTimeDigest     0.0008563995 secs
+#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun     1.621246e-05 secs
+#&gt; 51: f0da91a44b839434      otherFunctions               saveRDS
+#&gt; 52: f0da91a44b839434      otherFunctions               do.call
+#&gt; 53: f0da91a44b839434      otherFunctions      build_site_local
+#&gt; 54: f0da91a44b839434      otherFunctions       build_reference
+#&gt; 55: f0da91a44b839434      otherFunctions  data_reference_topic
+#&gt; 56: f0da91a44b839434      otherFunctions          run_examples
+#&gt; 57: f0da91a44b839434      otherFunctions    highlight_examples
+#&gt; 58: f0da91a44b839434      otherFunctions             timing_fn
+#&gt; 59: f0da91a44b839434      otherFunctions                handle
+#&gt; 60: f0da91a44b839434      otherFunctions                   try
+#&gt; 61: f0da91a44b839434           preDigest    n:7f12988bd88a0fb8
+#&gt; 62: f0da91a44b839434           preDigest .FUN:4f604aa46882b368
+#&gt; 63: f0da91a44b839434           file.size                   165
+#&gt; 64: f7bee22047b8d0c1            function                 rnorm
+#&gt; 65: f7bee22047b8d0c1               class               numeric
+#&gt; 66: f7bee22047b8d0c1         object.size                  1008
+#&gt; 67: f7bee22047b8d0c1            accessed   2020-05-14 10:33:57
+#&gt; 68: f7bee22047b8d0c1             inCloud                 FALSE
+#&gt; 69: f7bee22047b8d0c1          resultHash                      
+#&gt; 70: f7bee22047b8d0c1   elapsedTimeDigest     0.0008928776 secs
+#&gt; 71: f7bee22047b8d0c1 elapsedTimeFirstRun       2.0504e-05 secs
+#&gt; 72: f7bee22047b8d0c1      otherFunctions               saveRDS
+#&gt; 73: f7bee22047b8d0c1      otherFunctions               do.call
+#&gt; 74: f7bee22047b8d0c1      otherFunctions      build_site_local
+#&gt; 75: f7bee22047b8d0c1      otherFunctions       build_reference
+#&gt; 76: f7bee22047b8d0c1      otherFunctions  data_reference_topic
+#&gt; 77: f7bee22047b8d0c1      otherFunctions          run_examples
+#&gt; 78: f7bee22047b8d0c1      otherFunctions    highlight_examples
+#&gt; 79: f7bee22047b8d0c1      otherFunctions             timing_fn
+#&gt; 80: f7bee22047b8d0c1      otherFunctions                handle
+#&gt; 81: f7bee22047b8d0c1      otherFunctions                   try
+#&gt; 82: f7bee22047b8d0c1           preDigest    n:7eef4eae85fd9229
+#&gt; 83: f7bee22047b8d0c1           preDigest .FUN:4f604aa46882b368
+#&gt; 84: f7bee22047b8d0c1           file.size                   174
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-05-14 10:33:57
+#&gt;  2: 2020-05-14 10:33:57
+#&gt;  3: 2020-05-14 10:33:57
+#&gt;  4: 2020-05-14 10:33:57
+#&gt;  5: 2020-05-14 10:33:57
+#&gt;  6: 2020-05-14 10:33:57
+#&gt;  7: 2020-05-14 10:33:57
+#&gt;  8: 2020-05-14 10:33:57
+#&gt;  9: 2020-05-14 10:33:57
+#&gt; 10: 2020-05-14 10:33:57
+#&gt; 11: 2020-05-14 10:33:57
+#&gt; 12: 2020-05-14 10:33:57
+#&gt; 13: 2020-05-14 10:33:57
+#&gt; 14: 2020-05-14 10:33:57
+#&gt; 15: 2020-05-14 10:33:57
+#&gt; 16: 2020-05-14 10:33:57
+#&gt; 17: 2020-05-14 10:33:57
+#&gt; 18: 2020-05-14 10:33:57
+#&gt; 19: 2020-05-14 10:33:57
+#&gt; 20: 2020-05-14 10:33:57
+#&gt; 21: 2020-05-14 10:33:57
+#&gt; 22: 2020-05-14 10:33:57
+#&gt; 23: 2020-05-14 10:33:57
+#&gt; 24: 2020-05-14 10:33:57
+#&gt; 25: 2020-05-14 10:33:57
+#&gt; 26: 2020-05-14 10:33:57
+#&gt; 27: 2020-05-14 10:33:57
+#&gt; 28: 2020-05-14 10:33:57
+#&gt; 29: 2020-05-14 10:33:57
+#&gt; 30: 2020-05-14 10:33:57
+#&gt; 31: 2020-05-14 10:33:57
+#&gt; 32: 2020-05-14 10:33:57
+#&gt; 33: 2020-05-14 10:33:57
+#&gt; 34: 2020-05-14 10:33:57
+#&gt; 35: 2020-05-14 10:33:57
+#&gt; 36: 2020-05-14 10:33:57
+#&gt; 37: 2020-05-14 10:33:57
+#&gt; 38: 2020-05-14 10:33:57
+#&gt; 39: 2020-05-14 10:33:57
+#&gt; 40: 2020-05-14 10:33:57
+#&gt; 41: 2020-05-14 10:33:57
+#&gt; 42: 2020-05-14 10:33:57
+#&gt; 43: 2020-05-14 10:33:57
+#&gt; 44: 2020-05-14 10:33:57
+#&gt; 45: 2020-05-14 10:33:57
+#&gt; 46: 2020-05-14 10:33:57
+#&gt; 47: 2020-05-14 10:33:57
+#&gt; 48: 2020-05-14 10:33:57
+#&gt; 49: 2020-05-14 10:33:57
+#&gt; 50: 2020-05-14 10:33:57
+#&gt; 51: 2020-05-14 10:33:57
+#&gt; 52: 2020-05-14 10:33:57
+#&gt; 53: 2020-05-14 10:33:57
+#&gt; 54: 2020-05-14 10:33:57
+#&gt; 55: 2020-05-14 10:33:57
+#&gt; 56: 2020-05-14 10:33:57
+#&gt; 57: 2020-05-14 10:33:57
+#&gt; 58: 2020-05-14 10:33:57
+#&gt; 59: 2020-05-14 10:33:57
+#&gt; 60: 2020-05-14 10:33:57
+#&gt; 61: 2020-05-14 10:33:57
+#&gt; 62: 2020-05-14 10:33:57
+#&gt; 63: 2020-05-14 10:33:57
+#&gt; 64: 2020-05-14 10:33:57
+#&gt; 65: 2020-05-14 10:33:57
+#&gt; 66: 2020-05-14 10:33:57
+#&gt; 67: 2020-05-14 10:33:57
+#&gt; 68: 2020-05-14 10:33:57
+#&gt; 69: 2020-05-14 10:33:57
+#&gt; 70: 2020-05-14 10:33:57
+#&gt; 71: 2020-05-14 10:33:57
+#&gt; 72: 2020-05-14 10:33:57
+#&gt; 73: 2020-05-14 10:33:57
+#&gt; 74: 2020-05-14 10:33:57
+#&gt; 75: 2020-05-14 10:33:57
+#&gt; 76: 2020-05-14 10:33:57
+#&gt; 77: 2020-05-14 10:33:57
+#&gt; 78: 2020-05-14 10:33:57
+#&gt; 79: 2020-05-14 10:33:57
+#&gt; 80: 2020-05-14 10:33:57
+#&gt; 81: 2020-05-14 10:33:57
+#&gt; 82: 2020-05-14 10:33:57
+#&gt; 83: 2020-05-14 10:33:57
+#&gt; 84: 2020-05-14 10:33:57
+#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>No time provided; removing the most recent entry to the Cache</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 252 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 252 bytes</span></div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># most recent is gone</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 746 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 746 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 7072c305d8c69df0            function                 rnorm
+#&gt;  2: 7072c305d8c69df0               class               numeric
+#&gt;  3: 7072c305d8c69df0         object.size                   984
+#&gt;  4: 7072c305d8c69df0            accessed   2020-05-14 10:33:57
+#&gt;  5: 7072c305d8c69df0             inCloud                 FALSE
+#&gt;  6: 7072c305d8c69df0          resultHash                      
+#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest     0.0009357929 secs
+#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun     1.645088e-05 secs
+#&gt;  9: 7072c305d8c69df0      otherFunctions               saveRDS
+#&gt; 10: 7072c305d8c69df0      otherFunctions               do.call
+#&gt; 11: 7072c305d8c69df0      otherFunctions      build_site_local
+#&gt; 12: 7072c305d8c69df0      otherFunctions       build_reference
+#&gt; 13: 7072c305d8c69df0      otherFunctions  data_reference_topic
+#&gt; 14: 7072c305d8c69df0      otherFunctions          run_examples
+#&gt; 15: 7072c305d8c69df0      otherFunctions    highlight_examples
+#&gt; 16: 7072c305d8c69df0      otherFunctions             timing_fn
+#&gt; 17: 7072c305d8c69df0      otherFunctions                handle
+#&gt; 18: 7072c305d8c69df0      otherFunctions                   try
+#&gt; 19: 7072c305d8c69df0           preDigest    n:853b1797f54b229c
+#&gt; 20: 7072c305d8c69df0           preDigest .FUN:4f604aa46882b368
+#&gt; 21: 7072c305d8c69df0           file.size                   147
+#&gt; 22: 3b347dee8f6305c7            function                 rnorm
+#&gt; 23: 3b347dee8f6305c7               class               numeric
+#&gt; 24: 3b347dee8f6305c7         object.size                   992
+#&gt; 25: 3b347dee8f6305c7            accessed   2020-05-14 10:33:57
+#&gt; 26: 3b347dee8f6305c7             inCloud                 FALSE
+#&gt; 27: 3b347dee8f6305c7          resultHash                      
+#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest     0.0005972385 secs
+#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun     1.907349e-05 secs
+#&gt; 30: 3b347dee8f6305c7      otherFunctions               saveRDS
+#&gt; 31: 3b347dee8f6305c7      otherFunctions               do.call
+#&gt; 32: 3b347dee8f6305c7      otherFunctions      build_site_local
+#&gt; 33: 3b347dee8f6305c7      otherFunctions       build_reference
+#&gt; 34: 3b347dee8f6305c7      otherFunctions  data_reference_topic
+#&gt; 35: 3b347dee8f6305c7      otherFunctions          run_examples
+#&gt; 36: 3b347dee8f6305c7      otherFunctions    highlight_examples
+#&gt; 37: 3b347dee8f6305c7      otherFunctions             timing_fn
+#&gt; 38: 3b347dee8f6305c7      otherFunctions                handle
+#&gt; 39: 3b347dee8f6305c7      otherFunctions                   try
+#&gt; 40: 3b347dee8f6305c7           preDigest    n:82dc709f2b91918a
+#&gt; 41: 3b347dee8f6305c7           preDigest .FUN:4f604aa46882b368
+#&gt; 42: 3b347dee8f6305c7           file.size                   157
+#&gt; 43: f0da91a44b839434            function                 rnorm
+#&gt; 44: f0da91a44b839434               class               numeric
+#&gt; 45: f0da91a44b839434         object.size                  1008
+#&gt; 46: f0da91a44b839434            accessed   2020-05-14 10:33:57
+#&gt; 47: f0da91a44b839434             inCloud                 FALSE
+#&gt; 48: f0da91a44b839434          resultHash                      
+#&gt; 49: f0da91a44b839434   elapsedTimeDigest     0.0008563995 secs
+#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun     1.621246e-05 secs
+#&gt; 51: f0da91a44b839434      otherFunctions               saveRDS
+#&gt; 52: f0da91a44b839434      otherFunctions               do.call
+#&gt; 53: f0da91a44b839434      otherFunctions      build_site_local
+#&gt; 54: f0da91a44b839434      otherFunctions       build_reference
+#&gt; 55: f0da91a44b839434      otherFunctions  data_reference_topic
+#&gt; 56: f0da91a44b839434      otherFunctions          run_examples
+#&gt; 57: f0da91a44b839434      otherFunctions    highlight_examples
+#&gt; 58: f0da91a44b839434      otherFunctions             timing_fn
+#&gt; 59: f0da91a44b839434      otherFunctions                handle
+#&gt; 60: f0da91a44b839434      otherFunctions                   try
+#&gt; 61: f0da91a44b839434           preDigest    n:7f12988bd88a0fb8
+#&gt; 62: f0da91a44b839434           preDigest .FUN:4f604aa46882b368
+#&gt; 63: f0da91a44b839434           file.size                   165
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-05-14 10:33:57
+#&gt;  2: 2020-05-14 10:33:57
+#&gt;  3: 2020-05-14 10:33:57
+#&gt;  4: 2020-05-14 10:33:57
+#&gt;  5: 2020-05-14 10:33:57
+#&gt;  6: 2020-05-14 10:33:57
+#&gt;  7: 2020-05-14 10:33:57
+#&gt;  8: 2020-05-14 10:33:57
+#&gt;  9: 2020-05-14 10:33:57
+#&gt; 10: 2020-05-14 10:33:57
+#&gt; 11: 2020-05-14 10:33:57
+#&gt; 12: 2020-05-14 10:33:57
+#&gt; 13: 2020-05-14 10:33:57
+#&gt; 14: 2020-05-14 10:33:57
+#&gt; 15: 2020-05-14 10:33:57
+#&gt; 16: 2020-05-14 10:33:57
+#&gt; 17: 2020-05-14 10:33:57
+#&gt; 18: 2020-05-14 10:33:57
+#&gt; 19: 2020-05-14 10:33:57
+#&gt; 20: 2020-05-14 10:33:57
+#&gt; 21: 2020-05-14 10:33:57
+#&gt; 22: 2020-05-14 10:33:57
+#&gt; 23: 2020-05-14 10:33:57
+#&gt; 24: 2020-05-14 10:33:57
+#&gt; 25: 2020-05-14 10:33:57
+#&gt; 26: 2020-05-14 10:33:57
+#&gt; 27: 2020-05-14 10:33:57
+#&gt; 28: 2020-05-14 10:33:57
+#&gt; 29: 2020-05-14 10:33:57
+#&gt; 30: 2020-05-14 10:33:57
+#&gt; 31: 2020-05-14 10:33:57
+#&gt; 32: 2020-05-14 10:33:57
+#&gt; 33: 2020-05-14 10:33:57
+#&gt; 34: 2020-05-14 10:33:57
+#&gt; 35: 2020-05-14 10:33:57
+#&gt; 36: 2020-05-14 10:33:57
+#&gt; 37: 2020-05-14 10:33:57
+#&gt; 38: 2020-05-14 10:33:57
+#&gt; 39: 2020-05-14 10:33:57
+#&gt; 40: 2020-05-14 10:33:57
+#&gt; 41: 2020-05-14 10:33:57
+#&gt; 42: 2020-05-14 10:33:57
+#&gt; 43: 2020-05-14 10:33:57
+#&gt; 44: 2020-05-14 10:33:57
+#&gt; 45: 2020-05-14 10:33:57
+#&gt; 46: 2020-05-14 10:33:57
+#&gt; 47: 2020-05-14 10:33:57
+#&gt; 48: 2020-05-14 10:33:57
+#&gt; 49: 2020-05-14 10:33:57
+#&gt; 50: 2020-05-14 10:33:57
+#&gt; 51: 2020-05-14 10:33:57
+#&gt; 52: 2020-05-14 10:33:57
+#&gt; 53: 2020-05-14 10:33:57
+#&gt; 54: 2020-05-14 10:33:57
+#&gt; 55: 2020-05-14 10:33:57
+#&gt; 56: 2020-05-14 10:33:57
+#&gt; 57: 2020-05-14 10:33:57
+#&gt; 58: 2020-05-14 10:33:57
+#&gt; 59: 2020-05-14 10:33:57
+#&gt; 60: 2020-05-14 10:33:57
+#&gt; 61: 2020-05-14 10:33:57
+#&gt; 62: 2020-05-14 10:33:57
+#&gt; 63: 2020-05-14 10:33:57
+#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='no'>thisTime</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 0 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 0 bytes</span></div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># all those after thisTime gone, i.e., only 1 left</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 746 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 746 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 7072c305d8c69df0            function                 rnorm
+#&gt;  2: 7072c305d8c69df0               class               numeric
+#&gt;  3: 7072c305d8c69df0         object.size                   984
+#&gt;  4: 7072c305d8c69df0            accessed   2020-05-14 10:33:57
+#&gt;  5: 7072c305d8c69df0             inCloud                 FALSE
+#&gt;  6: 7072c305d8c69df0          resultHash                      
+#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest     0.0009357929 secs
+#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun     1.645088e-05 secs
+#&gt;  9: 7072c305d8c69df0      otherFunctions               saveRDS
+#&gt; 10: 7072c305d8c69df0      otherFunctions               do.call
+#&gt; 11: 7072c305d8c69df0      otherFunctions      build_site_local
+#&gt; 12: 7072c305d8c69df0      otherFunctions       build_reference
+#&gt; 13: 7072c305d8c69df0      otherFunctions  data_reference_topic
+#&gt; 14: 7072c305d8c69df0      otherFunctions          run_examples
+#&gt; 15: 7072c305d8c69df0      otherFunctions    highlight_examples
+#&gt; 16: 7072c305d8c69df0      otherFunctions             timing_fn
+#&gt; 17: 7072c305d8c69df0      otherFunctions                handle
+#&gt; 18: 7072c305d8c69df0      otherFunctions                   try
+#&gt; 19: 7072c305d8c69df0           preDigest    n:853b1797f54b229c
+#&gt; 20: 7072c305d8c69df0           preDigest .FUN:4f604aa46882b368
+#&gt; 21: 7072c305d8c69df0           file.size                   147
+#&gt; 22: 3b347dee8f6305c7            function                 rnorm
+#&gt; 23: 3b347dee8f6305c7               class               numeric
+#&gt; 24: 3b347dee8f6305c7         object.size                   992
+#&gt; 25: 3b347dee8f6305c7            accessed   2020-05-14 10:33:57
+#&gt; 26: 3b347dee8f6305c7             inCloud                 FALSE
+#&gt; 27: 3b347dee8f6305c7          resultHash                      
+#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest     0.0005972385 secs
+#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun     1.907349e-05 secs
+#&gt; 30: 3b347dee8f6305c7      otherFunctions               saveRDS
+#&gt; 31: 3b347dee8f6305c7      otherFunctions               do.call
+#&gt; 32: 3b347dee8f6305c7      otherFunctions      build_site_local
+#&gt; 33: 3b347dee8f6305c7      otherFunctions       build_reference
+#&gt; 34: 3b347dee8f6305c7      otherFunctions  data_reference_topic
+#&gt; 35: 3b347dee8f6305c7      otherFunctions          run_examples
+#&gt; 36: 3b347dee8f6305c7      otherFunctions    highlight_examples
+#&gt; 37: 3b347dee8f6305c7      otherFunctions             timing_fn
+#&gt; 38: 3b347dee8f6305c7      otherFunctions                handle
+#&gt; 39: 3b347dee8f6305c7      otherFunctions                   try
+#&gt; 40: 3b347dee8f6305c7           preDigest    n:82dc709f2b91918a
+#&gt; 41: 3b347dee8f6305c7           preDigest .FUN:4f604aa46882b368
+#&gt; 42: 3b347dee8f6305c7           file.size                   157
+#&gt; 43: f0da91a44b839434            function                 rnorm
+#&gt; 44: f0da91a44b839434               class               numeric
+#&gt; 45: f0da91a44b839434         object.size                  1008
+#&gt; 46: f0da91a44b839434            accessed   2020-05-14 10:33:57
+#&gt; 47: f0da91a44b839434             inCloud                 FALSE
+#&gt; 48: f0da91a44b839434          resultHash                      
+#&gt; 49: f0da91a44b839434   elapsedTimeDigest     0.0008563995 secs
+#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun     1.621246e-05 secs
+#&gt; 51: f0da91a44b839434      otherFunctions               saveRDS
+#&gt; 52: f0da91a44b839434      otherFunctions               do.call
+#&gt; 53: f0da91a44b839434      otherFunctions      build_site_local
+#&gt; 54: f0da91a44b839434      otherFunctions       build_reference
+#&gt; 55: f0da91a44b839434      otherFunctions  data_reference_topic
+#&gt; 56: f0da91a44b839434      otherFunctions          run_examples
+#&gt; 57: f0da91a44b839434      otherFunctions    highlight_examples
+#&gt; 58: f0da91a44b839434      otherFunctions             timing_fn
+#&gt; 59: f0da91a44b839434      otherFunctions                handle
+#&gt; 60: f0da91a44b839434      otherFunctions                   try
+#&gt; 61: f0da91a44b839434           preDigest    n:7f12988bd88a0fb8
+#&gt; 62: f0da91a44b839434           preDigest .FUN:4f604aa46882b368
+#&gt; 63: f0da91a44b839434           file.size                   165
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-05-14 10:33:57
+#&gt;  2: 2020-05-14 10:33:57
+#&gt;  3: 2020-05-14 10:33:57
+#&gt;  4: 2020-05-14 10:33:57
+#&gt;  5: 2020-05-14 10:33:57
+#&gt;  6: 2020-05-14 10:33:57
+#&gt;  7: 2020-05-14 10:33:57
+#&gt;  8: 2020-05-14 10:33:57
+#&gt;  9: 2020-05-14 10:33:57
+#&gt; 10: 2020-05-14 10:33:57
+#&gt; 11: 2020-05-14 10:33:57
+#&gt; 12: 2020-05-14 10:33:57
+#&gt; 13: 2020-05-14 10:33:57
+#&gt; 14: 2020-05-14 10:33:57
+#&gt; 15: 2020-05-14 10:33:57
+#&gt; 16: 2020-05-14 10:33:57
+#&gt; 17: 2020-05-14 10:33:57
+#&gt; 18: 2020-05-14 10:33:57
+#&gt; 19: 2020-05-14 10:33:57
+#&gt; 20: 2020-05-14 10:33:57
+#&gt; 21: 2020-05-14 10:33:57
+#&gt; 22: 2020-05-14 10:33:57
+#&gt; 23: 2020-05-14 10:33:57
+#&gt; 24: 2020-05-14 10:33:57
+#&gt; 25: 2020-05-14 10:33:57
+#&gt; 26: 2020-05-14 10:33:57
+#&gt; 27: 2020-05-14 10:33:57
+#&gt; 28: 2020-05-14 10:33:57
+#&gt; 29: 2020-05-14 10:33:57
+#&gt; 30: 2020-05-14 10:33:57
+#&gt; 31: 2020-05-14 10:33:57
+#&gt; 32: 2020-05-14 10:33:57
+#&gt; 33: 2020-05-14 10:33:57
+#&gt; 34: 2020-05-14 10:33:57
+#&gt; 35: 2020-05-14 10:33:57
+#&gt; 36: 2020-05-14 10:33:57
+#&gt; 37: 2020-05-14 10:33:57
+#&gt; 38: 2020-05-14 10:33:57
+#&gt; 39: 2020-05-14 10:33:57
+#&gt; 40: 2020-05-14 10:33:57
+#&gt; 41: 2020-05-14 10:33:57
+#&gt; 42: 2020-05-14 10:33:57
+#&gt; 43: 2020-05-14 10:33:57
+#&gt; 44: 2020-05-14 10:33:57
+#&gt; 45: 2020-05-14 10:33:57
+#&gt; 46: 2020-05-14 10:33:57
+#&gt; 47: 2020-05-14 10:33:57
+#&gt; 48: 2020-05-14 10:33:57
+#&gt; 49: 2020-05-14 10:33:57
+#&gt; 50: 2020-05-14 10:33:57
+#&gt; 51: 2020-05-14 10:33:57
+#&gt; 52: 2020-05-14 10:33:57
+#&gt; 53: 2020-05-14 10:33:57
+#&gt; 54: 2020-05-14 10:33:57
+#&gt; 55: 2020-05-14 10:33:57
+#&gt; 56: 2020-05-14 10:33:57
+#&gt; 57: 2020-05-14 10:33:57
+#&gt; 58: 2020-05-14 10:33:57
+#&gt; 59: 2020-05-14 10:33:57
+#&gt; 60: 2020-05-14 10:33:57
+#&gt; 61: 2020-05-14 10:33:57
+#&gt; 62: 2020-05-14 10:33:57
+#&gt; 63: 2020-05-14 10:33:57
+#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># Cache is</span></div><div class='output co'>#&gt; <span class='message'>No time provided; removing the most recent entry to the Cache</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 252 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 252 bytes</span></div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># Cache is already empty</span></div><div class='output co'>#&gt; <span class='message'>No time provided; removing the most recent entry to the Cache</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 248 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 248 bytes</span></div></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
-      <li><a href="#details">Details</a></li>
-      <li><a href="#note">Note</a></li>
-      <li><a href="#see-also">See also</a></li>
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -672,7 +1022,7 @@ in <code><a href='cache.html'>Cache</a></code></p></div>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>

@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -41,10 +45,16 @@ pkgDep in the miniCRAN package, but with modifications for speed.
 It will first check local package directories in libPath, and it if
 the function cannot find the packages there, then it will use
 package_dependencies.
-pkgDep2 is a convenience wrapper of pkgDep that
-&quot;goes one level in&quot; i.e., the first order dependencies, and runs
-the pkgDep on those." />
-<meta name="twitter:card" content="summary" />
+pkgDep2 is a convenience wrapper of pkgDep that &quot;goes one level in&quot;,
+i.e., the first order dependencies, and runs the pkgDep on those.
+This is a wrapper around tools::dependsOnPkgs,
+but with the added option of sorted, which
+will sort them such that the packages at the top will have
+the least number of dependencies that are in pkgs.
+This is essentially a topological sort, but it is done
+heuristically. This can be used to e.g., detach or
+unloadNamespace packages in order so that they each
+of their dependencies are detached or unloaded first." />
 
 
 
@@ -72,7 +82,7 @@ the pkgDep on those." />
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -86,7 +96,7 @@ the pkgDep on those." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -122,7 +132,7 @@ the pkgDep on those." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/PredictiveEcology/reproducible">
+  <a href="https://github.com/PredictiveEcology/reproducible/">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -151,9 +161,16 @@ the pkgDep on those." />
 It will first check local package directories in <code>libPath</code>, and it if
 the function cannot find the packages there, then it will use
 <code><a href='https://rdrr.io/r/tools/package_dependencies.html'>package_dependencies</a></code>.</p>
-<p><code>pkgDep2</code> is a convenience wrapper of <code>pkgDep</code> that
-"goes one level in" i.e., the first order dependencies, and runs
-the <code>pkgDep</code> on those.</p>
+<p><code>pkgDep2</code> is a convenience wrapper of <code>pkgDep</code> that "goes one level in",
+i.e., the first order dependencies, and runs the <code>pkgDep</code> on those.</p>
+<p>This is a wrapper around <code><a href='https://rdrr.io/r/tools/dependsOnPkgs.html'>tools::dependsOnPkgs</a></code>,
+but with the added option of <code>sorted</code>, which
+will sort them such that the packages at the top will have
+the least number of dependencies that are in <code>pkgs</code>.
+This is essentially a topological sort, but it is done
+heuristically. This can be used to e.g., <code>detach</code> or
+<code>unloadNamespace</code> packages in order so that they each
+of their dependencies are detached or unloaded first.</p>
     </div>
 
     <pre class="usage"><span class='fu'>pkgDep</span>(
@@ -164,6 +181,7 @@ the <code>pkgDep</code> on those.</p>
   <span class='kw'>imports</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>suggests</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>linkingTo</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>topoSort</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>repos</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"repos"</span>),
   <span class='kw'>refresh</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>)
@@ -180,6 +198,15 @@ the <code>pkgDep</code> on those.</p>
   <span class='kw'>refresh</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>),
   <span class='kw'>sorted</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+)
+
+<span class='fu'>pkgDepTopoSort</span>(
+  <span class='no'>pkgs</span>,
+  <span class='no'>deps</span>,
+  <span class='kw'>reverse</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>topoSort</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>useAllInSearch</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>returnFull</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -216,6 +243,13 @@ NOTE: Dependencies of suggests will not be recursive. Default <code>TRUE</code>.
       <td><p>Logical. Include packages listed in "LinkingTo". Default <code>TRUE</code>.</p></td>
     </tr>
     <tr>
+      <th>topoSort</th>
+      <td><p>Logical. If <code>TRUE</code>, the default, then
+the returned list of packages will be in order with the
+least number of dependencies listed in <code>pkgs</code> at
+the top of the list.</p></td>
+    </tr>
+    <tr>
       <th>repos</th>
       <td><p>The remote repository (e.g., a CRAN mirror), passed to either
 <code>install.packages</code>, <code>install_github</code> or <code>installVersions</code>.</p></td>
@@ -235,8 +269,42 @@ set <code>refresh = TRUE</code>.</p></td>
       <td><p>Logical. If <code>TRUE</code>, the default, the packages will be sorted in
 the returned list from most number of dependencies to least.</p></td>
     </tr>
+    <tr>
+      <th>pkgs</th>
+      <td><p>A vector of package names to evaluate their
+reverse depends (i.e., the packages that <em>use</em> each
+of these packages)</p></td>
+    </tr>
+    <tr>
+      <th>deps</th>
+      <td><p>An optional named list of (reverse) dependencies.
+If not supplied, then <code><a href='https://rdrr.io/r/tools/dependsOnPkgs.html'>tools::dependsOnPkgs(..., recursive = TRUE)</a></code>
+will be used</p></td>
+    </tr>
+    <tr>
+      <th>reverse</th>
+      <td><p>logical: if <code>FALSE</code> (default), regular
+    dependencies are calculated, otherwise reverse dependencies.</p></td>
+    </tr>
+    <tr>
+      <th>useAllInSearch</th>
+      <td><p>Logical. If <code>TRUE</code>, then all non-core
+R packages in <code><a href='https://rdrr.io/r/base/search.html'>search()</a></code> will be appended to <code>pkgs</code>
+to allow those to also be identified</p></td>
+    </tr>
+    <tr>
+      <th>returnFull</th>
+      <td><p>Logical. If <code>TRUE</code>, then the full reverse
+dependencies will be returned; if <code>FALSE</code>, the default,
+only the reverse dependencies that are found within the <code>pkgs</code>
+(and <code><a href='https://rdrr.io/r/base/search.html'>search()</a></code> if <code>useAllInSearch = TRUE</code>) will be returned.</p></td>
+    </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A possibly ordered, named (with packages as names) list where list elements
+are either full reverse depends.</p>
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
     <p><code>package_dependencies</code> and <code>pkgDep</code> will differ under the following
@@ -251,27 +319,39 @@ circumstances:</p><ol>
     <pre class="examples"><div class='input'><span class='fu'>pkgDep</span>(<span class='st'>"crayon"</span>)</div><div class='output co'>#&gt; $crayon
 #&gt; [1] "grDevices" "methods"   "utils"     "stats"     "graphics" 
 #&gt; </div><div class='input'><span class='fu'>pkgDep2</span>(<span class='st'>"reproducible"</span>)</div><div class='output co'>#&gt; $quickPlot
-#&gt;  [1] "ggplot2"      "gridBase"     "igraph"       "RColorBrewer" "rgeos"       
-#&gt;  [6] "gtable"       "lazyeval"     "MASS"         "mgcv"         "reshape2"    
-#&gt; [11] "scales"       "viridisLite"  "grid"         "grDevices"    "utils"       
-#&gt; [16] "methods"      "graphics"     "stats"        "Matrix"       "splines"     
-#&gt; [21] "nlme"         "lattice"      "plyr"         "stringr"      "Rcpp"        
-#&gt; [26] "stringi"      "tools"        "glue"         "magrittr"     "farver"      
-#&gt; [31] "labeling"     "munsell"      "lifecycle"    "colorspace"   "rlang"       
-#&gt; [36] "R6"           "digest"       "tibble"       "withr"        "cli"         
-#&gt; [41] "fansi"        "pillar"       "pkgconfig"    "assertthat"   "crayon"      
-#&gt; [46] "utf8"         "vctrs"        "ellipsis"     "zeallot"      "backports"   
-#&gt; [51] "sp"           "data.table"   "fpCompare"    "raster"       "rgdal"       
+#&gt;  [1] "ggplot2"      "grid"         "gridBase"     "igraph"       "raster"      
+#&gt;  [6] "RColorBrewer" "rgdal"        "rgeos"        "sp"           "gtable"      
+#&gt; [11] "isoband"      "MASS"         "mgcv"         "scales"       "testthat"    
+#&gt; [16] "evaluate"     "pkgload"      "praise"       "methods"      "stats"       
+#&gt; [21] "graphics"     "grDevices"    "utils"        "desc"         "pkgbuild"    
+#&gt; [26] "rprojroot"    "rstudioapi"   "assertthat"   "R6"           "crayon"      
+#&gt; [31] "tools"        "callr"        "prettyunits"  "processx"     "ps"          
+#&gt; [36] "cli"          "withr"        "glue"         "fansi"        "backports"   
+#&gt; [41] "rlang"        "digest"       "ellipsis"     "magrittr"     "Rcpp"        
+#&gt; [46] "Matrix"       "splines"      "nlme"         "lattice"      "farver"      
+#&gt; [51] "labeling"     "munsell"      "viridisLite"  "colorspace"   "lifecycle"   
+#&gt; [56] "tibble"       "pillar"       "pkgconfig"    "vctrs"        "utf8"        
+#&gt; [61] "data.table"   "fpCompare"   
+#&gt; 
+#&gt; $usethis
+#&gt;  [1] "clipr"      "gh"         "git2r"      "rematch2"   "whisker"   
+#&gt;  [6] "yaml"       "utils"      "ini"        "cli"        "jsonlite"  
+#&gt; [11] "httr"       "assertthat" "tools"      "crayon"     "glue"      
+#&gt; [16] "methods"    "fansi"      "grDevices"  "stats"      "graphics"  
+#&gt; [21] "mime"       "openssl"    "R6"         "askpass"    "sys"       
+#&gt; [26] "curl"       "tibble"     "ellipsis"   "lifecycle"  "pillar"    
+#&gt; [31] "pkgconfig"  "vctrs"      "rlang"      "utf8"       "digest"    
+#&gt; [36] "magrittr"   "desc"       "fs"         "purrr"      "rprojroot" 
+#&gt; [41] "rstudioapi" "withr"      "backports" 
 #&gt; 
 #&gt; $googledrive
 #&gt;  [1] "curl"       "gargle"     "httr"       "jsonlite"   "magrittr"  
 #&gt;  [6] "purrr"      "rlang"      "tibble"     "uuid"       "fs"        
-#&gt; [11] "withr"      "methods"    "Rcpp"       "stats"      "graphics"  
-#&gt; [16] "grDevices"  "utils"      "glue"       "mime"       "openssl"   
-#&gt; [21] "R6"         "tools"      "askpass"    "sys"        "cli"       
-#&gt; [26] "fansi"      "pillar"     "pkgconfig"  "assertthat" "crayon"    
-#&gt; [31] "utf8"       "vctrs"      "ellipsis"   "zeallot"    "backports" 
-#&gt; [36] "digest"    
+#&gt; [11] "withr"      "methods"    "stats"      "graphics"   "grDevices" 
+#&gt; [16] "utils"      "glue"       "mime"       "openssl"    "R6"        
+#&gt; [21] "tools"      "askpass"    "sys"        "cli"        "ellipsis"  
+#&gt; [26] "fansi"      "lifecycle"  "pillar"     "pkgconfig"  "vctrs"     
+#&gt; [31] "assertthat" "crayon"     "utf8"       "digest"    
 #&gt; 
 #&gt; $testthat
 #&gt;  [1] "evaluate"    "pkgload"     "praise"      "methods"     "stats"      
@@ -284,14 +364,8 @@ circumstances:</p><ol>
 #&gt; $RSQLite
 #&gt;  [1] "bit64"     "blob"      "BH"        "plogr"     "bit"       "utils"    
 #&gt;  [7] "methods"   "stats"     "graphics"  "grDevices" "rlang"     "vctrs"    
-#&gt; [13] "ellipsis"  "zeallot"   "backports" "digest"    "glue"      "DBI"      
-#&gt; [19] "memoise"   "pkgconfig" "Rcpp"     
-#&gt; 
-#&gt; $gdalUtils
-#&gt;  [1] "sp"          "foreach"     "R.utils"     "raster"      "rgdal"      
-#&gt;  [6] "lattice"     "grid"        "grDevices"   "graphics"    "stats"      
-#&gt; [11] "utils"       "methods"     "codetools"   "iterators"   "tools"      
-#&gt; [16] "R.methodsS3" "R.oo"        "Rcpp"       
+#&gt; [13] "ellipsis"  "digest"    "glue"      "DBI"       "memoise"   "pkgconfig"
+#&gt; [19] "Rcpp"     
 #&gt; 
 #&gt; $sf
 #&gt;  [1] "classInt"   "units"      "e1071"      "class"      "KernSmooth"
@@ -299,28 +373,28 @@ circumstances:</p><ol>
 #&gt; [11] "MASS"       "Rcpp"       "DBI"        "grid"       "magrittr"  
 #&gt; [16] "tools"     
 #&gt; 
-#&gt; $raster
-#&gt; [1] "Rcpp"      "methods"   "utils"     "stats"     "graphics"  "grDevices"
-#&gt; [7] "sp"        "lattice"   "grid"     
-#&gt; 
 #&gt; $httr
 #&gt; [1] "mime"     "openssl"  "R6"       "tools"    "askpass"  "sys"      "curl"    
 #&gt; [8] "jsonlite"
 #&gt; 
 #&gt; $R.utils
-#&gt; [1] "tools"       "R.methodsS3" "R.oo"        "utils"       "methods"    
-#&gt; [6] "stats"       "graphics"    "grDevices"  
+#&gt; [1] "R.methodsS3" "R.oo"        "utils"       "methods"     "stats"      
+#&gt; [6] "graphics"    "grDevices"   "tools"      
 #&gt; 
-#&gt; $rgdal
-#&gt; [1] "grDevices" "graphics"  "stats"     "utils"     "methods"   "sp"       
-#&gt; [7] "lattice"   "grid"     
+#&gt; $lifecycle
+#&gt; [1] "glue"      "rlang"     "methods"   "stats"     "graphics"  "grDevices"
+#&gt; [7] "utils"    
 #&gt; 
 #&gt; $qs
-#&gt; [1] "RApiSerialize" "Rcpp"          "methods"       "utils"        
+#&gt; [1] "Rcpp"          "RApiSerialize" "methods"       "utils"        
 #&gt; [5] "stats"         "graphics"      "grDevices"    
 #&gt; 
+#&gt; $raster
+#&gt; [1] "Rcpp"      "methods"   "sp"        "utils"     "stats"     "graphics" 
+#&gt; [7] "grDevices"
+#&gt; 
 #&gt; $sp
-#&gt; [1] "lattice"   "grid"      "grDevices" "graphics"  "stats"     "utils"    
+#&gt; [1] "utils"     "stats"     "graphics"  "grDevices" "lattice"   "grid"     
 #&gt; [7] "methods"  
 #&gt; 
 #&gt; $remotes
@@ -372,14 +446,10 @@ circumstances:</p><ol>
 #&gt; character(0)
 #&gt; </div></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#note">Note</a></li>
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -390,7 +460,7 @@ circumstances:</p><ol>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>

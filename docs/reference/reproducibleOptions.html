@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -39,7 +43,6 @@
 <meta property="og:description" content="These provide top-level, powerful settings for a comprehensive
 reproducible workflow. To see defaults, run reproducibleOptions().
 See Details below." />
-<meta name="twitter:card" content="summary" />
 
 
 
@@ -67,7 +70,7 @@ See Details below." />
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -81,7 +84,7 @@ See Details below." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
       </span>
     </div>
 
@@ -117,7 +120,7 @@ See Details below." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/PredictiveEcology/reproducible">
+  <a href="https://github.com/PredictiveEcology/reproducible/">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -163,6 +166,11 @@ file so they persist between sessions.</p>
                    The default path for repositories if not passed as an argument.</td></tr>
 <tr><td><code>cacheSaveFormat</code></td><td>"rds"</td><td>What save format to use; currently,
                          "qs" or "rds"</td></tr>
+<tr><td><code>cacheSpeed</code></td><td>"slow"</td><td>either "slow" or "fast" (1 or 2). "slow" uses
+                       digest::digest internally, which is transferable across Operating
+                       systems, but much slower than fastdigest::fastdigest. So,
+                       if all caching is happening on a single machine, "fast" would
+                       be a good setting</td></tr>
 <tr><td><code>conn</code></td><td><code>NULL</code></td><td>Sets a specific connection to a database, e.g.,
                       <code>dbConnect(drv = RSQLite::SQLite())</code> or
                       <code>dbConnect(drv = RPostgres::Postgres()</code>. For remote
@@ -217,21 +225,22 @@ file so they persist between sessions.</p>
                         are changing frequently, so any entry in the cache repository will
                         be stale following changes to functions, i.e., they will likely never
                         be relevant again. This will therefore keep the cache repository
-                        clean of stale objects. If there is ambiguity in the <code>userTags</code>, i.e
-                        they do not uniquely identify a single entry in the cacheRepo, then
-                        this option will default back to the non devMode behaviour to avoid
-                        deleting objects. This, therefore, is most useful if the user is
-                        using unique values for <code>userTags</code></td><td><code>useCloud</code></td></tr>
+                        clean of stale objects. If there is ambiguity in the <code>userTags</code>,
+                        i.e., they do not uniquely identify a single entry in the
+                        <code>cacheRepo</code>, then this option will default back to the non-dev-mode
+                        behaviour to avoid deleting objects.
+                        This, therefore, is most useful if the user is using unique values for
+                        <code>userTags</code></td><td><code>useCloud</code></td></tr>
 <tr><td>Passed to <code>Cache</code>. Default <code>FALSE</code>.</td><td><code>useDBI</code></td><td><code>TRUE</code></td></tr>
-<tr><td>As of reproducible 0.3, the backend is now <code>DBI</code>
-                     package instead of <code>archivist</code></td><td><code>useGDAL</code></td><td>Passed to <code>useGDAL</code> in <code>projectInputs.Raster</code>.
+<tr><td>As of reproducible 0.3, the backend is now <span class="pkg">DBI</span>
+                     package instead of <span class="pkg">archivist</span></td><td><code>useGDAL</code></td><td>Passed to <code>useGDAL</code> in <code>projectInputs.Raster</code>.
                   Default <code>TRUE</code>.</td></tr>
 <tr><td><code>useMemoise</code></td><td><code>FALSE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. If <code>TRUE</code>,
-                  recovery of cached elements from the cacheRepo will use
+                  recovery of cached elements from the <code>cacheRepo</code> will use
                   <code><a href='https://rdrr.io/pkg/memoise/man/memoise.html'>memoise::memoise</a></code>. This means that the 3rd time running a function
                   will be much faster than the 1st (create cache entry) or 2nd (recover
                   from the SQLite database on dist). NOTE: memoised values are removed
-                  when the R session is restarted. <b>This option will use more RAM</b> and
+                  when the R session is restarted. <strong>This option will use more RAM</strong> and
                   so may need to be turned off if RAM is limiting.  <code>clearCache</code>
                   of any sort will cause all memoising to be 'forgotten'
                   (<code><a href='https://rdrr.io/pkg/memoise/man/forget.html'>memoise::forget</a></code>)</td></tr>
@@ -240,7 +249,7 @@ file so they persist between sessions.</p>
                    will be defunct. This new algorithm will make <code>Cache</code> less
                    sensitive to minor but irrelevant changes (like changing the
                    order of arguments) and will work successfully across operating
-                   systems (especially relevant for the new 'cloudCache' function</td></tr>
+                   systems (especially relevant for the new <code>cloudCache</code> function</td></tr>
 <tr><td><code>verbose</code></td><td><code>FALSE</code></td><td>If set to <code>TRUE</code> then every Cache
      call will show a summary of the objects being cached, their <code>object.size</code>
      and the time it took to digest them and also the time it took to run
@@ -254,25 +263,22 @@ file so they persist between sessions.</p>
     
 
 <p>The following options are likely not needed by a user.</p><table class='table'>
-<tr><td><code>cloudChecksumsFilename</code></td><td><code><a href='https://rdrr.io/r/base/file.path.html'>file.path(dirname(.reproducibleTempCacheDir), "checksums.rds")</a></code></td><td>Used in <code><a href='Deprcated.html'>cloudCache</a></code></td></tr>
+<tr><td><code>cloudChecksumsFilename</code></td><td><code><a href='https://rdrr.io/r/base/file.path.html'>file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")</a></code></td><td>Used in <code><a href='Deprcated.html'>cloudCache</a></code></td></tr>
 <tr><td><code>length</code></td><td><code>Inf</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>, specifically to the internal
                      calls to <code><a href='CacheDigest.html'>CacheDigest</a></code>. This is passed to <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>.
                      Mostly this would be changed from default <code>Inf</code> if the digesting is
                      taking too long. Use this with caution, as some objects will have MANY
                      NA values in their first MANY elements</td></tr>
-<tr><td><code>useragent</code></td><td><code>"http://github.com/PredictiveEcology/reproducible"</code></td><td>User agent for downloads using this package.</td></tr>
+<tr><td><code>useragent</code></td><td><code>"https://github.com/PredictiveEcology/reproducible"</code></td><td>User agent for downloads using this package.</td></tr>
 </table>
 
 
 
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#details">Details</a></li>
-      <li><a href="#advanced">Advanced</a></li>
-    </ul>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -283,7 +289,7 @@ file so they persist between sessions.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>
