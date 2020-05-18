@@ -1,8 +1,6 @@
 ## Updated release
 
-This release fixes several errors revealed during CRAN checks.
-We have also begun working through required changes to our use of spatial packages due to upstream CRS changes in PROJ and GDAL.
-See `NEWS.md` for a complete list of changes.
+This release fixes an error revealed during CRAN checks.
 
 ## Test environments
 
@@ -20,10 +18,10 @@ See `NEWS.md` for a complete list of changes.
 * Windows                 (win-builder), R 4.0.0
 
 ### Development R version
-* Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-05-13 r78453)
-* Ubuntu 18.04                  (local), R 4.1.0 (2020-05-13 r78456)
-* Windows                    (appveyor), R 4.1.0 (2020-05-12 r78431)
-* Windows                 (win-builder), R 4.1.0 (2020-05-11 r78411)
+* Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-05-18 r78486)
+* Ubuntu 18.04                  (local), R 4.1.0 (2020-05-18 r78487)
+* Windows                    (appveyor), R 4.1.0 (2020-05-17 r78478)
+* Windows                 (win-builder), R 4.1.0 (2020-05-15 r78473)
 
 ## R CMD check results
 
