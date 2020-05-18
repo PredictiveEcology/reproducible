@@ -31,12 +31,13 @@ environment:
   - R_VERSION: release
 
   - R_VERSION: oldrel
-    RTOOLS_VERSION: 36
+    RTOOLS_VERSION: 35
 
 clone_depth: 5
 
 build_script:
   - Rscript -e "install.packages(c('RCurl'), repos = 'https://cran.rstudio.com')"
+  - Rscript -e "install.packages(c('data.table', 'utf8'), repos = 'https://cran.rstudio.com', type = 'source')"
   - travis-tool.sh install_deps
 
 test_script:

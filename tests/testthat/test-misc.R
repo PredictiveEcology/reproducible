@@ -277,20 +277,16 @@ test_that("Filenames for environment", {
   expect_true(identical(FnsB, fnsGrd))
 
   # Another stack with identical files
-  rlogoFiles <- system.file("external/rlogo.grd", package="raster")
+  rlogoFiles <- system.file("external/rlogo.grd", package = "raster")
   rlogoFiles <- c(rlogoFiles, gsub("grd$", "gri", rlogoFiles))
   secondSet <- file.path(tmpdir, c("one.grd", "one.gri"))
   file.link(rlogoFiles, secondSet)
   b <- raster::stack(rlogoFiles[1], secondSet[1])
-  expect_true(identical(
-    sort(normPath(c(rlogoFiles, secondSet))),
-    sort(Filenames(b))))
+  expect_true(identical(sort(normPath(c(rlogoFiles, secondSet))), sort(Filenames(b))))
 
   # Test duplicated filenames in same Stack
   b <- raster::stack(rlogoFiles[1], rlogoFiles[1])
-  expect_true(identical(
-    sort(normPath(c(rlogoFiles))),
-    sort(Filenames(b))))
+  expect_true(identical(sort(normPath(c(rlogoFiles))), sort(Filenames(b))))
 
   rlogoFiles <- system.file("external/rlogo.grd", package="raster")
   b <- raster::brick(rlogoFiles)
@@ -298,7 +294,6 @@ test_that("Filenames for environment", {
   expect_true(identical(
     sort(normPath(dir(pattern = "rlogo", dirname(rlogoFiles), full.names = TRUE))),
     sort(Filenames(b))))
-
 })
 
 test_that("test miscellaneous fns", {
