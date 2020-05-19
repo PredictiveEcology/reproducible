@@ -1,5 +1,17 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 1.1.1
+==============
+
+## New features
+* none
+
+## Dependency changes
+* none
+
+## bug fixes
+* fix CRAN test failure when `file.link` does not succeed.
+
 version 1.1.0
 ==============
 

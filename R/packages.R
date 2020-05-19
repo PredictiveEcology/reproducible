@@ -1,14 +1,9 @@
-if (getRversion() >= "3.1.0") {
-  utils::globalVariables(c(".SD", "instPkgs",
-                           "..colsToKeep", "Account", "availableOnCRAN",
-                           "availableOnGitHub", "AvailableVersion", "Branch",
-                           "compareVersionAvail", "compareVersionAvailGH",
-                           "correctVersion", "correctVersionAvail",
-                           "correctVersionAvailGH", "fullGit",
-                           "githubPkgName", "inequality", "isGH",
-                           "minVersion", "Package", "Repo", "RepoWBranch",
-                           "Version", "versionOnGH"))
-}
+utils::globalVariables(c(
+  ".SD", "..colsToKeep", "Account", "availableOnCRAN", "availableOnGitHub", "AvailableVersion",
+  "Branch", "compareVersionAvail", "compareVersionAvailGH", "correctVersion", "correctVersionAvail",
+  "correctVersionAvailGH", "fullGit", "githubPkgName", "inequality", "instPkgs", "isGH",
+  "minVersion", "Package", "Repo", "RepoWBranch", "Version", "versionOnGH"
+))
 
 #' Repeatability-safe install and load packages, optionally with specific versions
 #'

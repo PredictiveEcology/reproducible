@@ -91,6 +91,7 @@ matrix:
       - rgeos
   - os: osx
     osx_image: xcode9.4
+    r: oldrel
     addons:
       homebrew:
         packages:
@@ -101,8 +102,19 @@ matrix:
     latex: false
     r_build_args: '--no-build-vignettes'
     r_check_args: '--as-cran --ignore-vignettes --no-examples'
-#    before_script:
-#      - Rscript -e "install.packages(c('rgdal', 'rgeos'), type = 'source')"
+  - os: osx
+    osx_image: xcode11.4
+    r: release
+    addons:
+      homebrew:
+        packages:
+        - libgit2
+        - llvm
+        - udunits
+        update: true
+    latex: false
+    r_build_args: '--no-build-vignettes'
+    r_check_args: '--as-cran --ignore-vignettes --no-examples'
 r_build_args: " "
 r_check_args: "--as-cran"
 warnings_are_errors: true

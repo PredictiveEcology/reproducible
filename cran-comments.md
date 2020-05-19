@@ -1,8 +1,6 @@
 ## Updated release
 
-This release fixes several errors revealed during CRAN checks.
-We have also begun working through required changes to our use of spatial packages due to upstream CRS changes in PROJ and GDAL.
-See `NEWS.md` for a complete list of changes.
+This release fixes an error revealed during CRAN checks.
 
 ## Test environments
 
@@ -22,10 +20,10 @@ Tested and passed using winbuilder all three versions, and rhub with no errors, 
 * Windows                 (win-builder), R 4.0.0
 
 ### Development R version
-* Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-05-13 r78453)
-* Ubuntu 18.04                  (local), R 4.1.0 (2020-05-13 r78456)
-* Windows                    (appveyor), R 4.1.0 (2020-05-12 r78431)
-* Windows                 (win-builder), R 4.1.0 (2020-05-11 r78411)
+* Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-05-18 r78486)
+* Ubuntu 18.04                  (local), R 4.1.0 (2020-05-18 r78487)
+* Windows                    (appveyor), R 4.1.0 (2020-05-17 r78478)
+* Windows                 (win-builder), R 4.1.0 (2020-05-15 r78473)
 
 ## R CMD check results
 
@@ -45,6 +43,7 @@ We will pare down the number of dependencies in future releases, as we plan to s
 
 ## Downstream dependencies
 
-We have run R CMD check on downstream dependencies.
-`SpaDES.core` requires an update, which we will submit this package immediately upon `reproducible` being accepted.
-Other reverse dependencies are unaffected.
+We checked 4 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
+
+ * We saw 0 new problems
+ * We failed to check 0 packages

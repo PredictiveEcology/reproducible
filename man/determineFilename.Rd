@@ -45,14 +45,13 @@ not provided.}
            See details.
 
 \subsection{... passed to:}{
-  \tabular{lccc}{
-     Function                \tab Arguments \cr
-    \code{cropInputs}        \tab \code{\link[raster]{crop}} \cr
-    \code{projectInputs}     \tab \code{\link[raster]{projectRaster}}\cr
-    \code{maskInputs}        \tab \code{\link{fastMask}} or \code{\link[raster]{intersect}}\cr
-    \code{fixErrors}         \tab \code{\link[raster]{buffer}}\cr
-    \code{writeOutputs}      \tab \code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}\cr
-    \code{determineFilename} \tab \cr
+  \describe{
+    \item{\code{cropInputs}:}{\code{\link[raster]{crop}}}
+    \item{\code{projectInputs}}{\code{\link[raster]{projectRaster}}}
+    \item{\code{maskInputs}}{\code{\link{fastMask}} or \code{\link[raster]{intersect}}}
+    \item{\code{fixErrors}}{\code{\link[raster]{buffer}}}
+    \item{\code{writeOutputs}}{\code{\link[raster]{writeRaster}} or \code{\link[raster]{shapefile}}}
+    \item{\code{determineFilename}}{}
   }
   * Can be overridden with \code{useSAcrs}
   ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}

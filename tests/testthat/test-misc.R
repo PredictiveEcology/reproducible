@@ -280,9 +280,11 @@ test_that("Filenames for environment", {
   rlogoFiles <- system.file("external/rlogo.grd", package = "raster")
   rlogoFiles <- c(rlogoFiles, gsub("grd$", "gri", rlogoFiles))
   secondSet <- file.path(tmpdir, c("one.grd", "one.gri"))
-  file.link(rlogoFiles, secondSet)
-  b <- raster::stack(rlogoFiles[1], secondSet[1])
-  expect_true(identical(sort(normPath(c(rlogoFiles, secondSet))), sort(Filenames(b))))
+  res <- suppressWarnings(file.link(rlogoFiles, secondSet))
+  if (all(res)) {
+    b <- raster::stack(rlogoFiles[1], secondSet[1])
+    expect_true(identical(sort(normPath(c(rlogoFiles, secondSet))), sort(Filenames(b))))
+  }
 
   # Test duplicated filenames in same Stack
   b <- raster::stack(rlogoFiles[1], rlogoFiles[1])
