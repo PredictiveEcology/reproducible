@@ -696,7 +696,7 @@ extractFromArchive <- function(archive,
     }
   } else {
     # Try the direct, then indirect
-    isUnzip <- if ( identical(unzip, fun)) TRUE else ("overwrite" %in% names(formals(fun)))
+    isUnzip <- if (identical(unzip, fun)) TRUE else ("overwrite" %in% names(formals(fun)))
     argList <- if (isUnzip) {
       c(argList, overwrite = overwrite)
     } else {
@@ -735,11 +735,10 @@ extractFromArchive <- function(archive,
               args = paste0(pathToFile," -d ", .tempPath),
               wait = TRUE,
               stdout = NULL)
-      extractedFiles <-
-        list.files(path = .tempPath,
-                   # list of full paths of all extracted files!
-                   recursive = TRUE,
-                   include.dirs = TRUE)
+      extractedFiles <- list.files(path = .tempPath,
+                                   # list of full paths of all extracted files!
+                                   recursive = TRUE,
+                                   include.dirs = TRUE)
       invisible(lapply(
         X = extractedFiles,
         FUN = function(fileToMove) {
