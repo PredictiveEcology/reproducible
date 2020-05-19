@@ -281,7 +281,7 @@ test_that("Filenames for environment", {
   rlogoFiles <- c(rlogoFiles, gsub("grd$", "gri", rlogoFiles))
   secondSet <- file.path(tmpdir, c("one.grd", "one.gri"))
   res <- file.link(rlogoFiles, secondSet)
-  if (!all(res)) {
+  if (all(res)) {
     b <- raster::stack(rlogoFiles[1], secondSet[1])
     expect_true(identical(sort(normPath(c(rlogoFiles, secondSet))), sort(Filenames(b))))
   }
