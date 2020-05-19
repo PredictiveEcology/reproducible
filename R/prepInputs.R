@@ -705,19 +705,27 @@ extractFromArchive <- function(archive,
     opt <- options("warn")$warn
     on.exit(options(warn = opt), add = TRUE)
     options(warn = 1)
-    mess <- capture.output(type = "message", extractedFiles <- do.call(fun, c(args, argList)))
-    worked <- if (isUnzip) {
-      all(normPath(file.path(args$exdir, basename(argList[[1]]))) %in% normPath(extractedFiles))
-    } else {
-      isTRUE(extractedFiles == 0)
+    tooBig <- FALSE
+    worked <- FALSE
+    if (isUnzip) {
+      fattrs <- unzip(args[[1]], list = TRUE)
+      ids <- which(fattrs[["Name"]] %in% argList$files)
+      tooBig <- any(fattrs[ids, ]["Length"][[1]] >= 4294967295) ## files >= 4GB are truncated; see ?unzip
     }
-    if (!isTRUE(worked)) {
-      message(
-        paste0(
-          "File unzipping does not appear to have worked.",
-          " Trying a system call of unzip..."
-        )
-      )
+    if (!tooBig) {
+      mess <- capture.output({
+        extractedFiles <- do.call(fun, c(args, argList))
+      }, type = "message")
+      worked <- if (isUnzip) {
+        all(normPath(file.path(args$exdir, basename(argList[[1]]))) %in% normPath(extractedFiles))
+      } else {
+        isTRUE(extractedFiles == 0)
+      }
+    }
+    if (!isTRUE(worked) | isTRUE(tooBig)) {
+      message("File unzipping using R does not appear to have worked.",
+              " Trying a system call of unzip...")
+
       # tempDir <- file.path(args$exdir, "extractedFiles") %>%
       #   checkPath(create = TRUE)
       if (file.exists(args[[1]])){

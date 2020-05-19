@@ -11,6 +11,7 @@ version 1.1.1.9000
 
 ## bug fixes
 * fix over-wide tables in PDF manual (#144)
+* use system call to `unzip` when extracting large (>= 4GB) files (#145, @tati-micheletti)
 
 version 1.1.1
 ==============
