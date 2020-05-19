@@ -84,7 +84,7 @@ See Details below." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
       </span>
     </div>
 
@@ -158,120 +158,103 @@ See Details below.</p>
 where <code>xxx</code> is one of the values below, and <code>newValue</code> is a new value to
 give the option. Sometimes these options can be placed in the user's <code>.Rprofile</code>
 file so they persist between sessions.</p>
-<p>The following options are likely of interest to most users</p><table class='table'>
-<tr><td><em>OPTION</em></td><td><em>DEFAULT VALUE</em></td><td><em>DESCRIPTION</em></td></tr>
-<tr><td><code>ask</code></td><td><code>TRUE</code></td><td>Used in <code><a href='viewCache.html'>clearCache</a></code> and
-                                   <code><a href='viewCache.html'>keepCache</a></code></td></tr>
-<tr><td><code>cachePath</code></td><td><code>.reproducibleTempCacheDir</code></td><td>Used in <code><a href='cache.html'>Cache</a></code> and many others.
-                   The default path for repositories if not passed as an argument.</td></tr>
-<tr><td><code>cacheSaveFormat</code></td><td>"rds"</td><td>What save format to use; currently,
-                         "qs" or "rds"</td></tr>
-<tr><td><code>cacheSpeed</code></td><td>"slow"</td><td>either "slow" or "fast" (1 or 2). "slow" uses
-                       digest::digest internally, which is transferable across Operating
-                       systems, but much slower than fastdigest::fastdigest. So,
-                       if all caching is happening on a single machine, "fast" would
-                       be a good setting</td></tr>
-<tr><td><code>conn</code></td><td><code>NULL</code></td><td>Sets a specific connection to a database, e.g.,
-                      <code>dbConnect(drv = RSQLite::SQLite())</code> or
-                      <code>dbConnect(drv = RPostgres::Postgres()</code>. For remote
-                      database servers, setting one connection may be far faster than using
-                      <code>drv</code> which must make a new connection every time.</td></tr>
-<tr><td><code>destinationPath</code></td><td><code>NULL</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>,
-                              <code><a href='preProcess.html'>preProcess</a></code>. Can be set globally here.</td></tr>
-<tr><td><code>drv</code></td><td><code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code></td><td>Sets the default driver for the backend
-                      database system. Only tested with <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code> and
-                      <code><a href='https://rpostgres.r-dbi.org/reference/Postgres.html'>RPostgres::Postgres()</a></code></td></tr>
-<tr><td><code>futurePlan</code></td><td><code>FALSE</code></td><td>On Linux OSs, <code>Cache</code> and <code>cloudCache</code>
-                         have some functionality that uses the <code>future</code> package.
-                         Default is to not use these, as they are experimental. They may,
-                         however, be very effective in speeding up some things, specifically,
-                         uploading cached elements via googledrive in <code>cloudCache</code></td></tr>
-<tr><td><code>inputPaths</code></td><td><code>NULL</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>,
-                              <code><a href='preProcess.html'>preProcess</a></code>. If set to a path, this
-                              will cause these functions to save their downloaded
-                              and preprocessed file to this location, with a hardlink
-                              (via <code>file.link</code>) to the file
-                              created in the <code>destinationPath</code>. This can be used
-                              so that individual projects that use common data sets
-                              can maintain modularity (by placing downloaded objects
-                              in their <code>destinationPath</code>, but also minimize
-                              re-downloading the same (perhaps large) file over and over
-                              for each project. Because the files are hardlinks, there
-                              is no extra space taken up by the apparently duplicated files.</td></tr>
-<tr><td><code>inputPathsRecursive</code></td><td><code>FALSE</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>,
-                              <code><a href='preProcess.html'>preProcess</a></code>. Should the <code>reproducible.inputPaths</code>
-                              be searched recursively for existence of a file.</td></tr>
-<tr><td><code>nThreads</code></td><td><code>1</code></td><td>The number of threads to use for reading/writing cache files.</td></tr>
-<tr><td><code>overwrite</code></td><td><code>FALSE</code></td><td>Used in <code><a href='prepInputs.html'>prepInputs</a></code>, <code><a href='preProcess.html'>preProcess</a></code>,
-                        <code><a href='downloadFile.html'>downloadFile</a></code>, and <code><a href='postProcess.html'>postProcess</a></code>.</td></tr>
-<tr><td><code>quick</code></td><td><code>FALSE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. This will cause
-                <code>Cache</code> to use <code><a href='https://rdrr.io/r/base/file.info.html'>file.size(file)</a></code>
-                instead of the <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest(file)</a></code>.
-                Less robust to changes, but faster. NOTE: this will only affect objects
-                on disk.</td></tr>
-<tr><td><code>showSimilar</code></td><td>Passed to <code>Cache</code>. Default <code>FALSE</code>.</td><td><code>useCache</code></td></tr>
-<tr><td><code>TRUE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. If <code>FALSE</code>, then
-                        the entire <code>Cache</code> machinery is skipped and the functions
-                        are run as if there was no Cache occurring. Can also take 2 other values:
-                        <code>'overwrite'</code> and <code>'devMode'</code>. <code>'overwrite'</code> will
-                        cause no recovery of objects from the cache repository, only new
-                        ones will be created. If the hash is identical to a previous one,
-                        then this will overwrite the previous one. <code>'devMode'</code> will
-                        function as normally <code>Cache</code> except it will use the <code>userTags</code>
-                        to determine if a previous function has been run. If the <code>userTags</code>
-                        are identical, but the digest value is different, the old value will
-                        be deleted from the cache repository and this new value will be added.
-                        This addresses a common situation during the development stage: functions
-                        are changing frequently, so any entry in the cache repository will
-                        be stale following changes to functions, i.e., they will likely never
-                        be relevant again. This will therefore keep the cache repository
-                        clean of stale objects. If there is ambiguity in the <code>userTags</code>,
-                        i.e., they do not uniquely identify a single entry in the
-                        <code>cacheRepo</code>, then this option will default back to the non-dev-mode
-                        behaviour to avoid deleting objects.
-                        This, therefore, is most useful if the user is using unique values for
-                        <code>userTags</code></td><td><code>useCloud</code></td></tr>
-<tr><td>Passed to <code>Cache</code>. Default <code>FALSE</code>.</td><td><code>useDBI</code></td><td><code>TRUE</code></td></tr>
-<tr><td>As of reproducible 0.3, the backend is now <span class="pkg">DBI</span>
-                     package instead of <span class="pkg">archivist</span></td><td><code>useGDAL</code></td><td>Passed to <code>useGDAL</code> in <code>projectInputs.Raster</code>.
-                  Default <code>TRUE</code>.</td></tr>
-<tr><td><code>useMemoise</code></td><td><code>FALSE</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>. If <code>TRUE</code>,
-                  recovery of cached elements from the <code>cacheRepo</code> will use
-                  <code><a href='https://rdrr.io/pkg/memoise/man/memoise.html'>memoise::memoise</a></code>. This means that the 3rd time running a function
-                  will be much faster than the 1st (create cache entry) or 2nd (recover
-                  from the SQLite database on dist). NOTE: memoised values are removed
-                  when the R session is restarted. <strong>This option will use more RAM</strong> and
-                  so may need to be turned off if RAM is limiting.  <code>clearCache</code>
-                  of any sort will cause all memoising to be 'forgotten'
-                  (<code><a href='https://rdrr.io/pkg/memoise/man/forget.html'>memoise::forget</a></code>)</td></tr>
-<tr><td><code>useNewDigestAlgorithm</code></td><td><code>TRUE</code></td><td>This will mean that previous
-                   cache repositories
-                   will be defunct. This new algorithm will make <code>Cache</code> less
-                   sensitive to minor but irrelevant changes (like changing the
-                   order of arguments) and will work successfully across operating
-                   systems (especially relevant for the new <code>cloudCache</code> function</td></tr>
-<tr><td><code>verbose</code></td><td><code>FALSE</code></td><td>If set to <code>TRUE</code> then every Cache
-     call will show a summary of the objects being cached, their <code>object.size</code>
-     and the time it took to digest them and also the time it took to run
-     the call and save the call to the cache repository or load the cached
-     copy from the repository. This may help diagnosing some problems that may occur.</td></tr>
-</table>
+<p>The following options are likely of interest to most users:</p><dl'>
+  <dt><code>ask</code></dt><dd><p>Default: <code>TRUE</code>. Used in <code><a href='viewCache.html'>clearCache</a></code> and <code><a href='viewCache.html'>keepCache</a></code>.</p></dd>
+  <dt><code>cachePath</code></dt><dd><p>Default: <code>.reproducibleTempCacheDir</code>. Used in <code><a href='cache.html'>Cache</a></code> and many others.
+    The default path for repositories if not passed as an argument.</p></dd>
+  <dt><code>cacheSaveFormat</code></dt><dd><p>Default: <code>"rds"</code>. What save format to use; currently, <code>"qs"</code> or <code>"rds"</code>.</p></dd>
+  <dt><code>cacheSpeed</code></dt><dd><p>Default <code>"slow"</code>. One of <code>"slow"</code> or <code>"fast"</code> (1 or 2).
+    <code>"slow"</code> uses <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code> internally, which is transferable across operating
+    systems, but much slower than <code><a href='https://rdrr.io/pkg/fastdigest/man/fastdigest.html'>fastdigest::fastdigest</a></code>.
+    So, if all caching is happening on a single machine, <code>"fast"</code> would be a good setting.</p></dd>
+  <dt><code>conn</code></dt><dd><p>Default: <code>NULL</code>. Sets a specific connection to a database, e.g.,
+    <code>dbConnect(drv = RSQLite::SQLite())</code> or <code>dbConnect(drv = RPostgres::Postgres()</code>.
+    For remote database servers, setting one connection may be far faster than using
+    <code>drv</code> which must make a new connection every time.</p></dd>
+  <dt><code>destinationPath</code></dt><dd><p>Default: <code>NULL</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcess.html'>preProcess</a></code>.
+    Can be set globally here.</p></dd>
+  <dt><code>drv</code></dt><dd><p>Default: <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code>. Sets the default driver for the backend database system.
+    Only tested with <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code> and <code><a href='https://rpostgres.r-dbi.org/reference/Postgres.html'>RPostgres::Postgres()</a></code>.</p></dd>
+  <dt><code>futurePlan</code></dt><dd><p>Default: <code>FALSE</code>. On Linux OSes, <code>Cache</code> and <code>cloudCache</code> have some
+    functionality that uses the <code>future</code> package.
+    Default is to not use these, as they are experimental.
+    They may, however, be very effective in speeding up some things, specifically,
+    uploading cached elements via googledrive in <code>cloudCache</code>.</p></dd>
+  <dt><code>inputPaths</code></dt><dd><p>Default: <code>NULL</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcess.html'>preProcess</a></code>.
+    If set to a path, this will cause these functions to save their downloaded and preprocessed
+    file to this location, with a hardlink (via <code>file.link</code>) to the file created in the
+    <code>destinationPath</code>.
+    This can be used so that individual projects that use common data sets can maintain
+    modularity (by placing downloaded objects in their <code>destinationPath</code>, but also minimize
+    re-downloading the same (perhaps large) file over and over for each project.
+    Because the files are hardlinks, there is no extra space taken up by the apparently
+    duplicated files.</p></dd>
+  <dt><code>inputPathsRecursive</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcess.html'>preProcess</a></code>.
+    Should the <code>reproducible.inputPaths</code> be searched recursively for existence of a file?</p></dd>
+  <dt><code>nThreads</code></dt><dd><p>Default: <code>1</code>. The number of threads to use for reading/writing cache files.</p></dd>
+  <dt><code>overwrite</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code>, <code><a href='preProcess.html'>preProcess</a></code>,
+    <code><a href='downloadFile.html'>downloadFile</a></code>, and <code><a href='postProcess.html'>postProcess</a></code>.</p></dd>
+  <dt><code>quick</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='cache.html'>Cache</a></code>. This will cause <code>Cache</code> to use
+    <code><a href='https://rdrr.io/r/base/file.info.html'>file.size(file)</a></code> instead of the <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest(file)</a></code>.
+    Less robust to changes, but faster. <em>NOTE: this will only affect objects on disk</em>.</p></dd>
+  <dt><code>showSimilar</code></dt><dd><p>Default <code>FALSE</code>. Passed to <code>Cache</code>.</p></dd>
+  <dt><code>useCache</code></dt><dd><p>Default: <code>TRUE</code>. Used in <code><a href='cache.html'>Cache</a></code>. If <code>FALSE</code>, then the entire
+    <code>Cache</code> machinery is skipped and the functions are run as if there was no Cache occurring.
+    Can also take 2 other values: <code>'overwrite'</code> and <code>'devMode'</code>.
+    <code>'overwrite'</code> will cause no recovery of objects from the cache repository, only new
+    ones will be created. If the hash is identical to a previous one, then this will overwrite
+    the previous one.
+    <code>'devMode'</code> will function as normally <code>Cache</code> except it will use the
+    <code>userTags</code> to determine if a previous function has been run. If the <code>userTags</code>
+    are identical, but the digest value is different, the old value will be deleted from the
+    cache repository and this new value will be added.
+    This addresses a common situation during the development stage: functions are changing
+    frequently, so any entry in the cache repository will be stale following changes to
+    functions, i.e., they will likely never be relevant again.
+    This will therefore keep the cache repository clean of stale objects.
+    If there is ambiguity in the <code>userTags</code>, i.e., they do not uniquely identify a single
+    entry in the <code>cacheRepo</code>, then this option will default back to the non-dev-mode
+    behaviour to avoid deleting objects.
+    This, therefore, is most useful if the user is using unique values for <code>userTags</code>.</p></dd>
+  <dt><code>useCloud</code></dt><dd><p>Default <code>FALSE</code>. Passed to <code>Cache</code>.</p></dd>
+  <dt><code>useDBI</code></dt><dd><p>Default: <code>TRUE</code>. As of version 0.3, the backend is now <span class="pkg">DBI</span> instead of
+    <span class="pkg">archivist</span>.</p></dd>
+  <dt><code>useGDAL</code></dt><dd><p>Default <code>TRUE</code>. Passed to <code>useGDAL</code> in <code>projectInputs.Raster</code>.</p></dd>
+  <dt><code>useMemoise</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='cache.html'>Cache</a></code>. If <code>TRUE</code>, recovery of cached
+    elements from the <code>cacheRepo</code> will use <code><a href='https://rdrr.io/pkg/memoise/man/memoise.html'>memoise::memoise</a></code>.
+    This means that the 3rd time running a function will be much faster than the first (create
+    cache entry) or second (recover from the SQLite database on disk).
+    <em>NOTE: memoised values are removed when the R session is restarted</em>.
+    <strong>This option will use more RAM</strong> and so may need to be turned off if RAM is limiting.
+    <code>clearCache</code> of any sort will cause all memoising to be 'forgotten' (<code><a href='https://rdrr.io/pkg/memoise/man/forget.html'>memoise::forget</a></code>).</p></dd>
+  <dt><code>useNewDigestAlgorithm</code></dt><dd><p>Default: <code>TRUE</code>. This will mean that previous cache repositories will be defunct.
+    This new algorithm will make <code>Cache</code> less sensitive to minor but irrelevant changes
+    (like changing the order of arguments) and will work successfully across operating systems
+    (especially relevant for the new <code>cloudCache</code> function.</p></dd>
+  <dt><code>verbose</code></dt><dd><p>Default: <code>FALSE</code>. If set to <code>TRUE</code> then every <code>Cache</code> call will show a
+    summary of the objects being cached, their <code>object.size</code> and the time it took to digest
+    them and also the time it took to run the call and save the call to the cache repository or
+    load the cached copy from the repository.
+    This may help diagnosing some problems that may occur.</p></dd>
 
+</dl>
 
     <h2 class="hasAnchor" id="advanced"><a class="anchor" href="#advanced"></a>Advanced</h2>
 
     
 
-<p>The following options are likely not needed by a user.</p><table class='table'>
-<tr><td><code>cloudChecksumsFilename</code></td><td><code><a href='https://rdrr.io/r/base/file.path.html'>file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")</a></code></td><td>Used in <code><a href='Deprcated.html'>cloudCache</a></code></td></tr>
-<tr><td><code>length</code></td><td><code>Inf</code></td><td>Used in <code><a href='cache.html'>Cache</a></code>, specifically to the internal
-                     calls to <code><a href='CacheDigest.html'>CacheDigest</a></code>. This is passed to <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>.
-                     Mostly this would be changed from default <code>Inf</code> if the digesting is
-                     taking too long. Use this with caution, as some objects will have MANY
-                     NA values in their first MANY elements</td></tr>
-<tr><td><code>useragent</code></td><td><code>"https://github.com/PredictiveEcology/reproducible"</code></td><td>User agent for downloads using this package.</td></tr>
-</table>
+<p>The following options are likely not needed by a user.</p><dl'>
+  <dt><code>cloudChecksumsFilename</code></dt><dd><p>Default: <code><a href='https://rdrr.io/r/base/file.path.html'>file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")</a></code>.
+    Used in <code><a href='Deprcated.html'>cloudCache</a></code></p></dd>
+  <dt><code>length</code></dt><dd><p>Default: <code>Inf</code>. Used in <code><a href='cache.html'>Cache</a></code>, specifically to the internal
+    calls to <code><a href='CacheDigest.html'>CacheDigest</a></code>. This is passed to <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>.
+    Mostly this would be changed from default <code>Inf</code> if the digesting is taking too long.
+    Use this with caution, as some objects will have <em>many</em> <code>NA</code> values in their first
+    <em>many</em> elements</p></dd>
+  <dt><code>useragent</code></dt><dd><p>Default: <code>"https://github.com/PredictiveEcology/reproducible"</code>.
+    User agent for downloads using this package.</p></dd>
 
+</dl>
 
 
   </div>
