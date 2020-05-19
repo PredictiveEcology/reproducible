@@ -24,7 +24,9 @@ preProcess(
 )
 }
 \arguments{
-\item{n}{Number of non-null arguments passed to \code{preProcess}}
+\item{n}{Number of non-null arguments passed to \code{preProcess}.
+E.g., passing \code{n = 1} returns combinations with only a single non-NULL parameter.
+If \code{NULL} (default), all parameter combinations are returned.}
 
 \item{targetFile}{Character string giving the path to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
