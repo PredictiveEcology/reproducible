@@ -1,5 +1,17 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 1.1.1.9000
+==============
+
+## New features
+* none
+
+## Dependency changes
+* none
+
+## bug fixes
+* fix over-wide tables in PDF manual (#144)
+
 version 1.1.1
 ==============
 
