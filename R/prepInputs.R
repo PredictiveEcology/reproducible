@@ -70,21 +70,20 @@ if (getRversion() >= "3.1.0") {
 #'
 #' In options for control of purging the \code{CHECKSUMS.txt} file are:
 #'
-#'   \tabular{cl}{
-#'     \code{0} \tab keep file \cr
-#'     \code{1} \tab delete file \cr
-#'     \code{2} \tab delete entry for \code{targetFile} \cr
-#'     \code{4} \tab delete entry for \code{alsoExtract} \cr
-#'     \code{3} \tab delete entry for \code{archive} \cr
-#'     \code{5} \tab delete entry for \code{targetFile} & \code{alsoExtract} \cr
-#'     \code{6} \tab delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive} \cr
-#'     \code{7} \tab delete entry that is failing (i.e., for the file downloaded by the \code{url})\cr
+#'   \describe{
+#'     \item{\code{0}}{keep file}
+#'     \item{\code{1}}{delete file}
+#'     \item{\code{2}}{delete entry for \code{targetFile}}
+#'     \item{\code{4}}{delete entry for \code{alsoExtract}}
+#'     \item{\code{3}}{delete entry for \code{archive}}
+#'     \item{\code{5}}{delete entry for \code{targetFile} & \code{alsoExtract}}
+#'     \item{\code{6}}{delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive}}
+#'     \item{\code{7}}{delete entry that is failing (i.e., for the file downloaded by the \code{url})}
 #'   }
 #' will only remove entries in the \code{CHECKSUMS.txt} that are associated with
-#'    \code{targetFile}, \code{alsoExtract} or \code{archive} When prepInputs is called, it will write or append to a (if
-#'    already exists)
-#'   \code{CHECKSUMS.txt} file. If the \code{CHECKSUMS.txt} is not correct, use
-#'   this argument to remove it.
+#'   \code{targetFile}, \code{alsoExtract} or \code{archive} When \code{prepInputs} is called,
+#'   it will write or append to a (if already exists) \code{CHECKSUMS.txt} file.
+#'   If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 #'
 #' @param targetFile Character string giving the path to the eventual file
 #'   (raster, shapefile, csv, etc.) after downloading and extracting from a zip

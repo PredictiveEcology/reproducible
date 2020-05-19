@@ -6,9 +6,9 @@
 #' This is the first stage of three used in \code{prepInputs}.
 #'
 #' @return
-#' A list with 5 elements, \code{checkSums} (the result of a \code{Checksums}
-#' after downloading), \code{dots} (cleaned up ..., including deprecated argument checks),
-#' \code{fun} (the function to be used to load the preProcessed object from disk),
+#' A list with 5 elements: \code{checkSums} (the result of a \code{Checksums}
+#' after downloading), \code{dots} (cleaned up \code{...}, including deprecated argument checks),
+#' \code{fun} (the function to be used to load the \code{preProcess}ed object from disk),
 #' and \code{targetFilePath} (the fully qualified path to the \code{targetFile}).
 #'
 #' @section Combinations of \code{targetFile}, \code{url}, \code{archive}, \code{alsoExtract}:
@@ -96,7 +96,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (is.null(alsoExtract)) {
       if (file.exists(checkSumFilePath)) {
         if (file.size(checkSumFilePath) > 0) {
-          # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with same base name, without extension
+          # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
+          # same base name, without extension
           checksumsTmp <- as.data.table(read.table(checkSumFilePath))
           alsoExtract <- grep(paste0(file_path_sans_ext(targetFile),"\\."), checksumsTmp$file,
                               value = TRUE)
@@ -155,7 +156,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
 
-
   if (is(checkSums, "try-error")) {
     needChecksums <- 1
     checkSums <- .emptyChecksumsResult
@@ -184,7 +184,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                       newFilesToCheck = archive,
                                       checkSums = checkSums)
-
       }
 
     }
@@ -229,7 +228,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     results <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
                                       alsoExtract = alsoExtract, destinationPath = dp,
                                       checkSums = checkSums, needChecksums = needChecksums,
-                                      checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+                                      checkSumFilePath = checkSumFilePath,
+                                      filesToChecksum = filesToChecksum,
                                       targetFile = targetFile, quick = quick, .tempPath = .tempPath)
 
     checkSums <- results$checkSums
@@ -278,9 +278,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         gsub("^\\.", "^\\\\.", destinationPathUser)
       else
         destinationPathUser
-      archive <- gsub(archive, pattern = patt,
-                      replacement = destinationPath)
-
+      archive <- gsub(archive, pattern = patt, replacement = destinationPath)
     }
   }
 
@@ -353,11 +351,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Stage 1 - Extract from archive
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
   if (isTRUE(!all(isOK))) {
-    filesExtracted <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
-                                             alsoExtract = alsoExtract, destinationPath = destinationPath,
-                                             checkSums = checkSums, needChecksums = needChecksums,
-                                             checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-                                             targetFile = targetFile, quick = quick, .tempPath = .tempPath)
+    filesExtracted <- .tryExtractFromArchive(archive = archive,
+                                             neededFiles = neededFiles,
+                                             alsoExtract = alsoExtract,
+                                             destinationPath = destinationPath,
+                                             checkSums = checkSums,
+                                             needChecksums = needChecksums,
+                                             checkSumFilePath = checkSumFilePath,
+                                             filesToChecksum = filesToChecksum,
+                                             targetFile = targetFile,
+                                             quick = quick, .tempPath = .tempPath)
 
     filesExtr <- filesExtracted$filesExtr
     filesToChecksum <- filesExtracted$filesToChecksum
@@ -406,13 +409,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (any(file_ext(neededFiles) %in% c("zip", "tar", "rar"))) {
     nestedArchives <- .basename(neededFiles[file_ext(neededFiles) %in% c("zip", "tar", "rar")])
     nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
-    message(paste0("There are still archives in the extracted files. preProcess will try to extract the files from ",
-                   .basename(nestedArchives), ". If this is incorrect, please supply archive"))
+    message("There are still archives in the extracted files.",
+            " preProcess will try to extract the files from ", .basename(nestedArchives), ".",
+            " If this is incorrect, please supply archive.")
     # Guess which files inside the new nested
     nestedTargetFile <- .listFilesInArchive(archive = nestedArchives)
-    outFromSimilar <- .checkForSimilar(alsoExtract = alsoExtract, archive = nestedArchives,
-                                       neededFiles = nestedTargetFile, destinationPath = destinationPath,
-                                       checkSums = checkSums, targetFile = targetFile)
+    outFromSimilar <- .checkForSimilar(alsoExtract = alsoExtract,
+                                       archive = nestedArchives,
+                                       neededFiles = nestedTargetFile,
+                                       destinationPath = destinationPath,
+                                       checkSums = checkSums,
+                                       targetFile = targetFile)
     neededFiles <- outFromSimilar$neededFiles
     checkSums <- outFromSimilar$checkSums
 
@@ -432,11 +439,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
       needChecksums <- 0
     }, add = TRUE)
-    extractedFiles <- .tryExtractFromArchive(archive = nestedArchives, neededFiles = neededFiles,
-                                             alsoExtract = alsoExtract, destinationPath = destinationPath,
-                                             checkSums = checkSums, needChecksums = needChecksums,
-                                             checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-                                             targetFile = targetFile, quick = quick, .tempPath = .tempPath)
+    extractedFiles <- .tryExtractFromArchive(archive = nestedArchives,
+                                             neededFiles = neededFiles,
+                                             alsoExtract = alsoExtract,
+                                             destinationPath = destinationPath,
+                                             checkSums = checkSums,
+                                             needChecksums = needChecksums,
+                                             checkSumFilePath = checkSumFilePath,
+                                             filesToChecksum = filesToChecksum,
+                                             targetFile = targetFile,
+                                             quick = quick,
+                                             .tempPath = .tempPath)
     filesExtr <- c(filesExtr, extractedFiles$filesExtr)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
@@ -485,14 +498,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       append = needChecksums >= 2
     )
     if (!is.null(reproducible.inputPaths) && needChecksums != 3) {
-      checkSumFilePathInputPaths <- file.path(reproducible.inputPaths[[1]],
-                                              "CHECKSUMS.txt")
-      suppressMessages(checkSums <- appendChecksumsTable(
-        checkSumFilePath = checkSumFilePathInputPaths,
-        filesToChecksum = unique(.basename(filesToChecksum)),
-        destinationPath = destinationPath,
-        append = needChecksums == 2
-      ))
+      checkSumFilePathInputPaths <- file.path(reproducible.inputPaths[[1]], "CHECKSUMS.txt")
+      suppressMessages({
+        checkSums <- appendChecksumsTable(
+          checkSumFilePath = checkSumFilePathInputPaths,
+          filesToChecksum = unique(.basename(filesToChecksum)),
+          destinationPath = destinationPath,
+          append = needChecksums == 2
+        )
+      })
     }
     on.exit({
       needChecksums <- 0

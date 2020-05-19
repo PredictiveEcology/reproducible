@@ -93,9 +93,9 @@ Since \code{...} is passed to \code{\link{postProcess}}, these will
 functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 }
 \value{
-A list with 5 elements, \code{checkSums} (the result of a \code{Checksums}
-after downloading), \code{dots} (cleaned up ..., including deprecated argument checks),
-\code{fun} (the function to be used to load the preProcessed object from disk),
+A list with 5 elements: \code{checkSums} (the result of a \code{Checksums}
+after downloading), \code{dots} (cleaned up \code{...}, including deprecated argument checks),
+\code{fun} (the function to be used to load the \code{preProcess}ed object from disk),
 and \code{targetFilePath} (the fully qualified path to the \code{targetFile}).
 }
 \description{

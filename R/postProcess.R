@@ -126,8 +126,8 @@ postProcess.list <- function(x, ...) {
 #'     \code{alignment}  \tab Yes                  \tab   No         \tab \code{rasterToMatch} \cr
 #'     \code{mask}       \tab No**                 \tab   Yes        \tab \code{studyArea}**   \cr
 #'   }
-#'   * Can be overridden with \code{useSAcrs}
-#'   ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+#'   * Can be overridden with \code{useSAcrs}.
+#'   ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}.
 #' }
 #'
 #' \subsection{If \code{targetFile} is a \code{Spatial*} object:}{
