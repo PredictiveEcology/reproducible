@@ -241,3 +241,48 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
   }
   !need
 }
+
+
+#' Use message to print a clean square data structure
+#'
+#' Sends to \code{message}, but in a structured way so that a data.frame-like can
+#' be cleanly sent to messaging.
+#'
+#' @param df A data.frame, data.table, matrix
+#' @param round An optional numeric to pass to \code{round}
+#' @param colour Passed to \code{getFromNamespace(colour, ns = "crayon")},
+#'   so any colour that \code{crayon} can use
+#' @param colnames Logical or \code{NULL}. If \code{TRUE}, then it will print
+#'   column names even if there aren't any in the \code{df} (i.e., they will)
+#'   be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
+#'   which will omit them.
+#' @importFrom data.table is.data.table as.data.table
+#' @importFrom utils capture.output
+#' @export
+messageDF <- function(df, round, colour = NULL, colnames = NULL) {
+  origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
+
+  if (is.matrix(df))
+    df <- as.data.frame(df)
+  if (!is.data.table(df)) {
+    df <- as.data.table(df)
+  }
+  df <- Copy(df)
+  skipColNames <- if (is.null(origColNames) & !isTRUE(colnames)) TRUE else FALSE
+  if (!missing(round)) {
+    isNum <- sapply(df, is.numeric)
+    isNum <- colnames(df)[isNum]
+    for (Col in isNum) {
+      set(df, NULL, Col, round(df[[Col]], round))
+    }
+  }
+  outMess <- capture.output(df)
+  if (skipColNames) outMess <- outMess[-1]
+  out <- lapply(outMess, function(x) {
+    if (!is.null(colour)) {
+      message(getFromNamespace(colour, ns = "crayon")(x))
+    } else {
+    message(x)
+    }
+  })
+}
