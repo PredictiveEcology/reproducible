@@ -728,10 +728,10 @@ extractFromArchive <- function(archive,
 
       # tempDir <- file.path(args$exdir, "extractedFiles") %>%
       #   checkPath(create = TRUE)
-      if (file.exists(args[[1]])){
+      if (file.exists(args[[1]])) {
         pathToFile <-  normPath(args[[1]])
       } else {
-        if (file.exists(file.path(args$exdir, args[[1]]))){
+        if (file.exists(file.path(args$exdir, args[[1]]))) {
           pathToFile <-  normPath(file.path(args$exdir, args[[1]]))
         } else {
           warning(mess)
@@ -750,8 +750,15 @@ extractFromArchive <- function(archive,
       invisible(lapply(
         X = extractedFiles,
         FUN = function(fileToMove) {
-          file.rename(from = file.path(.tempPath, fileToMove),
-                      to = file.path(args$exdir, fileToMove))
+          res <- file.rename(from = file.path(.tempPath, fileToMove),
+                             to = file.path(args$exdir, fileToMove))
+          if (isFALSE(res)) {
+            res2 <- file.copy(from = file.path(.tempPath, fileToMove),
+                              to = file.path(args$exdir, fileToMove))
+            if (isTRUE(res2)) {
+              file.remove(file.path(.tempPath, fileToMove))
+            }
+          }
         }
       ))
       extractedFiles <- file.path(args$exdir, extractedFiles)
