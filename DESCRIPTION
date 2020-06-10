@@ -3,10 +3,10 @@ Type: Package
 Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
 Description: Collection of high-level, robust, machine- and OS-independent tools
     for making deeply reproducible and reusable content in R.
-    The three workhorse functions are Cache, prepInputs, and Require; 
+    The two workhorse functions are Cache and prepInputs; 
     these allow for nested caching, robust to environments, and objects with
-    environments (like functions), and data retrieval and processing, and 
-    package handling in continuous workflow environments. In all cases,
+    environments (like functions), and data retrieval and processing 
+    in continuous workflow environments. In all cases,
     efforts are made to make the first and subsequent calls of functions have 
     the same result, but vastly faster at subsequent times by way of checksums
     and digesting. Several features are still under active development, including
@@ -15,8 +15,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2020-05-19
-Version: 1.1.1.9000
+Date: 2020-06-09
+Version: 1.1.1.9001
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -51,6 +51,7 @@ Imports:
     qs,
     quickPlot,
     R.utils,
+    Require,
     raster,
     RSQLite,
     remotes,

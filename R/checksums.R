@@ -79,6 +79,7 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
 })
 
 #' @importFrom crayon magenta
+#' @importFrom data.table setnames
 #' @importFrom methods formalArgs
 #' @importFrom utils read.table write.table
 #' @importFrom R.utils isAbsolutePath

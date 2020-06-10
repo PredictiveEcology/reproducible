@@ -5,10 +5,9 @@
 #'
 #' This package aims at making
 #' high-level, robust, machine and OS independent tools for making deeply
-#' reproducible and reusable content in R. The \code{Require} function is a
-#' different take on package management, such as \pkg{renv}, \pkg{packrat} and
-#' \pkg{checkpoint} that attempts to be more seamless. The package also includes
-#' tools for caching, preparing data files and accessing GitHub repositories.
+#' reproducible and reusable content in R. The core user functions are \code{Cache}
+#' and \code{prepInputs}. Each of these is built around many core and edge cases
+#' required to have deeply reproducible code.
 #'
 #' @section Main Tools:
 #'
@@ -34,10 +33,6 @@
 #'   This allows all project data to be stored in custom cloud locations or in their original online
 #'   data repositories, \code{without altering code} between the first, second, third, etc., times
 #'   the code is run.}
-#'   \item{\code{Require}:}{A version of \code{require} that incorporates elements of
-#'   \code{install.packages}, \code{devtools::install_github}, \pkg{packrat}.
-#'   It allows for users code to work for a new user on a new machine that may or may not have all
-#'   packages installed.}
 #' }
 #'
 #' @section Package options:
