@@ -359,10 +359,12 @@ dlGeneric <- function(url, needChecksums, destinationPath) {
     destinationPath <- tempdir2(rndstr(1, 6))
   }
 
-  destFile <- file.path(destinationPath, basename(url))
+  bn <- basename(url)
+  bn <- gsub("\\?|\\&", "_", bn) # causes errors with ? and maybe &
+  destFile <- file.path(destinationPath, bn)
 
-  if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
-    stop("Can not access url ", url)
+  # if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
+  #   stop("Can not access url ", url)
 
   message("  Downloading ", url, " ...")
 
