@@ -1,3 +1,22 @@
+#' Move a file to a new location
+#'
+#' @param from,to character vectors, containing file names or paths.
+#'
+#' @return Logical indicating whether operation succeeded.
+file.move <- function(from, to, overwrite = FALSE) {
+  stopifnot(file.exists(from))
+  res <- suppressWarnings(file.rename(from = from, to = to))
+  if (isFALSE(res)) {
+    res2 <- file.copy(from = from, to = to, overwrite = overwrite)
+    if (isTRUE(res2)) {
+      file.remove(from)
+    }
+    return(res2)
+  } else {
+    return(res)
+  }
+}
+
 #' Make a temporary sub-directory or file in that subdirectory
 #'
 #' Create a temporary subdirectory in \code{.reproducibleTempPath()}, or a

@@ -1110,7 +1110,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
         )
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
                                           downloadFileResult$neededFiles)
-        invisible(file.rename(
+        invisible(file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1121,7 +1121,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
         )
         newFileWithExtension <- normPath(file.path(dirname(downloadFileResult$downloaded),
                                                    .basename(downloadFileResult$archive)))
-        invisible(file.rename(
+        invisible(file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1134,7 +1134,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
         downloadFileResult$neededFiles <- .basename(archive)
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
                                            downloadFileResult$neededFiles)
-        invisible(file.rename(
+        invisible(file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1151,7 +1151,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
         }
         downloadFileResult$archive <- file.path(normPath(destinationPath),
                                                 paste0(downloadFileResult$neededFiles, fileExt))
-        invisible(file.rename(
+        invisible(file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = normPath(downloadFileResult$archive)))
         downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)
