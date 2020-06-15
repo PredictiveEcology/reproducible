@@ -4,7 +4,7 @@ version 1.1.1.9000
 ==============
 
 ## New features
-* none
+* new function `file.move` used to rename/copy files across disks (a situation where `file.rename` would fail)
 
 ## Dependency changes
 * none

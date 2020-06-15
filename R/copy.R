@@ -3,6 +3,8 @@
 #' @param from,to character vectors, containing file names or paths.
 #'
 #' @return Logical indicating whether operation succeeded.
+#'
+#' @export
 file.move <- function(from, to, overwrite = FALSE) {
   stopifnot(file.exists(from))
   res <- suppressWarnings(file.rename(from = from, to = to))
