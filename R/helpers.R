@@ -97,7 +97,7 @@ setGeneric("studyAreaName", function(studyArea, ...) {
 setMethod(
   "studyAreaName",
   signature = "SpatialPolygonsDataFrame",
-  definition = function (studyArea, ...) {
+  definition = function(studyArea, ...) {
     digest(studyArea[, -c(1:ncol(studyArea))], algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 
