@@ -3,11 +3,14 @@
 \name{studyAreaName}
 \alias{studyAreaName}
 \alias{studyAreaName,SpatialPolygonsDataFrame-method}
+\alias{studyAreaName,SpatialPolygons-method}
 \title{Get a unique name for a given study area}
 \usage{
 studyAreaName(studyArea, ...)
 
 \S4method{studyAreaName}{SpatialPolygonsDataFrame}(studyArea, ...)
+
+\S4method{studyAreaName}{SpatialPolygons}(studyArea, ...)
 }
 \arguments{
 \item{studyArea}{Spatial object.}
