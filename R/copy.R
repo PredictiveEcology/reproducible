@@ -1,6 +1,7 @@
 #' Move a file to a new location
 #'
 #' @param from,to character vectors, containing file names or paths.
+#' @param overwrite logical indicating whether to overwrite destination file if it exists.
 #'
 #' @return Logical indicating whether operation succeeded.
 #'
