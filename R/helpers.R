@@ -98,8 +98,18 @@ setMethod(
   "studyAreaName",
   signature = "SpatialPolygonsDataFrame",
   definition = function (studyArea, ...) {
-    digest(studyArea[, -c(1:ncol(studyArea))], algo = "xxhash64") ## TODO: use `...` to pass `algo`
+    studyArea <- studyArea[, -c(1:ncol(studyArea))]
+    studyAreaName(studyArea, ...)
 })
+
+#' @export
+#' @rdname studyAreaName
+setMethod(
+  "studyAreaName",
+  signature = "SpatialPolygons",
+  definition = function (studyArea, ...) {
+    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+  })
 
 #' Identify which formals to a function are not in the current \code{...}
 #'

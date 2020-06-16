@@ -1,3 +1,24 @@
+#' Move a file to a new location
+#'
+#' @param from,to character vectors, containing file names or paths.
+#'
+#' @return Logical indicating whether operation succeeded.
+#'
+#' @export
+file.move <- function(from, to, overwrite = FALSE) {
+  stopifnot(file.exists(from))
+  res <- suppressWarnings(file.rename(from = from, to = to))
+  if (isFALSE(res)) {
+    res2 <- file.copy(from = from, to = to, overwrite = overwrite)
+    if (isTRUE(res2)) {
+      file.remove(from)
+    }
+    return(res2)
+  } else {
+    return(res)
+  }
+}
+
 #' Make a temporary sub-directory or file in that subdirectory
 #'
 #' Create a temporary subdirectory in \code{.reproducibleTempPath()}, or a
@@ -85,7 +106,6 @@ tempfile2 <- function(sub = "", ...) {
 #'   # write deep copy code here
 #' })
 #' }
-
 setGeneric("Copy", function(object, filebackedDir, ...) {
   standardGeneric("Copy")
 })
@@ -130,7 +150,7 @@ setMethod(
 
     }
     return(object)
-  })
+})
 
 
 #' @rdname Copy
@@ -141,16 +161,14 @@ setMethod("Copy",
             message("Making a copy of the entire SQLite database: ",object@dbname,
                     "; this may not be desireable ...")
             RSQLite::sqliteCopyDatabase(object, con)
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "data.table"),
           definition = function(object, ...) {
             data.table::copy(object)
-          })
-
-
+})
 
 #' @rdname Copy
 setMethod("Copy",
@@ -163,8 +181,7 @@ setMethod("Copy",
             lapply(object, function(x) {
               Copy(x, ...)
             })
-          })
-
+})
 
 #' @rdname Copy
 setMethod("Copy",
@@ -176,14 +193,14 @@ setMethod("Copy",
               stop("There is no method to copy this refClass object; ",
                    "see developers of reproducible package")
             }
-          })
+})
 
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "data.frame"),
           definition = function(object,  filebackedDir, ...) {
             object
-          })
+})
 
 #' @rdname Copy
 #' @inheritParams DBI::dbConnect
@@ -200,5 +217,4 @@ setMethod("Copy",
                 object <- .prepareFileBackedRaster(object, repoDir = filebackedDir, drv = drv, conn = conn)
             }
             object
-          })
-
+})

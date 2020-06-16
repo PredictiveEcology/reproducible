@@ -290,7 +290,7 @@ test_that("Filenames for environment", {
   b <- raster::stack(rlogoFiles[1], rlogoFiles[1])
   expect_true(identical(sort(normPath(c(rlogoFiles))), sort(Filenames(b))))
 
-  rlogoFiles <- system.file("external/rlogo.grd", package="raster")
+  rlogoFiles <- system.file("external/rlogo.grd", package = "raster")
   b <- raster::brick(rlogoFiles)
   rlogoFiles <- c(rlogoFiles <- gsub("grd$", "gri", rlogoFiles))
   expect_true(identical(
@@ -332,7 +332,4 @@ test_that("test miscellaneous fns", {
   expect_true(is.character(out))
   expect_true(length(out) == 2)
   expect_true(is.numeric(as.numeric(gsub(".*: ", "", out)[2])))
-
 })
-
-

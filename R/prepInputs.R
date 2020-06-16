@@ -687,8 +687,8 @@ extractFromArchive <- function(archive,
       invisible(lapply(
         X = extractedFiles,
         FUN = function(fileToMove) {
-          file.rename(from = file.path(.tempPath, fileToMove),
-                      to = file.path(args$exdir, basename(fileToMove)))
+          invisible(file.move(from = file.path(.tempPath, fileToMove),
+                              to = file.path(args$exdir, basename(fileToMove))))
         }
       ))
       # unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
@@ -750,15 +750,8 @@ extractFromArchive <- function(archive,
       invisible(lapply(
         X = extractedFiles,
         FUN = function(fileToMove) {
-          res <- file.rename(from = file.path(.tempPath, fileToMove),
-                             to = file.path(args$exdir, fileToMove))
-          if (isFALSE(res)) {
-            res2 <- file.copy(from = file.path(.tempPath, fileToMove),
-                              to = file.path(args$exdir, fileToMove))
-            if (isTRUE(res2)) {
-              file.remove(file.path(.tempPath, fileToMove))
-            }
-          }
+          invisible(file.move(from = file.path(.tempPath, fileToMove),
+                              to = file.path(args$exdir, fileToMove)))
         }
       ))
       extractedFiles <- file.path(args$exdir, extractedFiles)
