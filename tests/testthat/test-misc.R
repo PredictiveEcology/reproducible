@@ -291,10 +291,11 @@ test_that("Filenames for environment", {
   expect_true(identical(sort(normPath(c(rlogoFiles))), sort(Filenames(b))))
 
   rlogoFiles <- system.file("external/rlogo.grd", package = "raster")
+  rlogoDir <- dirname(rlogoFiles)
   b <- raster::brick(rlogoFiles)
-  rlogoFiles <- c(rlogoFiles <- gsub("grd$", "gri", rlogoFiles))
+  rlogoFiles <- c(rlogoFiles, gsub("grd$", "gri", rlogoFiles))
   expect_true(identical(
-    sort(normPath(dir(pattern = "rlogo", dirname(rlogoFiles), full.names = TRUE))),
+    sort(normPath(dir(pattern = "rlogo", rlogoDir, full.names = TRUE))),
     sort(Filenames(b))))
 })
 
