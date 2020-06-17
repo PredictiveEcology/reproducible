@@ -50,7 +50,7 @@ utils::globalVariables(c(
 #'   \item the \pkg{archivist} package detects different environments as different;
 #'   \item it also does not detect S4 methods correctly due to method inheritance;
 #'   \item it does not detect objects that have file-based storage of information
-#'         (specifically \code{\link[raster]{RasterLayer-class}} objects);
+#'         (specifically \code{\link[raster:Raster-classes]{RasterLayer-class}} objects);
 #'   \item the default hashing algorithm is relatively slow.
 #'   \item heavily nested function calls may want Cache arguments to propagate through
 #' }
@@ -354,7 +354,7 @@ utils::globalVariables(c(
 #' @importFrom methods formalArgs
 #' @importFrom tools file_path_sans_ext
 #' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
-#' @rdname cache
+#' @rdname Cache
 #'
 #' @example inst/examples/example_Cache.R
 #'
@@ -380,7 +380,7 @@ setGeneric(
 })
 
 #' @export
-#' @rdname cache
+#' @rdname Cache
 setMethod(
   "Cache",
   definition = function(FUN, ..., notOlderThan, .objects,

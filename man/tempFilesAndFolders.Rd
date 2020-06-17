@@ -18,7 +18,7 @@ tempfile2(sub = "", ...)
 directories.}
 
 \item{tempdir}{Optional character string where the temporary dir should be placed.
-Defaults to \code{.reproducibleTempPath()}}
+Defaults to \code{.reproducibleTempPath()}.}
 
 \item{...}{passed to \code{tempfile}, e.g., \code{fileext}}
 }

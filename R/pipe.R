@@ -182,7 +182,7 @@
 #' it is a clean alternative for simple cases.
 #'
 #' @export
-#' @rdname cache
+#' @rdname Cache
 #' @param lhs A name to assign to.
 #' @param rhs A function call
 #' @examples
