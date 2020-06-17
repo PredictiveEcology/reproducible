@@ -112,14 +112,11 @@ jobs:
     services:
       - xvfb
     r_github_packages:
+      - edzer/sp
       - r-spatial/sf
       - rspatial/raster
-    r_packages:
-      - devtools
-      - rgdal
-      - rgeos
     before_install:
-      - Rscript -e 'install.packages("sp", repos = "http://R-Forge.R-project.org")'
+      - Rscript -e 'install.packages("rgdal", repos = "http://R-Forge.R-project.org")'
   - os: osx
     osx_image: xcode9.4
     r: oldrel
