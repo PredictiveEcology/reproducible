@@ -68,6 +68,8 @@ jobs:
   - os: linux
     dist: xenial
     r: devel
+    env:
+      - RSPATIAL_DEVEL=false
     addons:
       apt:
         sources:
@@ -88,6 +90,33 @@ jobs:
       - devtools
       - rgdal
       - rgeos
+  - os: linux
+    dist: bionic
+    r: devel
+    env:
+      - RSPATIAL_DEVEL=true
+    addons:
+      apt:
+        sources:
+          - sourceline: 'ppa:ubuntugis/ubuntugis-unstable'
+        packages:
+          - ccache
+          - gdal-bin
+          - libgdal-dev
+          - libgeos-dev
+          - libgit2-dev
+          - libnlopt-dev
+          - libproj-dev
+          - libudunits2-dev
+          - unrar
+    services:
+      - xvfb
+    r_github_packages:
+      - edzer/sp
+      - r-spatial/sf
+      - rspatial/raster
+    before_script:
+      - Rscript -e 'install.packages("rgdal", repos = "http://R-Forge.R-project.org")'
   - os: osx
     osx_image: xcode9.4
     r: oldrel
