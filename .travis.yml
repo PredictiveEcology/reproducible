@@ -115,7 +115,7 @@ jobs:
       - edzer/sp
       - r-spatial/sf
       - rspatial/raster
-    before_install:
+    before_script:
       - Rscript -e 'install.packages("rgdal", repos = "http://R-Forge.R-project.org")'
   - os: osx
     osx_image: xcode9.4
