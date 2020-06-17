@@ -8,6 +8,8 @@ file.move(from, to, overwrite = FALSE)
 }
 \arguments{
 \item{from, to}{character vectors, containing file names or paths.}
+
+\item{overwrite}{logical indicating whether to overwrite destination file if it exists.}
 }
 \value{
 Logical indicating whether operation succeeded.

@@ -109,9 +109,11 @@ downloadFile <- function(archive, targetFile, neededFiles,
                                           overwrite = overwrite,
                                           needChecksums = needChecksums, .tempPath = .tempPath, ...))
         if (is(downloadResults, "try-error")) {
+          if (isTRUE(grepl("already exists", downloadResults)))
+            stop(downloadResults)
           failed <- failed + 1
           if (failed >= 4)
-            stop("Failed downloading from GoogleDrive")
+            stop("Download Failed")
             Sys.sleep(0.5)
         } else {
           failed <- 0
@@ -465,7 +467,16 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
           desiredPathExists <- file.exists(desiredPath)
           if (desiredPathExists && !isTRUE(overwrite)) {
-            stop(targetFile, " already exists at ", desiredPath, ". Use overwrite = TRUE?")
+
+            stopMess <- paste(desiredPath, " already exists and overwrite = FALSE; would you like to overwrite anyway? Y or N:  ")
+            if (interactive()) {
+              interactiveRes <- readline(stopMess)
+              if (startsWith(tolower(interactiveRes), "y"))
+                overwrite = TRUE
+            }
+            if (!identical(overwrite, TRUE)) {
+              stop(targetFile, " already exists at ", desiredPath, ". Use overwrite = TRUE?")
+            }
           }
           if (desiredPathExists) {
             file.remove(desiredPath)

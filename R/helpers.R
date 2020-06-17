@@ -97,7 +97,7 @@ setGeneric("studyAreaName", function(studyArea, ...) {
 setMethod(
   "studyAreaName",
   signature = "SpatialPolygonsDataFrame",
-  definition = function (studyArea, ...) {
+  definition = function(studyArea, ...) {
     studyArea <- studyArea[, -c(1:ncol(studyArea))]
     studyAreaName(studyArea, ...)
 })
@@ -107,9 +107,9 @@ setMethod(
 setMethod(
   "studyAreaName",
   signature = "SpatialPolygons",
-  definition = function (studyArea, ...) {
+  definition = function(studyArea, ...) {
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
-  })
+})
 
 #' Identify which formals to a function are not in the current \code{...}
 #'
@@ -237,7 +237,8 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
 #'   that is needed
 #' @param messageStart A character string with a prefix of message to provide
 .requireNamespace <- function(pkg = "methods", minVersion = NULL,
-                        messageStart = paste0(pkg, if (!is.null(minVersion)) paste0("(>=", minVersion, ")"), " is required. Try: ")) {
+                              messageStart = paste0(pkg, if (!is.null(minVersion))
+                                paste0("(>=", minVersion, ")"), " is required. Try: ")) {
   need <- FALSE
   if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE, warn.conflicts = FALSE))) {
     need <- TRUE
@@ -252,7 +253,6 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
   !need
 }
 
-
 #' Use message to print a clean square data structure
 #'
 #' Sends to \code{message}, but in a structured way so that a data.frame-like can
@@ -266,9 +266,10 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
 #'   column names even if there aren't any in the \code{df} (i.e., they will)
 #'   be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
 #'   which will omit them.
+#'
+#' @export
 #' @importFrom data.table is.data.table as.data.table
 #' @importFrom utils capture.output
-#' @export
 messageDF <- function(df, round, colour = NULL, colnames = NULL) {
   origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
 

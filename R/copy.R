@@ -1,6 +1,7 @@
 #' Move a file to a new location
 #'
 #' @param from,to character vectors, containing file names or paths.
+#' @param overwrite logical indicating whether to overwrite destination file if it exists.
 #'
 #' @return Logical indicating whether operation succeeded.
 #'
@@ -28,7 +29,7 @@ file.move <- function(from, to, overwrite = FALSE) {
 #'   \code{file.path("smth", "smth2")} for nested temporary sub
 #'   directories.
 #' @param tempdir Optional character string where the temporary dir should be placed.
-#'   Defaults to \code{.reproducibleTempPath()}
+#'   Defaults to \code{.reproducibleTempPath()}.
 #'
 #' @rdname tempFilesAndFolders
 #' @export
