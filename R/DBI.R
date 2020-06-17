@@ -9,7 +9,7 @@
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #' @inheritParams DBI::dbConnect
 #' @inheritParams DBI::dbWriteTable
-#' @rdname cacheTools
+#' @rdname cache-tools
 #' @export
 createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), force = FALSE) {
@@ -42,7 +42,7 @@ createCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
     #)
 }
 
-#' @rdname cacheTools
+#' @rdname cache-tools
 #' @inheritParams Cache
 #' @param cacheId The hash string representing the result of \code{.robustDigest}
 #' @param obj The R object to save to the cache
@@ -197,7 +197,7 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
 }
 
 #' @export
-#' @rdname cacheTools
+#' @rdname cache-tools
 #' @importFrom qs qread
 #' @inheritParams CacheStoredFile
 loadFromCache <- function(cachePath, cacheId,
@@ -228,7 +228,7 @@ loadFromCache <- function(cachePath, cacheId,
 #'
 #' @importFrom DBI dbClearResult dbSendStatement dbBind dbAppendTable
 #' @export
-#' @rdname cacheTools
+#' @rdname cache-tools
 rmFromCache <- function(cachePath, cacheId, drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL),
                         format = getOption("reproducible.cacheSaveFormat", "rds")) {

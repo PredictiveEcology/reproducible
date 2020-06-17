@@ -220,6 +220,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Need to run checksums on all files in destinationPath because we may not know what files we
   #   want if targetFile, archive, alsoExtract not specified
   reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
+  reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
   if (!is.null(reproducible.inputPaths))
     reproducible.inputPaths <- path.expand(reproducible.inputPaths)
 

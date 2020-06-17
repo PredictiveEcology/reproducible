@@ -9,6 +9,7 @@ inst/doc
 /revdep/.cache.rds
 vignettes/Intro-to-Cache\.html
 vignettes/Intro-to-Cache\.R
+cache
 
 #################
 ## LaTeX
@@ -44,3 +45,11 @@ vignettes/Intro-to-Cache\.R
 *.vrb
 *.xdy
 *.tdo
+
+CHECKSUMS.txt
+
+LandCoverOfCanada2005_V1_4.zip
+
+lcc.tif
+
+LCC2005_V1_4a.tif

@@ -293,19 +293,19 @@ setMethod(
 #' These are internal only.
 #'
 #' @param FUN A function
-#' @param ... passing the ... from outer function, which will include potential
-#'        arguments to the FUN
+#' @param ... passing the \code{...} from outer function, which will include potential
+#'        arguments to the \code{FUN}
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
-#' @param isPipe Logical. If the call to getFunctionName is coming from a pipe, there is more
-#'               information available. Specifically, ._lhs which is already a call.
+#' @param isPipe Logical. If the call to \code{getFunctionName} is coming from a pipe, there is more
+#'               information available. Specifically, \code{._lhs} which is already a call.
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot McIntire
 #' @importFrom methods selectMethod showMethods
 #' @importFrom utils head
 #' @keywords internal
-#' @rdname cacheHelper
+#' @rdname cache-helpers
 getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # nolint
   callIndex <- numeric()
   if (isS4(FUN)) {
@@ -872,7 +872,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 #' @importFrom digest digest
 #' @importFrom fastdigest fastdigest
 #' @importFrom raster res crs extent
-#' @rdname cacheHelper
+#' @rdname cache-helpers
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
