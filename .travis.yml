@@ -28,6 +28,7 @@ jobs:
     services:
       - xvfb
     r_packages:
+      - devtools
       - rgdal
       - rgeos
     before_script:
@@ -137,8 +138,6 @@ jobs:
     latex: false
     r_build_args: '--no-build-vignettes'
     r_check_args: '--as-cran --ignore-vignettes --no-examples'
-    before_script:
-      - Rscript -e 'devtools::install_github("PredictiveEcology/Require@development", dependencies = FALSE)'
   - os: osx
     osx_image: xcode11.4
     r: release
@@ -152,8 +151,6 @@ jobs:
     latex: false
     r_build_args: '--no-build-vignettes'
     r_check_args: '--as-cran --ignore-vignettes --no-examples'
-    before_script:
-      - Rscript -e 'devtools::install_github("PredictiveEcology/Require@development", dependencies = FALSE)'
 r_build_args: " "
 r_check_args: "--as-cran"
 warnings_are_errors: true
