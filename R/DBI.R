@@ -151,10 +151,15 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
 
   if (is.null(linkToCacheId)) {
-    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
+    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
       fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
                       preset = getOption("reproducible.qsavePreset", "high"))
-    else {
+      fs1 <- file.size(fts)
+      if (!identical(fs, fs1)) {
+        browser()
+        stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
+      }
+    } else {
       saveRDS(obj, file = fts)
       fs <- file.size(fts)
     }
