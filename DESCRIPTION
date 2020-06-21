@@ -1,5 +1,5 @@
 Package: reproducible
-Type: Package
+?Type: Package
 Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
 Description: Collection of high-level, robust, machine- and OS-independent tools
     for making deeply reproducible and reusable content in R.
