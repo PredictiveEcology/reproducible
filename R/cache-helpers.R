@@ -687,23 +687,32 @@ setAs(from = "character", to = "Path", function(from) {
           sapply(., dir.create, recursive = TRUE)
       }
 
-      if (any(saveFilename2 %>% grepl(., pattern = "[.]grd$"))) {
-        copyFile(from = curFilename2, to = saveFilename2, overwrite = TRUE, silent = TRUE)
-        griFilename <- sub(saveFilename2, pattern = "[.]grd$", replacement = ".gri")
-        curGriFilename <- sub(curFilename2, pattern = "[.]grd$", replacement = ".gri")
-        copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
-      } else {
-        saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
-          browser(expr = exists("._prepareFileBackedRaster_2"))
-          # change filename if it already exists
-          if (file.exists(saveFilename2[x])) {
-            saveFilename2[x] <- nextNumericName(saveFilename2[x])
-          }
-          copyFile(to = saveFilename2[x],
-                   overwrite = TRUE,
-                   from = curFilename2[x], silent = TRUE)
-        })
-      }
+      saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
+        #if (any(saveFilename2 %>% grepl(., pattern = "[.]grd$"))) {
+          curFilenameBase <- file_path_sans_ext(curFilename2[x])
+          curFilename <- dir(dirname(curFilename2[x]), pattern = paste0(basename(curFilenameBase), "\\."),
+                                 full.names = TRUE)
+          exts <- file_ext(curFilename)
+          saveFilenamesBase <- file_path_sans_ext(saveFilename2[x])
+          saveFilenames <- paste0(saveFilenamesBase, ".", exts)
+
+          #newAncilliaryFiles <- sub(saveFilename2, pattern = "[.]grd$", replacement = ".gri")
+          #copyFile(from = curFilename2, to = saveFilename2, overwrite = TRUE, silent = TRUE)
+          #griFilename <- sub(saveFilename2, pattern = "[.]grd$", replacement = ".gri")
+          #curGriFilename <- sub(curFilename2, pattern = "[.]grd$", replacement = ".gri")
+          #copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
+        #}
+
+        browser(expr = exists("._prepareFileBackedRaster_2"))
+        # change filename if it already exists
+        if (any(file.exists(saveFilenames))) {
+          # browser()
+          saveFilenames <- nextNumericName(saveFilenames)
+        }
+        copyFile(to = saveFilenames,
+                 overwrite = TRUE,
+                 from = curFilename, silent = TRUE)
+      })
 
       # for a stack with independent Raster Layers (each with own file)
       if (length(curFilename2) > 1) {
