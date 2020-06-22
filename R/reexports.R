@@ -9,3 +9,7 @@ Require::pkgDep
 #' @importFrom Require checkPath
 #' @export
 Require::checkPath
+
+#' @importFrom Require normPath
+#' @export
+Require::normPath

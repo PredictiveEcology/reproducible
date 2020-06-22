@@ -6,6 +6,7 @@
 \alias{Require}
 \alias{pkgDep}
 \alias{checkPath}
+\alias{normPath}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -13,6 +14,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{Require}{\code{\link[Require]{Require}}, \code{\link[Require]{checkPath}}, \code{\link[Require]{pkgDep}}}
+  \item{Require}{\code{\link[Require]{Require}}, \code{\link[Require]{checkPath}}, \code{\link[Require]{normPath}}, \code{\link[Require]{pkgDep}}}
 }}
 

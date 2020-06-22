@@ -93,7 +93,6 @@ Collate:
     'checksums.R'
     'cloud.R'
     'cloudOld.R'
-    'consistentPaths.R'
     'convertPaths.R'
     'copy.R'
     'download.R'

@@ -32,14 +32,16 @@ file.move <- function(from, to, overwrite = FALSE) {
 #'   Defaults to \code{.reproducibleTempPath()}.
 #'
 #' @rdname tempFilesAndFolders
+#' @importFrom Require normPath
 #' @export
 tempdir2 <- function(sub = "", tempdir = getOption("reproducible.tempPath", .reproducibleTempPath())) {
-  checkPath(normPath(file.path(tempdir, sub)), create = TRUE)
+  Require::checkPath(Require::normPath(file.path(tempdir, sub)), create = TRUE)
 }
 
 #' @param ... passed to \code{tempfile}, e.g., \code{fileext}
 #'
 #' @rdname tempFilesAndFolders
+#' @importFrom Require normPath
 #' @export
 tempfile2 <- function(sub = "", ...) {
   normPath(file.path(tempdir2(sub = sub), basename(tempfile(...))))

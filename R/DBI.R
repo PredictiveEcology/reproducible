@@ -282,7 +282,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
   do.call(dbConnect, args)
 }
 
-.emptyCacheTable <- data.table(cacheId = character(), tagKey = character(),
+.emptyCacheTable <- data.table::data.table(cacheId = character(), tagKey = character(),
                                tagValue = character(), createdDate = character())
 
 #' @importFrom DBI dbSendStatement dbClearResult

@@ -5,6 +5,7 @@
 #'
 #' @inheritParams prepInputs
 #' @inheritParams extractFromArchive
+#' @importFrom Require normPath
 #' @param dlFun Optional "download function" name, such as \code{"raster::getData"}, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
 #' @param ... Passed to \code{dlFun}. Still experimental.
