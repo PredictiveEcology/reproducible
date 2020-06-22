@@ -28,8 +28,11 @@ jobs:
     services:
       - xvfb
     r_packages:
+      - devtools
       - rgdal
       - rgeos
+    before_script:
+      - Rscript -e 'devtools::install_github("PredictiveEcology/Require@development", dependencies = FALSE)'
     before_install:
       - mkdir $HOME/.R && echo -e 'CXX_STD = CXX14\n\nVER=\nCCACHE=ccache\nCC=$(CCACHE) gcc$(VER) -std=gnu99\nCXX=$(CCACHE) g++$(VER)\nC11=$(CCACHE) g++$(VER)\nC14=$(CCACHE) g++$(VER)\nFC=$(CCACHE) gfortran$(VER)\nF77=$(CCACHE) gfortran$(VER)' > $HOME/.R/Makevars
       - echo -e 'max_size = 5.0G\nsloppiness = include_file_ctime\nhash_dir=false' > $HOME/.ccache/ccache.conf
@@ -62,6 +65,8 @@ jobs:
     before_install:
       - mkdir $HOME/.R && echo -e 'CXX_STD = CXX14\n\nVER=\nCCACHE=ccache\nCC=$(CCACHE) gcc$(VER) -std=gnu99\nCXX=$(CCACHE) g++$(VER)\nC11=$(CCACHE) g++$(VER)\nC14=$(CCACHE) g++$(VER)\nFC=$(CCACHE) gfortran$(VER)\nF77=$(CCACHE) gfortran$(VER)' > $HOME/.R/Makevars
       - echo -e 'max_size = 5.0G\nsloppiness = include_file_ctime\nhash_dir=false' > $HOME/.ccache/ccache.conf
+    before_script:
+      - Rscript -e 'devtools::install_github("PredictiveEcology/Require@development", dependencies = FALSE)'
     after_success:
     - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
     - Rscript -e 'lintr::lint_package()'
@@ -90,6 +95,8 @@ jobs:
       - devtools
       - rgdal
       - rgeos
+    before_script:
+      - Rscript -e 'devtools::install_github("PredictiveEcology/Require@development", dependencies = FALSE)'
   - os: linux
     dist: bionic
     r: devel
@@ -115,8 +122,11 @@ jobs:
       - edzer/sp
       - r-spatial/sf
       - rspatial/raster
+    r_packages:
+      - devtools
     before_script:
       - Rscript -e 'install.packages("rgdal", repos = "http://R-Forge.R-project.org")'
+      - Rscript -e 'devtools::install_github("PredictiveEcology/Require@development", dependencies = FALSE)'
   - os: osx
     osx_image: xcode9.4
     r: oldrel

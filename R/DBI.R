@@ -151,10 +151,22 @@ saveToCache <- function(cachePath, drv = getOption("reproducible.drv", RSQLite::
   }
 
   if (is.null(linkToCacheId)) {
-    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs")
-      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
-                      preset = getOption("reproducible.qsavePreset", "high"))
-    else {
+    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
+      for (attempt in 1:2) {
+        fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
+                        preset = getOption("reproducible.qsavePreset", "high"))
+        fs1 <- file.size(fts)
+        if (!identical(fs, fs1)) {
+          if (attempt == 1) {
+            warning("Attempted to save to Cache, but save seemed to fail; trying again")
+          } else {
+            stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
+          }
+        } else {
+          break
+        }
+      }
+    } else {
       saveRDS(obj, file = fts)
       fs <- file.size(fts)
     }
@@ -270,7 +282,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
   do.call(dbConnect, args)
 }
 
-.emptyCacheTable <- data.table(cacheId = character(), tagKey = character(),
+.emptyCacheTable <- data.table::data.table(cacheId = character(), tagKey = character(),
                                tagValue = character(), createdDate = character())
 
 #' @importFrom DBI dbSendStatement dbClearResult

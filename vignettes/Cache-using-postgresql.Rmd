@@ -11,7 +11,7 @@ output:
     self_contained: yes
     toc: yes
 vignette: >
-  %\VignetteIndexEntry{Cache using postgresql}
+  %\VignetteIndexEntry{Using alternate database backends for Cache}
   %\VignetteDepends{DBI}
   %\VignetteKeyword{Cache, postgresql}
   %\VignetteEncoding{UTF-8}

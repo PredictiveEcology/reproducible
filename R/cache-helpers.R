@@ -210,6 +210,7 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
 
 #' @export
 #' @rdname prepareOutput
+#' @importFrom Require normPath
 #' @importFrom RSQLite SQLite
 setMethod(
   ".prepareOutput",
