@@ -99,6 +99,7 @@ setMethod(
   signature = "SpatialPolygonsDataFrame",
   definition = function(studyArea, ...) {
     studyArea <- studyArea[, -c(1:ncol(studyArea))]
+    studyArea <- as(studyArea, "SpatialPolygons")
     studyAreaName(studyArea, ...)
 })
 
