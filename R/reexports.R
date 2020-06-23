@@ -18,3 +18,11 @@ Require::normPath
 #' @export
 Require::trimVersionNumber
 
+#' @importFrom Require tempfile2
+#' @export
+Require::tempfile2
+
+#' @importFrom Require tempdir2
+#' @export
+Require::tempdir2
+

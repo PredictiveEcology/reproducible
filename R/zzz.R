@@ -29,9 +29,9 @@
   options(o)
 }
 
-.reproducibleTempPath <- function() Require::normPath(file.path(tempdir(), "reproducible"))
-.reproducibleTempCacheDir <- function() Require::normPath(file.path(tempdir2(), "cache"))
-.reproducibleTempInputDir <- function() Require::normPath(file.path(tempdir2(), "inputs"))
+.reproducibleTempPath <- function() Require::tempdir2()
+.reproducibleTempCacheDir <- function() Require::tempdir2("cache")
+.reproducibleTempInputDir <- function() Require::tempdir2("inputs")
 
 .argsToRemove <- argsToRemove <- unique(c(names(formals(prepInputs)),
                                           names(formals(cropInputs)),

@@ -17,7 +17,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(all(grepl("adding", mess)))
 
   # .checkCacheRepo
-  options(reproducible.cachePath = .reproducibleTempPath())
+  options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl(messageNoCacheRepo, mess)))
 
