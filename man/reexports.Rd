@@ -15,6 +15,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{Require}{\code{\link[Require]{Require}}, \code{\link[Require]{checkPath}}, \code{\link[Require]{normPath}}, \code{\link[Require]{pkgDep}}, \code{\link[Require]{trimVersionNumber}}}
+  \item{Require}{\code{\link[Require]{checkPath}}, \code{\link[Require]{normPath}}, \code{\link[Require]{pkgDep}}, \code{\link[Require]{Require}}, \code{\link[Require]{trimVersionNumber}}}
 }}
 
