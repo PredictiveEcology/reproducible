@@ -172,12 +172,13 @@ test_that("repo stuff works", {
 })
 
 test_that("test miscellaneous fns (part 2)", {
+  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
   skip_if_no_token()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
-    drive_rm(as_id(cloudFolderID))
-    drive_rm(as_id(tmpCloudFolderID))
+    googledrive::drive_rm(googledrive::as_id(cloudFolderID))
+    googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID))
   }, add = TRUE)
 
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)

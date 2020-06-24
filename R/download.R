@@ -276,12 +276,13 @@ downloadFile <- function(archive, targetFile, neededFiles,
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
-#' @importFrom googledrive as_id drive_get
 #' @inheritParams preProcess
 #'
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
+  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
   }
@@ -310,7 +311,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
       a <- future::future({
         googledrive::drive_deauth()
-        retry(quote(drive_download(as_id(url), path = destFile, overwrite = overwrite,
+        retry(quote(googledrive::drive_download(googledrive::as_id(url), path = destFile, overwrite = overwrite,
                                    verbose = TRUE)))
         },
         globals = list(drive_download = googledrive::drive_download,
@@ -439,6 +440,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
         } else if (grepl("drive.google.com", url)) {
           browser(expr = exists("._downloadRemote_2"))
+          if (!requireNamespace("googledrive")) stop(googleDriveMissing)
           downloadResults <- dlGoogle(
             url = url,
             archive = archive,
@@ -449,6 +451,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             overwrite = overwrite,
             needChecksums = needChecksums
           )
+
         } else if (grepl("dl.dropbox.com", url)) {
           stop("Dropbox downloading is currently not supported")
         } else if (grepl("onedrive.live.com", url)) {
@@ -518,18 +521,14 @@ missingFiles <- function(files, checkSums, targetFile) {
       is.null(files))
 }
 
-#' @importFrom googledrive as_id drive_auth drive_get drive_token
 #' @importFrom quickPlot isRstudioServer
 assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath")) {
+  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
   if (isRstudioServer()) {
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
   }
-
-  #if (isInteractive())
-  # if (is.null(googledrive::drive_token()))
-  #   googledrive::drive_auth() ## needed for use on e.g., rstudio-server
 
   if (is.null(archive)) {
     fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url))))
@@ -558,3 +557,5 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   }
   return(downloadFilename)
 }
+
+googleDriveMissing <- "Must install googledrive package to use google drive files"

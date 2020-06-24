@@ -31,6 +31,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpdir <- tempdir2(rndstr(1, 6))
 
   if (isTRUE(needGoogle)) {
+    if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+
     if (utils::packageVersion("googledrive") >= "1.0.0")
       googledrive::drive_deauth()
     else
@@ -116,6 +118,7 @@ testOnExit <- function(testInitOut) {
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
   if (isTRUE(testInitOut$needGoogle)) {
+    if (!requireNamespace("googledrive")) stop(googleDriveMissing)
     if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
   }
@@ -266,6 +269,8 @@ if (utils::packageVersion("raster") <= "2.6.7") {
 
 
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, type = c("Raster", "Stack", "Brick")) {
+  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+
   # Second test .grd which has two files
   ####################################################
   # neither cloud or local exist -- should create local and upload to cloud
@@ -389,7 +394,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_true(attr(r1End, ".Cache")$newCache == TRUE) # new to local cache
 
 
-  driveLsBefore <- drive_ls(cloudFolderID)
+  driveLsBefore <- googledrive::drive_ls(cloudFolderID)
   r5Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
   r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   if (mc$type == "Stack") {
@@ -405,10 +410,10 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
   })
   expect_true(attr(r5End, ".Cache")$newCache == FALSE) # new to local cache
-  driveLsAfter <- drive_ls(cloudFolderID)
+  driveLsAfter <- googledrive::drive_ls(cloudFolderID)
   expect_true(identical(driveLsAfter, driveLsBefore))
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  driveLsEnd <- drive_ls(cloudFolderID)
+  driveLsEnd <- googledrive::drive_ls(cloudFolderID)
   expect_true(NROW(driveLsEnd) == 0)
 }
 

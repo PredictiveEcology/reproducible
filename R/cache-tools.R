@@ -118,6 +118,8 @@ setMethod(
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
+      if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+
       browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
@@ -140,6 +142,7 @@ setMethod(
         rmFromCloudFolder(cloudFolderID, x, cacheIds)
 
       }
+
     }
 
     browser(expr = exists("rrrr"))
@@ -737,7 +740,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   }
   browser(expr = exists("._rmFromCloudFolder_1"))
 
-  gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
+  gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)
   filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
   # filenamesToRm <- paste0(cacheIds, ".rda")
@@ -753,10 +756,10 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   toDelete <- gdriveLs[isInCloud,]
   message("Cloud:")
   if (!is.null(filenames)) {
-    rasFiles <- drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
+    rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
     toDelete <- rbind(rasFiles, toDelete)
   }
-  retry(quote(drive_rm(toDelete)))
+  retry(quote(googledrive::drive_rm(toDelete)))
 }
 
 
