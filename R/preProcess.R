@@ -877,7 +877,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
-#' @importFrom testthat capture_warnings
 #'
 #' @examples
 #' library(datasets)
@@ -936,9 +935,12 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
     dups <- duplicated(.basename(from))
 
     # Try hard link first -- the only type that R deeply recognizes
-    warns <- testthat::capture_warnings({
-      result <- file.link(from[!dups], to)
-    })
+    result <-  captureWarningsToAttr(
+      file.link(from[!dups], to)
+    )
+    warns <- attr(result, "warning")
+    attr(result, "warning") <- NULL
+
     if (isTRUE(all(result))) {
       message("Hardlinked version of file created at: ", toCollapsed, ", which points to "
               , fromCollapsed, "; no copy was made.")
@@ -1060,7 +1062,6 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
   return(fileExt)
 }
 
-#' @importFrom testthat capture_warnings
 #' @keywords internal
 .guessFileExtension <- function(file) {
   if (isWindows()) {
@@ -1070,16 +1071,23 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
       findFile <- file.exists(possLocs)
       if (any(findFile))
         fileLoc <- possLocs[findFile][1]
-      warn <- testthat::capture_warnings({
-        magicNumber <- system(paste(fileLoc, file), intern = TRUE)
-      })
+
+      magicNumber <- captureWarningsToAttr(
+        system(paste(fileLoc, file), intern = TRUE)
+      )
+      warn <- attr(magicNumber, "warning")
+      attr(magicNumber, "warning") <- NULL
+
       if (length(warn) > 0) {
         splitted <- unlist(strsplit(x = file, split = ":/"))
         fileAdapted <- file.path(paste0("/mnt/", tolower(splitted[1])), splitted[2])
-        warn <- testthat::capture_warnings({
-          magicNumber <- shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE,
-                               wait = TRUE, translate = FALSE, mustWork = TRUE)
-        })
+        magicNumber <- captureWarningsToAttr(
+          shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE,
+                wait = TRUE, translate = FALSE, mustWork = TRUE)
+        )
+        warn <- attr(magicNumber, "warning")
+        attr(magicNumber, "warning") <- NULL
+
       }
       fileExt <- if (length(warn) == 0) {
         .decodeMagicNumber(magicNumberString = magicNumber)

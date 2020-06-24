@@ -161,7 +161,6 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom rlang quo
 #' @importFrom R.utils isAbsolutePath isFile
 #' @importFrom utils methods
-#' @importFrom testthat capture_error
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
 #' @seealso \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
@@ -317,12 +316,21 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             as.list(tmpEnv, all.names = TRUE)
         } else {
           browser(expr = exists("._prepInputs_3"))
-          err <- capture_error(
+          err <- tryCatch(error = function(xx) xx,
             mess <- capture.output(
               type = "message",
               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
                            useCache = useCache)))
-          if (!is.null(err)) stop(err)
+          # errOld <- capture_error(
+          #  mess <- capture.output(
+          #    type = "message",
+          #    obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+          #                 useCache = useCache)))
+          if (is(err, "simpleError")) {
+          #   if (!identical(errOld, err$message)) browser()
+             stop(err$message)
+          }
+          # if (!is.null(errOld)) stop(errOld)
 
           mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
           if (length(mess) > 0)
@@ -911,7 +919,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #'
 #' @return A character string of all files in the archive.
 #'
-#' @importFrom testthat capture_warnings
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
@@ -934,13 +941,20 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       } else {
         if (grepl(x = extractSystemCallPath, pattern = "7z")) {
           extractSystemCall <- paste0("\"", extractSystemCallPath, "\"", " l ", archive[1])
-          if (isWindows())
-            warn <- capture_warnings(filesOutput <- system(extractSystemCall,
-                                                           show.output.on.console = FALSE, intern = TRUE))
-          else
+          if (isWindows()) {
+            filesOutput <- captureWarningsToAttr(
+                             system(extractSystemCall, show.output.on.console = FALSE, intern = TRUE)
+            )
+            warn <- attr(filesOutput, "warning")
+            attr(filesOutput, "warning") <- NULL
+          } else {
             # On Linux/MacOS
-            warn <- capture_warnings(
-              filesOutput <- system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE))
+            filesOutput <- captureWarningsToAttr(
+              system(extractSystemCall, intern = TRUE, ignore.stderr = TRUE))
+            warn <- attr(filesOutput, "warning")
+            attr(filesOutput, "warning") <- NULL
+          }
+
         } else {
           archiveExtractBinary <- .archiveExtractBinary()
           if (is.null(archiveExtractBinary))

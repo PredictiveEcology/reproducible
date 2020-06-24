@@ -522,7 +522,6 @@ fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
 #' failures to \code{rgeos::gIsValid}
 #'
 #' @export
-#' @importFrom testthat capture_warnings
 #' @rdname fixErrors
 fixErrors.SpatialPolygons <- function(x, objectName = NULL,
                                       attemptErrorFixes = TRUE,
@@ -540,12 +539,12 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
         TRUE
       }
       if (anyNotValid) {
-        warn <- capture_warnings({
-          x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
-        })
+        x1 <- captureWarningsToAttr(
+          try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
+        )
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+        x <- bufferWarningSuppress(warn = attr(x1, "warning"), objectName = objectName,
                               x1 = x1, bufferFn = "raster::buffer")
       } else {
         message("  Found no errors.")
@@ -557,7 +556,6 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 
 #' @export
 #' @importFrom sf st_buffer st_geometry st_is_valid
-#' @importFrom testthat capture_warnings
 #' @rdname fixErrors
 fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -568,11 +566,12 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
-        warn <- capture_warnings({
-          x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
-        })
 
-        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+        x1 <- captureWarningsToAttr(
+          try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
+        )
+
+        x <- bufferWarningSuppress(warn = attr(x1, "warning"), objectName = objectName,
                                    x1 = x1, bufferFn = "sf::st_buffer")
       } else {
         message("  Found no errors.")
@@ -634,7 +633,6 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'
 #' @importFrom fpCompare %==%
 #' @importFrom raster crs dataType res res<- dataType<-
-#' @importFrom testthat capture_warnings
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
                                  useGDAL = getOption("reproducible.useGDAL", TRUE),
                                  ...) {
@@ -785,9 +783,12 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         if (is.null(rasterToMatch)) {
           Args <- append(dots, list(from = x, crs = targetCRS))
-          warn <- capture_warnings({
-            x <- do.call(projectRaster, args = Args)
-          })
+          x <- captureWarningsToAttr(
+            do.call(projectRaster, args = Args)
+          )
+          warn <- attr(x, "warning")
+          attr(x, "warning") <- NULL
+
         } else {
           # projectRaster does silly things with integers, i.e., it converts to numeric
           if (is.na(targetCRS))
@@ -823,7 +824,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
 
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
-        warnings(warn)
+        if (length(warn))
+          warnings(warn)
         ## projectRaster doesn't always ensure equal res (floating point number issue)
         ## if resolutions are close enough, re-write res(x)
         ## note that when useSAcrs = TRUE, the different resolutions may be due to
@@ -1279,7 +1281,6 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
   x
 }
 
-#' @importFrom testthat capture_warnings
 #' @rdname writeOutputs
 writeOutputs.Spatial <- function(x, filename2 = NULL,
                                  overwrite = getOption("reproducible.overwrite", TRUE),
@@ -1293,8 +1294,8 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
     dots <- dots[keepForDots]
     # Internally in rgdal::writeOGR, it converts the row.names to integer with this test
     #   it creates a warning there, so capture here instead
-    warn <- testthat::capture_warnings(as.integer(row.names(x)))
-    if (isTRUE(any(grepl("NAs introduced by coercion", warn))))
+    warn <- captureWarningsToAttr(as.integer(row.names(x)))
+    if (isTRUE(any(grepl("NAs introduced by coercion", attr(warn, "warning")))))
       row.names(x) <- as.character(seq_along(row.names(x)))
     do.call(shapefile, append(dots, list(x = x, filename = filename2, overwrite = overwrite)))
   }

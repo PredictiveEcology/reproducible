@@ -382,7 +382,6 @@ dlGeneric <- function(url, needChecksums, destinationPath) {
   list(destFile = destFile, needChecksums = needChecksums)
 }
 
-#' @importFrom testthat capture_warnings
 #' @inheritParams prepInputs
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, skipDownloadMsg,
@@ -486,9 +485,10 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           # Try hard link first -- the only type that R deeply recognizes
           # if that fails, fall back to copying the file.
           # NOTE: never use symlink because the original will be deleted.
-          warns <- capture_warnings({
-            result <- file.link(downloadResults$destFile, desiredPath)
-          })
+          result <- suppressWarnings(
+            file.link(downloadResults$destFile, desiredPath)
+          )
+
           if (isFALSE(result)) {
             result <- file.copy(downloadResults$destFile, desiredPath)
           }
