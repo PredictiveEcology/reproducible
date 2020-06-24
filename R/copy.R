@@ -31,7 +31,6 @@ file.move <- function(from, to, overwrite = FALSE) {
 #' @param tempdir Optional character string where the temporary dir should be placed.
 #'   Defaults to \code{.reproducibleTempPath()}.
 #'
-#' @rdname tempFilesAndFolders
 #' @importFrom Require normPath
 #' @export
 tempdir2 <- function(sub = "", tempdir = getOption("reproducible.tempPath", .reproducibleTempPath())) {
@@ -40,7 +39,6 @@ tempdir2 <- function(sub = "", tempdir = getOption("reproducible.tempPath", .rep
 
 #' @param ... passed to \code{tempfile}, e.g., \code{fileext}
 #'
-#' @rdname tempFilesAndFolders
 #' @importFrom Require normPath
 #' @export
 tempfile2 <- function(sub = "", ...) {

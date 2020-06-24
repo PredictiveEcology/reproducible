@@ -159,7 +159,7 @@ setMethod(
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
-        tmpDir <- .reproducibleTempPath()
+        tmpDir <- .reproducibleTempCacheDir()
         # Test whether the user has accepted the default. If yes, then give message.
         #  If no, then user is aware and doesn't need a message
         if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
@@ -168,8 +168,8 @@ setMethod(
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        message("No cacheRepo supplied. Using ",.reproducibleTempPath())
-        .reproducibleTempPath()
+        message("No cacheRepo supplied. Using ",.reproducibleTempCacheDir())
+        .reproducibleTempCacheDir()
       }
       checkPath(path = cacheRepo, create = create)
     })
