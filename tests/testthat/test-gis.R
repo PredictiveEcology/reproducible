@@ -138,7 +138,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
     )
     expect_is(NFDB_PT, "sf")
     expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
-                      file_ext(dir(pattern = "NFDB_point"))))
+                      fileExt(dir(pattern = "NFDB_point"))))
 
     warn <- capture_warnings(NFDB_PT_BCR6 <- Cache(
       postProcess,

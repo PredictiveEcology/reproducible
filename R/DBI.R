@@ -220,16 +220,16 @@ loadFromCache <- function(cachePath, cacheId,
 
   # First test if it is correct format
   if (!file.exists(f)) {
-    sameCacheID <- dir(dirname(f), pattern = file_path_sans_ext(basename(f)))
+    sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
     if (length(sameCacheID)) {
-      message(blue(paste0("     (Changing format of Cache entry from ", file_ext(sameCacheID), " to ",
-              file_ext(f), ")")))
+      message(blue(paste0("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+              fileExt(f), ")")))
       obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
-                           format = file_ext(sameCacheID))
+                           format = fileExt(sameCacheID))
       fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
                         cacheId = cacheId)
       rmFromCache(cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-                  format = file_ext(sameCacheID))
+                  format = fileExt(sameCacheID))
       return(fs)
     }
   }
@@ -613,12 +613,11 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
   dbClearResult(res)
 }
 
-#' @importFrom tools file_ext
 #' @importFrom qs qread
 loadFile <- function(file, format) {
   browser(expr = exists("._loadFile_1"))
   if (missing(format))
-    format <- file_ext(file)
+    format <- fileExt(file)
   if (format == "qs") {
     obj <- qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
   } else {

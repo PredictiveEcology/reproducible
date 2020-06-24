@@ -54,27 +54,23 @@ Imports:
     Require,
     raster,
     RSQLite,
-    remotes,
     rlang,
     sf,
     sp,
-    testthat,
-    tools,
     usethis,
-    utils,
-    versions
+    utils
 Suggests:
     covr,
     fasterize,
     future,
     gdalUtils,
-    git2r (>= 0.18),
     knitr,
     parallel,
     RCurl (>= 1.95-4.8),
     rgdal,
     rgeos,
     rmarkdown,
+    testthat,
     TimeWarp
 Encoding: UTF-8
 Language: en-CA

@@ -53,7 +53,6 @@ chooseCRANmirror2 <- function() {
 #'
 #' @author Jean Marchal and Alex Chubaty
 #' @export
-#' @importFrom tools file_ext file_path_sans_ext
 #' @rdname prefix
 #'
 #' @examples
@@ -74,8 +73,8 @@ chooseCRANmirror2 <- function() {
 #' @name suffix
 #' @rdname prefix
 .suffix <- function(f, suffix = "") {
-  file.path(dirname(f), paste0(tools::file_path_sans_ext(basename(f)), suffix,
-                               ".", tools::file_ext(f)))
+  file.path(dirname(f), paste0(tools::filePathSansExt(basename(f)), suffix,
+                               ".", fileExt(f)))
 }
 
 #' Get a unique name for a given study area
@@ -297,4 +296,13 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL) {
     message(x)
     }
   })
+}
+
+filePathSansExt <- function(x) {
+  sub("([^.]+)\\.[[:alnum:]]+$", "\\1", x)
+}
+
+fileExt <- function(x) {
+  pos <- regexpr("\\.([[:alnum:]]+)$", x)
+  ifelse(pos > -1L, substring(x, pos + 1L), "")
 }

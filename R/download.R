@@ -289,9 +289,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                                    targetFile = targetFile,
                                    destinationPath = destinationPath)
 
-  #destFile <- tempfile(fileext = paste0(".", tools::file_ext(downloadFilename)))
   destFile <- file.path(destinationPath, basename(downloadFilename))
-  # checkPath(dirname(destFile), create = TRUE) # don't need with tempdir2
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
     message("  Downloading from Google Drive.")
     fs <- attr(archive, "fileSize")

@@ -327,8 +327,8 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_false(identical(Filenames(r2Orig), Filenames(r1Orig)))
   expect_true(r1EndCacheAttr == TRUE)
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
-  filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(file_path_sans_ext(Filenames(r2End))))))
-  filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(file_path_sans_ext(r1EndFilename)))))
+  filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))))
+  filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))))
   expect_true(NROW(filnames1End) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
   expect_true(NROW(filnames2End) == numRasterFiles) # both sets because of the _1
 
@@ -362,9 +362,9 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   data.table::setDT(driveLs)
   expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
   # should have 2 files in cloud b/c of grd and gri
-  expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filenames(r4End)))) == numRasterFiles)
+  expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
-  suppressMessages(expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)),
+  suppressMessages(expect_true(NROW(unique(showCache(userTags = filePathSansExt(driveLs[endsWith(name, "rda")]$name)),
                                            by = .cacheTableHashColName()))==1))
 
   ####################################################

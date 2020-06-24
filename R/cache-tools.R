@@ -200,7 +200,6 @@ setMethod(
 
         if (length(filesToRemove)) {
           filesToRemove <- unlist(filesToRemove)
-          #filesToRemove <- file_path_sans_ext(filesToRemove)#gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
           if (isInteractive()) {
             dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )

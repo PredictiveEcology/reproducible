@@ -87,7 +87,6 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL) {
 #' @param gdriveLs The result of \code{googledrive::drive_ls(as_id(cloudFolderID), pattern = "outputHash")}
 #' @param output The output object of FUN that was run in \code{Cache}
 #' @importFrom googledrive drive_upload
-#' @importFrom tools file_ext
 #' @inheritParams Cache
 cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output) {
   artifact <- isInRepo[[.cacheTableHashColName()]][1]
@@ -100,7 +99,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
     newFileName <- paste0(outputHash,".rda")
   }
   isInCloud <- gsub(gdriveLs$name,
-                    pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
+                    pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                     replacement = "") %in% outputHash
 
   if (!any(isInCloud)) {
@@ -140,7 +139,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
   message("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
   localNewFilename <- file.path(tempdir2(), basename2(newFileName))
   isInCloud <- gsub(gdriveLs$name,
-                    pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
+                    pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                     replacement = "") %in% outputHash
 
   retry(quote(drive_download(file = as_id(gdriveLs$id[isInCloud][1]),
@@ -197,10 +196,6 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
   out <- NULL
   if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {
     allRelevantFiles <- unique(rasterFilename)
-    # allRelevantFiles <- sapply(rasterFilename, function(file) {
-    #   unique(dir(dirname(file), pattern = paste(collapse = "|", file_path_sans_ext(basename(file))),
-    #              full.names = TRUE))
-    # })
     out <- lapply(allRelevantFiles, function(file) {
       try(retry(quote(drive_upload(media = file,  path = cloudFolderID, name = basename(file),
                                overwrite = FALSE))))
@@ -218,13 +213,13 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
     gdriveLs2 <- NULL
     cacheRepoRasterDir <- file.path(cacheRepo, "rasters")
     checkPath(cacheRepoRasterDir, create = TRUE)
-    simpleFilenames <- unique(file_path_sans_ext(basename2(unlist(rasterFilename))))
+    simpleFilenames <- unique(filePathSansExt(basename2(unlist(rasterFilename))))
     retry(quote({
       gdriveLs2 <- drive_ls(path = as_id(cloudFolderID),
                             pattern = paste(collapse = "|", simpleFilenames))
     }))
 
-    if (all(simpleFilenames %in% file_path_sans_ext(gdriveLs2$name))) {
+    if (all(simpleFilenames %in% filePathSansExt(gdriveLs2$name))) {
       filenameMismatches <- unlist(lapply(seq_len(NROW(gdriveLs2)), function(idRowNum) {
         localNewFilename <- file.path(cacheRepoRasterDir, basename2(gdriveLs2$name[idRowNum]))
         filenameMismatch <- identical(localNewFilename, rasterFilename)

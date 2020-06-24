@@ -7,8 +7,7 @@
 .checkGitConfig()
 }
 \description{
-In general, interacting with remote repositories using \pkg{git2r} won't work
-if a user's \file{.gitconfig} file rewrites HTTPS urls to SSH.
+Defunct.
 }
 \author{
 Alex Chubaty

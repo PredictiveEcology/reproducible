@@ -1214,12 +1214,12 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
-      if (tools::file_ext(filename(x)) == "grd") {
-        if (!tools::file_ext(filename2) == "grd") {
-          warning("filename2 file type (", tools::file_ext(filename2), ") was not same type (",
-                  tools::file_ext(filename(x)),") ", "as the filename of the raster; ",
-                  "Changing filename2 so that it is ", tools::file_ext(filename(x)))
-          filename2 <- gsub(tools::file_ext(filename2), "grd", filename2)
+      if (fileExt(filename(x)) == "grd") {
+        if (!fileExt(filename2) == "grd") {
+          warning("filename2 file type (", fileExt(filename2), ") was not same type (",
+                  fileExt(filename(x)),") ", "as the filename of the raster; ",
+                  "Changing filename2 so that it is ", fileExt(filename(x)))
+          filename2 <- gsub(fileExt(filename2), "grd", filename2)
         }
         file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
                   overwrite = overwrite)
@@ -1303,13 +1303,12 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
 }
 
 #' @importFrom sf st_write
-#' @importFrom tools file_ext
 #' @rdname writeOutputs
 writeOutputs.sf <- function(x, filename2 = NULL,
                             overwrite = getOption("reproducible.overwrite", FALSE),
                             ...) {
   if (!is.null(filename2)) {
-    if (!nzchar(tools::file_ext(filename2))) {
+    if (!nzchar(fileExt(filename2))) {
       filename2 <- paste0(filename2, ".shp")
     }
     if (identical(".", dirname(filename2))) {

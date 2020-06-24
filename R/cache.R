@@ -352,7 +352,6 @@ utils::globalVariables(c(
 #' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
-#' @importFrom tools file_path_sans_ext
 #' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
 #' @rdname Cache
 #'
@@ -757,7 +756,7 @@ setMethod(
         # Here, download cloud copy to local folder, skip the running of FUN
         newFileName <- CacheStoredFile(cacheRepo, outputHash) # paste0(outputHash,".rda")
         isInCloud <- gsub(gdriveLs$name,
-                          pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
+                          pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                           replacement = "") %in% outputHash
         if (any(isInCloud)) {
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,

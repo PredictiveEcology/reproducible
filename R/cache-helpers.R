@@ -1027,17 +1027,16 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   unique(otherFns)
 }
 
-#' @importFrom tools file_path_sans_ext file_ext
 #' @keywords internal
 nextNumericName <- function(string) {
-  theExt <- file_ext(string)
-  saveFilenameSansExt <- file_path_sans_ext(string)
+  theExt <- fileExt(string)
+  saveFilenameSansExt <- filePathSansExt(string)
   finalNumericPattern <- "_[[:digit:]]*$"
   allSimilarFilesInDir <- dir(dirname(saveFilenameSansExt), pattern = basename(saveFilenameSansExt))
   allSimilarFilesInDirSansExt <- if (length(allSimilarFilesInDir) == 0) {
     unique(saveFilenameSansExt)
   } else {
-    unique(file_path_sans_ext(allSimilarFilesInDir))
+    unique(filePathSansExt(allSimilarFilesInDir))
   }
   alreadyHasNumeric <- grepl(allSimilarFilesInDirSansExt, pattern = finalNumericPattern)
   if (isTRUE(any(alreadyHasNumeric))) {

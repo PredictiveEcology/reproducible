@@ -406,7 +406,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @return A character vector listing the paths of the extracted archives.
 #'
 #' @author Jean Marchal and Eliot McIntire
-#' @importFrom tools file_ext
 #'
 extractFromArchive <- function(archive,
                                destinationPath = getOption("reproducible.destinationPath", dirname(archive)),
@@ -416,8 +415,8 @@ extractFromArchive <- function(archive,
 
   browser(expr = exists('._extractFromArchive_1'))
   if (!is.null(archive)) {
-    if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% file_ext(archive)))) {
-      stop("Archives of type ", file_ext(archive), " are not currently supported. ",
+    if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% fileExt(archive)))) {
+      stop("Archives of type ", fileExt(archive), " are not currently supported. ",
            "Try extracting manually then placing extracted files in ", destinationPath)
     }
   }
@@ -487,7 +486,7 @@ extractFromArchive <- function(archive,
             .tempPath = .tempPath
           )
         } else if (any(neededFiles %in% basename(filesInArchive)) || is.null(neededFiles)) {
-          possibleFolders <- filesInArchive[file_ext(filesInArchive) == ""]
+          possibleFolders <- filesInArchive[fileExt(filesInArchive) == ""]
           if (length(possibleFolders) != 0) {
             filesInArchive <- setdiff(filesInArchive, possibleFolders)
           }
@@ -505,8 +504,8 @@ extractFromArchive <- function(archive,
                                                     .tempPath = .tempPath))
         } else {
           # don't have a 2nd archive, and don't have our neededFiles file
-          #isArchive <- grepl(file_ext(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
-          isArchive <- grepl(file_ext(filesInArchive), pattern = paste0("(",paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE)
+          #isArchive <- grepl(fileExt(filesInArchive), pattern = "(zip|tar|rar)", ignore.case = TRUE)
+          isArchive <- grepl(fileExt(filesInArchive), pattern = paste0("(",paste(knownArchiveExtensions, collapse = "|"), ")"), ignore.case = TRUE)
 
           if (any(isArchive)) {
             arch <- .basename(filesInArchive[isArchive])
@@ -552,7 +551,6 @@ extractFromArchive <- function(archive,
 #' @keywords internal
 #' @rdname guessAtTarget
 #' @name guessAtTarget
-#' @importFrom tools file_ext
 #' @importFrom utils unzip untar
 #' @inheritParams postProcess
 #' @param filesExtracted A character vector of all files that have been extracted (e.g.,
@@ -566,7 +564,7 @@ extractFromArchive <- function(archive,
     stop("fun must be a character string, not the function")
   }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
-  fileExt <- file_ext(possibleFiles)
+  fileExt <- fileExt(possibleFiles)
   isShapefile <- grepl("shp", fileExt)
   isRaster <- fileExt %in% c("tif", "grd")
   isRDS <- fileExt %in% c("rds")
@@ -626,7 +624,7 @@ extractFromArchive <- function(archive,
 #' @importFrom utils untar unzip
 .whichExtractFn <- function(archive, args) {
   if (!(is.null(archive))) {
-    ext <- tolower(file_ext(archive))
+    ext <- tolower(fileExt(archive))
     if (!ext %in% knownArchiveExtensions)
       stop("preProcess can only deal with archives with following extensions:\n",
            paste(knownArchiveExtensions, collapse = ", "))
@@ -686,7 +684,7 @@ extractFromArchive <- function(archive,
     }
     # list of full paths of all extracted files!
     extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
-    internalFolders <- extractedFiles[file_ext(extractedFiles) == ""]
+    internalFolders <- extractedFiles[fileExt(extractedFiles) == ""]
     extractedFiles <- setdiff(x = extractedFiles, y = internalFolders)
     if (length(extractedFiles) == 0) {
       stop("preProcess could not extract the files from the archive ", basename(args[[1]]),".",
@@ -792,11 +790,10 @@ extractFromArchive <- function(archive,
 #' @keywords internal
 .checkSumsMem <- memoise::memoise(.checkSums)
 
-#' @importFrom tools file_ext
 .isArchive <- function(filename) {
   if (!is.null(filename)) {
     filename <- if (length(filename)) {
-      isArchive <- file_ext(filename) %in% knownArchiveExtensions
+      isArchive <- fileExt(filename) %in% knownArchiveExtensions
       if (any(isArchive)) {
         filename[isArchive]
       } else {
@@ -895,9 +892,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname checkForAuxiliaryFiles
 .checkForAuxiliaryFiles <- function(neededFiles) {
-  if ("shp" %in% file_ext(neededFiles)) { # if user wants .shp file, needs other anciliary files
+  if ("shp" %in% fileExt(neededFiles)) { # if user wants .shp file, needs other anciliary files
     # but not all
-    shpfileBase <- gsub(".shp$", "", neededFiles[file_ext(neededFiles) %in% "shp"])
+    shpfileBase <- gsub(".shp$", "", neededFiles[fileExt(neededFiles) %in% "shp"])
     reqdShpFiles <- paste0(shpfileBase, ".", c("shx", "dbf", "prj", "sbx", "sbn"))
     if (length(neededFiles) > 0) {
       if (identical(FALSE, (all(reqdShpFiles %in% neededFiles)))) {
@@ -922,14 +919,14 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
-  if (length(archive) > 0 && tools::file_ext(archive[1]) %in% knownSystemArchiveExtensions) {
+  if (length(archive) > 0 && tools::fileExt(archive[1]) %in% knownSystemArchiveExtensions) {
     extractSystemCallPath <- .testForArchiveExtract()
   }
   funWArgs <- .whichExtractFn(archive[1], NULL)
   filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
-      if (!file_ext(archive[1]) %in% knownSystemArchiveExtensions) {
+      if (!fileExt(archive[1]) %in% knownSystemArchiveExtensions) {
         filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
         if ("Name" %in% names(filesInArchive)) {
           # for zips, rm directories (length = 0)

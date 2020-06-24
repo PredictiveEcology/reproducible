@@ -23,11 +23,7 @@ that contains the GitHub PAT or filename of the GitHub private key file.}
 Invisibly returns a git_repository class object, defined in \pkg{git2r}.
 }
 \description{
-In reproducible research, not only do packages and R version have to be
-consistent, but also specific versions of version controlled scripts.
-This function allows a simple way to create an exactly copy locally of a git
-repository. It can use ssh keys (including GitHub deploy keys) or GitHub
-Personal Access Tokens.
+Defunct.
 }
 \examples{
 \dontrun{
