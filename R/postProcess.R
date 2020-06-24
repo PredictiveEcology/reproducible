@@ -357,8 +357,8 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           if (!completed) {
             ## if not completed because file doesn't exist, let the user know with a sensible error.
             noFileError <- grepl("Error in .local(.Object, ...)", yy, fixed = TRUE)
-            fileExists <- file.exists(filename(x))
-            if (noFileError | !fileExists) {
+            fileDoesntExist <- fromDisk(x) && !file.exists(filename(x))
+            if (noFileError && fileDoesntExist) {
               stop("The following file-backed raster is supposed to be on disk ",
                    "but appears to to be missing:\n",
                    paste("    ", filename(x), collapse = "\n"))
@@ -1184,6 +1184,7 @@ writeOutputs <- function(x, filename2,
   UseMethod("writeOutputs")
 }
 
+#' @export
 #' @rdname writeOutputs
 writeOutputs.Raster <- function(x, filename2 = NULL,
                                 overwrite = getOption("reproducible.overwrite", FALSE),
