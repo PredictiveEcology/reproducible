@@ -919,7 +919,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
-  if (length(archive) > 0 && tools::fileExt(archive[1]) %in% knownSystemArchiveExtensions) {
+  if (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions) {
     extractSystemCallPath <- .testForArchiveExtract()
   }
   funWArgs <- .whichExtractFn(archive[1], NULL)

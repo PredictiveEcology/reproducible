@@ -73,7 +73,7 @@ chooseCRANmirror2 <- function() {
 #' @name suffix
 #' @rdname prefix
 .suffix <- function(f, suffix = "") {
-  file.path(dirname(f), paste0(tools::filePathSansExt(basename(f)), suffix,
+  file.path(dirname(f), paste0(filePathSansExt(basename(f)), suffix,
                                ".", fileExt(f)))
 }
 
