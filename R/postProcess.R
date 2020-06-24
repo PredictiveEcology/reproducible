@@ -1351,8 +1351,9 @@ writeOutputs.default <- function(x, filename2, ...) {
 #' @author Eliot McIntire
 #' @author Ceres Barros
 #' @author Ian Eddy
+#' @author Eliot McIntire
 #' @export
-#' @importFrom raster getValues
+#' @importFrom raster getValues sampleRandom
 #' @rdname assessDataType
 #'
 #' @example inst/examples/example_assessDataType.R
@@ -1374,6 +1375,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
     ras <- setMinMaxIfNeeded(ras)
     if (maxValCurrent != maxValue(ras))
       datatype <- dataType(ras)
+  } else {
+    ras <- setMinMaxIfNeeded(ras)
   }
 
   if (is.null(datatype)) {
@@ -1388,41 +1391,52 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
     maxVal <- max(ras@data@max)
     signVal <- minVal < 0
     doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
-
-    ## writeRaster deals with infinite values as FLT8S
-    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
-
-    if (!doubVal & !signVal) {
+    datatype <- if (doubVal) {
+      names(MinValsFlts)[min(which(minVal >= MinValsFlts & maxVal <= MaxValsFlts))]
+    } else {
       ## only check for binary if there are no decimals and no signs
       logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
-
       if (logi) {
-        datatype <- "LOG1S"
+        "LOG1S"
       } else {
-        ## if() else is faster than if
-        datatype <- if (maxVal <= 255) "INT1U" else
-          if (maxVal <= 65534) "INT2U" else
-            if (maxVal <= 4294967296) "INT4U" else  ## note: ?dataType advises against INT4U
-              if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
-      }
-    } else {
-      if (signVal & !doubVal) {
-        ## if() else is faster than if
-        datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
-          if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
-            if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else  ## note: ?dataType advises against INT4U
-              if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
-      } else {
-        if (doubVal)
-          datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+        names(MinVals)[min(which(minVal >= unlist(MinVals) & maxVal <= unlist(MaxVals)))]
       }
     }
-  }
-  #convert datatype if needed
-  switch(type,
+
+    #   if (!doubVal & !signVal) {
+    #     ## only check for binary if there are no decimals and no signs
+    #     logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
+    #
+    #     if (logi) {
+    #       datatype <- "LOG1S"
+    #     } else {
+    #       ## if() else is faster than if
+    #       datatype <- if (maxVal <= MaxVals$INT1U) "INT1U" else
+    #         if (maxVal <= MaxVals$INT2U) "INT2U" else
+    #           if (maxVal <= MaxVals$INT4U) "INT4U" else  ## note: ?dataType advises against INT4U
+    #             if (maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
+    #     }
+    #   } else {
+    #     if (signVal & !doubVal) {
+    #       ## if() else is faster than if
+    #       datatype <- if (minVal >= -MaxVals$INT1S & maxVal <= MaxVals$INT1S) "INT1S" else
+    #         if (minVal >= -MaxVals$INT2S & maxVal <= MaxVals$INT2S) "INT2S" else
+    #           if (minVal >= -MaxVals$INT4S & maxVal <=  MaxVals$INT4S) "INT4S" else  ## note: ?dataType advises against INT4U
+    #             if (minVal < -MaxVals$FLT4S | maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
+    #     } else {
+    #       if (doubVal)
+    #         datatype <- if (minVal < -MaxVals$FLT4S | maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
+    #     }
+    #   }
+    #   if (!identical(datatype, datatype1))
+    #     browser()
+    }
+    #convert datatype if needed
+    switch(type,
          GDAL = {
            switch(datatype,
                   LOG1S = {datatype <- "Byte"},
+                  INT1S = {datatype <- "Int16"},
                   INT2S = {datatype <- "Int16"},
                   INT4S = {datatype <- "Int32"},
                   INT1U = {datatype <- "Byte"},
@@ -1463,7 +1477,7 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 
 #' Assess the appropriate raster layer data type for GDAL
 #'
-#' Can be used to write prepared inputs on disk.
+#' This is a convenience function around \code{assessDataType(ras, type = "GDAL")}
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @return The appropriate data type for the range of values in \code{ras} for using GDAL.
@@ -1471,52 +1485,9 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 #' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @export
-#' @importFrom raster getValues ncell sampleRandom
-#' @rdname assessDataTypeGDAL
+#' @rdname assessDataType
 assessDataTypeGDAL <- function(ras) {
-  ## using ras@data@... is faster, but won't work for @values in large rasters
-  minVal <- ras@data@min
-  maxVal <- ras@data@max
-  signVal <- minVal < 0
-
-  if (ras@file@datanotation != "FLT4S") {
-    ## gdal deals with infinite values as Float32
-    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
-
-    if (!signVal) {
-      ## only check for binary if there are no decimals and no signs
-      datatype <- if (maxVal <= 255) "Byte" else
-        if (maxVal <= 65534) "UInt16" else
-          if (maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
-    } else {
-      if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
-        if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
-    }
-  } else {
-    if (ncell(ras) > 100000) {
-      rasVals <- raster::sampleRandom(x = ras, size = 100000)
-    } else {
-      rasVals <- raster::getValues(ras)
-    }
-
-    #This method is slower but safer than getValues. Alternatives?
-    doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)
-
-    if (signVal & !doubVal) {
-      datatype <- if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
-        if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
-    } else
-      if (doubVal) {
-        datatype <- "Float32"
-      } else {
-        #data was FLT4S but doesn't need sign or decimal
-        datatype <- if (maxVal <= 255) "Byte" else
-          if (maxVal <= 65534) "UInt16" else
-            if (maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
-      }
-  }
-
-  datatype
+  assessDataType(ras, type = "GDAL")
 }
 
 #' @importFrom rlang eval_tidy
@@ -1732,13 +1703,12 @@ roundToRes <- function(extent, x) {
 }
 
 setMinMaxIfNeeded <- function(ras) {
-  maxIntVals <- c(127, 255, 32767, 65534, 2147483647, 4294967296)
   suppressWarnings(maxValCurrent <- maxValue(ras))
   needSetMinMax <- FALSE
   if (isTRUE(is.na(maxValCurrent))) {
     needSetMinMax <- TRUE
   } else {
-    possibleShortCut <- maxValCurrent %in% maxIntVals
+    possibleShortCut <- maxValCurrent %in% c(unlist(MaxVals), unlist(MaxVals) + 1)
     if (isTRUE(possibleShortCut)) {
       needSetMinMax <- TRUE
     }
