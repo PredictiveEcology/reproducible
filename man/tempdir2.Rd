@@ -2,15 +2,12 @@
 % Please edit documentation in R/copy.R
 \name{tempdir2}
 \alias{tempdir2}
-\alias{tempfile2}
 \title{Make a temporary sub-directory or file in that subdirectory}
 \usage{
 tempdir2(
   sub = "",
   tempdir = getOption("reproducible.tempPath", .reproducibleTempPath())
 )
-
-tempfile2(sub = "", ...)
 }
 \arguments{
 \item{sub}{Character string, length 1. Can be a result of
@@ -19,8 +16,6 @@ directories.}
 
 \item{tempdir}{Optional character string where the temporary dir should be placed.
 Defaults to \code{.reproducibleTempPath()}.}
-
-\item{...}{passed to \code{tempfile}, e.g., \code{fileext}}
 }
 \description{
 Create a temporary subdirectory in \code{.reproducibleTempPath()}, or a
