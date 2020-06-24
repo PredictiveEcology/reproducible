@@ -1768,12 +1768,12 @@ test_that("rasters aren't properly resampled", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  a <- raster(extent(0, 20, 0, 20), res = 1, vals = 1:400)
-  b <- raster(extent(0, 20, 0, 20), res = c(2,2), vals = 1:100)
-  suppressWarnings({
+  a <- raster(extent(0, 20, 0, 20), res = 2, vals = 1:100*4)
+  b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1:100)
+  #suppressWarnings({
     crs(a) <- crsToUse
     crs(b) <- crsToUse
-  }) ## TODO: temporary until raster fixes all crs issues
+    #}) ## TODO: temporary until raster fixes all crs issues
 
   tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   tiftemp2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
@@ -1787,10 +1787,11 @@ test_that("rasters aren't properly resampled", {
                     destinationPath = dirname(tiftemp1), useCache = FALSE)
   expect_true(dataType(out) == "INT2U")
 
+  # Test bilinear --> but keeps integer if it is integer
   out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp1), method = "bilinear",
                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
-  expect_true(dataType(out2) == "FLT4S")
+  expect_true(dataType(out2) %in% c("INT2S", "INT2U")) # because of "bilinear", it can become negative
 
   c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
   crs(c) <- crsToUse
