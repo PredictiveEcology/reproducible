@@ -1092,6 +1092,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 .unrarPath <- NULL
 
 missingUnrarMess <- "The archive is a 'rar' archive; your system does not have unrar or 7zip;\n"
+proj6Warn <- "NOT UPDATED FOR PROJ"
 
 knownInternalArchiveExtensions <- c("zip", "tar", "tar.gz", "gz")
 knownSystemArchiveExtensions <- c("rar", "7z")

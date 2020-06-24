@@ -420,6 +420,6 @@ fnCacheHelper <- function(a, cacheRepo2) {
   Cache(fnCacheHelper1, cacheRepo = cacheRepo2, verbose = 2)
 }
 
-crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
 
 messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is inside"

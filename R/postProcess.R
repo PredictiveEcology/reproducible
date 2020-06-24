@@ -792,11 +792,15 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           # projectRaster does silly things with integers, i.e., it converts to numeric
           if (is.na(targetCRS))
             stop("rasterToMatch needs to have a projection (crs)")
-          tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS)
+          tempRas <- suppressWarningsSpecific(
+            projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
           Args <- append(dots, list(from = x, to = tempRas))
-          warn <- capture_warnings({
-            x <- do.call(projectRaster, args = Args)
-          })
+          x <- captureWarningsToAttr(
+            suppressWarningsSpecific(falseWarnings = projNotWKT2warn,
+            do.call(projectRaster, args = Args)
+          ))
+          warn <- attr(x, "warning")
+          attr(x, "warning") <- NULL
 
           if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
             if (all(res(x) %==% res(rasterToMatch))) {
@@ -970,8 +974,14 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
     # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
     #  specifically ecodistricts.shp . It created an invalid object with
     #  non-unique row names
-    y <- try(raster::intersect(x, studyArea))
-
+    y <- suppressWarningsSpecific(raster::intersect(x, studyArea),
+                        "warn:.*different proj4 strings")
+    # warn <- capture.output(type = "message",
+    #                     suppressWarnings(withCallingHandlers(yy <- raster::intersect(x, studyArea),
+    #                          warning = function(xx) {
+    #                            message(paste0("warn::", xx$message))
+    #   })))
+    #
     trySF <- if (is(y, "try-error")) {
       TRUE
     } else if (!identical(length(unique(row.names(y))), length(row.names(y)))) {
@@ -1589,7 +1599,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       #replace extentRTM and crsRTM, because they will supersede all arguments
       if (!is.null(rasterToMatch)) {
         #reproject rasterToMatch, extend by res
-        newExtent <- projectExtent(rasterToMatch, crs = crs(x))
+        newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = crs(x)), projNotWKT2warn)
         tempPoly <- as(extent(newExtent), "SpatialPolygons")
         crs(tempPoly) <- crs(x)
         #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
@@ -1669,8 +1679,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       # writeOutputs
       ##################################
       if (!is.null(filename2)) {
-        x <- do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
-                                               overwrite = overwrite), dots))
+        x <- suppressWarningsSpecific(do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
+                                               overwrite = overwrite), dots)),
+                                      proj6Warn)
       } else {
         message(cyan("  Skipping writeOutputs; filename2 is NULL"))
       }
@@ -1756,3 +1767,63 @@ roundTo6Dec <- function(x) {
   }
   x
 }
+
+suppressWarningsSpecific <- function(code, falseWarnings) {
+  warn <- capture.output(type = "message",
+                         suppressWarnings(withCallingHandlers(yy <- eval(code),
+                                                              warning = function(xx) {
+                                                                message(paste0("warn::", xx$message))
+                                                              })))
+  trueWarnings <- grep("warn::", warn, value = TRUE)
+  trueWarnings <- grep(falseWarnings, trueWarnings,
+                       invert = TRUE, value = TRUE)
+  if (length(trueWarnings)) {
+    warning(paste(trueWarnings, collapse = "\n  "))
+  }
+  return(yy)
+}
+
+captureWarningsToAttr <- function(code) {
+  warn <- capture.output(type = "message",
+                         suppressWarnings(withCallingHandlers(yy <- eval(code),
+                                                              warning = function(xx) {
+                                                                message(paste0("warn::", xx$message))
+                                                              })))
+  trueWarnings <- grepl("warn::.*", warn)
+  if (length(warn[!trueWarnings]))
+    message(paste(warn[!trueWarnings], collapse = "\n  "))
+  warn <- gsub("warn::", "", warn[trueWarnings])
+  attr(yy, "warning") <- paste(warn, collapse = "\n")
+  return(yy)
+}
+
+dtp <- list()
+dtp[["INT1"]] <- 255/2
+dtp[["INT2"]] <- 65534/2
+dtp[["INT4"]] <- 4294967296/2
+dtp[["FLT4"]] <- 3.4e+38
+dtp[["FLT8"]] <- Inf
+#INT4S <- MaxVals$INT4U/2 - 1
+#MaxVals$INT2S <- INT2UMax
+#MaxVals$INT1S <- floor(INT1UMax/2) # 127
+#ero <- 0
+dtps <- c("INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S")
+names(dtps) <- dtps
+datatypeVals <- lapply(dtps, function(namdtp) {
+  d <- dtp[grep(substr(namdtp, 1, 4), names(dtp), value = TRUE)]
+  div <- substr(namdtp, 5, 5)
+  mult <- ifelse(div == "U", 2, 1)
+  Max <- trunc(unlist(d)*mult)
+  sign1 <- ifelse(div == "U", 0, -1)
+  Min <- Max * sign1
+  list(Min = Min, Max = Max)
+  })
+MaxVals <- lapply(datatypeVals, function(x) unname(x$Max))
+MinVals <- lapply(datatypeVals, function(x) unname(x$Min))
+MinValsFlts <- MinVals[grep("FLT", names(MinVals), value = TRUE)]
+MaxValsFlts <- MaxVals[grep("FLT", names(MinVals), value = TRUE)]
+# , envir = asNamespace("reproducible")
+#MaxVals <- c(INT1UMax, MaxVals$INT1S, INT2UMax, MaxVals$INT2S, MaxVals$INT4U, MaxVals$INT4S, MaxVals$FLT4S)
+#MinVals <- c(0, -MaxVals$INT1S, 0, -MaxVals$INT2S, 0, -MaxVals$INT4S, -MaxVals$FLT4S)
+
+projNotWKT2warn <- "Using PROJ not WKT2"
