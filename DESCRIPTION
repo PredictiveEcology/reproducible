@@ -48,7 +48,6 @@ Imports:
     methods,
     qs,
     quickPlot,
-    R.utils,
     Require,
     raster,
     RSQLite,

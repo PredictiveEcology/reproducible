@@ -198,6 +198,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   if (!dir.exists(destinationPath)) {
+    # if (!identical(file.exists(destinationPath), isFile(destinationPath))) stop("isFile is not same as file.exists")
     if (isFile(destinationPath)) {
       stop("destinationPath must be a directory")
     }

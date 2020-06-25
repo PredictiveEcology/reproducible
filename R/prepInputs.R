@@ -159,7 +159,6 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom digest digest
 #' @importFrom methods is
 #' @importFrom rlang quo
-#' @importFrom R.utils isAbsolutePath isFile
 #' @importFrom utils methods
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
