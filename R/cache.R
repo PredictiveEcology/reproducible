@@ -1289,7 +1289,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #'    robust CacheDigest results.
 #'
 #' @inheritParams Cache
-#' @importFrom fastdigest fastdigest
 #'
 #' @return
 #' A list of length 2 with the \code{outputHash}, which is the digest
@@ -1332,7 +1331,9 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
   } else {
-    fastdigest(preDigest)
+    if (!requireNamespace("fastdigest"))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    fastdigest::fastdigest(preDigest)
   }
   list(outputHash = res, preDigest = preDigest)
 }

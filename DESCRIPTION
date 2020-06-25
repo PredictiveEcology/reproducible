@@ -39,7 +39,6 @@ Imports:
     data.table (>= 1.10.4),
     DBI,
     digest,
-    fastdigest,
     fpCompare,
     glue,
     httr,
@@ -60,6 +59,7 @@ Imports:
     utils
 Suggests:
     covr,
+    fastdigest,
     fasterize,
     future,
     gdalUtils,
