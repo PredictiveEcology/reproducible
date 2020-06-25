@@ -797,9 +797,13 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
             projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
           Args <- append(dots, list(from = x, to = tempRas))
           x <- captureWarningsToAttr(
-            suppressWarningsSpecific(falseWarnings = projNotWKT2warn,
+            suppressWarningsSpecific(falseWarnings = paste0(projNotWKT2warn, "|no non-missing arguments"),
             do.call(projectRaster, args = Args)
           ))
+          # check for faulty datatype --> namely if it is an integer but classified as flt because of floating point problems
+          if (isTRUE(grepl("FLT", dataType(x))))
+            if (isTRUE(sum(!na.omit(round(x[], 0) %==% x[])) == 0))
+              x[] <- round(x[], 0)
           warn <- attr(x, "warning")
           attr(x, "warning") <- NULL
 

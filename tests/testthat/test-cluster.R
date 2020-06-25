@@ -35,9 +35,6 @@ test_that("test parallel collisions", {
 
     clusterSetRNGStream(cl)
     parallel::clusterEvalQ(cl, {library(reproducible)})
-    # clusterEvalQ(cl = cl, {
-    #   devtools::load_all()
-    # })
     numToRun <- 40
 
     # There is a 'creating Cache at the same time' problem -- haven't resolved

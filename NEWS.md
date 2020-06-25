@@ -5,10 +5,11 @@ version 1.1.1.9000
 
 ## New features
 * removed `Require`, `pkgDep`, `trimVersionNumber`, `normPath`, `checkPath` that were moved to `Require` package. For backwards compatibility, these are imported and reexported
+* address permanently or temporarily new changes in GDAL>3 and PROJ>6 in the spatial packages.
 * new function `file.move` used to rename/copy files across disks (a situation where `file.rename` would fail)
 
 ## Dependency changes
-* none
+* net reduction in number of packages that are imported from by 6. Removed completely: `R.utils`, `tools`, `remotes`, `versions`; moved to Suggests: `rgdal`, `gdalUtils`, `googledrive`, `fastdigest`, `testthat`; added: `Require`, `lifecycle`, `usethis`
 
 ## bug fixes
 * fix over-wide tables in PDF manual (#144)

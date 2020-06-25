@@ -109,12 +109,13 @@ test_that("checkGDALVersion", {
 })
 
 test_that("testing prepInputs with deauthorized googledrive", {
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   testInitOut <- testInit(needGoogle = FALSE, "googledrive")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  drive_deauth()
+  googledrive::drive_deauth()
   testthat::with_mock(
     "reproducible::isInteractive" = function() {
       FALSE

@@ -352,7 +352,6 @@ utils::globalVariables(c(
 #' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
-#' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
 #' @rdname Cache
 #'
 #' @example inst/examples/example_Cache.R
@@ -578,12 +577,11 @@ setMethod(
       # compare outputHash to existing Cache record
       tries <- 1
       if (useCloud) {
+        if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
         browser(expr = exists("._Cache_2"))
-        #message("Retrieving file list in cloud folder")
-        #gdriveLs <- retry(quote(drive_ls(path = as_id(cloudFolderID), pattern = outputHash)))
         if (is.null(cloudFolderID))
           cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
         if (is.character(cloudFolderID)) {
@@ -762,7 +760,7 @@ setMethod(
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                                   drv = drv)
           if (is.null(output)) {
-            retry(quote(drive_rm(gdriveLs[isInCloud,])))
+            retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
             isInCloud[isInCloud] <- FALSE
           } else {
             .CacheIsNew <- FALSE
@@ -1291,7 +1289,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #'    robust CacheDigest results.
 #'
 #' @inheritParams Cache
-#' @importFrom fastdigest fastdigest
 #'
 #' @return
 #' A list of length 2 with the \code{outputHash}, which is the digest
@@ -1334,7 +1331,9 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
   } else {
-    fastdigest(preDigest)
+    if (!requireNamespace("fastdigest"))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    fastdigest::fastdigest(preDigest)
   }
   list(outputHash = res, preDigest = preDigest)
 }

@@ -51,7 +51,6 @@
 #' @author Eliot McIntire
 #' @export
 #' @importFrom digest digest
-#' @importFrom fastdigest fastdigest
 #' @keywords internal
 #' @rdname robustDigest
 #' @examples
@@ -365,7 +364,9 @@ setMethod(
     out <- if (cacheSpeed == 1) {
       digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      fastdigest(x)
+      if (!requireNamespace("fastdigest"))
+        stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+      fastdigest::fastdigest(x)
     } else {
       stop("options('reproducible.cacheSpeed') must be 1, 2, 'slow' or 'fast'")
     }
