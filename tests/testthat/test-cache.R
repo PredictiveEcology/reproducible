@@ -624,7 +624,7 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_silent(Cache(outer, n = 2, cacheRepo = tmpdir))
   clearCache(ask = FALSE, x = tmpdir)
 
-  options(reproducible.cachePath = .reproducibleTempPath())
+  options(reproducible.cachePath = .reproducibleTempCachePath())
   out <- capture_messages(Cache(outer, n = 2))
   expect_true(all(unlist(lapply(
     c(messageNoCacheRepo, messageNoCacheRepo),
