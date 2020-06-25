@@ -577,7 +577,7 @@ setMethod(
       # compare outputHash to existing Cache record
       tries <- 1
       if (useCloud) {
-        if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+        if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)

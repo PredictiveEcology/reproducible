@@ -118,7 +118,7 @@ setMethod(
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
-      if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+      if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
       browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"

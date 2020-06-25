@@ -172,7 +172,7 @@ test_that("repo stuff works", {
 })
 
 test_that("test miscellaneous fns (part 2)", {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   skip_if_no_token()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({

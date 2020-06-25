@@ -38,7 +38,7 @@ test_that("test multiple cacheRepo", {
 ##########################
 test_that("test multiple cacheRepo with 1 of them a cloudCache", {
   skip(message = "test cloudCache inside Cache -- Not fully written test")
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   #if (!interactive())
   testInitOut <- testInit(libraries = "googledrive")
   on.exit({

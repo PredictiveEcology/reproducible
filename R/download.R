@@ -281,7 +281,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
@@ -440,7 +440,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
         } else if (grepl("drive.google.com", url)) {
           browser(expr = exists("._downloadRemote_2"))
-          if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+          if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
           downloadResults <- dlGoogle(
             url = url,
             archive = archive,
@@ -524,7 +524,7 @@ missingFiles <- function(files, checkSums, targetFile) {
 #' @importFrom quickPlot isRstudioServer
 assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath")) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   if (isRstudioServer()) {
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
@@ -558,4 +558,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   return(downloadFilename)
 }
 
-googleDriveMissing <- "Must install googledrive package to use google drive files"
+requireNamespaceMsg <- function(pkg, extraMsg = character()) {
+  paste("Must install",pkg,"package", extraMsg)
+}
+

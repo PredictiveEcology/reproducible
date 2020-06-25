@@ -31,7 +31,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpdir <- tempdir2(rndstr(1, 6))
 
   if (isTRUE(needGoogle)) {
-    if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+    if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
     if (utils::packageVersion("googledrive") >= "1.0.0")
       googledrive::drive_deauth()
@@ -118,7 +118,7 @@ testOnExit <- function(testInitOut) {
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
   if (isTRUE(testInitOut$needGoogle)) {
-    if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+    if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
     if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
   }
@@ -269,7 +269,7 @@ if (utils::packageVersion("raster") <= "2.6.7") {
 
 
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, type = c("Raster", "Stack", "Brick")) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
   # Second test .grd which has two files
   ####################################################

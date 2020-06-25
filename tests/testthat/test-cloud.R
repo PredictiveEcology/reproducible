@@ -1,5 +1,5 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   skip_if_no_token()
   if (interactive()) {
 

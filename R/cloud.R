@@ -18,7 +18,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
                                       cacheRepo = NULL,
                                       create = FALSE,
                                       overwrite = FALSE) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   browser(expr = exists("._checkAndMakeCloudFolderID_1"))
   if (!is(cloudFolderID, "dribble")) {
     isNullCFI <- is.null(cloudFolderID)
@@ -59,7 +59,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
 }
 
 driveLs <- function(cloudFolderID = NULL, pattern = NULL) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   browser(expr = exists("kkkk"))
   if (!is(cloudFolderID, "tbl"))
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = FALSE) # only deals with NULL case
@@ -90,7 +90,7 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL) {
 #' @param output The output object of FUN that was run in \code{Cache}
 #' @inheritParams Cache
 cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   artifact <- isInRepo[[.cacheTableHashColName()]][1]
   browser(expr = exists("._cloudUpload_1"))
   artifactFileName <- CacheStoredFile(cacheRepo, hash = artifact)
@@ -136,7 +136,7 @@ cloudUpload <- function(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID
 cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   browser(expr = exists("._cloudDownload_1"))
   message("Downloading cloud copy of ", newFileName,", with cacheId: ", outputHash)
   localNewFilename <- file.path(tempdir2(), basename2(newFileName))
@@ -172,7 +172,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cacheRepo, cloudFol
 #' @keywords internal
 cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID,
                                  outputToSave, rasters) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   browser(expr = exists("._cloudUploadFromCache_1"))
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cacheRepo, outputHash)
@@ -193,7 +193,7 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cacheRepo, cloudFolderID
 }
 
 cloudUploadRasterBackends <- function(obj, cloudFolderID) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   browser(expr = exists("._cloudUploadRasterBackends_1"))
   rasterFilename <- Filenames(obj)
   out <- NULL
@@ -210,7 +210,7 @@ cloudUploadRasterBackends <- function(obj, cloudFolderID) {
 cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
                                        drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                        conn = getOption("reproducible.conn", NULL)) {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   browser(expr = exists("._cloudDownloadRasterBackend_1"))
   rasterFilename <- Filenames(output)
   if (!is.null(unlist(rasterFilename)) && length(rasterFilename) > 0) {

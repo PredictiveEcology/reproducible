@@ -109,7 +109,7 @@ test_that("checkGDALVersion", {
 })
 
 test_that("testing prepInputs with deauthorized googledrive", {
-  if (!requireNamespace("googledrive")) stop(googleDriveMissing)
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   testInitOut <- testInit(needGoogle = FALSE, "googledrive")
   on.exit({
     testOnExit(testInitOut)
