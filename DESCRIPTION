@@ -42,7 +42,6 @@ Imports:
     fpCompare,
     glue,
     httr,
-    lifecycle,
     magrittr,
     memoise,
     methods,
@@ -54,7 +53,6 @@ Imports:
     rlang,
     sf,
     sp,
-    usethis,
     utils
 Suggests:
     covr,
@@ -106,4 +104,3 @@ Collate:
     'reproducible-package.R'
     'search.R'
     'zzz.R'
-RdMacros: lifecycle

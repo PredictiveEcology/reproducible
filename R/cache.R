@@ -7,7 +7,8 @@ utils::globalVariables(c(
 
 #' Cache method that accommodates environments, S4 methods, Rasters, & nested caching
 #'
-#' \lifecycle{maturing}
+#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
 #' A function that can be used to wrap around other functions to cache function calls
 #' for later use. This is normally most effective when the function to cache is
@@ -1684,4 +1685,3 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
                                 "Cache", "tryCatch", "doTryCatch", "withCallingHandlers",
                                 "FUN", "capture", "withVisible)")
 
-usethis::use_lifecycle()

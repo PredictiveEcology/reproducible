@@ -483,7 +483,8 @@ setMethod(
 
 #' Merge two cache repositories together
 #'
-#' \lifecycle{experimental}
+#' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
+#' \if{latex}{\figure{lifecycle-experimental.svg}{options: width=0.5in}}
 #'
 #' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
 #' repository. All \code{userTags} will be copied verbatim, including

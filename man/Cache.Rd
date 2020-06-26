@@ -197,7 +197,8 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
-\lifecycle{maturing}
+\if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+\if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 
 Still experimental and may change. This form cannot pass any arguments to
 ]code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
