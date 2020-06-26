@@ -366,8 +366,6 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
               stop(as.character(yy))
             }
           }
-
-
         }
 
         if (is.null(x)) {
@@ -435,7 +433,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
         completed <- FALSE
-        while(!completed) {
+        while (!completed) {
           yy <- try(do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots)),
                     silent = TRUE)
           if (is(yy, "try-error")) {
@@ -731,7 +729,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
 
         targCRS <- as.character(targetCRS)
-        if (FALSE){
+        if (FALSE) {
           # There is a new-ish warning " +init=epsg:XXXX syntax is deprecated. It might return a CRS with a non-EPSG compliant axis order."
           #  This next clears all the extraneous stuff after the EPSG... but that may not be correct.
           #  I think leave it with the warning.
