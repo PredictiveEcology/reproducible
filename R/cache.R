@@ -7,6 +7,7 @@ utils::globalVariables(c(
 
 #' Cache method that accommodates environments, S4 methods, Rasters, & nested caching
 #'
+#' @description
 #' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 #' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
@@ -328,7 +329,8 @@ utils::globalVariables(c(
 #' to this same cached function with identical arguments).
 #'
 #' @seealso \code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
-#'   \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}}
+#'   \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}},
+#'   \code{\link{pipe}}
 #'
 #' @author Eliot McIntire
 #' @export

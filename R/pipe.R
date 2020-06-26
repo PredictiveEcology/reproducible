@@ -1,10 +1,13 @@
 #################
 #' A cache-aware pipe that does not mask with \code{\%>\%}
 #'
-#' \emph{STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.}
+#' @description
+#' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
+#' \if{latex}{\figure{lifecycle-experimental.svg}{options: width=0.5in}}
 #'
 #' This pipe can only be used at any point in a pipe chain, but must
-#' be preceded by \code{Cache(...)} (which allows other \code{Cache} arguments to be passed).
+#' be preceded by \code{Cache(...)} (which allows other \code{Cache() \%C\% ... remaining pipes}
+#' arguments to be passed).
 #'
 #' This will take the input arguments of the first function immediately following
 #' the \code{Cache()} and the pipe chain until the special \code{\%C\%},
@@ -17,10 +20,6 @@
 #' Therefore, the entire chain must be identical.
 #' The required usage should be straight forward to insert into existing code
 #' that uses pipes (\code{Cache() \%C\% ... remaining pipes}).
-#'
-#' @note \emph{This is still experimental; use with care.}
-#'
-#' @inheritParams magrittr::`%>%`
 #'
 #' @aliases %C%
 #' @export
@@ -182,7 +181,7 @@
 #' it is a clean alternative for simple cases.
 #'
 #' @export
-#' @rdname Cache
+#' @rdname pipe
 #' @param lhs A name to assign to.
 #' @param rhs A function call
 #' @examples

@@ -3,21 +3,25 @@
 \name{pipe}
 \alias{pipe}
 \alias{\%C\%}
+\alias{\%<\%}
 \title{A cache-aware pipe that does not mask with \code{\%>\%}}
 \usage{
 lhs \%C\% rhs
+
+lhs \%<\% rhs
 }
 \arguments{
-\item{lhs}{A value or the magrittr placeholder.}
+\item{lhs}{A name to assign to.}
 
-\item{rhs}{A function call using the magrittr semantics.}
+\item{rhs}{A function call}
 }
 \description{
-\emph{STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.}
-}
-\details{
+\if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
+\if{latex}{\figure{lifecycle-experimental.svg}{options: width=0.5in}}
+
 This pipe can only be used at any point in a pipe chain, but must
-be preceded by \code{Cache(...)} (which allows other \code{Cache} arguments to be passed).
+be preceded by \code{Cache(...)} (which allows other \code{Cache() \%C\% ... remaining pipes}
+arguments to be passed).
 
 This will take the input arguments of the first function immediately following
 the \code{Cache()} and the pipe chain until the special \code{\%C\%},
@@ -30,9 +34,10 @@ The final result will be cached for future use.
 Therefore, the entire chain must be identical.
 The required usage should be straight forward to insert into existing code
 that uses pipes (\code{Cache() \%C\% ... remaining pipes}).
-}
-\note{
-\emph{This is still experimental; use with care.}
+
+Still experimental and may change. This form cannot pass any arguments to
+]code{Cache}, such as \code{cacheRepo}, thus it is of limited utility. However,
+it is a clean alternative for simple cases.
 }
 \examples{
 library(magrittr) # standard pipe
@@ -101,4 +106,8 @@ sum(b1 - b2) # 0 # i.e., numbers are same
 
 unlink(tmpdir, recursive = TRUE)
 #}
+# Equivalent
+a <- Cache(rnorm, 1)
+b \%<\% rnorm(1)
+
 }
