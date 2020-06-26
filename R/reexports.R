@@ -13,3 +13,16 @@ Require::checkPath
 #' @importFrom Require normPath
 #' @export
 Require::normPath
+
+#' @importFrom Require trimVersionNumber
+#' @export
+Require::trimVersionNumber
+
+#' @importFrom Require tempfile2
+#' @export
+Require::tempfile2
+
+#' @importFrom Require tempdir2
+#' @export
+Require::tempdir2
+

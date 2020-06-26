@@ -53,7 +53,6 @@ chooseCRANmirror2 <- function() {
 #'
 #' @author Jean Marchal and Alex Chubaty
 #' @export
-#' @importFrom tools file_ext file_path_sans_ext
 #' @rdname prefix
 #'
 #' @examples
@@ -74,8 +73,8 @@ chooseCRANmirror2 <- function() {
 #' @name suffix
 #' @rdname prefix
 .suffix <- function(f, suffix = "") {
-  file.path(dirname(f), paste0(tools::file_path_sans_ext(basename(f)), suffix,
-                               ".", tools::file_ext(f)))
+  file.path(dirname(f), paste0(filePathSansExt(basename(f)), suffix,
+                               ".", fileExt(f)))
 }
 
 #' Get a unique name for a given study area
@@ -99,6 +98,7 @@ setMethod(
   signature = "SpatialPolygonsDataFrame",
   definition = function(studyArea, ...) {
     studyArea <- studyArea[, -c(1:ncol(studyArea))]
+    studyArea <- as(studyArea, "SpatialPolygons")
     studyAreaName(studyArea, ...)
 })
 
@@ -296,4 +296,60 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL) {
     message(x)
     }
   })
+}
+
+filePathSansExt <- function(x) {
+  sub("([^.]+)\\.[[:alnum:]]+$", "\\1", x)
+}
+
+fileExt <- function(x) {
+  pos <- regexpr("\\.([[:alnum:]]+)$", x)
+  ifelse(pos > -1L, substring(x, pos + 1L), "")
+}
+
+isDirectory <- function(pathnames) {
+  keep <- is.character(pathnames)
+  if (length(pathnames) == 0) return(logical())
+  if (isFALSE(keep)) stop("pathnames must be character")
+  origPn <- pathnames
+  pathnames <- normPath(pathnames[keep])
+  id <- dir.exists(pathnames)
+  id[id] <- file.info(pathnames[id])$isdir
+  names(id) <- origPn
+  id
+}
+
+isFile <- function(pathnames) {
+  keep <- is.character(pathnames)
+  if (isFALSE(keep)) stop("pathnames must be character")
+  origPn <- pathnames
+  pathnames <- normPath(pathnames[keep])
+  iF <- file.exists(pathnames)
+  iF[iF] <- !file.info(pathnames[iF])$isdir
+  names(iF) <- origPn
+  iF
+}
+
+isAbsolutePath <- function(pathnames) {
+  # modified slightly from R.utils::isAbsolutePath
+  keep <- is.character(pathnames)
+  if (isFALSE(keep)) stop("pathnames must be character")
+  origPn <- pathnames
+  nPathnames <- length(pathnames)
+  if (nPathnames == 0L)
+    return(logical(0L))
+  if (nPathnames > 1L) {
+    res <- sapply(pathnames, FUN = isAbsolutePath)
+    return(res)
+  }
+  if (is.na(pathnames))
+    return(FALSE)
+  if (regexpr("^~", pathnames) != -1L)
+    return(TRUE)
+  if (regexpr("^.:(/|\\\\)", pathnames) != -1L)
+    return(TRUE)
+  components <- strsplit(pathnames, split = "[/\\]")[[1L]]
+  if (length(components) == 0L)
+    return(FALSE)
+  (components[1L] == "")
 }

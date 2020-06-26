@@ -7,7 +7,9 @@ utils::globalVariables(c(
 
 #' Cache method that accommodates environments, S4 methods, Rasters, & nested caching
 #'
-#' \lifecycle{maturing}
+#' @description
+#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
 #' A function that can be used to wrap around other functions to cache function calls
 #' for later use. This is normally most effective when the function to cache is
@@ -327,7 +329,8 @@ utils::globalVariables(c(
 #' to this same cached function with identical arguments).
 #'
 #' @seealso \code{\link{showCache}}, \code{\link{clearCache}}, \code{\link{keepCache}},
-#'   \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}}
+#'   \code{\link{CacheDigest}}, \code{\link{movedCache}}, \code{\link{.robustDigest}},
+#'   \code{\link{pipe}}
 #'
 #' @author Eliot McIntire
 #' @export
@@ -352,8 +355,6 @@ utils::globalVariables(c(
 #' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
-#' @importFrom tools file_path_sans_ext
-#' @importFrom googledrive drive_mkdir drive_ls drive_upload drive_download
 #' @rdname Cache
 #'
 #' @example inst/examples/example_Cache.R
@@ -579,12 +580,11 @@ setMethod(
       # compare outputHash to existing Cache record
       tries <- 1
       if (useCloud) {
+        if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
         # Here, test that cloudFolderID exists and get obj details that matches outputHash, if present
         #  returns NROW 0 gdriveLs if not present
         #cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID)
         browser(expr = exists("._Cache_2"))
-        #message("Retrieving file list in cloud folder")
-        #gdriveLs <- retry(quote(drive_ls(path = as_id(cloudFolderID), pattern = outputHash)))
         if (is.null(cloudFolderID))
           cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
         if (is.character(cloudFolderID)) {
@@ -757,13 +757,13 @@ setMethod(
         # Here, download cloud copy to local folder, skip the running of FUN
         newFileName <- CacheStoredFile(cacheRepo, outputHash) # paste0(outputHash,".rda")
         isInCloud <- gsub(gdriveLs$name,
-                          pattern = paste0("\\.", file_ext(CacheStoredFile(cacheRepo, outputHash))),
+                          pattern = paste0("\\.", fileExt(CacheStoredFile(cacheRepo, outputHash))),
                           replacement = "") %in% outputHash
         if (any(isInCloud)) {
           output <- cloudDownload(outputHash, newFileName, gdriveLs, cacheRepo, cloudFolderID,
                                   drv = drv)
           if (is.null(output)) {
-            retry(quote(drive_rm(gdriveLs[isInCloud,])))
+            retry(quote(googledrive::drive_rm(gdriveLs[isInCloud,])))
             isInCloud[isInCloud] <- FALSE
           } else {
             .CacheIsNew <- FALSE
@@ -1292,7 +1292,6 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #'    robust CacheDigest results.
 #'
 #' @inheritParams Cache
-#' @importFrom fastdigest fastdigest
 #'
 #' @return
 #' A list of length 2 with the \code{outputHash}, which is the digest
@@ -1335,7 +1334,9 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
   } else {
-    fastdigest(preDigest)
+    if (!requireNamespace("fastdigest"))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    fastdigest::fastdigest(preDigest)
   }
   list(outputHash = res, preDigest = preDigest)
 }
@@ -1686,4 +1687,3 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
                                 "Cache", "tryCatch", "doTryCatch", "withCallingHandlers",
                                 "FUN", "capture", "withVisible)")
 
-usethis::use_lifecycle()

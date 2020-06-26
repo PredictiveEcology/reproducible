@@ -133,7 +133,6 @@ preProcessParams <- function(n = NULL) {
 #' @author Eliot McIntire
 #' @export
 #' @importFrom data.table fread setDT
-#' @importFrom tools file_path_sans_ext
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),
                        fun = NULL, dlFun = NULL,
@@ -182,7 +181,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
           # same base name, without extension
           checksumsTmp <- as.data.table(read.table(checkSumFilePath))
-          alsoExtract <- grep(paste0(file_path_sans_ext(targetFile),"\\."), checksumsTmp$file,
+          alsoExtract <- grep(paste0(filePathSansExt(targetFile),"\\."), checksumsTmp$file,
                               value = TRUE)
           rm(checksumsTmp) # clean up
         }
@@ -199,6 +198,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   if (!dir.exists(destinationPath)) {
+    # if (!identical(file.exists(destinationPath), isFile(destinationPath))) stop("isFile is not same as file.exists")
     if (isFile(destinationPath)) {
       stop("destinationPath must be a directory")
     }
@@ -491,8 +491,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # if it was a nested file
   browser(expr = exists("._preProcess_8"))
 
-  if (any(file_ext(neededFiles) %in% c("zip", "tar", "rar"))) {
-    nestedArchives <- .basename(neededFiles[file_ext(neededFiles) %in% c("zip", "tar", "rar")])
+  if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar"))) {
+    nestedArchives <- .basename(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
     nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
     message("There are still archives in the extracted files.",
             " preProcess will try to extract the files from ", .basename(nestedArchives), ".",
@@ -719,7 +719,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @keywords internal
 .similarFilesInCheckSums <- function(file, checkSums) {
   if (NROW(checkSums)) {
-    anySimilarInCS <- checkSums[grepl(paste0(file_path_sans_ext(file),"\\."),
+    anySimilarInCS <- checkSums[grepl(paste0(filePathSansExt(file),"\\."),
                                       checkSums$expectedFile),]$result
     if (length(anySimilarInCS)) {
       isTRUE(all(compareNA("OK", anySimilarInCS)))
@@ -754,7 +754,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       allOK <- .similarFilesInCheckSums(targetFile, checkSums)
       if (!allOK) {
         filePatternToKeep <- gsub(.basename(targetFile),
-                                  pattern = file_ext(.basename(targetFile)), replacement = "")
+                                  pattern = fileExt(.basename(targetFile)), replacement = "")
         filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
         neededFiles <- unique(c(neededFiles, filesToGet))
       }
@@ -877,7 +877,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
-#' @importFrom testthat capture_warnings
 #'
 #' @examples
 #' library(datasets)
@@ -936,9 +935,12 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
     dups <- duplicated(.basename(from))
 
     # Try hard link first -- the only type that R deeply recognizes
-    warns <- testthat::capture_warnings({
-      result <- file.link(from[!dups], to)
-    })
+    result <-  captureWarningsToAttr(
+      file.link(from[!dups], to)
+    )
+    warns <- attr(result, "warning")
+    attr(result, "warning") <- NULL
+
     if (isTRUE(all(result))) {
       message("Hardlinked version of file created at: ", toCollapsed, ", which points to "
               , fromCollapsed, "; no copy was made.")
@@ -1060,7 +1062,6 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
   return(fileExt)
 }
 
-#' @importFrom testthat capture_warnings
 #' @keywords internal
 .guessFileExtension <- function(file) {
   if (isWindows()) {
@@ -1070,16 +1071,23 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
       findFile <- file.exists(possLocs)
       if (any(findFile))
         fileLoc <- possLocs[findFile][1]
-      warn <- testthat::capture_warnings({
-        magicNumber <- system(paste(fileLoc, file), intern = TRUE)
-      })
+
+      magicNumber <- captureWarningsToAttr(
+        system(paste(fileLoc, file), intern = TRUE)
+      )
+      warn <- attr(magicNumber, "warning")
+      attr(magicNumber, "warning") <- NULL
+
       if (length(warn) > 0) {
         splitted <- unlist(strsplit(x = file, split = ":/"))
         fileAdapted <- file.path(paste0("/mnt/", tolower(splitted[1])), splitted[2])
-        warn <- testthat::capture_warnings({
-          magicNumber <- shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE,
-                               wait = TRUE, translate = FALSE, mustWork = TRUE)
-        })
+        magicNumber <- captureWarningsToAttr(
+          shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE,
+                wait = TRUE, translate = FALSE, mustWork = TRUE)
+        )
+        warn <- attr(magicNumber, "warning")
+        attr(magicNumber, "warning") <- NULL
+
       }
       fileExt <- if (length(warn) == 0) {
         .decodeMagicNumber(magicNumberString = magicNumber)
@@ -1102,8 +1110,8 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
 .fixNoFileExtension <- function(downloadFileResult, targetFile, archive,
                                 destinationPath) {
   if (!is.null(downloadFileResult$downloaded) &&
-      identical(file_ext(normPath(.basename(downloadFileResult$downloaded))), "")) {
-    if (!is.null(targetFile) && !identical(file_ext(normPath(.basename(downloadFileResult$neededFiles))), "")) {
+      identical(fileExt(normPath(.basename(downloadFileResult$downloaded))), "")) {
+    if (!is.null(targetFile) && !identical(fileExt(normPath(.basename(downloadFileResult$neededFiles))), "")) {
       if (is.null(archive)) {
         message(
           "Downloaded file has no extension: targetFile is provided, but archive is not.\n",

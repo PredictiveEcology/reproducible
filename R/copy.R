@@ -20,32 +20,6 @@ file.move <- function(from, to, overwrite = FALSE) {
   }
 }
 
-#' Make a temporary sub-directory or file in that subdirectory
-#'
-#' Create a temporary subdirectory in \code{.reproducibleTempPath()}, or a
-#' temporary file in that temporary subdirectory.
-#'
-#' @param sub Character string, length 1. Can be a result of
-#'   \code{file.path("smth", "smth2")} for nested temporary sub
-#'   directories.
-#' @param tempdir Optional character string where the temporary dir should be placed.
-#'   Defaults to \code{.reproducibleTempPath()}.
-#'
-#' @rdname tempFilesAndFolders
-#' @importFrom Require normPath
-#' @export
-tempdir2 <- function(sub = "", tempdir = getOption("reproducible.tempPath", .reproducibleTempPath())) {
-  Require::checkPath(Require::normPath(file.path(tempdir, sub)), create = TRUE)
-}
-
-#' @param ... passed to \code{tempfile}, e.g., \code{fileext}
-#'
-#' @rdname tempFilesAndFolders
-#' @importFrom Require normPath
-#' @export
-tempfile2 <- function(sub = "", ...) {
-  normPath(file.path(tempdir2(sub = sub), basename(tempfile(...))))
-}
 
 #' Recursive copying of nested environments, and other "hard to copy" objects
 #'

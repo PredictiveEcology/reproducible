@@ -109,12 +109,13 @@ test_that("checkGDALVersion", {
 })
 
 test_that("testing prepInputs with deauthorized googledrive", {
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   testInitOut <- testInit(needGoogle = FALSE, "googledrive")
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  drive_deauth()
+  googledrive::drive_deauth()
   testthat::with_mock(
     "reproducible::isInteractive" = function() {
       FALSE
@@ -138,7 +139,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
     )
     expect_is(NFDB_PT, "sf")
     expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
-                      file_ext(dir(pattern = "NFDB_point"))))
+                      fileExt(dir(pattern = "NFDB_point"))))
 
     warn <- capture_warnings(NFDB_PT_BCR6 <- Cache(
       postProcess,

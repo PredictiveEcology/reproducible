@@ -104,7 +104,8 @@ in details below.}
 Defaults to \code{getOption("reproducible.useCache")}.}
 }
 \description{
-\lifecycle{maturing}
+\if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+\if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 
 The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
 crop, reproject, and mask, in that order.

@@ -1,6 +1,7 @@
 #' Generic function to post process objects
 #'
-#' \lifecycle{maturing}
+#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
 #' @export
 #' @param x  An object of postProcessing, e.g., \code{spatialObjects}.
@@ -357,8 +358,8 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
           if (!completed) {
             ## if not completed because file doesn't exist, let the user know with a sensible error.
             noFileError <- grepl("Error in .local(.Object, ...)", yy, fixed = TRUE)
-            fileExists <- file.exists(filename(x))
-            if (noFileError | !fileExists) {
+            fileDoesntExist <- fromDisk(x) && !file.exists(filename(x))
+            if (noFileError && fileDoesntExist) {
               stop("The following file-backed raster is supposed to be on disk ",
                    "but appears to to be missing:\n",
                    paste("    ", filename(x), collapse = "\n"))
@@ -366,8 +367,6 @@ cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
               stop(as.character(yy))
             }
           }
-
-
         }
 
         if (is.null(x)) {
@@ -435,7 +434,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
         dots <- list(...)
         dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
         completed <- FALSE
-        while(!completed) {
+        while (!completed) {
           yy <- try(do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots)),
                     silent = TRUE)
           if (is(yy, "try-error")) {
@@ -522,7 +521,6 @@ fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
 #' failures to \code{rgeos::gIsValid}
 #'
 #' @export
-#' @importFrom testthat capture_warnings
 #' @rdname fixErrors
 fixErrors.SpatialPolygons <- function(x, objectName = NULL,
                                       attemptErrorFixes = TRUE,
@@ -540,12 +538,12 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
         TRUE
       }
       if (anyNotValid) {
-        warn <- capture_warnings({
-          x1 <- try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
-        })
+        x1 <- captureWarningsToAttr(
+          try(Cache(raster::buffer, x, width = 0, dissolve = FALSE, useCache = useCache))
+        )
 
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
-        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+        x <- bufferWarningSuppress(warn = attr(x1, "warning"), objectName = objectName,
                               x1 = x1, bufferFn = "raster::buffer")
       } else {
         message("  Found no errors.")
@@ -557,7 +555,6 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 
 #' @export
 #' @importFrom sf st_buffer st_geometry st_is_valid
-#' @importFrom testthat capture_warnings
 #' @rdname fixErrors
 fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE), ...) {
@@ -568,11 +565,12 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       message("Checking for errors in ", objectName)
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         message("Found errors in ", objectName, ". Attempting to correct.")
-        warn <- capture_warnings({
-          x1 <- try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
-        })
 
-        x <- bufferWarningSuppress(warn = warn, objectName = objectName,
+        x1 <- captureWarningsToAttr(
+          try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))
+        )
+
+        x <- bufferWarningSuppress(warn = attr(x1, "warning"), objectName = objectName,
                                    x1 = x1, bufferFn = "sf::st_buffer")
       } else {
         message("  Found no errors.")
@@ -634,7 +632,6 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'
 #' @importFrom fpCompare %==%
 #' @importFrom raster crs dataType res res<- dataType<-
-#' @importFrom testthat capture_warnings
 projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, cores = NULL,
                                  useGDAL = getOption("reproducible.useGDAL", TRUE),
                                  ...) {
@@ -733,7 +730,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
 
         targCRS <- as.character(targetCRS)
-        if (FALSE){
+        if (FALSE) {
           # There is a new-ish warning " +init=epsg:XXXX syntax is deprecated. It might return a CRS with a non-EPSG compliant axis order."
           #  This next clears all the extraneous stuff after the EPSG... but that may not be correct.
           #  I think leave it with the warning.
@@ -785,18 +782,29 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
         if (is.null(rasterToMatch)) {
           Args <- append(dots, list(from = x, crs = targetCRS))
-          warn <- capture_warnings({
-            x <- do.call(projectRaster, args = Args)
-          })
+          x <- captureWarningsToAttr(
+            do.call(projectRaster, args = Args)
+          )
+          warn <- attr(x, "warning")
+          attr(x, "warning") <- NULL
+
         } else {
           # projectRaster does silly things with integers, i.e., it converts to numeric
           if (is.na(targetCRS))
             stop("rasterToMatch needs to have a projection (crs)")
-          tempRas <- projectExtent(object = rasterToMatch, crs = targetCRS)
+          tempRas <- suppressWarningsSpecific(
+            projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
           Args <- append(dots, list(from = x, to = tempRas))
-          warn <- capture_warnings({
-            x <- do.call(projectRaster, args = Args)
-          })
+          x <- captureWarningsToAttr(
+            suppressWarningsSpecific(falseWarnings = paste0(projNotWKT2warn, "|no non-missing arguments"),
+            do.call(projectRaster, args = Args)
+          ))
+          # check for faulty datatype --> namely if it is an integer but classified as flt because of floating point problems
+          if (isTRUE(grepl("FLT", dataType(x))))
+            if (isTRUE(sum(!na.omit(round(x[], 0) %==% x[])) == 0))
+              x[] <- round(x[], 0)
+          warn <- attr(x, "warning")
+          attr(x, "warning") <- NULL
 
           if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
             if (all(res(x) %==% res(rasterToMatch))) {
@@ -819,7 +827,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
 
         warn <- warn[!grepl("no non-missing arguments to m.*; returning .*Inf", warn)] # This is a bug in raster
-        warnings(warn)
+        if (length(warn))
+          warnings(warn)
         ## projectRaster doesn't always ensure equal res (floating point number issue)
         ## if resolutions are close enough, re-write res(x)
         ## note that when useSAcrs = TRUE, the different resolutions may be due to
@@ -970,8 +979,14 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
     # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
     #  specifically ecodistricts.shp . It created an invalid object with
     #  non-unique row names
-    y <- try(raster::intersect(x, studyArea))
-
+    y <- suppressWarningsSpecific(raster::intersect(x, studyArea),
+                        "warn:.*different proj4 strings")
+    # warn <- capture.output(type = "message",
+    #                     suppressWarnings(withCallingHandlers(yy <- raster::intersect(x, studyArea),
+    #                          warning = function(xx) {
+    #                            message(paste0("warn::", xx$message))
+    #   })))
+    #
     trySF <- if (is(y, "try-error")) {
       TRUE
     } else if (!identical(length(unique(row.names(y))), length(row.names(y)))) {
@@ -1172,6 +1187,7 @@ writeOutputs <- function(x, filename2,
   UseMethod("writeOutputs")
 }
 
+#' @export
 #' @rdname writeOutputs
 writeOutputs.Raster <- function(x, filename2 = NULL,
                                 overwrite = getOption("reproducible.overwrite", FALSE),
@@ -1202,12 +1218,12 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
-      if (tools::file_ext(filename(x)) == "grd") {
-        if (!tools::file_ext(filename2) == "grd") {
-          warning("filename2 file type (", tools::file_ext(filename2), ") was not same type (",
-                  tools::file_ext(filename(x)),") ", "as the filename of the raster; ",
-                  "Changing filename2 so that it is ", tools::file_ext(filename(x)))
-          filename2 <- gsub(tools::file_ext(filename2), "grd", filename2)
+      if (fileExt(filename(x)) == "grd") {
+        if (!fileExt(filename2) == "grd") {
+          warning("filename2 file type (", fileExt(filename2), ") was not same type (",
+                  fileExt(filename(x)),") ", "as the filename of the raster; ",
+                  "Changing filename2 so that it is ", fileExt(filename(x)))
+          filename2 <- gsub(fileExt(filename2), "grd", filename2)
         }
         file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
                   overwrite = overwrite)
@@ -1269,7 +1285,6 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
   x
 }
 
-#' @importFrom testthat capture_warnings
 #' @rdname writeOutputs
 writeOutputs.Spatial <- function(x, filename2 = NULL,
                                  overwrite = getOption("reproducible.overwrite", TRUE),
@@ -1283,8 +1298,8 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
     dots <- dots[keepForDots]
     # Internally in rgdal::writeOGR, it converts the row.names to integer with this test
     #   it creates a warning there, so capture here instead
-    warn <- testthat::capture_warnings(as.integer(row.names(x)))
-    if (isTRUE(any(grepl("NAs introduced by coercion", warn))))
+    warn <- captureWarningsToAttr(as.integer(row.names(x)))
+    if (isTRUE(any(grepl("NAs introduced by coercion", attr(warn, "warning")))))
       row.names(x) <- as.character(seq_along(row.names(x)))
     do.call(shapefile, append(dots, list(x = x, filename = filename2, overwrite = overwrite)))
   }
@@ -1292,13 +1307,12 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
 }
 
 #' @importFrom sf st_write
-#' @importFrom tools file_ext
 #' @rdname writeOutputs
 writeOutputs.sf <- function(x, filename2 = NULL,
                             overwrite = getOption("reproducible.overwrite", FALSE),
                             ...) {
   if (!is.null(filename2)) {
-    if (!nzchar(tools::file_ext(filename2))) {
+    if (!nzchar(fileExt(filename2))) {
       filename2 <- paste0(filename2, ".shp")
     }
     if (identical(".", dirname(filename2))) {
@@ -1341,8 +1355,9 @@ writeOutputs.default <- function(x, filename2, ...) {
 #' @author Eliot McIntire
 #' @author Ceres Barros
 #' @author Ian Eddy
+#' @author Eliot McIntire
 #' @export
-#' @importFrom raster getValues
+#' @importFrom raster getValues sampleRandom
 #' @rdname assessDataType
 #'
 #' @example inst/examples/example_assessDataType.R
@@ -1364,6 +1379,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
     ras <- setMinMaxIfNeeded(ras)
     if (maxValCurrent != maxValue(ras))
       datatype <- dataType(ras)
+  } else {
+    ras <- setMinMaxIfNeeded(ras)
   }
 
   if (is.null(datatype)) {
@@ -1378,41 +1395,52 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
     maxVal <- max(ras@data@max)
     signVal <- minVal < 0
     doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)  ## faster than any(x %% 1 != 0)
-
-    ## writeRaster deals with infinite values as FLT8S
-    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
-
-    if (!doubVal & !signVal) {
+    datatype <- if (doubVal) {
+      names(MinValsFlts)[min(which(minVal >= MinValsFlts & maxVal <= MaxValsFlts))]
+    } else {
       ## only check for binary if there are no decimals and no signs
       logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
-
       if (logi) {
-        datatype <- "LOG1S"
+        "LOG1S"
       } else {
-        ## if() else is faster than if
-        datatype <- if (maxVal <= 255) "INT1U" else
-          if (maxVal <= 65534) "INT2U" else
-            if (maxVal <= 4294967296) "INT4U" else  ## note: ?dataType advises against INT4U
-              if (maxVal > 3.4e+38) "FLT8S" else "FLT4S"
-      }
-    } else {
-      if (signVal & !doubVal) {
-        ## if() else is faster than if
-        datatype <- if (minVal >= -127 & maxVal <= 127) "INT1S" else
-          if (minVal >= -32767 & maxVal <= 32767) "INT2S" else
-            if (minVal >= -2147483647 & maxVal <=  2147483647) "INT4S" else  ## note: ?dataType advises against INT4U
-              if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
-      } else {
-        if (doubVal)
-          datatype <- if (minVal < -3.4e+38 | maxVal > 3.4e+38) "FLT8S" else "FLT4S"
+        names(MinVals)[min(which(minVal >= unlist(MinVals) & maxVal <= unlist(MaxVals)))]
       }
     }
-  }
-  #convert datatype if needed
-  switch(type,
+
+    #   if (!doubVal & !signVal) {
+    #     ## only check for binary if there are no decimals and no signs
+    #     logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
+    #
+    #     if (logi) {
+    #       datatype <- "LOG1S"
+    #     } else {
+    #       ## if() else is faster than if
+    #       datatype <- if (maxVal <= MaxVals$INT1U) "INT1U" else
+    #         if (maxVal <= MaxVals$INT2U) "INT2U" else
+    #           if (maxVal <= MaxVals$INT4U) "INT4U" else  ## note: ?dataType advises against INT4U
+    #             if (maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
+    #     }
+    #   } else {
+    #     if (signVal & !doubVal) {
+    #       ## if() else is faster than if
+    #       datatype <- if (minVal >= -MaxVals$INT1S & maxVal <= MaxVals$INT1S) "INT1S" else
+    #         if (minVal >= -MaxVals$INT2S & maxVal <= MaxVals$INT2S) "INT2S" else
+    #           if (minVal >= -MaxVals$INT4S & maxVal <=  MaxVals$INT4S) "INT4S" else  ## note: ?dataType advises against INT4U
+    #             if (minVal < -MaxVals$FLT4S | maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
+    #     } else {
+    #       if (doubVal)
+    #         datatype <- if (minVal < -MaxVals$FLT4S | maxVal > MaxVals$FLT4S) "FLT8S" else "FLT4S"
+    #     }
+    #   }
+    #   if (!identical(datatype, datatype1))
+    #     browser()
+    }
+    #convert datatype if needed
+    switch(type,
          GDAL = {
            switch(datatype,
                   LOG1S = {datatype <- "Byte"},
+                  INT1S = {datatype <- "Int16"},
                   INT2S = {datatype <- "Int16"},
                   INT4S = {datatype <- "Int32"},
                   INT1U = {datatype <- "Byte"},
@@ -1453,7 +1481,7 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 
 #' Assess the appropriate raster layer data type for GDAL
 #'
-#' Can be used to write prepared inputs on disk.
+#' This is a convenience function around \code{assessDataType(ras, type = "GDAL")}
 #'
 #' @param ras  The RasterLayer or RasterStack for which data type will be assessed.
 #' @return The appropriate data type for the range of values in \code{ras} for using GDAL.
@@ -1461,52 +1489,9 @@ assessDataType.default <- function(ras, type = "writeRaster") {
 #' @author Eliot McIntire, Ceres Barros, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_assessDataTypeGDAL.R
 #' @export
-#' @importFrom raster getValues ncell sampleRandom
-#' @rdname assessDataTypeGDAL
+#' @rdname assessDataType
 assessDataTypeGDAL <- function(ras) {
-  ## using ras@data@... is faster, but won't work for @values in large rasters
-  minVal <- ras@data@min
-  maxVal <- ras@data@max
-  signVal <- minVal < 0
-
-  if (ras@file@datanotation != "FLT4S") {
-    ## gdal deals with infinite values as Float32
-    # infVal <- any(!is.finite(minVal), !is.finite(maxVal))   ## faster than |
-
-    if (!signVal) {
-      ## only check for binary if there are no decimals and no signs
-      datatype <- if (maxVal <= 255) "Byte" else
-        if (maxVal <= 65534) "UInt16" else
-          if (maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
-    } else {
-      if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
-        if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
-    }
-  } else {
-    if (ncell(ras) > 100000) {
-      rasVals <- raster::sampleRandom(x = ras, size = 100000)
-    } else {
-      rasVals <- raster::getValues(ras)
-    }
-
-    #This method is slower but safer than getValues. Alternatives?
-    doubVal <-  any(floor(rasVals) != rasVals, na.rm = TRUE)
-
-    if (signVal & !doubVal) {
-      datatype <- if (minVal >= -32767 & maxVal <= 32767) "Int16" else #there is no INT8 for gdal
-        if (minVal >= -2147483647 & maxVal <=  2147483647) "Int32" else "Float32"
-    } else
-      if (doubVal) {
-        datatype <- "Float32"
-      } else {
-        #data was FLT4S but doesn't need sign or decimal
-        datatype <- if (maxVal <= 255) "Byte" else
-          if (maxVal <= 65534) "UInt16" else
-            if (maxVal <= 4294967296) "UInt32" else "Float32" #else transform your units
-      }
-  }
-
-  datatype
+  assessDataType(ras, type = "GDAL")
 }
 
 #' @importFrom rlang eval_tidy
@@ -1589,7 +1574,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       #replace extentRTM and crsRTM, because they will supersede all arguments
       if (!is.null(rasterToMatch)) {
         #reproject rasterToMatch, extend by res
-        newExtent <- projectExtent(rasterToMatch, crs = crs(x))
+        newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = crs(x)), projNotWKT2warn)
         tempPoly <- as(extent(newExtent), "SpatialPolygons")
         crs(tempPoly) <- crs(x)
         #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
@@ -1669,8 +1654,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       # writeOutputs
       ##################################
       if (!is.null(filename2)) {
-        x <- do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
-                                               overwrite = overwrite), dots))
+        x <- suppressWarningsSpecific(do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
+                                               overwrite = overwrite), dots)),
+                                      proj6Warn)
       } else {
         message(cyan("  Skipping writeOutputs; filename2 is NULL"))
       }
@@ -1721,13 +1707,12 @@ roundToRes <- function(extent, x) {
 }
 
 setMinMaxIfNeeded <- function(ras) {
-  maxIntVals <- c(127, 255, 32767, 65534, 2147483647, 4294967296)
   suppressWarnings(maxValCurrent <- maxValue(ras))
   needSetMinMax <- FALSE
   if (isTRUE(is.na(maxValCurrent))) {
     needSetMinMax <- TRUE
   } else {
-    possibleShortCut <- maxValCurrent %in% maxIntVals
+    possibleShortCut <- maxValCurrent %in% c(unlist(MaxVals), unlist(MaxVals) + 1)
     if (isTRUE(possibleShortCut)) {
       needSetMinMax <- TRUE
     }
@@ -1756,3 +1741,63 @@ roundTo6Dec <- function(x) {
   }
   x
 }
+
+suppressWarningsSpecific <- function(code, falseWarnings) {
+  warn <- capture.output(type = "message",
+                         suppressWarnings(withCallingHandlers(yy <- eval(code),
+                                                              warning = function(xx) {
+                                                                message(paste0("warn::", xx$message))
+                                                              })))
+  trueWarnings <- grep("warn::", warn, value = TRUE)
+  trueWarnings <- grep(falseWarnings, trueWarnings,
+                       invert = TRUE, value = TRUE)
+  if (length(trueWarnings)) {
+    warning(paste(trueWarnings, collapse = "\n  "))
+  }
+  return(yy)
+}
+
+captureWarningsToAttr <- function(code) {
+  warn <- capture.output(type = "message",
+                         suppressWarnings(withCallingHandlers(yy <- eval(code),
+                                                              warning = function(xx) {
+                                                                message(paste0("warn::", xx$message))
+                                                              })))
+  trueWarnings <- grepl("warn::.*", warn)
+  if (length(warn[!trueWarnings]))
+    message(paste(warn[!trueWarnings], collapse = "\n  "))
+  warn <- gsub("warn::", "", warn[trueWarnings])
+  attr(yy, "warning") <- paste(warn, collapse = "\n")
+  return(yy)
+}
+
+dtp <- list()
+dtp[["INT1"]] <- 255/2
+dtp[["INT2"]] <- 65534/2
+dtp[["INT4"]] <- 4294967296/2
+dtp[["FLT4"]] <- 3.4e+38
+dtp[["FLT8"]] <- Inf
+#INT4S <- MaxVals$INT4U/2 - 1
+#MaxVals$INT2S <- INT2UMax
+#MaxVals$INT1S <- floor(INT1UMax/2) # 127
+#ero <- 0
+dtps <- c("INT1U", "INT1S", "INT2U", "INT2S", "INT4U", "INT4S", "FLT4S", "FLT8S")
+names(dtps) <- dtps
+datatypeVals <- lapply(dtps, function(namdtp) {
+  d <- dtp[grep(substr(namdtp, 1, 4), names(dtp), value = TRUE)]
+  div <- substr(namdtp, 5, 5)
+  mult <- ifelse(div == "U", 2, 1)
+  Max <- trunc(unlist(d)*mult)
+  sign1 <- ifelse(div == "U", 0, -1)
+  Min <- Max * sign1
+  list(Min = Min, Max = Max)
+  })
+MaxVals <- lapply(datatypeVals, function(x) unname(x$Max))
+MinVals <- lapply(datatypeVals, function(x) unname(x$Min))
+MinValsFlts <- MinVals[grep("FLT", names(MinVals), value = TRUE)]
+MaxValsFlts <- MaxVals[grep("FLT", names(MinVals), value = TRUE)]
+# , envir = asNamespace("reproducible")
+#MaxVals <- c(INT1UMax, MaxVals$INT1S, INT2UMax, MaxVals$INT2S, MaxVals$INT4U, MaxVals$INT4S, MaxVals$FLT4S)
+#MinVals <- c(0, -MaxVals$INT1S, 0, -MaxVals$INT2S, 0, -MaxVals$INT4S, -MaxVals$FLT4S)
+
+projNotWKT2warn <- "Using PROJ not WKT2"

@@ -1,7 +1,8 @@
 #' The \code{reproducible} package
 #'
 #' @description
-#' \lifecycle{maturing}
+#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
 #' This package aims at making
 #' high-level, robust, machine and OS independent tools for making deeply
@@ -43,7 +44,3 @@
 #' @import methods
 "_PACKAGE"
 
-## usethis namespace: start
-#' @importFrom lifecycle deprecate_soft
-## usethis namespace: end
-NULL

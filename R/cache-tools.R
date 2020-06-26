@@ -118,6 +118,8 @@ setMethod(
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
+      if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+
       browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
@@ -140,6 +142,7 @@ setMethod(
         rmFromCloudFolder(cloudFolderID, x, cacheIds)
 
       }
+
     }
 
     browser(expr = exists("rrrr"))
@@ -200,7 +203,6 @@ setMethod(
 
         if (length(filesToRemove)) {
           filesToRemove <- unlist(filesToRemove)
-          #filesToRemove <- file_path_sans_ext(filesToRemove)#gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
           if (isInteractive()) {
             dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
@@ -481,7 +483,8 @@ setMethod(
 
 #' Merge two cache repositories together
 #'
-#' \lifecycle{experimental}
+#' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
+#' \if{latex}{\figure{lifecycle-experimental.svg}{options: width=0.5in}}
 #'
 #' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
 #' repository. All \code{userTags} will be copied verbatim, including
@@ -738,7 +741,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   }
   browser(expr = exists("._rmFromCloudFolder_1"))
 
-  gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
+  gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)
   filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
   # filenamesToRm <- paste0(cacheIds, ".rda")
@@ -754,10 +757,10 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   toDelete <- gdriveLs[isInCloud,]
   message("Cloud:")
   if (!is.null(filenames)) {
-    rasFiles <- drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
+    rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
     toDelete <- rbind(rasFiles, toDelete)
   }
-  retry(quote(drive_rm(toDelete)))
+  retry(quote(googledrive::drive_rm(toDelete)))
 }
 
 

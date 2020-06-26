@@ -31,6 +31,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   tmpdir <- tempdir2(rndstr(1, 6))
 
   if (isTRUE(needGoogle)) {
+    if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+
     if (utils::packageVersion("googledrive") >= "1.0.0")
       googledrive::drive_deauth()
     else
@@ -116,6 +118,7 @@ testOnExit <- function(testInitOut) {
   setwd(testInitOut$origDir)
   unlink(testInitOut$tmpdir, recursive = TRUE)
   if (isTRUE(testInitOut$needGoogle)) {
+    if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
     if (utils::packageVersion("googledrive") < "1.0.0")
       googledrive::drive_auth_config(active = FALSE)
   }
@@ -266,6 +269,8 @@ if (utils::packageVersion("raster") <= "2.6.7") {
 
 
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, type = c("Raster", "Stack", "Brick")) {
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+
   # Second test .grd which has two files
   ####################################################
   # neither cloud or local exist -- should create local and upload to cloud
@@ -327,8 +332,8 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_false(identical(Filenames(r2Orig), Filenames(r1Orig)))
   expect_true(r1EndCacheAttr == TRUE)
   expect_true(attr(r2End, ".Cache")$newCache == FALSE)
-  filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(file_path_sans_ext(Filenames(r2End))))))
-  filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(file_path_sans_ext(r1EndFilename)))))
+  filnames2End <- unique(dir(dirname(Filenames(r2End)), pattern = paste(collapse = "|", basename(filePathSansExt(Filenames(r2End))))))
+  filnames1End <- unique(dir(dirname(r1EndFilename), pattern = paste(collapse = "|", basename(filePathSansExt(r1EndFilename)))))
   expect_true(NROW(filnames1End) == numRasterFiles) # both sets because of the _1 -- a bit of an artifact due to same folder
   expect_true(NROW(filnames2End) == numRasterFiles) # both sets because of the _1
 
@@ -362,9 +367,9 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   data.table::setDT(driveLs)
   expect_true(all(basename(Filenames(r4End)) %in% driveLs$name))
   # should have 2 files in cloud b/c of grd and gri
-  expect_true(sum(file_path_sans_ext(driveLs$name) %in% file_path_sans_ext(basename(Filenames(r4End)))) == numRasterFiles)
+  expect_true(sum(filePathSansExt(driveLs$name) %in% filePathSansExt(basename(Filenames(r4End)))) == numRasterFiles)
   # should have 1 file that matches in local and in cloud, based on cacheId
-  suppressMessages(expect_true(NROW(unique(showCache(userTags = file_path_sans_ext(driveLs[endsWith(name, "rda")]$name)),
+  suppressMessages(expect_true(NROW(unique(showCache(userTags = filePathSansExt(driveLs[endsWith(name, "rda")]$name)),
                                            by = .cacheTableHashColName()))==1))
 
   ####################################################
@@ -389,7 +394,7 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
   expect_true(attr(r1End, ".Cache")$newCache == TRUE) # new to local cache
 
 
-  driveLsBefore <- drive_ls(cloudFolderID)
+  driveLsBefore <- googledrive::drive_ls(cloudFolderID)
   r5Orig <- raster(extent(0,200, 0, 200), vals = 5, res = 1)
   r5Orig <- writeRaster(r5Orig, filename = tempfile(tmpdir = tmpdir, fileext = fileext), overwrite = TRUE)
   if (mc$type == "Stack") {
@@ -405,10 +410,10 @@ testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, ty
     clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
   })
   expect_true(attr(r5End, ".Cache")$newCache == FALSE) # new to local cache
-  driveLsAfter <- drive_ls(cloudFolderID)
+  driveLsAfter <- googledrive::drive_ls(cloudFolderID)
   expect_true(identical(driveLsAfter, driveLsBefore))
   clearCache(useCloud = TRUE, cloudFolderID = cloudFolderID)
-  driveLsEnd <- drive_ls(cloudFolderID)
+  driveLsEnd <- googledrive::drive_ls(cloudFolderID)
   expect_true(NROW(driveLsEnd) == 0)
 }
 
@@ -420,6 +425,6 @@ fnCacheHelper <- function(a, cacheRepo2) {
   Cache(fnCacheHelper1, cacheRepo = cacheRepo2, verbose = 2)
 }
 
-crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
 
 messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is inside"

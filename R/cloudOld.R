@@ -14,7 +14,6 @@ if (getRversion() >= "3.1.0") {
 #'    be written. This will only be used if \code{checksumsFileID} is not provided
 #'   provided as a character string.
 #' @export
-#' @importFrom googledrive as_id drive_download drive_upload
 #' @seealso \code{\link{cloudSyncCacheOld}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}}
 cloudCheckOld <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL) {
   .Deprecated("Cache", msg = "Please use the 'useCloud' and 'cloudFolderID' args in 'Cache' instead")
@@ -36,7 +35,6 @@ cloudCheckOld <- function(toDigest, checksumsFileID = NULL, cloudFolderID = NULL
 #'
 #' @export
 #' @importFrom data.table data.table rbindlist
-#' @importFrom googledrive as_id drive_update drive_upload
 #' @seealso \code{\link{cloudSyncCacheOld}}, \code{\link{cloudCheckOld}}
 cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, checksumsFileID,
                        futurePlan = getOption("reproducible.futurePlan")) {
@@ -46,7 +44,8 @@ cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, check
 
 #' Deprecated
 #'
-#' \lifecycle{defunct}
+#' \if{html}{\figure{lifecycle-defunct.svg}{options: alt="defunct"}}
+#' \if{latex}{\figure{lifecycle-defunct.svg}{options: width=0.5in}}
 #'
 #' Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 #'
@@ -96,7 +95,6 @@ cloudCache <- function(...) {
 #' @export
 #' @importFrom crayon blue
 #' @importFrom data.table data.table rbindlist
-#' @importFrom googledrive as_id drive_rm drive_upload
 #' @seealso \code{\link{cloudCache}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
 #'   \code{\link{cloudCheckOld}}
 cloudSyncCacheOld <- function(cacheRepo = getOption("reproducible.cachePath"),
