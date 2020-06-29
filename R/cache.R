@@ -780,6 +780,12 @@ setMethod(
         if (fnDetails$isPipe) {
           output <- eval(modifiedDots$._pipe, envir = modifiedDots$._envir)
         } else {
+          # rlang attempts that are inadequate -- can't quite get the flexibility required to
+          #   allow either Cache(rnorm(1)) or Cache(rnorm, 1) to work correctly. Can only get
+          #   one or the other
+          # FUNx1 <- rlang::enquo(FUN)
+          # FUNx2 <- rlang::enquos(...)
+          # rlang::eval_tidy(call2(FUNx1, !!!FUNx2))
           # theCall <- expr(FUN(!!!dots))
           # output <- eval_tidy(theCall)
           output <- FUN(...)

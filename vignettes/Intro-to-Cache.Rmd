@@ -226,7 +226,7 @@ all.equal(notCached, reRun) ## TRUE
 Nested caching, which is when Caching of a function occurs inside an outer function, which is itself cached.
 This is a critical element to working within a reproducible work flow.
 It is not enough during development to cache flat code chunks, as there will be many levels of "slow" functions.
-Ideally, at all points in a development cycle, it should be possible to get to any line of code starting from the very initial steps, running through everything up to that point, in less that 1 second.
+Ideally, at all points in a development cycle, it should be possible to get to any line of code starting from the very initial steps, running through everything up to that point, in less than a few seconds.
 If the workflow can be kept very fast like this, then there is a guarantee that it will work at any point.
 
 ```{r nested}
@@ -312,10 +312,4 @@ In general, we feel that a liberal use of `Cache` will make a re-usable and repr
 `shiny` apps can be made, taking advantage of `Cache`. 
 Indeed, much of the difficulty in managing data sets and saving them for future use, can be accommodated by caching.
 
-## Nested Caching
 
-#### Cache individual functions
-
-`Cache(<functionName>, <other arguments>)`
-
-This will allow fine scale control of individual function calls.
