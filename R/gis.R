@@ -113,7 +113,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       y <- spTransform(x = y, CRSobj = crs(x))
     } else {
       if (!.requireNamespace("sf")) stop(call. = FALSE)
-      y <- st_transform(x = y, crs = crs(x))
+      y <- sf::st_transform(x = y, crs = crs(x))
     }
   }
 
