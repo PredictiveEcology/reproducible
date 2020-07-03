@@ -352,7 +352,6 @@ utils::globalVariables(c(
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
 #' @importFrom glue glue_sql double_quote
 #' @importFrom magrittr %>%
-#' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
 #' @rdname Cache
@@ -1104,7 +1103,6 @@ unmakeMemoisable.default <- function(x) {
 #'                 the \code{CacheRepo}
 #'
 #' @export
-#' @importFrom stats runif
 #' @inheritParams Cache
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -1562,7 +1560,7 @@ determineNestedTags <- function(envir, mc, userTags) {
   namesMatchCall <- names(mc)
   namesMatchCall <- namesMatchCall[!namesMatchCall %in% argsNoNesting]
   userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
-  namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
+  namesUserCacheArgs <- namesMatchCall[userCacheArgs[!is.na(userCacheArgs)]]
   objOverride <- is.na(userCacheArgs)
   #}
 

@@ -799,9 +799,11 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
             do.call(projectRaster, args = Args)
           ))
           # check for faulty datatype --> namely if it is an integer but classified as flt because of floating point problems
-          if (isTRUE(grepl("FLT", dataType(x))))
-            if (isTRUE(sum(!na.omit(round(x[], 0) %==% x[])) == 0))
+          if (isTRUE(grepl("FLT", dataType(x)))) {
+            rrr <- round(x[], 0) %==% x[]
+            if (isTRUE(sum(!rrr[!is.na(rrr)]) == 0)) # if (isTRUE(sum(!na.omit(rrr)) == 0))
               x[] <- round(x[], 0)
+          }
           warn <- attr(x, "warning")
           attr(x, "warning") <- NULL
 
@@ -1395,7 +1397,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
       names(MinValsFlts)[min(which(minVal >= MinValsFlts & maxVal <= MaxValsFlts))]
     } else {
       ## only check for binary if there are no decimals and no signs
-      logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
+      logi <- all(!is.na(.bincode(rasVals[!is.na(rasVals)], c(-1,1))))  ## range needs to include 0
+      #logi <- all(!is.na(.bincode(na.omit(rasVals), c(-1,1))))  ## range needs to include 0
       if (logi) {
         "LOG1S"
       } else {

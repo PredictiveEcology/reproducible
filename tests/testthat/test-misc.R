@@ -90,7 +90,9 @@ test_that("setting options works correctly", {
   a <- reproducibleOptions()
   a1 <- a[sapply(a, function(x) !is.null(x))]
   b <- options()
-  expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(match(names(b), names(a1)))]))))
+  bbb <- match(names(b), names(a1))
+  # expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(bbb)]))))
+  expect_true(identical(sort(names(a1)), sort(names(a1[bbb[!is.na(bbb)]]))))
   omit <- c(names(testInitOut$opts), names(testInitOut$optsAsk))
   b1 <- b[names(a1)]
   b1 <- b1[!names(b1) %in% omit]

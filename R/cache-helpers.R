@@ -343,7 +343,8 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     }
 
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
-    matchedCall <- matchedCall[na.omit(match(names(matchedCall), FUN@signature[signat]))]
+    ff <- match(names(matchedCall), FUN@signature[signat])
+    matchedCall <- matchedCall[ff[!is.na(ff)]]
     matchedCall <- lapply(matchedCall, eval)
 
     signatures <- rep("missing", (sum(signat))) # default is "missing"
