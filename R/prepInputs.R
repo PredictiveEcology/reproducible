@@ -60,11 +60,11 @@ if (getRversion() >= "3.1.0") {
 #'   If \code{rasterToMatch} or \code{studyArea} are used, then this will
 #'   trigger several subsequent functions, specifically the sequence,
 #'   \emph{Crop, reproject, mask}, which appears to be a common sequence in
-#'   spatial simulation. See \code{\link{postProcess.spatialObjects}}.
+#'   spatial simulation. See \code{\link{postProcess.spatialClasses}}.
 #'
 #'   \emph{Understanding various combinations of \code{rasterToMatch}
 #'   and/or \code{studyArea}:}
-#'   Please see \code{\link{postProcess.spatialObjects}}.
+#'   Please see \code{\link{postProcess.spatialClasses}}.
 #'  }
 #'
 #' @section \code{purge}:

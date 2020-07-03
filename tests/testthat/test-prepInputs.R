@@ -1727,7 +1727,7 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir
       )
     })
-    expect_is(test1, "spatialObjects")
+    expect_is(test1, "spatialClasses")
     expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 0) # no link made b/c identical dir
     expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 0) # no link made b/c identical dir
   }

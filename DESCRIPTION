@@ -46,7 +46,6 @@ Imports:
     memoise,
     methods,
     qs,
-    quickPlot,
     Require,
     raster,
     RSQLite,
@@ -103,4 +102,5 @@ Collate:
     'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'
+    'spatialObjects-class.R'
     'zzz.R'

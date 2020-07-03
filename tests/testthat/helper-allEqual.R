@@ -38,7 +38,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     else
       googledrive::drive_auth_config(active = TRUE)
 
-    if (quickPlot::isRstudioServer()) {
+    if (.isRstudioServer()) {
       options(httr_oob_default = TRUE)
     }
 
@@ -79,10 +79,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (!is.null(opts)) {
     if (needGoogle) {
       optsGoogle <- if (utils::packageVersion("googledrive") >= "1.0.0") {
-        # list(httr_oob_default = quickPlot::isRstudioServer(),
-        #      httr_oauth_cache = "~/.httr-oauth")
       } else {
-        list(httr_oob_default = quickPlot::isRstudioServer())
+        list(httr_oob_default = .isRstudioServer())
       }
       opts <- append(opts, optsGoogle)
     }

@@ -4,10 +4,9 @@
 #' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
 #' @export
-#' @param x  An object of postProcessing, e.g., \code{spatialObjects}.
+#' @param x  An object of postProcessing, e.g., \code{spatialClasses}.
 #'           See individual methods. This can be provided as a
 #'           \code{rlang::quosure} or a normal R object.
-#' @importClassesFrom quickPlot spatialObjects
 #' @importFrom utils capture.output
 #' @importFrom raster buffer
 #' @importFrom sf st_is_longlat
@@ -37,9 +36,9 @@ postProcess.list <- function(x, ...) {
   lapply(x, function(y) postProcess(y, ...))
 }
 
-#' Post processing for \code{spatialObjects}
+#' Post processing for \code{spatialClasses}
 #'
-#' The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
+#' The method for spatialClasses (\code{Raster*} and \code{Spatial*}) will
 #' crop, reproject, and mask, in that order.
 #' This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
 #' \code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
@@ -89,7 +88,7 @@ postProcess.list <- function(x, ...) {
 #'                 If \code{TRUE}, it will be taken from \code{studyArea}. See table
 #'                 in details below.
 #'
-#' @param ... Additional arguments passed to methods. For \code{spatialObjects},
+#' @param ... Additional arguments passed to methods. For \code{spatialClasses},
 #'            these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
 #'            \code{\link{projectInputs}}, \code{\link{maskInputs}},
 #'            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
@@ -147,7 +146,7 @@ postProcess.list <- function(x, ...) {
 #' @importFrom raster removeTmpFiles
 #' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
-postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
+postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = TRUE,
                                        studyArea = NULL, rasterToMatch = NULL,
                                        overwrite = getOption("reproducible.overwrite", TRUE),
                                        useSAcrs = FALSE,
@@ -157,7 +156,7 @@ postProcess.spatialObjects <- function(x, filename1 = NULL, filename2 = TRUE,
   on.exit(removeTmpFiles(h = 0), add = TRUE)
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  browser(expr = exists("._postProcess.spatialobjects_1"))
+  browser(expr = exists("._postProcess.spatialClasses_1"))
   x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
                              rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
                              filename1 = filename1, filename2 = filename2,
@@ -243,7 +242,7 @@ cropInputs.default <- function(x, studyArea, rasterToMatch, ...) {
 #' @export
 #' @importFrom raster compareCRS projectExtent tmpDir
 #' @rdname cropInputs
-cropInputs.spatialObjects <- function(x, studyArea = NULL, rasterToMatch = NULL,
+cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL,
                                       useGDAL = getOption("reproducible.useGDAL", TRUE),
                                       ...) {
@@ -881,7 +880,7 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
   if (!is.null(targetCRS)) {
     if (!is(targetCRS, "CRS")) {
       if (!is.character(targetCRS)) {
-        if (is(targetCRS, "spatialObjects")) {
+        if (is(targetCRS, "spatialClasses")) {
           targetCRS <- crs(targetCRS)
         } else {
           stop("targetCRS in projectInputs must be a CRS object or a class from",
@@ -902,7 +901,7 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
 #'
 #' This is the function that follows the table of order of
 #' preference for determining CRS. See \code{\link{postProcess}}
-#' @inheritParams postProcess.spatialObjects
+#' @inheritParams postProcess.spatialClasses
 #' @keywords internal
 #' @rdname postProcessHelpers
 .getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL) {
@@ -1082,7 +1081,7 @@ maskInputs.sf <- function(x, studyArea, ...) {
 #'   absolute or relative path and used as is if absolute or
 #'   prepended with \code{destinationPath} if relative.
 #'
-#' @inheritParams postProcess.spatialObjects
+#' @inheritParams postProcess.spatialClasses
 #'
 #' @param destinationPath Optional. If \code{filename2} is a relative file path, then this
 #'                        will be the directory of the resulting absolute file path.
@@ -1596,7 +1595,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       }
     }
 
-    browser(expr = exists("._postProcess.spatialobjects_2"))
+    browser(expr = exists("._postProcess.spatialClasses_2"))
     if (!isTRUE(all.equal(extent(x), extRTM))) {
       x <- Cache(cropInputs, x = x, studyArea = studyArea,
                  extentToMatch = extRTM,
@@ -1611,7 +1610,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     }
 
     # cropInputs may have returned NULL if they don't overlap
-    browser(expr = exists("._postProcess.spatialobjects_3"))
+    browser(expr = exists("._postProcess.spatialClasses_3"))
     if (!is.null(x)) {
       objectName <- if (is.null(filename1)) NULL else basename(filename1)
       x <- fixErrors(x = x, objectName = objectName,
@@ -1623,7 +1622,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
                                  targetCRS)
 
-      browser(expr = exists("._postProcess.spatialobjects_4"))
+      browser(expr = exists("._postProcess.spatialClasses_4"))
       runIt <- if (is(x, "Raster") && !is.null(rasterToMatch))
         differentRasters(x, rasterToMatch, targetCRS)
       else
@@ -1641,7 +1640,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       # maskInputs
       ##################################
-      browser(expr = exists("._postProcess.spatialobjects_5"))
+      browser(expr = exists("._postProcess.spatialClasses_5"))
       x <- Cache(maskInputs, x = x, studyArea = studyArea,
                  rasterToMatch = rasterToMatch, useCache = useCache, ...)
 
@@ -1661,7 +1660,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         message(cyan("  Skipping writeOutputs; filename2 is NULL"))
       }
 
-      browser(expr = exists("._postProcess.spatialobjects_6"))
+      browser(expr = exists("._postProcess.spatialClasses_6"))
       if (dir.exists(bigRastersTmpFolder())) {
         ## Delete gdalwarp results in temp
         unlink(bigRastersTmpFolder(), recursive = TRUE)
