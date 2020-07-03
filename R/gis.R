@@ -72,7 +72,6 @@ checkGDALVersion <- function(version) {
 #' @inheritParams projectInputs.Raster
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
-#' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
 #' @examples
@@ -113,8 +112,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     if (!is(y, "sf")) {
       y <- spTransform(x = y, CRSobj = crs(x))
     } else {
-      rn <- .requireNamespace("sf")
-      if (isFALSE(rn)) stop("Must install sf package")
+      if (!.requireNamespace("sf")) stop(call. = FALSE)
       y <- st_transform(x = y, crs = crs(x))
     }
   }
