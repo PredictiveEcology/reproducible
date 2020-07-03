@@ -1291,7 +1291,10 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
   if (!is.null(filename2)) {
     dots <- list(...)
     notWanted1 <- .formalsNotInCurrentDots(shapefile, ...)
-    notWanted2 <- .formalsNotInCurrentDots(rgdal::writeOGR, ...)
+    formalNamesIn_rgdal_writeOGR <- c("obj", "dsn", "layer", "driver", "dataset_options", "layer_options",
+                 "verbose", "check_exists", "overwrite_layer", "delete_dsn", "morphToESRI",
+                 "encoding", "shp_edge_case_fix", "dumpSRS")
+    notWanted2 <- .formalsNotInCurrentDots(formalNames = formalNamesIn_rgdal_writeOGR, ...)
     keepForDots <- c(setdiff(notWanted1, notWanted2), setdiff(names(dots), notWanted1))
     dots <- dots[keepForDots]
     # Internally in rgdal::writeOGR, it converts the row.names to integer with this test
