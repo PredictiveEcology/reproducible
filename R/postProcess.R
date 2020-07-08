@@ -966,7 +966,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 #' @export
 #' @rdname maskInputs
 #' @importFrom sf st_as_sf st_intersects st_join
-maskInputs.Spatial <- function(x, studyArea, ...) {
+maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   if (!is.null(studyArea)) {
     message("    intersecting ...")
     if (NROW(studyArea) > 1)
@@ -1006,6 +1006,16 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 
     return(y)
   } else {
+    if (!is.null(rasterToMatch)) {
+      if (isTRUE(maskWithRTM)) {
+        sameProj <- if (isTRUE(compareCRS(x, rasterToMatch))) TRUE else FALSE
+        if (isFALSE(sameProj))
+          x <- sp::spTransform(x, crs(rasterToMatch))
+        x <- x[!is.na(rasterToMatch[x]),]
+      } else {
+        message("No studyArea supplied, and maskWithRTM is FALSE; not masking")
+      }
+    }
     return(x)
   }
 }
