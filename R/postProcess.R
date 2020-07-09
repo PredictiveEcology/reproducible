@@ -1281,6 +1281,13 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           stop("filename2 must be length 1 or length nlayers(...)")
         }
       } else {
+        if (file.exists(argsForWrite$filename)) {
+          if (interactive() && isFALSE(argsForWrite$overwrite)) {
+            wantOverwrite <- readline(paste0("File ", argsForWrite$filename, " already exists; overwrite? Y or N: "))
+            if (identical(tolower(wantOverwrite), "y"))
+              argsForWrite$overwrite <- TRUE
+          }
+        }
         xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
       }
       #Before changing to do.call, dots were not being added.
