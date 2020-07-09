@@ -1762,11 +1762,12 @@ roundTo6Dec <- function(x) {
 }
 
 suppressWarningsSpecific <- function(code, falseWarnings) {
-  warn <- capture.output(type = "message",
+  warn <- tryCatch(capture.output(type = "message",
                          suppressWarnings(withCallingHandlers(yy <- eval(code),
                                                               warning = function(xx) {
                                                                 message(paste0("warn::", xx$message))
-                                                              })))
+                                                              }))), error = function(xx) stop(xx$message))
+
   trueWarnings <- grep("warn::", warn, value = TRUE)
   trueWarnings <- grep(falseWarnings, trueWarnings,
                        invert = TRUE, value = TRUE)
