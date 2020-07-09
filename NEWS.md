@@ -13,6 +13,7 @@ version 1.1.1.9000
 
 ## bug fixes
 * fix over-wide tables in PDF manual (#144)
+* use `file.link` not `file.symlink` for `saveToCache`. This would have resulted in C Stack overflow errors due to missing original file in the `file.symlink`
 * use system call to `unzip` when extracting large (>= 4GB) files (#145, @tati-micheletti)
 
 version 1.1.1
