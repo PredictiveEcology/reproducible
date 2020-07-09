@@ -7,6 +7,7 @@ version 1.1.1.9000
 * removed `Require`, `pkgDep`, `trimVersionNumber`, `normPath`, `checkPath` that were moved to `Require` package. For backwards compatibility, these are imported and reexported
 * address permanently or temporarily new changes in GDAL>3 and PROJ>6 in the spatial packages.
 * new function `file.move` used to rename/copy files across disks (a situation where `file.rename` would fail)
+* all `DBI` type functions now have default `cachePath` of `getOption("reproducible.cachePath")`
 
 ## Dependency changes
 * net reduction in number of packages that are imported from by 6. Removed completely: `R.utils`, `tools`, `remotes`, `versions`; moved to Suggests: `rgdal`, `gdalUtils`, `googledrive`, `fastdigest`, `testthat`; added: `Require`, `lifecycle`, `usethis`
@@ -15,6 +16,7 @@ version 1.1.1.9000
 * fix over-wide tables in PDF manual (#144)
 * use `file.link` not `file.symlink` for `saveToCache`. This would have resulted in C Stack overflow errors due to missing original file in the `file.symlink`
 * use system call to `unzip` when extracting large (>= 4GB) files (#145, @tati-micheletti)
+* several minor including projectInputs when converting to longlat projections, setMinMax for gdalwarp results
 
 version 1.1.1
 ==============
