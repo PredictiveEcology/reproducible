@@ -752,6 +752,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           wait = TRUE)
 
         x <- raster(tempDstRaster)
+        x <- setMinMax(x)
         crs(x) <- targetCRS #sometimes the crs is correct but the character string is not identical
         #file exists in temp drive. Can copy to filename2
       } else {
