@@ -8,14 +8,14 @@
 \title{Create a new cache}
 \usage{
 createCache(
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
   force = FALSE
 )
 
 saveToCache(
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),
   obj,
@@ -25,7 +25,7 @@ saveToCache(
 )
 
 loadFromCache(
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   cacheId,
   format = getOption("reproducible.cacheSaveFormat", "rds"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -33,7 +33,7 @@ loadFromCache(
 )
 
 rmFromCache(
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   cacheId,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL),

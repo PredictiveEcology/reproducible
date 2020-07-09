@@ -1542,6 +1542,7 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 
 #' @importFrom crayon cyan
 #' @importFrom raster projectExtent
+#' @importFrom Require normPath
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
@@ -1673,7 +1674,8 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       # writeOutputs
       ##################################
       if (!is.null(filename2)) {
-        x <- suppressWarningsSpecific(do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
+        x <- suppressWarningsSpecific(do.call(writeOutputs, append(list(x = rlang::quo(x),
+                                                                        filename2 = normPath(newFilename),
                                                overwrite = overwrite), dots)),
                                       proj6Warn)
       } else {

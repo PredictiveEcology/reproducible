@@ -9,26 +9,26 @@
 \title{A collection of low level tools for Cache}
 \usage{
 CacheDBFile(
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL)
 )
 
-CacheStorageDir(cachePath)
+CacheStorageDir(cachePath = getOption("reproducible.cachePath"))
 
 CacheStoredFile(
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   hash,
   format = getOption("reproducible.cacheSaveFormat", "rds")
 )
 
 CacheDBTableName(
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   drv = getOption("reproducible.drv", RSQLite::SQLite())
 )
 
 CacheIsACache(
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   create = FALSE,
   drv = getOption("reproducible.drv", RSQLite::SQLite()),
   conn = getOption("reproducible.conn", NULL)
