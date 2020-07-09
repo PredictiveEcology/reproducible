@@ -745,7 +745,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                  teRas,
                  "-r ", dots$method,
                  " -overwrite ",
-                 "-tr ", paste(tr, collapse = " "), " ",
+                 if (!grepl("longlat", targCRS)) {paste("-tr ", paste(tr, collapse = " "))},
+                 " ",
                  "\"", tempSrcRaster, "\"", " ",
                  "\"", tempDstRaster, "\""),
           wait = TRUE)
