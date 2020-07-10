@@ -175,7 +175,6 @@ setMethod(
       if (useDBI()) {
         createCache(x, drv = drv, force = TRUE)
       }
-      browser()
       if (isTRUE(getOption("reproducible.useMemoise")))
         if (exists(x, envir = .pkgEnv))
           rm(x, envir = .pkgEnv)

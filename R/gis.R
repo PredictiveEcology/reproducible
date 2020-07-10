@@ -328,8 +328,9 @@ maskWithRasterNAs <- function(x, y) {
   x
 }
 
+#' @importFrom raster maxValue minValue
 checkColors <- function(x) {
-  origColors <- getColors(x)
+  origColors <- .getColors(x)
   origMaxValue <- maxValue(x)
   origMinValue <- minValue(x)
   list(origColors = origColors[[1]], origMinValue = origMinValue, origMaxValue = origMaxValue)
@@ -337,16 +338,24 @@ checkColors <- function(x) {
 
 rebuildColors <- function(x, origColors) {
   if (origColors$origMinValue != minValue(x) || origColors$origMaxValue != maxValue(x) ||
-      !identical(getColors(x)[[1]], origColors$origColors)) {
+      !identical(.getColors(x)[[1]], origColors$origColors)) {
     if (length(origColors$origColors) == length(origColors$origMinValue:origColors$origMaxValue)) {
       newSeq <- minValue(x):maxValue(x)
       oldSeq <- origColors$origMinValue:origColors$origMaxValue
       whFromOld <- match(newSeq, oldSeq)
-      setColors(x, n = length(newSeq)) <- origColors$origColors[whFromOld]
+      x@legend@colortable <- origColors$origColors[whFromOld]
     }
-  } else {
-    getColors(x)
-
   }
   x
 }
+
+
+.getColors <- function(object) {
+  nams <- names(object)
+  cols <- lapply(nams, function(x) {
+    as.character(object[[x]]@legend@colortable)
+  })
+  names(cols) <- nams
+  return(cols)
+}
+

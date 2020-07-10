@@ -306,7 +306,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
         cropExtentRounded <- roundToRes(cropExtent, x)
         if (attemptGDAL && is(x, "Raster")) {
-          origColors <- getColors(x)
           tmpfile <- paste0(tempfile(fileext = ".tif"));
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
@@ -1739,7 +1738,7 @@ roundToRes <- function(extent, x) {
 
 setMinMaxIfNeeded <- function(ras) {
   # special case where the colours already match the discrete values
-  if (length(getColors(ras)[[1]]) != length(minValue(ras):maxValue(ras))) {
+  if (length(.getColors(ras)[[1]]) != (maxValue(ras) - minValue(ras) + 1)) {
     suppressWarnings(maxValCurrent <- maxValue(ras))
     needSetMinMax <- FALSE
     if (isTRUE(is.na(maxValCurrent))) {

@@ -11,7 +11,7 @@ maskInputs(x, studyArea, ...)
 
 \method{maskInputs}{Raster}(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...)
 
-\method{maskInputs}{Spatial}(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...)
+\method{maskInputs}{Spatial}(x, studyArea, ...)
 
 \method{maskInputs}{sf}(x, studyArea, ...)
 }
