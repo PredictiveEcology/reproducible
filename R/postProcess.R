@@ -965,7 +965,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 
 #' @export
 #' @rdname maskInputs
-maskInputs.Spatial <- function(x, studyArea, ...) {
+maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   if (!is.null(studyArea)) {
     message("    intersecting ...")
     if (NROW(studyArea) > 1)
