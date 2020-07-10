@@ -5,8 +5,8 @@ test_that("Checksums read and written correctly", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  sampleDir <- system.file("maps", package = "quickPlot")
-  sampleFiles <- list.files(sampleDir, pattern = "[.]tif", full.names = TRUE)
+  sampleDir <- system.file("examples", package = "reproducible")
+  sampleFiles <- list.files(sampleDir, pattern = "[.R]", full.names = TRUE)
   on.exit(unlink(dirname(tmpdir), recursive = TRUE), add = TRUE)
 
   expect_true(all(file.copy(sampleFiles, tmpdir)))
@@ -15,8 +15,8 @@ test_that("Checksums read and written correctly", {
   cnamesR <- c("result", "expectedFile", "actualFile", "checksum.x", "checksum.y",
                "algorithm.x", "algorithm.y", "filesize.x", "filesize.y")
   cnamesW <- c("file", "checksum", "filesize", "algorithm")
-  csums <- c("77c56d42fecac5b1", "8affcdf311555fd6", "e2dd8734d6ed3d05",
-             "f21251dcdf23dde0", "86e342cfc6876b7d")
+  csums <- c("e765e999bf75d95f", "67bb602a320e6ab0", "95cf3d316655454d",
+             "1781d29114c37e4b", "ed47937f707440af")
 
   # 1. read Checksums without CHECKSUMS.txt file
   expect_true(NROW(Checksums(tmpdir))==0)
@@ -30,9 +30,9 @@ test_that("Checksums read and written correctly", {
   # 3. write Checksums without CHECKSUMS.txt
   expect_true(file.remove(csf))
   txt <- Checksums(dirname(csf), write = TRUE)
-  txt <- txt[filesize.x > 0]
+  txt <- txt[grepl("R", expectedFile)]
   expect_true(all(colnames(txt) == cnamesR))
-  expect_equal(nrow(txt), 5)
+  expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
   expect_true(all(txt$checksum.y == csums))
 
@@ -43,10 +43,13 @@ test_that("Checksums read and written correctly", {
                     stringsAsFactors = FALSE)
   utils::write.table(out, csf, eol = "\n", col.names = TRUE, row.names = FALSE)
 
+  txt <- Checksums(tmpdir, write = FALSE)
+  expect_equal(nrow(txt), NROW(out))
+
   txt <- Checksums(tmpdir, write = TRUE)
-  txt <- txt[filesize.x > 0]
+  txt <- txt[grepl("R", expectedFile)]
   expect_true(all(colnames(txt) == cnamesR))
-  expect_equal(nrow(txt), 5)
+  expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
   expect_true(all(txt$checksum.y == csums))
 })
