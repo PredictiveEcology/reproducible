@@ -28,7 +28,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   if (missing(libraries)) libraries <- list()
   unlist(lapply(libraries, require, character.only = TRUE))
   require("testthat")
-  tmpdir <- tempdir2(rndstr(1, 6))
+  tmpdir <- tempdir2(reproducible:::rndstr(1, 6))
 
   if (isTRUE(needGoogle)) {
     if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
@@ -67,7 +67,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   checkPath(tmpCache, create = TRUE)
 
   defaultOpts <- list(
-    reproducible.cachePath = .reproducibleTempCacheDir(), ## TODO: deal with cachePath issues in non-interactive tests
+    reproducible.cachePath = reproducible:::.reproducibleTempCacheDir(), ## TODO: deal with cachePath issues in non-interactive tests
     reproducible.showSimilar = FALSE,
     reproducible.overwrite = TRUE,
     reproducible.useNewDigestAlgorithm = TRUE
@@ -88,7 +88,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
   }
 
   if (!is.null(tmpFileExt)) {
-    ranfiles <- unlist(lapply(tmpFileExt, function(x) paste0(rndstr(1, 7), ".", x)))
+    ranfiles <- unlist(lapply(tmpFileExt, function(x) paste0(reproducible:::rndstr(1, 7), ".", x)))
     tmpfile <- file.path(tmpdir, ranfiles)
     tmpfile <- gsub(pattern = "\\.\\.", tmpfile, replacement = "\\.")
     file.create(tmpfile)

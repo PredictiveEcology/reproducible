@@ -1,7 +1,7 @@
 test_that("Checksums read and written correctly", {
-  library(magrittr)
+  # library(magrittr)
 
-  testInitOut <- testInit("raster", tmpFileExt = c("",""))
+  testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -34,7 +34,7 @@ test_that("Checksums read and written correctly", {
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
-  expect_true(all(txt$checksum.y == csums))
+  expect_true(all(sort(txt$checksum.y) == sort(csums)))
 
   # 4. read Checksums with non-empty CHECKSUMS.txt file
   out <- data.frame(file = basename(sampleFiles[-1]),
@@ -51,5 +51,5 @@ test_that("Checksums read and written correctly", {
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
-  expect_true(all(txt$checksum.y == csums))
+  expect_true(all(sort(txt$checksum.y) == sort(csums)))
 })
