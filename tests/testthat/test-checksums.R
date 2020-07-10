@@ -1,9 +1,12 @@
 test_that("Checksums read and written correctly", {
   library(magrittr)
 
+  testInitOut <- testInit("raster", tmpFileExt = c("",""))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
   sampleDir <- system.file("maps", package = "quickPlot")
   sampleFiles <- list.files(sampleDir, pattern = "[.]tif", full.names = TRUE)
-  tmpdir <- tempdir2("test_checksums") %>% checkPath(create = TRUE)
   on.exit(unlink(dirname(tmpdir), recursive = TRUE), add = TRUE)
 
   expect_true(all(file.copy(sampleFiles, tmpdir)))
@@ -27,6 +30,7 @@ test_that("Checksums read and written correctly", {
   # 3. write Checksums without CHECKSUMS.txt
   expect_true(file.remove(csf))
   txt <- Checksums(dirname(csf), write = TRUE)
+  txt <- txt[filesize.x > 0]
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), 5)
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
@@ -40,6 +44,7 @@ test_that("Checksums read and written correctly", {
   utils::write.table(out, csf, eol = "\n", col.names = TRUE, row.names = FALSE)
 
   txt <- Checksums(tmpdir, write = TRUE)
+  txt <- txt[filesize.x > 0]
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), 5)
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
