@@ -317,7 +317,10 @@ test_that("test 'quick' argument", {
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   })
-  expect_true(any(grepl(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"), mess1 )))
+  expect_true(sum(grepl(paste0(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"),"|",
+                               paste(.loadedMemoisedResultMsg, "quickFun call")),
+                        mess1)) == 1)
+  # expect_true(any(grepl(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"), mess1 )))
   expect_silent({
     out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = FALSE)
   })
@@ -333,7 +336,8 @@ test_that("test 'quick' argument", {
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   })
-  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"),
+  expect_true(sum(grepl(paste0(paste(.loadedCacheResultMsg, "quickFun call, adding to memoised copy"),"|",
+                               paste(.loadedMemoisedResultMsg, "quickFun call")),
                     mess1)) == 1)
 
   #mess3 <- capture_messages({ out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = FALSE) })
@@ -491,7 +495,8 @@ test_that("test asPath", {
 
   expect_true(length(a1) == 0)
   expect_true(length(a2) == 0)
-  expect_true(sum(grepl("loaded cached result", a3)) == 1)
+  expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "|",
+                              .loadedCacheResultMsg), a3)) == 1)
 
   unlink("filename.RData")
   try(clearCache(tmpdir, ask = FALSE), silent = TRUE)
@@ -502,7 +507,8 @@ test_that("test asPath", {
   a3 <- capture_messages(Cache(saveRDS, obj, file = asPath("filename.RData"),
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
-  expect_true(sum(grepl("loaded cached result", a2)) == 1)
+  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "|",
+                              .loadedMemoisedResultMsg), a2)) == 1)
   expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
 
   unlink("filename.RData")
@@ -514,7 +520,8 @@ test_that("test asPath", {
   a3 <- capture_messages(Cache(saveRDS, obj, file = as("filename.RData", "Path"),
                                quick = TRUE, cacheRepo = tmpdir))
   expect_true(length(a1) == 0)
-  expect_true(sum(grepl("loaded cached result", a2)) == 1)
+  expect_true(sum(grepl(paste(.loadedCacheResultMsg, "|",
+                              .loadedMemoisedResultMsg), a2)) == 1)
   expect_true(sum(grepl(paste(.loadedMemoisedResultMsg, "saveRDS call"), a3)) == 1)
 
   # setwd(origDir)

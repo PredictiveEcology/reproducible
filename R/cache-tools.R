@@ -175,9 +175,10 @@ setMethod(
       if (useDBI()) {
         createCache(x, drv = drv, force = TRUE)
       }
-      if (isTRUE(getOption("reproducible.useMemoise")))
+      if (isTRUE(getOption("reproducible.useMemoise"))) {
         if (exists(x, envir = .pkgEnv))
-          rm(x, envir = .pkgEnv)
+          rm(list = x, envir = .pkgEnv)
+      }
       # memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
     }
