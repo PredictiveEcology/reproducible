@@ -9,7 +9,6 @@ utils::globalVariables(c(
 #'
 #' @description
 #' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
-#' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
 #' A function that can be used to wrap around other functions to cache function calls
 #' for later use. This is normally most effective when the function to cache is

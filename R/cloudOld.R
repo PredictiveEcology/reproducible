@@ -45,7 +45,6 @@ cloudWriteOld <- function(object, digest, cloudFolderID = NULL, checksums, check
 #' Deprecated
 #'
 #' \if{html}{\figure{lifecycle-defunct.svg}{options: alt="defunct"}}
-#' \if{latex}{\figure{lifecycle-defunct.svg}{options: width=0.5in}}
 #'
 #' Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.
 #'

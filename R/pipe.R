@@ -3,7 +3,6 @@
 #'
 #' @description
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
-#' \if{latex}{\figure{lifecycle-experimental.svg}{options: width=0.5in}}
 #'
 #' This pipe can only be used at any point in a pipe chain, but must
 #' be preceded by \code{Cache(...)} (which allows other \code{Cache() \%C\% ... remaining pipes}

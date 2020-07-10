@@ -5,7 +5,6 @@ if (getRversion() >= "3.1.0") {
 #' Download and optionally post-process files
 #'
 #' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
-#' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
 #' This function can be used to prepare R objects from remote or local data sources.
 #' The object of this function is to provide a reproducible version of
