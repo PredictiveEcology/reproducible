@@ -42,7 +42,7 @@ test_that("Checksums read and written correctly", {
   data.table::setorderv(txt, "expectedFile")
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
-  expect_true(all(txt$expectedFile == basename(sampleFiles)))
+  expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
 
   # 4. read Checksums with non-empty, but incomplete CHECKSUMS.txt file
   out <- data.frame(file = basename(sampleFiles[-1]),
