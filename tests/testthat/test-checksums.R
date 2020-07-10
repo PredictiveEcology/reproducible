@@ -22,7 +22,10 @@ test_that("Checksums read and written correctly", {
   Checksums(dirname(csf), write = TRUE)
   txt <- Checksums(dirname(csf))
   txt <- txt[grepl("R", expectedFile)]
+  data.table::setorderv(txt, "expectedFile")
 
+
+  browser()
   csums <- txt$checksum.x
 
 
@@ -36,6 +39,7 @@ test_that("Checksums read and written correctly", {
   expect_true(file.remove(csf))
   txt <- Checksums(dirname(csf), write = TRUE)
   txt <- txt[grepl("R", expectedFile)]
+  data.table::setorderv(txt, "expectedFile")
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
@@ -48,6 +52,8 @@ test_that("Checksums read and written correctly", {
   utils::write.table(out, csf, eol = "\n", col.names = TRUE, row.names = FALSE)
 
   txt <- Checksums(tmpdir, write = FALSE)
+  data.table::setorderv(txt, "expectedFile")
+  browser()
   expect_equal(nrow(txt), NROW(out))
   expect_true(all(txt$result == "OK"))
 
