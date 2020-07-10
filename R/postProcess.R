@@ -744,12 +744,14 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                  teRas,
                  "-r ", dots$method,
                  " -overwrite ",
-                 "-tr ", paste(tr, collapse = " "), " ",
+                 if (!grepl("longlat", targCRS)) {paste("-tr ", paste(tr, collapse = " "))},
+                 " ",
                  "\"", tempSrcRaster, "\"", " ",
                  "\"", tempDstRaster, "\""),
           wait = TRUE)
 
         x <- raster(tempDstRaster)
+        x <- setMinMax(x)
         crs(x) <- targetCRS #sometimes the crs is correct but the character string is not identical
         #file exists in temp drive. Can copy to filename2
       } else {
@@ -1004,6 +1006,16 @@ maskInputs.Spatial <- function(x, studyArea, ...) {
 
     return(y)
   } else {
+    if (!is.null(rasterToMatch)) {
+      if (isTRUE(maskWithRTM)) {
+        sameProj <- if (isTRUE(compareCRS(x, rasterToMatch))) TRUE else FALSE
+        if (isFALSE(sameProj))
+          x <- sp::spTransform(x, crs(rasterToMatch))
+        x <- x[!is.na(rasterToMatch[x]),]
+      } else {
+        message("No studyArea supplied, and maskWithRTM is FALSE; not masking")
+      }
+    }
     return(x)
   }
 }
@@ -1267,6 +1279,13 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           stop("filename2 must be length 1 or length nlayers(...)")
         }
       } else {
+        if (file.exists(argsForWrite$filename)) {
+          if (interactive() && isFALSE(argsForWrite$overwrite)) {
+            wantOverwrite <- readline(paste0("File ", argsForWrite$filename, " already exists; overwrite? Y or N: "))
+            if (identical(tolower(wantOverwrite), "y"))
+              argsForWrite$overwrite <- TRUE
+          }
+        }
         xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
       }
       #Before changing to do.call, dots were not being added.
@@ -1526,6 +1545,7 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 #' @importFrom crayon cyan
 #' @importFrom raster projectExtent
 #' @importFrom sp wkt
+#' @importFrom Require normPath
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
   dots <- list(...)
@@ -1661,7 +1681,8 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       # writeOutputs
       ##################################
       if (!is.null(filename2)) {
-        x <- suppressWarningsSpecific(do.call(writeOutputs, append(list(x = rlang::quo(x), filename2 = newFilename,
+        x <- suppressWarningsSpecific(do.call(writeOutputs, append(list(x = rlang::quo(x),
+                                                                        filename2 = normPath(newFilename),
                                                overwrite = overwrite), dots)),
                                       proj6Warn)
       } else {
@@ -1750,11 +1771,12 @@ roundTo6Dec <- function(x) {
 }
 
 suppressWarningsSpecific <- function(code, falseWarnings) {
-  warn <- capture.output(type = "message",
+  warn <- tryCatch(capture.output(type = "message",
                          suppressWarnings(withCallingHandlers(yy <- eval(code),
                                                               warning = function(xx) {
                                                                 message(paste0("warn::", xx$message))
-                                                              })))
+                                                              }))), error = function(xx) stop(xx$message))
+
   trueWarnings <- grep("warn::", warn, value = TRUE)
   trueWarnings <- grep(falseWarnings, trueWarnings,
                        invert = TRUE, value = TRUE)

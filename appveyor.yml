@@ -70,6 +70,7 @@ notifications:
   - provider: Email
     to:
     - alex.chubaty@gmail.com
+    - '{{commitAuthorEmail}}'
     subject: 'reproducible: r-appveyor build {{status}}'
     message: "https://ci.appveyor.com/project/achubaty/reproducible"
     on_build_success: false
