@@ -192,7 +192,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                "\"", tempDstRaster, "\""),
         wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
       x <- raster(tempDstRaster)
-      x <- setMinMax(x)
+      x <- setMinMaxIfNeeded(x)
     } else {
       # Eliot removed this because fasterize::fasterize will handle cases where x[[1]] is too big
       #extentY <- extent(y)
@@ -319,9 +319,34 @@ attemptGDAL <- function(x, useGDAL) {
 }
 
 maskWithRasterNAs <- function(x, y) {
+  origColors <- checkColors(x)
   if (canProcessInMemory(x, 3) && fromDisk(x))
     x[] <- x[]
+  x <- rebuildColors(x, origColors)
   m <- which(is.na(y[]))
   x[m] <- NA
+  x
+}
+
+checkColors <- function(x) {
+  origColors <- getColors(x)
+  origMaxValue <- maxValue(x)
+  origMinValue <- minValue(x)
+  list(origColors = origColors[[1]], origMinValue = origMinValue, origMaxValue = origMaxValue)
+}
+
+rebuildColors <- function(x, origColors) {
+  if (origColors$origMinValue != minValue(x) || origColors$origMaxValue != maxValue(x) ||
+      !identical(getColors(x)[[1]], origColors$origColors)) {
+    if (length(origColors$origColors) == length(origColors$origMinValue:origColors$origMaxValue)) {
+      newSeq <- minValue(x):maxValue(x)
+      oldSeq <- origColors$origMinValue:origColors$origMaxValue
+      whFromOld <- match(newSeq, oldSeq)
+      setColors(x, n = length(newSeq)) <- origColors$origColors[whFromOld]
+    }
+  } else {
+    getColors(x)
+
+  }
   x
 }

@@ -306,6 +306,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
         cropExtentRounded <- roundToRes(cropExtent, x)
         if (attemptGDAL && is(x, "Raster")) {
+          origColors <- getColors(x)
           tmpfile <- paste0(tempfile(fileext = ".tif"));
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
@@ -751,7 +752,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           wait = TRUE)
 
         x <- raster(tempDstRaster)
-        x <- setMinMax(x)
+        x <- setMinMaxIfNeeded(x)
         crs(x) <- targetCRS #sometimes the crs is correct but the character string is not identical
         #file exists in temp drive. Can copy to filename2
       } else {
@@ -1286,7 +1287,9 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
               argsForWrite$overwrite <- TRUE
           }
         }
+        origColors <- checkColors(x)
         xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
+        xTmp <- rebuildColors(xTmp, origColors)
       }
       #Before changing to do.call, dots were not being added.
       # This is a bug in writeRaster was spotted with crs of xTmp became
@@ -1735,18 +1738,21 @@ roundToRes <- function(extent, x) {
 }
 
 setMinMaxIfNeeded <- function(ras) {
-  suppressWarnings(maxValCurrent <- maxValue(ras))
-  needSetMinMax <- FALSE
-  if (isTRUE(is.na(maxValCurrent))) {
-    needSetMinMax <- TRUE
-  } else {
-    possibleShortCut <- maxValCurrent %in% c(unlist(MaxVals), unlist(MaxVals) + 1)
-    if (isTRUE(possibleShortCut)) {
+  # special case where the colours already match the discrete values
+  if (length(getColors(ras)[[1]]) != length(minValue(ras):maxValue(ras))) {
+    suppressWarnings(maxValCurrent <- maxValue(ras))
+    needSetMinMax <- FALSE
+    if (isTRUE(is.na(maxValCurrent))) {
       needSetMinMax <- TRUE
+    } else {
+      possibleShortCut <- maxValCurrent %in% c(unlist(MaxVals), unlist(MaxVals) + 1)
+      if (isTRUE(possibleShortCut)) {
+        needSetMinMax <- TRUE
+      }
     }
-  }
-  if (isTRUE(needSetMinMax)) {
-    suppressWarnings(ras <- setMinMax(ras))
+    if (isTRUE(needSetMinMax)) {
+      suppressWarnings(ras <- setMinMax(ras))
+    }
   }
   ras
 }

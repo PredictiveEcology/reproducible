@@ -252,12 +252,15 @@
 
   fromMemoise <- NA
   if (getOption("reproducible.useMemoise")) {
-    fromMemoise <-
-      if (memoise::has_cache(.loadFromLocalRepoMem)(cacheObj, repoDir = cacheRepo, value = TRUE)) {
-        TRUE
-      } else {
-        FALSE
-      }
+    fromMemoise <- FALSE
+    if (!is.null(.pkgEnv[[cacheRepo]]))
+      if (exists(cacheObj, envir = .pkgEnv[[cacheRepo]]))
+        fromMemoise <- TRUE
+      # if (memoise::has_cache(.loadFromLocalRepoMem)(cacheObj, repoDir = cacheRepo, value = TRUE)) {
+      #   TRUE
+      # } else {
+      #   FALSE
+      # }
     loadFromMgs <- "Loading from memoised version of repo"
     browser(expr = exists("eeee"))
     output <- .loadFromLocalRepoMem(md5hash = cacheObj, repoDir = cacheRepo, value = TRUE)

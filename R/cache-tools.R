@@ -175,7 +175,11 @@ setMethod(
       if (useDBI()) {
         createCache(x, drv = drv, force = TRUE)
       }
-      memoise::forget(.loadFromLocalRepoMem)
+      browser()
+      if (isTRUE(getOption("reproducible.useMemoise")))
+        if (exists(x, envir = .pkgEnv))
+          rm(x, envir = .pkgEnv)
+      # memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
     }
 
@@ -237,10 +241,14 @@ setMethod(
           on.exit({dbDisconnect(conn)})
         }
         rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
+        if (isTRUE(getOption("reproducible.useMemoise")))
+          if (exists(x, envir = .pkgEnv))
+            suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
+
         browser(expr = exists("rmFC"))
       }
     }
-    memoise::forget(.loadFromLocalRepoMem)
+    # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
 })

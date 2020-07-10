@@ -172,8 +172,13 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
       saveRDS(obj, file = fts)
       fs <- file.size(fts)
     }
-  } else {
   }
+  if (isTRUE(getOption("reproducible.useMemoise"))) {
+    if (is.null(.pkgEnv[[cachePath]]))
+      .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
+  }
+
   fsChar <- as.character(fs)
 
   tagKeyHasFS <- tagKey %in% "file.size"
@@ -219,6 +224,13 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           format = getOption("reproducible.cacheSaveFormat", "rds"),
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL) ) {
+  if (isTRUE(getOption("reproducible.useMemoise"))) {
+    if (is.null(.pkgEnv[[cachePath]]))
+      .pkgEnv[[cachePath]] <- new.env(parent = emptyenv())
+    isMemoised <- exists(cacheId, envir = .pkgEnv[[cachePath]])
+    if (isTRUE(isMemoised))
+      return(get(cacheId, envir = .pkgEnv[[cachePath]]))
+  }
   f <- CacheStoredFile(cachePath, cacheId, format)
 
   # First test if it is correct format
@@ -237,6 +249,11 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     }
   }
   obj <- loadFile(f, format = format)
+  if (isTRUE(getOption("reproducible.useMemoise"))) {
+    assign(cacheId, obj, envir = .pkgEnv[[cachePath]])
+  }
+  obj
+
 }
 
 #' Low level tools to work with Cache

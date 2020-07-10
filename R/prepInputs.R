@@ -787,8 +787,6 @@ extractFromArchive <- function(archive,
   list(moduleName = moduleName, modulePath = modulePath, checkSums = checkSums)
 }
 
-#' @keywords internal
-.checkSumsMem <- memoise::memoise(.checkSums)
 
 .isArchive <- function(filename) {
   if (!is.null(filename)) {

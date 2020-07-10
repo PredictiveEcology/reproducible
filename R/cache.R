@@ -1024,7 +1024,7 @@ setMethod(
 .namesCacheFormals <- names(.formalsCache)[]
 
 #' @keywords internal
-.loadFromLocalRepoMem2 <- function(md5hash, repoDir, ...) {
+.loadFromLocalRepoMem <- function(md5hash, repoDir, ...) {
   browser(expr = exists("._loadFromLocalRepoMem2_1"))
   if (useDBI()) {
     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
@@ -1034,7 +1034,7 @@ setMethod(
 }
 
 #' @keywords internal
-.loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
+#.loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
 
 #' @keywords internal
 .unlistToCharacter <- function(l, max.level = 1) {
