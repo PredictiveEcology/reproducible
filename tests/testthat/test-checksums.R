@@ -15,11 +15,16 @@ test_that("Checksums read and written correctly", {
   cnamesR <- c("result", "expectedFile", "actualFile", "checksum.x", "checksum.y",
                "algorithm.x", "algorithm.y", "filesize.x", "filesize.y")
   cnamesW <- c("file", "checksum", "filesize", "algorithm")
-  csums <- c("e765e999bf75d95f", "67bb602a320e6ab0", "95cf3d316655454d",
-             "1781d29114c37e4b", "ed47937f707440af")
 
   # 1. read Checksums without CHECKSUMS.txt file
   expect_true(NROW(Checksums(tmpdir))==0)
+
+  Checksums(dirname(csf), write = TRUE)
+  txt <- Checksums(dirname(csf))
+  txt <- txt[grepl("R", expectedFile)]
+
+  csums <- txt$checksum.x
+
 
   # 2. read Checksums with empty CHECKSUMS.txt file
   expect_true(file.create(csf))
@@ -34,9 +39,8 @@ test_that("Checksums read and written correctly", {
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
-  expect_true(all(sort(txt$checksum.y) == sort(csums)))
 
-  # 4. read Checksums with non-empty CHECKSUMS.txt file
+  # 4. read Checksums with non-empty, but incomplete CHECKSUMS.txt file
   out <- data.frame(file = basename(sampleFiles[-1]),
                     checksum = csums[-1],
                     algorithm = c("xxhash64", "xxhash64", "xxhash64", "xxhash64"),
@@ -45,11 +49,13 @@ test_that("Checksums read and written correctly", {
 
   txt <- Checksums(tmpdir, write = FALSE)
   expect_equal(nrow(txt), NROW(out))
+  expect_true(all(txt$result == "OK"))
 
+  # 5. make Checksums complete -- just append one line
   txt <- Checksums(tmpdir, write = TRUE)
   txt <- txt[grepl("R", expectedFile)]
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
   expect_true(all(txt$expectedFile == basename(sampleFiles)))
-  expect_true(all(sort(txt$checksum.y) == sort(csums)))
+
 })
