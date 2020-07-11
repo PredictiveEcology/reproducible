@@ -521,11 +521,10 @@ missingFiles <- function(files, checkSums, targetFile) {
       is.null(files))
 }
 
-#' @importFrom quickPlot isRstudioServer
 assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath")) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
-  if (isRstudioServer()) {
+  if (.isRstudioServer()) {
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
   }
@@ -562,3 +561,16 @@ requireNamespaceMsg <- function(pkg, extraMsg = character()) {
   paste("Must install",pkg,"package", extraMsg)
 }
 
+
+.isRstudioServer <- function() {
+  isRstudioServer <- FALSE
+
+  if (isTRUE("tools:rstudio" %in% search())) { ## running in Rstudio
+    rsAPIFn <- get(".rs.api.versionInfo", as.environment("tools:rstudio"))
+    versionInfo <- rsAPIFn()
+    if (!is.null(versionInfo)) {
+      isRstudioServer <- identical("server", versionInfo$mode)
+    }
+  }
+  isRstudioServer
+}

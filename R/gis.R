@@ -72,7 +72,6 @@ checkGDALVersion <- function(version) {
 #' @inheritParams projectInputs.Raster
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
-#' @importFrom sf st_as_sf st_write
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
 #' @examples
@@ -113,9 +112,8 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
     if (!is(y, "sf")) {
       y <- spTransform(x = y, CRSobj = crs(x))
     } else {
-      rn <- .requireNamespace("sf")
-      if (isFALSE(rn)) stop("Must install sf package")
-      y <- st_transform(x = y, crs = crs(x))
+      if (!.requireNamespace("sf")) stop(call. = FALSE)
+      y <- sf::st_transform(x = y, crs = crs(x))
     }
   }
 
@@ -194,7 +192,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                "\"", tempDstRaster, "\""),
         wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
       x <- raster(tempDstRaster)
-      x <- setMinMax(x)
+      x <- setMinMaxIfNeeded(x)
     } else {
       # Eliot removed this because fasterize::fasterize will handle cases where x[[1]] is too big
       #extentY <- extent(y)
@@ -321,9 +319,43 @@ attemptGDAL <- function(x, useGDAL) {
 }
 
 maskWithRasterNAs <- function(x, y) {
+  origColors <- checkColors(x)
   if (canProcessInMemory(x, 3) && fromDisk(x))
     x[] <- x[]
+  x <- rebuildColors(x, origColors)
   m <- which(is.na(y[]))
   x[m] <- NA
   x
 }
+
+#' @importFrom raster maxValue minValue
+checkColors <- function(x) {
+  origColors <- .getColors(x)
+  origMaxValue <- maxValue(x)
+  origMinValue <- minValue(x)
+  list(origColors = origColors[[1]], origMinValue = origMinValue, origMaxValue = origMaxValue)
+}
+
+rebuildColors <- function(x, origColors) {
+  if (origColors$origMinValue != minValue(x) || origColors$origMaxValue != maxValue(x) ||
+      !identical(.getColors(x)[[1]], origColors$origColors)) {
+    if (length(origColors$origColors) == length(origColors$origMinValue:origColors$origMaxValue)) {
+      newSeq <- minValue(x):maxValue(x)
+      oldSeq <- origColors$origMinValue:origColors$origMaxValue
+      whFromOld <- match(newSeq, oldSeq)
+      x@legend@colortable <- origColors$origColors[whFromOld]
+    }
+  }
+  x
+}
+
+
+.getColors <- function(object) {
+  nams <- names(object)
+  cols <- lapply(nams, function(x) {
+    as.character(object[[x]]@legend@colortable)
+  })
+  names(cols) <- nams
+  return(cols)
+}
+

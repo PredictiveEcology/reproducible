@@ -4,7 +4,7 @@
 \alias{.formalsNotInCurrentDots}
 \title{Identify which formals to a function are not in the current \code{...}}
 \usage{
-.formalsNotInCurrentDots(fun, ..., dots)
+.formalsNotInCurrentDots(fun, ..., dots, formalNames)
 }
 \arguments{
 \item{fun}{A function}
@@ -14,6 +14,8 @@ provided explicitly.}
 
 \item{dots}{Optional. If this is provided via say \code{dots = list(...)},
 then this will cause the \code{...} to be ignored.}
+
+\item{formalNames}{Optional character vector. If provided then it will override the \code{fun}}
 }
 \description{
 Advanced use.

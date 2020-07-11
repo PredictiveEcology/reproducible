@@ -175,7 +175,11 @@ setMethod(
       if (useDBI()) {
         createCache(x, drv = drv, force = TRUE)
       }
-      memoise::forget(.loadFromLocalRepoMem)
+      if (isTRUE(getOption("reproducible.useMemoise"))) {
+        if (exists(x, envir = .pkgEnv))
+          rm(list = x, envir = .pkgEnv)
+      }
+      # memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
     }
 
@@ -237,10 +241,14 @@ setMethod(
           on.exit({dbDisconnect(conn)})
         }
         rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
+        if (isTRUE(getOption("reproducible.useMemoise")))
+          if (exists(x, envir = .pkgEnv))
+            suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
+
         browser(expr = exists("rmFC"))
       }
     }
-    memoise::forget(.loadFromLocalRepoMem)
+    # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
 })
@@ -484,7 +492,6 @@ setMethod(
 #' Merge two cache repositories together
 #'
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
-#' \if{latex}{\figure{lifecycle-experimental.svg}{options: width=0.5in}}
 #'
 #' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
 #' repository. All \code{userTags} will be copied verbatim, including

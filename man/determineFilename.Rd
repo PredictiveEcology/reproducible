@@ -33,7 +33,7 @@ will be the directory of the resulting absolute file path.}
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
 
-\item{...}{Additional arguments passed to methods. For \code{spatialObjects},
+\item{...}{Additional arguments passed to methods. For \code{spatialClasses},
            these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.

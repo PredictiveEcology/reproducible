@@ -9,7 +9,6 @@ utils::globalVariables(c(
 #'
 #' @description
 #' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
-#' \if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 #'
 #' A function that can be used to wrap around other functions to cache function calls
 #' for later use. This is normally most effective when the function to cache is
@@ -352,7 +351,6 @@ utils::globalVariables(c(
 #' @importFrom data.table setDT := setkeyv .N .SD setattr
 #' @importFrom glue glue_sql double_quote
 #' @importFrom magrittr %>%
-#' @importFrom stats na.omit
 #' @importFrom utils object.size tail methods
 #' @importFrom methods formalArgs
 #' @rdname Cache
@@ -1025,7 +1023,7 @@ setMethod(
 .namesCacheFormals <- names(.formalsCache)[]
 
 #' @keywords internal
-.loadFromLocalRepoMem2 <- function(md5hash, repoDir, ...) {
+.loadFromLocalRepoMem <- function(md5hash, repoDir, ...) {
   browser(expr = exists("._loadFromLocalRepoMem2_1"))
   if (useDBI()) {
     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
@@ -1035,7 +1033,7 @@ setMethod(
 }
 
 #' @keywords internal
-.loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
+#.loadFromLocalRepoMem <- memoise::memoise(.loadFromLocalRepoMem2)
 
 #' @keywords internal
 .unlistToCharacter <- function(l, max.level = 1) {
@@ -1104,7 +1102,6 @@ unmakeMemoisable.default <- function(x) {
 #'                 the \code{CacheRepo}
 #'
 #' @export
-#' @importFrom stats runif
 #' @inheritParams Cache
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
@@ -1562,7 +1559,7 @@ determineNestedTags <- function(envir, mc, userTags) {
   namesMatchCall <- names(mc)
   namesMatchCall <- namesMatchCall[!namesMatchCall %in% argsNoNesting]
   userCacheArgs <- match(.namesCacheFormals, namesMatchCall)
-  namesUserCacheArgs <- namesMatchCall[na.omit(userCacheArgs)]
+  namesUserCacheArgs <- namesMatchCall[userCacheArgs[!is.na(userCacheArgs)]]
   objOverride <- is.na(userCacheArgs)
   #}
 

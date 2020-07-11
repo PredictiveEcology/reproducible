@@ -343,7 +343,8 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     }
 
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
-    matchedCall <- matchedCall[na.omit(match(names(matchedCall), FUN@signature[signat]))]
+    ff <- match(names(matchedCall), FUN@signature[signat])
+    matchedCall <- matchedCall[ff[!is.na(ff)]]
     matchedCall <- lapply(matchedCall, eval)
 
     signatures <- rep("missing", (sum(signat))) # default is "missing"
@@ -877,12 +878,14 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
   sn <- slotNames(object@data)
-  sn <- sn[!(sn %in% c("min", "max", "haveminmax", "names", "isfactor",
-                       "dropped", "nlayers", "fromdisk", "inmemory", "offset", "gain"))]
+  sn <- sn[!(sn %in% c(#"min", "max", "haveminmax", "names", "isfactor",
+                       "dropped", "nlayers", "fromdisk", "inmemory"
+                       #"offset", "gain"
+                       ))]
   dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig <- digest(append(list(dim(object), res(object), crs(object),
-                              extent(object)), dataSlotsToDigest),
+    dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
+                              extent(object)), dataSlotsToDigest), length = length, quick = quick,
                   algo = algo) # don't include object@data -- these are volatile
   else {
     if (!requireNamespace("fastdigest"))
@@ -891,11 +894,25 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
                                   extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
   }
 
+  # Legend
+  sn <- slotNames(object@legend)
+  dataSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig2 <- .robustDigest(dataSlotsToDigest, length = length, quick = quick,
+                  algo = algo) # don't include object@data -- these are volatile
+  else {
+    if (!requireNamespace("fastdigest"))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    dig2 <- fastdigest::fastdigest(dataSlotsToDigest) # don't include object@data -- these are volatile
+  }
+  dig <- c(dig, dig2)
+
   sn <- slotNames(object@file)
   sn <- sn[!(sn %in% c("name"))]
   fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    digFile <- digest(fileSlotsToDigest, algo = algo) # don't include object@file -- these are volatile
+    digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
+                             algo = algo) # don't include object@file -- these are volatile
   else {
     if (!requireNamespace("fastdigest"))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
@@ -916,7 +933,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   }
 
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig <- digest(dig, algo = algo)
+    dig <- .robustDigest(dig, length = length, quick = quick, algo = algo)
   else {
     if (!requireNamespace("fastdigest"))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))

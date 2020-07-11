@@ -90,7 +90,6 @@ functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 }
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
-\if{latex}{\figure{lifecycle-maturing.svg}{options: width=0.5in}}
 }
 \details{
 This function can be used to prepare R objects from remote or local data sources.
@@ -150,11 +149,11 @@ See \code{\link{preProcess}} for combinations of arguments.
   If \code{rasterToMatch} or \code{studyArea} are used, then this will
   trigger several subsequent functions, specifically the sequence,
   \emph{Crop, reproject, mask}, which appears to be a common sequence in
-  spatial simulation. See \code{\link{postProcess.spatialObjects}}.
+  spatial simulation. See \code{\link{postProcess.spatialClasses}}.
 
   \emph{Understanding various combinations of \code{rasterToMatch}
   and/or \code{studyArea}:}
-  Please see \code{\link{postProcess.spatialObjects}}.
+  Please see \code{\link{postProcess.spatialClasses}}.
  }
 }
 

@@ -19,7 +19,6 @@ Invoked for its side effect on the \code{repoDir}.
 }
 \description{
 \if{html}{\figure{lifecycle-deprecated.svg}{options: alt="deprecated"}}
-\if{latex}{\figure{lifecycle-deprecated.svg}{options: width=0.5in}}
 }
 \details{
 Stub artifacts can result from several causes. The most common being

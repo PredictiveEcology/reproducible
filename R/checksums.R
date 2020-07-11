@@ -155,7 +155,8 @@ setMethod(
     if (!is.null(txt$algorithm)) {
       if (!write) {
         dots$algo <- unique(txt[txt$file %in% basename(filesToCheck),][["algorithm"]])
-        dots$algo <- na.omit(dots$algo)[1]
+        dots$algo <- dots$algo[!is.na(dots$algo)][1]
+        # dots$algo <- na.omit(dots$algo)[1]
         if (is.na(dots$algo)) dots$algo <- defaultWriteHashAlgo
       }
     } else {

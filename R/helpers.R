@@ -122,11 +122,13 @@ setMethod(
 #'        provided explicitly.
 #' @param dots Optional. If this is provided via say \code{dots = list(...)},
 #'             then this will cause the \code{...} to be ignored.
-.formalsNotInCurrentDots <- function(fun, ..., dots) {
+#' @param formalNames Optional character vector. If provided then it will override the \code{fun}
+.formalsNotInCurrentDots <- function(fun, ..., dots, formalNames) {
+  if (missing(formalNames)) formalNames <- names(formals(fun))
   if (!missing(dots)) {
-    out <- names(dots)[!(names(dots) %in% names(formals(fun)))]
+    out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
-    out <- names(list(...))[!(names(list(...)) %in% names(formals(fun)))]
+    out <- names(list(...))[!(names(list(...)) %in% formalNames)]
   }
   out
 }
@@ -203,7 +205,7 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
     if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
     result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
-      backoff <- runif(n = 1, min = 0, max = exponentialDecayBase^i - 1)
+      backoff <- sample(1:1000/1000, size = 1) * (exponentialDecayBase^i - 1)
       if (backoff > 3) {
         message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
       }

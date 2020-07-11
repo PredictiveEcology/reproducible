@@ -15,8 +15,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2020-07-09
-Version: 1.1.1.9010
+Date: 2020-07-11
+Version: 2.0.0.9010
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -43,16 +43,13 @@ Imports:
     glue,
     httr,
     magrittr,
-    memoise,
     methods,
     qs,
-    quickPlot,
     Require,
     raster,
     RSQLite,
     rlang,
-    sf,
-    sp,
+    sp (>= 1.4-2),
     utils
 Suggests:
     covr,
@@ -67,6 +64,8 @@ Suggests:
     rgdal,
     rgeos,
     rmarkdown,
+    sf,
+    stats,
     testthat,
     TimeWarp
 Encoding: UTF-8
@@ -103,4 +102,5 @@ Collate:
     'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'
+    'spatialObjects-class.R'
     'zzz.R'
