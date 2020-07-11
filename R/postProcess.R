@@ -1589,10 +1589,13 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       #if all CRS are projected, then check if buffer is necessary
       objsAreProjected <- list(x, studyArea, crsRTM)
       nonNulls <- !unlist(lapply(objsAreProjected, is.null))
-      projections <- sapply(objsAreProjected[nonNulls], function(xx) grepl("(longitude).*(latitude)", wkt(xx)))
+      suppressWarningsSpecific(falseWarnings = "wkt",
+                               projections <- sapply(objsAreProjected[nonNulls],
+                                                     function(xx) grepl("(longitude).*(latitude)", wkt(xx))))
+
       #projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
       #projections <- na.omit(projections)
-      if (!any(projections)) {
+      if (!any(unlist(projections))) {
         if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
           useBuffer <- TRUE
         }
