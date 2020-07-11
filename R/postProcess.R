@@ -650,6 +650,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
     if (is.null(targetCRS)) {
       targetCRS <- crs(rasterToMatch)
     }
+    srcCRS <- crs(x)
+    dontSpecifyResBCLongLat <- if (grepl("longlat", targetCRS)) !grepl("longlat", srcCRS) else FALSE
 
     doProjection <- FALSE
     if (is.null(rasterToMatch)) {
@@ -745,7 +747,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                  teRas,
                  "-r ", dots$method,
                  " -overwrite ",
-                 if (!grepl("longlat", targCRS)) {paste("-tr ", paste(tr, collapse = " "))},
+                 if (!dontSpecifyResBCLongLat) {paste("-tr ", paste(tr, collapse = " "))},
                  " ",
                  "\"", tempSrcRaster, "\"", " ",
                  "\"", tempDstRaster, "\""),

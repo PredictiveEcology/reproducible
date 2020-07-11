@@ -1759,140 +1759,140 @@
 #   expect_true(identical(normPath(filename(b1a)),
 #                         normPath(gsub(tifTmp, pattern = "tif", replacement = "grd"))))
 # })
-
-test_that("rasters aren't properly resampled", {
-  testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-                                                "reproducible.inputPaths" = NULL),
-                          needGoogle = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  a <- raster(extent(0, 20, 0, 20), res = 2, vals = 1:100*4)
-  b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1:100)
-  #suppressWarnings({
-    crs(a) <- crsToUse
-    crs(b) <- crsToUse
-    #}) ## TODO: temporary until raster fixes all crs issues
-
-  tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  tiftemp2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-
-  suppressWarnings({
-    writeRaster(a, filename = tiftemp1)
-    writeRaster(b, filename = tiftemp2)
-  }) ## TODO: temporary GDAL>6
-
-  out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
-                    destinationPath = dirname(tiftemp1), useCache = FALSE)
-  expect_true(dataType(out) == "INT2U")
-
-  # Test bilinear --> but keeps integer if it is integer
-  out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
-                     destinationPath = dirname(tiftemp1), method = "bilinear",
-                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
-  expect_true(dataType(out2) %in% c("INT2S", "INT2U")) # because of "bilinear", it can become negative
-
-  c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
-  crs(c) <- crsToUse
-  tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  suppressWarningsSpecific(writeRaster(c, filename = tiftemp3), proj6Warn)
-
-  out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
-                     destinationPath = dirname(tiftemp3),
-                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
-  expect_true(dataType(out3) == "FLT4S")
-})
-
-test_that("System call gdal works", {
-  skip_on_cran()
-
-  testInitOut <- testInit("raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- crsToUse
-  rnStr <- rndstr(1,6)
-  ras <- suppressWarningsSpecific(writeRaster(ras, filename = file.path(tempdir2(rnStr), basename(tempfile())),
-                     format = "GTiff"), proj6Warn)
-
-  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- crsToUse
-
-  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
-
-  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE)
-  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
-  expect_true(dataType(test1) == "INT1U") #properly resampled
-
-  ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
-  rnStr <- rndstr(1,6)
-  ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
-                                  proj6Warn)
-  test2 <- prepInputs(targetFile = ras@file@name,
-                      destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
-  expect_true(dataType(test2) == "FLT4S")
-
-  on.exit(raster::rasterOptions(todisk = FALSE))
-})
-
-test_that("System call gdal works using multicores for both projecting and masking", {
-  skip_on_cran()
-
-  testInitOut <- testInit("raster")
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
-  crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  rnStr <- rndstr(1, 6)
-  ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
-                                  proj6Warn)
-
-  ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
-  crs(ras2) <- crsToUse
-
-  coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2),
-                      .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  # crs(StudyArea) <- crsToUse
-  crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
-
-  # Passing a specific integer for cores
-  test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2)
-  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
-  # Passing as float for cores
-  test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3)
-  expect_true(file.exists(test2@file@name)) #exists on disk after gdalwarp
-  # Not passing cores
-  test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea)
-  expect_true(file.exists(test3@file@name)) #exists on disk after gdalwarp
-  # Passing cores as AUTO
-  test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO")
-  expect_true(file.exists(test4@file@name)) #exists on disk after gdalwarp
-  # Passing cores as any other character than 'AUTO'
-  expect_error({
-    test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                        rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA")
-  })
-
-  # ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
-  # ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
-
-  on.exit(raster::rasterOptions(todisk = FALSE))
-})
+#
+# test_that("rasters aren't properly resampled", {
+#   testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+#                                                 "reproducible.inputPaths" = NULL),
+#                           needGoogle = TRUE)
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#
+#   a <- raster(extent(0, 20, 0, 20), res = 2, vals = 1:100*4)
+#   b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1:100)
+#   #suppressWarnings({
+#     crs(a) <- crsToUse
+#     crs(b) <- crsToUse
+#     #}) ## TODO: temporary until raster fixes all crs issues
+#
+#   tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+#   tiftemp2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+#
+#   suppressWarnings({
+#     writeRaster(a, filename = tiftemp1)
+#     writeRaster(b, filename = tiftemp2)
+#   }) ## TODO: temporary GDAL>6
+#
+#   out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
+#                     destinationPath = dirname(tiftemp1), useCache = FALSE)
+#   expect_true(dataType(out) == "INT2U")
+#
+#   # Test bilinear --> but keeps integer if it is integer
+#   out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
+#                      destinationPath = dirname(tiftemp1), method = "bilinear",
+#                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
+#   expect_true(dataType(out2) %in% c("INT2S", "INT2U")) # because of "bilinear", it can become negative
+#
+#   c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
+#   crs(c) <- crsToUse
+#   tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+#   suppressWarningsSpecific(writeRaster(c, filename = tiftemp3), proj6Warn)
+#
+#   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
+#                      destinationPath = dirname(tiftemp3),
+#                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
+#   expect_true(dataType(out3) == "FLT4S")
+# })
+#
+# test_that("System call gdal works", {
+#   skip_on_cran()
+#
+#   testInitOut <- testInit("raster")
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#
+#   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
+#   crs(ras) <- crsToUse
+#   rnStr <- rndstr(1,6)
+#   ras <- suppressWarningsSpecific(writeRaster(ras, filename = file.path(tempdir2(rnStr), basename(tempfile())),
+#                      format = "GTiff"), proj6Warn)
+#
+#   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+#   crs(ras2) <- crsToUse
+#
+#   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+#
+#   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE)
+#   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+#   expect_true(dataType(test1) == "INT1U") #properly resampled
+#
+#   ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
+#   rnStr <- rndstr(1,6)
+#   ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
+#                                   proj6Warn)
+#   test2 <- prepInputs(targetFile = ras@file@name,
+#                       destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
+#   expect_true(dataType(test2) == "FLT4S")
+#
+#   on.exit(raster::rasterOptions(todisk = FALSE))
+# })
+#
+# test_that("System call gdal works using multicores for both projecting and masking", {
+#   skip_on_cran()
+#
+#   testInitOut <- testInit("raster")
+#   on.exit({
+#     testOnExit(testInitOut)
+#   }, add = TRUE)
+#
+#   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
+#   crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#   rnStr <- rndstr(1, 6)
+#   ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
+#                                   proj6Warn)
+#
+#   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
+#   crs(ras2) <- crsToUse
+#
+#   coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2),
+#                       .Dim = c(5L, 2L))
+#   Sr1 <- Polygon(coords)
+#   Srs1 <- Polygons(list(Sr1), "s1")
+#   StudyArea <- SpatialPolygons(list(Srs1), 1L)
+#   # crs(StudyArea) <- crsToUse
+#   crs(StudyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+#   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+#
+#   # Passing a specific integer for cores
+#   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2)
+#   expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+#   # Passing as float for cores
+#   test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3)
+#   expect_true(file.exists(test2@file@name)) #exists on disk after gdalwarp
+#   # Not passing cores
+#   test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea)
+#   expect_true(file.exists(test3@file@name)) #exists on disk after gdalwarp
+#   # Passing cores as AUTO
+#   test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                       rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO")
+#   expect_true(file.exists(test4@file@name)) #exists on disk after gdalwarp
+#   # Passing cores as any other character than 'AUTO'
+#   expect_error({
+#     test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
+#                         rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA")
+#   })
+#
+#   # ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
+#   # ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
+#
+#   on.exit(raster::rasterOptions(todisk = FALSE))
+# })
 
 test_that("System call gdal will make the rasters match for rasterStack", {
   skip_on_cran()
