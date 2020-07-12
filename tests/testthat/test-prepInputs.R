@@ -144,13 +144,16 @@ test_that("prepInputs doesn't work (part 1)", {
   LCC2005 <- prepInputs(
     url = url,
     destinationPath = asPath(dPath),
-    studyArea = StudyArea
+    studyArea = StudyArea,
+    useCache = FALSE
   )
+  # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
+  #  we make it a bit bigger so it doesn't crop the edges of the raster
   expect_is(LCC2005, "Raster")
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-  expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
+  expect_true(all(abs(extent(LCC2005)[1:4] -
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
 
   #######################################
   ### url, targetFile, archive     ######
@@ -271,9 +274,11 @@ test_that("prepInputs doesn't work (part 1)", {
 
   expect_true(is(LCC2005, "Raster"))
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-  # crop and mask worked:
-  expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
+  # crop and mask worked -- remember the buffering that happens when it is longlat
+  expect_true(all(abs(extent(LCC2005)[1:4] -
+                        round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+  # expect_identical(extent(LCC2005)[1:4],
+  #                  round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 })
 
 test_that("interactive prepInputs", {

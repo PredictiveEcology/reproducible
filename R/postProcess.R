@@ -1591,7 +1591,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       #if all CRS are projected, then check if buffer is necessary
       objsAreProjected <- list(x, studyArea, crsRTM)
       nonNulls <- !unlist(lapply(objsAreProjected, is.null))
-      suppressWarningsSpecific(falseWarnings = "wkt",
+      suppressWarningsSpecific(falseWarnings = "wkt|CRS object has no comment",
                                projections <- sapply(objsAreProjected[nonNulls],
                                                      function(xx) grepl("(longitude).*(latitude)", wkt(xx))))
 
@@ -1618,14 +1618,24 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       } else {
         bufferSA <- TRUE
         origStudyArea <- studyArea
+        bufferWidth <- max(res(x)) * 1.5
+        crsX <- crs(x)
         if (!is(studyArea, "sf")) {
-          studyArea <- sp::spTransform(studyArea, CRSobj = crs(x))
-          studyArea <- raster::buffer(studyArea, width = max(res(x)) * 1.5)
+          studyArea <- sp::spTransform(studyArea, CRSobj = crsX)
+          studyArea <- raster::buffer(studyArea, width = bufferWidth)
         } else {
           if (!.requireNamespace("sf")) stop(call. = FALSE)
-          studyArea <- sf::st_transform(studyArea, crs = crs(x))
-          studyArea <- sf::st_buffer(studyArea, dist = max(res(x)) * 1.5)
+          studyArea <- sf::st_transform(studyArea, crs = crsX)
+          studyArea <- sf::st_buffer(studyArea, dist = bufferWidth)
         }
+
+        # studyAreaForCrop <- specialBuffer(studyArea, x)
+
+        #studyAreaForCrop <- studyArea2
+
+        # bufferWidth <- max(unlist(lapply(extent(studyArea), as.numeric)) %% max(res(x)))
+
+        #studyArea <- raster::buffer(studyArea, width = bufferWidth)
         #confirm you could only pass study area, because buffering will require reprojecting first.
         #buffer studyArea
       }
@@ -1847,3 +1857,35 @@ MaxValsFlts <- MaxVals[grep("FLT", names(MinVals), value = TRUE)]
 #MinVals <- c(0, -MaxVals$INT1S, 0, -MaxVals$INT2S, 0, -MaxVals$INT4S, -MaxVals$FLT4S)
 
 projNotWKT2warn <- "Using PROJ not WKT2"
+
+# specialBuffer <- function(studyArea, x) {
+#   studyAreaExt2 <- extent(studyArea)
+#   newXMin <- xmin(studyAreaExt2)
+#   xMisAlignMin <- ((xmin(studyAreaExt2) - origin(x)[1]) %% res(x)[1])
+#   if (xMisAlignMin < res(x)[1]/2) {
+#     newXMin <- newXMin - xMisAlignMin
+#   }
+#
+#   newYMin <- ymin(studyAreaExt2)
+#   yMisAlignMin <- ((ymin(studyAreaExt2) - origin(x)[2]) %% res(x)[2])
+#   if (yMisAlignMin < res(x)[2]/2) {
+#     newYMin <- newYMin - yMisAlignMin
+#   }
+#
+#   newXMax <- xmax(studyAreaExt2)
+#   xMisAlignMax <- (res(x)[1] - ((xmax(studyAreaExt2) - origin(x)[1]) %% res(x)[1]))
+#   if (xMisAlignMax < res(x)[1]/2) {
+#     newXMax <- newXMax + xMisAlignMax
+#   }
+#
+#   newYMax <- ymax(studyAreaExt2)
+#   yMisAlignMax <- (res(x)[2] - ((ymax(studyAreaExt2) - origin(x)[2]) %% res(x)[2]))
+#   if (yMisAlignMax < res(x)[2]/2) {
+#     newYMax <- ymax(studyAreaExt2) + yMisAlignMax
+#   }
+#
+#   newExtent <- extent(newXMin, newXMax, newYMin, newYMax)
+#   studyArea2 <- as(newExtent, "SpatialPolygons")
+#   crs(studyArea2) <- crs(studyArea)
+#   studyArea2
+# }

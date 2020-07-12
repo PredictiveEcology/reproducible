@@ -74,7 +74,7 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Collate: 
     'DBI.R'
     'cache-helpers.R'
