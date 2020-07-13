@@ -24,8 +24,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
   browser(expr = exists("._downloadFile_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
-    on.exit({unlink(.tempPath, recursive = TRUE)},
-            add = TRUE)
+    on.exit(unlink(.tempPath, recursive = TRUE), add = TRUE)
   }
 
   if (!is.null(url) || !is.null(dlFun)) {
@@ -67,7 +66,6 @@ downloadFile <- function(archive, targetFile, neededFiles,
               )
             }
 
-
             # Check again, post extract ... If FALSE now, then it got it from local, already existing archive
             missingNeededFiles <- missingFiles(neededFiles, checkSums, targetFile)
             if (!missingNeededFiles) {
@@ -100,15 +98,15 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
       # The download step
       failed <- 1
-      while(failed > 0  && failed < 4) {
+      while (failed > 0  && failed < 4) {
         downloadResults <- try(downloadRemote(url = url, archive = archive, # both url and fileToDownload must be NULL to skip downloading
-                                          targetFile = targetFile, fileToDownload = fileToDownload,
-                                          skipDownloadMsg = skipDownloadMsg,
-                                          checkSums = checkSums,
-                                          dlFun = dlFun,
-                                          destinationPath = destinationPath,
-                                          overwrite = overwrite,
-                                          needChecksums = needChecksums, .tempPath = .tempPath, ...))
+                                              targetFile = targetFile, fileToDownload = fileToDownload,
+                                              skipDownloadMsg = skipDownloadMsg,
+                                              checkSums = checkSums,
+                                              dlFun = dlFun,
+                                              destinationPath = destinationPath,
+                                              overwrite = overwrite,
+                                              needChecksums = needChecksums, .tempPath = .tempPath, ...))
         if (is(downloadResults, "try-error")) {
           if (isTRUE(grepl("already exists", downloadResults)))
             stop(downloadResults)
