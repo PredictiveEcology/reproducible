@@ -158,7 +158,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       }
 
       ## GDAL requires file path to cutline - write to disk
-      tempSrcShape <- file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = "")
+      tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
       ysf <- sf::st_as_sf(y)
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
