@@ -1561,7 +1561,10 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots) {
 #' @importFrom sp wkt
 #' @importFrom Require normPath
 postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
-                                  filename2, useSAcrs, overwrite, targetCRS = NULL, ...) {
+                                  filename2, useSAcrs, overwrite, targetCRS = NULL,
+                                  useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                  cores = getOption("reproducible.GDALcores", 2),
+                                  ...) {
   dots <- list(...)
   browser(expr = exists("._postProcessAllSpatial_1"))
 
@@ -1680,7 +1683,8 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           TRUE
         if (runIt) {
           x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
-                     rasterToMatch = rasterToMatch, useCache = useCache, ...)
+                     rasterToMatch = rasterToMatch, useCache = useCache,
+                     cores = cores, ...)
           x <- fixErrors(x = x, objectName = objectName,
                          useCache = useCache, ...)
         } else {
