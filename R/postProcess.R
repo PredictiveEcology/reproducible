@@ -158,7 +158,8 @@ postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = TRUE,
   x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
                              rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
                              filename1 = filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite, ...)
+                             useSAcrs = useSAcrs, overwrite = overwrite,
+                             ...)
   return(x1)
 }
 
@@ -991,7 +992,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
     #  specifically ecodistricts.shp . It created an invalid object with
     #  non-unique row names
     y <- suppressWarningsSpecific(raster::intersect(x, studyArea),
-                        "warn:.*different proj4 strings")
+                        "warn:.*different proj4 strings|which is lost in output")
     # warn <- capture.output(type = "message",
     #                     suppressWarnings(withCallingHandlers(yy <- raster::intersect(x, studyArea),
     #                          warning = function(xx) {
