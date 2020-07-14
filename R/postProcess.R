@@ -336,14 +336,19 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           #        "\"", tempSrcRaster, "\"", " ",
           #        "\"", tempDstRaster, "\""),
         } else if (is(x, "Spatial")) { # raster::crop has stopped working on SpatialPolygons
-          whichIntersect <- suppressWarningsSpecific(
-            falseWarnings = "have different proj4",
-            rgeos::gIntersects(x, as(cropExtentRounded, "SpatialPolygons"), byid = TRUE))
-          whichIntersect <- which(whichIntersect)
-          xx <- x[whichIntersect,]
-          yy <- suppressWarningsSpecific(falseWarnings = "non identical CRS|which is lost in output",
-                                        raster::intersect(xx, cropExtentRounded))
-          x <- SpatialPolygonsDataFrame(yy, data = as.data.frame(x[whichIntersect,]), match.ID = FALSE)
+          yyy <- as(cropExtentRounded, "SpatialPolygons")
+          crs(yyy) <- crsX
+          y <- sf::st_intersection(sf::st_as_sf(x), sf::st_as_sf(yyy))
+          # whichIntersect <- suppressWarningsSpecific(
+          #   falseWarnings = "have different proj4",
+          #   rgeos::gIntersects(x, as(cropExtentRounded, "SpatialPolygons"), byid = TRUE))
+          # whichIntersect <- which(whichIntersect)
+          # xx <- x[whichIntersect,]
+          # yy <- suppressWarningsSpecific(falseWarnings = "non identical CRS|which is lost in output",
+          #                               raster::intersect(xx, cropExtentRounded))
+          # browser()
+          # if (is(x, "SpatialPolygonsDataFrame"))
+          #   x <- SpatialPolygonsDataFrame(yy, data = as.data.frame(x[whichIntersect,]), match.ID = FALSE)
         } else {
           completed <- FALSE
           i <- 1
@@ -979,58 +984,72 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 #' @export
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
-  if (!is.null(studyArea)) {
-    message("    intersecting ...")
-    if (NROW(studyArea) > 1)
-      studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
-    if (!identical(crs(x), crs(studyArea)))
-      studyArea <- spTransform(studyArea, CRSobj = crs(x))
-    suppressWarnings({
-      studyArea <- fixErrors(studyArea, "studyArea")
-    })
-    # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
-    #  specifically ecodistricts.shp . It created an invalid object with
-    #  non-unique row names
-    y <- suppressWarningsSpecific(raster::intersect(x, studyArea),
-                        "warn:.*different proj4 strings|which is lost in output")
-    # warn <- capture.output(type = "message",
-    #                     suppressWarnings(withCallingHandlers(yy <- raster::intersect(x, studyArea),
-    #                          warning = function(xx) {
-    #                            message(paste0("warn::", xx$message))
-    #   })))
-    #
-    trySF <- if (is(y, "try-error")) {
-      TRUE
-    } else if (!identical(length(unique(row.names(y))), length(row.names(y)))) {
-      TRUE
-    } else {
-      FALSE
-    }
-    if (trySF) {
-      "raster intersect did not work correctly, trying sf"
-      if (!.requireNamespace("sf")) stop(call. = FALSE)
-      xTmp <- sf::st_join(sf::st_as_sf(x), sf::st_as_sf(studyArea), join = sf::st_intersects)
-      y <- as(xTmp, "Spatial")
-    }
-    if (!identical(crs(y), crs(x))) {
-      crs(y) <- crs(x) # sometimes the proj4string is rearranged, so they are not identical:
-      #  they should be
-    }
-
-    return(y)
-  } else {
-    if (!is.null(rasterToMatch)) {
-      if (isTRUE(maskWithRTM)) {
-        sameProj <- if (isTRUE(compareCRS(x, rasterToMatch))) TRUE else FALSE
-        if (isFALSE(sameProj))
-          x <- sp::spTransform(x, crs(rasterToMatch))
-        x <- x[!is.na(rasterToMatch[x]),]
-      } else {
-        message("No studyArea supplied, and maskWithRTM is FALSE; not masking")
-      }
-    }
-    return(x)
-  }
+  browser(expr = exists("._maskInputs.Spatial_1"))
+  x <- maskInputs(sf::st_as_sf(x), studyArea, rasterToMatch, maskWithRTM)
+  x <- as(x, "Spatial")
+  # if (!is.null(studyArea)) {
+  #   message("    intersecting ...")
+  #   if (NROW(studyArea) > 1)
+  #     studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
+  #   if (!identical(crs(x), crs(studyArea)))
+  #     studyArea <- spTransform(studyArea, CRSobj = crs(x))
+  #   suppressWarnings({
+  #     studyArea <- fixErrors(studyArea, "studyArea")
+  #   })
+  #   # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
+  #   #  specifically ecodistricts.shp . It created an invalid object with
+  #   #  non-unique row names
+  #
+  #   #yyy <- as(cropExtentRounded, "SpatialPolygons")
+  #   #crs(yyy) <- crsX
+  #   y <- sf::st_intersection(sf::st_as_sf(x), sf::st_as_sf(studyArea))
+  #
+  #   # if (!.requireNamespace("rgeos")) stop()
+  #   # whichIntersect <- suppressWarningsSpecific(
+  #   #   falseWarnings = "have different proj4",
+  #   #   rgeos::gIntersects(x, studyArea, byid = TRUE))
+  #   # whichIntersect <- which(whichIntersect)
+  #   # xx <- x[whichIntersect,]
+  #   # y <- suppressWarningsSpecific(falseWarnings = "non identical CRS|which is lost in output",
+  #   #                                raster::intersect(xx, studyArea))
+  #   # if (is(x, "SpatialPolygonsDataFrame"))
+  #   #   y <- SpatialPolygonsDataFrame(y, data = as.data.frame(x[whichIntersect,]), match.ID = FALSE)
+  #
+  #   # y <- suppressWarningsSpecific(raster::intersect(x, studyArea),
+  #   #                     "warn:.*different proj4 strings|which is lost in output")
+  #   trySF <- if (is(y, "try-error")) {
+  #     TRUE
+  #   } else if (!identical(length(unique(row.names(y))), length(row.names(y)))) {
+  #     TRUE
+  #   } else {
+  #     FALSE
+  #   }
+  #   if (trySF) {
+  #     "raster intersect did not work correctly, trying sf"
+  #     if (!.requireNamespace("sf")) stop(call. = FALSE)
+  #     xTmp <- sf::st_join(sf::st_as_sf(x), sf::st_as_sf(studyArea), join = sf::st_intersects)
+  #     y <- as(xTmp, "Spatial")
+  #   }
+  #   if (!identical(crs(y), crs(x))) {
+  #     crs(y) <- crs(x) # sometimes the proj4string is rearranged, so they are not identical:
+  #     #  they should be
+  #   }
+  #
+  #   return(y)
+  # } else {
+  #   if (!is.null(rasterToMatch)) {
+  #     if (isTRUE(maskWithRTM)) {
+  #       sameProj <- if (isTRUE(compareCRS(x, rasterToMatch))) TRUE else FALSE
+  #       if (isFALSE(sameProj))
+  #         x <- sp::spTransform(x, crs(rasterToMatch))
+  #       x <- x[!is.na(rasterToMatch[x]),]
+  #     } else {
+  #       message("No studyArea supplied, and maskWithRTM is FALSE; not masking")
+  #     }
+  #   }
+  #   return(x)
+  # }
+  x
 }
 
 #' @export
@@ -1049,7 +1068,6 @@ maskInputs.sf <- function(x, studyArea, ...) {
     if (NROW(studyArea) > 1)
       studyArea <- sf::st_combine(studyArea)
 
-    studyArea <- sf::st_sf(studyArea)
     if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
       y2 <- sapply(y1, function(x) length(x) == 1)
@@ -1321,23 +1339,29 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 writeOutputs.Spatial <- function(x, filename2 = NULL,
                                  overwrite = getOption("reproducible.overwrite", TRUE),
                                  ...) {
+  writeOutputs(sf::st_as_sf(x), filename2 = filename2, overwrite = overwrite)
 
-  if (!is.null(filename2)) {
-    dots <- list(...)
-    notWanted1 <- .formalsNotInCurrentDots(shapefile, ...)
-    formalNamesIn_rgdal_writeOGR <- c("obj", "dsn", "layer", "driver", "dataset_options", "layer_options",
-                 "verbose", "check_exists", "overwrite_layer", "delete_dsn", "morphToESRI",
-                 "encoding", "shp_edge_case_fix", "dumpSRS")
-    notWanted2 <- .formalsNotInCurrentDots(formalNames = formalNamesIn_rgdal_writeOGR, ...)
-    keepForDots <- c(setdiff(notWanted1, notWanted2), setdiff(names(dots), notWanted1))
-    dots <- dots[keepForDots]
-    # Internally in rgdal::writeOGR, it converts the row.names to integer with this test
-    #   it creates a warning there, so capture here instead
-    warn <- captureWarningsToAttr(as.integer(row.names(x)))
-    if (isTRUE(any(grepl("NAs introduced by coercion", attr(warn, "warning")))))
-      row.names(x) <- as.character(seq_along(row.names(x)))
-    do.call(shapefile, append(dots, list(x = x, filename = filename2, overwrite = overwrite)))
-  }
+  # browser()
+  # if (!is.null(filename2)) {
+  #   if (!grepl(".shp$", raster::extension(filename2))) {
+  #     filename2 <- paste0(filename2, ".shp")
+  #   }
+  #
+  #   dots <- list(...)
+  #   notWanted1 <- .formalsNotInCurrentDots(shapefile, ...)
+  #   formalNamesIn_rgdal_writeOGR <- c("obj", "dsn", "layer", "driver", "dataset_options", "layer_options",
+  #                "verbose", "check_exists", "overwrite_layer", "delete_dsn", "morphToESRI",
+  #                "encoding", "shp_edge_case_fix", "dumpSRS")
+  #   notWanted2 <- .formalsNotInCurrentDots(formalNames = formalNamesIn_rgdal_writeOGR, ...)
+  #   keepForDots <- c(setdiff(notWanted1, notWanted2), setdiff(names(dots), notWanted1))
+  #   dots <- dots[keepForDots]
+  #   # Internally in rgdal::writeOGR, it converts the row.names to integer with this test
+  #   #   it creates a warning there, so capture here instead
+  #   warn <- captureWarningsToAttr(as.integer(row.names(x)))
+  #   if (isTRUE(any(grepl("NAs introduced by coercion", attr(warn, "warning")))))
+  #     row.names(x) <- as.character(seq_along(row.names(x)))
+  #   do.call(sf::st_write, append(dots, list(obj = sf::st_as_sf(x), dsn = filename2, overwrite = overwrite)))
+  # }
   x
 }
 
@@ -1347,7 +1371,10 @@ writeOutputs.sf <- function(x, filename2 = NULL,
                             ...) {
   if (!.requireNamespace("sf")) stop(call. = FALSE)
   if (!is.null(filename2)) {
-    if (!nzchar(fileExt(filename2))) {
+    # if (!nzchar(fileExt(filename2))) {
+    #   filename2 <- paste0(filename2, ".shp")
+    # }
+    if (!grepl(".shp$", raster::extension(filename2))) {
       filename2 <- paste0(filename2, ".shp")
     }
     if (identical(".", dirname(filename2))) {
@@ -1691,7 +1718,6 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         } else {
           message(cyan("  Skipping projectInputs; identical crs, res, extent"))
         }
-        # may need to fix again
 
         ##################################
         # maskInputs
