@@ -4,6 +4,7 @@ version 1.2.0.9000
 ==============
 
 ## New features
+* Concurrent Cache now works fine with SQLite thanks to suggestion here: https://stackoverflow.com/a/44445010
 * updated digesting of `Raster` class objects to account for more of the metadata (including the colortable). This will change the digest value of all `Raster` layers, causing re-run of `Cache`
 * removed `Require`, `pkgDep`, `trimVersionNumber`, `normPath`, `checkPath` that were moved to `Require` package. For backwards compatibility, these are imported and reexported
 * address permanently or temporarily new changes in GDAL>3 and PROJ>6 in the spatial packages.
