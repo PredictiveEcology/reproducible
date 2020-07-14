@@ -1579,147 +1579,144 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     filename1 <- extraDots$filename1
 
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(targetCRS)) {
-    # fix errors if methods available
-    skipCacheMess <- "useCache is FALSE, skipping Cache"
-    skipCacheMess2 <- "No cacheRepo supplied"
-
-    ##################################
-    # cropInputs
-    ##################################
-    if (!is.null(rasterToMatch)) {
-      extRTM <- extent(rasterToMatch)
-      crsRTM <- crs(rasterToMatch)
+    attemptGDALAllAtOnce <- attemptGDAL(x, useGDAL = useGDAL)
+    if (isTRUE(attemptGDALAllAtOnce)) {
+      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots)
     } else {
-      extRTM <- NULL
-      crsRTM <- NULL
-    }
-    useBuffer <- FALSE
-    bufferSA <- FALSE
 
-    if (is(x, "Raster")) {
-      #if all CRS are projected, then check if buffer is necessary
-      objsAreProjected <- list(x, studyArea, crsRTM)
-      nonNulls <- !unlist(lapply(objsAreProjected, is.null))
-      suppressWarningsSpecific(falseWarnings = "wkt|CRS object has no comment",
-                               projections <- sapply(objsAreProjected[nonNulls],
-                                                     function(xx) grepl("(longitude).*(latitude)", wkt(xx))))
 
-      #projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
-      #projections <- na.omit(projections)
-      if (!any(unlist(projections))) {
-        if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
-          useBuffer <- TRUE
-        }
-      }
-    }
+      # fix errors if methods available
+      skipCacheMess <- "useCache is FALSE, skipping Cache"
+      skipCacheMess2 <- "No cacheRepo supplied"
 
-    if (useBuffer) {
-      #replace extentRTM and crsRTM, because they will supersede all arguments
+      ##################################
+      # cropInputs
+      ##################################
       if (!is.null(rasterToMatch)) {
-        #reproject rasterToMatch, extend by res
-        newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = crs(x)), projNotWKT2warn)
-        tempPoly <- as(extent(newExtent), "SpatialPolygons")
-        crs(tempPoly) <- crs(x)
-        #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
-        tempPoly <- raster::buffer(tempPoly, width = max(res(x))*1.5)
-        extRTM <- tempPoly
-        crsRTM <- crs(tempPoly)
+        extRTM <- extent(rasterToMatch)
+        crsRTM <- crs(rasterToMatch)
       } else {
-        bufferSA <- TRUE
-        origStudyArea <- studyArea
-        bufferWidth <- max(res(x)) * 1.5
-        crsX <- crs(x)
-        if (!is(studyArea, "sf")) {
-          studyArea <- sp::spTransform(studyArea, CRSobj = crsX)
-          studyArea <- raster::buffer(studyArea, width = bufferWidth)
-        } else {
-          if (!.requireNamespace("sf")) stop(call. = FALSE)
-          studyArea <- sf::st_transform(studyArea, crs = crsX)
-          studyArea <- sf::st_buffer(studyArea, dist = bufferWidth)
-        }
-
-        # studyAreaForCrop <- specialBuffer(studyArea, x)
-
-        #studyAreaForCrop <- studyArea2
-
-        # bufferWidth <- max(unlist(lapply(extent(studyArea), as.numeric)) %% max(res(x)))
-
-        #studyArea <- raster::buffer(studyArea, width = bufferWidth)
-        #confirm you could only pass study area, because buffering will require reprojecting first.
-        #buffer studyArea
+        extRTM <- NULL
+        crsRTM <- NULL
       }
-    }
+      useBuffer <- FALSE
+      bufferSA <- FALSE
 
-    browser(expr = exists("._postProcess.spatialClasses_2"))
-    if (!isTRUE(all.equal(extent(x), extRTM))) {
-      x <- Cache(cropInputs, x = x, studyArea = studyArea,
-                 extentToMatch = extRTM,
-                 extentCRS = crsRTM,
-                 useCache = useCache, ...)
-    } else {
-      message(cyan("  Skipping cropInputs; already same extents"))
-    }
+      if (is(x, "Raster")) {
+        #if all CRS are projected, then check if buffer is necessary
+        objsAreProjected <- list(x, studyArea, crsRTM)
+        nonNulls <- !unlist(lapply(objsAreProjected, is.null))
+        suppressWarningsSpecific(falseWarnings = "wkt|CRS object has no comment",
+                                 projections <- sapply(objsAreProjected[nonNulls],
+                                                       function(xx) grepl("(longitude).*(latitude)", wkt(xx))))
 
-    if (bufferSA) {
-      studyArea <- origStudyArea
-    }
+        #projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
+        #projections <- na.omit(projections)
+        if (!any(unlist(projections))) {
+          if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
+            useBuffer <- TRUE
+          }
+        }
+      }
 
-    # cropInputs may have returned NULL if they don't overlap
-    browser(expr = exists("._postProcess.spatialClasses_3"))
-    if (!is.null(x)) {
-      objectName <- if (is.null(filename1)) NULL else basename(filename1)
-      x <- fixErrors(x = x, objectName = objectName,
-                     useCache = useCache, ...)
+      if (useBuffer) {
+        #replace extentRTM and crsRTM, because they will supersede all arguments
+        if (!is.null(rasterToMatch)) {
+          #reproject rasterToMatch, extend by res
+          newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = crs(x)), projNotWKT2warn)
+          tempPoly <- as(extent(newExtent), "SpatialPolygons")
+          crs(tempPoly) <- crs(x)
+          #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
+          tempPoly <- raster::buffer(tempPoly, width = max(res(x))*1.5)
+          extRTM <- tempPoly
+          crsRTM <- crs(tempPoly)
+        } else {
+          bufferSA <- TRUE
+          origStudyArea <- studyArea
+          bufferWidth <- max(res(x)) * 1.5
+          crsX <- crs(x)
+          if (!is(studyArea, "sf")) {
+            studyArea <- sp::spTransform(studyArea, CRSobj = crsX)
+            studyArea <- raster::buffer(studyArea, width = bufferWidth)
+          } else {
+            if (!.requireNamespace("sf")) stop(call. = FALSE)
+            studyArea <- sf::st_transform(studyArea, crs = crsX)
+            studyArea <- sf::st_buffer(studyArea, dist = bufferWidth)
+          }
+        }
+      }
 
-      ##################################
-      # projectInputs
-      ##################################
-      targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
-                                 targetCRS)
+      browser(expr = exists("._postProcess.spatialClasses_2"))
+      if (!isTRUE(all.equal(extent(x), extRTM))) {
+        x <- Cache(cropInputs, x = x, studyArea = studyArea,
+                   extentToMatch = extRTM,
+                   extentCRS = crsRTM,
+                   useCache = useCache, ...)
+      } else {
+        message(cyan("  Skipping cropInputs; already same extents"))
+      }
 
-      browser(expr = exists("._postProcess.spatialClasses_4"))
-      runIt <- if (is(x, "Raster") && !is.null(rasterToMatch))
-        differentRasters(x, rasterToMatch, targetCRS)
-      else
-        TRUE
-      if (runIt) {
-        x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
-                   rasterToMatch = rasterToMatch, useCache = useCache, ...)
+      if (bufferSA) {
+        studyArea <- origStudyArea
+      }
+
+      # cropInputs may have returned NULL if they don't overlap
+      browser(expr = exists("._postProcess.spatialClasses_3"))
+      if (!is.null(x)) {
+        objectName <- if (is.null(filename1)) NULL else basename(filename1)
         x <- fixErrors(x = x, objectName = objectName,
                        useCache = useCache, ...)
-      } else {
-        message(cyan("  Skipping projectInputs; identical crs, res, extent"))
-      }
-      # may need to fix again
 
-      ##################################
-      # maskInputs
-      ##################################
-      browser(expr = exists("._postProcess.spatialClasses_5"))
-      x <- Cache(maskInputs, x = x, studyArea = studyArea,
-                 rasterToMatch = rasterToMatch, useCache = useCache, ...)
+        ##################################
+        # projectInputs
+        ##################################
+        targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
+                                   targetCRS)
 
-      ##################################
-      # filename
-      ##################################
-      newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, ...)
+        browser(expr = exists("._postProcess.spatialClasses_4"))
+        runIt <- if (is(x, "Raster") && !is.null(rasterToMatch))
+          differentRasters(x, rasterToMatch, targetCRS)
+        else
+          TRUE
+        if (runIt) {
+          x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
+                     rasterToMatch = rasterToMatch, useCache = useCache, ...)
+          x <- fixErrors(x = x, objectName = objectName,
+                         useCache = useCache, ...)
+        } else {
+          message(cyan("  Skipping projectInputs; identical crs, res, extent"))
+        }
+        # may need to fix again
 
-      ##################################
-      # writeOutputs
-      ##################################
-      if (!is.null(filename2)) {
-        x <- suppressWarningsSpecific(do.call(writeOutputs, append(list(x = rlang::quo(x),
-                                                                        filename2 = normPath(newFilename),
-                                               overwrite = overwrite), dots)),
-                                      proj6Warn)
-      } else {
-        message(cyan("  Skipping writeOutputs; filename2 is NULL"))
-      }
+        ##################################
+        # maskInputs
+        ##################################
+        browser(expr = exists("._postProcess.spatialClasses_5"))
+        x <- Cache(maskInputs, x = x, studyArea = studyArea,
+                   rasterToMatch = rasterToMatch, useCache = useCache, ...)
 
-      browser(expr = exists("._postProcess.spatialClasses_6"))
-      if (dir.exists(bigRastersTmpFolder())) {
-        ## Delete gdalwarp results in temp
-        unlink(bigRastersTmpFolder(), recursive = TRUE)
+        ##################################
+        # filename
+        ##################################
+        newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, ...)
+
+        ##################################
+        # writeOutputs
+        ##################################
+        if (!is.null(filename2)) {
+          x <- suppressWarningsSpecific(do.call(writeOutputs, append(list(x = rlang::quo(x),
+                                                                          filename2 = normPath(newFilename),
+                                                                          overwrite = overwrite), dots)),
+                                        proj6Warn)
+        } else {
+          message(cyan("  Skipping writeOutputs; filename2 is NULL"))
+        }
+
+        browser(expr = exists("._postProcess.spatialClasses_6"))
+        if (dir.exists(bigRastersTmpFolder())) {
+          ## Delete gdalwarp results in temp
+          unlink(bigRastersTmpFolder(), recursive = TRUE)
+        }
       }
     }
   }
@@ -1898,3 +1895,96 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 #   crs(studyArea2) <- crs(studyArea)
 #   studyArea2
 # }
+
+
+cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots) {
+  message("crop, reproject, mask is using one-step gdalwarp")
+
+  # rasters need to go to same directory that can be unlinked at end without losing other temp files
+  tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
+  tempSrcRaster <- bigRastersTmpFile()
+  tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
+
+  needCutline <- FALSE
+  needReproject <- FALSE
+  needNewRes <- FALSE
+
+  if (!is.null(studyArea)) {
+    # studyAreaCRSx <- spTransform(studyArea, crs(x))
+    cropExtent <- extent(studyArea)
+    needCutline <- TRUE
+    cropExtent <- roundToRes(cropExtent, x = x)
+    tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
+
+    # write the studyArea to disk -- go via sf because faster
+    studyAreasf <- sf::st_as_sf(studyArea)
+    sf::st_write(studyAreasf, tempSrcShape)
+
+    targCRS <- crs(studyAreasf)
+
+  } else if (!is.null(rasterToMatch)) {
+    needNewRes <- !identical(res(x), res(rasterToMatch))
+    cropExtent <- extent(rasterToMatch)
+    targCRS <- crs(rasterToMatch)
+  }
+
+  # GDAL will to a reprojection without an explicit crop
+  # the raster could be in memory if it wasn't reprojected
+  if (inMemory(x)) {
+    dType <- assessDataType(x, type = "writeRaster")
+    dTypeGDAL <- assessDataType(x, type = "GDAL")
+    x <- writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE)
+    gc()
+  } else {
+    tempSrcRaster <- x@file@name #Keep original raster.
+    dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
+  }
+
+  ## GDAL requires file path to cutline - write to disk
+  tr <- if (needNewRes) res(rasterToMatch) else res(x)
+
+  srcCRS <- as.character(raster::crs(raster::raster(tempSrcRaster)))
+  if (!compareCRS(srcCRS, targCRS) ) {
+    needReproject <- TRUE
+  }
+
+  if (isWindows()) {
+    message("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
+    exe <- ".exe"
+  } else {
+    exe <- ""
+  }
+
+  if (needReproject) {
+    if (is.null(dots$method)) {
+      dots$method <- assessDataType(x, type = "projectRaster")
+    }
+    if (dots$method == "ngb") {
+      dots$method <- "near"
+    }
+  }
+
+  cores <- dealWithCores(cores)
+  prll <- paste0("-wo NUM_THREADS=", cores, " ")
+  system(
+    paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+           "-s_srs \"", srcCRS, "\"",
+           " -t_srs \"", targCRS, "\"",
+           " -multi ", prll,
+           "-ot ",
+           dTypeGDAL, " ",
+           # "-crop_to_cutline ", # crop to cutline is wrong here, it will realign raster to new origin
+           if (needCutline) {paste0("-cutline ",  "\"", tempSrcShape,"\"", " ")},
+           if (needReproject) {paste0("-r ", dots$method)},
+           " -overwrite ",
+           "-tr ", paste(tr, collapse = " "), " ",
+           "-te ", paste(c(cropExtent[1], cropExtent[3], # having this here is like crop to cutline
+                           cropExtent[2], cropExtent[4]), # but without cutting pixels off
+                         collapse = " "), " ",
+           "\"", tempSrcRaster, "\"", " ",
+           "\"", tempDstRaster, "\""),
+    wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
+  x <- raster(tempDstRaster)
+  x <- setMinMaxIfNeeded(x)
+
+}
