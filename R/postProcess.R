@@ -1610,9 +1610,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
     filename1 <- extraDots$filename1
 
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(targetCRS)) {
-    attemptGDALAllAtOnce <- attemptGDAL(x, useGDAL = useGDAL)
-    if (isTRUE(attemptGDALAllAtOnce)) {
-      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots)
+    attemptGDALAllAtOnce <- if (is(x, "RasterLayer")) attemptGDAL(x, useGDAL = useGDAL) else FALSE
+    if (isTRUE(attemptGDALAllAtOnce) ) {
+      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs)
     } else {
 
 
@@ -1928,37 +1928,24 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 # }
 
 
-cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots) {
+cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs) {
   message("crop, reproject, mask is using one-step gdalwarp")
+
+  browser(expr = exists("._cropReprojMaskWGDAL_1"))
 
   # rasters need to go to same directory that can be unlinked at end without losing other temp files
   tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
   tempSrcRaster <- bigRastersTmpFile()
-  tempDstRaster <- file.path(tmpRasPath, paste0(x@data@names,"_mask", ".tif"))
-
-  needCutline <- FALSE
-  needReproject <- FALSE
-  needNewRes <- FALSE
-
-  if (!is.null(studyArea)) {
-    # studyAreaCRSx <- spTransform(studyArea, crs(x))
-    cropExtent <- extent(studyArea)
-    needCutline <- TRUE
-    cropExtent <- roundToRes(cropExtent, x = x)
-    tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
-
-    # write the studyArea to disk -- go via sf because faster
-    studyAreasf <- sf::st_as_sf(studyArea)
-    sf::st_write(studyAreasf, tempSrcShape)
-
-    targCRS <- crs(studyAreasf)
-
-  } else if (!is.null(rasterToMatch)) {
-    needNewRes <- !identical(res(x), res(rasterToMatch))
-    cropExtent <- extent(rasterToMatch)
-    targCRS <- crs(rasterToMatch)
+  returnToRAM <- FALSE
+  if (missing(filename2)) filename2 <- NULL
+  if (isTRUE(filename2)) {
+    filename2 <- determineFilename(filename2)
+  } else if (is.null(filename2) | isFALSE(filename2)) {
+    returnToRAM <- TRUE
+    filename2 <- file.path(tmpRasPath, paste0(x@data@names, "_", rndstr(1, 8)))
   }
-
+  if (nchar(extension(filename2)) == 0)
+    filename2 <- paste0(filename2, ".tif")
   # GDAL will to a reprojection without an explicit crop
   # the raster could be in memory if it wasn't reprojected
   if (inMemory(x)) {
@@ -1971,10 +1958,41 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
   }
 
+  srcCRS <- as.character(raster::crs(raster::raster(tempSrcRaster)))
+
+  needCutline <- FALSE
+  needReproject <- FALSE
+  needNewRes <- FALSE
+
+  if (!is.null(studyArea)) {
+    # studyAreaCRSx <- spTransform(studyArea, crs(x))
+    needCutline <- TRUE
+    tempSrcShape <- normPath(file.path(tempfile(tmpdir = raster::tmpDir()), ".shp", fsep = ""))
+
+    studyAreasf <- sf::st_as_sf(studyArea)
+    if (isTRUE(useSAcrs)) {
+      targCRS <- crs(studyArea)
+    } else {
+      targCRS <- srcCRS
+      studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
+    }
+    # write the studyArea to disk -- go via sf because faster
+    cropExtent <- extent(studyAreasf)
+    if (!(grepl("longlat", targCRS)))
+      cropExtent <- roundToRes(cropExtent, x = x)
+    sf::st_write(studyAreasf, tempSrcShape)
+
+
+  } else if (!is.null(rasterToMatch)) {
+    needNewRes <- !identical(res(x), res(rasterToMatch))
+    cropExtent <- extent(rasterToMatch)
+    targCRS <- crs(rasterToMatch)
+  }
+  dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
+
   ## GDAL requires file path to cutline - write to disk
   tr <- if (needNewRes) res(rasterToMatch) else res(x)
 
-  srcCRS <- as.character(raster::crs(raster::raster(tempSrcRaster)))
   if (!compareCRS(srcCRS, targCRS) ) {
     needReproject <- TRUE
   }
@@ -1997,6 +2015,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
 
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")
+  browser(expr = exists("._cropReprojMaskWGDAL_2"))
   system(
     paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
            "-s_srs \"", srcCRS, "\"",
@@ -2004,18 +2023,32 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
            " -multi ", prll,
            "-ot ",
            dTypeGDAL, " ",
+           " -srcnodata NA ",
+           " -dstnodata NA ",
            # "-crop_to_cutline ", # crop to cutline is wrong here, it will realign raster to new origin
            if (needCutline) {paste0("-cutline ",  "\"", tempSrcShape,"\"", " ")},
            if (needReproject) {paste0("-r ", dots$method)},
            " -overwrite ",
-           "-tr ", paste(tr, collapse = " "), " ",
-           "-te ", paste(c(cropExtent[1], cropExtent[3], # having this here is like crop to cutline
+           " -dstalpha ",
+           if (!dontSpecifyResBCLongLat) {paste("-tr ", paste(tr, collapse = " "))},
+           # "-tr ", paste(tr, collapse = " "), " ",
+           " -te ", paste(c(cropExtent[1], cropExtent[3], # having this here is like crop to cutline
                            cropExtent[2], cropExtent[4]), # but without cutting pixels off
                          collapse = " "), " ",
            "\"", tempSrcRaster, "\"", " ",
-           "\"", tempDstRaster, "\""),
+           "\"", filename2, "\""),
     wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
-  x <- raster(tempDstRaster)
+  x <- raster(filename2)
   x <- setMinMaxIfNeeded(x)
+  if (returnToRAM) {
+    origColors <- checkColors(x)
+    x[] <- x[]
+    x <- rebuildColors(x, origColors)
+  }
 
+  x
+}
+
+isLongLat <- function(targCRS, srcCRS = targCRS) {
+  if (grepl("longlat", targCRS)) !grepl("longlat", srcCRS) else FALSE
 }
