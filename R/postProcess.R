@@ -1440,8 +1440,8 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
   if (ncell(ras) > 1e8) { # for very large rasters, try a different way
     maxValCurrent <- maxValue(ras)
     ras <- setMinMaxIfNeeded(ras)
-    if (maxValCurrent != maxValue(ras))
-      datatype <- dataType(ras)
+    # if (maxValCurrent != maxValue(ras))
+    datatype <- dataType(ras)
   } else {
     ras <- setMinMaxIfNeeded(ras)
   }
