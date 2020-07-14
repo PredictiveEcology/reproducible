@@ -666,7 +666,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
       targetCRS <- crs(rasterToMatch)
     }
     srcCRS <- crs(x)
-    dontSpecifyResBCLongLat <- if (grepl("longlat", targetCRS)) !grepl("longlat", srcCRS) else FALSE
+
+    dontSpecifyResBCLongLat <- isLongLat(targetCRS, srcCRS)
 
     doProjection <- FALSE
     if (is.null(rasterToMatch)) {
