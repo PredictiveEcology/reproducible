@@ -169,11 +169,11 @@ expectedMessageRaw <- c("Running preP", "Preparing:", "File downloaded",
                         "Downloading", "Skipping download", "Skipping extractFrom",
                         "targetFile was not.*ry",
                         "Writing checksums.*you can specify targetFile",
-                        "No targetFile supplied. Extracting", "Appending checksums")
+                        "No targetFile supplied. Extracting", "Appending checksums", "although coordinates are longitude")
 expectedMessage <- paste0(collapse = "|", expectedMessageRaw)
 
 expectedMessagePostProcessRaw <- c("cropping", "Checking for errors", "Found no errors",
-                                   "intersecting", "masking")
+                                   "intersecting", "masking", "although coordinates are longitude")
 expectedMessagePostProcess <- paste0(collapse = "|", expectedMessagePostProcessRaw)
 
 urlTif1 <- "https://raw.githubusercontent.com/PredictiveEcology/quickPlot/master/inst/maps/DEM.tif"
