@@ -334,6 +334,15 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           #        "-tr ", paste(tr, collapse = " "), " ",
           #        "\"", tempSrcRaster, "\"", " ",
           #        "\"", tempDstRaster, "\""),
+        } else if (is(x, "Spatial")) { # raster::crop has stopped working on SpatialPolygons
+          whichIntersect <- suppressWarningsSpecific(
+            falseWarnings = "have different proj4",
+            rgeos::gIntersects(x, as(cropExtentRounded, "SpatialPolygons"), byid = TRUE))
+          whichIntersect <- which(whichIntersect)
+          xx <- x[whichIntersect,]
+          yy <- suppressWarningsSpecific(falseWarnings = "non identical CRS|which is lost in output",
+                                        raster::intersect(xx, cropExtentRounded))
+          x <- SpatialPolygonsDataFrame(yy, data = as.data.frame(x[whichIntersect,]), match.ID = FALSE)
         } else {
           completed <- FALSE
           i <- 1
