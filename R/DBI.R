@@ -524,6 +524,7 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
+  checkPath(cachePath, create = TRUE)
   browser(expr = exists("._CacheIsACache_1"))
   if (useDBI()) {
     if (is.null(conn)) {
