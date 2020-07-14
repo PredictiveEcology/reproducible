@@ -1929,7 +1929,7 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   expect_true(dataType(test1) == "INT1U")
   expect_identical(raster::res(ras2), raster::res(test1))
   expect_identical(raster::extent(ras2), raster::extent(test1))
-  expect_identical(raster::crs(ras2), raster::crs(test1))
+  expect_true(compareCRS(ras2, test1))
 
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
