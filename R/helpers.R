@@ -238,20 +238,22 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
 #' @param minVersion Character string indicating minimum version of package
 #'   that is needed
 #' @param messageStart A character string with a prefix of message to provide
+#' @param stopOnFALSE Logical. If \code{TRUE}, this function will create an
+#'   error (i.e., \code{stop}) if the function returns \code{FALSE}; otherwise
+#'   it simply returns \code{FALSE}
 .requireNamespace <- function(pkg = "methods", minVersion = NULL,
+                              stopOnFALSE = FALSE,
                               messageStart = paste0(pkg, if (!is.null(minVersion))
                                 paste0("(>=", minVersion, ")"), " is required. Try: ")) {
   need <- FALSE
-  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE, warn.conflicts = FALSE))) {
+  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE))) {
     need <- TRUE
   } else {
     if (isTRUE(packageVersion(pkg) < minVersion))
       need <- TRUE
   }
-  if (need) {
-    message(messageStart,
-         "install.packages('",pkg,"')")
-  }
+  if (isTRUE(stopOnFALSE) && isTRUE(need))
+    stop(requireNamespaceMsg(pkg))
   !need
 }
 
@@ -312,7 +314,7 @@ fileExt <- function(x) {
 isDirectory <- function(pathnames) {
   keep <- is.character(pathnames)
   if (length(pathnames) == 0) return(logical())
-  if (isFALSE(keep)) stop("pathnames must be character")
+  if (.isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   pathnames <- normPath(pathnames[keep])
   id <- dir.exists(pathnames)
@@ -323,7 +325,7 @@ isDirectory <- function(pathnames) {
 
 isFile <- function(pathnames) {
   keep <- is.character(pathnames)
-  if (isFALSE(keep)) stop("pathnames must be character")
+  if (.isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   pathnames <- normPath(pathnames[keep])
   iF <- file.exists(pathnames)
@@ -335,7 +337,7 @@ isFile <- function(pathnames) {
 isAbsolutePath <- function(pathnames) {
   # modified slightly from R.utils::isAbsolutePath
   keep <- is.character(pathnames)
-  if (isFALSE(keep)) stop("pathnames must be character")
+  if (.isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   nPathnames <- length(pathnames)
   if (nPathnames == 0L)
@@ -355,3 +357,5 @@ isAbsolutePath <- function(pathnames) {
     return(FALSE)
   (components[1L] == "")
 }
+
+.isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x

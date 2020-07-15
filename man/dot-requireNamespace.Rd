@@ -7,6 +7,7 @@
 .requireNamespace(
   pkg = "methods",
   minVersion = NULL,
+  stopOnFALSE = FALSE,
   messageStart = paste0(pkg, if (!is.null(minVersion)) paste0("(>=", minVersion, ")"),
     " is required. Try: ")
 )
@@ -16,6 +17,10 @@
 
 \item{minVersion}{Character string indicating minimum version of package
 that is needed}
+
+\item{stopOnFALSE}{Logical. If \code{TRUE}, this function will create an
+error (i.e., \code{stop}) if the function returns \code{FALSE}; otherwise
+it simply returns \code{FALSE}}
 
 \item{messageStart}{A character string with a prefix of message to provide}
 }
