@@ -352,7 +352,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
         } else {
           completed <- FALSE
           i <- 1
-          while(!completed & i < 3) {
+          while (!completed & i < 3) {
             if (canProcessInMemory(x, 3)) {
               yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots)),
                         silent = TRUE)
