@@ -172,7 +172,7 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
                            useSAcrs = FALSE,
                            useCache = getOption("reproducible.useCache", FALSE),
                            ...) {
-  if (!.requireNamespace("sf")) stop(call. = FALSE)
+  .requireNamespace("sf", stopOnFALSE = TRUE)
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   message("postProcess with sf class objects is still experimental")
@@ -276,7 +276,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           #crs(theExtent) <- crsCropTo
           raster::extent(spTransform(x = cropTo, CRSobj = crsX))
         } else if (is(studyArea, "sf")) {
-          if (!.requireNamespace("sf")) stop(call. = FALSE)
+          .requireNamespace("sf", stopOnFALSE = TRUE)
           extent(sf::st_transform(cropTo, crs = crsX))
         } else {
           message("cropInputs must have a rasterToMatch raster, or studyArea Spatial or sf object. ",
@@ -402,7 +402,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' @rdname cropInputs
 cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           extentToMatch = NULL, extentCRS = NULL, ...) {
-  if (!.requireNamespace("sf")) stop(call. = FALSE)
+  .requireNamespace("sf", stopOnFALSE = TRUE)
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS)
   if (useExtentToMatch) {
     extentToMatch <- NULL
@@ -572,7 +572,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 #' @rdname fixErrors
 fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE), ...) {
-  if (!.requireNamespace("sf")) stop(call. = FALSE)
+  .requireNamespace("sf", stopOnFALSE = TRUE)
   if (attemptErrorFixes) {
     if (is.null(objectName)) objectName = "SimpleFeature"
     if ((is(sf::st_geometry(x), "sfc_MULTIPOLYGON") || is(sf::st_geometry(x), "sfc_GEOMETRY") ||
@@ -872,10 +872,10 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 #' @export
 #' @rdname projectInputs
 projectInputs.sf <- function(x, targetCRS, ...) {
-  if (!.requireNamespace("sf")) stop(call. = FALSE)
+  .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(targetCRS)) {
     warning("sf class objects not fully tested Use with caution.")
-    if (!.requireNamespace("sf")) stop(call. = FALSE)
+    .requireNamespace("sf", stopOnFALSE = TRUE)
     isValid <- sf::st_is_valid(x)
     if (any(sf::st_is(x, c("POLYGON", "MULTIPOLYGON"))) && !any(isValid)) {
       x[!isValid] <- sf::st_buffer(x[!isValid], dist = 0, ...)
@@ -1027,7 +1027,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
   #   }
   #   if (trySF) {
   #     "raster intersect did not work correctly, trying sf"
-  #     if (!.requireNamespace("sf")) stop(call. = FALSE)
+  #     .requireNamespace("sf", stopOnFALSE = TRUE)
   #     xTmp <- sf::st_join(sf::st_as_sf(x), sf::st_as_sf(studyArea), join = sf::st_intersects)
   #     y <- as(xTmp, "Spatial")
   #   }
@@ -1056,7 +1056,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
 #' @export
 #' @rdname maskInputs
 maskInputs.sf <- function(x, studyArea, ...) {
-  if (!.requireNamespace("sf")) stop(call. = FALSE)
+  .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(studyArea)) {
     if (is(studyArea, "Spatial"))
       studyArea <- sf::st_as_sf(studyArea)
@@ -1370,7 +1370,7 @@ writeOutputs.Spatial <- function(x, filename2 = NULL,
 writeOutputs.sf <- function(x, filename2 = NULL,
                             overwrite = getOption("reproducible.overwrite", FALSE),
                             ...) {
-  if (!.requireNamespace("sf")) stop(call. = FALSE)
+  .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(filename2)) {
     # if (!nzchar(fileExt(filename2))) {
     #   filename2 <- paste0(filename2, ".shp")
@@ -1671,7 +1671,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
             studyArea <- sp::spTransform(studyArea, CRSobj = crsX)
             studyArea <- raster::buffer(studyArea, width = bufferWidth)
           } else {
-            if (!.requireNamespace("sf")) stop(call. = FALSE)
+            .requireNamespace("sf", stopOnFALSE = TRUE)
             studyArea <- sf::st_transform(studyArea, crs = crsX)
             studyArea <- sf::st_buffer(studyArea, dist = bufferWidth)
           }

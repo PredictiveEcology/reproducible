@@ -1037,7 +1037,7 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
-  if (!.requireNamespace("qs")) skip("need qs installed")
+  if (!.requireNamespace("qs")) skip("Need qs; skipping test")
   testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)

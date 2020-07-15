@@ -7,6 +7,7 @@
 .requireNamespace(
   pkg = "methods",
   minVersion = NULL,
+  stopOnFALSE = FALSE,
   messageStart = paste0(pkg, if (!is.null(minVersion)) paste0("(>=", minVersion, ")"),
     " is required. Try: ")
 )

@@ -239,19 +239,18 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
 #'   that is needed
 #' @param messageStart A character string with a prefix of message to provide
 .requireNamespace <- function(pkg = "methods", minVersion = NULL,
+                              stopOnFALSE = FALSE,
                               messageStart = paste0(pkg, if (!is.null(minVersion))
                                 paste0("(>=", minVersion, ")"), " is required. Try: ")) {
   need <- FALSE
-  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE))) {
+  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE))) {
     need <- TRUE
   } else {
     if (isTRUE(packageVersion(pkg) < minVersion))
       need <- TRUE
   }
-  if (need) {
-    message(messageStart,
-         "install.packages('",pkg,"')")
-  }
+  if (isTRUE(stopOnFALSE) && isTRUE(need))
+    stop(requireNamespaceMsg(pkg))
   !need
 }
 

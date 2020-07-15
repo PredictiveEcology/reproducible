@@ -282,7 +282,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
-  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE)
 
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
@@ -357,7 +357,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @importFrom crayon magenta
 #' @inheritParams preProcess
 dlGeneric <- function(url, needChecksums, destinationPath) {
-  if (!.requireNamespace("httr")) stop(call. = FALSE)
+  .requireNamespace("httr", stopOnFALSE = TRUE)
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
   }
@@ -526,7 +526,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath")) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   if (.isRstudioServer()) {
-    if (!.requireNamespace("httr")) stop(call. = FALSE)
+    .requireNamespace("httr", stopOnFALSE = TRUE)
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
   }
@@ -559,8 +559,13 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   return(downloadFilename)
 }
 
-requireNamespaceMsg <- function(pkg, extraMsg = character()) {
-  paste("Must install",pkg,"package", extraMsg)
+requireNamespaceMsg <- function(pkg, extraMsg = character(), minVersion = NULL) {
+  mess <- paste0(pkg, if (!is.null(minVersion))
+    paste0("(>=", minVersion, ")"), " is required but not yet installed. Try: ",
+    "install.packages('",pkg,"')")
+  if (length(extraMsg) > 0)
+    mess <- paste(mess, extraMsg)
+  mess
 }
 
 

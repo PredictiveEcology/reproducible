@@ -153,7 +153,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (is.null(linkToCacheId)) {
     if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
-      if (!.requireNamespace("qs")) stop(call. = FALSE)
+      .requireNamespace("qs", stopOnFALSE = TRUE)
       for (attempt in 1:2) {
         fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
                         preset = getOption("reproducible.qsavePreset", "high"))
@@ -643,7 +643,7 @@ loadFile <- function(file, format) {
   if (missing(format))
     format <- fileExt(file)
   if (format == "qs") {
-    if (!.requireNamespace("qs")) stop(call. = FALSE)
+    .requireNamespace("qs", stopOnFALSE = TRUE)
     obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
   } else {
     obj <- readRDS(file = file)
