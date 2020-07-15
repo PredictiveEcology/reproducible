@@ -1948,6 +1948,10 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
   }
   if (nchar(extension(filename2)) == 0)
     filename2 <- paste0(filename2, ".tif")
+  isFactor <- raster::is.factor(x)
+  if (isFactor) {
+    factorDF <- raster::levels(x)
+  }
   # GDAL will to a reprojection without an explicit crop
   # the raster could be in memory if it wasn't reprojected
   if (inMemory(x)) {
@@ -2046,6 +2050,9 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     origColors <- checkColors(x)
     x[] <- x[]
     x <- rebuildColors(x, origColors)
+  }
+  if (isFactor) {
+    levels(x) <- factorDF[[1]]
   }
 
   x
