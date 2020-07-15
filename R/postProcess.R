@@ -1929,6 +1929,7 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 # }
 
 
+#' @importFrom raster extension
 cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs) {
   message("crop, reproject, mask is using one-step gdalwarp")
 
