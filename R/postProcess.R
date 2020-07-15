@@ -1061,7 +1061,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
 maskInputs.sf <- function(x, studyArea, ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(studyArea)) {
-    if (!is(studyArea, "sf"))
+    if (is(studyArea, "Spatial"))
       studyArea <- sf::st_as_sf(studyArea)
 
     message("maskInputs with sf class objects is still experimental")
@@ -1069,8 +1069,9 @@ maskInputs.sf <- function(x, studyArea, ...) {
     #studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
     if (!identical(sf::st_crs(x), sf::st_crs(studyArea)))
       studyArea <- sf::st_transform(studyArea, crs = sf::st_crs(x))
-    if (NROW(studyArea) > 1)
-      studyArea <- sf::st_combine(studyArea)
+    if (NROW(studyArea) > 1) {
+      studyArea <- sf::st_sf(sf::st_combine(studyArea))
+    }
 
     if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
