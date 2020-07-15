@@ -282,7 +282,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
                      overwrite, needChecksums) {
-  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  .requireNamespace("googledrive", stopOnFALSE = TRUE)
 
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
@@ -300,7 +300,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     class(fs) <- "object_size"
     isLargeFile <- if (is.null(fs)) FALSE else fs > 1e6
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
-        !isFALSE(getOption("reproducible.futurePlan"))) {
+        !.isFALSE(getOption("reproducible.futurePlan"))) {
       message("Downloading a large file")
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
@@ -355,9 +355,9 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
 #' @importFrom crayon magenta
-#' @importFrom httr GET http_error progress stop_for_status user_agent write_disk
 #' @inheritParams preProcess
 dlGeneric <- function(url, needChecksums, destinationPath) {
+  .requireNamespace("httr", stopOnFALSE = TRUE)
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
   }
@@ -491,7 +491,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             file.link(downloadResults$destFile, desiredPath)
           )
 
-          if (isFALSE(result)) {
+          if (.isFALSE(result)) {
             result <- file.copy(downloadResults$destFile, desiredPath)
           }
 
@@ -526,6 +526,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath")) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   if (.isRstudioServer()) {
+    .requireNamespace("httr", stopOnFALSE = TRUE)
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
   }
@@ -558,8 +559,13 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   return(downloadFilename)
 }
 
-requireNamespaceMsg <- function(pkg, extraMsg = character()) {
-  paste("Must install",pkg,"package", extraMsg)
+requireNamespaceMsg <- function(pkg, extraMsg = character(), minVersion = NULL) {
+  mess <- paste0(pkg, if (!is.null(minVersion))
+    paste0("(>=", minVersion, ")"), " is required but not yet installed. Try: ",
+    "install.packages('",pkg,"')")
+  if (length(extraMsg) > 0)
+    mess <- paste(mess, extraMsg)
+  mess
 }
 
 

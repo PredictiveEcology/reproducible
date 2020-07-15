@@ -1010,7 +1010,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       if (grepl("7z", extractSystemCallPath)) {
         SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE) %>%
           grepl("installed", .)
-        if (isFALSE(SevenZrarExists))
+        if (.isFALSE(SevenZrarExists))
           message("To extract .rar files, you will need p7zip-rar, not just p7zip-full. Try: \n",
                   "--------------------------\n",
                   "apt install p7zip-rar\n",

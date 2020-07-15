@@ -360,7 +360,7 @@ setMethod(
     # not seeing userTags
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
-      !isFALSE(getOption("reproducible.futurePlan"))
+      !.isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
       if (exists("futureEnv", envir = .reproEnv))
         hasFuture <- .requireNamespace("future",
@@ -611,9 +611,9 @@ setMethod(
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
-  message("Cache size: ")
-  message(preMessage1, format(fsTotal, "auto"))
-  message(preMessage, format(fs, "auto"))
+  message(crayon::blue("Cache size: "))
+  message(crayon::blue(preMessage1, format(fsTotal, "auto")))
+  message(crayon::blue(preMessage, format(fs, "auto")))
 }
 
 #' @keywords internal
@@ -732,7 +732,7 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
 
 useDBI <- function() {
   ud <- getOption("reproducible.useDBI", TRUE)
-  if (isFALSE(ud)) {
+  if (.isFALSE(ud)) {
     stop("options('reproducible.useDBI') can only be TRUE in this and future versions of reproducible",
          call. = FALSE)
   }
