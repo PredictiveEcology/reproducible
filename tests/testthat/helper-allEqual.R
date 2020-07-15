@@ -427,3 +427,9 @@ fnCacheHelper <- function(a, cacheRepo2) {
 crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
 
 messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cachePath'\\) is inside"
+
+
+.writeRaster <- function(...) {
+  suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
+                           writeRaster(...))
+}

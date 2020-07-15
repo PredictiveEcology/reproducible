@@ -611,9 +611,9 @@ setMethod(
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
-  message("Cache size: ")
-  message(preMessage1, format(fsTotal, "auto"))
-  message(preMessage, format(fs, "auto"))
+  message(crayon::blue("Cache size: "))
+  message(crayon::blue(preMessage1, format(fsTotal, "auto")))
+  message(crayon::blue(preMessage, format(fs, "auto")))
 }
 
 #' @keywords internal

@@ -1685,7 +1685,7 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
 
 .defaultUserTags <- c("function", "class", "object.size", "accessed", "inCloud",
                       "otherFunctions", "preDigest", "file.size", "cacheId",
-                      "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash")
+                      "elapsedTimeDigest", "elapsedTimeFirstRun", "resultHash", "elapsedTimeLoad")
 
 .defaultOtherFunctionsOmit <- c("(test_","with_reporter", "force", "Restart", "with_mock",
                                 "eval", "::", "\\$", "\\.\\.", "standardGeneric",
