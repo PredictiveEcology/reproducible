@@ -39,6 +39,7 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
       googledrive::drive_auth_config(active = TRUE)
 
     if (.isRstudioServer()) {
+      if (!.requireNamespace("httr")) stop(call. = FALSE)
       options(httr_oob_default = TRUE)
     }
 

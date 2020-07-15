@@ -16,7 +16,7 @@ URL:
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
 Date: 2020-07-14
-Version: 1.2.0.9013
+Version: 1.2.0.9014
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -40,7 +40,6 @@ Imports:
     digest,
     fpCompare,
     glue,
-    httr,
     magrittr,
     methods,
     Require,
@@ -56,6 +55,7 @@ Suggests:
     future,
     gdalUtils,
     googledrive,
+    httr,
     qs,
     knitr,
     parallel,

@@ -14,7 +14,7 @@ version 1.2.0.9000
 * all `DBI` type functions now have default `cachePath` of `getOption("reproducible.cachePath")`
 
 ## Dependency changes
-* net reduction in number of packages that are imported from by 13. Removed completely: `backports`, `memoise`, `quickPlot`, `R.utils`, `remotes`, `tools`, and `versions`; moved to Suggests: `gdalUtils`, `googledrive`, `fastdigest`, `qs`, `rgdal`, `sf`, `testthat`; added: `Require`
+* net reduction in number of packages that are imported from by 14. Removed completely: `backports`, `memoise`, `quickPlot`, `R.utils`, `remotes`, `tools`, and `versions`; moved to Suggests: `fastdigest`, `gdalUtils`, `googledrive`, `httr`, `qs`, `rgdal`, `sf`, `testthat`; added: `Require`. Now there are 12 non-base packages listed in Imports. This is down from 31 prior to Ver 1.0.0.
 
 ## bug fixes
 * fix over-wide tables in PDF manual (#144)

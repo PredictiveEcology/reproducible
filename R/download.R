@@ -355,9 +355,9 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
 #' @importFrom crayon magenta
-#' @importFrom httr GET http_error progress stop_for_status user_agent write_disk
 #' @inheritParams preProcess
 dlGeneric <- function(url, needChecksums, destinationPath) {
+  if (!.requireNamespace("httr")) stop(call. = FALSE)
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
   }
@@ -526,6 +526,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath")) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   if (.isRstudioServer()) {
+    if (!.requireNamespace("httr")) stop(call. = FALSE)
     opts <- options(httr_oob_default = TRUE)
     on.exit(options(opts))
   }
