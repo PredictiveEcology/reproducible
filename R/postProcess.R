@@ -1948,6 +1948,10 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
   }
   if (nchar(extension(filename2)) == 0)
     filename2 <- paste0(filename2, ".tif")
+  # GDAL can't deal with grd filename extensions (and possibly others) --> go with .tif and update at end
+  filename2Orig <- filename2
+  if (!grepl(".tif$", filename2)) filename2 <- paste0(filename2, ".tif")
+  needRenameAtEnd <- !identical(filename2Orig, filename2)
   isFactor <- raster::is.factor(x)
   if (isFactor) {
     factorDF <- raster::levels(x)
@@ -2051,6 +2055,8 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     x[] <- x[]
     x <- rebuildColors(x, origColors)
   }
+  if (needRenameAtEnd)
+    x <- writeRaster(x, filename = filename2Orig, overwrite = TRUE)
   if (isFactor) {
     levels(x) <- factorDF[[1]]
   }
