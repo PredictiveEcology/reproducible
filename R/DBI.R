@@ -50,7 +50,6 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 #' @param linkToCacheId Optional. If a \code{cacheId} is provided here, then a \code{file.link}
 #'   will be made to the file with that \code{cacheId} name in the cache repo.
 #'   This is used when identical outputs exist in the cache. This will save disk space.
-#' @importFrom qs qsave
 saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
@@ -154,6 +153,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (is.null(linkToCacheId)) {
     if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
+      if (!.requireNamespace("qs")) stop(call. = FALSE)
       for (attempt in 1:2) {
         fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
                         preset = getOption("reproducible.qsavePreset", "high"))
@@ -217,7 +217,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
 #' @export
 #' @rdname cache-tools
-#' @importFrom qs qread
 #' @inheritParams CacheStoredFile
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           cacheId,
@@ -639,13 +638,13 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
   dbClearResult(res)
 }
 
-#' @importFrom qs qread
 loadFile <- function(file, format) {
   browser(expr = exists("._loadFile_1"))
   if (missing(format))
     format <- fileExt(file)
   if (format == "qs") {
-    obj <- qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
+    if (!.requireNamespace("qs")) stop(call. = FALSE)
+    obj <- qs::qread(file = file, nthreads = getOption("reproducible.nThreads", 1))
   } else {
     obj <- readRDS(file = file)
   }

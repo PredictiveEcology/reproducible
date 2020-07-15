@@ -1046,6 +1046,7 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
   sc <- showCache(tmpdir)
   ci <- unique(sc[[.cacheTableHashColName()]])
   options("reproducible.cacheSaveFormat" = "qs")
+  if (!.requireNamespace("qs")) skip()
   on.exit({
     options(opts)
   }, add = TRUE)
