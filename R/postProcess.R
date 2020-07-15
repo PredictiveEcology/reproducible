@@ -1077,6 +1077,7 @@ maskInputs.sf <- function(x, studyArea, ...) {
       #y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
       y <- x[y2,]
     } else {
+      x <- fixErrors(x)
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
     }
