@@ -85,22 +85,7 @@ test_that("prepInputs doesn't work (part 1)", {
     "ecozones.shp",
     "ecozones.shx"
   )
-  shpEcozoneSm <- Cache(
-    prepInputs,
-    url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-    targetFile = reproducible::asPath(ecozoneFilename),
-    alsoExtract = reproducible::asPath(ecozoneFiles),
-    studyArea = StudyArea,
-    fun = "shapefile",
-    destinationPath = dPath,
-    filename2 = "EcozoneFile.shp"
-  ) # passed to determineFilename
-  expect_true(is(shpEcozoneSm, "SpatialPolygons"))
-  expect_identical(extent(shpEcozoneSm), extent(StudyArea))
-
-  unlink(dirname(ecozoneFilename), recursive = TRUE)
-  # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
-  mess <- capture_messages({
+  warn <- suppressWarningsSpecific(falseWarnings = "attribute variables are assumed to be spatially constant",
     shpEcozoneSm <- Cache(
       prepInputs,
       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
@@ -109,10 +94,29 @@ test_that("prepInputs doesn't work (part 1)", {
       studyArea = StudyArea,
       fun = "shapefile",
       destinationPath = dPath,
-      filename2 = "EcozoneFile.shp",
-      useCache = FALSE
-    )
-  })
+      filename2 = "EcozoneFile.shp"
+    )) # passed to determineFilename
+  expect_true(is(shpEcozoneSm, "SpatialPolygons"))
+  expect_identical(extent(shpEcozoneSm), extent(StudyArea))
+
+  unlink(dirname(ecozoneFilename), recursive = TRUE)
+  # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
+  warn <- suppressWarningsSpecific(
+    falseWarnings = "attribute variables are assumed to be spatially constant",
+    mess <- capture_messages({
+      shpEcozoneSm <- Cache(
+        prepInputs,
+        url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+        targetFile = reproducible::asPath(ecozoneFilename),
+        alsoExtract = reproducible::asPath(ecozoneFiles),
+        studyArea = StudyArea,
+        fun = "shapefile",
+        destinationPath = dPath,
+        filename2 = "EcozoneFile.shp",
+        useCache = FALSE
+      )
+    })
+  )
   expect_false(all(grepl("loading", mess)))
 
   # Test useCache -- doesn't error and loads from cache
@@ -154,6 +158,7 @@ test_that("prepInputs doesn't work (part 1)", {
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_true(all(abs(extent(LCC2005)[1:4] -
                    round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+  expect_true(length(LCC2005@legend@colortable) == (maxValue(LCC2005) - minValue(LCC2005) + 1))
 
   #######################################
   ### url, targetFile, archive     ######
@@ -1135,11 +1140,11 @@ test_that("prepInputs doesn't work (part 2)", {
                               dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                               path = tmpdir)
         })
+
         runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
         runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-
         mess2 <- capture_messages({
           warn <- capture_warnings({
             test3 <- prepInputs(targetFile = targetFileLuxRDS,
@@ -1147,7 +1152,7 @@ test_that("prepInputs doesn't work (part 2)", {
                                 path = tmpdir, studyArea = StudyArea)
           })
         })
-        runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+        runTest("1_2_5_6_8_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir,
                 test = test3)
 
@@ -1161,11 +1166,11 @@ test_that("prepInputs doesn't work (part 2)", {
                                 country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
           })
         })
-        runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+        runTest("1_2_5_6_13_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir,
                 test = test3)
 
-        runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+        runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 5, mess2,
                 expectedMess = expectedMessagePostProcess,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
@@ -1173,7 +1178,6 @@ test_that("prepInputs doesn't work (part 2)", {
         testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                       "reproducible.inputPaths" = NULL),
                                 needGoogle = TRUE)
-      } else {
       }
     }
     # Add a study area to Crop and Mask to
@@ -1210,11 +1214,12 @@ test_that("prepInputs doesn't work (part 2)", {
           test3 <- prepInputs(
             url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing", #nolint
             studyArea = StudyArea,
+            destinationPath = tmpdir,
             fun = "base::readRDS"
           )
         })
       })
-      runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+      runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 1, mess2,
               expectedMess = expectedMessagePostProcess,
               filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
     }

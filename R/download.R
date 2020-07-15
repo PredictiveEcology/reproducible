@@ -117,6 +117,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
             stop("Download Failed")
             Sys.sleep(0.5)
         } else {
+          if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
           failed <- 0
         }
       }
@@ -385,7 +386,7 @@ dlGeneric <- function(url, needChecksums, destinationPath) {
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, skipDownloadMsg,
                            destinationPath, overwrite, needChecksums, .tempPath, ...) {
-  browser(expr = exists("downloadRemote_1"))
+  browser(expr = exists("._downloadRemote_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit({unlink(.tempPath, recursive = TRUE)},
