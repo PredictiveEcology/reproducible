@@ -896,14 +896,14 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
   # Legend
   sn <- slotNames(object@legend)
-  dataSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
+  legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig2 <- .robustDigest(dataSlotsToDigest, length = length, quick = quick,
+    dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
                   algo = algo) # don't include object@data -- these are volatile
   else {
     if (!requireNamespace("fastdigest"))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
-    dig2 <- fastdigest::fastdigest(dataSlotsToDigest) # don't include object@data -- these are volatile
+    dig2 <- fastdigest::fastdigest(legendSlotsToDigest) # don't include object@data -- these are volatile
   }
   dig <- c(dig, dig2)
 
@@ -933,7 +933,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   }
 
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig <- .robustDigest(dig, length = length, quick = quick, algo = algo)
+    dig <- .robustDigest(unlist(dig), length = length, quick = quick, algo = algo)
   else {
     if (!requireNamespace("fastdigest"))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
