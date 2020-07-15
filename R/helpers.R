@@ -242,7 +242,7 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
                               messageStart = paste0(pkg, if (!is.null(minVersion))
                                 paste0("(>=", minVersion, ")"), " is required. Try: ")) {
   need <- FALSE
-  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE, warn.conflicts = FALSE))) {
+  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE))) {
     need <- TRUE
   } else {
     if (isTRUE(packageVersion(pkg) < minVersion))
