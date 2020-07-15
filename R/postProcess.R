@@ -338,6 +338,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
         } else if (is(x, "Spatial")) { # raster::crop has stopped working on SpatialPolygons
           yyy <- as(cropExtentRounded, "SpatialPolygons")
           crs(yyy) <- crsX
+          x <- fixErrors(x)
           y <- sf::st_intersection(sf::st_as_sf(x), sf::st_as_sf(yyy))
           # whichIntersect <- suppressWarningsSpecific(
           #   falseWarnings = "have different proj4",
