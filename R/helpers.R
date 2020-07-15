@@ -238,6 +238,9 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
 #' @param minVersion Character string indicating minimum version of package
 #'   that is needed
 #' @param messageStart A character string with a prefix of message to provide
+#' @param stopOnFALSE Logical. If \code{TRUE}, this function will create an
+#'   error (i.e., \code{stop}) if the function returns \code{FALSE}; otherwise
+#'   it simply returns \code{FALSE}
 .requireNamespace <- function(pkg = "methods", minVersion = NULL,
                               stopOnFALSE = FALSE,
                               messageStart = paste0(pkg, if (!is.null(minVersion))
