@@ -292,7 +292,7 @@ findGDAL <- function() {
   }
 }
 
-attemptGDAL <- function(x, useGDAL) {
+attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
   if (requireNamespace("gdalUtils", quietly = TRUE)) {
     browser(expr = exists("._attemptGDAL_1"))
     crsIsNA <- is.na(crs(x))
