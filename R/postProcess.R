@@ -596,6 +596,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
   return(x)
 }
 
+
 #' Project \code{Raster*} or {Spatial*} or \code{sf} objects
 #'
 #' A simple wrapper around the various different tools for these GIS types.
@@ -1060,7 +1061,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
 maskInputs.sf <- function(x, studyArea, ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
   if (!is.null(studyArea)) {
-    if (is(studyArea, "Spatial"))
+    if (!is(studyArea, "sf"))
       studyArea <- sf::st_as_sf(studyArea)
 
     message("maskInputs with sf class objects is still experimental")
