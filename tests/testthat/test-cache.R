@@ -614,7 +614,8 @@ test_that("test quoted FUN in Cache", {
 })
 
 test_that("test Cache argument inheritance to inner functions", {
-  testInitOut <- testInit("raster", opts = list("reproducible.showSimilar" = FALSE))
+  testInitOut <- testInit("raster", opts = list("reproducible.showSimilar" = FALSE,
+                                                "reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1016,7 +1017,7 @@ test_that("test .defaultUserTags", {
 })
 
 test_that("test failed Cache recovery -- message to delete cacheId", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
@@ -1063,7 +1064,7 @@ test_that("test changing reproducible.cacheSaveFormat midstream", {
 })
 
 test_that("test file link with duplicate Cache", {
-  testInitOut <- testInit()
+  testInitOut <- testInit(opts = list("reproducible.useMemoise" = FALSE))
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
