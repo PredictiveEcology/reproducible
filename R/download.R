@@ -300,7 +300,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     class(fs) <- "object_size"
     isLargeFile <- if (is.null(fs)) FALSE else fs > 1e6
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
-        !isFALSE(getOption("reproducible.futurePlan"))) {
+        !.isFALSE(getOption("reproducible.futurePlan"))) {
       message("Downloading a large file")
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
@@ -491,7 +491,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             file.link(downloadResults$destFile, desiredPath)
           )
 
-          if (isFALSE(result)) {
+          if (.isFALSE(result)) {
             result <- file.copy(downloadResults$destFile, desiredPath)
           }
 

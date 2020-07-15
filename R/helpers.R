@@ -312,7 +312,7 @@ fileExt <- function(x) {
 isDirectory <- function(pathnames) {
   keep <- is.character(pathnames)
   if (length(pathnames) == 0) return(logical())
-  if (isFALSE(keep)) stop("pathnames must be character")
+  if (.isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   pathnames <- normPath(pathnames[keep])
   id <- dir.exists(pathnames)
@@ -323,7 +323,7 @@ isDirectory <- function(pathnames) {
 
 isFile <- function(pathnames) {
   keep <- is.character(pathnames)
-  if (isFALSE(keep)) stop("pathnames must be character")
+  if (.isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   pathnames <- normPath(pathnames[keep])
   iF <- file.exists(pathnames)
@@ -335,7 +335,7 @@ isFile <- function(pathnames) {
 isAbsolutePath <- function(pathnames) {
   # modified slightly from R.utils::isAbsolutePath
   keep <- is.character(pathnames)
-  if (isFALSE(keep)) stop("pathnames must be character")
+  if (.isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   nPathnames <- length(pathnames)
   if (nPathnames == 0L)
@@ -355,3 +355,5 @@ isAbsolutePath <- function(pathnames) {
     return(FALSE)
   (components[1L] == "")
 }
+
+.isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x

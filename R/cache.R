@@ -407,7 +407,7 @@ setMethod(
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots
 
-    if (isFALSE(useCache) || isTRUE(0 == useCache)) {
+    if (.isFALSE(useCache) || isTRUE(0 == useCache)) {
       message(crayon::green("useCache is FALSE, skipping Cache.",
                             "To turn Caching on, use options(reproducible.useCache = TRUE)"))
       if (fnDetails$isDoCall) {
@@ -740,7 +740,7 @@ setMethod(
         browser(expr = exists("._Cache_8"))
 
         if (!is.null(showSimilar)) { # TODO: Needs testing
-          if (!isFALSE(showSimilar)) {
+          if (!.isFALSE(showSimilar)) {
             if (!exists("localTags", inherits = FALSE)) #
               localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
@@ -945,7 +945,7 @@ setMethod(
       useFuture <- FALSE
       .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
       if (.onLinux) {
-        if (!isFALSE(getOption("reproducible.futurePlan")) &&
+        if (!.isFALSE(getOption("reproducible.futurePlan")) &&
             .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
           useFuture <- TRUE
         }

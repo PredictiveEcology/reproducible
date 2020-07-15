@@ -34,7 +34,6 @@ Authors@R: c(
 Depends:
     R (>= 3.5)
 Imports:
-    backports,
     crayon,
     data.table (>= 1.10.4),
     DBI,

@@ -1041,7 +1041,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
   #   if (!is.null(rasterToMatch)) {
   #     if (isTRUE(maskWithRTM)) {
   #       sameProj <- if (isTRUE(compareCRS(x, rasterToMatch))) TRUE else FALSE
-  #       if (isFALSE(sameProj))
+  #       if (.isFALSE(sameProj))
   #         x <- sp::spTransform(x, crs(rasterToMatch))
   #       x <- x[!is.na(rasterToMatch[x]),]
   #     } else {
@@ -1312,7 +1312,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         }
       } else {
         if (file.exists(argsForWrite$filename)) {
-          if (interactive() && isFALSE(argsForWrite$overwrite)) {
+          if (interactive() && .isFALSE(argsForWrite$overwrite)) {
             wantOverwrite <- readline(paste0("File ", argsForWrite$filename, " already exists; overwrite? Y or N: "))
             if (identical(tolower(wantOverwrite), "y"))
               argsForWrite$overwrite <- TRUE
@@ -1942,7 +1942,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
   if (missing(filename2)) filename2 <- NULL
   if (isTRUE(filename2)) {
     filename2 <- determineFilename(filename2)
-  } else if (is.null(filename2) | isFALSE(filename2)) {
+  } else if (is.null(filename2) | .isFALSE(filename2)) {
     returnToRAM <- TRUE
     filename2 <- file.path(tmpRasPath, paste0(x@data@names, "_", rndstr(1, 8)))
   }
