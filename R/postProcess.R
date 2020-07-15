@@ -987,6 +987,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   browser(expr = exists("._maskInputs.Spatial_1"))
+  x <- fixErrors(x)
   x <- maskInputs(sf::st_as_sf(x), studyArea, rasterToMatch, maskWithRTM)
   x <- as(x, "Spatial")
   # if (!is.null(studyArea)) {
@@ -1077,7 +1078,6 @@ maskInputs.sf <- function(x, studyArea, ...) {
       #y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
       y <- x[y2,]
     } else {
-      x <- fixErrors(x)
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
     }
