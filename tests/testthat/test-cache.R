@@ -8,7 +8,7 @@ test_that("test file-backed raster caching", {
 
   randomPolyToDisk <- function(tmpfile) {
     r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-    writeRaster(r, tmpfile[1], overwrite = TRUE)
+    .writeRaster(r, tmpfile[1], overwrite = TRUE)
     r <- raster(tmpfile[1])
     r
   }
@@ -129,7 +129,7 @@ test_that("test file-backed raster caching", {
       ### Test for 2 caching events with same file-backing name
       randomPolyToDisk2 <- function(tmpfile, rand) {
         r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-        writeRaster(r, tmpfile[1], overwrite = TRUE)
+        .writeRaster(r, tmpfile[1], overwrite = TRUE)
         r <- raster(tmpfile[1])
         r
       }
@@ -198,7 +198,7 @@ test_that("test file-backed raster caching", {
         r <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
         levels(r) <- data.frame(ID = 1:30, vals = sample(LETTERS[1:5], size = 30, replace = TRUE),
                                 vals2 = sample(1:7, size = 30, replace = TRUE))
-        r <- writeRaster(r, tmpfile, overwrite = TRUE, datatype = "INT1U")
+        r <- .writeRaster(r, tmpfile, overwrite = TRUE, datatype = "INT1U")
         r
       }
 
@@ -257,12 +257,12 @@ test_that("test memory backed raster robustDigest", {
 
   expect_identical(dig, dig1)
 
-  b <- writeRaster(b, file = tmpfile[1], overwrite = TRUE)
+  b <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
   dig <- .robustDigest(b)
 
   r <- raster(matrix(1:10, 2, 5))
   b <- brick(r, r)
-  b <- writeRaster(b, file = tmpfile[1], overwrite = TRUE)
+  b <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
   dig1 <- .robustDigest(b)
 
   expect_identical(dig, dig1)
@@ -279,15 +279,15 @@ test_that("test memory backed raster robustDigest", {
 
   expect_identical(dig, dig1)
 
-  r4 <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
-  r5 <- writeRaster(r, file = tmpfile[2], overwrite = TRUE)
+  r4 <- .writeRaster(r, file = tmpfile[1], overwrite = TRUE)
+  r5 <- .writeRaster(r, file = tmpfile[2], overwrite = TRUE)
   b <- raster::stack(r4, r5)
   dig <- .robustDigest(b)
 
-  r2 <- writeRaster(r1, file = tmpfile[1], overwrite = TRUE)
-  r3 <- writeRaster(r1, file = tmpfile[2], overwrite = TRUE)
+  r2 <- .writeRaster(r1, file = tmpfile[1], overwrite = TRUE)
+  r3 <- .writeRaster(r1, file = tmpfile[2], overwrite = TRUE)
   b1 <- raster::stack(r2, r3)
-  #b1 <- writeRaster(b1, file = tmpfile[1], overwrite = TRUE)
+  #b1 <- .writeRaster(b1, file = tmpfile[1], overwrite = TRUE)
   dig1 <- .robustDigest(b1)
 
   expect_identical(dig, dig1)
@@ -304,7 +304,7 @@ test_that("test 'quick' argument", {
   ### Make raster using Cache
   set.seed(123)
   r1 <- raster(extent(0, 10, 0, 10), vals = sample(1:30, size = 100, replace = TRUE))
-  r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = tmpfile, overwrite = TRUE)
   quickFun <- function(rasFile) {
     ras <- raster(rasFile)
     ras[sample(ncell(ras), size = 1)]
@@ -313,7 +313,7 @@ test_that("test 'quick' argument", {
   out1a <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir)
   out1b <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
-  r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = tmpfile, overwrite = TRUE)
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, asPath(filename(r1)), cacheRepo = tmpdir, quick = TRUE)
   })
@@ -332,7 +332,7 @@ test_that("test 'quick' argument", {
   out1a <- Cache(quickFun, r1, cacheRepo = tmpdir)
   out1b <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   r1[4] <- r1[4] + 1
-  r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = tmpfile, overwrite = TRUE)
   mess1 <- capture_messages({
     out1c <- Cache(quickFun, r1, cacheRepo = tmpdir, quick = TRUE)
   })
@@ -843,8 +843,8 @@ test_that("test cache-helpers", {
   s <- raster::stack(r, r1)
   b <- .prepareFileBackedRaster(s, tmpCache)
 
-  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
-  r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
+  r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
   s <- addLayer(r, r1)
 
   # Test deleted raster backed file
@@ -854,7 +854,7 @@ test_that("test cache-helpers", {
 
   # Test wrong folder names
   tmpfile <- file.path(tmpCache, basename(tempfile(tmpdir = tmpdir, fileext = ".grd")))
-  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
   r@file@name <- gsub(pattern = normalizePath(tempdir(), winslash = "/", mustWork = FALSE),
                       normalizePath(tmpfile, winslash = "/", mustWork = FALSE),
                       replacement = basename(tempdir()))
@@ -865,7 +865,7 @@ test_that("test cache-helpers", {
   expect_true(file.exists(filename(b)))
   # Check that it makes a new name if already in Cache
   checkPath(file.path(tmpCache, "rasters"), create = TRUE)
-  r1 <- writeRaster(r1, filename = file.path(tmpCache, "rasters", basename(tmpfile2)), overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = file.path(tmpCache, "rasters", basename(tmpfile2)), overwrite = TRUE)
   b <- .prepareFileBackedRaster(r1, tmpCache)
   expect_true(identical(normalizePath(filename(b), winslash = "/", mustWork = FALSE),
                         normalizePath(file.path(dirname(filename(r1)),
@@ -875,8 +875,8 @@ test_that("test cache-helpers", {
   r <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   r1 <- raster(extent(0, 5, 0, 5), res = 1, vals = rep(1:2, length.out = 25))
   tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
-  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
-  r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
+  r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
   s <- addLayer(r, r1)
   b1 <- .prepareFileBackedRaster(s, repoDir = tmpCache)
   expect_true(is(b1, "RasterStack"))
@@ -885,7 +885,7 @@ test_that("test cache-helpers", {
                         normalizePath(file.path(tmpCache, "rasters", basename(filename(r))), winslash = "/", mustWork = FALSE)))
 
   # Give them same name
-  r1 <- writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = tmpfile, overwrite = TRUE)
   b <- raster::stack(r, r1)
   b1 <- .prepareFileBackedRaster(b, tmpCache)
   expect_true(identical(b1$layer.1@file@name, b1$layer.2@file@name))
@@ -990,8 +990,8 @@ test_that("test pre-creating conn", {
   conn <- dbConnectAll(cachePath = tmpdir, conn = NULL)
   ra <- raster(extent(0,10,0,10), vals = sample(1:100))
   rb <- raster(extent(0,10,0,10), vals = sample(1:100))
-  r1 <- Cache(writeRaster, ra, filename = tmpfile[1], overwrite = TRUE, cacheRepo = tmpCache)
-  r2 <- Cache(writeRaster, rb, filename = tmpfile[2], overwrite = TRUE, cacheRepo = tmpdir,
+  r1 <- Cache(.writeRaster, ra, filename = tmpfile[1], overwrite = TRUE, cacheRepo = tmpCache)
+  r2 <- Cache(.writeRaster, rb, filename = tmpfile[2], overwrite = TRUE, cacheRepo = tmpdir,
               conn = conn)
   expect_true(file.exists(filename(r1)))
   expect_true(file.exists(filename(r2)))
