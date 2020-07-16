@@ -885,11 +885,15 @@ test_that("test cache-helpers", {
   expect_true(identical(normalizePath(filename(b1$layer.1), winslash = "/", mustWork = FALSE),
                         normalizePath(file.path(tmpCache, "rasters", basename(filename(r))), winslash = "/", mustWork = FALSE)))
 
-  # Give them same name
+  # Give them same name -- but will create a next numeric
   r1 <- .writeRaster(r1, filename = tmpfile, overwrite = TRUE)
   b <- raster::stack(r, r1)
+  expect_true(identical(b$layer.1@file@name, b$layer.2@file@name))
   b1 <- .prepareFileBackedRaster(b, tmpCache)
-  expect_true(identical(b1$layer.1@file@name, b1$layer.2@file@name))
+
+  # there are 2 file names now
+  expect_true(length(unique(filePathSansExt(Filenames(b1)))) == 2)
+
 })
 
 test_that("test useCache = 'overwrite'", {
