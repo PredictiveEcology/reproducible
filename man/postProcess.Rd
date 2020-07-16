@@ -106,7 +106,7 @@ Defaults to \code{getOption("reproducible.useCache")}.}
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 
-The method for spatialClasses (\code{Raster*} and \code{Spatial*}) will
+The method for \code{spatialClasses} (\code{Raster*} and \code{Spatial*}) will
 crop, reproject, and mask, in that order.
 This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
 \code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},

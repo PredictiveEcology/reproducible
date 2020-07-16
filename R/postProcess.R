@@ -36,7 +36,7 @@ postProcess.list <- function(x, ...) {
 
 #' Post processing for \code{spatialClasses}
 #'
-#' The method for spatialClasses (\code{Raster*} and \code{Spatial*}) will
+#' The method for \code{spatialClasses} (\code{Raster*} and \code{Spatial*}) will
 #' crop, reproject, and mask, in that order.
 #' This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
 #' \code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
@@ -338,6 +338,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
         } else if (is(x, "Spatial")) { # raster::crop has stopped working on SpatialPolygons
           yyy <- as(cropExtentRounded, "SpatialPolygons")
           crs(yyy) <- crsX
+          x <- fixErrors(x)
           y <- sf::st_intersection(sf::st_as_sf(x), sf::st_as_sf(yyy))
           # whichIntersect <- suppressWarningsSpecific(
           #   falseWarnings = "have different proj4",
@@ -352,7 +353,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
         } else {
           completed <- FALSE
           i <- 1
-          while(!completed & i < 3) {
+          while (!completed & i < 3) {
             if (canProcessInMemory(x, 3)) {
               yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots)),
                         silent = TRUE)
@@ -594,6 +595,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
   }
   return(x)
 }
+
 
 #' Project \code{Raster*} or {Spatial*} or \code{sf} objects
 #'
@@ -986,6 +988,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   browser(expr = exists("._maskInputs.Spatial_1"))
+  x <- fixErrors(x)
   x <- maskInputs(sf::st_as_sf(x), studyArea, rasterToMatch, maskWithRTM)
   x <- as(x, "Spatial")
   # if (!is.null(studyArea)) {
@@ -1066,8 +1069,9 @@ maskInputs.sf <- function(x, studyArea, ...) {
     #studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
     if (!identical(sf::st_crs(x), sf::st_crs(studyArea)))
       studyArea <- sf::st_transform(studyArea, crs = sf::st_crs(x))
-    if (NROW(studyArea) > 1)
-      studyArea <- sf::st_combine(studyArea)
+    if (NROW(studyArea) > 1) {
+      studyArea <- sf::st_sf(sf::st_combine(studyArea))
+    }
 
     if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)

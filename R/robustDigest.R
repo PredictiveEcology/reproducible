@@ -263,6 +263,7 @@ setMethod(
       dig <- suppressWarnings(
         .digestRasterLayer(object, length = length, algo = algo, quick = quick))
     }
+    dig <- .doDigest(unlist(dig))
     return(dig)
 })
 
