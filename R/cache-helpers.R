@@ -655,7 +655,7 @@ setAs(from = "character", to = "Path", function(from) {
     } else {
       file.path(repoDir, basename(curFilename))
     }
-    saveFilename <- normalizePath(saveFilename, winslash = "/", mustWork = FALSE)
+    saveFilename <- normPath(saveFilename)
   }
 
   sameFilenames <- saveFilename == curFilename
@@ -689,30 +689,23 @@ setAs(from = "character", to = "Path", function(from) {
       }
 
       saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
-        #if (any(saveFilename2 %>% grepl(., pattern = "[.]grd$"))) {
-          curFilenameBase <- file_path_sans_ext(curFilename2[x])
-          curFilename <- dir(dirname(curFilename2[x]), pattern = paste0(basename(curFilenameBase), "\\."),
-                                 full.names = TRUE)
-          exts <- file_ext(curFilename)
-          saveFilenamesBase <- file_path_sans_ext(saveFilename2[x])
-          saveFilenames <- paste0(saveFilenamesBase, ".", exts)
+        curFilenameBase <- filePathSansExt(curFilename2[x])
+        curFilename <- dir(dirname(curFilename2[x]), pattern = paste0(basename(curFilenameBase), "\\."),
+                           full.names = TRUE)
+        exts <- fileExt(curFilename)
+        saveFilenamesBase <- filePathSansExt(saveFilename2[x])
+        saveFilenames <- paste0(saveFilenamesBase, ".", exts)
 
-          #newAncilliaryFiles <- sub(saveFilename2, pattern = "[.]grd$", replacement = ".gri")
-          #copyFile(from = curFilename2, to = saveFilename2, overwrite = TRUE, silent = TRUE)
-          #griFilename <- sub(saveFilename2, pattern = "[.]grd$", replacement = ".gri")
-          #curGriFilename <- sub(curFilename2, pattern = "[.]grd$", replacement = ".gri")
-          #copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
-        #}
 
         browser(expr = exists("._prepareFileBackedRaster_2"))
         # change filename if it already exists
         if (any(file.exists(saveFilenames))) {
-          # browser()
           saveFilenames <- nextNumericName(saveFilenames)
         }
         copyFile(to = saveFilenames,
                  overwrite = TRUE,
                  from = curFilename, silent = TRUE)
+        saveFilenames[match(fileExt(curFilename2[x]), fileExt(saveFilenames))]
       })
 
       # for a stack with independent Raster Layers (each with own file)
