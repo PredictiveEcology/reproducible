@@ -1149,7 +1149,7 @@ test_that("prepInputs doesn't work (part 2)", {
           warn <- capture_warnings({
             test3 <- prepInputs(targetFile = targetFileLuxRDS,
                                 dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                                path = tmpdir, studyArea = StudyArea)
+                                path = tmpdir, filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
           })
         })
         runTest("1_2_5_6_8_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
@@ -1163,7 +1163,8 @@ test_that("prepInputs doesn't work (part 2)", {
         mess2 <- capture_messages({
           warn <- capture_warnings({
             test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
-                                country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
+                                country = "LUX", level = 0, path = tmpdir,
+                                filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
           })
         })
         runTest("1_2_5_6_13_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
