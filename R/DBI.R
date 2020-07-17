@@ -70,62 +70,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     tagValue <- sub(userTags, pattern = "^[^:]*:", replacement = "")
   }
 
-  # outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
-  # if (outputToSaveIsList) {
-  #   rasters <- unlist(lapply(obj, is, "Raster"))
-  # } else {
-  #   rasters <- is(obj, "Raster")
-  # }
-  # browser(expr = exists("aaaa"))
-  # if (any(rasters)) {
-  #   atts <- attributes(obj)
-  #   if (outputToSaveIsList) {
-  #     obj[rasters] <- lapply(obj[rasters], function(x)
-  #       .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv))
-  #   } else {
-  #     obj <- .prepareFileBackedRaster(obj, repoDir = cachePath,
-  #                                              overwrite = FALSE, drv = drv)
-  #   }
-  #
-  #   # have to reset all these attributes on the rasters as they were undone in prev steps
-  #   setattr(obj, "tags", atts$tags)
-  #   .setSubAttrInList(obj, ".Cache", "newCache", atts$.Cache$newCache)
-  #   setattr(obj, "call", atts$call)
-  #
-  #   if (!identical(attr(obj, ".Cache")$newCache, atts$.Cache$newCache))
-  #     stop("attributes are not correct 6")
-  #   if (!identical(attr(obj, "call"), atts$call))
-  #     stop("attributes are not correct 7")
-  #   if (!identical(attr(obj, "tags"), atts$tags))
-  #     stop("attributes are not correct 8")
-  #
-  #   if (!is.null(atts[["function"]])) {
-  #     setattr(obj, "function", atts[["function"]])
-  #     if (!identical(attr(obj, "function"), atts[["function"]]))
-  #       stop("There is an unknown error 04")
-  #   }
-  #   # attr(obj, "function") <- attr(output, "function")
-  #
-  #  #output <- obj
-  # }
-
-  # This section is more direct, and under some conditions is faster, but sooo wordy
-  # ci <- rep(cacheId, length(tagKey))
-  # tagKey
-  # tagValue
-  # times <- rep(as.character(Sys.time()), length(tagKey))
-  # vals <- paste0("(\"", paste(collapse = "\"), (\"",
-  #       apply(data.frame(ci, tagKey, tagValue, times), 1, function(y) {
-  #         paste(y, collapse = "\", \"")
-  #       })
-  #       ), "\")")
-  # res <- retry(quote(dbSendStatement(
-  #   conn, paste0("insert into ",CacheDBTableName(cachePath, drv),
-  #                " ('cacheId', 'tagKey', 'tagValue', 'createdDate') values ", vals)),
-  #   retries = 15))
-  # dbClearResult(res)
-
-  # The above can replace this
   fts <- CacheStoredFile(cachePath, cacheId)
 
   browser(expr = exists("._saveToCache_2"))
@@ -152,26 +96,27 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   }
 
   if (is.null(linkToCacheId)) {
-    if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
-      .requireNamespace("qs", stopOnFALSE = TRUE)
-      for (attempt in 1:2) {
-        fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
-                        preset = getOption("reproducible.qsavePreset", "high"))
-        fs1 <- file.size(fts)
-        if (!identical(fs, fs1)) {
-          if (attempt == 1) {
-            warning("Attempted to save to Cache, but save seemed to fail; trying again")
-          } else {
-            stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
-          }
-        } else {
-          break
-        }
-      }
-    } else {
-      saveRDS(obj, file = fts)
-      fs <- file.size(fts)
-    }
+    fs <- saveFileInCacheFolder(obj, fts)
+    # if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
+    #   .requireNamespace("qs", stopOnFALSE = TRUE)
+    #   for (attempt in 1:2) {
+    #     fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
+    #                     preset = getOption("reproducible.qsavePreset", "high"))
+    #     fs1 <- file.size(fts)
+    #     if (!identical(fs, fs1)) {
+    #       if (attempt == 1) {
+    #         warning("Attempted to save to Cache, but save seemed to fail; trying again")
+    #       } else {
+    #         stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
+    #       }
+    #     } else {
+    #       break
+    #     }
+    #   }
+    # } else {
+    #   saveRDS(obj, file = fts)
+    #   fs <- file.size(fts)
+    # }
   }
   if (isTRUE(getOption("reproducible.useMemoise"))) {
     if (is.null(.pkgEnv[[cachePath]]))
@@ -648,4 +593,31 @@ loadFile <- function(file, format) {
   } else {
     obj <- readRDS(file = file)
   }
+}
+
+saveFileInCacheFolder <- function(obj, fts, cachePath, cacheId) {
+  if (missing(fts))
+    fts <- CacheStoredFile(cachePath, cacheId)
+
+  if (getOption("reproducible.cacheSaveFormat", "rds") == "qs") {
+    .requireNamespace("qs", stopOnFALSE = TRUE)
+    for (attempt in 1:2) {
+      fs <- qs::qsave(obj, file = fts, nthreads = getOption("reproducible.nThreads", 1),
+                      preset = getOption("reproducible.qsavePreset", "high"))
+      fs1 <- file.size(fts)
+      if (!identical(fs, fs1)) {
+        if (attempt == 1) {
+          warning("Attempted to save to Cache, but save seemed to fail; trying again")
+        } else {
+          stop("Saving to Cache did not work correctly; file appears corrupted. Please retry")
+        }
+      } else {
+        break
+      }
+    }
+  } else {
+    saveRDS(obj, file = fts)
+    fs <- file.size(fts)
+  }
+  fs
 }

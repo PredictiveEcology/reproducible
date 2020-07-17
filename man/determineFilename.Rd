@@ -7,7 +7,7 @@
 determineFilename(
   filename2 = TRUE,
   filename1 = NULL,
-  destinationPath = getOption("reproducible.destinationPath"),
+  destinationPath = getOption("reproducible.destinationPath", "."),
   prefix = "Small",
   ...
 )

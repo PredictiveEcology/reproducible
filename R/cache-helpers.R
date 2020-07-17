@@ -709,20 +709,21 @@ setAs(from = "character", to = "Path", function(from) {
       })
 
       # for a stack with independent Raster Layers (each with own file)
-      if (length(curFilename2) > 1) {
-        for (i in seq_along(curFilename2)) {
-          slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- saveFilename2[i]
-        }
-      } else {
-        if (!isStack) {
-          slot(slot(obj, "file"), "name") <- saveFilename2
-        } else {
-          for (i in seq_len(nlayers(obj))) {
-            whFilename <- match(basename(saveFilename2), basename(curFilename2))
-            slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename2[whFilename]
-          }
-        }
-      }
+      obj <- updateFilenameSlots(obj, curFilename2, saveFilename2, isStack)
+      # if (length(curFilename2) > 1) {
+      #   for (i in seq_along(curFilename2)) {
+      #     slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- saveFilename2[i]
+      #   }
+      # } else {
+      #   if (!isStack) {
+      #     slot(slot(obj, "file"), "name") <- saveFilename2
+      #   } else {
+      #     for (i in seq_len(nlayers(obj))) {
+      #       whFilename <- match(basename(saveFilename2), basename(curFilename2))
+      #       slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename2[whFilename]
+      #     }
+      #   }
+      # }
 
       ## update saveFilename
       saveFilename[notSameButBacked] <- saveFilename2[notSameButBacked]
@@ -1109,6 +1110,7 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
     rasters <- is(obj, "Raster")
   }
   if (any(rasters)) {
+    objOrig <- obj
     atts <- attributes(obj)
     browser(expr = exists("._dealWithRasters_2"))
     if (outputToSaveIsList) {
@@ -1140,6 +1142,8 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
       if (!identical(attr(obj, "function"), atts[["function"]]))
         stop("There is an unknown error 04")
     }
+    if (isFromDisk)
+      obj <- list(origRaster = objOrig, cacheRaster = obj)
   }
   obj
 }
@@ -1150,4 +1154,23 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
 
 .loadedCacheMsg <- function(root, functionName) {
   paste0("     ", root," ", functionName, " call, ")
+}
+
+updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL) {
+  if (length(curFilenames) > 1) {
+    for (i in seq_along(curFilenames)) {
+      slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+    }
+  } else {
+    if (is.null(isStack)) isStack <- is(obj, "RasterStack")
+    if (!isStack) {
+      slot(slot(obj, "file"), "name") <- newFilenames
+    } else {
+      for (i in seq_len(nlayers(obj))) {
+        whFilename <- match(basename(newFilenames), basename(curFilenames))
+        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+      }
+    }
+  }
+  obj
 }

@@ -242,13 +242,6 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
         } else {
           output@filename <- file.path(cacheRepoRasterDir, basename2(rasterFilename))
         }
-        # lapply(names(rasterFilename), function(rasName) {
-        #   output[[rasName]] <- .prepareFileBackedRaster(output[[rasName]],
-        #                                                 repoDir = cacheRepo, overwrite = FALSE,
-        #                                                 drv = drv, conn = conn)
-        # })
-        # output <- .prepareFileBackedRaster(output, repoDir = cacheRepo, overwrite = FALSE,
-        #                                    drv = drv, conn = conn)
       }
     } else {
       warning("Raster backed files are not available in googledrive; \n",

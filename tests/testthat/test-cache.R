@@ -136,7 +136,10 @@ test_that("test file-backed raster caching", {
 
       a <- Cache(randomPolyToDisk2, tmpfile[1], runif(1))
       b <- Cache(randomPolyToDisk2, tmpfile[1], runif(1))
-      expect_false(identical(filename(a), filename(b)))
+
+      # changed behaviour as of reproducible 1.2.0.9020
+      #  -- now Cache doesn't protect user from filename collisions if user makes them
+      expect_true(identical(filename(a), filename(b)))
 
       # Caching a raster as an input works
       rasterTobinary <- function(raster) {
@@ -206,7 +209,8 @@ test_that("test file-backed raster caching", {
       bb1 <- randomPolyToFactorOnDisk(tmpfile[2])
       # bb has new one, inside of cache repository, with same basename
       bb <- Cache(randomPolyToFactorOnDisk, tmpfile = tmpfile[2], cacheRepo = tmpdir)
-      expect_true(dirname(normPath(filename(bb))) == normPath(file.path(tmpdir, "rasters")))
+      # changed behaviour as of reproducible 1.2.0.9020 -- now Cache doesn't protect user from filename collisions if user makes them
+      expect_true(dirname(normPath(filename(bb))) != normPath(file.path(tmpdir, "rasters")))
       expect_true(basename(filename(bb)) == basename(tmpfile[2]))
       expect_false(filename(bb) == tmpfile[2])
       expect_true(dirname(filename(bb1)) == dirname(tmpfile[2]))
@@ -1000,8 +1004,8 @@ test_that("test pre-creating conn", {
               conn = conn)
   expect_true(file.exists(filename(r1)))
   expect_true(file.exists(filename(r2)))
-  expect_true(grepl(basename(dirname(filename(r1))), "rasters"))
-  expect_true(grepl(basename(dirname(filename(r2))), "rasters"))
+  expect_false(grepl(basename(dirname(filename(r1))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
+  expect_false(grepl(basename(dirname(filename(r2))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
 
 })
 

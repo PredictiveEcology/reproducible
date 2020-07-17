@@ -706,6 +706,8 @@ setMethod(
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
+          output <- dealWithRastersOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
+                                              drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
           postLoadTime <- Sys.time()
           elapsedTimeLoad <- postLoadTime - preLoadTime
 
@@ -844,10 +846,13 @@ setMethod(
       }
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
-        if (.CacheIsNew)
-          output <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
+        if (.CacheIsNew) {
+          outputToSave <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
+          outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
+        } else {
+          outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
+        }
       }
-      outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
 
       # Remove from otherFunctions if it is "function"
       alreadyIn <- gsub(otherFns, pattern = "otherFunctions:", replacement = "") %in%
@@ -1692,3 +1697,47 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
                                 "Cache", "tryCatch", "doTryCatch", "withCallingHandlers",
                                 "FUN", "capture", "withVisible)")
 
+
+dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
+                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                      conn = getOption("reproducible.conn", NULL)) {
+  if (is(output, "list")) {
+    if (identical(names(output), c("origRaster", "cacheRaster"))) {
+      origFilenames <- Filenames(output$origRaster)
+      cacheFilenames <- Filenames(output$cacheRaster)
+      origStillExist <- file.exists(origFilenames)
+      origFilenamesNeed <- origFilenames[!origStillExist]
+      cacheFilenamesNeed <- cacheFilenames[!origStillExist]
+      origFilenamesNeedDig <- origFilenames[origStillExist]
+      cacheFilenamesNeedDig <- cacheFilenames[origStillExist]
+      if (any(origStillExist)) {
+        cacheFilenamesDig <- unlist(.robustDigest(asPath(cacheFilenamesNeedDig)))
+        origFilenamesDig <- unlist(.robustDigest(asPath(origFilenamesNeedDig)))
+        whichUnchanged <- cacheFilenamesDig == origFilenamesDig
+        if (any(whichUnchanged)) {
+          origFilenamesNeedDig <- origFilenamesNeedDig[!whichUnchanged]
+          cacheFilenamesNeedDig <- cacheFilenamesNeedDig[!whichUnchanged]
+        }
+        cacheFilenamesNeed <- c(cacheFilenamesNeed, cacheFilenamesNeedDig)
+        origFilenamesNeed <- c(origFilenamesNeed, origFilenamesNeedDig)
+      }
+      dirnamesRasters <- unique(dirname(dirname(cacheFilenamesNeed)))
+      if (length(dirnamesRasters))
+        if (!isTRUE(all.equal(dirnamesRasters, cacheRepo))) { # if this is a moved cache, the filenames will be wrong
+          cacheFilenamesNeed2 <- gsub(dirnamesRasters, cacheRepo, cacheFilenamesNeed)
+          wrongFilenames <- file.exists(cacheFilenamesNeed2)
+          if (any(wrongFilenames)) {
+            output$cacheRaster <- updateFilenameSlots(output$cacheRaster, cacheFilenamesNeed[wrongFilenames],
+                                                      newFilenames = cacheFilenamesNeed2[wrongFilenames])
+            fs <- saveFileInCacheFolder(output, cachePath = cacheRepo, cacheId = cacheId)
+            cacheFilenamesNeed[wrongFilenames] <- cacheFilenamesNeed2[wrongFilenames]
+          }
+
+        }
+      copyFile(from = cacheFilenamesNeed, to = origFilenamesNeed, overwrite = TRUE)
+      output <- output$origRaster
+      .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+    }
+  }
+  output
+}

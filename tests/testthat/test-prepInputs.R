@@ -2134,7 +2134,18 @@ test_that("new gdalwarp all in one with grd with factor", {
   df <- data.frame(ID = 0:10, label = LETTERS[1:11])
   levels(r) <- df
 
-  rr <- postProcess(r, studyArea = StudyArea, useCache = FALSE, useGDAL = "force")
+  # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
+  #  This invokes the new dealWithRastersOnRecovery fn
+  rr <- postProcess(r, destinationPath = tmpdir,
+              studyArea = StudyArea, useCache = TRUE, useGDAL = "force")
+  rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
+              studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+  rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+  expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
+  expect_true(identical(Filenames(rr1), Filenames(rr3)))
+  expect_true(!identical(dirname(Filenames(rr)), tmpCache)) # used to be that the recovery path was Cache file
+
   expect_true(identical(raster::levels(rr), raster::levels(r)))
   expect_true(sum(abs(raster::extent(rr)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
   expect_true(sum(abs(raster::extent(r)[1:4] - raster::extent(StudyArea)[1:4])) > 1)

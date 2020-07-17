@@ -1150,7 +1150,7 @@ maskInputs.sf <- function(x, studyArea, ...) {
 #' @rdname determineFilename
 #' @example inst/examples/example_postProcess.R
 determineFilename <- function(filename2 = TRUE, filename1 = NULL,
-                              destinationPath = getOption("reproducible.destinationPath"),
+                              destinationPath = getOption("reproducible.destinationPath", "."),
                               prefix = "Small", ...) {
   if (!is.null(filename2)) {
     dots <- list(...)
@@ -1174,11 +1174,20 @@ determineFilename <- function(filename2 = TRUE, filename1 = NULL,
 
     filename2 <- if (!identical(filename2, FALSE)) { # allow TRUE or path
       if (isTRUE(filename2) ) {
-        if (is.null(filename1)) {
-          tmpfile <- basename(tempfile(tmpdir = tmpDir()))
-          filename1 <- tmpfile
+        # 1. Take destinationPath, if it exists
+        # 2. Take dirname of filename1, if it exists and is absolute path
+        # 3. Take getwd()
+        theDir <- destinationPath
+        if (is.null(destinationPath)) {
+          if (is.character(filename1)) {
+            if (isAbsolutePath(filename1)) {
+              theDir <- dirname(filename1)
+              message("filename2 is NULL; using dirname(filename1) as destinationPath")
+            }
+          }
         }
-        .prefix(filename1, prefix)
+        filename3 <- normPath(tempfile(tmpdir = theDir, fileext = ".tif"))
+        .prefix(filename3, prefix)
       } else {
         iap <- isAbsolutePath(filename2)
         if (all(iap)) {
@@ -1617,7 +1626,8 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(targetCRS)) {
     attemptGDALAllAtOnce <- if (is(x, "RasterLayer")) attemptGDAL(x, useGDAL = useGDAL) else FALSE
     if (isTRUE(attemptGDALAllAtOnce) ) {
-      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs)
+      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs,
+                               ...)
     } else {
 
 
@@ -1934,20 +1944,21 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 
 
 #' @importFrom raster extension
-cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs) {
+`cropReprojMaskWGDAL` <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs,
+                                destinationPath = getOption("reproducible.destinationPath", "."), ...) {
   message("crop, reproject, mask is using one-step gdalwarp")
 
   browser(expr = exists("._cropReprojMaskWGDAL_1"))
 
   # rasters need to go to same directory that can be unlinked at end without losing other temp files
-  tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
   tempSrcRaster <- bigRastersTmpFile()
   returnToRAM <- FALSE
   if (missing(filename2)) filename2 <- NULL
   if (isTRUE(filename2)) {
-    filename2 <- determineFilename(filename2)
+    filename2 <- determineFilename(filename2, destinationPath = destinationPath)
   } else if (is.null(filename2) | .isFALSE(filename2)) {
     returnToRAM <- TRUE
+    tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
     filename2 <- file.path(tmpRasPath, paste0(x@data@names, "_", rndstr(1, 8)))
   }
   if (nchar(extension(filename2)) == 0)
