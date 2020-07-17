@@ -2047,7 +2047,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
            if (needCutline) {paste0("-cutline ",  "\"", tempSrcShape,"\"", " ")},
            if (needReproject) {paste0("-r ", dots$method)},
            " -overwrite ",
-           " -dstalpha ",
+           # " -dstalpha ",
            if (!dontSpecifyResBCLongLat) {paste("-tr ", paste(tr, collapse = " "))},
            # "-tr ", paste(tr, collapse = " "), " ",
            " -te ", paste(c(cropExtent[1], cropExtent[3], # having this here is like crop to cutline
