@@ -12,6 +12,7 @@ version 1.2.0.9000
 * address permanently or temporarily new changes in GDAL>3 and PROJ>6 in the spatial packages.
 * new function `file.move` used to rename/copy files across disks (a situation where `file.rename` would fail)
 * all `DBI` type functions now have default `cachePath` of `getOption("reproducible.cachePath")`
+* `Cache(prepInputs, ...` on a file-backed `Raster*` class object now gives the non-Cache repository folder as the `filename(returnRaster)`. Previously, the return object would contain the cache repository as the folder for the file-backed `Raster*` 
 
 ## Dependency changes
 * net reduction in number of packages that are imported from by 14. Removed completely: `backports`, `memoise`, `quickPlot`, `R.utils`, `remotes`, `tools`, and `versions`; moved to Suggests: `fastdigest`, `gdalUtils`, `googledrive`, `httr`, `qs`, `rgdal`, `sf`, `testthat`; added: `Require`. Now there are 12 non-base packages listed in Imports. This is down from 31 prior to Ver 1.0.0.
