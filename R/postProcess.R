@@ -596,7 +596,6 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
   return(x)
 }
 
-
 #' Project \code{Raster*} or {Spatial*} or \code{sf} objects
 #'
 #' A simple wrapper around the various different tools for these GIS types.
@@ -887,10 +886,9 @@ projectInputs.sf <- function(x, targetCRS, ...) {
       targetCRS <- sf::st_crs(targetCRS@projargs)
     x <- sf::st_transform(x = x, crs = targetCRS, ...)
     if (!identical(sf::st_crs(x), targetCRS)) {
-      sf::st_crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
-      #  they should be
+      ## sometimes the proj4string is rearranged, so they are not identical; they should be
+      sf::st_crs(x) <- targetCRS
     }
-
   }
   x
 }
@@ -912,8 +910,8 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
     }
     x <- spTransform(x = x, CRSobj = targetCRS)
     if (!identical(crs(x), targetCRS)) {
-      crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
-      #  they should be
+      ## sometimes the proj4string is rearranged, so they are not identical; they should be
+      crs(x) <- targetCRS
     }
   }
   x
@@ -1076,7 +1074,7 @@ maskInputs.sf <- function(x, studyArea, ...) {
     if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
       y2 <- sapply(y1, function(x) length(x) == 1)
-      ## TODO: usevapply instead of sapply; sapply is not type-safe
+      ## TODO: use vapply instead of sapply; sapply is not type-safe
       #y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
       y <- x[y2,]
     } else {
@@ -1084,8 +1082,8 @@ maskInputs.sf <- function(x, studyArea, ...) {
       y <- sf::st_intersection(x, studyArea)
     }
     if (!identical(crs(y), crs(x))) {
-      crs(y) <- crs(x) # sometimes the proj4string is rearranged, so they are not identical:
-      #  they should be
+      ## sometimes the proj4string is rearranged, so they are not identical; thef should be
+      crs(y) <- crs(x)
     }
 
     return(y)
