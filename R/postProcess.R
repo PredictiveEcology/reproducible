@@ -958,8 +958,10 @@ maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
 }
 
-#' @export
 #' @param maskWithRTM Logical. If \code{TRUE}, then the default,
+#'
+#' @export
+#' @importFrom raster stack
 #' @rdname maskInputs
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   message("    masking...")
@@ -1847,12 +1849,14 @@ roundTo6Dec <- function(x) {
   x
 }
 
+#' @importFrom utils capture.output
 suppressWarningsSpecific <- function(code, falseWarnings) {
   warn <- tryCatch(capture.output(type = "message",
-                         suppressWarnings(withCallingHandlers(yy <- eval(code),
-                                                              warning = function(xx) {
-                                                                message(paste0("warn::", xx$message))
-                                                              }))), error = function(xx) stop(xx$message))
+                                  suppressWarnings(withCallingHandlers({
+                                    yy <- eval(code)
+                                  }, warning = function(xx) {
+                                    message(paste0("warn::", xx$message))
+                                  }))), error = function(xx) stop(xx$message))
 
   trueWarnings <- grep("warn::", warn, value = TRUE)
   trueWarnings <- grep(falseWarnings, trueWarnings,
@@ -1863,12 +1867,14 @@ suppressWarningsSpecific <- function(code, falseWarnings) {
   return(yy)
 }
 
+#' @importFrom utils capture.output
 captureWarningsToAttr <- function(code) {
   warn <- capture.output(type = "message",
-                         suppressWarnings(withCallingHandlers(yy <- eval(code),
-                                                              warning = function(xx) {
-                                                                message(paste0("warn::", xx$message))
-                                                              })))
+                         suppressWarnings(withCallingHandlers({
+                           yy <- eval(code)
+                         }, warning = function(xx) {
+                           message(paste0("warn::", xx$message))
+                         })))
   trueWarnings <- grepl("warn::.*", warn)
   if (length(warn[!trueWarnings]))
     message(paste(warn[!trueWarnings], collapse = "\n  "))
