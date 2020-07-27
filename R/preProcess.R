@@ -1,3 +1,109 @@
+#' @param n Number of non-null arguments passed to \code{preProcess}.
+#' E.g., passing \code{n = 1} returns combinations with only a single non-NULL parameter.
+#' If \code{NULL} (default), all parameter combinations are returned.
+#'
+#' @export
+#' @rdname preProcess
+preProcessParams <- function(n = NULL) {
+  p1 <- data.frame(
+    url = c("char", "NULL", "NULL", "NULL"),
+    targetFile = c("NULL", "char", "NULL", "NULL"),
+    archive = c("NULL", "NULL", "char", "NULL"),
+    alsoExtract = c("NULL", "NULL", "NULL", "char"),
+    Result = c("Download, extract all files if an archive, guess at 'targetFile', load into R.",
+               "Load 'targetFile' into R.",
+               "Extract all files, guess at 'targetFile', load into R.",
+               "Guess at 'targetFile' from files in 'alsoExtract', load into R."),
+    FirstChecksum = c("Write or append all new files.",
+                      "Write or append 'targetFile'.",
+                      "Write or append all new files.",
+                      "Write or append all new files."),
+    SecondChecksum = c("Same as first; no 'targetFile'.*",
+                       "No downloading, so no checksums used.",
+                       "No downloading, so no checksums used.",
+                       "No downloading, so no checksums used."),
+    stringsAsFactors = FALSE
+  )
+  p2 <- data.frame(
+    url = c("char", "char", "char", "NULL", "NULL", "NULL"),
+    targetFile = c("char", "NULL", "NULL", "char", "char", "NULL"),
+    archive = c("NULL", "char", "NULL", "NULL", "char", "char"),
+    alsoExtract = c("NULL", "NULL", "char", "char", "NULL", "char"),
+    Result = c("Download, extract all files if an archive, load 'targetFile' into R.",
+               "Download, extract all files, guess at 'targetFile', load into R.",
+               "Download, extract only named files in 'alsoExtract', guess at 'targetFile', load into R.",
+               "Load 'targetFile' into R.",
+               "Extract all files, load 'targetFile' into R.",
+               " Extract only named files in 'alsoExtract', guess at 'targetFile', load into R."),
+    FirstChecksum = c("Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files."),
+    SecondChecksum = c("Use Checksums, skip downloading.",
+                       "Same as first; no 'targetFile'.*",
+                       "Same as first; no 'targetFile'.*",
+                       "No downloading, so no checksums used.",
+                       "No downloading, so no checksums used.",
+                       "No downloading, so no checksums used."),
+    stringsAsFactors = FALSE
+  )
+  p3 <- data.frame(
+    url = c("char", "char", "char", "char", "char", "char", "NULL"),
+    targetFile = c("char", "NULL", "NULL", "char", "char", "char", "char"),
+    archive = c("char", "char", "char", "NULL", "NULL", "char", "char"),
+    alsoExtract = c("NULL", "char", "'similar'", "char", "'similar", "NULL", "char"),
+    Result = c("Download, extract all files, load 'targetFile' into R.",
+               "Download, extract files named in 'alsoExtract', guess at 'targetFile', load into R.",
+               "Download, extract all files (can't understand \"similar\"), guess at 'targetFile', load into R.",
+               "Download, if an archive, extract files named in 'targetFile' and 'alsoExtract', load 'targetFile' into R.",
+               "Download, if an archive, extract files with same base as 'targetFile', load 'targetFile' into R.",
+               "Download, extract all files from archive, load 'targetFile' into R.",
+               "Extract  files named in 'alsoExtract' from archive, load 'targetFile' into R."),
+    FirstChecksum = c("Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files.",
+                      "Write or append all new files."),
+    SecondChecksum = c("Use Checksums, skip downloading.",
+                       "Use Checksums, skip downloading.",
+                       "Same as first; no 'targetFile'.",
+                       "Use Checksums, skip downloading.",
+                       "Use Checksums, skip downloading.",
+                       "Use Checksums, skip downloading.",
+                       "No downloading, so no checksums used."),
+    stringsAsFactors = FALSE
+  )
+  p4 <- data.frame(
+    url = c("char", "char"),
+    targetFile = c("char", "char"),
+    archive = c("char", "char"),
+    alsoExtract = c("char", "'similar'"),
+    Result = c("Download, extract files named in 'targetFile' and 'alsoExtract', load 'targetFile' into R.",
+               "Download, extract all files with same basename as 'targetFile', load 'targetFile' into R."),
+    FirstChecksum = c("Write or append all new files.",
+                      "Write or append all new files."),
+    SecondChecksum = c("Use Checksums, skip downloading.",
+                       "Use Checksums, skip downloading."),
+    stringsAsFactors = FALSE
+  )
+
+  if (is.null(n)) {
+    rbind(p1, p2, p3, p4)
+  } else if (n == 1) {
+    p1
+  } else if (n == 2) {
+    p2
+  } else if (n == 3) {
+    p3
+  } else if (n == 4) {
+    p4
+  }
+}
+
 #' Download, Checksum, Extract files
 #'
 #' This does downloading (via \code{downloadFile}), checksumming (\code{Checksums}),
@@ -6,43 +112,20 @@
 #' This is the first stage of three used in \code{prepInputs}.
 #'
 #' @return
-#' A list with 5 elements, \code{checkSums} (the result of a \code{Checksums}
-#' after downloading), \code{dots} (cleaned up ..., including deprecated argument checks),
-#' \code{fun} (the function to be used to load the preProcessed object from disk),
+#' A list with 5 elements: \code{checkSums} (the result of a \code{Checksums}
+#' after downloading), \code{dots} (cleaned up \code{...}, including deprecated argument checks),
+#' \code{fun} (the function to be used to load the \code{preProcess}ed object from disk),
 #' and \code{targetFilePath} (the fully qualified path to the \code{targetFile}).
 #'
 #' @section Combinations of \code{targetFile}, \code{url}, \code{archive}, \code{alsoExtract}:
 #'
-#'   \tabular{ccccclll}{
-#'  # Params \tab \code{url} \tab \code{targetFile} \tab \code{archive}\tab \code{alsoExtract} \tab Result \tab Checksum 1st time \tab Checksum 2nd time \cr
-#'  ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------  \cr
-#' \bold{1} \tab      char \tab NULL \tab NULL \tab NULL             \tab Download, extract all files if an archive, guess at \code{targetFile}, load into R \tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
-#'      \tab NULL \tab char \tab NULL \tab NULL             \tab load \code{targetFile} into R \tab write or append \code{targetFile} \tab no downloading, so no checksums use \cr
-#'      \tab NULL \tab NULL \tab char \tab NULL             \tab extract all files, guess at \code{targetFile}, load into R \tab write or append all new files \tab no downloading, so no checksums use \cr
-#'      \tab NULL \tab NULL \tab NULL \tab char             \tab guess at \code{targetFile} from files in \code{alsoExtract}, load into R \tab write or append all new files \tab no downloading, so no checksums use \cr
-#'  ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
-#' \bold{2} \tab char \tab char \tab NULL \tab NULL             \tab Download, extract all files if an archive, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
-#'      \tab char \tab NULL \tab char \tab NULL             \tab Download, extract all files, guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
-#'      \tab char \tab NULL \tab NULL \tab char             \tab Download, extract only named files in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
-#'      \tab NULL \tab char \tab NULL \tab char             \tab load \code{targetFile} into R \tab write or append all new files \tab no downloading, so no checksums use \cr
-#'      \tab NULL \tab char \tab char \tab NULL             \tab Extract all files, load \code{targetFile} into R\tab write or append all new files \tab no downloading, so no checksums use \cr
-#'      \tab NULL \tab NULL \tab char \tab char             \tab Extract only named files in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab no downloading, so no checksums use \cr
-#'  ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
-#' \bold{3} \tab char \tab char \tab char \tab NULL             \tab Download, extract all files, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
-#'      \tab char \tab NULL \tab char \tab char             \tab Download, extract files named in \code{alsoExtract}, guess at \code{targetFile}, load into R\tab write or append all new files \tab use Checksums, skip downloading \cr
-#'      \tab char \tab NULL \tab char \tab \code{"similar"} \tab Download, extract all files (can't understand "similar"), guess at \code{targetFile}, load into R\tab write or append all new files \tab same as 1st -- no \code{targetFile}* \cr
-#'      \tab char \tab char \tab NULL \tab char             \tab Download, if an archive, extract files named in \code{targetFile} and \code{alsoExtract}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
-#'      \tab char \tab char \tab NULL \tab \code{"similar"} \tab Download, if an archive, extract files with same base as \code{targetFile}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
-#'      \tab char \tab char \tab char \tab NULL             \tab Download, extract all files from archive, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
-#'      \tab NULL \tab char \tab char \tab char             \tab Extract  files named in \code{alsoExtract} from archive, load \code{targetFile} into R\tab write or append all new files \tab no downloading, so no checksums use \cr
-#'  ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \tab ------ \cr
-#' \bold{4} \tab char \tab char \tab char \tab char             \tab Download, extract files named in \code{targetFile} and \code{alsoExtract}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
-#'      \tab char \tab char \tab char \tab \code{"similar"} \tab Download, extract all files with same base as \code{targetFile}, load \code{targetFile} into R\tab write or append all new files \tab use Checksums, skip downloading \cr
-#'   }
+#'   Use \code{preProcessParams()} for a table describing various parameter combinations and their
+#'   outcomes.
+#'
 #'  \code{*} If the \code{url} is a file on Google Drive, checksumming will work
 #'  even without a \code{targetFile} specified because there is an initial attempt
 #'  to get the remove file information (e.g., file name). With that, the connection
-#'  between the \code{url} and the filename used in the CHECKSUMS.txt file can be made.
+#'  between the \code{url} and the filename used in the \file{CHECKSUMS.txt} file can be made.
 #'
 #' @inheritParams prepInputs
 #' @inheritParams downloadFile
@@ -50,7 +133,6 @@
 #' @author Eliot McIntire
 #' @export
 #' @importFrom data.table fread setDT
-#' @importFrom tools file_path_sans_ext
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),
                        fun = NULL, dlFun = NULL,
@@ -96,9 +178,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (is.null(alsoExtract)) {
       if (file.exists(checkSumFilePath)) {
         if (file.size(checkSumFilePath) > 0) {
-          # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with same base name, without extension
+          # if alsoExtract is not specified, then try to find all files in CHECKSUMS.txt with
+          # same base name, without extension
           checksumsTmp <- as.data.table(read.table(checkSumFilePath))
-          alsoExtract <- grep(paste0(file_path_sans_ext(targetFile),"\\."), checksumsTmp$file,
+          alsoExtract <- grep(paste0(filePathSansExt(targetFile),"\\."), checksumsTmp$file,
                               value = TRUE)
           rm(checksumsTmp) # clean up
         }
@@ -115,6 +198,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   }
 
   if (!dir.exists(destinationPath)) {
+    # if (!identical(file.exists(destinationPath), isFile(destinationPath))) stop("isFile is not same as file.exists")
     if (isFile(destinationPath)) {
       stop("destinationPath must be a directory")
     }
@@ -137,6 +221,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   #   want if targetFile, archive, alsoExtract not specified
   reproducible.inputPaths <- getOption("reproducible.inputPaths", NULL)
   if (!is.null(reproducible.inputPaths))
+    reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
+  if (!is.null(reproducible.inputPaths))
     reproducible.inputPaths <- path.expand(reproducible.inputPaths)
 
   for (dp in unique(c(destinationPath, reproducible.inputPaths))) {
@@ -154,7 +240,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   }
-
 
   if (is(checkSums, "try-error")) {
     needChecksums <- 1
@@ -184,7 +269,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
                                       newFilesToCheck = archive,
                                       checkSums = checkSums)
-
       }
 
     }
@@ -229,7 +313,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     results <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
                                       alsoExtract = alsoExtract, destinationPath = dp,
                                       checkSums = checkSums, needChecksums = needChecksums,
-                                      checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
+                                      checkSumFilePath = checkSumFilePath,
+                                      filesToChecksum = filesToChecksum,
                                       targetFile = targetFile, quick = quick, .tempPath = .tempPath)
 
     checkSums <- results$checkSums
@@ -278,9 +363,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         gsub("^\\.", "^\\\\.", destinationPathUser)
       else
         destinationPathUser
-      archive <- gsub(archive, pattern = patt,
-                      replacement = destinationPath)
-
+      archive <- gsub(archive, pattern = patt, replacement = destinationPath)
     }
   }
 
@@ -353,11 +436,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Stage 1 - Extract from archive
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
   if (isTRUE(!all(isOK))) {
-    filesExtracted <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
-                                             alsoExtract = alsoExtract, destinationPath = destinationPath,
-                                             checkSums = checkSums, needChecksums = needChecksums,
-                                             checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-                                             targetFile = targetFile, quick = quick, .tempPath = .tempPath)
+    filesExtracted <- .tryExtractFromArchive(archive = archive,
+                                             neededFiles = neededFiles,
+                                             alsoExtract = alsoExtract,
+                                             destinationPath = destinationPath,
+                                             checkSums = checkSums,
+                                             needChecksums = needChecksums,
+                                             checkSumFilePath = checkSumFilePath,
+                                             filesToChecksum = filesToChecksum,
+                                             targetFile = targetFile,
+                                             quick = quick, .tempPath = .tempPath)
 
     filesExtr <- filesExtracted$filesExtr
     filesToChecksum <- filesExtracted$filesToChecksum
@@ -403,16 +491,20 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # if it was a nested file
   browser(expr = exists("._preProcess_8"))
 
-  if (any(file_ext(neededFiles) %in% c("zip", "tar", "rar"))) {
-    nestedArchives <- .basename(neededFiles[file_ext(neededFiles) %in% c("zip", "tar", "rar")])
+  if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar"))) {
+    nestedArchives <- .basename(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
     nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
-    message(paste0("There are still archives in the extracted files. preProcess will try to extract the files from ",
-                   .basename(nestedArchives), ". If this is incorrect, please supply archive"))
+    message("There are still archives in the extracted files.",
+            " preProcess will try to extract the files from ", .basename(nestedArchives), ".",
+            " If this is incorrect, please supply archive.")
     # Guess which files inside the new nested
     nestedTargetFile <- .listFilesInArchive(archive = nestedArchives)
-    outFromSimilar <- .checkForSimilar(alsoExtract = alsoExtract, archive = nestedArchives,
-                                       neededFiles = nestedTargetFile, destinationPath = destinationPath,
-                                       checkSums = checkSums, targetFile = targetFile)
+    outFromSimilar <- .checkForSimilar(alsoExtract = alsoExtract,
+                                       archive = nestedArchives,
+                                       neededFiles = nestedTargetFile,
+                                       destinationPath = destinationPath,
+                                       checkSums = checkSums,
+                                       targetFile = targetFile)
     neededFiles <- outFromSimilar$neededFiles
     checkSums <- outFromSimilar$checkSums
 
@@ -432,11 +524,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
       needChecksums <- 0
     }, add = TRUE)
-    extractedFiles <- .tryExtractFromArchive(archive = nestedArchives, neededFiles = neededFiles,
-                                             alsoExtract = alsoExtract, destinationPath = destinationPath,
-                                             checkSums = checkSums, needChecksums = needChecksums,
-                                             checkSumFilePath = checkSumFilePath, filesToChecksum = filesToChecksum,
-                                             targetFile = targetFile, quick = quick, .tempPath = .tempPath)
+    extractedFiles <- .tryExtractFromArchive(archive = nestedArchives,
+                                             neededFiles = neededFiles,
+                                             alsoExtract = alsoExtract,
+                                             destinationPath = destinationPath,
+                                             checkSums = checkSums,
+                                             needChecksums = needChecksums,
+                                             checkSumFilePath = checkSumFilePath,
+                                             filesToChecksum = filesToChecksum,
+                                             targetFile = targetFile,
+                                             quick = quick,
+                                             .tempPath = .tempPath)
     filesExtr <- c(filesExtr, extractedFiles$filesExtr)
   }
   targetParams <- .guessAtTargetAndFun(targetFilePath, destinationPath,
@@ -485,14 +583,15 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       append = needChecksums >= 2
     )
     if (!is.null(reproducible.inputPaths) && needChecksums != 3) {
-      checkSumFilePathInputPaths <- file.path(reproducible.inputPaths[[1]],
-                                              "CHECKSUMS.txt")
-      suppressMessages(checkSums <- appendChecksumsTable(
-        checkSumFilePath = checkSumFilePathInputPaths,
-        filesToChecksum = unique(.basename(filesToChecksum)),
-        destinationPath = destinationPath,
-        append = needChecksums == 2
-      ))
+      checkSumFilePathInputPaths <- file.path(reproducible.inputPaths[[1]], "CHECKSUMS.txt")
+      suppressMessages({
+        checkSums <- appendChecksumsTable(
+          checkSumFilePath = checkSumFilePathInputPaths,
+          filesToChecksum = unique(.basename(filesToChecksum)),
+          destinationPath = destinationPath,
+          append = needChecksums == 2
+        )
+      })
     }
     on.exit({
       needChecksums <- 0
@@ -620,7 +719,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @keywords internal
 .similarFilesInCheckSums <- function(file, checkSums) {
   if (NROW(checkSums)) {
-    anySimilarInCS <- checkSums[grepl(paste0(file_path_sans_ext(file),"\\."),
+    anySimilarInCS <- checkSums[grepl(paste0(filePathSansExt(file),"\\."),
                                       checkSums$expectedFile),]$result
     if (length(anySimilarInCS)) {
       isTRUE(all(compareNA("OK", anySimilarInCS)))
@@ -655,7 +754,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       allOK <- .similarFilesInCheckSums(targetFile, checkSums)
       if (!allOK) {
         filePatternToKeep <- gsub(.basename(targetFile),
-                                  pattern = file_ext(.basename(targetFile)), replacement = "")
+                                  pattern = fileExt(.basename(targetFile)), replacement = "")
         filesToGet <- grep(allFiles, pattern = filePatternToKeep, value = TRUE)
         neededFiles <- unique(c(neededFiles, filesToGet))
       }
@@ -778,7 +877,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #'
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
-#' @importFrom testthat capture_warnings
 #'
 #' @examples
 #' library(datasets)
@@ -837,9 +935,12 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
     dups <- duplicated(.basename(from))
 
     # Try hard link first -- the only type that R deeply recognizes
-    warns <- testthat::capture_warnings({
-      result <- file.link(from[!dups], to)
-    })
+    result <-  captureWarningsToAttr(
+      file.link(from[!dups], to)
+    )
+    warns <- attr(result, "warning")
+    attr(result, "warning") <- NULL
+
     if (isTRUE(all(result))) {
       message("Hardlinked version of file created at: ", toCollapsed, ", which points to "
               , fromCollapsed, "; no copy was made.")
@@ -851,7 +952,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
     }
 
     # On *nix types -- try symlink
-    if (isFALSE(all(result)) && isTRUE(symlink)) {
+    if (.isFALSE(all(result)) && isTRUE(symlink)) {
       if (!isWindows()) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
@@ -861,7 +962,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
       }
     }
 
-    if (isFALSE(all(result))) {
+    if (.isFALSE(all(result))) {
       result <- file.copy(from, to)
       message("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed)
     }
@@ -961,7 +1062,6 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
   return(fileExt)
 }
 
-#' @importFrom testthat capture_warnings
 #' @keywords internal
 .guessFileExtension <- function(file) {
   if (isWindows()) {
@@ -971,16 +1071,23 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
       findFile <- file.exists(possLocs)
       if (any(findFile))
         fileLoc <- possLocs[findFile][1]
-      warn <- testthat::capture_warnings({
-        magicNumber <- system(paste(fileLoc, file), intern = TRUE)
-      })
+
+      magicNumber <- captureWarningsToAttr(
+        system(paste(fileLoc, file), intern = TRUE)
+      )
+      warn <- attr(magicNumber, "warning")
+      attr(magicNumber, "warning") <- NULL
+
       if (length(warn) > 0) {
         splitted <- unlist(strsplit(x = file, split = ":/"))
         fileAdapted <- file.path(paste0("/mnt/", tolower(splitted[1])), splitted[2])
-        warn <- testthat::capture_warnings({
-          magicNumber <- shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE,
-                               wait = TRUE, translate = FALSE, mustWork = TRUE)
-        })
+        magicNumber <- captureWarningsToAttr(
+          shell(paste0("'file ", fileAdapted, "'"), "bash", intern = TRUE,
+                wait = TRUE, translate = FALSE, mustWork = TRUE)
+        )
+        warn <- attr(magicNumber, "warning")
+        attr(magicNumber, "warning") <- NULL
+
       }
       fileExt <- if (length(warn) == 0) {
         .decodeMagicNumber(magicNumberString = magicNumber)
@@ -1003,8 +1110,8 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
 .fixNoFileExtension <- function(downloadFileResult, targetFile, archive,
                                 destinationPath) {
   if (!is.null(downloadFileResult$downloaded) &&
-      identical(file_ext(normPath(.basename(downloadFileResult$downloaded))), "")) {
-    if (!is.null(targetFile) && !identical(file_ext(normPath(.basename(downloadFileResult$neededFiles))), "")) {
+      identical(fileExt(normPath(.basename(downloadFileResult$downloaded))), "")) {
+    if (!is.null(targetFile) && !identical(fileExt(normPath(.basename(downloadFileResult$neededFiles))), "")) {
       if (is.null(archive)) {
         message(
           "Downloaded file has no extension: targetFile is provided, but archive is not.\n",
@@ -1013,7 +1120,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
         )
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
                                           downloadFileResult$neededFiles)
-        invisible(file.rename(
+        invisible(file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1024,7 +1131,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
         )
         newFileWithExtension <- normPath(file.path(dirname(downloadFileResult$downloaded),
                                                    .basename(downloadFileResult$archive)))
-        invisible(file.rename(
+        invisible(file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1037,7 +1144,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
         downloadFileResult$neededFiles <- .basename(archive)
         newFileWithExtension <- file.path(normPath(dirname(downloadFileResult$downloaded)),
                                            downloadFileResult$neededFiles)
-        invisible(file.rename(
+        invisible(file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
@@ -1054,7 +1161,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
         }
         downloadFileResult$archive <- file.path(normPath(destinationPath),
                                                 paste0(downloadFileResult$neededFiles, fileExt))
-        invisible(file.rename(
+        invisible(file.move(
           from = file.path(normPath(downloadFileResult$downloaded)),
           to = normPath(downloadFileResult$archive)))
         downloadFileResult$neededFiles <- .listFilesInArchive(downloadFileResult$archive)

@@ -30,16 +30,16 @@ test_that("prepInputs doesn't work (part 3)", {
     nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                             "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
     #dPath <- file.path(tmpdir, "ecozones")
-    nc <- st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
-    nc1 <- st_transform(nc, nonLatLongProj)
-    #ncSmall <- st_buffer(nc1, dist = -10000)
-    ncSmall <- st_as_sf(StudyArea2)
-    ncSmall <- st_transform(ncSmall, nonLatLongProj)
-    ncSmall <- st_buffer(ncSmall, dist = -10000)
+    nc <- sf::st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
+    nc1 <- sf::st_transform(nc, nonLatLongProj)
+    #ncSmall <- sf::st_buffer(nc1, dist = -10000)
+    ncSmall <- sf::st_as_sf(StudyArea2)
+    ncSmall <- sf::st_transform(ncSmall, nonLatLongProj)
+    ncSmall <- sf::st_buffer(ncSmall, dist = -10000)
     b <- postProcess(nc1, studyArea = ncSmall, filename2 = NULL)
     expect_true(is(b, "sf"))
     expect_true(identical(extent(b), extent(ncSmall)))
-    expect_true(st_area(b) < st_area(nc1))
+    expect_true(sf::st_area(b) < sf::st_area(nc1))
 
     r <- suppressWarnings(raster(nc1, res = 1000)) # TODO: temporary until raster crs fixes
     rSmall <- suppressWarnings(raster(ncSmall, res = 1000)) # TODO: temporary until raster crs fixes

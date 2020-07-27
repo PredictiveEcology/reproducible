@@ -55,17 +55,18 @@ tmpDir <- file.path(tempdir(), "reproducible_examples", "Cache")
 checkPath(tmpDir, create = TRUE)
 
 ras <- raster(extent(0, 1000, 0, 1000), vals = 1:1e6, res = 1)
-crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +ellps=WGS84"
+crs(ras) <- "+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"
 
-newCRS <- "+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+newCRS <- "+init=epsg:4326" # A longlat crs
+
 # No Cache
-system.time(map1 <- projectRaster(ras, crs = newCRS))
+system.time(suppressWarnings(map1 <- projectRaster(ras, crs = newCRS))) # Warnings due to new PROJ
 
 # Try with memoise for this example -- for many simple cases, memoising will not be faster
 opts <- options("reproducible.useMemoise" = TRUE)
 # With Cache -- a little slower the first time because saving to disk
-system.time(map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir,
-                         notOlderThan = Sys.time()))
+system.time(suppressWarnings(map1 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir,
+                         notOlderThan = Sys.time())))
 
 # vastly faster the second time
 system.time(map2 <- Cache(projectRaster, ras, crs = newCRS, cacheRepo = tmpDir))
@@ -225,7 +226,7 @@ all.equal(notCached, reRun) ## TRUE
 Nested caching, which is when Caching of a function occurs inside an outer function, which is itself cached.
 This is a critical element to working within a reproducible work flow.
 It is not enough during development to cache flat code chunks, as there will be many levels of "slow" functions.
-Ideally, at all points in a development cycle, it should be possible to get to any line of code starting from the very initial steps, running through everything up to that point, in less that 1 second.
+Ideally, at all points in a development cycle, it should be possible to get to any line of code starting from the very initial steps, running through everything up to that point, in less than a few seconds.
 If the workflow can be kept very fast like this, then there is a guarantee that it will work at any point.
 
 ```{r nested}
@@ -311,10 +312,4 @@ In general, we feel that a liberal use of `Cache` will make a re-usable and repr
 `shiny` apps can be made, taking advantage of `Cache`. 
 Indeed, much of the difficulty in managing data sets and saving them for future use, can be accommodated by caching.
 
-## Nested Caching
 
-#### Cache individual functions
-
-`Cache(<functionName>, <other arguments>)`
-
-This will allow fine scale control of individual function calls.

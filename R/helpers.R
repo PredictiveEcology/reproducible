@@ -53,7 +53,6 @@ chooseCRANmirror2 <- function() {
 #'
 #' @author Jean Marchal and Alex Chubaty
 #' @export
-#' @importFrom tools file_ext file_path_sans_ext
 #' @rdname prefix
 #'
 #' @examples
@@ -74,8 +73,8 @@ chooseCRANmirror2 <- function() {
 #' @name suffix
 #' @rdname prefix
 .suffix <- function(f, suffix = "") {
-  file.path(dirname(f), paste0(tools::file_path_sans_ext(basename(f)), suffix,
-                               ".", tools::file_ext(f)))
+  file.path(dirname(f), paste0(filePathSansExt(basename(f)), suffix,
+                               ".", fileExt(f)))
 }
 
 #' Get a unique name for a given study area
@@ -97,8 +96,19 @@ setGeneric("studyAreaName", function(studyArea, ...) {
 setMethod(
   "studyAreaName",
   signature = "SpatialPolygonsDataFrame",
-  definition = function (studyArea, ...) {
-    digest(studyArea[, -c(1:ncol(studyArea))], algo = "xxhash64") ## TODO: use `...` to pass `algo`
+  definition = function(studyArea, ...) {
+    studyArea <- studyArea[, -c(1:ncol(studyArea))]
+    studyArea <- as(studyArea, "SpatialPolygons")
+    studyAreaName(studyArea, ...)
+})
+
+#' @export
+#' @rdname studyAreaName
+setMethod(
+  "studyAreaName",
+  signature = "SpatialPolygons",
+  definition = function(studyArea, ...) {
+    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 
 #' Identify which formals to a function are not in the current \code{...}
@@ -112,11 +122,13 @@ setMethod(
 #'        provided explicitly.
 #' @param dots Optional. If this is provided via say \code{dots = list(...)},
 #'             then this will cause the \code{...} to be ignored.
-.formalsNotInCurrentDots <- function(fun, ..., dots) {
+#' @param formalNames Optional character vector. If provided then it will override the \code{fun}
+.formalsNotInCurrentDots <- function(fun, ..., dots, formalNames) {
+  if (missing(formalNames)) formalNames <- names(formals(fun))
   if (!missing(dots)) {
-    out <- names(dots)[!(names(dots) %in% names(formals(fun)))]
+    out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
-    out <- names(list(...))[!(names(list(...)) %in% names(formals(fun)))]
+    out <- names(list(...))[!(names(list(...)) %in% formalNames)]
   }
   out
 }
@@ -193,7 +205,7 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
     if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
     result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
-      backoff <- runif(n = 1, min = 0, max = exponentialDecayBase^i - 1)
+      backoff <- sample(1:1000/1000, size = 1) * (exponentialDecayBase^i - 1)
       if (backoff > 3) {
         message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
       }
@@ -226,18 +238,124 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
 #' @param minVersion Character string indicating minimum version of package
 #'   that is needed
 #' @param messageStart A character string with a prefix of message to provide
+#' @param stopOnFALSE Logical. If \code{TRUE}, this function will create an
+#'   error (i.e., \code{stop}) if the function returns \code{FALSE}; otherwise
+#'   it simply returns \code{FALSE}
 .requireNamespace <- function(pkg = "methods", minVersion = NULL,
-                        messageStart = paste0(pkg, if (!is.null(minVersion)) paste0("(>=", minVersion, ")"), " is required. Try: ")) {
+                              stopOnFALSE = FALSE,
+                              messageStart = paste0(pkg, if (!is.null(minVersion))
+                                paste0("(>=", minVersion, ")"), " is required. Try: ")) {
   need <- FALSE
-  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE, warn.conflicts = FALSE))) {
+  if (suppressWarnings(!requireNamespace(pkg, quietly = TRUE))) {
     need <- TRUE
   } else {
     if (isTRUE(packageVersion(pkg) < minVersion))
       need <- TRUE
   }
-  if (need) {
-    message(messageStart,
-         "install.packages('",pkg,"')")
-  }
+  if (isTRUE(stopOnFALSE) && isTRUE(need))
+    stop(requireNamespaceMsg(pkg))
   !need
 }
+
+#' Use message to print a clean square data structure
+#'
+#' Sends to \code{message}, but in a structured way so that a data.frame-like can
+#' be cleanly sent to messaging.
+#'
+#' @param df A data.frame, data.table, matrix
+#' @param round An optional numeric to pass to \code{round}
+#' @param colour Passed to \code{getFromNamespace(colour, ns = "crayon")},
+#'   so any colour that \code{crayon} can use
+#' @param colnames Logical or \code{NULL}. If \code{TRUE}, then it will print
+#'   column names even if there aren't any in the \code{df} (i.e., they will)
+#'   be \code{V1} etc., \code{NULL} will print them if they exist, and \code{FALSE}
+#'   which will omit them.
+#'
+#' @export
+#' @importFrom data.table is.data.table as.data.table
+#' @importFrom utils capture.output
+messageDF <- function(df, round, colour = NULL, colnames = NULL) {
+  origColNames <- if (is.null(colnames) | isTRUE(colnames)) colnames(df) else NULL
+
+  if (is.matrix(df))
+    df <- as.data.frame(df)
+  if (!is.data.table(df)) {
+    df <- as.data.table(df)
+  }
+  df <- Copy(df)
+  skipColNames <- if (is.null(origColNames) & !isTRUE(colnames)) TRUE else FALSE
+  if (!missing(round)) {
+    isNum <- sapply(df, is.numeric)
+    isNum <- colnames(df)[isNum]
+    for (Col in isNum) {
+      set(df, NULL, Col, round(df[[Col]], round))
+    }
+  }
+  outMess <- capture.output(df)
+  if (skipColNames) outMess <- outMess[-1]
+  out <- lapply(outMess, function(x) {
+    if (!is.null(colour)) {
+      message(getFromNamespace(colour, ns = "crayon")(x))
+    } else {
+    message(x)
+    }
+  })
+}
+
+filePathSansExt <- function(x) {
+  sub("([^.]+)\\.[[:alnum:]]+$", "\\1", x)
+}
+
+fileExt <- function(x) {
+  pos <- regexpr("\\.([[:alnum:]]+)$", x)
+  ifelse(pos > -1L, substring(x, pos + 1L), "")
+}
+
+isDirectory <- function(pathnames) {
+  keep <- is.character(pathnames)
+  if (length(pathnames) == 0) return(logical())
+  if (.isFALSE(keep)) stop("pathnames must be character")
+  origPn <- pathnames
+  pathnames <- normPath(pathnames[keep])
+  id <- dir.exists(pathnames)
+  id[id] <- file.info(pathnames[id])$isdir
+  names(id) <- origPn
+  id
+}
+
+isFile <- function(pathnames) {
+  keep <- is.character(pathnames)
+  if (.isFALSE(keep)) stop("pathnames must be character")
+  origPn <- pathnames
+  pathnames <- normPath(pathnames[keep])
+  iF <- file.exists(pathnames)
+  iF[iF] <- !file.info(pathnames[iF])$isdir
+  names(iF) <- origPn
+  iF
+}
+
+isAbsolutePath <- function(pathnames) {
+  # modified slightly from R.utils::isAbsolutePath
+  keep <- is.character(pathnames)
+  if (.isFALSE(keep)) stop("pathnames must be character")
+  origPn <- pathnames
+  nPathnames <- length(pathnames)
+  if (nPathnames == 0L)
+    return(logical(0L))
+  if (nPathnames > 1L) {
+    res <- sapply(pathnames, FUN = isAbsolutePath)
+    return(res)
+  }
+  if (is.na(pathnames))
+    return(FALSE)
+  if (regexpr("^~", pathnames) != -1L)
+    return(TRUE)
+  if (regexpr("^.:(/|\\\\)", pathnames) != -1L)
+    return(TRUE)
+  components <- strsplit(pathnames, split = "[/\\]")[[1L]]
+  if (length(components) == 0L)
+    return(FALSE)
+  (components[1L] == "")
+}
+
+.isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x

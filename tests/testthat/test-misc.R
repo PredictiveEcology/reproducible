@@ -90,7 +90,9 @@ test_that("setting options works correctly", {
   a <- reproducibleOptions()
   a1 <- a[sapply(a, function(x) !is.null(x))]
   b <- options()
-  expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(match(names(b), names(a1)))]))))
+  bbb <- match(names(b), names(a1))
+  # expect_true(identical(sort(names(a1)), sort(names(a1[na.omit(bbb)]))))
+  expect_true(identical(sort(names(a1)), sort(names(a1[bbb[!is.na(bbb)]]))))
   omit <- c(names(testInitOut$opts), names(testInitOut$optsAsk))
   b1 <- b[names(a1)]
   b1 <- b1[!names(b1) %in% omit]
@@ -172,12 +174,13 @@ test_that("repo stuff works", {
 })
 
 test_that("test miscellaneous fns (part 2)", {
+  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   skip_if_no_token()
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
-    drive_rm(as_id(cloudFolderID))
-    drive_rm(as_id(tmpCloudFolderID))
+    googledrive::drive_rm(googledrive::as_id(cloudFolderID))
+    googledrive::drive_rm(googledrive::as_id(tmpCloudFolderID))
   }, add = TRUE)
 
   ras <- raster(extent(0,1,0,1), res  = 1, vals = 1)
@@ -290,11 +293,12 @@ test_that("Filenames for environment", {
   b <- raster::stack(rlogoFiles[1], rlogoFiles[1])
   expect_true(identical(sort(normPath(c(rlogoFiles))), sort(Filenames(b))))
 
-  rlogoFiles <- system.file("external/rlogo.grd", package="raster")
+  rlogoFiles <- system.file("external/rlogo.grd", package = "raster")
+  rlogoDir <- dirname(rlogoFiles)
   b <- raster::brick(rlogoFiles)
-  rlogoFiles <- c(rlogoFiles <- gsub("grd$", "gri", rlogoFiles))
+  rlogoFiles <- c(rlogoFiles, gsub("grd$", "gri", rlogoFiles))
   expect_true(identical(
-    sort(normPath(dir(pattern = "rlogo", dirname(rlogoFiles), full.names = TRUE))),
+    sort(normPath(dir(pattern = "rlogo", rlogoDir, full.names = TRUE))),
     sort(Filenames(b))))
 })
 
@@ -318,4 +322,20 @@ test_that("test miscellaneous fns", {
   whZero <- which(unlist(x1) == 0 )
   expect_true(all(unlist(lapply(whZero, function(ws) identical(x1[[ws]], a[[ws]])))))
 
+  if (FALSE) { ## TODO: fix empty messageDF outputs when run during non-interactive tests
+    out <- utils::capture.output(type = "message", messageDF(cbind(a = 1.1232), round = 2))
+    expect_true(is.character(out))
+    expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
+    expect_true(is.numeric(as.numeric(gsub(".*: ", "", out)[2])))
+
+    out <- utils::capture.output(type = "message", messageDF(cbind(a = 1.1232), round = 2, colnames = FALSE))
+    expect_true(is.character(out))
+    expect_identical(length(out), 1L) ## TODO: only passes when run line by line interactively
+    expect_true(is.numeric(as.numeric(gsub(".*: ", "", out)[2])))
+
+    out <- utils::capture.output(type = "message", messageDF(1.1232, round = 2, colnames = TRUE))
+    expect_true(is.character(out))
+    expect_identical(length(out), 2L) ## TODO: only passes when run line by line interactively
+    expect_true(is.numeric(as.numeric(gsub(".*: ", "", out)[2])))
+  }
 })

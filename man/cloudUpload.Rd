@@ -11,7 +11,7 @@ cloudUpload(isInRepo, outputHash, gdriveLs, cacheRepo, cloudFolderID, output)
 
 \item{outputHash}{The \code{cacheId} of the object to upload}
 
-\item{gdriveLs}{The result of \code{googledrive::drive_ls(as_id(cloudFolderID), pattern = "outputHash")}}
+\item{gdriveLs}{The result of \code{googledrive::drive_ls(googledrive::as_id(cloudFolderID), pattern = "outputHash")}}
 
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}

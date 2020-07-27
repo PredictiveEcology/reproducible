@@ -10,7 +10,7 @@ cloudCache(...)
 \item{...}{Passed to \code{\link{Cache}}}
 }
 \description{
-\lifecycle{defunct}
+\if{html}{\figure{lifecycle-defunct.svg}{options: alt="defunct"}}
 }
 \details{
 Please use \code{Cache}, with args \code{useCloud} and \code{cloudFolderID}.

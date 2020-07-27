@@ -89,7 +89,7 @@ Since \code{...} is passed to \code{\link{postProcess}}, these will
 functions, e.g., \code{\link{cropInputs}}. See details and examples.}
 }
 \description{
-\lifecycle{maturing}
+\if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 }
 \details{
 This function can be used to prepare R objects from remote or local data sources.
@@ -149,11 +149,11 @@ See \code{\link{preProcess}} for combinations of arguments.
   If \code{rasterToMatch} or \code{studyArea} are used, then this will
   trigger several subsequent functions, specifically the sequence,
   \emph{Crop, reproject, mask}, which appears to be a common sequence in
-  spatial simulation. See \code{\link{postProcess.spatialObjects}}.
+  spatial simulation. See \code{\link{postProcess.spatialClasses}}.
 
   \emph{Understanding various combinations of \code{rasterToMatch}
   and/or \code{studyArea}:}
-  Please see \code{\link{postProcess.spatialObjects}}.
+  Please see \code{\link{postProcess.spatialClasses}}.
  }
 }
 
@@ -162,21 +162,20 @@ See \code{\link{preProcess}} for combinations of arguments.
 
 In options for control of purging the \code{CHECKSUMS.txt} file are:
 
-  \tabular{cl}{
-    \code{0} \tab keep file \cr
-    \code{1} \tab delete file \cr
-    \code{2} \tab delete entry for \code{targetFile} \cr
-    \code{4} \tab delete entry for \code{alsoExtract} \cr
-    \code{3} \tab delete entry for \code{archive} \cr
-    \code{5} \tab delete entry for \code{targetFile} & \code{alsoExtract} \cr
-    \code{6} \tab delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive} \cr
-    \code{7} \tab delete entry that is failing (i.e., for the file downloaded by the \code{url})\cr
+  \describe{
+    \item{\code{0}}{keep file}
+    \item{\code{1}}{delete file}
+    \item{\code{2}}{delete entry for \code{targetFile}}
+    \item{\code{4}}{delete entry for \code{alsoExtract}}
+    \item{\code{3}}{delete entry for \code{archive}}
+    \item{\code{5}}{delete entry for \code{targetFile} & \code{alsoExtract}}
+    \item{\code{6}}{delete entry for \code{targetFile}, \code{alsoExtract} & \code{archive}}
+    \item{\code{7}}{delete entry that is failing (i.e., for the file downloaded by the \code{url})}
   }
 will only remove entries in the \code{CHECKSUMS.txt} that are associated with
-   \code{targetFile}, \code{alsoExtract} or \code{archive} When prepInputs is called, it will write or append to a (if
-   already exists)
-  \code{CHECKSUMS.txt} file. If the \code{CHECKSUMS.txt} is not correct, use
-  this argument to remove it.
+  \code{targetFile}, \code{alsoExtract} or \code{archive} When \code{prepInputs} is called,
+  it will write or append to a (if already exists) \code{CHECKSUMS.txt} file.
+  If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 }
 
 \examples{

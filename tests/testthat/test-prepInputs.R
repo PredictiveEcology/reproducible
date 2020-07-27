@@ -85,22 +85,7 @@ test_that("prepInputs doesn't work (part 1)", {
     "ecozones.shp",
     "ecozones.shx"
   )
-  shpEcozoneSm <- Cache(
-    prepInputs,
-    url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-    targetFile = reproducible::asPath(ecozoneFilename),
-    alsoExtract = reproducible::asPath(ecozoneFiles),
-    studyArea = StudyArea,
-    fun = "shapefile",
-    destinationPath = dPath,
-    filename2 = "EcozoneFile.shp"
-  ) # passed to determineFilename
-  expect_true(is(shpEcozoneSm, "SpatialPolygons"))
-  expect_identical(extent(shpEcozoneSm), extent(StudyArea))
-
-  unlink(dirname(ecozoneFilename), recursive = TRUE)
-  # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
-  mess <- capture_messages({
+  warn <- suppressWarningsSpecific(falseWarnings = "attribute variables are assumed to be spatially constant",
     shpEcozoneSm <- Cache(
       prepInputs,
       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
@@ -109,10 +94,29 @@ test_that("prepInputs doesn't work (part 1)", {
       studyArea = StudyArea,
       fun = "shapefile",
       destinationPath = dPath,
-      filename2 = "EcozoneFile.shp",
-      useCache = FALSE
-    )
-  })
+      filename2 = "EcozoneFile.shp"
+    )) # passed to determineFilename
+  expect_true(is(shpEcozoneSm, "SpatialPolygons"))
+  expect_identical(extent(shpEcozoneSm), extent(StudyArea))
+
+  unlink(dirname(ecozoneFilename), recursive = TRUE)
+  # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
+  warn <- suppressWarningsSpecific(
+    falseWarnings = "attribute variables are assumed to be spatially constant",
+    mess <- capture_messages({
+      shpEcozoneSm <- Cache(
+        prepInputs,
+        url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+        targetFile = reproducible::asPath(ecozoneFilename),
+        alsoExtract = reproducible::asPath(ecozoneFiles),
+        studyArea = StudyArea,
+        fun = "shapefile",
+        destinationPath = dPath,
+        filename2 = "EcozoneFile.shp",
+        useCache = FALSE
+      )
+    })
+  )
   expect_false(all(grepl("loading", mess)))
 
   # Test useCache -- doesn't error and loads from cache
@@ -144,13 +148,17 @@ test_that("prepInputs doesn't work (part 1)", {
   LCC2005 <- prepInputs(
     url = url,
     destinationPath = asPath(dPath),
-    studyArea = StudyArea
+    studyArea = StudyArea,
+    useCache = FALSE
   )
+  # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
+  #  we make it a bit bigger so it doesn't crop the edges of the raster
   expect_is(LCC2005, "Raster")
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-  expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
+  expect_true(all(abs(extent(LCC2005)[1:4] -
+                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+  expect_true(length(LCC2005@legend@colortable) == (maxValue(LCC2005) - minValue(LCC2005) + 1))
 
   #######################################
   ### url, targetFile, archive     ######
@@ -271,9 +279,11 @@ test_that("prepInputs doesn't work (part 1)", {
 
   expect_true(is(LCC2005, "Raster"))
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-  # crop and mask worked:
-  expect_identical(extent(LCC2005)[1:4],
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
+  # crop and mask worked -- remember the buffering that happens when it is longlat
+  expect_true(all(abs(extent(LCC2005)[1:4] -
+                        round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+  # expect_identical(extent(LCC2005)[1:4],
+  #                  round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250)
 })
 
 test_that("interactive prepInputs", {
@@ -358,7 +368,7 @@ test_that("interactive prepInputs", {
     #######################################
     file.remove(grep(pattern = "asc|zip|CHECK",
                      invert = TRUE, value = TRUE,
-                     dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))]))
+                     dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]))
 
     outsideModule <- Map(x = birdSpecies, url = urls,
                          MoreArgs = list(tmpdir = tmpdir),
@@ -383,7 +393,7 @@ test_that("interactive prepInputs", {
     # remove the .prj files -- test "similar"
     file.remove(grep(pattern = "asc|zip|CHECK",
                      invert = TRUE, value = TRUE,
-                     dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))]))
+                     dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))]))
 
     #######################################
     ### url, targetFile, archive, alsoExtract NA ######
@@ -829,7 +839,7 @@ test_that("preProcess doesn't work", {
   ################################################################
   # archive exists locally
   # remove all non archive files
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))], pattern = "\\.zip", invert = TRUE, value = TRUE))
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))], pattern = "\\.zip", invert = TRUE, value = TRUE))
   mess <- capture_messages({
     warns <- capture_warnings({
       test <- prepInputs(
@@ -858,7 +868,7 @@ test_that("preProcess doesn't work", {
   ################################################################
   # archive exists locally
   # remove all non archive files
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "\\.zip", invert = TRUE, value = TRUE))
   mess <- capture_messages({
     warns <- capture_warnings({
@@ -890,7 +900,7 @@ test_that("preProcess doesn't work", {
   ################################################################
   # archive exists locally
   # remove all non archive files
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "\\.zip", invert = TRUE, value = TRUE))
   mess <- capture_messages({
     warns <- capture_warnings({
@@ -919,9 +929,9 @@ test_that("preProcess doesn't work", {
   runTest("1_2_5_6_9", "SpatialPolygons", 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "\\.zip", invert = TRUE, value = TRUE))
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages({
     warns <- capture_warnings({
@@ -972,7 +982,7 @@ test_that("preProcess doesn't work", {
   ################################################################
   ###### targetFile, alsoExtract                             #####
   ################################################################
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages({
     warns <- capture_warnings({
@@ -1000,7 +1010,7 @@ test_that("preProcess doesn't work", {
   ################################################################
   ###### alsoExtract -- will fail b/c no information         #####
   ###############################################################
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "CHECKSUMS.txt", value = TRUE))
   expect_error({
     mess <- capture_messages({
@@ -1018,9 +1028,9 @@ test_that("preProcess doesn't work", {
   ################################################################
   # archive exists locally
   # remove all non archive files
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "\\.zip", invert = TRUE, value = TRUE))
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages({
     warns <- capture_warnings({
@@ -1048,7 +1058,7 @@ test_that("preProcess doesn't work", {
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
   # Try without .shp -- fail
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "\\.zip", invert = TRUE, value = TRUE))
   expect_error({
     mess <- capture_messages({
@@ -1062,9 +1072,9 @@ test_that("preProcess doesn't work", {
     })
   })
 
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "\\.zip", invert = TRUE, value = TRUE))
-  file.remove(grep(dir(tmpdir, full.names = TRUE)[!R.utils::isDirectory(dir(tmpdir))],
+  file.remove(grep(dir(tmpdir, full.names = TRUE)[!isDirectory(dir(tmpdir))],
                    pattern = "CHECKSUMS.txt", value = TRUE))
   mess <- capture_messages({
     warns <- capture_warnings({
@@ -1130,19 +1140,19 @@ test_that("prepInputs doesn't work (part 2)", {
                               dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
                               path = tmpdir)
         })
+
         runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
         runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-
         mess2 <- capture_messages({
           warn <- capture_warnings({
             test3 <- prepInputs(targetFile = targetFileLuxRDS,
                                 dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                                path = tmpdir, studyArea = StudyArea)
+                                path = tmpdir, filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
           })
         })
-        runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+        runTest("1_2_5_6_8_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir,
                 test = test3)
 
@@ -1153,14 +1163,15 @@ test_that("prepInputs doesn't work (part 2)", {
         mess2 <- capture_messages({
           warn <- capture_warnings({
             test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
-                                country = "LUX", level = 0, path = tmpdir, studyArea = StudyArea)
+                                country = "LUX", level = 0, path = tmpdir,
+                                filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
           })
         })
-        runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+        runTest("1_2_5_6_13_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir,
                 test = test3)
 
-        runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+        runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 5, mess2,
                 expectedMess = expectedMessagePostProcess,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
@@ -1168,7 +1179,6 @@ test_that("prepInputs doesn't work (part 2)", {
         testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
                                                       "reproducible.inputPaths" = NULL),
                                 needGoogle = TRUE)
-      } else {
       }
     }
     # Add a study area to Crop and Mask to
@@ -1205,11 +1215,12 @@ test_that("prepInputs doesn't work (part 2)", {
           test3 <- prepInputs(
             url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing", #nolint
             studyArea = StudyArea,
+            destinationPath = tmpdir,
             fun = "base::readRDS"
           )
         })
       })
-      runTest("1_2_3_4", "SpatialPolygonsDataFrame", 1, mess2,
+      runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 1, mess2,
               expectedMess = expectedMessagePostProcess,
               filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
     }
@@ -1727,7 +1738,7 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir
       )
     })
-    expect_is(test1, "spatialObjects")
+    expect_true(is(test1, "spatialClasses"))
     expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 0) # no link made b/c identical dir
     expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 0) # no link made b/c identical dir
   }
@@ -1748,7 +1759,7 @@ test_that("writeOutputs saves factor rasters with .grd class to preserve levels"
   file.create(tifTmp)
   tifTmp <- normPath(tifTmp)
 
-  b1 <- writeRaster(a, filename = tifTmp, overwrite = TRUE)
+  b1 <- suppressWarnings(writeRaster(a, filename = tifTmp, overwrite = TRUE)) # the GDAL>6 issue
   expect_warning({
     b1a <- writeOutputs(a, filename2 = tifTmp)
   })
@@ -1768,12 +1779,12 @@ test_that("rasters aren't properly resampled", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  a <- raster(extent(0, 20, 0, 20), res = 1, vals = 1:400)
-  b <- raster(extent(0, 20, 0, 20), res = c(2,2), vals = 1:100)
-  suppressWarnings({
+  a <- raster(extent(0, 20, 0, 20), res = 2, vals = 1:100*4)
+  b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1:100)
+  #suppressWarnings({
     crs(a) <- crsToUse
     crs(b) <- crsToUse
-  }) ## TODO: temporary until raster fixes all crs issues
+    #}) ## TODO: temporary until raster fixes all crs issues
 
   tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
   tiftemp2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
@@ -1781,21 +1792,22 @@ test_that("rasters aren't properly resampled", {
   suppressWarnings({
     writeRaster(a, filename = tiftemp1)
     writeRaster(b, filename = tiftemp2)
-  }) ## TODO: temporary until raster fixes all crs issues
+  }) ## TODO: temporary GDAL>6
 
   out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
                     destinationPath = dirname(tiftemp1), useCache = FALSE)
   expect_true(dataType(out) == "INT2U")
 
+  # Test bilinear --> but keeps integer if it is integer
   out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp1), method = "bilinear",
                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
-  expect_true(dataType(out2) == "FLT4S")
+  expect_true(dataType(out2) %in% c("INT2S", "INT2U")) # because of "bilinear", it can become negative
 
   c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
   crs(c) <- crsToUse
   tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  writeRaster(c, filename = tiftemp3)
+  suppressWarningsSpecific(writeRaster(c, filename = tiftemp3), proj6Warn)
 
   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp3),
@@ -1814,8 +1826,8 @@ test_that("System call gdal works", {
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
   crs(ras) <- crsToUse
   rnStr <- rndstr(1,6)
-  ras <- writeRaster(ras, filename = file.path(tempdir2(rnStr), basename(tempfile())),
-                     format = "GTiff")
+  ras <- suppressWarningsSpecific(writeRaster(ras, filename = file.path(tempdir2(rnStr), basename(tempfile())),
+                     format = "GTiff"), proj6Warn)
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- crsToUse
@@ -1829,7 +1841,8 @@ test_that("System call gdal works", {
 
   ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
   rnStr <- rndstr(1,6)
-  ras <- writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff")
+  ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
+                                  proj6Warn)
   test2 <- prepInputs(targetFile = ras@file@name,
                       destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE, method = "bilinear")
@@ -1849,7 +1862,8 @@ test_that("System call gdal works using multicores for both projecting and maski
   ras <- raster(extent(0, 10, 0, 10), res = 1, vals = 1:100)
   crs(ras) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   rnStr <- rndstr(1, 6)
-  ras <- writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff")
+  ras <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
+                                  proj6Warn)
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- crsToUse
@@ -1906,7 +1920,8 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   ras1 <- suppressWarnings(raster::projectRaster(from = ras, crs = "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0", method = "ngb"))
 
   rnStr <- rndstr(1, 6)
-  ras1 <- writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff")
+  ras1 <- suppressWarningsSpecific(writeRaster(ras, filename = tempfile2(rnStr), format = "GTiff"),
+                                   proj6Warn)
 
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
@@ -1920,7 +1935,7 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   expect_true(dataType(test1) == "INT1U")
   expect_identical(raster::res(ras2), raster::res(test1))
   expect_identical(raster::extent(ras2), raster::extent(test1))
-  expect_identical(raster::crs(ras2), raster::crs(test1))
+  expect_true(compareCRS(ras2, test1))
 
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
@@ -2098,4 +2113,48 @@ test_that("writeOutputs with non-matching filename2", {
   expect_true(identical(vals1, vals3))
   expect_false(identical(normPath(filename(r)), normPath(filename(r1))))
   expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
+})
+
+
+test_that("new gdalwarp all in one with grd with factor", {
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- crsToUse
+
+  r <- raster(extent(-130,-110,55,65), res = 1)
+  crs(r) <- crsToUse
+  r[] <- sample(0:10, size = ncell(r), replace = TRUE)
+  df <- data.frame(ID = 0:10, label = LETTERS[1:11])
+  levels(r) <- df
+
+  # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
+  #  This invokes the new dealWithRastersOnRecovery fn
+  rr <- postProcess(r, destinationPath = tmpdir,
+              studyArea = StudyArea, useCache = TRUE, useGDAL = "force")
+  rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
+              studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+  rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+  expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
+  expect_true(identical(Filenames(rr1), Filenames(rr3)))
+  expect_true(!identical(dirname(Filenames(rr)), tmpCache)) # used to be that the recovery path was Cache file
+
+  expect_true(identical(raster::levels(rr), raster::levels(r)))
+  expect_true(sum(abs(raster::extent(rr)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
+  expect_true(sum(abs(raster::extent(r)[1:4] - raster::extent(StudyArea)[1:4])) > 1)
+  rr2 <- postProcess(r, studyArea = StudyArea, useCache = FALSE, useGDAL = "force", filename2 = "out.grd")
+  expect_true(identical(raster::levels(rr2), raster::levels(r)))
+  expect_true(sum(abs(raster::extent(rr2)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
+  expect_true(!identical(filename(rr), filename(rr2)))
+  expect_true(grepl(".tif$", filename(rr)))
+  expect_true(grepl(".grd$", filename(rr2)))
+
 })

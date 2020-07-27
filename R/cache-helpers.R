@@ -159,7 +159,7 @@ setMethod(
   definition = function(object, create) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
-        tmpDir <- .reproducibleTempPath()
+        tmpDir <- .reproducibleTempCacheDir()
         # Test whether the user has accepted the default. If yes, then give message.
         #  If no, then user is aware and doesn't need a message
         if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
@@ -168,8 +168,8 @@ setMethod(
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        message("No cacheRepo supplied. Using ",.reproducibleTempPath())
-        .reproducibleTempPath()
+        message("No cacheRepo supplied. Using ",.reproducibleTempCacheDir())
+        .reproducibleTempCacheDir()
       }
       checkPath(path = cacheRepo, create = create)
     })
@@ -210,6 +210,7 @@ setGeneric(".prepareOutput", function(object, cacheRepo, ...) {
 
 #' @export
 #' @rdname prepareOutput
+#' @importFrom Require normPath
 #' @importFrom RSQLite SQLite
 setMethod(
   ".prepareOutput",
@@ -293,19 +294,19 @@ setMethod(
 #' These are internal only.
 #'
 #' @param FUN A function
-#' @param ... passing the ... from outer function, which will include potential
-#'        arguments to the FUN
+#' @param ... passing the \code{...} from outer function, which will include potential
+#'        arguments to the \code{FUN}
 #' @param overrideCall A character string indicating a different (not "Cache") function
 #'        name to search for. Mostly so that this works with deprecated "cache".
-#' @param isPipe Logical. If the call to getFunctionName is coming from a pipe, there is more
-#'               information available. Specifically, ._lhs which is already a call.
+#' @param isPipe Logical. If the call to \code{getFunctionName} is coming from a pipe, there is more
+#'               information available. Specifically, \code{._lhs} which is already a call.
 #' @note If the function cannot figure out a clean function name, it returns "internal"
 #'
 #' @author Eliot McIntire
 #' @importFrom methods selectMethod showMethods
 #' @importFrom utils head
 #' @keywords internal
-#' @rdname cacheHelper
+#' @rdname cache-helpers
 getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # nolint
   callIndex <- numeric()
   if (isS4(FUN)) {
@@ -342,7 +343,8 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     }
 
     matchedCall <- matchedCall[nzchar(names(matchedCall))]
-    matchedCall <- matchedCall[na.omit(match(names(matchedCall), FUN@signature[signat]))]
+    ff <- match(names(matchedCall), FUN@signature[signat])
+    matchedCall <- matchedCall[ff[!is.na(ff)]]
     matchedCall <- lapply(matchedCall, eval)
 
     signatures <- rep("missing", (sum(signat))) # default is "missing"
@@ -653,7 +655,7 @@ setAs(from = "character", to = "Path", function(from) {
     } else {
       file.path(repoDir, basename(curFilename))
     }
-    saveFilename <- normalizePath(saveFilename, winslash = "/", mustWork = FALSE)
+    saveFilename <- normPath(saveFilename)
   }
 
   sameFilenames <- saveFilename == curFilename
@@ -686,39 +688,42 @@ setAs(from = "character", to = "Path", function(from) {
           sapply(., dir.create, recursive = TRUE)
       }
 
-      if (any(saveFilename2 %>% grepl(., pattern = "[.]grd$"))) {
-        copyFile(from = curFilename2, to = saveFilename2, overwrite = TRUE, silent = TRUE)
-        griFilename <- sub(saveFilename2, pattern = "[.]grd$", replacement = ".gri")
-        curGriFilename <- sub(curFilename2, pattern = "[.]grd$", replacement = ".gri")
-        copyFile(from = curGriFilename, to = griFilename, overwrite = TRUE, silent = TRUE)
-      } else {
-        saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
-          browser(expr = exists("._prepareFileBackedRaster_2"))
-          # change filename if it already exists
-          if (file.exists(saveFilename2[x])) {
-            saveFilename2[x] <- nextNumericName(saveFilename2[x])
-          }
-          copyFile(to = saveFilename2[x],
-                   overwrite = TRUE,
-                   from = curFilename2[x], silent = TRUE)
-        })
-      }
+      saveFilename2 <- sapply(seq_along(curFilename2), function(x) {
+        curFilenameBase <- filePathSansExt(curFilename2[x])
+        curFilename <- dir(dirname(curFilename2[x]), pattern = paste0(basename(curFilenameBase), "\\."),
+                           full.names = TRUE)
+        exts <- fileExt(curFilename)
+        saveFilenamesBase <- filePathSansExt(saveFilename2[x])
+        saveFilenames <- paste0(saveFilenamesBase, ".", exts)
+
+
+        browser(expr = exists("._prepareFileBackedRaster_2"))
+        # change filename if it already exists
+        if (any(file.exists(saveFilenames))) {
+          saveFilenames <- nextNumericName(saveFilenames)
+        }
+        copyFile(to = saveFilenames,
+                 overwrite = TRUE,
+                 from = curFilename, silent = TRUE)
+        saveFilenames[match(fileExt(curFilename2[x]), fileExt(saveFilenames))]
+      })
 
       # for a stack with independent Raster Layers (each with own file)
-      if (length(curFilename2) > 1) {
-        for (i in seq_along(curFilename2)) {
-          slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- saveFilename2[i]
-        }
-      } else {
-        if (!isStack) {
-          slot(slot(obj, "file"), "name") <- saveFilename2
-        } else {
-          for (i in seq_len(nlayers(obj))) {
-            whFilename <- match(basename(saveFilename2), basename(curFilename2))
-            slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename2[whFilename]
-          }
-        }
-      }
+      obj <- updateFilenameSlots(obj, curFilename2, saveFilename2, isStack)
+      # if (length(curFilename2) > 1) {
+      #   for (i in seq_along(curFilename2)) {
+      #     slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- saveFilename2[i]
+      #   }
+      # } else {
+      #   if (!isStack) {
+      #     slot(slot(obj, "file"), "name") <- saveFilename2
+      #   } else {
+      #     for (i in seq_len(nlayers(obj))) {
+      #       whFilename <- match(basename(saveFilename2), basename(curFilename2))
+      #       slot(slot(obj@layers[[i]], "file"), "name") <- saveFilename2[whFilename]
+      #     }
+      #   }
+      # }
 
       ## update saveFilename
       saveFilename[notSameButBacked] <- saveFilename2[notSameButBacked]
@@ -870,31 +875,52 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 
 #' @importFrom methods slotNames
 #' @importFrom digest digest
-#' @importFrom fastdigest fastdigest
 #' @importFrom raster res crs extent
-#' @rdname cacheHelper
+#' @rdname cache-helpers
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
   sn <- slotNames(object@data)
-  sn <- sn[!(sn %in% c("min", "max", "haveminmax", "names", "isfactor",
-                       "dropped", "nlayers", "fromdisk", "inmemory", "offset", "gain"))]
+  sn <- sn[!(sn %in% c(#"min", "max", "haveminmax", "names", "isfactor",
+                       "dropped", "nlayers", "fromdisk", "inmemory"
+                       #"offset", "gain"
+                       ))]
   dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig <- digest(append(list(dim(object), res(object), crs(object),
-                              extent(object)), dataSlotsToDigest),
+    dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
+                              extent(object)), dataSlotsToDigest), length = length, quick = quick,
                   algo = algo) # don't include object@data -- these are volatile
-  else
-    dig <- fastdigest(append(list(dim(object), res(object), crs(object),
+  else {
+    if (!requireNamespace("fastdigest"))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    dig <- fastdigest::fastdigest(append(list(dim(object), res(object), crs(object),
                                   extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
+  }
+
+  # Legend
+  sn <- slotNames(object@legend)
+  legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
+                  algo = algo) # don't include object@data -- these are volatile
+  else {
+    if (!requireNamespace("fastdigest"))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    dig2 <- fastdigest::fastdigest(legendSlotsToDigest) # don't include object@data -- these are volatile
+  }
+  dig <- c(dig, dig2)
 
   sn <- slotNames(object@file)
   sn <- sn[!(sn %in% c("name"))]
   fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    digFile <- digest(fileSlotsToDigest, algo = algo) # don't include object@file -- these are volatile
-  else
-    digFile <- fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
+    digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
+                             algo = algo) # don't include object@file -- these are volatile
+  else {
+    if (!requireNamespace("fastdigest"))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    digFile <- fastdigest::fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
+  }
 
   dig <- c(dig, digFile)
   if (nzchar(object@file@name)) {
@@ -910,9 +936,12 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   }
 
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig <- digest(dig, algo = algo)
-  else
-    dig <- fastdigest(dig)
+    dig <- .robustDigest(unlist(dig), length = length, quick = quick, algo = algo)
+  else {
+    if (!requireNamespace("fastdigest"))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    dig <- fastdigest::fastdigest(dig)
+  }
   dig
 }
 
@@ -1026,17 +1055,16 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   unique(otherFns)
 }
 
-#' @importFrom tools file_path_sans_ext file_ext
 #' @keywords internal
 nextNumericName <- function(string) {
-  theExt <- file_ext(string)
-  saveFilenameSansExt <- file_path_sans_ext(string)
+  theExt <- fileExt(string)
+  saveFilenameSansExt <- filePathSansExt(string)
   finalNumericPattern <- "_[[:digit:]]*$"
   allSimilarFilesInDir <- dir(dirname(saveFilenameSansExt), pattern = basename(saveFilenameSansExt))
   allSimilarFilesInDirSansExt <- if (length(allSimilarFilesInDir) == 0) {
     unique(saveFilenameSansExt)
   } else {
-    unique(file_path_sans_ext(allSimilarFilesInDir))
+    unique(filePathSansExt(allSimilarFilesInDir))
   }
   alreadyHasNumeric <- grepl(allSimilarFilesInDirSansExt, pattern = finalNumericPattern)
   if (isTRUE(any(alreadyHasNumeric))) {
@@ -1082,6 +1110,7 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
     rasters <- is(obj, "Raster")
   }
   if (any(rasters)) {
+    objOrig <- obj
     atts <- attributes(obj)
     browser(expr = exists("._dealWithRasters_2"))
     if (outputToSaveIsList) {
@@ -1113,6 +1142,8 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
       if (!identical(attr(obj, "function"), atts[["function"]]))
         stop("There is an unknown error 04")
     }
+    if (isFromDisk)
+      obj <- list(origRaster = objOrig, cacheRaster = obj)
   }
   obj
 }
@@ -1123,4 +1154,23 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
 
 .loadedCacheMsg <- function(root, functionName) {
   paste0("     ", root," ", functionName, " call, ")
+}
+
+updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL) {
+  if (length(curFilenames) > 1) {
+    for (i in seq_along(curFilenames)) {
+      slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+    }
+  } else {
+    if (is.null(isStack)) isStack <- is(obj, "RasterStack")
+    if (!isStack) {
+      slot(slot(obj, "file"), "name") <- newFilenames
+    } else {
+      for (i in seq_len(nlayers(obj))) {
+        whFilename <- match(basename(newFilenames), basename(curFilenames))
+        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+      }
+    }
+  }
+  obj
 }

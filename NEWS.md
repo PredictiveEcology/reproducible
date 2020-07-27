@@ -1,5 +1,29 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 1.2.0.9000
+==============
+
+## New features
+* `postProcess` now uses a simpler single call to `gdalwarp`, if available, for `RasterLayer` class to accomplish `cropInputs`, `projectInputs`, `maskInputs`, and `writeOutputs` all at once. This should be faster, simpler and, perhaps, more stable. It will only be invoked if the `RasterLayer` is too large to fit into RAM. To force it to be used the user must set `useGDAL = "force"` in `prepInputs` or `postProcess` or globally with `options("reproducible.useGDAL" = "force")`
+* `postProcess` when using the new `gdalwarp`, has better persistence of colour table, and NA values as these are kept with better reliability
+* concurrent `Cache` now works as expected (e.g., with parallel processing, it will avoid collisions) with SQLite thanks to suggestion here: https://stackoverflow.com/a/44445010
+* updated digesting of `Raster` class objects to account for more of the metadata (including the colortable). This will change the digest value of all `Raster` layers, causing re-run of `Cache`
+* removed `Require`, `pkgDep`, `trimVersionNumber`, `normPath`, `checkPath` that were moved to `Require` package. For backwards compatibility, these are imported and reexported
+* address permanently or temporarily new changes in GDAL>3 and PROJ>6 in the spatial packages.
+* new function `file.move` used to rename/copy files across disks (a situation where `file.rename` would fail)
+* all `DBI` type functions now have default `cachePath` of `getOption("reproducible.cachePath")`
+* `Cache(prepInputs, ...` on a file-backed `Raster*` class object now gives the non-Cache repository folder as the `filename(returnRaster)`. Previously, the return object would contain the cache repository as the folder for the file-backed `Raster*` 
+
+## Dependency changes
+* net reduction in number of packages that are imported from by 14. Removed completely: `backports`, `memoise`, `quickPlot`, `R.utils`, `remotes`, `tools`, and `versions`; moved to Suggests: `fastdigest`, `gdalUtils`, `googledrive`, `httr`, `qs`, `rgdal`, `sf`, `testthat`; added: `Require`. Now there are 12 non-base packages listed in Imports. This is down from 31 prior to Ver 1.0.0.
+
+## bug fixes
+* fix over-wide tables in PDF manual (#144)
+* use `file.link` not `file.symlink` for `saveToCache`. This would have resulted in C Stack overflow errors due to missing original file in the `file.symlink`
+* use system call to `unzip` when extracting large (>= 4GB) files (#145, @tati-micheletti)
+* several minor including projectInputs when converting to longlat projections, setMinMax for gdalwarp results
+* improvements to file-backed Raster caching to accommodate a few more edge cases
+
 version 1.1.1
 ==============
 

@@ -1,22 +1,23 @@
 Package: reproducible
-Type: Package
+?Type: Package
 Title: A Set of Tools that Enhance Reproducibility Beyond Package Management
-Description: Collection of high-level, robust, machine- and OS-independent tools
+Description: Collection of high-level, machine- and OS-independent tools
     for making deeply reproducible and reusable content in R.
-    The three workhorse functions are Cache, prepInputs, and Require; 
-    these allow for nested caching, robust to environments, and objects with
-    environments (like functions), and data retrieval and processing, and 
-    package handling in continuous workflow environments. In all cases,
+    The two workhorse functions are Cache and prepInputs; 
+    these allow for: nested caching, robust to environments, and objects with
+    environments (like functions); and data retrieval and processing 
+    in continuous workflow environments. In all cases,
     efforts are made to make the first and subsequent calls of functions have 
     the same result, but vastly faster at subsequent times by way of checksums
     and digesting. Several features are still under active development, including
-    cloud storage of cached objects, allowing for sharing between users.
+    cloud storage of cached objects, allowing for sharing between users. Several
+    advanced options are available, see ?reproducibleOptions.
 SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.rar' files.
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2020-05-18
-Version: 1.1.1
+Date: 2020-07-17
+Version: 1.2.0.9021
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
@@ -34,46 +35,38 @@ Authors@R: c(
 Depends:
     R (>= 3.5)
 Imports:
-    backports,
     crayon,
     data.table (>= 1.10.4),
     DBI,
     digest,
-    fastdigest,
     fpCompare,
     glue,
-    googledrive,
-    httr,
-    lifecycle,
     magrittr,
-    memoise,
     methods,
-    qs,
-    quickPlot,
-    R.utils,
+    Require,
     raster,
     RSQLite,
-    remotes,
     rlang,
-    sf,
-    sp,
-    testthat,
-    tools,
-    usethis,
-    utils,
-    versions
+    sp (>= 1.4-2),
+    utils
 Suggests:
     covr,
+    fastdigest,
     fasterize,
     future,
     gdalUtils,
-    git2r (>= 0.18),
+    googledrive,
+    httr,
+    qs,
     knitr,
     parallel,
     RCurl (>= 1.95-4.8),
     rgdal,
     rgeos,
     rmarkdown,
+    sf,
+    stats,
+    testthat,
     TimeWarp
 Encoding: UTF-8
 Language: en-CA
@@ -81,7 +74,7 @@ License: GPL-3
 VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Collate: 
     'DBI.R'
     'cache-helpers.R'
@@ -92,7 +85,6 @@ Collate:
     'checksums.R'
     'cloud.R'
     'cloudOld.R'
-    'consistentPaths.R'
     'convertPaths.R'
     'copy.R'
     'download.R'
@@ -106,8 +98,9 @@ Collate:
     'postProcess.R'
     'preProcess.R'
     'prepInputs.R'
+    'reexports.R'
     'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'
+    'spatialObjects-class.R'
     'zzz.R'
-RdMacros: lifecycle

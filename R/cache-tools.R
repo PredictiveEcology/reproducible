@@ -118,6 +118,8 @@ setMethod(
     clearWholeCache <- all(missing(userTags), is.null(after), is.null(before))
 
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
+      if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+
       browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
@@ -140,6 +142,7 @@ setMethod(
         rmFromCloudFolder(cloudFolderID, x, cacheIds)
 
       }
+
     }
 
     browser(expr = exists("rrrr"))
@@ -172,7 +175,11 @@ setMethod(
       if (useDBI()) {
         createCache(x, drv = drv, force = TRUE)
       }
-      memoise::forget(.loadFromLocalRepoMem)
+      if (isTRUE(getOption("reproducible.useMemoise"))) {
+        if (exists(x, envir = .pkgEnv))
+          rm(list = x, envir = .pkgEnv)
+      }
+      # memoise::forget(.loadFromLocalRepoMem)
       return(invisible())
     }
 
@@ -200,7 +207,6 @@ setMethod(
 
         if (length(filesToRemove)) {
           filesToRemove <- unlist(filesToRemove)
-          #filesToRemove <- file_path_sans_ext(filesToRemove)#gsub(filesToRemove, pattern = "(\\.).*$", replacement = "\\1*")
           if (isInteractive()) {
             dirLs <- dir(unique(dirname(filesToRemove)), full.names = TRUE)
             dirLs <- unlist(lapply(basename(filesToRemove), grep, dirLs, value = TRUE) )
@@ -235,10 +241,14 @@ setMethod(
           on.exit({dbDisconnect(conn)})
         }
         rmFromCache(x, objToGet, conn = conn, drv = drv)# many = TRUE)
+        if (isTRUE(getOption("reproducible.useMemoise")))
+          if (exists(x, envir = .pkgEnv))
+            suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
+
         browser(expr = exists("rmFC"))
       }
     }
-    memoise::forget(.loadFromLocalRepoMem)
+    # memoise::forget(.loadFromLocalRepoMem)
     try(setindex(objsDT, NULL), silent = TRUE)
     return(invisible(objsDT))
 })
@@ -350,7 +360,7 @@ setMethod(
     # not seeing userTags
     # Clear the futures that are resolved
     .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
-      !isFALSE(getOption("reproducible.futurePlan"))
+      !.isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
       if (exists("futureEnv", envir = .reproEnv))
         hasFuture <- .requireNamespace("future",
@@ -481,7 +491,7 @@ setMethod(
 
 #' Merge two cache repositories together
 #'
-#' \lifecycle{experimental}
+#' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
 #'
 #' All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
 #' repository. All \code{userTags} will be copied verbatim, including
@@ -601,9 +611,9 @@ setMethod(
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
-  message("Cache size: ")
-  message(preMessage1, format(fsTotal, "auto"))
-  message(preMessage, format(fs, "auto"))
+  message(crayon::blue("Cache size: "))
+  message(crayon::blue(preMessage1, format(fsTotal, "auto")))
+  message(crayon::blue(preMessage, format(fs, "auto")))
 }
 
 #' @keywords internal
@@ -722,7 +732,7 @@ getArtifact <- function(cacheRepo, shownCache, cacheId) {
 
 useDBI <- function() {
   ud <- getOption("reproducible.useDBI", TRUE)
-  if (isFALSE(ud)) {
+  if (.isFALSE(ud)) {
     stop("options('reproducible.useDBI') can only be TRUE in this and future versions of reproducible",
          call. = FALSE)
   }
@@ -738,7 +748,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   }
   browser(expr = exists("._rmFromCloudFolder_1"))
 
-  gdriveLs <- drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
+  gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)
   filenamesToRm <- basename2(CacheStoredFile(x, cacheIds))
   # filenamesToRm <- paste0(cacheIds, ".rda")
@@ -754,10 +764,10 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   toDelete <- gdriveLs[isInCloud,]
   message("Cloud:")
   if (!is.null(filenames)) {
-    rasFiles <- drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
+    rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
     toDelete <- rbind(rasFiles, toDelete)
   }
-  retry(quote(drive_rm(toDelete)))
+  retry(quote(googledrive::drive_rm(toDelete)))
 }
 
 

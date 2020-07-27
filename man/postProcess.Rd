@@ -4,7 +4,7 @@
 \alias{postProcess}
 \alias{postProcess.default}
 \alias{postProcess.list}
-\alias{postProcess.spatialObjects}
+\alias{postProcess.spatialClasses}
 \alias{postProcess.sf}
 \title{Generic function to post process objects}
 \usage{
@@ -14,7 +14,7 @@ postProcess(x, ...)
 
 \method{postProcess}{list}(x, ...)
 
-\method{postProcess}{spatialObjects}(
+\method{postProcess}{spatialClasses}(
   x,
   filename1 = NULL,
   filename2 = TRUE,
@@ -39,11 +39,11 @@ postProcess(x, ...)
 )
 }
 \arguments{
-\item{x}{An object of postProcessing, e.g., \code{spatialObjects}.
+\item{x}{An object of postProcessing, e.g., \code{spatialClasses}.
 See individual methods. This can be provided as a
 \code{rlang::quosure} or a normal R object.}
 
-\item{...}{Additional arguments passed to methods. For \code{spatialObjects},
+\item{...}{Additional arguments passed to methods. For \code{spatialClasses},
            these are: \code{\link{cropInputs}}, \code{\link{fixErrors}},
            \code{\link{projectInputs}}, \code{\link{maskInputs}},
            \code{\link{determineFilename}}, and \code{\link{writeOutputs}}.
@@ -104,9 +104,9 @@ in details below.}
 Defaults to \code{getOption("reproducible.useCache")}.}
 }
 \description{
-\lifecycle{maturing}
+\if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
 
-The method for spatialObjects (\code{Raster*} and \code{Spatial*}) will
+The method for \code{spatialClasses} (\code{Raster*} and \code{Spatial*}) will
 crop, reproject, and mask, in that order.
 This is a wrapper for \code{\link{cropInputs}}, \code{\link{fixErrors}},
 \code{\link{projectInputs}}, \code{\link{maskInputs}} and \code{\link{writeOutputs}},
@@ -150,8 +150,8 @@ Depending on which of these were passed, different things will happen to the
     \code{alignment}  \tab Yes                  \tab   No         \tab \code{rasterToMatch} \cr
     \code{mask}       \tab No**                 \tab   Yes        \tab \code{studyArea}**   \cr
   }
-  * Can be overridden with \code{useSAcrs}
-  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}
+  * Can be overridden with \code{useSAcrs}.
+  ** Will mask with \code{NA}s from \code{rasterToMatch} if \code{maskWithRTM}.
 }
 
 \subsection{If \code{targetFile} is a \code{Spatial*} object:}{

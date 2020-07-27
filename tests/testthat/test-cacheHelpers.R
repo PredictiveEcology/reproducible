@@ -17,7 +17,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_false(all(grepl("adding", mess)))
 
   # .checkCacheRepo
-  options(reproducible.cachePath = .reproducibleTempPath())
+  options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))
   expect_true(any(grepl(messageNoCacheRepo, mess)))
 
@@ -182,7 +182,7 @@ test_that("test cache-helpers with stacks", {
   expect_true(length(list.files(file.path(tmpCache, "rasters"))) == 0)
 
   ## with 1 backups
-  r <- writeRaster(r, filename = tmpfile, overwrite = TRUE)
+  r <- .writeRaster(r, filename = tmpfile, overwrite = TRUE)
   s <- addLayer(r, r1)
   b <- .prepareFileBackedRaster(s, tmpCache)
 
@@ -190,7 +190,7 @@ test_that("test cache-helpers with stacks", {
   expect_false(all(basename(c(tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))
 
   ## with 2 backups
-  r1 <- writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
+  r1 <- .writeRaster(r1, filename = tmpfile2, overwrite = TRUE)
   s <- addLayer(r, r1)
   b <- .prepareFileBackedRaster(s, tmpCache)
   expect_true(all(basename(c(tmpfile, tmpfile2)) %in% basename(list.files(tmpCache, recursive = TRUE))))

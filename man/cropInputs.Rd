@@ -3,7 +3,7 @@
 \name{cropInputs}
 \alias{cropInputs}
 \alias{cropInputs.default}
-\alias{cropInputs.spatialObjects}
+\alias{cropInputs.spatialClasses}
 \alias{cropInputs.sf}
 \title{Crop a \code{Spatial*} or \code{Raster*} object}
 \usage{
@@ -11,7 +11,7 @@ cropInputs(x, studyArea, rasterToMatch, ...)
 
 \method{cropInputs}{default}(x, studyArea, rasterToMatch, ...)
 
-\method{cropInputs}{spatialObjects}(
+\method{cropInputs}{spatialClasses}(
   x,
   studyArea = NULL,
   rasterToMatch = NULL,
