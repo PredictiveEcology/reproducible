@@ -83,7 +83,7 @@ detected via requireNamespace." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0.9021</span>
       </span>
     </div>
 
@@ -150,6 +150,7 @@ detected via <code>requireNamespace</code>.</p>
     <pre class="usage"><span class='fu'>.requireNamespace</span>(
   <span class='kw'>pkg</span> <span class='kw'>=</span> <span class='st'>"methods"</span>,
   <span class='kw'>minVersion</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>stopOnFALSE</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>messageStart</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste0</a></span>(<span class='no'>pkg</span>, <span class='kw'>if</span> (!<span class='fu'><a href='https://rdrr.io/r/base/NULL.html'>is.null</a></span>(<span class='no'>minVersion</span>)) <span class='fu'><a href='https://rdrr.io/r/base/paste.html'>paste0</a></span>(<span class='st'>"(&gt;="</span>, <span class='no'>minVersion</span>, <span class='st'>")"</span>),
     <span class='st'>" is required. Try: "</span>)
 )</pre>
@@ -165,6 +166,12 @@ detected via <code>requireNamespace</code>.</p>
       <th>minVersion</th>
       <td><p>Character string indicating minimum version of package
 that is needed</p></td>
+    </tr>
+    <tr>
+      <th>stopOnFALSE</th>
+      <td><p>Logical. If <code>TRUE</code>, this function will create an
+error (i.e., <code>stop</code>) if the function returns <code>FALSE</code>; otherwise
+it simply returns <code>FALSE</code></p></td>
     </tr>
     <tr>
       <th>messageStart</th>

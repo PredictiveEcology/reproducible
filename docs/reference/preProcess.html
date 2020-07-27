@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Download, Checksum, Extract files — preProcess • reproducible</title>
+<title>Download, Checksum, Extract files — preProcessParams • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="Download, Checksum, Extract files — preProcess" />
+<meta property="og:title" content="Download, Checksum, Extract files — preProcessParams" />
 <meta property="og:description" content="This does downloading (via downloadFile), checksumming (Checksums),
 and extracting from archives (extractFromArchive), plus cleaning up of input
 arguments (e.g., paths, function names).
@@ -85,7 +85,7 @@ This is the first stage of three used in prepInputs." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0.9021</span>
       </span>
     </div>
 
@@ -151,7 +151,9 @@ arguments (e.g., paths, function names).
 This is the first stage of three used in <code>prepInputs</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>preProcess</span>(
+    <pre class="usage"><span class='fu'>preProcessParams</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+
+<span class='fu'>preProcess</span>(
   <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -170,6 +172,12 @@ This is the first stage of three used in <code>prepInputs</code>.</p>
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>n</th>
+      <td><p>Number of non-null arguments passed to <code>preProcess</code>.
+E.g., passing <code>n = 1</code> returns combinations with only a single non-NULL parameter.
+If <code>NULL</code> (default), all parameter combinations are returned.</p></td>
+    </tr>
     <tr>
       <th>targetFile</th>
       <td><p>Character string giving the path to the eventual file
@@ -234,7 +242,7 @@ custom downloading, in addition to loading into R. Still experimental.</p></td>
       <th>quick</th>
       <td><p>Logical. This is passed internally to <code><a href='Checksums.html'>Checksums</a></code>
 (the quickCheck argument), and to
-<code><a href='cache.html'>Cache</a></code> (the quick argument). This results in faster, though
+<code><a href='Cache.html'>Cache</a></code> (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.</p></td>
     </tr>
     <tr>
@@ -262,7 +270,7 @@ Will be cleared on.exit from this function.</p></td>
     <tr>
       <th>...</th>
       <td><p>Additional arguments passed to <code>fun</code> (i.e,. user supplied),
- <code><a href='postProcess.html'>postProcess</a></code> and <code><a href='cache.html'>Cache</a></code>.
+ <code><a href='postProcess.html'>postProcess</a></code> and <code><a href='Cache.html'>Cache</a></code>.
 Since <code>...</code> is passed to <code><a href='postProcess.html'>postProcess</a></code>, these will
 <code>...</code> will also be passed into the inner
 functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See details and examples.</p></td>
@@ -271,45 +279,21 @@ functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See deta
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A list with 5 elements, <code>checkSums</code> (the result of a <code>Checksums</code>
-after downloading), <code>dots</code> (cleaned up ..., including deprecated argument checks),
-<code>fun</code> (the function to be used to load the preProcessed object from disk),
+    <p>A list with 5 elements: <code>checkSums</code> (the result of a <code>Checksums</code>
+after downloading), <code>dots</code> (cleaned up <code>...</code>, including deprecated argument checks),
+<code>fun</code> (the function to be used to load the <code>preProcess</code>ed object from disk),
 and <code>targetFilePath</code> (the fully qualified path to the <code>targetFile</code>).</p>
     <h2 class="hasAnchor" id="combinations-of-targetfile-url-archive-alsoextract"><a class="anchor" href="#combinations-of-targetfile-url-archive-alsoextract"></a>Combinations of <code>targetFile</code>, <code>url</code>, <code>archive</code>, <code>alsoExtract</code></h2>
 
     
 
 
-<p></p><table class='table'>
-<tr><td># Params</td><td><code>url</code></td><td><code>targetFile</code></td><td><code>archive</code></td><td><code>alsoExtract</code></td><td>Result</td><td>Checksum 1st time</td><td>Checksum 2nd time</td></tr>
-<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
-<tr><td><b>1</b></td><td>char</td><td>NULL</td><td>NULL</td><td>NULL</td><td>Download, extract all files if an archive, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>same as 1st -- no <code>targetFile</code>*</td></tr>
-<tr><td></td><td>NULL</td><td>char</td><td>NULL</td><td>NULL</td><td>load <code>targetFile</code> into R</td><td>write or append <code>targetFile</code></td><td>no downloading, so no checksums use</td></tr>
-<tr><td></td><td>NULL</td><td>NULL</td><td>char</td><td>NULL</td><td>extract all files, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
-<tr><td></td><td>NULL</td><td>NULL</td><td>NULL</td><td>char</td><td>guess at <code>targetFile</code> from files in <code>alsoExtract</code>, load into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
-<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
-<tr><td><b>2</b></td><td>char</td><td>char</td><td>NULL</td><td>NULL</td><td>Download, extract all files if an archive, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td>char</td><td>NULL</td><td>char</td><td>NULL</td><td>Download, extract all files, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>same as 1st -- no <code>targetFile</code>*</td></tr>
-<tr><td></td><td>char</td><td>NULL</td><td>NULL</td><td>char</td><td>Download, extract only named files in <code>alsoExtract</code>, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>same as 1st -- no <code>targetFile</code>*</td></tr>
-<tr><td></td><td>NULL</td><td>char</td><td>NULL</td><td>char</td><td>load <code>targetFile</code> into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
-<tr><td></td><td>NULL</td><td>char</td><td>char</td><td>NULL</td><td>Extract all files, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
-<tr><td></td><td>NULL</td><td>NULL</td><td>char</td><td>char</td><td>Extract only named files in <code>alsoExtract</code>, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
-<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
-<tr><td><b>3</b></td><td>char</td><td>char</td><td>char</td><td>NULL</td><td>Download, extract all files, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td>char</td><td>NULL</td><td>char</td><td>char</td><td>Download, extract files named in <code>alsoExtract</code>, guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td>char</td><td>NULL</td><td>char</td><td><code>"similar"</code></td><td>Download, extract all files (can't understand "similar"), guess at <code>targetFile</code>, load into R</td><td>write or append all new files</td><td>same as 1st -- no <code>targetFile</code>*</td></tr>
-<tr><td></td><td>char</td><td>char</td><td>NULL</td><td>char</td><td>Download, if an archive, extract files named in <code>targetFile</code> and <code>alsoExtract</code>, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td>char</td><td>char</td><td>NULL</td><td><code>"similar"</code></td><td>Download, if an archive, extract files with same base as <code>targetFile</code>, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td>char</td><td>char</td><td>char</td><td>NULL</td><td>Download, extract all files from archive, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td>NULL</td><td>char</td><td>char</td><td>char</td><td>Extract  files named in <code>alsoExtract</code> from archive, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>no downloading, so no checksums use</td></tr>
-<tr><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td><td>------</td></tr>
-<tr><td><b>4</b></td><td>char</td><td>char</td><td>char</td><td>char</td><td>Download, extract files named in <code>targetFile</code> and <code>alsoExtract</code>, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-<tr><td></td><td>char</td><td>char</td><td>char</td><td><code>"similar"</code></td><td>Download, extract all files with same base as <code>targetFile</code>, load <code>targetFile</code> into R</td><td>write or append all new files</td><td>use Checksums, skip downloading</td></tr>
-</table>
+<p>Use <code>preProcessParams()</code> for a table describing various parameter combinations and their
+  outcomes.</p>
 <p><code>*</code> If the <code>url</code> is a file on Google Drive, checksumming will work
  even without a <code>targetFile</code> specified because there is an initial attempt
  to get the remove file information (e.g., file name). With that, the connection
- between the <code>url</code> and the filename used in the CHECKSUMS.txt file can be made.</p>
+ between the <code>url</code> and the filename used in the <code class="file">CHECKSUMS.txt</code> file can be made.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

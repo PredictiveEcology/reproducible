@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Sort or order any named object with dotted names and underscores first — .sortDotsUnderscoreFirst • reproducible</title>
+<title>Move a file to a new location — file.move • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,11 +39,8 @@
 
 
 
-<meta property="og:title" content="Sort or order any named object with dotted names and underscores first — .sortDotsUnderscoreFirst" />
-<meta property="og:description" content="Internal use only. This exists so Windows, Linux, and Mac machines can have
-the same order after a sort. It will put dots and underscores first
-(with the sort key based on their second character, see examples.
-It also sorts lower case before upper case." />
+<meta property="og:title" content="Move a file to a new location — file.move" />
+<meta property="og:description" content="Move a file to a new location" />
 
 
 
@@ -139,47 +136,34 @@ It also sorts lower case before upper case." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Sort or order any named object with dotted names and underscores first</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R'><code>R/cache-helpers.R</code></a></small>
-    <div class="hidden name"><code>sortDotsUnderscoreFirst.Rd</code></div>
+    <h1>Move a file to a new location</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/copy.R'><code>R/copy.R</code></a></small>
+    <div class="hidden name"><code>file.move.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Internal use only. This exists so Windows, Linux, and Mac machines can have
-the same order after a sort. It will put dots and underscores first
-(with the sort key based on their second character, see examples.
-It also sorts lower case before upper case.</p>
+    <p>Move a file to a new location</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='no'>obj</span>)
-
-<span class='fu'>.orderDotsUnderscoreFirst</span>(<span class='no'>obj</span>)</pre>
+    <pre class="usage"><span class='fu'>file.move</span>(<span class='no'>from</span>, <span class='no'>to</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>obj</th>
-      <td><p>An arbitrary R object for which a <code>names</code> function
-returns a character vector.</p></td>
+      <th>from, to</th>
+      <td><p>character vectors, containing file names or paths.</p></td>
+    </tr>
+    <tr>
+      <th>overwrite</th>
+      <td><p>logical indicating whether to overwrite destination file if it exists.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>The same object as <code>obj</code>, but sorted with .objects first.</p>
+    <p>Logical indicating whether operation succeeded.</p>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>items</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='kw'>A</span> <span class='kw'>=</span> <span class='st'>"a"</span>, <span class='kw'>Z</span> <span class='kw'>=</span> <span class='st'>"z"</span>, <span class='kw'>`.D`</span> <span class='kw'>=</span> <span class='st'>".d"</span>, <span class='kw'>`_C`</span> <span class='kw'>=</span> <span class='st'>"_C"</span>)
-<span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='no'>items</span>)</div><div class='output co'>#&gt;   _C   .D    A    Z 
-#&gt; "_C" ".d"  "a"  "z" </div><div class='input'>
-<span class='co'># dots &amp; underscore (using 2nd character), then all lower then all upper</span>
-<span class='no'>items</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='kw'>B</span> <span class='kw'>=</span> <span class='st'>"Upper"</span>, <span class='kw'>b</span> <span class='kw'>=</span> <span class='st'>"lower"</span>, <span class='kw'>A</span> <span class='kw'>=</span> <span class='st'>"a"</span>, <span class='kw'>`.D`</span> <span class='kw'>=</span> <span class='st'>".d"</span>, <span class='kw'>`_C`</span> <span class='kw'>=</span> <span class='st'>"_C"</span>)
-<span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='no'>items</span>)</div><div class='output co'>#&gt;      _C      .D       b       A       B 
-#&gt;    "_C"    ".d" "lower"     "a" "Upper" </div><div class='input'>
-<span class='co'># with a vector</span>
-<span class='fu'>.sortDotsUnderscoreFirst</span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>".C"</span>, <span class='st'>"_B"</span>, <span class='st'>"A"</span>)) <span class='co'># _B is first</span></div><div class='output co'>#&gt; [1] "_B" ".C" "A" </div><div class='input'>
-</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

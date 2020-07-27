@@ -87,7 +87,7 @@ interactive()." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0.9021</span>
       </span>
     </div>
 
@@ -165,7 +165,7 @@ just for the test. In all other times, this returns the same things as
 <span class='kw'>`isInteractive`</span> <span class='kw'>=</span> <span class='kw'>function</span>() {<span class='fu'><a href='https://rdrr.io/r/base/browser.html'>browser</a></span>(); <span class='fl'>TRUE</span>},
 {
   <span class='no'>tmpdir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>()
-  <span class='no'>aa</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"something2"</span>)
+  <span class='no'>aa</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"something2"</span>)
   <span class='co'># Test clearCache -- has an internal isInteractive() call</span>
   <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
   })

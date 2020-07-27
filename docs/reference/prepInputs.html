@@ -82,7 +82,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0.9021</span>
       </span>
     </div>
 
@@ -142,7 +142,7 @@
     </div>
 
     <div class="ref-description">
-    <p><a href='https://www.tidyverse.org/lifecycle/#maturing'><img src='figures/lifecycle-maturing.svg' alt='Maturing lifecycle'></a></p>
+    <p><img src='figures/lifecycle-maturing.svg' alt="maturing" /></p>
     </div>
 
     <pre class="usage"><span class='fu'>prepInputs</span>(
@@ -222,7 +222,7 @@ into R.</p></td>
       <th>quick</th>
       <td><p>Logical. This is passed internally to <code><a href='Checksums.html'>Checksums</a></code>
 (the quickCheck argument), and to
-<code><a href='cache.html'>Cache</a></code> (the quick argument). This results in faster, though
+<code><a href='Cache.html'>Cache</a></code> (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.</p></td>
     </tr>
     <tr>
@@ -250,7 +250,7 @@ Will be cleared on.exit from this function.</p></td>
     <tr>
       <th>...</th>
       <td><p>Additional arguments passed to <code>fun</code> (i.e,. user supplied),
- <code><a href='postProcess.html'>postProcess</a></code> and <code><a href='cache.html'>Cache</a></code>.
+ <code><a href='postProcess.html'>postProcess</a></code> and <code><a href='Cache.html'>Cache</a></code>.
 Since <code>...</code> is passed to <code><a href='postProcess.html'>postProcess</a></code>, these will
 <code>...</code> will also be passed into the inner
 functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See details and examples.</p></td>
@@ -315,10 +315,10 @@ See examples.</p>
 <p>If <code>rasterToMatch</code> or <code>studyArea</code> are used, then this will
   trigger several subsequent functions, specifically the sequence,
   <em>Crop, reproject, mask</em>, which appears to be a common sequence in
-  spatial simulation. See <code><a href='postProcess.html'>postProcess.spatialObjects</a></code>.</p>
+  spatial simulation. See <code><a href='postProcess.html'>postProcess.spatialClasses</a></code>.</p>
 <p><em>Understanding various combinations of <code>rasterToMatch</code>
   and/or <code>studyArea</code>:</em>
-  Please see <code><a href='postProcess.html'>postProcess.spatialObjects</a></code>.</p>
+  Please see <code><a href='postProcess.html'>postProcess.spatialClasses</a></code>.</p>
 
     <h2 class="hasAnchor" id="purge"><a class="anchor" href="#purge"></a><code>purge</code></h2>
 
@@ -326,21 +326,20 @@ See examples.</p>
 
 
 <p>In options for control of purging the <code>CHECKSUMS.txt</code> file are:</p>
-<p></p><table class='table'>
-<tr><td><code>0</code></td><td>keep file</td></tr>
-<tr><td><code>1</code></td><td>delete file</td></tr>
-<tr><td><code>2</code></td><td>delete entry for <code>targetFile</code></td></tr>
-<tr><td><code>4</code></td><td>delete entry for <code>alsoExtract</code></td></tr>
-<tr><td><code>3</code></td><td>delete entry for <code>archive</code></td></tr>
-<tr><td><code>5</code></td><td>delete entry for <code>targetFile</code> &amp; <code>alsoExtract</code></td></tr>
-<tr><td><code>6</code></td><td>delete entry for <code>targetFile</code>, <code>alsoExtract</code> &amp; <code>archive</code></td></tr>
-<tr><td><code>7</code></td><td>delete entry that is failing (i.e., for the file downloaded by the <code>url</code>)</td></tr>
-</table>
-<p>will only remove entries in the <code>CHECKSUMS.txt</code> that are associated with
-   <code>targetFile</code>, <code>alsoExtract</code> or <code>archive</code> When prepInputs is called, it will write or append to a (if
-   already exists)
-  <code>CHECKSUMS.txt</code> file. If the <code>CHECKSUMS.txt</code> is not correct, use
-  this argument to remove it.</p>
+<p></p><dl'>
+    <dt><code>0</code></dt><dd><p>keep file</p></dd>
+    <dt><code>1</code></dt><dd><p>delete file</p></dd>
+    <dt><code>2</code></dt><dd><p>delete entry for <code>targetFile</code></p></dd>
+    <dt><code>4</code></dt><dd><p>delete entry for <code>alsoExtract</code></p></dd>
+    <dt><code>3</code></dt><dd><p>delete entry for <code>archive</code></p></dd>
+    <dt><code>5</code></dt><dd><p>delete entry for <code>targetFile</code> &amp; <code>alsoExtract</code></p></dd>
+    <dt><code>6</code></dt><dd><p>delete entry for <code>targetFile</code>, <code>alsoExtract</code> &amp; <code>archive</code></p></dd>
+    <dt><code>7</code></dt><dd><p>delete entry that is failing (i.e., for the file downloaded by the <code>url</code>)</p></dd>
+  
+</dl><p>will only remove entries in the <code>CHECKSUMS.txt</code> that are associated with
+  <code>targetFile</code>, <code>alsoExtract</code> or <code>archive</code> When <code>prepInputs</code> is called,
+  it will write or append to a (if already exists) <code>CHECKSUMS.txt</code> file.
+  If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='downloadFile.html'>downloadFile</a></code>, <code><a href='extractFromArchive.html'>extractFromArchive</a></code>,
@@ -391,7 +390,7 @@ See examples.</p>
 <span class='co'>#   targetFile is there, it will not redownload the archive.</span>
 <span class='no'>ecozoneFiles</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"ecozones.dbf"</span>, <span class='st'>"ecozones.prj"</span>,
                   <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span>)
-<span class='no'>shpEcozoneSm</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>,
+<span class='no'>shpEcozoneSm</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>,
                       <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
                       <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFilename</span>),
                       <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFiles</span>),
@@ -418,7 +417,7 @@ See examples.</p>
 <span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span>(<span class='no'>LCC2005</span>)
 
 <span class='co'># if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)</span>
-<span class='no'>LCC2005</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='no'>url</span>,
+<span class='no'>LCC2005</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='no'>url</span>,
                  <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='no'>lcc2005Filename</span>,
                  <span class='kw'>archive</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='st'>"LandCoverOfCanada2005_V1_4.zip"</span>),
                  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>dPath</span>),

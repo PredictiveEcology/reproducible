@@ -82,7 +82,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0.9021</span>
       </span>
     </div>
 
@@ -145,7 +145,7 @@
     <p>Advanced use.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.formalsNotInCurrentDots</span>(<span class='no'>fun</span>, <span class='no'>...</span>, <span class='no'>dots</span>)</pre>
+    <pre class="usage"><span class='fu'>.formalsNotInCurrentDots</span>(<span class='no'>fun</span>, <span class='no'>...</span>, <span class='no'>dots</span>, <span class='no'>formalNames</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -163,6 +163,10 @@ provided explicitly.</p></td>
       <th>dots</th>
       <td><p>Optional. If this is provided via say <code>dots = list(...)</code>,
 then this will cause the <code>...</code> to be ignored.</p></td>
+    </tr>
+    <tr>
+      <th>formalNames</th>
+      <td><p>Optional character vector. If provided then it will override the <code>fun</code></p></td>
     </tr>
     </table>
 

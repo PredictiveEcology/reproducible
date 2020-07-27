@@ -82,7 +82,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0.9021</span>
       </span>
     </div>
 
@@ -146,26 +146,26 @@
     </div>
 
     <pre class="usage"><span class='fu'>CacheDBFile</span>(
-  <span class='no'>cachePath</span>,
+  <span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>),
   <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
   <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>)
 )
 
-<span class='fu'>CacheStorageDir</span>(<span class='no'>cachePath</span>)
+<span class='fu'>CacheStorageDir</span>(<span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>))
 
 <span class='fu'>CacheStoredFile</span>(
-  <span class='no'>cachePath</span>,
+  <span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>),
   <span class='no'>hash</span>,
   <span class='kw'>format</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cacheSaveFormat"</span>, <span class='st'>"rds"</span>)
 )
 
 <span class='fu'>CacheDBTableName</span>(
-  <span class='no'>cachePath</span>,
+  <span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>),
   <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>())
 )
 
 <span class='fu'>CacheIsACache</span>(
-  <span class='no'>cachePath</span>,
+  <span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>),
   <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
   <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>)

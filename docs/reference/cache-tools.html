@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Write to cache repository, using <code>future::future</code> — writeFuture • reproducible</title>
+<title>Create a new cache — createCache • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,9 @@
 
 
 
-<meta property="og:title" content="Write to cache repository, using <code>future::future</code> — writeFuture" />
-<meta property="og:description" content="This will be used internally if options(&quot;reproducible.futurePlan&quot; = TRUE).
-This is still experimental." />
+<meta property="og:title" content="Create a new cache — createCache" />
+<meta property="og:description" content="Create a new cache
+Low level tools to work with Cache" />
 
 
 
@@ -137,52 +137,60 @@ This is still experimental." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Write to cache repository, using <code>future::future</code></h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache.R'><code>R/cache.R</code></a></small>
-    <div class="hidden name"><code>writeFuture.Rd</code></div>
+    <h1>Create a new cache</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/DBI.R'><code>R/DBI.R</code></a></small>
+    <div class="hidden name"><code>cache-tools.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This will be used internally if <code><a href='https://rdrr.io/r/base/options.html'>options("reproducible.futurePlan" = TRUE)</a></code>.
-This is still experimental.</p>
+    <p>Create a new cache</p>
+<p>Low level tools to work with Cache</p>
     </div>
 
-    <pre class="usage"><span class='fu'>writeFuture</span>(
-  <span class='no'>written</span>,
-  <span class='no'>outputToSave</span>,
-  <span class='no'>cacheRepo</span>,
-  <span class='no'>userTags</span>,
+    <pre class="usage"><span class='fu'>createCache</span>(
+  <span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>),
   <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
   <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
-  <span class='no'>cacheId</span>
+  <span class='kw'>force</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>
+)
+
+<span class='fu'>saveToCache</span>(
+  <span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>),
+  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
+  <span class='no'>obj</span>,
+  <span class='no'>userTags</span>,
+  <span class='no'>cacheId</span>,
+  <span class='kw'>linkToCacheId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)
+
+<span class='fu'>loadFromCache</span>(
+  <span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>),
+  <span class='no'>cacheId</span>,
+  <span class='kw'>format</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cacheSaveFormat"</span>, <span class='st'>"rds"</span>),
+  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>)
+)
+
+<span class='fu'>rmFromCache</span>(
+  <span class='kw'>cachePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cachePath"</span>),
+  <span class='no'>cacheId</span>,
+  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
+  <span class='kw'>format</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cacheSaveFormat"</span>, <span class='st'>"rds"</span>)
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>written</th>
-      <td><p>Integer. If zero or positive then it needs to be written still.
-Should be 0 to start.</p></td>
-    </tr>
-    <tr>
-      <th>outputToSave</th>
-      <td><p>The R object to save to repository</p></td>
-    </tr>
-    <tr>
-      <th>cacheRepo</th>
-      <td><p>The file path of the repository</p></td>
-    </tr>
-    <tr>
-      <th>userTags</th>
-      <td><p>Character string of tags to attach to this <code>outputToSave</code> in
-the <code>CacheRepo</code></p></td>
+      <th>cachePath</th>
+      <td><p>A path describing the directory in which to create
+the database file(s)</p></td>
     </tr>
     <tr>
       <th>drv</th>
-      <td><p>an object that inherits from DBIDriver,
-or an existing DBIConnection
-object (in order to clone an existing connection).</p></td>
+      <td><p>A driver, passed to <code>dbConnect</code></p></td>
     </tr>
     <tr>
       <th>conn</th>
@@ -190,14 +198,35 @@ object (in order to clone an existing connection).</p></td>
 <code><a href='https://dbi.r-dbi.org/reference/dbConnect.html'>dbConnect()</a></code>.</p></td>
     </tr>
     <tr>
+      <th>force</th>
+      <td><p>Logical. Should it create a cache in the <code>cachePath</code>,
+even if it already exists, overwriting.</p></td>
+    </tr>
+    <tr>
+      <th>obj</th>
+      <td><p>The R object to save to the cache</p></td>
+    </tr>
+    <tr>
+      <th>userTags</th>
+      <td><p>A character vector with descriptions of the Cache function call. These
+will be added to the Cache so that this entry in the Cache can be found using
+<code>userTags</code> e.g., via <code><a href='viewCache.html'>showCache</a></code>.</p></td>
+    </tr>
+    <tr>
       <th>cacheId</th>
-      <td><p>Character string. If passed, this will override the calculated hash
-of the inputs, and return the result from this cacheId in the cacheRepo.
-Setting this is equivalent to manually saving the output of this function, i.e.,
-the object will be on disk, and will be recovered in subsequent
-This may help in some particularly finicky situations
-where Cache is not correctly detecting unchanged inputs. This will guarantee
-the object will be identical each time; this may be useful in operational code.</p></td>
+      <td><p>The hash string representing the result of <code>.robustDigest</code></p></td>
+    </tr>
+    <tr>
+      <th>linkToCacheId</th>
+      <td><p>Optional. If a <code>cacheId</code> is provided here, then a <code>file.link</code>
+will be made to the file with that <code>cacheId</code> name in the cache repo.
+This is used when identical outputs exist in the cache. This will save disk space.</p></td>
+    </tr>
+    <tr>
+      <th>format</th>
+      <td><p>The text string representing the file extension used normally by
+different save formats; currently only <code>"rds"</code> or <code>"qs"</code>. Defaults
+to <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.cacheSaveFormat", "rds")</a></code></p></td>
     </tr>
     </table>
 

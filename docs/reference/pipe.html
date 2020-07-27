@@ -40,7 +40,24 @@
 
 
 <meta property="og:title" content="A cache-aware pipe that does not mask with <code>%&gt;%</code> — pipe" />
-<meta property="og:description" content="STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED." />
+<meta property="og:description" content="
+This pipe can only be used at any point in a pipe chain, but must
+be preceded by Cache(...) (which allows other Cache() %C% ... remaining pipes
+arguments to be passed).
+This will take the input arguments of the first function immediately following
+the Cache() and the pipe chain until the special %C%,
+evaluate them both against the cacheRepo argument in Cache.
+If they exist, then the entire pipe chain will be skipped, and only the
+previous final result will be given.
+If there is no previous cached copy of the initial function's arguments,
+then all chain elements will be evaluated.
+The final result will be cached for future use.
+Therefore, the entire chain must be identical.
+The required usage should be straight forward to insert into existing code
+that uses pipes (Cache() %C% ... remaining pipes).
+Still experimental and may change. This form cannot pass any arguments to
+]codeCache, such as cacheRepo, thus it is of limited utility. However,
+it is a clean alternative for simple cases." />
 
 
 
@@ -82,7 +99,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0.9021</span>
       </span>
     </div>
 
@@ -142,30 +159,12 @@
     </div>
 
     <div class="ref-description">
-    <p><em>STILL EXPERIMENTAL. THIS MAY NOT WORK AS ANTICIPATED.</em></p>
-    </div>
-
-    <pre class="usage"><span class='no'>lhs</span> <span class='kw'>%C%</span> <span class='no'>rhs</span></pre>
-
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>lhs</th>
-      <td><p>A value or the magrittr placeholder.</p></td>
-    </tr>
-    <tr>
-      <th>rhs</th>
-      <td><p>A function call using the magrittr semantics.</p></td>
-    </tr>
-    </table>
-
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>This pipe can only be used at any point in a pipe chain, but must
-be preceded by <code><a href='cache.html'>Cache(...)</a></code> (which allows other <code>Cache</code> arguments to be passed).</p>
+    <p><img src='figures/lifecycle-experimental.svg' alt="experimental" /></p>
+<p>This pipe can only be used at any point in a pipe chain, but must
+be preceded by <code><a href='Cache.html'>Cache(...)</a></code> (which allows other <code>Cache() %C% ... remaining pipes</code>
+arguments to be passed).</p>
 <p>This will take the input arguments of the first function immediately following
-the <code><a href='cache.html'>Cache()</a></code> and the pipe chain until the special <code>%C%</code>,
+the <code><a href='Cache.html'>Cache()</a></code> and the pipe chain until the special <code>%C%</code>,
 evaluate them both against the <code>cacheRepo</code> argument in <code>Cache</code>.
 If they exist, then the entire pipe chain will be skipped, and only the
 previous final result will be given.
@@ -175,39 +174,58 @@ The final result will be cached for future use.
 Therefore, the entire chain must be identical.
 The required usage should be straight forward to insert into existing code
 that uses pipes (<code>Cache() %C% ... remaining pipes</code>).</p>
-    <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
+<p>Still experimental and may change. This form cannot pass any arguments to
+]codeCache, such as <code>cacheRepo</code>, thus it is of limited utility. However,
+it is a clean alternative for simple cases.</p>
+    </div>
 
-    <p><em>This is still experimental; use with care.</em></p>
+    <pre class="usage"><span class='no'>lhs</span> <span class='kw'>%C%</span> <span class='no'>rhs</span>
+
+<span class='no'>lhs</span> <span class='kw'>%&lt;%</span> <span class='no'>rhs</span></pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>lhs</th>
+      <td><p>A name to assign to.</p></td>
+    </tr>
+    <tr>
+      <th>rhs</th>
+      <td><p>A function call</p></td>
+    </tr>
+    </table>
+
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>magrittr</span>) <span class='co'># standard pipe</span>
 <span class='co'># dontrun{ # these can't be automatically run due to package conflicts with magrittr</span>
 <span class='no'>tmpdir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"testCache"</span>)
-<span class='fu'><a href='checkPath.html'>checkPath</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "/tmp/RtmpXMlGMn/testCache"</div><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>) <span class='kw'>%&gt;%</span>
+<span class='fu'><a href='https://rdrr.io/pkg/Require/man/checkPath.html'>checkPath</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>create</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "C:/Users/EMCINT~1.L-V/AppData/Local/Temp/RtmpKqN2VH/testCache"</div><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>) <span class='kw'>%&gt;%</span>
      <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>() <span class='kw'>%&gt;%</span>
      <span class='fu'><a href='https://rdrr.io/r/base/prod.html'>prod</a></span>(<span class='no'>.</span>, <span class='fl'>6</span>)
-<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%C%</span> <span class='co'># use of the %C% pipe!</span>
+<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%C%</span> <span class='co'># use of the %C% pipe!</span>
      <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>) <span class='kw'>%&gt;%</span> <span class='co'># everything after here is NOT cached!</span>
      <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>() <span class='kw'>%&gt;%</span>
-     <span class='fu'><a href='https://rdrr.io/r/base/prod.html'>prod</a></span>(<span class='no'>.</span>, <span class='fl'>6</span>)</div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%C%</span>
+     <span class='fu'><a href='https://rdrr.io/r/base/prod.html'>prod</a></span>(<span class='no'>.</span>, <span class='fl'>6</span>)</div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>d</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%C%</span>
      <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>) <span class='kw'>%&gt;%</span>
      <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>() <span class='kw'>%&gt;%</span>
-     <span class='fu'><a href='https://rdrr.io/r/base/prod.html'>prod</a></span>(<span class='no'>.</span>, <span class='fl'>6</span>)</div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>e</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%C%</span>
+     <span class='fu'><a href='https://rdrr.io/r/base/prod.html'>prod</a></span>(<span class='no'>.</span>, <span class='fl'>6</span>)</div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>e</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%C%</span>
      <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>) <span class='kw'>%&gt;%</span>
      <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>() <span class='kw'>%&gt;%</span>
-     <span class='fu'><a href='https://rdrr.io/r/base/prod.html'>prod</a></span>(<span class='no'>.</span>, <span class='fl'>5</span>) <span class='co'># changed</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>b</span>,<span class='no'>d</span>) <span class='co'># TRUE</span></div><div class='output co'>#&gt; <span class='error'>Error in all.equal(b, d): object 'b' not found</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>a</span>,<span class='no'>d</span>) <span class='co'># different because 'a' uses a unique rnorm, 'd' uses the Cached rnorm</span></div><div class='output co'>#&gt; <span class='error'>Error in all.equal(a, d): object 'd' not found</span></div><div class='input'>               <span class='co'>#   because the arguments to rnorm, i.e., 10 and 16, and</span>
+     <span class='fu'><a href='https://rdrr.io/r/base/prod.html'>prod</a></span>(<span class='no'>.</span>, <span class='fl'>5</span>) <span class='co'># changed</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>b</span>,<span class='no'>d</span>) <span class='co'># TRUE</span></div><div class='output co'>#&gt; <span class='error'>Error in h(simpleError(msg, call)): error in evaluating the argument 'target' in selecting a method for function 'all.equal': object 'b' not found</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>a</span>,<span class='no'>d</span>) <span class='co'># different because 'a' uses a unique rnorm, 'd' uses the Cached rnorm</span></div><div class='output co'>#&gt; <span class='error'>Error in h(simpleError(msg, call)): error in evaluating the argument 'current' in selecting a method for function 'all.equal': object 'd' not found</span></div><div class='input'>               <span class='co'>#   because the arguments to rnorm, i.e., 10 and 16, and</span>
                <span class='co'>#   the subsequent functions in the chain, are identical</span>
-<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>a</span>,<span class='no'>e</span>) <span class='co'># different because the final function, prod, has a changed argument.</span></div><div class='output co'>#&gt; <span class='error'>Error in all.equal(a, e): object 'e' not found</span></div><div class='input'>
+<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>a</span>,<span class='no'>e</span>) <span class='co'># different because the final function, prod, has a changed argument.</span></div><div class='output co'>#&gt; <span class='error'>Error in h(simpleError(msg, call)): error in evaluating the argument 'current' in selecting a method for function 'all.equal': object 'e' not found</span></div><div class='input'>
 <span class='co'>###########</span>
 <span class='co'># multiple random elements shows Cached sequence up to %C%</span>
-<span class='no'>a1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%&gt;%</span>
+<span class='no'>a1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>1</span>, <span class='fl'>10</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>2</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>() <span class='kw'>%C%</span>                <span class='co'># Cache pipe here --</span>
                                  <span class='co'># means this pipe is the last one that is Cached</span>
        <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>3</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>.</span>) <span class='kw'>%&gt;%</span>
-       <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>4</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>)  <span class='co'># Random 4 numbers, the mean is same each time</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>a2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%&gt;%</span>
+       <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>4</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>)  <span class='co'># Random 4 numbers, the mean is same each time</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>a2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>1</span>, <span class='fl'>10</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>2</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>() <span class='kw'>%C%</span>                <span class='co'># Cache pipe here --</span>
@@ -216,14 +234,14 @@ that uses pipes (<code>Cache() %C% ... remaining pipes</code>).</p>
        <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>.</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>4</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>)  <span class='co'># Random 4 numbers, the mean is same each time</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='no'>a1</span> - <span class='no'>a2</span>) <span class='co'># not 0 # i.e., numbers are different</span></div><div class='output co'>#&gt; <span class='error'>Error in eval(expr, envir, enclos): object 'a1' not found</span></div><div class='input'>
 <span class='co'># NOW DO WITH CACHE AT END</span>
-<span class='no'>b1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%&gt;%</span>
+<span class='no'>b1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>1</span>, <span class='fl'>10</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>2</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>() <span class='kw'>%&gt;%</span>
                                  <span class='co'># means this pipe is the last one that is Cached</span>
        <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>3</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>.</span>) <span class='kw'>%C%</span>               <span class='co'># Cache pipe here --</span>
-       <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>4</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>)        <span class='co'># These are samethe mean is same each time</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>b2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%&gt;%</span>
+       <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>4</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>)        <span class='co'># These are samethe mean is same each time</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>b2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpdir</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>1</span>, <span class='fl'>10</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>2</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>) <span class='kw'>%&gt;%</span>
        <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>() <span class='kw'>%&gt;%</span>
@@ -232,7 +250,12 @@ that uses pipes (<code>Cache() %C% ... remaining pipes</code>).</p>
        <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span>(<span class='no'>.</span>) <span class='kw'>%C%</span>               <span class='co'># Cache pipe here --</span>
        <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>4</span>, <span class='kw'>mean</span> <span class='kw'>=</span> <span class='no'>.</span>)        <span class='co'># These are samethe mean is same each time</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='no'>b1</span> - <span class='no'>b2</span>) <span class='co'># 0 # i.e., numbers are same</span></div><div class='output co'>#&gt; <span class='error'>Error in eval(expr, envir, enclos): object 'b1' not found</span></div><div class='input'>
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>tmpdir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-<span class='co'>#}</span></div></pre>
+<span class='co'>#}</span>
+<span class='co'># Equivalent</span>
+<span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span>
+#&gt; <span class='message'>  this will not persist across R sessions.</span></div><div class='input'><span class='no'>b</span> <span class='kw'>%&lt;%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span>
+#&gt; <span class='message'>  this will not persist across R sessions.</span></div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  ...(Object to retrieve (7072c305d8c69df0.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous rnorm call, </span><span></span></div><div class='input'>
+</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

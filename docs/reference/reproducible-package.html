@@ -43,10 +43,9 @@
 <meta property="og:description" content="
 This package aims at making
 high-level, robust, machine and OS independent tools for making deeply
-reproducible and reusable content in R. The Require function is a
-different take on package management, such as renv, packrat and
-checkpoint that attempts to be more seamless. The package also includes
-tools for caching, preparing data files and accessing GitHub repositories." />
+reproducible and reusable content in R. The core user functions are Cache
+and prepInputs. Each of these is built around many core and edge cases
+required to have deeply reproducible code." />
 
 
 
@@ -88,7 +87,7 @@ tools for caching, preparing data files and accessing GitHub repositories." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0.9021</span>
       </span>
     </div>
 
@@ -148,13 +147,12 @@ tools for caching, preparing data files and accessing GitHub repositories." />
     </div>
 
     <div class="ref-description">
-    <p><a href='https://www.tidyverse.org/lifecycle/#maturing'><img src='figures/lifecycle-maturing.svg' alt='Maturing lifecycle'></a></p>
+    <p><img src='figures/lifecycle-maturing.svg' alt="maturing" /></p>
 <p>This package aims at making
 high-level, robust, machine and OS independent tools for making deeply
-reproducible and reusable content in R. The <code>Require</code> function is a
-different take on package management, such as <span class="pkg">renv</span>, <span class="pkg">packrat</span> and
-<span class="pkg">checkpoint</span> that attempts to be more seamless. The package also includes
-tools for caching, preparing data files and accessing GitHub repositories.</p>
+reproducible and reusable content in R. The core user functions are <code>Cache</code>
+and <code>prepInputs</code>. Each of these is built around many core and edge cases
+required to have deeply reproducible code.</p>
     </div>
 
 
@@ -185,10 +183,6 @@ That way, the entire code sequence for a project of arbitrary size can be run
   This allows all project data to be stored in custom cloud locations or in their original online
   data repositories, <code>without altering code</code> between the first, second, third, etc., times
   the code is run.</p></dd>
-  <dt><code>Require</code>:</dt><dd><p>A version of <code>require</code> that incorporates elements of
-  <code>install.packages</code>, <code><a href='https://devtools.r-lib.org//reference/remote-reexports.html'>devtools::install_github</a></code>, <span class="pkg">packrat</span>.
-  It allows for users code to work for a new user on a new machine that may or may not have all
-  packages installed.</p></dd>
 
 </dl>
 
