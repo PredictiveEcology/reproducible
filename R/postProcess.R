@@ -1942,7 +1942,7 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 
 
 #' @importFrom raster extension
-`cropReprojMaskWGDAL` <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs,
+cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs,
                                 destinationPath = getOption("reproducible.destinationPath", "."), ...) {
   message("crop, reproject, mask is using one-step gdalwarp")
 
@@ -1952,7 +1952,7 @@ projNotWKT2warn <- "Using PROJ not WKT2"
   tempSrcRaster <- bigRastersTmpFile()
   returnToRAM <- FALSE
   if (missing(filename2)) filename2 <- NULL
-  if (isTRUE(filename2)) {
+  if (!.isFALSE(filename2)) {
     filename2 <- determineFilename(filename2, destinationPath = destinationPath)
   } else if (is.null(filename2) | .isFALSE(filename2)) {
     returnToRAM <- TRUE
