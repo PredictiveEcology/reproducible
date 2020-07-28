@@ -16,7 +16,7 @@ Tested and passed using winbuilder all three versions, and rhub with no errors, 
 * Ubuntu 16.04              (travis-ci), R 4.0.2
 * Ubuntu 18.04                  (local), R 4.0.2
 * Windows                    (appveyor), R 4.0.2
-* Windows                 (win-builder), R 4.0.2
+* Windows                       (local), R 4.0.2
 
 ### Development R version
 * Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-07-27)
