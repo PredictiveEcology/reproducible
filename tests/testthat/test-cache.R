@@ -212,7 +212,7 @@ test_that("test file-backed raster caching", {
       # changed behaviour as of reproducible 1.2.0.9020 -- now Cache doesn't protect user from filename collisions if user makes them
       expect_true(dirname(normPath(filename(bb))) != normPath(file.path(tmpdir, "rasters")))
       expect_true(identical(basename(filename(bb)), basename(tmpfile[2])))
-      expect_true(identical(filename(bb), tmpfile[2]))
+      expect_true(identical(normPath(filename(bb)), tmpfile[2]))
       expect_true(dirname(filename(bb1)) == dirname(tmpfile[2]))
       expect_true(basename(filename(bb1)) == basename(tmpfile[2]))
       expect_true(dataType(bb) == "INT1U")
