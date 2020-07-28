@@ -224,7 +224,7 @@
 <li>can now change <code><a href="https://rdrr.io/r/base/options.html">options('reproducible.cacheSaveFormat')</a></code> on the fly; cache will look for the file by <code>cacheId</code> and write it using <code><a href="https://rdrr.io/r/base/options.html">options('reproducible.cacheSaveFormat')</a></code>. If it is in another format, Cache will load it and resave it with the new format. Experimental still.</li>
 <li>new <code>Copy</code> methods for <code>refClass</code> objects, <code>SQLite</code> and moved <code>environment</code> method into <code>ANY</code> as it would be dispatched for unknown classes that inherit from <code>environment</code>, of which there are many and this should be intercepted</li>
 <li>
-<code>Require</code> can now handle minimum version numbers, e.g., <code><a href="https://rdrr.io/pkg/Require/man/Require.html">Require("bit (&gt;=1.1-15.2)")</a></code>; this can be worked into downstream tools. Still experimental.</li>
+<code>Require</code> can now handle minimum version numbers, e.g., <code><a href="https://Require.predictiveecology.org/reference/Require.html">Require("bit (&gt;=1.1-15.2)")</a></code>; this can be worked into downstream tools. Still experimental.</li>
 <li>Cache will do <code>file.link</code> or <code>file.symlink</code> if an existing Cache entry with identical output exists and it is large (currently <code>1e6</code> bytes); this will save disk space.</li>
 <li>Cache database now has tags for elapsed time of “digest”, “original call”, and “subsequent recovery from file”, <code>elapsedTimeDigest</code>, <code>elapsedTimeFirstRun</code>, and <code>elapsedTimeLoad</code>, respectively.</li>
 <li>Better management of temporary files in package and tests, e.g., during downloading (<code>preProcess</code>). Includes 2 new functions, <code>tempdir2</code> and <code>tempfile2</code> for use with <code>reproducible</code> package</li>
@@ -358,7 +358,7 @@
 <a href="#bug-fixes-5" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>
-<code>pkgDep</code> was becoming unreliable for unknown reasons. It has been reimplemented, much faster, without memoising. The speed gains should be immediately noticeable (6 second to 0.1 second for <code><a href="https://rdrr.io/pkg/Require/man/pkgDep.html">pkgDep("reproducible")</a></code>)</li>
+<code>pkgDep</code> was becoming unreliable for unknown reasons. It has been reimplemented, much faster, without memoising. The speed gains should be immediately noticeable (6 second to 0.1 second for <code><a href="https://Require.predictiveecology.org/reference/pkgDep.html">pkgDep("reproducible")</a></code>)</li>
 <li>improved <code>retry</code> to use exponential backoff when attempting to access online resources (<a href='https://github.com/PredictiveEcology/reproducible/issues/121'>#121</a>)</li>
 </ul>
 </div>

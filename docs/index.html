@@ -100,6 +100,7 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
+
 <div id="reproducible" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#reproducible" class="anchor"></a>reproducible</h1></div>
@@ -108,7 +109,46 @@
 <div id="news" class="section level2">
 <h2 class="hasAnchor">
 <a href="#news" class="anchor"></a>News</h2>
-<p>See updates from latest <a href="https://cran.r-project.org/package=reproducible">CRAN</a> and <a href="https://github.com/PredictiveEcology/reproducible/blob/development/NEWS.md">development</a> versions. Note that versions 1.0.0 and later are not compatible with previous versions “out of the box”. However, setting the <code><a href="https://rdrr.io/r/base/options.html">options("reproducible.useDBI" = FALSE)</a></code> will return the behaviour to prior versions and so <em>should</em> be compatible. The new version is much faster and creates smaller repository files and allows for different (e.g., <code>RPostgres</code> backends for the database – not the saved files, however; these are still saved locally).</p>
+<p>See updates from latest <a href="https://cran.r-project.org/package=reproducible">CRAN</a> and <a href="https://github.com/PredictiveEcology/reproducible/blob/development/NEWS.md">development</a> versions. Note that versions 1.0.0 and later are not compatible with previous versions. The current version can be much faster and creates smaller repository files (each with specific options set using <code>Suggests</code> packages) and allows for different (e.g., <code>RPostgres</code> backends for the database – not the saved files, however; these are still saved locally).</p>
+</div>
+</div>
+<div id="reproducible-workflows" class="section level1">
+<h1 class="hasAnchor">
+<a href="#reproducible-workflows" class="anchor"></a>Reproducible workflows</h1>
+<p>A reproducible workflow is a series of code steps (e.g., in a script) that, when run, produce the same output from the same inputs every time. The big challenge with such a workflow is that many steps are so time consuming that a scientist tends to <em>not</em> re-run each step every time. After many months of work, it is often unclear if the code will actually function from the start. Is the original dataset still there? Have the packages that were used been updated? Are some of the steps missing because there was some “point and clicking”?</p>
+<p>The best way to maintain reproducibility is to have all the code re-run <em>all the time</em>. That way, errors are detected early and can be fixed. The challenge is how to make all the steps fast enough that it becomes convenient to re-run everything from scratch each time.</p>
+<div id="cache" class="section level2">
+<h2 class="hasAnchor">
+<a href="#cache" class="anchor"></a><code>Cache</code>
+</h2>
+<p>Caching is the principle tool to achieve this reproducible work-flow. There are many existing tools that support some notion of <em>caching</em>. The main tool here, <code>Cache</code>, can be nested hierarchically, becoming very powerful for the data science developer who is regularly working at many levels of an analysis.</p>
+<pre><code><a href="https://rdrr.io/r/stats/Normal.html">rnorm(1) # give a random number
+Cache(rnorm, 1) # generates a random number
+Cache(rnorm, 1) # recovers the previous random number because call is identical
+</a></code></pre>
+</div>
+<div id="prepinputs" class="section level2">
+<h2 class="hasAnchor">
+<a href="#prepinputs" class="anchor"></a><code>prepInputs</code>
+</h2>
+<p>A common data problem is starting from a raw (spatial) dataset and getting it into shape for an analysis. Often, copies of a dataset are haphazardly placed in ad hoc local file systems. This makes it particularly difficult to share the workflow. The solution to this is use a canonical location (e.g., cloud storage, permalink to original data provider, etc.) and use tools that are smart enough to download only once.</p>
+<p>Get a geospatial dataset. It will be checksummed (locally), meaning if the file is already in place locally, it will not download it again.</p>
+<pre><code># Using dlFun -- a custom download function -- passed to preProcess
+test1 &lt;- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+                    dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                    path = dPath)
+                    
+                    </code></pre>
+</div>
+<div id="cache-with-prepinputs" class="section level2">
+<h2 class="hasAnchor">
+<a href="#cache-with-prepinputs" class="anchor"></a><code>Cache</code> with <code>prepInputs</code>
+</h2>
+<p>Putting these tools together allows for very rich data flows. For example, with <code>prepInputs</code> and using the <code>fun</code> argument or passing a <code>studyArea</code>, a raw dataset can be downloaded, loaded into R, and post processed – all potentially very time consuming steps resulting in a clean, often much smaller dataset. Wrapping all these with a <code>Cache</code> can make it very quick.</p>
+<pre><code>test1 &lt;- Cache(prepInputs, targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
+                    dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+                    path = dPath)</code></pre>
+<p>See vignettes and help files for many more real-world examples.</p>
 </div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
@@ -118,9 +158,9 @@
 <a href="#current-release-on-cran" class="anchor"></a>Current release (on CRAN)</h3>
 <p><a href="https://travis-ci.org/PredictiveEcology/reproducible"><img src="https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=master" alt="Build Status"></a> <a href="https://ci.appveyor.com/project/achubaty/reproducible/branch/master"><img src="https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/master?svg=true" alt="Appveyor Build status"></a> <a href="https://coveralls.io/github/PredictiveEcology/reproducible?branch=master"><img src="https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=master" alt="Coverage Status"></a></p>
 <p><strong>Install from CRAN:</strong></p>
-<div class="sourceCode" id="cb1"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"reproducible"</span>)</pre></div>
+<div class="sourceCode" id="cb4"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"reproducible"</span>)</pre></div>
 <p><strong>Install from GitHub:</strong></p>
-<div class="sourceCode" id="cb2"><pre class="r"><span class="co">#install.packages("devtools")</span>
+<div class="sourceCode" id="cb5"><pre class="r"><span class="co">#install.packages("devtools")</span>
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"devtools"</span>)
 <span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"PredictiveEcology/reproducible"</span>, <span class="kw">dependencies</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></div>
 </div>
@@ -129,7 +169,7 @@
 <a href="#development-version" class="anchor"></a>Development version</h3>
 <p><a href="https://travis-ci.org/PredictiveEcology/reproducible"><img src="https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=development" alt="Build Status"></a> <a href="https://ci.appveyor.com/project/achubaty/reproducible/branch/development"><img src="https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/development?svg=true" alt="Appveyor Build status"></a> <a href="https://coveralls.io/github/PredictiveEcology/reproducible?branch=development"><img src="https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development" alt="Coverage Status"></a></p>
 <p><strong>Install from GitHub:</strong></p>
-<div class="sourceCode" id="cb3"><pre class="r"><span class="co">#install.packages("devtools")</span>
+<div class="sourceCode" id="cb6"><pre class="r"><span class="co">#install.packages("devtools")</span>
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"devtools"</span>)
 <span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"PredictiveEcology/reproducible"</span>, <span class="kw">ref</span> <span class="kw">=</span> <span class="st">"development"</span>, <span class="kw">dependencies</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></div>
 </div>
@@ -140,6 +180,7 @@
 <p>Please see <code>CONTRIBUTING.md</code> for information on how to contribute to this project.</p>
 </div>
 </div>
+
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
