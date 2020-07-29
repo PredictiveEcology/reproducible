@@ -108,12 +108,12 @@ checkGDALVersion <- function(version) {
 #' }
 #'
 fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE), ...) {
-  if (!identical(crs(y), crs(x))) {
+  if (!identical(.crs(y), .crs(x))) {
     if (!is(y, "sf")) {
-      y <- spTransform(x = y, CRSobj = crs(x))
+      y <- spTransform(x = y, CRSobj = .crs(x))
     } else {
       .requireNamespace("sf", stopOnFALSE = TRUE)
-      y <- sf::st_transform(x = y, crs = crs(x))
+      y <- sf::st_transform(x = y, crs = .crs(x))
     }
   }
 
@@ -172,7 +172,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       # dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
       cores <- dealWithCores(cores)
       prll <- paste0("-wo NUM_THREADS=", cores, " ")
-      srcCRS <- as.character(raster::crs(raster::raster(tempSrcRaster)))
+      srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
       targCRS <- srcCRS
       system(
         paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
@@ -295,7 +295,7 @@ findGDAL <- function() {
 attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
   if (requireNamespace("gdalUtils", quietly = TRUE)) {
     browser(expr = exists("._attemptGDAL_1"))
-    crsIsNA <- is.na(crs(x))
+    crsIsNA <- is.na(.crs(x))
     cpim <- canProcessInMemory(x, 3)
     isTRUEuseGDAL <- isTRUE(useGDAL)
     forceGDAL <- identical(useGDAL, "force")
