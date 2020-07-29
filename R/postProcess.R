@@ -341,7 +341,18 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           yyy <- as(cropExtentRounded, "SpatialPolygons")
           crs(yyy) <- crsX
           x <- fixErrors(x)
-          y <- sf::st_intersection(sf::st_as_sf(x), sf::st_as_sf(yyy))
+          xSF <- sf::st_as_sf(x)
+          yyySF <- sf::st_as_sf(yyy)
+
+          # This tryCatch seems to be finding a bug in st_intersection:
+          #   The error was:
+          #   Error in geos_op2_geom("intersection", x, y) :
+          #      st_crs(x) == st_crs(y) is not TRUE
+          #   But the st_crs are identical
+          y <- tryCatch(sf::st_intersection(xSF, yyySF), error = function(x) {
+            xSF <- sf::st_transform(xSF, sf::st_crs(crsX))
+            sf::st_intersection(xSF, yyySF)
+          })
           # whichIntersect <- suppressWarningsSpecific(
           #   falseWarnings = "have different proj4",
           #   rgeos::gIntersects(x, as(cropExtentRounded, "SpatialPolygons"), byid = TRUE))
@@ -990,70 +1001,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
   browser(expr = exists("._maskInputs.Spatial_1"))
   x <- fixErrors(x)
   x <- maskInputs(sf::st_as_sf(x), studyArea, rasterToMatch, maskWithRTM)
-  x <- as(x, "Spatial")
-  # if (!is.null(studyArea)) {
-  #   message("    intersecting ...")
-  #   if (NROW(studyArea) > 1)
-  #     studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
-  #   if (!identical(crs(x), crs(studyArea)))
-  #     studyArea <- spTransform(studyArea, CRSobj = crs(x))
-  #   suppressWarnings({
-  #     studyArea <- fixErrors(studyArea, "studyArea")
-  #   })
-  #   # raster::intersect -- did weird things in case of SpatialPolygonsDataFrame
-  #   #  specifically ecodistricts.shp . It created an invalid object with
-  #   #  non-unique row names
-  #
-  #   #yyy <- as(cropExtentRounded, "SpatialPolygons")
-  #   #crs(yyy) <- crsX
-  #   y <- sf::st_intersection(sf::st_as_sf(x), sf::st_as_sf(studyArea))
-  #
-  #   # if (!.requireNamespace("rgeos")) stop()
-  #   # whichIntersect <- suppressWarningsSpecific(
-  #   #   falseWarnings = "have different proj4",
-  #   #   rgeos::gIntersects(x, studyArea, byid = TRUE))
-  #   # whichIntersect <- which(whichIntersect)
-  #   # xx <- x[whichIntersect,]
-  #   # y <- suppressWarningsSpecific(falseWarnings = "non identical CRS|which is lost in output",
-  #   #                                raster::intersect(xx, studyArea))
-  #   # if (is(x, "SpatialPolygonsDataFrame"))
-  #   #   y <- SpatialPolygonsDataFrame(y, data = as.data.frame(x[whichIntersect,]), match.ID = FALSE)
-  #
-  #   # y <- suppressWarningsSpecific(raster::intersect(x, studyArea),
-  #   #                     "warn:.*different proj4 strings|which is lost in output")
-  #   trySF <- if (is(y, "try-error")) {
-  #     TRUE
-  #   } else if (!identical(length(unique(row.names(y))), length(row.names(y)))) {
-  #     TRUE
-  #   } else {
-  #     FALSE
-  #   }
-  #   if (trySF) {
-  #     "raster intersect did not work correctly, trying sf"
-  #     .requireNamespace("sf", stopOnFALSE = TRUE)
-  #     xTmp <- sf::st_join(sf::st_as_sf(x), sf::st_as_sf(studyArea), join = sf::st_intersects)
-  #     y <- as(xTmp, "Spatial")
-  #   }
-  #   if (!identical(crs(y), crs(x))) {
-  #     crs(y) <- crs(x) # sometimes the proj4string is rearranged, so they are not identical:
-  #     #  they should be
-  #   }
-  #
-  #   return(y)
-  # } else {
-  #   if (!is.null(rasterToMatch)) {
-  #     if (isTRUE(maskWithRTM)) {
-  #       sameProj <- if (isTRUE(compareCRS(x, rasterToMatch))) TRUE else FALSE
-  #       if (.isFALSE(sameProj))
-  #         x <- sp::spTransform(x, crs(rasterToMatch))
-  #       x <- x[!is.na(rasterToMatch[x]),]
-  #     } else {
-  #       message("No studyArea supplied, and maskWithRTM is FALSE; not masking")
-  #     }
-  #   }
-  #   return(x)
-  # }
-  x
+  as(x, "Spatial")
 }
 
 #' @export
