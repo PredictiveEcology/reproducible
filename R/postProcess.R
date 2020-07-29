@@ -2091,6 +2091,6 @@ isLongLat <- function(targCRS, srcCRS = targCRS) {
 
 .crs <- function(x, ...) {
   suppressWarningsSpecific(falseWarnings = "CRS object has comment",
-                           .crs(x, ...))
+                           raster::crs(x, ...))
 }
 
