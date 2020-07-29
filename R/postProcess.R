@@ -253,7 +253,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
   }
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
     if (!is.null(extentToMatch)) {
-      rasterToMatch <- raster(extentToMatch, crs = extentCRS)
+      rasterToMatch <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
+                                                raster(extentToMatch, crs = extentCRS))
     }
     cropTo <- if (!is.null(rasterToMatch)) {
       rasterToMatch
@@ -263,8 +264,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
     # have to project the extent to the x projection so crop will work -- this is temporary
     #   once cropped, then cropExtent should be rm
-    crsX <- crs(x)
-    crsCropTo <- crs(cropTo)
+    crsX <- .crs(x)
+    crsCropTo <- .crs(cropTo)
     cropExtent <- if (compareCRS(crsX, crsCropTo)) {
       extent(cropTo)
     } else {
@@ -308,7 +309,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
         if (attemptGDAL && is(x, "Raster")) {
           tmpfile <- paste0(tempfile(fileext = ".tif"))
           if (inMemory(x))
-            x <- writeRaster(x, filename = tempfile(fileext = ".tif"))
+            x <- suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
+                                          writeRaster(x, filename = tempfile(fileext = ".tif")))
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
           gdalUtils::gdalwarp(srcfile = filename(x),
@@ -427,7 +429,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
     } else {
       if (!is.null(rasterToMatch)) {
         # stop("Can't work with rasterToMatch and sf objects yet in cropInputs")
-        projectExtent(cropTo, crs(x))
+        projectExtent(cropTo, .crs(x))
       } else {
         if (is(studyArea, "sf")) {
           sf::st_transform(x = cropTo, crs = sf::st_crs(x))
@@ -660,19 +662,19 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
 
   if (is.null(rasterToMatch) && is.null(targetCRS)) {
     message("     no reprojecting because no rasterToMatch & targetCRS are FALSE (or NULL).")
-  } else if (is.null(rasterToMatch) & identical(crs(x), targetCRS)) {
+  } else if (is.null(rasterToMatch) & identical(.crs(x), targetCRS)) {
     message("    no reprojecting because target CRS is same as input CRS.")
   } else {
     if (is.null(targetCRS)) {
-      targetCRS <- crs(rasterToMatch)
+      targetCRS <- .crs(rasterToMatch)
     }
-    srcCRS <- crs(x)
+    srcCRS <- .crs(x)
 
     dontSpecifyResBCLongLat <- isLongLat(targetCRS, srcCRS)
 
     doProjection <- FALSE
     if (is.null(rasterToMatch)) {
-      if (!identical(crs(x), targetCRS))  doProjection <- TRUE
+      if (!identical(.crs(x), targetCRS))  doProjection <- TRUE
     } else if (differentRasters(x, rasterToMatch, targetCRS)) {
       doProjection <- TRUE
     }
@@ -757,7 +759,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         }
         system(
           paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-                 "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
+                 "-s_srs \"", as.character(.crs(raster::raster(tempSrcRaster))), "\"",
                  " -t_srs \"", targCRS, "\"",
                  " -multi ", prll,
                  "-ot ", dTypeGDAL,
@@ -829,7 +831,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           warn <- attr(x, "warning")
           attr(x, "warning") <- NULL
 
-          if (identical(crs(x), crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
+          if (identical(.crs(x), .crs(rasterToMatch)) & any(res(x) != res(rasterToMatch))) {
             if (all(res(x) %==% res(rasterToMatch))) {
               res(x) <- res(rasterToMatch) # TODO: This is irrelevant. Should not happen. TO Omit.
             } else {
@@ -838,7 +840,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
             }
           }
         }
-        if (!identical(crs(x), targetCRS)) {
+        if (!identical(.crs(x), targetCRS)) {
           crs(x) <- targetCRS # sometimes the proj4string is rearranged, so they are not identical:
           #  they should be
         }
@@ -901,7 +903,7 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
     if (!is(targetCRS, "CRS")) {
       if (!is.character(targetCRS)) {
         if (is(targetCRS, "spatialClasses")) {
-          targetCRS <- crs(targetCRS)
+          targetCRS <- .crs(targetCRS)
         } else {
           stop("targetCRS in projectInputs must be a CRS object or a class from",
                " which a crs can be extracted with raster::crs")
@@ -909,7 +911,7 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
       }
     }
     x <- spTransform(x = x, CRSobj = targetCRS)
-    if (!identical(crs(x), targetCRS)) {
+    if (!identical(.crs(x), targetCRS)) {
       ## sometimes the proj4string is rearranged, so they are not identical; they should be
       crs(x) <- targetCRS
     }
@@ -927,9 +929,9 @@ projectInputs.Spatial <- function(x, targetCRS, ...) {
 .getTargetCRS <- function(useSAcrs, studyArea, rasterToMatch, targetCRS = NULL) {
   if (is.null(targetCRS)) {
     targetCRS <- if (useSAcrs) {
-      crs(studyArea)
+      .crs(studyArea)
     } else if (!is.null(rasterToMatch)) {
-      crs(rasterToMatch)
+      .crs(rasterToMatch)
     } else {
       NULL # don't reproject a Raster if only has studyArea -- too lossy
     }
@@ -1081,9 +1083,9 @@ maskInputs.sf <- function(x, studyArea, ...) {
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
     }
-    if (!identical(crs(y), crs(x))) {
+    if (!identical(.crs(y), .crs(x))) {
       ## sometimes the proj4string is rearranged, so they are not identical; thef should be
-      crs(y) <- crs(x)
+      crs(y) <- .crs(x)
     }
 
     return(y)
@@ -1338,8 +1340,8 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
       # should have stayed at
       # +proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0
-      if (!identical(crs(xTmp), crs(x)))
-        crs(xTmp) <- crs(x)
+      if (!identical(.crs(xTmp), .crs(x)))
+        crs(xTmp) <- .crs(x)
 
       x <- xTmp
     }
@@ -1638,7 +1640,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       ##################################
       if (!is.null(rasterToMatch)) {
         extRTM <- extent(rasterToMatch)
-        crsRTM <- crs(rasterToMatch)
+        crsRTM <- .crs(rasterToMatch)
       } else {
         extRTM <- NULL
         crsRTM <- NULL
@@ -1652,7 +1654,8 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         nonNulls <- !unlist(lapply(objsAreProjected, is.null))
         suppressWarningsSpecific(falseWarnings = "wkt|CRS object has no comment",
                                  projections <- sapply(objsAreProjected[nonNulls],
-                                                       function(xx) grepl("(longitude).*(latitude)", wkt(xx))))
+                                                       function(xx) grepl("(longitude).*(latitude)",
+                                                                          tryCatch(wkt(xx), error = function(yy) NULL))))
 
         #projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
         #projections <- na.omit(projections)
@@ -1667,18 +1670,19 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         #replace extentRTM and crsRTM, because they will supersede all arguments
         if (!is.null(rasterToMatch)) {
           #reproject rasterToMatch, extend by res
-          newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = crs(x)), projNotWKT2warn)
+          newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = .crs(x)), projNotWKT2warn)
           tempPoly <- as(extent(newExtent), "SpatialPolygons")
-          crs(tempPoly) <- crs(x)
+          crs(tempPoly) <- .crs(x)
           #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
           tempPoly <- raster::buffer(tempPoly, width = max(res(x))*1.5)
           extRTM <- tempPoly
-          crsRTM <- crs(tempPoly)
+          crsRTM <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
+                                             .crs(tempPoly))
         } else {
           bufferSA <- TRUE
           origStudyArea <- studyArea
           bufferWidth <- max(res(x)) * 1.5
-          crsX <- crs(x)
+          crsX <- .crs(x)
           if (!is(studyArea, "sf")) {
             studyArea <- sp::spTransform(studyArea, CRSobj = crsX)
             studyArea <- raster::buffer(studyArea, width = bufferWidth)
@@ -1830,7 +1834,7 @@ setMinMaxIfNeeded <- function(ras) {
 
 differentRasters <- function(ras1, ras2, targetCRS) {
 
-  (!isTRUE(all.equal(crs(ras1), targetCRS)) |
+  (!isTRUE(all.equal(.crs(ras1), targetCRS)) |
      !isTRUE(all.equal(res(ras1), res(ras2))) |
      !isTRUE(all.equal(extent(ras1), extent(ras2))))
 }
@@ -1985,7 +1989,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
   }
   tempSrcRaster <- normPath(tempSrcRaster)
 
-  srcCRS <- as.character(raster::crs(raster::raster(tempSrcRaster)))
+  srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
 
   needCutline <- FALSE
   needReproject <- FALSE
@@ -1998,7 +2002,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
 
     studyAreasf <- sf::st_as_sf(studyArea)
     if (isTRUE(useSAcrs)) {
-      targCRS <- crs(studyArea)
+      targCRS <- .crs(studyArea)
     } else {
       targCRS <- srcCRS
       studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
@@ -2013,7 +2017,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
   } else if (!is.null(rasterToMatch)) {
     needNewRes <- !identical(res(x), res(rasterToMatch))
     cropExtent <- extent(rasterToMatch)
-    targCRS <- crs(rasterToMatch)
+    targCRS <- .crs(rasterToMatch)
   }
   dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
 
@@ -2084,3 +2088,9 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
 isLongLat <- function(targCRS, srcCRS = targCRS) {
   if (grepl("longlat", targCRS)) !grepl("longlat", srcCRS) else FALSE
 }
+
+.crs <- function(x, ...) {
+  suppressWarningsSpecific(falseWarnings = "CRS object has comment",
+                           .crs(x, ...))
+}
+
