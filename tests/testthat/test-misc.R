@@ -230,10 +230,12 @@ test_that("test miscellaneous fns (part 2)", {
   testthat::with_mock(
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
-      mess1 <- capture_messages(err <- capture_error(
-        cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life",
-                             cacheRepo = tmpCache)
-      ))
+      mess1 <- capture_messages({
+        err <- capture_error({
+          cloudUploadFromCache(isInCloud = FALSE, outputHash = "sdsdfs", saved = "life",
+                               cacheRepo = tmpCache)
+        })
+      })
       expect_true(all(grepl("cloudFolderID.*is missing, with no default", err)))
     })
   expect_true(grepl("Uploading new cached object|with cacheId", mess1))
@@ -241,7 +243,6 @@ test_that("test miscellaneous fns (part 2)", {
   a <- new.env(parent = emptyenv())
   a$a = list(ras, ras)
   expect_true(all(isOrHasRaster(a)))
-
 })
 
 test_that("Filenames for environment", {
@@ -255,8 +256,8 @@ test_that("Filenames for environment", {
   }, add = TRUE)
 
   s <- new.env(parent = emptyenv())
-  s$r <- raster(extent(0,10,0,10), vals = 1, res = 1)
-  s$r2 <- raster(extent(0,10,0,10), vals = 1, res = 1)
+  s$r <- raster(extent(0, 10, 0, 10), vals = 1, res = 1)
+  s$r2 <- raster(extent(0, 10, 0, 10), vals = 1, res = 1)
   s$r <- writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE)
   s$r2 <- writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE)
   s$s <- stack(s$r, s$r2)
