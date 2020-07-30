@@ -1030,9 +1030,7 @@ maskInputs.sf <- function(x, studyArea, ...) {
 
     if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
-      y2 <- sapply(y1, function(x) length(x) == 1)
-      ## TODO: use vapply instead of sapply; sapply is not type-safe
-      #y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
+      y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
       y <- x[y2,]
     } else {
       studyArea <- fixErrors(studyArea)
