@@ -998,16 +998,11 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 }
 
 #' @export
-#' @importFrom sf st_as_sf st_collection_extract st_geometry st_geometry<-
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   browser(expr = exists("._maskInputs.Spatial_1"))
   x <- fixErrors(x)
   x <- maskInputs(sf::st_as_sf(x), studyArea, rasterToMatch, maskWithRTM)
-
-  if (length(unique(sf::st_geometry_type(x))) > 1)  ## convert sfc to sf if needed
-    sf::st_geometry(x) <- sf::st_collection_extract(x = sf::st_geometry(x), type = "POLYGON")
-
   as(x, "Spatial")
 }
 
