@@ -1001,8 +1001,9 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   browser(expr = exists("._maskInputs.Spatial_1"))
+  x <- sf::st_as_sf(x)
   x <- fixErrors(x)
-  x <- maskInputs(sf::st_as_sf(x), studyArea, rasterToMatch, maskWithRTM)
+  x <- maskInputs(x, studyArea, rasterToMatch, maskWithRTM)
   as(x, "Spatial")
 }
 
@@ -1010,6 +1011,8 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
 #' @rdname maskInputs
 maskInputs.sf <- function(x, studyArea, ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
+
+  browser(expr = exists("._maskInputs.sf_1"))
   if (!is.null(studyArea)) {
     if (is(studyArea, "Spatial"))
       studyArea <- sf::st_as_sf(studyArea)
@@ -1028,11 +1031,13 @@ maskInputs.sf <- function(x, studyArea, ...) {
       y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
       y <- x[y2,]
     } else {
+      browser(expr = exists("._maskInputs.sf_2"))
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
+      y <- sf::st_buffer(y, 0) ## fixErrors doesn't work with multiple geometries; st_buffer does
     }
     if (!identical(.crs(y), .crs(x))) {
-      ## sometimes the proj4string is rearranged, so they are not identical; thef should be
+      ## sometimes the proj4string is rearranged, so they are not identical; they should be
       crs(y) <- .crs(x)
     }
 
