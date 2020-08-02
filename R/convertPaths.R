@@ -121,7 +121,7 @@ setMethod(
       names(fn) <- theNames[!dups]
     }
 
-    return(fn) ## TODO: unlist? see #149
+    return(fn)
 })
 
 #' @export
@@ -135,8 +135,9 @@ setMethod(
     if (any(rastersLogical)) {
       rasterNames <- names(rastersLogical)[rastersLogical]
       if (!is.null(rasterNames)) {
-        no <- names(obj);
-        names(no) <- no;
+        no <- names(obj)
+        names(no) <- no
+        ## TODO: sapply is not type-safe; use vapply
         nestedOnes <- lapply(no, function(rn) grep(paste0("^", rn, "\\."), rasterNames, value = TRUE))
         nestedOnes1 <- nestedOnes[sapply(nestedOnes, function(x) length(x) > 0)]
         nonNested <- nestedOnes[sapply(nestedOnes, function(x) length(x) == 0)]
@@ -160,7 +161,7 @@ setMethod(
     rasterFilenameDups <- lapply(rasterFilename, duplicated)
     rasterFilename <- lapply(names(rasterFilenameDups), function(nam)
       rasterFilename[[nam]][!rasterFilenameDups[[nam]]])
-    return(rasterFilename)  ## TODO: unlist? see #149
+    return(unlist(rasterFilename))
 })
 
 #' @export

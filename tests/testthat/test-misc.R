@@ -248,7 +248,6 @@ test_that("test miscellaneous fns (part 2)", {
 test_that("Filenames for environment", {
   testInitOut <- testInit(c("raster"), tmpFileExt = c(".tif", ".grd", ".tif", ".tif", ".grd"),
                           opts = list("reproducible.ask" = FALSE))
-
   on.exit({
     testOnExit(testInitOut)
     options(opts)
@@ -265,17 +264,19 @@ test_that("Filenames for environment", {
 
   Fns <- Filenames(s)
 
-  fnsGrd <- normPath(c(filename(s$b), gsub("grd$", "gri", filename(s$b))))
-  expect_true(identical(Fns$b, fnsGrd))
-  expect_true(identical(Fns$r, normPath(filename(s$r))))
-  expect_true(identical(Fns$r2, normPath(filename(s$r2))))
-  expect_true(identical(Fns$s, sapply(seq_len(nlayers(s$s)), function(rInd) normPath(filename(s$s[[rInd]])))))
+  fnsGrd <- unlist(normPath(c(filename(s$b), gsub("grd$", "gri", filename(s$b)))))
+  expect_true(identical(c(Fns[["b1"]], Fns[["b2"]]), fnsGrd))
+  expect_true(identical(Fns[["r"]], normPath(filename(s$r))))
+  expect_true(identical(Fns[["r2"]], normPath(filename(s$r2))))
+  expect_true(identical(c(Fns[["s1"]], Fns[["s2"]]),
+                        sapply(seq_len(nlayers(s$s)), function(rInd) normPath(filename(s$s[[rInd]])))))
 
   FnsR <- Filenames(s$r)
   expect_true(identical(FnsR, normPath(filename(s$r))))
 
   FnsS <- Filenames(s$s)
-  expect_true(identical(FnsS, sapply(seq_len(nlayers(s$s)), function(rInd) normPath(filename(s$s[[rInd]])))))
+  expect_true(identical(FnsS, sapply(seq_len(nlayers(s$s)),
+                                     function(rInd) normPath(filename(s$s[[rInd]])))))
 
   FnsB <- Filenames(s$b)
   expect_true(identical(FnsB, fnsGrd))

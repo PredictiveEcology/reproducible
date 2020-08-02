@@ -1579,11 +1579,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(targetCRS)) {
     attemptGDALAllAtOnce <- if (is(x, "RasterLayer")) attemptGDAL(x, useGDAL = useGDAL) else FALSE
     if (isTRUE(attemptGDALAllAtOnce) ) {
-      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs,
-                               ...)
+      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2,
+                               useSAcrs, ...)
     } else {
-
-
       # fix errors if methods available
       skipCacheMess <- "useCache is FALSE, skipping Cache"
       skipCacheMess2 <- "No cacheRepo supplied"
@@ -1629,8 +1627,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
           tempPoly <- raster::buffer(tempPoly, width = max(res(x))*1.5)
           extRTM <- tempPoly
-          crsRTM <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
-                                             .crs(tempPoly))
+          crsRTM <- suppressWarningsSpecific(falseWarnings = "CRS object has comment", .crs(tempPoly))
         } else {
           bufferSA <- TRUE
           origStudyArea <- studyArea
