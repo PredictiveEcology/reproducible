@@ -56,7 +56,7 @@ jobs:
 
       - name: Install additional dependencies
         run: |
-          devtools::install_github('PredictiveEcology/Require@development')
+          remotes::install_github('PredictiveEcology/Require@development')
         shell: Rscript {0}
 
       - name: Cache R packages
