@@ -1,6 +1,6 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 1.2.0.9000
+version 1.2.1
 ==============
 
 ## New features
@@ -21,7 +21,8 @@ version 1.2.0.9000
 * fix over-wide tables in PDF manual (#144)
 * use `file.link` not `file.symlink` for `saveToCache`. This would have resulted in C Stack overflow errors due to missing original file in the `file.symlink`
 * use system call to `unzip` when extracting large (>= 4GB) files (#145, @tati-micheletti)
-* several minor including projectInputs when converting to longlat projections, setMinMax for gdalwarp results
+* several minor including `projectInputs` when converting to longlat projections, `setMinMax` for `gdalwarp` results
+* `Filenames` now consistently returns a character vector (#149)
 * improvements to file-backed Raster caching to accommodate a few more edge cases
 
 version 1.1.1
