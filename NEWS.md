@@ -6,7 +6,7 @@ version 1.2.1
 ## New features
 * `postProcess` now uses a simpler single call to `gdalwarp`, if available, for `RasterLayer` class to accomplish `cropInputs`, `projectInputs`, `maskInputs`, and `writeOutputs` all at once. This should be faster, simpler and, perhaps, more stable. It will only be invoked if the `RasterLayer` is too large to fit into RAM. To force it to be used the user must set `useGDAL = "force"` in `prepInputs` or `postProcess` or globally with `options("reproducible.useGDAL" = "force")`
 * `postProcess` when using the new `gdalwarp`, has better persistence of colour table, and NA values as these are kept with better reliability
-* concurrent `Cache` now works as expected (e.g., with parallel processing, it will avoid collisions) with SQLite thanks to suggestion here: https://stackoverflow.com/a/44445010
+* concurrent `Cache` now works as expected (e.g., with parallel processing, it will avoid collisions) with SQLite thanks to suggestion here: <https://stackoverflow.com/a/44445010>
 * updated digesting of `Raster` class objects to account for more of the metadata (including the colortable). This will change the digest value of all `Raster` layers, causing re-run of `Cache`
 * removed `Require`, `pkgDep`, `trimVersionNumber`, `normPath`, `checkPath` that were moved to `Require` package. For backwards compatibility, these are imported and reexported
 * address permanently or temporarily new changes in GDAL>3 and PROJ>6 in the spatial packages.
