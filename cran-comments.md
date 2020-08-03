@@ -10,18 +10,19 @@ This release fixes an error revealed during CRAN checks.
 * Windows                 (win-builder), R 3.6.3
 
 ### Current R versions
-* macOS 10.13.3 High Sierra (travis-ci), R 4.0.0
-* macOS 10.15.4 Catalina        (local), R 4.0.0
-* Ubuntu 16.04              (travis-ci), R 4.0.0
-* Ubuntu 18.04                  (local), R 4.0.0
-* Windows                    (appveyor), R 4.0.0
-* Windows                 (win-builder), R 4.0.0
+* macOS 10.13.3 High Sierra (travis-ci), R 4.0.2
+* macOS 10.15.5 Catalina        (local), R 4.0.2
+* Ubuntu 16.04              (travis-ci), R 4.0.2
+* Ubuntu 20.04                  (local), R 4.0.2
+* Windows                    (appveyor), R 4.0.2
+* Windows                       (local), R 4.0.2
+* Windows                 (win-builder), R 4.0.2
 
 ### Development R version
-* Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-05-18 r78486)
-* Ubuntu 18.04                  (local), R 4.1.0 (2020-05-18 r78487)
-* Windows                    (appveyor), R 4.1.0 (2020-05-17 r78478)
-* Windows                 (win-builder), R 4.1.0 (2020-05-15 r78473)
+* Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-08-03 r78963)
+* Ubuntu 20.04                  (local), R 4.1.0 (2020-08-03 r78963)
+* Windows                    (appveyor), R 4.1.0 (2020-08-02 r78957)
+* Windows                 (win-builder), R 4.1.0 (2020-08-02 r78957)
 
 ## R CMD check results
 
