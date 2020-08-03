@@ -221,9 +221,11 @@ test_that("test miscellaneous fns (part 2)", {
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
       # cloudFolderID can't be meaningless "character", but retry is TRUE
-      warns <- capture_warnings(err <- capture_error(
-        cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
-      ))
+      warns <- capture_warnings({
+        err <- capture_error({
+          cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
+        })
+      })
       expect_true(is.null(err))
     })
 
