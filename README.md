@@ -3,7 +3,7 @@
 <!-- badges: start -->
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/reproducible)](https://cran.r-project.org/package=reproducible)
 [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
-![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg)](https://github.com/PredictiveEcology/reproducible/actions)
+[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg)](https://github.com/PredictiveEcology/reproducible/actions)
 <!-- badges: end -->
 
 A set of tools for R that enhance reproducibility beyond package management.
