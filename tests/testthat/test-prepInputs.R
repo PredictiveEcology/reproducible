@@ -1857,6 +1857,13 @@ test_that("System call gdal works", {
 test_that("System call gdal works using multicores for both projecting and masking", {
   skip_on_cran()
 
+  if (requireNamespace("gdalUtils", quietly = TRUE)) {
+    gdalUtils::gdal_setInstallation()
+  }
+
+  if (is.null(getOption("gdalUtils_gdalPath")))
+    skip("no GDAL installation found")
+
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
@@ -1871,8 +1878,7 @@ test_that("System call gdal works using multicores for both projecting and maski
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- crsToUse
 
-  coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2),
-                      .Dim = c(5L, 2L))
+  coords <- structure(c(2, 6, 8, 6, 2, 2.2, 4, 5, 4.6, 2.2), .Dim = c(5L, 2L))
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
@@ -1978,7 +1984,6 @@ test_that("cropInputs crops too closely when input projections are different", {
   RTM <- setValues(RTM, 2)
   out <- postProcess(x = x, rasterToMatch = RTM, filename2 = NULL)
   expect_null(out[is.na(out) & !is.na(RTM)])
-
 })
 
 test_that("message when files from archive are already present", {
@@ -2126,8 +2131,7 @@ test_that("new gdalwarp all in one with grd with factor", {
       gdalUtils::gdal_setInstallation()
     })
 
-    gdalPath <- getOption("gdalUtils_gdalPath")
-    if (is.null(gdalPath))
+    if (is.null(getOption("gdalUtils_gdalPath")))
       skip("no GDAL installation found")
 
     testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
