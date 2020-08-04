@@ -160,7 +160,8 @@ test_that("prepInputs doesn't work (part 1)", {
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_true(all(abs(extent(LCC2005)[1:4] -
                    round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
-  expect_true(length(LCC2005@legend@colortable) == (maxValue(LCC2005) - minValue(LCC2005) + 1))
+  expect_equal(length(which(LCC2005@legend@colortable != "#000000")),
+               (maxValue(LCC2005) - minValue(LCC2005)))
 
   #######################################
   ### url, targetFile, archive     ######
