@@ -127,13 +127,13 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- .archiveExtractBinary()
-  if (!is.null(extractSystemCallPath)) {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+
+  if (is.null(extractSystemCallPath)) {
     expect_error({
       ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
     })
   } else {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
     ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
     testthat::expect_is(object = ras, class = "list")
     testthat::expect_true(file.exists(ras$targetFilePath))
@@ -147,15 +147,15 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- .archiveExtractBinary()
-  if (!is.null(extractSystemCallPath)) {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+
+  if (is.null(extractSystemCallPath)) {
     expect_error({
       ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
                                       destinationPath = tmpdir)
     })
   } else {
     wd <- getwd()
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
     ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
                                     destinationPath = tmpdir)
     testthat::expect_is(object = ras, class = "list")
@@ -171,13 +171,13 @@ test_that("preProcess works when provides url, archive and destinationPath for a
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- .archiveExtractBinary()
-  if (!is.null(extractSystemCallPath)) {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+
+  if (is.null(extractSystemCallPath)) {
     expect_error({
       ras <- reproducible::preProcess(url = url, archive = "rasterTest.rar", destinationPath = tmpdir)
     })
   } else {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
     ras <- reproducible::preProcess(url = url, archive = "rasterTest.rar", destinationPath = tmpdir)
     testthat::expect_is(object = ras, class = "list")
     testthat::expect_true(file.exists(ras$targetFilePath))
