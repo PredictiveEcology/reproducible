@@ -152,7 +152,7 @@ test_that("prepInputs doesn't work (part 1)", {
     destinationPath = asPath(dPath),
     studyArea = StudyArea,
     useCache = FALSE
-  )
+  ) ## TODO: searching for GDAL is slow on Windows (e.g., appveyor)
   # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
   #  we make it a bit bigger so it doesn't crop the edges of the raster
   expect_is(LCC2005, "Raster")
@@ -2119,8 +2119,14 @@ test_that("writeOutputs with non-matching filename2", {
   expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
 })
 
-
 test_that("new gdalwarp all in one with grd with factor", {
+  suppressWarnings({
+    gdalPath <- getOption("gdalUtils_gdalPath")
+  })
+
+  if (is.null(gdalPath))
+    skip("no GDAL installation found")
+
   testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
   on.exit({
     testOnExit(testInitOut)
