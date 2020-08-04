@@ -43,7 +43,7 @@ test_that("fastMask produces correct results", {
   expect_equivalent(newStack1, newStack3)
   # Run same as above but with different internal pathway
   if (requireNamespace("gdalUtils", quietly = TRUE)) {
-    gdalUtils::gdal_setInstallation()
+    suppressWarnings(gdalUtils::gdal_setInstallation())
 
     # if it doesn't find gdal installed
     hasGDALInstalled <- !is.null(getOption("gdalUtils_gdalPath"))

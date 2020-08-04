@@ -283,7 +283,6 @@ findGDAL <- function() {
       if (any(gdalInfoExists))
         gdalPath <- possibleWindowsPaths[gdalInfoExists]
     }
-    gdalPath
     gdalUtils::gdal_setInstallation(gdalPath)
 
     if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed

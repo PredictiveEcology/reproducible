@@ -1858,7 +1858,7 @@ test_that("System call gdal works using multicores for both projecting and maski
   skip_on_cran()
 
   if (requireNamespace("gdalUtils", quietly = TRUE)) {
-    gdalUtils::gdal_setInstallation()
+    suppressWarnings(gdalUtils::gdal_setInstallation())
   }
 
   if (is.null(getOption("gdalUtils_gdalPath")))
@@ -2127,51 +2127,49 @@ test_that("writeOutputs with non-matching filename2", {
 
 test_that("new gdalwarp all in one with grd with factor", {
   if (requireNamespace("gdalUtils")) {
-    suppressWarnings({
-      gdalUtils::gdal_setInstallation()
-    })
-
-    if (is.null(getOption("gdalUtils_gdalPath")))
-      skip("no GDAL installation found")
-
-    testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
-
-    coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                        .Dim = c(5L, 2L))
-    Sr1 <- Polygon(coords)
-    Srs1 <- Polygons(list(Sr1), "s1")
-    StudyArea <- SpatialPolygons(list(Srs1), 1L)
-    crs(StudyArea) <- crsToUse
-
-    r <- raster(extent(-130, -110, 55, 65), res = 1)
-    crs(r) <- crsToUse
-    r[] <- sample(0:10, size = ncell(r), replace = TRUE)
-    df <- data.frame(ID = 0:10, label = LETTERS[1:11])
-    levels(r) <- df
-
-    # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
-    #  This invokes the new dealWithRastersOnRecovery fn
-    rr <- postProcess(r, destinationPath = tmpdir,
-                      studyArea = StudyArea, useCache = TRUE, useGDAL = "force")
-    rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
-                 studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
-    rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
-                 studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
-    expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
-    expect_true(identical(Filenames(rr1), Filenames(rr3)))
-    expect_true(!identical(dirname(Filenames(rr)), tmpCache)) # used to be that the recovery path was Cache file
-
-    expect_true(identical(raster::levels(rr), raster::levels(r)))
-    expect_true(sum(abs(raster::extent(rr)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
-    expect_true(sum(abs(raster::extent(r)[1:4] - raster::extent(StudyArea)[1:4])) > 1)
-    rr2 <- postProcess(r, studyArea = StudyArea, useCache = FALSE, useGDAL = "force", filename2 = "out.grd")
-    expect_true(identical(raster::levels(rr2), raster::levels(r)))
-    expect_true(sum(abs(raster::extent(rr2)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
-    expect_true(!identical(filename(rr), filename(rr2)))
-    expect_true(grepl(".tif$", filename(rr)))
-    expect_true(grepl(".grd$", filename(rr2)))
+    suppressWarnings(gdalUtils::gdal_setInstallation())
   }
+
+  if (is.null(getOption("gdalUtils_gdalPath")))
+    skip("no GDAL installation found")
+
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- crsToUse
+
+  r <- raster(extent(-130, -110, 55, 65), res = 1)
+  crs(r) <- crsToUse
+  r[] <- sample(0:10, size = ncell(r), replace = TRUE)
+  df <- data.frame(ID = 0:10, label = LETTERS[1:11])
+  levels(r) <- df
+
+  # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
+  #  This invokes the new dealWithRastersOnRecovery fn
+  rr <- postProcess(r, destinationPath = tmpdir,
+                    studyArea = StudyArea, useCache = TRUE, useGDAL = "force")
+  rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+  rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+  expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
+  expect_true(identical(Filenames(rr1), Filenames(rr3)))
+  expect_true(!identical(dirname(Filenames(rr)), tmpCache)) # used to be that the recovery path was Cache file
+
+  expect_true(identical(raster::levels(rr), raster::levels(r)))
+  expect_true(sum(abs(raster::extent(rr)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
+  expect_true(sum(abs(raster::extent(r)[1:4] - raster::extent(StudyArea)[1:4])) > 1)
+  rr2 <- postProcess(r, studyArea = StudyArea, useCache = FALSE, useGDAL = "force", filename2 = "out.grd")
+  expect_true(identical(raster::levels(rr2), raster::levels(r)))
+  expect_true(sum(abs(raster::extent(rr2)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
+  expect_true(!identical(filename(rr), filename(rr2)))
+  expect_true(grepl(".tif$", filename(rr)))
+  expect_true(grepl(".grd$", filename(rr2)))
 })
