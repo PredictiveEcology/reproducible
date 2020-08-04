@@ -28,9 +28,10 @@ test_that("prepInputs doesn't work (part 1)", {
   #######################################
   ### url  ######
   #######################################
+  url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+
   mess <- capture_messages({
-    shpEcozone <- prepInputs(destinationPath = dPath,
-                             url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+    shpEcozone <- prepInputs(destinationPath = dPath, url = url)
   })
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
   expect_true(any(grepl(mess, pattern = "Appending")))
@@ -41,8 +42,7 @@ test_that("prepInputs doesn't work (part 1)", {
   unlink(dir(dPath, full.names = TRUE)[1:3])
   expect_error(raster::shapefile(file.path(dPath, "ecozone_shp.zip")))
   rm(shpEcozone)
-  shpEcozone1 <- prepInputs(destinationPath = dPath,
-                            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip")
+  shpEcozone1 <- prepInputs(destinationPath = dPath, url = url)
   expect_true(is(shpEcozone1, "SpatialPolygons"))
   unlink(dPath, recursive = TRUE)
 
@@ -85,7 +85,8 @@ test_that("prepInputs doesn't work (part 1)", {
     "ecozones.shp",
     "ecozones.shx"
   )
-  warn <- suppressWarningsSpecific(falseWarnings = "attribute variables are assumed to be spatially constant",
+  warn <- suppressWarningsSpecific(
+    falseWarnings = "attribute variables are assumed to be spatially constant", {
     shpEcozoneSm <- Cache(
       prepInputs,
       url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
@@ -95,14 +96,15 @@ test_that("prepInputs doesn't work (part 1)", {
       fun = "shapefile",
       destinationPath = dPath,
       filename2 = "EcozoneFile.shp"
-    )) # passed to determineFilename
+    )
+  })
   expect_true(is(shpEcozoneSm, "SpatialPolygons"))
   expect_identical(extent(shpEcozoneSm), extent(StudyArea))
 
   unlink(dirname(ecozoneFilename), recursive = TRUE)
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
   warn <- suppressWarningsSpecific(
-    falseWarnings = "attribute variables are assumed to be spatially constant",
+    falseWarnings = "attribute variables are assumed to be spatially constant", {
     mess <- capture_messages({
       shpEcozoneSm <- Cache(
         prepInputs,
@@ -116,7 +118,7 @@ test_that("prepInputs doesn't work (part 1)", {
         useCache = FALSE
       )
     })
-  )
+  })
   expect_false(all(grepl("loading", mess)))
 
   # Test useCache -- doesn't error and loads from cache
@@ -2103,7 +2105,9 @@ test_that("writeOutputs with non-matching filename2", {
 
   r <- raster(extent(0,10,0,10), vals = rnorm(100))
   r <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
-  warn <- capture_warnings(r1 <- writeOutputs(r, filename2 = tmpfile[2]))
+  warn <- capture_warnings({
+    r1 <- writeOutputs(r, filename2 = tmpfile[2])
+  })
   expect_true(any(grepl("filename2 file type", warn)))
   r2 <- raster(filename(r1))
   vals1 <- r2[]
@@ -2129,7 +2133,7 @@ test_that("new gdalwarp all in one with grd with factor", {
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
   crs(StudyArea) <- crsToUse
 
-  r <- raster(extent(-130,-110,55,65), res = 1)
+  r <- raster(extent(-130, -110, 55, 65), res = 1)
   crs(r) <- crsToUse
   r[] <- sample(0:10, size = ncell(r), replace = TRUE)
   df <- data.frame(ID = 0:10, label = LETTERS[1:11])
@@ -2138,9 +2142,9 @@ test_that("new gdalwarp all in one with grd with factor", {
   # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
   #  This invokes the new dealWithRastersOnRecovery fn
   rr <- postProcess(r, destinationPath = tmpdir,
-              studyArea = StudyArea, useCache = TRUE, useGDAL = "force")
+                    studyArea = StudyArea, useCache = TRUE, useGDAL = "force")
   rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
-              studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
   rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
                studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
   expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
@@ -2156,5 +2160,4 @@ test_that("new gdalwarp all in one with grd with factor", {
   expect_true(!identical(filename(rr), filename(rr2)))
   expect_true(grepl(".tif$", filename(rr)))
   expect_true(grepl(".grd$", filename(rr2)))
-
 })
