@@ -1,7 +1,9 @@
 test_that("prepInputs doesn't work (part 1)", {
-  testthat::skip_on_cran()
-  testthat::skip_on_travis()
-  testthat::skip_on_appveyor()
+  skip_on_cran()
+
+  skip_on_appveyor()
+  skip_on_ci()
+  skip_on_travis()
 
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -433,11 +435,13 @@ test_that("preProcess doesn't work", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  testthat::skip_on_cran()
-  testthat::skip_on_travis()
-  testthat::skip_on_appveyor()
+  skip_on_cran()
 
-  testthat::skip_if_not(isInteractive())
+  skip_on_appveyor()
+  skip_on_ci()
+  skip_on_travis()
+
+  skip_if_not(isInteractive())
 
   # Note urlShapefiles1Zip, urlShapefilesZip, and urlTif1 are in helper-allEqual.R
 

@@ -173,8 +173,12 @@ test_that(paste0("prepInputs in a two files double nested rar file, with the wan
 
 test_that("prepInputs works with nested rar file inside internal rar folder", {
   skip_on_cran()
-  skip_on_travis() ## TODO: temporarily skip
-  skip_on_appveyor()  ## TODO: temporarily skip
+
+  ## TODO: temporarily skip tests on CI
+  skip_on_appveyor()
+  skip_on_ci()
+  skip_on_travis()
+
   testInitOut <- testInit("raster", needGoogle = FALSE)
   on.exit({
     testOnExit(testInitOut)
