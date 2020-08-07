@@ -3,7 +3,6 @@
 # Download script file from GitHub
 init:
   ps: |
-        start-sleep -Seconds (30..300 | get-random)
         $ErrorActionPreference = "Stop"
         Invoke-WebRequest http://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
         Import-Module '..\appveyor-tool.ps1'
