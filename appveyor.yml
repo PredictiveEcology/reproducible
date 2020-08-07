@@ -36,9 +36,6 @@ environment:
 
 clone_depth: 5
 
-build_cloud: windows.projects.for-cast.ca
-image: Windows
-
 build_script:
   - Rscript -e "install.packages(c('RCurl'), repos = 'https://cran.rstudio.com')"
   - Rscript -e "install.packages(c('data.table', 'utf8'), repos = 'https://cran.rstudio.com', type = 'source')"
