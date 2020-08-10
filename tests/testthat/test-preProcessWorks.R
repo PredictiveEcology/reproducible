@@ -119,6 +119,7 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
+
 test_that("preProcess works when provides url and destinationPath for a .rar file", {
   skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)
@@ -126,11 +127,13 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- .archiveExtractBinary()
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+
   if (is.null(extractSystemCallPath)) {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-    expect_error(ras <- reproducible::preProcess(url = url, destinationPath = tmpdir))
+    expect_error({
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+    })
   } else {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
     ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
     testthat::expect_is(object = ras, class = "list")
     testthat::expect_true(file.exists(ras$targetFilePath))
@@ -144,13 +147,15 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- .archiveExtractBinary()
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+
   if (is.null(extractSystemCallPath)) {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-    expect_error( ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
-                                                   destinationPath = tmpdir))
+    expect_error({
+      ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
+                                      destinationPath = tmpdir)
+    })
   } else {
     wd <- getwd()
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
     ras <- reproducible::preProcess(url = url, targetFile = "rasterTest.tif",
                                     destinationPath = tmpdir)
     testthat::expect_is(object = ras, class = "list")
@@ -166,14 +171,14 @@ test_that("preProcess works when provides url, archive and destinationPath for a
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- .archiveExtractBinary()
+  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+
   if (is.null(extractSystemCallPath)) {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-    expect_error(ras <- reproducible::preProcess(url = url, archive = "rasterTest.rar",
-                                                 destinationPath = tmpdir))
+    expect_error({
+      ras <- reproducible::preProcess(url = url, archive = "rasterTest.rar", destinationPath = tmpdir)
+    })
   } else {
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-    ras <- reproducible::preProcess(url = url, archive = "rasterTest.rar",
-                                    destinationPath = tmpdir)
+    ras <- reproducible::preProcess(url = url, archive = "rasterTest.rar", destinationPath = tmpdir)
     testthat::expect_is(object = ras, class = "list")
     testthat::expect_true(file.exists(ras$targetFilePath))
   }
@@ -186,9 +191,9 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  testthat::expect_message(ras <- reproducible::preProcess(url = url,
-                                                           destinationPath = tmpdir,
-                                                           cacheTags = "objectName::ras"))
+  testthat::expect_message({
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, cacheTags = "objectName::ras")
+  })
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -200,9 +205,10 @@ test_that("preProcess works, but gives a warning when supplying postProcessedFil
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  testthat::expect_message(ras <- reproducible::preProcess(url = url,
-                                                           destinationPath = tmpdir,
-                                                           postProcessedFilename = "ras.tif"))
+  testthat::expect_message({
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir,
+                                    postProcessedFilename = "ras.tif")
+  })
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -214,9 +220,9 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  testthat::expect_message(ras <- reproducible::preProcess(url = url,
-                                                           destinationPath = tmpdir,
-                                                           rasterInterpMethod = "ngb"))
+  testthat::expect_message({
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterInterpMethod = "ngb")
+  })
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -228,9 +234,9 @@ test_that("preProcess works, but gives a warning when supplying rasterDatatype",
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  testthat::expect_message(ras <- reproducible::preProcess(url = url,
-                                                           destinationPath = tmpdir,
-                                                           rasterDatatype = "INT1U"))
+  testthat::expect_message({
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterDatatype = "INT1U")
+  })
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -242,10 +248,9 @@ test_that("preProcess works, but gives a warning when supplying pkg", {
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  testthat::expect_message(ras <- reproducible::preProcess(url = url,
-                                                           destinationPath = tmpdir,
-                                                           pkg = "utils", fun = "unzip"))
+  testthat::expect_message({
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, pkg = "utils", fun = "unzip")
+})
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
-

@@ -5,7 +5,6 @@
 #' @author Alex Chubaty and Eliot McIntire
 #' @export
 #' @importFrom magrittr %>%
-#'
 getGDALVersion <-  function() {
   if (.requireNamespace("rgdal")) {
     vers <- tryCatch(rgdal::getGDALVersionInfo(), error = function(e) NA_real_)
@@ -75,6 +74,7 @@ checkGDALVersion <- function(version) {
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
 #'
 #' @examples
+#' library(sp)
 #' library(raster)
 #'
 #' Sr1 <- Polygon(cbind(c(2, 4, 4, 0.9, 2), c(2, 3, 5, 4, 2)))
@@ -93,7 +93,7 @@ checkGDALVersion <- function(version) {
 #' poly[[2]] <- raster(raster::extent(shp), vals = 1, res = c(1, 1))
 #' origStack <- stack(poly)
 #' # original mask function in raster
-#' newStack1 <- mask(origStack, mask = shp)
+#' newStack1 <- mask(x= origStack, mask = shp)
 #' newStack2 <- fastMask(x = origStack, y = shp)
 #'
 #' # test all equal
@@ -283,7 +283,6 @@ findGDAL <- function() {
       if (any(gdalInfoExists))
         gdalPath <- possibleWindowsPaths[gdalInfoExists]
     }
-    gdalPath
     gdalUtils::gdal_setInstallation(gdalPath)
 
     if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed

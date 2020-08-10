@@ -930,8 +930,10 @@ test_that("test useCache = 'overwrite'", {
 
 test_that("test rm large non-file-backed rasters", {
   ## This is a large object test!
-  skip_on_appveyor()
   skip_on_cran()
+
+  skip_on_appveyor()
+  skip_on_ci()
   skip_on_travis()
 
   if (!is.null(getOption("reproducible.conn", NULL)))
@@ -954,8 +956,11 @@ test_that("test rm large non-file-backed rasters", {
 
 test_that("test cc", {
   skip_on_cran()
-  skip_on_travis()
+
   skip_on_appveyor()
+  skip_on_ci()
+  skip_on_travis()
+
   testInitOut <- testInit(ask = FALSE)
   on.exit({
     testOnExit(testInitOut)
@@ -1115,7 +1120,7 @@ test_that("test file link with duplicate Cache", {
   mess2 <- capture_messages({d <- Cache(sample, N, cacheRepo = tmpCache)})
   # Different inputs AND different output -- so no cache recovery and no file link
   expect_true(length(mess2) == 0)
-  out2 <- try(system2("du", tmpCache, stdout = TRUE))
+  out2 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out2, "try-error")) {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
     expect_true(all(fs1 * 1.9 < fs2))

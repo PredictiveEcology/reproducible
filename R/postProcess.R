@@ -1034,7 +1034,9 @@ maskInputs.sf <- function(x, studyArea, ...) {
       browser(expr = exists("._maskInputs.sf_2"))
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
-      y <- sf::st_buffer(y, 0) ## fixErrors doesn't work with multiple geometries; st_buffer does
+      ## fixErrors doesn't work with multiple geometries; st_buffer does, so use it here
+      y <- suppressWarningsSpecific(sf::st_buffer(y, 0),
+                                    "st_buffer does not correctly buffer longitude/latitude data")
     }
     if (!identical(.crs(y), .crs(x))) {
       ## sometimes the proj4string is rearranged, so they are not identical; they should be

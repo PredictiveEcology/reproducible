@@ -221,9 +221,11 @@ test_that("test miscellaneous fns (part 2)", {
     "reproducible::retry" = function(..., retries = 1) TRUE,
     {
       # cloudFolderID can't be meaningless "character", but retry is TRUE
-      warns <- capture_warnings(err <- capture_error(
-        cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
-      ))
+      warns <- capture_warnings({
+        err <- capture_error({
+          cloudDownloadRasterBackend(output = ras, cacheRepo = tmpCache, cloudFolderID = "character")
+        })
+      })
       expect_true(is.null(err))
     })
 
@@ -257,8 +259,10 @@ test_that("Filenames for environment", {
   s <- new.env(parent = emptyenv())
   s$r <- raster(extent(0, 10, 0, 10), vals = 1, res = 1)
   s$r2 <- raster(extent(0, 10, 0, 10), vals = 1, res = 1)
-  s$r <- writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE)
-  s$r2 <- writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE)
+  s$r <- suppressWarningsSpecific(writeRaster(s$r, filename = tmpfile[1], overwrite = TRUE),
+                                  "NOT UPDATED FOR PROJ >= 6")
+  s$r2 <- suppressWarningsSpecific(writeRaster(s$r2, filename = tmpfile[3], overwrite = TRUE),
+                                   "NOT UPDATED FOR PROJ >= 6")
   s$s <- stack(s$r, s$r2)
   s$b <- writeRaster(s$s, filename = tmpfile[5], overwrite = TRUE)
 
