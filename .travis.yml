@@ -74,7 +74,7 @@ jobs:
       - echo "options(HTTPUserAgent = paste0('R/', getRversion(), ' R (',
            paste(getRversion(), R.version['platform'], R.version['arch'], R.version['os']),
            ')'))" >> ~/.Rprofile.site
-      - Rscript -e 'install.packages("Rcpp", type = "source", repos = "https://cran.rstudio.com")''
+      - Rscript -e 'install.packages("Rcpp", type = "source", repos = "https://cran.rstudio.com")'
     after_success:
     - Rscript -e 'covr::coveralls(type = "all", quiet = FALSE)'
     - Rscript -e 'lintr::lint_package()'
