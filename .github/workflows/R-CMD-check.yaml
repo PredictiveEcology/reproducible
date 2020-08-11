@@ -57,6 +57,7 @@ jobs:
 
       - name: Install additional dependencies
         run: |
+          remotes::install_github('traversc/stringfish')
           remotes::install_github('PredictiveEcology/Require@development')
         shell: Rscript {0}
 
