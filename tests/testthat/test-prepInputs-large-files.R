@@ -1,9 +1,7 @@
 test_that("prepInputs correctly unzips large files", {
   skip_on_cran()
 
-  skip_on_appveyor()
   skip_on_ci()
-  skip_on_travis()
 
   skip_if_not(isInteractive(), "tests extracting large files should be run manually")
 
