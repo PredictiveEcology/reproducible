@@ -152,25 +152,6 @@ test_that("repo stuff works", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  # helpers.R
-  a <- getCRANrepos(NULL)
-  expect_true(is.character(a))
-
-  a <- getCRANrepos("")
-  expect_true(grepl("https://cloud.r-project.org", a))
-
-  testthat::with_mock(
-    "reproducible::isInteractive" = function() TRUE,
-    "reproducible::chooseCRANmirror2" = function() {
-      repos <- NULL
-      repos2 <- "https://cloud.r-project.org"
-      repos["CRAN"] <- repos2
-      options("repos" = repos)},
-    {
-      out <- getCRANrepos()
-      expect_true(identical("https://cloud.r-project.org", unname(out)))
-    }
-  )
 })
 
 test_that("test miscellaneous fns (part 2)", {
