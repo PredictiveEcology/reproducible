@@ -81,7 +81,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1.9001</span>
       </span>
     </div>
 
@@ -139,9 +139,9 @@
       <small>Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="version-120" class="section level1">
-<h1 class="page-header" data-toc-text="1.2.0">
-<a href="#version-120" class="anchor"></a>version 1.2.0<small> Unreleased </small>
+    <div id="version-121" class="section level1">
+<h1 class="page-header" data-toc-text="1.2.1">
+<a href="#version-121" class="anchor"></a>version 1.2.1<small> Unreleased </small>
 </h1>
 <div id="new-features" class="section level2">
 <h2 class="hasAnchor">
@@ -181,7 +181,9 @@
 <li>use <code>file.link</code> not <code>file.symlink</code> for <code>saveToCache</code>. This would have resulted in C Stack overflow errors due to missing original file in the <code>file.symlink</code>
 </li>
 <li>use system call to <code>unzip</code> when extracting large (&gt;= 4GB) files (<a href='https://github.com/PredictiveEcology/reproducible/issues/145'>#145</a>, <a href='https://github.com/tati-micheletti'>@tati-micheletti</a>)</li>
-<li>several minor including projectInputs when converting to longlat projections, setMinMax for gdalwarp results</li>
+<li>several minor including <code>projectInputs</code> when converting to longlat projections, <code>setMinMax</code> for <code>gdalwarp</code> results</li>
+<li>
+<code>Filenames</code> now consistently returns a character vector (<a href='https://github.com/PredictiveEcology/reproducible/issues/149'>#149</a>)</li>
 <li>improvements to file-backed Raster caching to accommodate a few more edge cases</li>
 </ul>
 </div>
