@@ -3,7 +3,6 @@ on:
     branches:
       - master
       - development
-      - 152-check-fixes
   pull_request:
     branches:
       - master
