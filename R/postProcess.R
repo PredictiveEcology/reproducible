@@ -971,8 +971,10 @@ maskInputs <- function(x, studyArea, ...) {
   UseMethod("maskInputs")
 }
 
-#' @export
 #' @param maskWithRTM Logical. If \code{TRUE}, then the default,
+#'
+#' @export
+#' @importFrom raster stack
 #' @rdname maskInputs
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   message("    masking...")
@@ -999,8 +1001,9 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, 
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
   browser(expr = exists("._maskInputs.Spatial_1"))
+  x <- sf::st_as_sf(x)
   x <- fixErrors(x)
-  x <- maskInputs(sf::st_as_sf(x), studyArea, rasterToMatch, maskWithRTM)
+  x <- maskInputs(x, studyArea, rasterToMatch, maskWithRTM)
   as(x, "Spatial")
 }
 
@@ -1008,6 +1011,8 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
 #' @rdname maskInputs
 maskInputs.sf <- function(x, studyArea, ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
+
+  browser(expr = exists("._maskInputs.sf_1"))
   if (!is.null(studyArea)) {
     if (is(studyArea, "Spatial"))
       studyArea <- sf::st_as_sf(studyArea)
@@ -1023,16 +1028,18 @@ maskInputs.sf <- function(x, studyArea, ...) {
 
     if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
-      y2 <- sapply(y1, function(x) length(x) == 1)
-      ## TODO: use vapply instead of sapply; sapply is not type-safe
-      #y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
+      y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
       y <- x[y2,]
     } else {
+      browser(expr = exists("._maskInputs.sf_2"))
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
+      ## fixErrors doesn't work with multiple geometries; st_buffer does, so use it here
+      y <- suppressWarningsSpecific(sf::st_buffer(y, 0),
+                                    "st_buffer does not correctly buffer longitude/latitude data")
     }
     if (!identical(.crs(y), .crs(x))) {
-      ## sometimes the proj4string is rearranged, so they are not identical; thef should be
+      ## sometimes the proj4string is rearranged, so they are not identical; they should be
       crs(y) <- .crs(x)
     }
 
@@ -1574,11 +1581,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(targetCRS)) {
     attemptGDALAllAtOnce <- if (is(x, "RasterLayer")) attemptGDAL(x, useGDAL = useGDAL) else FALSE
     if (isTRUE(attemptGDALAllAtOnce) ) {
-      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs,
-                               ...)
+      x <- cropReprojMaskWGDAL(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2,
+                               useSAcrs, ...)
     } else {
-
-
       # fix errors if methods available
       skipCacheMess <- "useCache is FALSE, skipping Cache"
       skipCacheMess2 <- "No cacheRepo supplied"
@@ -1624,8 +1629,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           #buffer the new polygon by 1.5 the resolution of X so edges aren't cropped out
           tempPoly <- raster::buffer(tempPoly, width = max(res(x))*1.5)
           extRTM <- tempPoly
-          crsRTM <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
-                                             .crs(tempPoly))
+          crsRTM <- suppressWarningsSpecific(falseWarnings = "CRS object has comment", .crs(tempPoly))
         } else {
           bufferSA <- TRUE
           origStudyArea <- studyArea
@@ -1799,12 +1803,14 @@ roundTo6Dec <- function(x) {
   x
 }
 
+#' @importFrom utils capture.output
 suppressWarningsSpecific <- function(code, falseWarnings) {
   warn <- tryCatch(capture.output(type = "message",
-                         suppressWarnings(withCallingHandlers(yy <- eval(code),
-                                                              warning = function(xx) {
-                                                                message(paste0("warn::", xx$message))
-                                                              }))), error = function(xx) stop(xx$message))
+                                  suppressWarnings(withCallingHandlers({
+                                    yy <- eval(code)
+                                  }, warning = function(xx) {
+                                    message(paste0("warn::", xx$message))
+                                  }))), error = function(xx) stop(xx$message))
 
   trueWarnings <- grep("warn::", warn, value = TRUE)
   trueWarnings <- grep(falseWarnings, trueWarnings,
@@ -1815,12 +1821,14 @@ suppressWarningsSpecific <- function(code, falseWarnings) {
   return(yy)
 }
 
+#' @importFrom utils capture.output
 captureWarningsToAttr <- function(code) {
   warn <- capture.output(type = "message",
-                         suppressWarnings(withCallingHandlers(yy <- eval(code),
-                                                              warning = function(xx) {
-                                                                message(paste0("warn::", xx$message))
-                                                              })))
+                         suppressWarnings(withCallingHandlers({
+                           yy <- eval(code)
+                         }, warning = function(xx) {
+                           message(paste0("warn::", xx$message))
+                         })))
   trueWarnings <- grepl("warn::.*", warn)
   if (length(warn[!trueWarnings]))
     message(paste(warn[!trueWarnings], collapse = "\n  "))

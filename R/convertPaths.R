@@ -89,7 +89,7 @@ setMethod(
   signature = "ANY",
   definition = function(obj, allowMultiple) {
     NULL
-  })
+})
 
 #' @export
 #' @rdname Filenames
@@ -103,7 +103,7 @@ setMethod(
       if (endsWith(fn, suffix = "grd"))
         fn <- c(fn, gsub("grd$", "gri", fn))
     normPath(fn)
-  })
+})
 
 #' @export
 #' @rdname Filenames
@@ -122,8 +122,7 @@ setMethod(
     }
 
     return(fn)
-
-  })
+})
 
 #' @export
 #' @rdname Filenames
@@ -136,14 +135,13 @@ setMethod(
     if (any(rastersLogical)) {
       rasterNames <- names(rastersLogical)[rastersLogical]
       if (!is.null(rasterNames)) {
-        no <- names(obj);
-        names(no) <- no;
+        no <- names(obj)
+        names(no) <- no
+        ## TODO: sapply is not type-safe; use vapply
         nestedOnes <- lapply(no, function(rn) grep(paste0("^", rn, "\\."), rasterNames, value = TRUE))
         nestedOnes1 <- nestedOnes[sapply(nestedOnes, function(x) length(x) > 0)]
         nonNested <- nestedOnes[sapply(nestedOnes, function(x) length(x) == 0)]
         nonNestedRasterNames <- rasterNames[rasterNames %in% names(nonNested)]
-
-
         diskBacked <- sapply(mget(nonNestedRasterNames, envir = obj), fromDisk)
 
         names(rasterNames) <- rasterNames
@@ -161,9 +159,10 @@ setMethod(
       }
     }
     rasterFilenameDups <- lapply(rasterFilename, duplicated)
-    rasterFilename <- lapply(names(rasterFilenameDups), function(nam) rasterFilename[[nam]][!rasterFilenameDups[[nam]]])
-    return(rasterFilename)
-  })
+    rasterFilename <- lapply(names(rasterFilenameDups), function(nam)
+      rasterFilename[[nam]][!rasterFilenameDups[[nam]]])
+    return(unlist(rasterFilename))
+})
 
 #' @export
 #' @rdname Filenames
@@ -172,7 +171,5 @@ setMethod(
   signature = "list",
   definition = function(obj, allowMultiple = TRUE) {
     ## convert a list to an environment -- this is to align it with a simList and environment
-    Filenames(as.environment(obj),
-              allowMultiple = allowMultiple)
-  })
-
+    Filenames(as.environment(obj), allowMultiple = allowMultiple)
+})

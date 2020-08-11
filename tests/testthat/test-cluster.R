@@ -27,14 +27,14 @@ test_that("test parallel collisions", {
     if (interactive()) {
       of <- tmpfile[3]
       cl <- makeCluster(N, outfile = of)
-      print(paste("log file is", of))
+      message(paste("log file is", of))
     } else {
       cl <- makeCluster(N)
     }
     on.exit(stopCluster(cl), add = TRUE)
 
     clusterSetRNGStream(cl)
-    parallel::clusterEvalQ(cl, {library(reproducible)})
+#    parallel::clusterEvalQ(cl, {library(reproducible)})
     numToRun <- 40
 
     # There is a 'creating Cache at the same time' problem -- haven't resolved

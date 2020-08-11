@@ -12,7 +12,16 @@ test_that("all exported functions have examples", {
   #   cat("#END##############\n", file = tmpExFile, append = TRUE)
   }
 
-  exFiles <- normalizePath(dir("../../man", full.names = TRUE))
+  manDir <- if (dir.exists("../../man")) {
+    "../../man" ## if called during devtools::check()
+  } else if (dir.exists("./man")) {
+    "./man" ## if called during devtools::test()
+  } else {
+    system.file("man", package = "reproducible")
+  }
+  exFiles <- list.files(manDir, full.names = TRUE, pattern = "[.]Rd$") %>%
+    normalizePath(.)
+
   # use for loop as it keeps control at top level
   owd <- getwd()
   tmpdir <- tempdir2("test_Examples") %>% checkPath(create = TRUE)
@@ -35,4 +44,3 @@ test_that("all exported functions have examples", {
     test_example(file)
   }
 })
-

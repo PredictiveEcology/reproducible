@@ -15,7 +15,7 @@ The [`development`](https://github.com/PredictiveEcology/reproducible/tree/devel
 
 To make a contribution to the package, just send a [pull request](https://help.github.com/articles/using-pull-requests/). 
 When you send your PR, make sure `development` is the destination branch on the [reproducible repository](https://github.com/PredictiveEcology/reproducible).
-Your PR should pass `R CMD check --as-cran`, which will also be checked by <a href="https://travis-ci.org/PredictiveEcology/reproducible">Travis CI</a> and <a href="https://ci.appveyor.com/project/achubaty/reproducible">AppVeyor CI</a> when the PR is submitted.
+Your PR should pass `R CMD check --as-cran`, which will also be checked by <a href="https://github.com/PredictiveEcology/reproducible/actions">GitHub Actions</a> when the PR is submitted.
 
 We'll try to review your pull request and provide feedback / merge improvements as quickly as possible.
 

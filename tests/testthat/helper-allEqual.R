@@ -14,7 +14,6 @@ skip_if_no_token <- function() {
 # sets options("reproducible.ask" = FALSE) if ask = FALSE
 testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
                      opts = NULL, needGoogle = FALSE) {
-
   optsAsk <- if (!ask)
     options("reproducible.ask" = ask)
   else
@@ -26,12 +25,13 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     list()
 
   if (missing(libraries)) libraries <- list()
-  unlist(lapply(libraries, require, character.only = TRUE))
-  require("testthat")
+  unlist(lapply(libraries, require, character.only = TRUE, quietly = TRUE))
+  require("testthat", quietly = TRUE)
   tmpdir <- tempdir2(rndstr(1, 6))
 
   if (isTRUE(needGoogle)) {
-    if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+    if (!requireNamespace("googledrive"))
+      stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
     if (utils::packageVersion("googledrive") >= "1.0.0")
       googledrive::drive_deauth()
@@ -433,3 +433,11 @@ messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cache
   suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
                            writeRaster(...))
 }
+
+tatisRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"
+tatisRasterTestFilename <- function(pre = "", suff = "") {
+  paste0(pre, "rasterTest.", suff)
+}
+tatisRasterTestZip <- tatisRasterTestFilename(tatisRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+tatisRasterTestRar <- tatisRasterTestFilename(tatisRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+tatisRasterTestTar <- tatisRasterTestFilename(tatisRasterTests, "tar")

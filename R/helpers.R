@@ -6,41 +6,7 @@
   inst
 }
 
-#' @importFrom utils chooseCRANmirror
-#' @keywords internal
-getCRANrepos <- function(repos = NULL) {
-  if (is.null(repos)) {
-    repos <- getOption("repos")["CRAN"]
-  }
 
-  # still might be imprecise repository, specifically ""
-  if (isTRUE("" == repos)) {
-    repos <- "@CRAN@"
-  }
-
-  # if @CRAN@, and non interactive session
-  if (isTRUE("@CRAN@" %in% repos)) {
-    cranRepo <- Sys.getenv("CRAN_REPO")
-    repos <- if (nzchar(cranRepo)) {
-      cranRepo
-    } else {
-      chooseCRANmirror2() ## sets repo option
-      getOption("repos")["CRAN"]
-    }
-  }
-
-  return(repos)
-}
-
-#' @importFrom utils chooseCRANmirror
-#' @keywords internal
-chooseCRANmirror2 <- function() {
-  if (isInteractive()) {
-    chooseCRANmirror()
-  } else {
-    chooseCRANmirror(ind = 1) ## https://cloud.r-project.org
-  }
-}
 #' Add a prefix or suffix to the basename part of a file path
 #'
 #' Prepend (or postpend) a filename with a prefix (or suffix).

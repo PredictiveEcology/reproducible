@@ -43,6 +43,7 @@ A \code{Raster*} object, masked (i.e., smaller extent and/or
 This alternative to \code{raster::mask} is included here.
 }
 \examples{
+library(sp)
 library(raster)
 
 Sr1 <- Polygon(cbind(c(2, 4, 4, 0.9, 2), c(2, 3, 5, 4, 2)))
@@ -61,7 +62,7 @@ poly[[1]] <- raster(raster::extent(shp), vals = 0, res = c(1, 1))
 poly[[2]] <- raster(raster::extent(shp), vals = 1, res = c(1, 1))
 origStack <- stack(poly)
 # original mask function in raster
-newStack1 <- mask(origStack, mask = shp)
+newStack1 <- mask(x= origStack, mask = shp)
 newStack2 <- fastMask(x = origStack, y = shp)
 
 # test all equal
