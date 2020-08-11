@@ -433,3 +433,11 @@ messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cache
   suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
                            writeRaster(...))
 }
+
+tatisRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"
+tatisRasterTestFilename <- function(pre = "", suff = "") {
+  paste0(pre, "rasterTest.", suff)
+}
+tatisRasterTestZip <- tatisRasterTestFilename(tatisRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+tatisRasterTestRar <- tatisRasterTestFilename(tatisRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+tatisRasterTestTar <- tatisRasterTestFilename(tatisRasterTests, "tar")
