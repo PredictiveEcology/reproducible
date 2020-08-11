@@ -64,8 +64,7 @@ See vignettes and help files for many more real-world examples.
 
 ### Current release (on CRAN)
 
-[![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=master)](https://travis-ci.org/PredictiveEcology/reproducible)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/master?svg=true)](https://ci.appveyor.com/project/achubaty/reproducible/branch/master)
+[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=master)](https://github.com/PredictiveEcology/reproducible/actions)
 [![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=master)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=master)
 
 **Install from CRAN:**
@@ -84,8 +83,7 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE)
 
 ### Development version
 
-[![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=development)](https://travis-ci.org/PredictiveEcology/reproducible)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/development?svg=true)](https://ci.appveyor.com/project/achubaty/reproducible/branch/development)
+[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=development)](https://github.com/PredictiveEcology/reproducible/actions)
 [![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=development)
 
 **Install from GitHub:**

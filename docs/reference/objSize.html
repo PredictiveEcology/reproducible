@@ -87,7 +87,7 @@ See Details for the special case of functions and their enclosing environments."
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1.9001</span>
       </span>
     </div>
 
@@ -343,7 +343,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 100432 bytes
 #&gt; 
 #&gt; $captureWarningsToAttr
-#&gt; 106112 bytes
+#&gt; 126024 bytes
 #&gt; 
 #&gt; $cc
 #&gt; 38672 bytes
@@ -436,10 +436,10 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 551496 bytes
 #&gt; 
 #&gt; $cropInputs.spatialClasses
-#&gt; 183000 bytes
+#&gt; 193688 bytes
 #&gt; 
 #&gt; $cropReprojMaskWGDAL
-#&gt; 175448 bytes
+#&gt; 175336 bytes
 #&gt; 
 #&gt; $datatypeVals
 #&gt; 8080 bytes
@@ -493,7 +493,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 158576 bytes
 #&gt; 
 #&gt; $fastMask
-#&gt; 145744 bytes
+#&gt; 145464 bytes
 #&gt; 
 #&gt; $file.move
 #&gt; 76440 bytes
@@ -508,7 +508,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 10008 bytes
 #&gt; 
 #&gt; $findGDAL
-#&gt; 141416 bytes
+#&gt; 138824 bytes
 #&gt; 
 #&gt; $fixErrors
 #&gt; 7600 bytes
@@ -535,7 +535,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 75776 bytes
 #&gt; 
 #&gt; $getCRANrepos
-#&gt; 94720 bytes
+#&gt; 159320 bytes
 #&gt; 
 #&gt; $getFunctionName
 #&gt; 1310448 bytes
@@ -607,7 +607,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 31120 bytes
 #&gt; 
 #&gt; $maskInputs.sf
-#&gt; 236024 bytes
+#&gt; 55104 bytes
 #&gt; 
 #&gt; $maskInputs.Spatial
 #&gt; 11376 bytes
@@ -688,7 +688,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 12280 bytes
 #&gt; 
 #&gt; $postProcessAllSpatial
-#&gt; 178888 bytes
+#&gt; 180800 bytes
 #&gt; 
 #&gt; $postProcessChecks
 #&gt; 113400 bytes
@@ -712,7 +712,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 6440 bytes
 #&gt; 
 #&gt; $projectInputs.Raster
-#&gt; 265112 bytes
+#&gt; 264832 bytes
 #&gt; 
 #&gt; $projectInputs.sf
 #&gt; 139832 bytes
@@ -775,7 +775,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 10232 bytes
 #&gt; 
 #&gt; $suppressWarningsSpecific
-#&gt; 125848 bytes
+#&gt; 148984 bytes
 #&gt; 
 #&gt; $unmakeMemoisable
 #&gt; 6600 bytes
@@ -845,7 +845,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 
 <span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
 <span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
-(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 568 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 28702056</div><div class='input'>                 # and imported functions
+(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 568 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 28469304</div><div class='input'>                 # and imported functions
 
 </div></pre>
   </div>
