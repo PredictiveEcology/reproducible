@@ -144,7 +144,7 @@ postProcess.list <- function(x, ...) {
 #' @importFrom raster removeTmpFiles
 #' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
-postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = TRUE,
+postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
                                        studyArea = NULL, rasterToMatch = NULL,
                                        overwrite = getOption("reproducible.overwrite", TRUE),
                                        useSAcrs = FALSE,
@@ -166,7 +166,7 @@ postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = TRUE,
 #' @export
 #' @example inst/examples/example_postProcess.R
 #' @rdname postProcess
-postProcess.sf <- function(x, filename1 = NULL, filename2 = TRUE,
+postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
                            studyArea = NULL, rasterToMatch = NULL,
                            overwrite = getOption("reproducible.overwrite", TRUE),
                            useSAcrs = FALSE,
@@ -1108,7 +1108,7 @@ maskInputs.sf <- function(x, studyArea, ...) {
 #' @importFrom raster tmpDir
 #' @rdname determineFilename
 #' @example inst/examples/example_postProcess.R
-determineFilename <- function(filename2 = TRUE, filename1 = NULL,
+determineFilename <- function(filename2 = NULL, filename1 = NULL,
                               destinationPath = getOption("reproducible.destinationPath", "."),
                               prefix = "Small", ...) {
   if (!is.null(filename2)) {
@@ -1915,10 +1915,13 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
   if (missing(filename2)) filename2 <- NULL
   if (!.isFALSE(filename2)) {
     filename2 <- determineFilename(filename2, destinationPath = destinationPath)
-  } else if (is.null(filename2) | .isFALSE(filename2)) {
+  }
+
+  if (is.null(filename2) | .isFALSE(filename2)) {
     returnToRAM <- TRUE
     tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
     filename2 <- file.path(tmpRasPath, paste0(x@data@names, "_", rndstr(1, 8)))
+    layerName <- names(x)
   }
   if (nchar(extension(filename2)) == 0)
     filename2 <- paste0(filename2, ".tif")
