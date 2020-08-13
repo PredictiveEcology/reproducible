@@ -205,7 +205,7 @@ object (in order to clone an existing connection).</p></td>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
 <span class='co'># make a cache repository</span>
 <span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)</div><div class='output co'>#&gt; <span class='message'>No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span>
-#&gt; <span class='message'>  this will not persist across R sessions.</span></div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  ...(Object to retrieve (7072c305d8c69df0.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous rnorm call, </span><span></span></div><div class='input'>
+#&gt; <span class='message'>  this will not persist across R sessions.</span></div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (7072c305d8c69df0.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous rnorm call, </span></div><div class='input'>
 <span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/raster.html'>raster</a></span>(<span class='fu'><a href='https://rdrr.io/pkg/raster/man/extent.html'>extent</a></span>(<span class='fl'>0</span>,<span class='fl'>10</span>,<span class='fl'>0</span>,<span class='fl'>10</span>), <span class='kw'>vals</span> <span class='kw'>=</span> <span class='fl'>1</span>:<span class='fl'>100</span>)
 
 <span class='co'># write to disk manually -- will be in tempdir()</span>
@@ -219,11 +219,11 @@ object (in order to clone an existing connection).</p></td>
 #&gt; resolution : 1, 1  (x, y)
 #&gt; extent     : 0, 10, 0, 10  (xmin, xmax, ymin, ymax)
 #&gt; crs        : NA 
-#&gt; source     : C:/Users/emcintir.L-VIC-A023744/AppData/Local/Temp/RtmpMdZfWx/rasters/file5ee432eb3424.grd 
+#&gt; source     : /tmp/RtmpS9bh0n/rasters/file1f6b80fa3ff06.grd 
 #&gt; names      : layer 
 #&gt; values     : 1, 100  (min, max)
 #&gt; </div><div class='input'>
-</div></span></pre>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -125,8 +125,7 @@
 <p>Caching is the principle tool to achieve this reproducible work-flow. There are many existing tools that support some notion of <em>caching</em>. The main tool here, <code>Cache</code>, can be nested hierarchically, becoming very powerful for the data science developer who is regularly working at many levels of an analysis.</p>
 <pre><code><a href="https://rdrr.io/r/stats/Normal.html">rnorm(1) # give a random number
 Cache(rnorm, 1) # generates a random number
-Cache(rnorm, 1) # recovers the previous random number because call is identical
-</a></code></pre>
+Cache(rnorm, 1) # recovers the previous random number because call is identical</a></code></pre>
 </div>
 <div id="prepinputs" class="section level2">
 <h2 class="hasAnchor">
@@ -137,9 +136,7 @@ Cache(rnorm, 1) # recovers the previous random number because call is identical
 <pre><code># Using dlFun -- a custom download function -- passed to preProcess
 test1 &lt;- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-                    path = dPath)
-                    
-                    </code></pre>
+                    path = dPath)</code></pre>
 </div>
 <div id="cache-with-prepinputs" class="section level2">
 <h2 class="hasAnchor">
@@ -157,7 +154,7 @@ test1 &lt;- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify curr
 <div id="current-release-on-cran" class="section level3">
 <h3 class="hasAnchor">
 <a href="#current-release-on-cran" class="anchor"></a>Current release (on CRAN)</h3>
-<p><a href="https://github.com/PredictiveEcology/reproducible/actions"><img src="https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=master" alt="R build status"></a> <a href="https://coveralls.io/github/PredictiveEcology/reproducible?branch=master"><img src="https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=master" alt="Coverage Status"></a></p>
+<p><a href="https://github.com/PredictiveEcology/reproducible/actions"><img src="https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=master" alt="R build status"></a> <a href="https://codecov.io/gh/PredictiveEcology/reproducible?branch=master"><img src="https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg" alt="Codecov test coverage"></a></p>
 <p><strong>Install from CRAN:</strong></p>
 <div class="sourceCode" id="cb4"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span>(<span class="st">"reproducible"</span>)</pre></div>
 <p><strong>Install from GitHub:</strong></p>
@@ -168,7 +165,7 @@ test1 &lt;- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify curr
 <div id="development-version" class="section level3">
 <h3 class="hasAnchor">
 <a href="#development-version" class="anchor"></a>Development version</h3>
-<p><a href="https://github.com/PredictiveEcology/reproducible/actions"><img src="https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=development" alt="R build status"></a> <a href="https://coveralls.io/github/PredictiveEcology/reproducible?branch=development"><img src="https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development" alt="Coverage Status"></a></p>
+<p><a href="https://github.com/PredictiveEcology/reproducible/actions"><img src="https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=development" alt="R build status"></a> <a href="https://codecov.io/gh/PredictiveEcology/reproducible?branch=development"><img src="https://codecov.io/gh/PredictiveEcology/reproducible/branch/development/graph/badge.svg" alt="Codecov test coverage"></a></p>
 <p><strong>Install from GitHub:</strong></p>
 <div class="sourceCode" id="cb6"><pre class="r"><span class="co">#install.packages("devtools")</span>
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"devtools"</span>)
@@ -223,6 +220,7 @@ test1 &lt;- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify curr
 <li><a href="https://cran.r-project.org/package=reproducible"><img src="http://www.r-pkg.org/badges/version/reproducible" alt="CRAN_Status_Badge"></a></li>
 <li><a href="https://cran.r-project.org/package=reproducible"><img src="http://cranlogs.r-pkg.org/badges/grand-total/reproducible" alt="CRAN Downloads"></a></li>
 <li><a href="https://github.com/PredictiveEcology/reproducible/actions"><img src="https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg" alt="R build status"></a></li>
+<li><a href="https://codecov.io/gh/PredictiveEcology/reproducible?branch=master"><img src="https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg" alt="Codecov test coverage"></a></li>
 </ul>
 </div>
 </div>

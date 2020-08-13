@@ -174,7 +174,7 @@ file so they persist between sessions.</p>
   <dt><code>destinationPath</code></dt><dd><p>Default: <code>NULL</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcess.html'>preProcess</a></code>.
     Can be set globally here.</p></dd>
   <dt><code>drv</code></dt><dd><p>Default: <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code>. Sets the default driver for the backend database system.
-    Only tested with <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code> and <code>RPostgres::Postgres()</code>.</p></dd>
+    Only tested with <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code> and <code><a href='https://rpostgres.r-dbi.org/reference/Postgres.html'>RPostgres::Postgres()</a></code>.</p></dd>
   <dt><code>futurePlan</code></dt><dd><p>Default: <code>FALSE</code>. On Linux OSes, <code>Cache</code> and <code>cloudCache</code> have some
     functionality that uses the <code>future</code> package.
     Default is to not use these, as they are experimental.

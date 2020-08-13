@@ -157,7 +157,7 @@
       <th>repoDir</th>
       <td><p>A character denoting an existing directory of the repository for
 which metadata will be returned. If <code>NULL</code> (default), it will use the
-<code>repoDir</code> specified in <code>archivist::setLocalRepo</code>.</p></td>
+<code>repoDir</code> specified in <code><a href='https://rdrr.io/pkg/archivist/man/setRepo.html'>archivist::setLocalRepo</a></code>.</p></td>
     </tr>
     </table>
 
@@ -178,8 +178,8 @@ have no actual file with data.</p>
 <span class='fu'><a href='https://rdrr.io/r/base/lapply.html'>lapply</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='no'>runif</span>, <span class='no'>rnorm</span>), <span class='kw'>function</span>(<span class='no'>f</span>) {
   <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>f</span>, <span class='fl'>10</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 })</div><div class='output co'>#&gt; [[1]]
-#&gt;  [1] 0.08428220 0.43445306 0.81142784 0.21235285 0.74902359 0.82294596
-#&gt;  [7] 0.89065564 0.01716172 0.95006332 0.16434046
+#&gt;  [1] 0.859625102 0.757621128 0.926860752 0.081588733 0.049136837 0.345142181
+#&gt;  [7] 0.002873588 0.678100822 0.604252266 0.119109327
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -190,8 +190,8 @@ have no actual file with data.</p>
 #&gt; [1] ""
 #&gt; 
 #&gt; [[2]]
-#&gt;  [1] -0.1829260 -1.3792578  1.2506006 -1.8762368 -0.3687876 -2.1292973
-#&gt;  [7]  0.3376460 -1.5745748 -0.1963194  0.9150601
+#&gt;  [1]  1.02457159 -0.65918555 -0.38630438 -0.24249895  0.22059324 -1.48109003
+#&gt;  [7]  0.72469120 -2.37751470 -0.06540921 -0.46970481
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -202,15 +202,15 @@ have no actual file with data.</p>
 #&gt; [1] ""
 #&gt; </div><div class='input'>
 <span class='co'># clear out any stub artifacts</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters):  552 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters):  552 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters):  552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters):  552 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 88dabbb6fbb67941            function                     f
 #&gt;  2: 88dabbb6fbb67941               class               numeric
 #&gt;  3: 88dabbb6fbb67941         object.size                  1104
-#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-11 15:00:19
+#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-13 11:26:16
 #&gt;  5: 88dabbb6fbb67941             inCloud                 FALSE
 #&gt;  6: 88dabbb6fbb67941          resultHash                      
-#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest      0.002005816 secs
-#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun                0 secs
+#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0004119873 secs
+#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun     1.072884e-05 secs
 #&gt;  9: 88dabbb6fbb67941      otherFunctions               saveRDS
 #&gt; 10: 88dabbb6fbb67941      otherFunctions               do.call
 #&gt; 11: 88dabbb6fbb67941      otherFunctions      build_site_local
@@ -224,15 +224,15 @@ have no actual file with data.</p>
 #&gt; 19: 88dabbb6fbb67941      otherFunctions                lapply
 #&gt; 20: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719
 #&gt; 21: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c
-#&gt; 22: 88dabbb6fbb67941           file.size                   204
+#&gt; 22: 88dabbb6fbb67941           file.size                   205
 #&gt; 23: 87eee6212ba1ae0a            function                     f
 #&gt; 24: 87eee6212ba1ae0a               class               numeric
 #&gt; 25: 87eee6212ba1ae0a         object.size                  1104
-#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-11 15:00:19
+#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-13 11:26:16
 #&gt; 27: 87eee6212ba1ae0a             inCloud                 FALSE
 #&gt; 28: 87eee6212ba1ae0a          resultHash                      
-#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest      0.002003908 secs
-#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun                0 secs
+#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest     0.0005438328 secs
+#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun     1.597404e-05 secs
 #&gt; 31: 87eee6212ba1ae0a      otherFunctions               saveRDS
 #&gt; 32: 87eee6212ba1ae0a      otherFunctions               do.call
 #&gt; 33: 87eee6212ba1ae0a      otherFunctions      build_site_local
@@ -249,61 +249,61 @@ have no actual file with data.</p>
 #&gt; 44: 87eee6212ba1ae0a           file.size                   225
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-11 15:00:19
-#&gt;  2: 2020-08-11 15:00:19
-#&gt;  3: 2020-08-11 15:00:19
-#&gt;  4: 2020-08-11 15:00:19
-#&gt;  5: 2020-08-11 15:00:19
-#&gt;  6: 2020-08-11 15:00:19
-#&gt;  7: 2020-08-11 15:00:19
-#&gt;  8: 2020-08-11 15:00:19
-#&gt;  9: 2020-08-11 15:00:19
-#&gt; 10: 2020-08-11 15:00:19
-#&gt; 11: 2020-08-11 15:00:19
-#&gt; 12: 2020-08-11 15:00:19
-#&gt; 13: 2020-08-11 15:00:19
-#&gt; 14: 2020-08-11 15:00:19
-#&gt; 15: 2020-08-11 15:00:19
-#&gt; 16: 2020-08-11 15:00:19
-#&gt; 17: 2020-08-11 15:00:19
-#&gt; 18: 2020-08-11 15:00:19
-#&gt; 19: 2020-08-11 15:00:19
-#&gt; 20: 2020-08-11 15:00:19
-#&gt; 21: 2020-08-11 15:00:19
-#&gt; 22: 2020-08-11 15:00:19
-#&gt; 23: 2020-08-11 15:00:19
-#&gt; 24: 2020-08-11 15:00:19
-#&gt; 25: 2020-08-11 15:00:19
-#&gt; 26: 2020-08-11 15:00:19
-#&gt; 27: 2020-08-11 15:00:19
-#&gt; 28: 2020-08-11 15:00:19
-#&gt; 29: 2020-08-11 15:00:19
-#&gt; 30: 2020-08-11 15:00:19
-#&gt; 31: 2020-08-11 15:00:19
-#&gt; 32: 2020-08-11 15:00:19
-#&gt; 33: 2020-08-11 15:00:19
-#&gt; 34: 2020-08-11 15:00:19
-#&gt; 35: 2020-08-11 15:00:19
-#&gt; 36: 2020-08-11 15:00:19
-#&gt; 37: 2020-08-11 15:00:19
-#&gt; 38: 2020-08-11 15:00:19
-#&gt; 39: 2020-08-11 15:00:19
-#&gt; 40: 2020-08-11 15:00:19
-#&gt; 41: 2020-08-11 15:00:19
-#&gt; 42: 2020-08-11 15:00:19
-#&gt; 43: 2020-08-11 15:00:19
-#&gt; 44: 2020-08-11 15:00:19
+#&gt;  1: 2020-08-13 11:26:16
+#&gt;  2: 2020-08-13 11:26:16
+#&gt;  3: 2020-08-13 11:26:16
+#&gt;  4: 2020-08-13 11:26:16
+#&gt;  5: 2020-08-13 11:26:16
+#&gt;  6: 2020-08-13 11:26:16
+#&gt;  7: 2020-08-13 11:26:16
+#&gt;  8: 2020-08-13 11:26:16
+#&gt;  9: 2020-08-13 11:26:16
+#&gt; 10: 2020-08-13 11:26:16
+#&gt; 11: 2020-08-13 11:26:16
+#&gt; 12: 2020-08-13 11:26:16
+#&gt; 13: 2020-08-13 11:26:16
+#&gt; 14: 2020-08-13 11:26:16
+#&gt; 15: 2020-08-13 11:26:16
+#&gt; 16: 2020-08-13 11:26:16
+#&gt; 17: 2020-08-13 11:26:16
+#&gt; 18: 2020-08-13 11:26:16
+#&gt; 19: 2020-08-13 11:26:16
+#&gt; 20: 2020-08-13 11:26:16
+#&gt; 21: 2020-08-13 11:26:16
+#&gt; 22: 2020-08-13 11:26:16
+#&gt; 23: 2020-08-13 11:26:16
+#&gt; 24: 2020-08-13 11:26:16
+#&gt; 25: 2020-08-13 11:26:16
+#&gt; 26: 2020-08-13 11:26:16
+#&gt; 27: 2020-08-13 11:26:16
+#&gt; 28: 2020-08-13 11:26:16
+#&gt; 29: 2020-08-13 11:26:16
+#&gt; 30: 2020-08-13 11:26:16
+#&gt; 31: 2020-08-13 11:26:16
+#&gt; 32: 2020-08-13 11:26:16
+#&gt; 33: 2020-08-13 11:26:16
+#&gt; 34: 2020-08-13 11:26:16
+#&gt; 35: 2020-08-13 11:26:16
+#&gt; 36: 2020-08-13 11:26:16
+#&gt; 37: 2020-08-13 11:26:16
+#&gt; 38: 2020-08-13 11:26:16
+#&gt; 39: 2020-08-13 11:26:16
+#&gt; 40: 2020-08-13 11:26:16
+#&gt; 41: 2020-08-13 11:26:16
+#&gt; 42: 2020-08-13 11:26:16
+#&gt; 43: 2020-08-13 11:26:16
+#&gt; 44: 2020-08-13 11:26:16
 #&gt;             createdDate</div><div class='input'>
 <span class='no'>file2Remove</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.files.html'>dir</a></span>(<span class='fu'><a href='CacheHelpers.html'>CacheStorageDir</a></span>(<span class='no'>tmpDir</span>), <span class='kw'>full.name</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>]
-<span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.remove</a></span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters):  552 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters):  552 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+<span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.remove</a></span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters):  552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters):  552 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 88dabbb6fbb67941            function                     f
 #&gt;  2: 88dabbb6fbb67941               class               numeric
 #&gt;  3: 88dabbb6fbb67941         object.size                  1104
-#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-11 15:00:19
+#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-13 11:26:16
 #&gt;  5: 88dabbb6fbb67941             inCloud                 FALSE
 #&gt;  6: 88dabbb6fbb67941          resultHash                      
-#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest      0.002005816 secs
-#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun                0 secs
+#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0004119873 secs
+#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun     1.072884e-05 secs
 #&gt;  9: 88dabbb6fbb67941      otherFunctions               saveRDS
 #&gt; 10: 88dabbb6fbb67941      otherFunctions               do.call
 #&gt; 11: 88dabbb6fbb67941      otherFunctions      build_site_local
@@ -317,15 +317,15 @@ have no actual file with data.</p>
 #&gt; 19: 88dabbb6fbb67941      otherFunctions                lapply
 #&gt; 20: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719
 #&gt; 21: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c
-#&gt; 22: 88dabbb6fbb67941           file.size                   204
+#&gt; 22: 88dabbb6fbb67941           file.size                   205
 #&gt; 23: 87eee6212ba1ae0a            function                     f
 #&gt; 24: 87eee6212ba1ae0a               class               numeric
 #&gt; 25: 87eee6212ba1ae0a         object.size                  1104
-#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-11 15:00:19
+#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-13 11:26:16
 #&gt; 27: 87eee6212ba1ae0a             inCloud                 FALSE
 #&gt; 28: 87eee6212ba1ae0a          resultHash                      
-#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest      0.002003908 secs
-#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun                0 secs
+#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest     0.0005438328 secs
+#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun     1.597404e-05 secs
 #&gt; 31: 87eee6212ba1ae0a      otherFunctions               saveRDS
 #&gt; 32: 87eee6212ba1ae0a      otherFunctions               do.call
 #&gt; 33: 87eee6212ba1ae0a      otherFunctions      build_site_local
@@ -342,62 +342,62 @@ have no actual file with data.</p>
 #&gt; 44: 87eee6212ba1ae0a           file.size                   225
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-11 15:00:19
-#&gt;  2: 2020-08-11 15:00:19
-#&gt;  3: 2020-08-11 15:00:19
-#&gt;  4: 2020-08-11 15:00:19
-#&gt;  5: 2020-08-11 15:00:19
-#&gt;  6: 2020-08-11 15:00:19
-#&gt;  7: 2020-08-11 15:00:19
-#&gt;  8: 2020-08-11 15:00:19
-#&gt;  9: 2020-08-11 15:00:19
-#&gt; 10: 2020-08-11 15:00:19
-#&gt; 11: 2020-08-11 15:00:19
-#&gt; 12: 2020-08-11 15:00:19
-#&gt; 13: 2020-08-11 15:00:19
-#&gt; 14: 2020-08-11 15:00:19
-#&gt; 15: 2020-08-11 15:00:19
-#&gt; 16: 2020-08-11 15:00:19
-#&gt; 17: 2020-08-11 15:00:19
-#&gt; 18: 2020-08-11 15:00:19
-#&gt; 19: 2020-08-11 15:00:19
-#&gt; 20: 2020-08-11 15:00:19
-#&gt; 21: 2020-08-11 15:00:19
-#&gt; 22: 2020-08-11 15:00:19
-#&gt; 23: 2020-08-11 15:00:19
-#&gt; 24: 2020-08-11 15:00:19
-#&gt; 25: 2020-08-11 15:00:19
-#&gt; 26: 2020-08-11 15:00:19
-#&gt; 27: 2020-08-11 15:00:19
-#&gt; 28: 2020-08-11 15:00:19
-#&gt; 29: 2020-08-11 15:00:19
-#&gt; 30: 2020-08-11 15:00:19
-#&gt; 31: 2020-08-11 15:00:19
-#&gt; 32: 2020-08-11 15:00:19
-#&gt; 33: 2020-08-11 15:00:19
-#&gt; 34: 2020-08-11 15:00:19
-#&gt; 35: 2020-08-11 15:00:19
-#&gt; 36: 2020-08-11 15:00:19
-#&gt; 37: 2020-08-11 15:00:19
-#&gt; 38: 2020-08-11 15:00:19
-#&gt; 39: 2020-08-11 15:00:19
-#&gt; 40: 2020-08-11 15:00:19
-#&gt; 41: 2020-08-11 15:00:19
-#&gt; 42: 2020-08-11 15:00:19
-#&gt; 43: 2020-08-11 15:00:19
-#&gt; 44: 2020-08-11 15:00:19
+#&gt;  1: 2020-08-13 11:26:16
+#&gt;  2: 2020-08-13 11:26:16
+#&gt;  3: 2020-08-13 11:26:16
+#&gt;  4: 2020-08-13 11:26:16
+#&gt;  5: 2020-08-13 11:26:16
+#&gt;  6: 2020-08-13 11:26:16
+#&gt;  7: 2020-08-13 11:26:16
+#&gt;  8: 2020-08-13 11:26:16
+#&gt;  9: 2020-08-13 11:26:16
+#&gt; 10: 2020-08-13 11:26:16
+#&gt; 11: 2020-08-13 11:26:16
+#&gt; 12: 2020-08-13 11:26:16
+#&gt; 13: 2020-08-13 11:26:16
+#&gt; 14: 2020-08-13 11:26:16
+#&gt; 15: 2020-08-13 11:26:16
+#&gt; 16: 2020-08-13 11:26:16
+#&gt; 17: 2020-08-13 11:26:16
+#&gt; 18: 2020-08-13 11:26:16
+#&gt; 19: 2020-08-13 11:26:16
+#&gt; 20: 2020-08-13 11:26:16
+#&gt; 21: 2020-08-13 11:26:16
+#&gt; 22: 2020-08-13 11:26:16
+#&gt; 23: 2020-08-13 11:26:16
+#&gt; 24: 2020-08-13 11:26:16
+#&gt; 25: 2020-08-13 11:26:16
+#&gt; 26: 2020-08-13 11:26:16
+#&gt; 27: 2020-08-13 11:26:16
+#&gt; 28: 2020-08-13 11:26:16
+#&gt; 29: 2020-08-13 11:26:16
+#&gt; 30: 2020-08-13 11:26:16
+#&gt; 31: 2020-08-13 11:26:16
+#&gt; 32: 2020-08-13 11:26:16
+#&gt; 33: 2020-08-13 11:26:16
+#&gt; 34: 2020-08-13 11:26:16
+#&gt; 35: 2020-08-13 11:26:16
+#&gt; 36: 2020-08-13 11:26:16
+#&gt; 37: 2020-08-13 11:26:16
+#&gt; 38: 2020-08-13 11:26:16
+#&gt; 39: 2020-08-13 11:26:16
+#&gt; 40: 2020-08-13 11:26:16
+#&gt; 41: 2020-08-13 11:26:16
+#&gt; 42: 2020-08-13 11:26:16
+#&gt; 43: 2020-08-13 11:26:16
+#&gt; 44: 2020-08-13 11:26:16
 #&gt;             createdDate</div><div class='input'>
 <span class='co'># run clearStubArtifacts</span>
 <span class='fu'><a href='https://rdrr.io/r/base/warning.html'>suppressWarnings</a></span>(<span class='fu'>clearStubArtifacts</span>(<span class='no'>tmpDir</span>))
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># stubs are removed</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters):  552 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters):  552 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># stubs are removed</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters):  552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters):  552 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 88dabbb6fbb67941            function                     f
 #&gt;  2: 88dabbb6fbb67941               class               numeric
 #&gt;  3: 88dabbb6fbb67941         object.size                  1104
-#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-11 15:00:19
+#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-13 11:26:16
 #&gt;  5: 88dabbb6fbb67941             inCloud                 FALSE
 #&gt;  6: 88dabbb6fbb67941          resultHash                      
-#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest      0.002005816 secs
-#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun                0 secs
+#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0004119873 secs
+#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun     1.072884e-05 secs
 #&gt;  9: 88dabbb6fbb67941      otherFunctions               saveRDS
 #&gt; 10: 88dabbb6fbb67941      otherFunctions               do.call
 #&gt; 11: 88dabbb6fbb67941      otherFunctions      build_site_local
@@ -411,15 +411,15 @@ have no actual file with data.</p>
 #&gt; 19: 88dabbb6fbb67941      otherFunctions                lapply
 #&gt; 20: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719
 #&gt; 21: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c
-#&gt; 22: 88dabbb6fbb67941           file.size                   204
+#&gt; 22: 88dabbb6fbb67941           file.size                   205
 #&gt; 23: 87eee6212ba1ae0a            function                     f
 #&gt; 24: 87eee6212ba1ae0a               class               numeric
 #&gt; 25: 87eee6212ba1ae0a         object.size                  1104
-#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-11 15:00:19
+#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-13 11:26:16
 #&gt; 27: 87eee6212ba1ae0a             inCloud                 FALSE
 #&gt; 28: 87eee6212ba1ae0a          resultHash                      
-#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest      0.002003908 secs
-#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun                0 secs
+#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest     0.0005438328 secs
+#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun     1.597404e-05 secs
 #&gt; 31: 87eee6212ba1ae0a      otherFunctions               saveRDS
 #&gt; 32: 87eee6212ba1ae0a      otherFunctions               do.call
 #&gt; 33: 87eee6212ba1ae0a      otherFunctions      build_site_local
@@ -436,54 +436,54 @@ have no actual file with data.</p>
 #&gt; 44: 87eee6212ba1ae0a           file.size                   225
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-11 15:00:19
-#&gt;  2: 2020-08-11 15:00:19
-#&gt;  3: 2020-08-11 15:00:19
-#&gt;  4: 2020-08-11 15:00:19
-#&gt;  5: 2020-08-11 15:00:19
-#&gt;  6: 2020-08-11 15:00:19
-#&gt;  7: 2020-08-11 15:00:19
-#&gt;  8: 2020-08-11 15:00:19
-#&gt;  9: 2020-08-11 15:00:19
-#&gt; 10: 2020-08-11 15:00:19
-#&gt; 11: 2020-08-11 15:00:19
-#&gt; 12: 2020-08-11 15:00:19
-#&gt; 13: 2020-08-11 15:00:19
-#&gt; 14: 2020-08-11 15:00:19
-#&gt; 15: 2020-08-11 15:00:19
-#&gt; 16: 2020-08-11 15:00:19
-#&gt; 17: 2020-08-11 15:00:19
-#&gt; 18: 2020-08-11 15:00:19
-#&gt; 19: 2020-08-11 15:00:19
-#&gt; 20: 2020-08-11 15:00:19
-#&gt; 21: 2020-08-11 15:00:19
-#&gt; 22: 2020-08-11 15:00:19
-#&gt; 23: 2020-08-11 15:00:19
-#&gt; 24: 2020-08-11 15:00:19
-#&gt; 25: 2020-08-11 15:00:19
-#&gt; 26: 2020-08-11 15:00:19
-#&gt; 27: 2020-08-11 15:00:19
-#&gt; 28: 2020-08-11 15:00:19
-#&gt; 29: 2020-08-11 15:00:19
-#&gt; 30: 2020-08-11 15:00:19
-#&gt; 31: 2020-08-11 15:00:19
-#&gt; 32: 2020-08-11 15:00:19
-#&gt; 33: 2020-08-11 15:00:19
-#&gt; 34: 2020-08-11 15:00:19
-#&gt; 35: 2020-08-11 15:00:19
-#&gt; 36: 2020-08-11 15:00:19
-#&gt; 37: 2020-08-11 15:00:19
-#&gt; 38: 2020-08-11 15:00:19
-#&gt; 39: 2020-08-11 15:00:19
-#&gt; 40: 2020-08-11 15:00:19
-#&gt; 41: 2020-08-11 15:00:19
-#&gt; 42: 2020-08-11 15:00:19
-#&gt; 43: 2020-08-11 15:00:19
-#&gt; 44: 2020-08-11 15:00:19
+#&gt;  1: 2020-08-13 11:26:16
+#&gt;  2: 2020-08-13 11:26:16
+#&gt;  3: 2020-08-13 11:26:16
+#&gt;  4: 2020-08-13 11:26:16
+#&gt;  5: 2020-08-13 11:26:16
+#&gt;  6: 2020-08-13 11:26:16
+#&gt;  7: 2020-08-13 11:26:16
+#&gt;  8: 2020-08-13 11:26:16
+#&gt;  9: 2020-08-13 11:26:16
+#&gt; 10: 2020-08-13 11:26:16
+#&gt; 11: 2020-08-13 11:26:16
+#&gt; 12: 2020-08-13 11:26:16
+#&gt; 13: 2020-08-13 11:26:16
+#&gt; 14: 2020-08-13 11:26:16
+#&gt; 15: 2020-08-13 11:26:16
+#&gt; 16: 2020-08-13 11:26:16
+#&gt; 17: 2020-08-13 11:26:16
+#&gt; 18: 2020-08-13 11:26:16
+#&gt; 19: 2020-08-13 11:26:16
+#&gt; 20: 2020-08-13 11:26:16
+#&gt; 21: 2020-08-13 11:26:16
+#&gt; 22: 2020-08-13 11:26:16
+#&gt; 23: 2020-08-13 11:26:16
+#&gt; 24: 2020-08-13 11:26:16
+#&gt; 25: 2020-08-13 11:26:16
+#&gt; 26: 2020-08-13 11:26:16
+#&gt; 27: 2020-08-13 11:26:16
+#&gt; 28: 2020-08-13 11:26:16
+#&gt; 29: 2020-08-13 11:26:16
+#&gt; 30: 2020-08-13 11:26:16
+#&gt; 31: 2020-08-13 11:26:16
+#&gt; 32: 2020-08-13 11:26:16
+#&gt; 33: 2020-08-13 11:26:16
+#&gt; 34: 2020-08-13 11:26:16
+#&gt; 35: 2020-08-13 11:26:16
+#&gt; 36: 2020-08-13 11:26:16
+#&gt; 37: 2020-08-13 11:26:16
+#&gt; 38: 2020-08-13 11:26:16
+#&gt; 39: 2020-08-13 11:26:16
+#&gt; 40: 2020-08-13 11:26:16
+#&gt; 41: 2020-08-13 11:26:16
+#&gt; 42: 2020-08-13 11:26:16
+#&gt; 43: 2020-08-13 11:26:16
+#&gt; 44: 2020-08-13 11:26:16
 #&gt;             createdDate</div><div class='input'>
 <span class='co'># cleanup</span>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></span></pre>
+<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
