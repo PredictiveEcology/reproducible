@@ -3,6 +3,7 @@ on:
     branches:
       - master
       - development
+      - StacksAndMessaging
   pull_request:
     branches:
       - master
