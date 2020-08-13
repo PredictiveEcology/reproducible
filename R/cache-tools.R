@@ -106,10 +106,10 @@ setMethod(
 
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
-        message("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
+        messageCache("x not specified, but cacheRepo is; using ", list(...)$cacheRepo)
         list(...)$cacheRepo
       } else  {
-        message("x not specified; using ", getOption("reproducible.cachePath")[1])
+        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
         x <- getOption("reproducible.cachePath")[1]
       }
     }
@@ -157,11 +157,11 @@ setMethod(
           cacheSize <- sum(file.size(dir(x, full.names = TRUE, recursive = TRUE)))
           class(cacheSize) <- "object_size"
           formattedCacheSize <- format(cacheSize, "auto")
-          message("Your current cache size is ", formattedCacheSize, ".\n",
+          messageQuestion("Your current cache size is ", formattedCacheSize, ".\n",
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
-            message("Aborting clearCache")
+            messageCache("Aborting clearCache")
             return(invisible())
           }
         }
@@ -219,11 +219,11 @@ setMethod(
         class(cacheSize) <- "object_size"
         formattedCacheSize <- format(cacheSize, "auto")
         if (isTRUE(ask)) {
-          message("Your size of your selected objects is ", formattedCacheSize, ".\n",
+          messageQuestion("Your size of your selected objects is ", formattedCacheSize, ".\n",
                   " Are you sure you would like to delete it all? Y or N")
           rl <- readline()
           if (!identical(toupper(rl), "Y")) {
-            message("Aborting clearCache")
+            messageCache("Aborting clearCache")
             return(invisible())
           }
         }
@@ -283,13 +283,13 @@ setMethod(
 cc <- function(secs, ...) {
   browser(expr = exists("jjjj"))
   if (missing(secs)) {
-    message("No time provided; removing the most recent entry to the Cache")
+    messageCache("No time provided; removing the most recent entry to the Cache")
     suppressMessages({theCache <- reproducible::showCache(...)})
     if (NROW(theCache) > 0) {
       accessed <- data.table::setkey(theCache[tagKey == "accessed"], tagValue)
       clearCache(userTags = tail(accessed, 1)[[.cacheTableHashColName()]], ...)
     } else {
-      message("Cache already empty")
+      messageCache("Cache already empty")
     }
   } else {
     if (is(secs, "POSIXct")) {
@@ -335,7 +335,7 @@ setMethod(
   definition = function(x, userTags, after = NULL, before = NULL, drv, conn, ...) {
     browser(expr = exists("rrrr"))
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath")[1])
+      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
     browser(expr = exists("jjjj"))
@@ -467,7 +467,7 @@ setMethod(
   "keepCache",
   definition = function(x, userTags, after, before, ask, drv, conn, ...) {
     if (missing(x)) {
-      message("x not specified; using ", getOption("reproducible.cachePath")[1])
+      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
     # if (missing(after)) after <- NA # "1970-01-01"
@@ -554,7 +554,7 @@ setMethod(
           try(loadFromCache(cacheFrom, artifact))
         }
         if (is(outputToSave, "try-error")) {
-          message("Continuing to load others")
+          messageCache("Continuing to load others")
           outputToSave <- NULL
         }
 
@@ -564,10 +564,10 @@ setMethod(
         if (useDBI()) {
           output <- saveToCache(cacheTo, userTags = userTags, obj = outputToSave, cacheId = artifact) # nolint
         }
-        message(artifact, " copied")
+        messageCache(artifact, " copied")
         outputToSave
       } else {
-        message("Skipping ", artifact, "; already in ", cacheTo)
+        messageCache("Skipping ", artifact, "; already in ", cacheTo)
       }
     })
     .messageCacheSize(cacheTo, cacheTable = showCache(cacheTo))
@@ -611,9 +611,9 @@ setMethod(
   class(fs) <- "object_size"
   preMessage <- "  Selected objects (not including Rasters): "
 
-  message(crayon::blue("Cache size: "))
-  message(crayon::blue(preMessage1, format(fsTotal, "auto")))
-  message(crayon::blue(preMessage, format(fs, "auto")))
+  messageCache("Cache size: ")
+  messageCache(preMessage1, format(fsTotal, "auto"))
+  messageCache(preMessage, format(fs, "auto"))
 }
 
 #' @keywords internal
@@ -634,7 +634,7 @@ checkFutures <- function() {
       if (count > 1 ) {
         Sys.sleep(0.001)
         if (count > 1e3) {
-          message("Future is not resolved after 1 second of waiting. Allowing to proceed.")
+          messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.")
           break
         }
       }
@@ -762,7 +762,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
   frmDisk <- unlist(lapply(objs, fromDisk))
   filenames <- unlist(lapply(objs[frmDisk], Filenames))
   toDelete <- gdriveLs[isInCloud,]
-  message("Cloud:")
+  messageCache("Cloud:")
   if (!is.null(filenames)) {
     rasFiles <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(basename2(filenames), collapse = "|"))
     toDelete <- rbind(rasFiles, toDelete)

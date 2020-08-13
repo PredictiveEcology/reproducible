@@ -394,7 +394,7 @@ setMethod(
     # dots <- enquos(...)
     browser(expr = exists("._Cache_1"))
     if (!is.null(list(...)$objects)) {
-      message("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
+      messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
     }
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
@@ -408,8 +408,8 @@ setMethod(
     originalDots <- fnDetails$originalDots
 
     if (.isFALSE(useCache) || isTRUE(0 == useCache)) {
-      message(crayon::green("useCache is FALSE, skipping Cache.",
-                            "To turn Caching on, use options(reproducible.useCache = TRUE)"))
+      messageCache("useCache is FALSE, skipping Cache.",
+                            "To turn Caching on, use options(reproducible.useCache = TRUE)")
       if (fnDetails$isDoCall) {
         do.call(modifiedDots$what, args = modifiedDots$args)
       } else {
@@ -419,11 +419,11 @@ setMethod(
       startCacheTime <- verboseTime(verbose)
 
       if (!missing(compareRasterFileLength)) {
-        message("compareRasterFileLength argument being deprecated. Use 'length'")
+        messageCache("compareRasterFileLength argument being deprecated. Use 'length'")
         length <- compareRasterFileLength
       }
       if (!missing(digestPathContent)) {
-        message("digestPathContent argument being deprecated. Use 'quick'.")
+        messageCache("digestPathContent argument being deprecated. Use 'quick'.")
         quick <- !digestPathContent
       }
 
@@ -555,7 +555,7 @@ setMethod(
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
           print(.reproEnv$verboseTiming)
-          message("This object is also available from .reproEnv$cacheTimings")
+          messageCache("This object is also available from .reproEnv$cacheTimings")
           if (exists("verboseTiming", envir = .reproEnv))
             rm("verboseTiming", envir = .reproEnv)
         },
@@ -570,9 +570,9 @@ setMethod(
       if (!is.null(cacheId)) {
         outputHashManual <- cacheId
         if (identical(outputHashManual, outputHash)) {
-          message("cacheId is same as calculated hash")
+          messageCache("cacheId is same as calculated hash")
         } else {
-          message("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId)
+          messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId)
         }
         outputHash <- outputHashManual
       }
@@ -660,7 +660,7 @@ setMethod(
           userTagsSimple <- gsub(".*:(.*)", "\\1", userTags)
           isInRepo <- isInRepo[!isInRepo[[.cacheTableTagColName()]] %in% userTagsSimple, , drop = FALSE]
           outputHash <- outputHashNew
-          message("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'")
+          messageCache("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'")
         } else {
           # remove entries from the 2 data.frames of isInRep & gdriveLs
           if (useDBI()) {
@@ -670,7 +670,7 @@ setMethod(
           } else {
             isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
           }
-          message("Overwriting Cache entry with function '",fnDetails$functionName ,"'")
+          messageCache("Overwriting Cache entry with function '",fnDetails$functionName ,"'")
         }
       }
 
@@ -689,12 +689,12 @@ setMethod(
           }
           class(objSize) <- "object_size"
           bigFile <- isTRUE(objSize > 1e6)
-          message(crayon::blue(paste0("  ...(Object to retrieve (",
+          messageCache("  ...(Object to retrieve (",
                                       basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
                                       ")",
                                       if (bigFile) " is large: ",
                                       if (bigFile) format(objSize, units = "auto"),
-                                      ")")))
+                                      ")")
 
           preLoadTime <- Sys.time()
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
@@ -960,7 +960,7 @@ setMethod(
           .reproEnv$futureEnv <- new.env(parent = emptyenv())
 
         if (isTRUE(getOption("reproducible.futurePlan"))) {
-          message('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess".\n',
+          messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess".\n',
                   'Please specify a plan by name, e.g.,\n',
                   '  options("reproducible.futurePlan" = "multiprocess")')
           future::plan("multiprocess", workers = 2)
@@ -982,7 +982,7 @@ setMethod(
                            drv = drv)
           )
         if (is.null(.reproEnv$alreadyMsgFuture)) {
-          message("  Cache saved in a separate 'future' process. ",
+          messageCache("  Cache saved in a separate 'future' process. ",
                   "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
                   "This message will not be shown again until next reload of reproducible")
           .reproEnv$alreadyMsgFuture <- TRUE
@@ -1409,49 +1409,49 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
     if (isDevMode) {
-      message(crayon::cyan(" ------ devMode -------"))
-      message(crayon::cyan("This call to cache will replace"))
+      messageCache(" ------ devMode -------")
+      messageCache("This call to cache will replace")
     } else {
-      message(crayon::cyan(" ------ showSimilar -------"))
-      message(crayon::cyan("This call to cache differs from the next closest:"))
+      messageCache(" ------ showSimilar -------")
+      messageCache("This call to cache differs from the next closest:")
     }
-    message(crayon::cyan(paste0("... artifact with cacheId ", cacheIdOfSimilar)))
+    messageCache(paste0("... artifact with cacheId ", cacheIdOfSimilar))
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
-      message(crayon::cyan("... different", paste(similar2[differs %in% TRUE]$fun, collapse = ", ")))
+      messageCache("... different", paste(similar2[differs %in% TRUE]$fun, collapse = ", "))
     }
 
     if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
-      message(crayon::cyan("... possible, unknown, differences in a nested list",
+      messageCache("... possible, unknown, differences in a nested list",
                            "that is deeper than",getOption("reproducible.showSimilarDepth",3),"in ",
-                           paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun))))
+                           paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)))
     }
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
-      message(crayon::cyan("... because of (a) new argument(s): ",
+      messageCache("... because of (a) new argument(s): ",
                            #"argument currently specified that was not in similar cache: ",
-                           paste(as.character(missingArgs), collapse = ", ")))
+                           paste(as.character(missingArgs), collapse = ", "))
     }
-    # message(crayon::cyan("Only the following elements differ (dots are replacements for $ or @)"))
+    # messageCache("Only the following elements differ (dots are replacements for $ or @)"))
     # oldColsToKeep <- c("fun", "differs")
     # cleanDT <- similar2[, ..oldColsToKeep]
     # data.table::setnames(cleanDT, old = oldColsToKeep, new = c("element", "different"))
-    # message(crayon::cyan(
+    # messageCache(
     #   paste0(capture.output(
     #     cleanDT)
     # , collapse = "\n")))
     if (isDevMode) {
-      message(crayon::cyan(" ------ end devMode -------"))
+      messageCache(" ------ end devMode -------")
     } else {
-      message(crayon::cyan(" ------ end showSimilar -------"))
+      messageCache(" ------ end showSimilar -------")
     }
 
   } else {
     if (!identical("devMode", useCache))
-      message("There is no similar item in the cacheRepo")
+      messageCache("There is no similar item in the cacheRepo")
   }
 }
 
@@ -1473,7 +1473,7 @@ verboseTime <- function(verbose) {
 #' @keywords internal
 verboseMessage1 <- function(verbose, userTags) {
   if (verbose > 0)
-    message("Using devMode; overwriting previous Cache entry with tags: ",
+    messageCache("Using devMode; overwriting previous Cache entry with tags: ",
             paste(userTags, collapse = ", "))
   invisible(NULL)
 }
@@ -1481,7 +1481,7 @@ verboseMessage1 <- function(verbose, userTags) {
 #' @keywords internal
 verboseMessage2 <- function(verbose) {
   if (verbose > 0)
-    message("Using devMode; Found entry with identical userTags, ",
+    messageCache("Using devMode; Found entry with identical userTags, ",
             "but since it is very different, adding new entry")
   invisible(NULL)
 }
@@ -1490,7 +1490,7 @@ verboseMessage2 <- function(verbose) {
 verboseMessage3 <- function(verbose, artifact) {
   if (length(unique(artifact)) > 1) {
     if (verbose > 0)
-      message("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE")
+      messageCache("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE")
   }
 }
 

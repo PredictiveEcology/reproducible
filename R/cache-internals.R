@@ -42,7 +42,7 @@
     on.exit({
       assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
       print(.reproEnv$hashDetails)
-      message("The hashing details are available from .reproEnv$hashDetails")
+      messageCache("The hashing details are available from .reproEnv$hashDetails")
       rm("hashDetails", envir = .reproEnv)
     }, add = TRUE)
   }
@@ -131,7 +131,7 @@
 
 
 .CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN, ...) {
-  message("sideEffect argument is poorly tested. It may not function as desired")
+  messageCache("sideEffect argument is poorly tested. It may not function as desired")
   browser(expr = exists("sideE"))
   needDwd <- logical(0)
   fromCopy <- character(0)
@@ -182,7 +182,7 @@
     }
     #}
   } else {
-    message("  There was no record of files in sideEffects")
+    messageCache("  There was no record of files in sideEffects")
   }
 
   if (any(needDwd)) {

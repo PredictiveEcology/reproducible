@@ -2,6 +2,10 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
 version 1.2.1
 ==============
+## New features
+* harmonized message colours: `blue` for all `Cache` functions; `cyan` for all `prepInputs` functions
+version 1.2.0
+==============
 
 ## New features
 * `postProcess` now uses a simpler single call to `gdalwarp`, if available, for `RasterLayer` class to accomplish `cropInputs`, `projectInputs`, `maskInputs`, and `writeOutputs` all at once. This should be faster, simpler and, perhaps, more stable. It will only be invoked if the `RasterLayer` is too large to fit into RAM. To force it to be used the user must set `useGDAL = "force"` in `prepInputs` or `postProcess` or globally with `options("reproducible.useGDAL" = "force")`

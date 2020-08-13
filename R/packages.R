@@ -33,7 +33,7 @@ internetExists <- function() {
   if (requireNamespace("RCurl", quietly = TRUE)) {
     out <- RCurl::url.exists("www.google.com")
   } else {
-    message(RCurlMess)
+    messagePrepInputs(RCurlMess)
     if (.Platform$OS.type == "windows") {
       ipmessage <- system("ipconfig", intern = TRUE)
     } else {
