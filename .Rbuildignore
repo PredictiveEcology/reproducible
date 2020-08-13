@@ -17,3 +17,4 @@ tests/testthat/\.httr-oauth$
 vignettes/.*_cache$
 vignettes/.*\.log$
 ^\.github$
+^codecov\.yml$

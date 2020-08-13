@@ -4,6 +4,7 @@
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/reproducible)](https://cran.r-project.org/package=reproducible)
 [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
 [![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg)](https://github.com/PredictiveEcology/reproducible/actions)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=master)
 <!-- badges: end -->
 
 A set of tools for R that enhance reproducibility beyond package management.
@@ -28,7 +29,6 @@ Caching is the principle tool to achieve this reproducible work-flow. There are 
 rnorm(1) # give a random number
 Cache(rnorm, 1) # generates a random number
 Cache(rnorm, 1) # recovers the previous random number because call is identical
-
 ```
 
 ## `prepInputs`
@@ -42,8 +42,6 @@ Get a geospatial dataset. It will be checksummed (locally), meaning if the file 
 test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                     path = dPath)
-                    
-                    
 ```
 
 ## `Cache` with `prepInputs`
@@ -64,8 +62,7 @@ See vignettes and help files for many more real-world examples.
 
 ### Current release (on CRAN)
 
-[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=master)](https://github.com/PredictiveEcology/reproducible/actions)
-[![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=master)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=master)
 
 **Install from CRAN:**
 
@@ -83,8 +80,7 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE)
 
 ### Development version
 
-[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=development)](https://github.com/PredictiveEcology/reproducible/actions)
-[![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=development)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/development/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=development)
 
 **Install from GitHub:**
 
