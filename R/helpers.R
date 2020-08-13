@@ -335,24 +335,28 @@ messageCache <- function(...) {
   messageColoured(..., colour = "blue")
 }
 
-messageQuestion <- function(...) {
-  messageColoured(..., colour = "green")
+messageQuestion <- function(..., verboseLevel = 0) {
+  # force this message to print
+  messageColoured(..., colour = "green", verboseLevel = verboseLevel, verbose = 0)
 }
 
-messageColoured <- function(..., colour = NULL) {
-  needCrayon <- FALSE
-  if (!is.null(colour)) {
-    if (is.character(colour))
-      needCrayon <- TRUE
-  }
-  if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
-    message(getFromNamespace(colour, "crayon")(paste0(...)))
-  } else {
-    if (!isTRUE(.pkgEnv$.checkedCrayon)) {
-      message("To add colours to messages, install.packages('crayon')")
-      .pkgEnv$.checkedCrayon <- TRUE
+messageColoured <- function(..., colour = NULL, verboseLevel = 1,
+                            verbose = getOption("reproducible.verbose", 1)) {
+  if (isTRUE(verboseLevel <= verbose)) {
+    needCrayon <- FALSE
+    if (!is.null(colour)) {
+      if (is.character(colour))
+        needCrayon <- TRUE
     }
-    message(paste0(...))
+    if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
+      message(getFromNamespace(colour, "crayon")(paste0(...)))
+    } else {
+      if (!isTRUE(.pkgEnv$.checkedCrayon)) {
+        message("To add colours to messages, install.packages('crayon')")
+        .pkgEnv$.checkedCrayon <- TRUE
+      }
+      message(paste0(...))
+    }
   }
 
 }

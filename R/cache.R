@@ -549,7 +549,7 @@ setMethod(
         .unlistToCharacter(preDigest, getOption("reproducible.showSimilarDepth", 3))
       )
 
-      if (verbose > 1) {
+      if (verbose > 3) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
                               startHashTime, modifiedDots, dotPipe, quick = quick)
         on.exit({
@@ -995,9 +995,9 @@ setMethod(
                            pattern = "object.size:", replacement = "")
         otsObjSize <- as.numeric(otsObjSize)
         class(otsObjSize) <- "object_size"
-        if (otsObjSize > 1e7)
-          message("Saving large object (cacheId: ", outputHash, ") to Cache: ",
-                  format(otsObjSize, units = "auto"))
+        isBig <- otsObjSize > 1e7
+        messageCache("Saving ","large "[isBig],"object (cacheId: ", outputHash, ") to Cache", ": "[isBig],
+                  format(otsObjSize, units = "auto")[isBig], verboseLevel = 2 - isBig, verbose = verbose)
         if (useDBI()) {
           browser(expr = exists("._Cache_13"))
           outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
@@ -1469,14 +1469,14 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
 
 #' @keywords internal
 verboseTime <- function(verbose) {
-  if (verbose > 1) {
+  if (verbose > 3) {
     return(Sys.time())
   }
 }
 
 #' @keywords internal
 verboseMessage1 <- function(verbose, userTags) {
-  if (verbose > 0)
+  if (verbose > 2)
     messageCache("Using devMode; overwriting previous Cache entry with tags: ",
             paste(userTags, collapse = ", "))
   invisible(NULL)
@@ -1484,7 +1484,7 @@ verboseMessage1 <- function(verbose, userTags) {
 
 #' @keywords internal
 verboseMessage2 <- function(verbose) {
-  if (verbose > 0)
+  if (verbose > 2)
     messageCache("Using devMode; Found entry with identical userTags, ",
             "but since it is very different, adding new entry")
   invisible(NULL)
@@ -1493,14 +1493,14 @@ verboseMessage2 <- function(verbose) {
 #' @keywords internal
 verboseMessage3 <- function(verbose, artifact) {
   if (length(unique(artifact)) > 1) {
-    if (verbose > 0)
+    if (verbose > 2)
       messageCache("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE")
   }
 }
 
 #' @keywords internal
 verboseDF1 <- function(verbose, functionName, startRunTime) {
-  if (verbose > 1) {
+  if (verbose > 3) {
     endRunTime <- Sys.time()
     verboseDF <- data.frame(
       functionName = functionName,
@@ -1518,7 +1518,7 @@ verboseDF1 <- function(verbose, functionName, startRunTime) {
 
 #' @keywords internal
 verboseDF2 <- function(verbose, functionName, startSaveTime) {
-  if (verbose > 1) {
+  if (verbose > 3) {
     endSaveTime <- Sys.time()
     verboseDF <-
       data.frame(
@@ -1537,7 +1537,7 @@ verboseDF2 <- function(verbose, functionName, startSaveTime) {
 
 #' @keywords internal
 verboseDF3 <- function(verbose, functionName, startCacheTime) {
-  if (verbose > 1) {
+  if (verbose > 3) {
     endCacheTime <- Sys.time()
     verboseDF <- data.frame(functionName = functionName,
                             component = "Whole Cache call",

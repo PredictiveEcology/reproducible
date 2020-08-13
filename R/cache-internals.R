@@ -244,7 +244,7 @@
                          algo, preDigest, startCacheTime,
                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          conn = getOption("reproducible.conn", NULL), ...) {
-  if (verbose > 1) {
+  if (verbose > 3) {
     startLoadTime <- Sys.time()
   }
 
@@ -274,7 +274,7 @@
     }
   }
 
-  if (verbose > 1) {
+  if (verbose > 3) {
     endLoadTime <- Sys.time()
     verboseDF <- data.frame(
       functionName = fnDetails$functionName,
@@ -320,7 +320,7 @@
   #attr(output, ".Cache")$newCache <- FALSE
   if (!identical(attr(output, ".Cache")$newCache, FALSE)) stop("attributes are not correct 2")
 
-  if (verbose > 1) {
+  if (verbose > 3) {
     endCacheTime <- Sys.time()
     verboseDF <- data.frame(
       functionName = fnDetails$functionName,
