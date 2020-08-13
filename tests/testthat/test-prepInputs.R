@@ -1785,19 +1785,19 @@ test_that("rasters aren't properly resampled", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  a <- raster(extent(0, 20, 0, 20), res = 2, vals = 1:100*4)
-  b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1:100)
+  a <- raster(extent(0, 20, 0, 20), res = 2, vals = as.integer(1:100*4))
+  b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1L:100L)
   #suppressWarnings({
     crs(a) <- crsToUse
     crs(b) <- crsToUse
     #}) ## TODO: temporary until raster fixes all crs issues
 
-  tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  tiftemp2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  tiftemp1 <- normPath(tempfile(tmpdir = tmpdir, fileext = ".tif"))
+  tiftemp2 <- normPath(tempfile(tmpdir = tmpdir, fileext = ".tif"))
 
   suppressWarnings({
-    writeRaster(a, filename = tiftemp1)
-    writeRaster(b, filename = tiftemp2)
+    a <- writeRaster(a, filename = tiftemp1, datatype = "INT2U")
+    b <- writeRaster(b, filename = tiftemp2, datatype = "INT2U")
   }) ## TODO: temporary GDAL>6
 
   out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
