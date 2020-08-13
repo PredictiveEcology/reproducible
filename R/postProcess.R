@@ -1228,12 +1228,12 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
   if (!is.null(filename2)) {
     if (is.null(dots$datatype)) {
       out <- lapply(paste("No 'datatype' chosen.",
-                          "Saving", names(x), "as", datatype2 ), message)
+                          "Saving", names(x), "as", datatype2 ), messagePrepInputs)
       dots$datatype <- datatype2
     } else if (any(datatype2 != dots$datatype)) {
       out <- lapply(paste("chosen 'datatype', ", dots$datatype, ", may be inadequate for the ",
               "range/type of values in ", names(x),
-              "\n consider changing to ", datatype2), message)
+              "\n consider changing to ", datatype2), messagePrepInputs)
     }
 
     if (any(raster::is.factor(x))) {
