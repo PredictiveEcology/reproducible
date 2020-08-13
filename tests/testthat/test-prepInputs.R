@@ -1840,7 +1840,6 @@ test_that("System call gdal works", {
 
   raster::rasterOptions(todisk = TRUE) # to trigger GDAL
 
-  browser()
   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
                       rasterToMatch = ras2, useCache = FALSE, filename2 = TRUE)
   expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2

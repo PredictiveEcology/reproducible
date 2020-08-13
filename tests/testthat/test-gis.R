@@ -14,14 +14,14 @@ test_that("fastMask produces correct results", {
   shp <- SpatialPolygons(list(Srs1, Srs2, Srs3), 1:3)
   d <- data.frame(vals = 1:3, other = letters[1:3])
   row.names(d) <- names(shp)
-  shpDF <- SpatialPolygonsDataFrame(shp, data = d)
+  shpDF <- sp::SpatialPolygonsDataFrame(shp, data = d)
   poly <- list()
   poly[[1]] <- raster(extent(shpDF), vals = 0, res = c(0.5, 0.5))
   poly[[2]] <- raster(extent(shpDF), vals = 1, res = c(0.5, 0.5))
   origStack <- raster::stack(poly)
 
   ## mask
-  newStack1 <- raster::stack(mask(origStack, mask = shpDF))
+  newStack1 <- raster::stack(raster::mask(origStack, mask = shpDF))
   newStack2 <- fastMask(x = origStack, y = shpDF)
   expect_equal(newStack1, newStack2)
 

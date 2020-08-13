@@ -580,10 +580,10 @@ extractFromArchive <- function(archive,
     }
   }
   if (is.null(targetFilePath)) {
-    messagePrepInputs("  targetFile was not specified. ", if (any(isShapefile)) {
+    secondPartOfMess <- if (any(isShapefile)) {
       c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
-          " If that is not correct, please specify a different targetFile",
-          " and/or fun.")
+        " If that is not correct, please specify a different targetFile",
+        " and/or fun.")
 
     } else {
       c(" Trying ", fun,
@@ -591,7 +591,8 @@ extractFromArchive <- function(archive,
         " and/or different fun. The current files in the targetFilePath's ",
         "directory are: \n",
         paste(possibleFiles, collapse = "\n"))
-    })
+    }
+    messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess))
 
     targetFilePath <- if (is.null(fun)) {
       NULL
