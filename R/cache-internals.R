@@ -41,7 +41,7 @@
     .reproEnv$hashDetails <- hashDetails
     on.exit({
       assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
-      print(.reproEnv$hashDetails)
+      messageDF(.reproEnv$hashDetails, colour = "blue")
       messageCache("The hashing details are available from .reproEnv$hashDetails")
       rm("hashDetails", envir = .reproEnv)
     }, add = TRUE)

@@ -554,7 +554,7 @@ setMethod(
                               startHashTime, modifiedDots, dotPipe, quick = quick)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
-          print(.reproEnv$verboseTiming)
+          messageDF(.reproEnv$verboseTiming, colour = "blue")
           messageCache("This object is also available from .reproEnv$cacheTimings")
           if (exists("verboseTiming", envir = .reproEnv))
             rm("verboseTiming", envir = .reproEnv)

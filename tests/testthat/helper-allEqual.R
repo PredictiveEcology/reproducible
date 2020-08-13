@@ -53,12 +53,12 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
           linkOrCopy("~/.httr-oauth", to = file.path(tmpdir, ".httr-oauth"))
         } else {
           googledrive::drive_auth()
-          print("copying .httr-oauth to ~/.httr-oauth")
+          messagePrepInputs("copying .httr-oauth to ~/.httr-oauth")
           file.copy(".httr-oauth", "~/.httr-oauth", overwrite = TRUE)
         }
 
         if (!file.exists("~/.httr-oauth"))
-          message("Please put an .httr-oauth file in your ~ directory")
+          messagePrepInputs("Please put an .httr-oauth file in your ~ directory")
       }
     }
   }
@@ -147,7 +147,7 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
   files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
   expect_true(length(files) == numFiles)
   expect_is(test, class)
-  message(mess)
+  messagePrepInputs(mess)
   hasMessageNum <- print(paste(collapse = "_", which(unlist(
     lapply(strsplit(expectedMess, "\\|")[[1]], function(m)
       any(grepl(m, mess)))
@@ -159,8 +159,8 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
     getting <- as.numeric(strsplit(hasMessageNum, split = "_")[[1]])
 
     expectedMessVec <- strsplit(expectedMess, split = "\\|")[[1]]
-    message("expecting, but didn't get ", paste(collapse = ", ", expectedMessVec[setdiff(expe, getting)]))
-    message("got, but didn't expect ", paste(collapse = ", ", expectedMessVec[setdiff(getting, expe)]))
+    messagePrepInputs("expecting, but didn't get ", paste(collapse = ", ", expectedMessVec[setdiff(expe, getting)]))
+    messagePrepInputs("got, but didn't expect ", paste(collapse = ", ", expectedMessVec[setdiff(getting, expe)]))
   }
   expect_true(isOK) #
 }
@@ -210,11 +210,11 @@ targetFileLuxRDS <- "gadm36_LUX_0_sp.rds"
       }
       raster:::.download(theurl, filename)
       if (!file.exists(filename)) {
-        message("\nCould not download file -- perhaps it does not exist")
+        messagePrepInputs("\nCould not download file -- perhaps it does not exist")
       }
     }
     else {
-      message("File not available locally. Use 'download = TRUE'")
+      messagePrepInputs("File not available locally. Use 'download = TRUE'")
     }
   }
   if (file.exists(filename)) {
