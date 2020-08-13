@@ -974,12 +974,15 @@ setMethod(
           #saved <-
           future::futureCall(
             FUN = writeFuture,
-            args = list(written, outputToSave, cacheRepo, userTags, drv),
+            args = list(written, outputToSave, cacheRepo, userTags, drv, conn, cacheId, linkToCacheId),
             globals = list(written = written,
                            outputToSave = outputToSave,
                            cacheRepo = cacheRepo,
                            userTags = userTags,
-                           drv = drv)
+                           drv = drv,
+                           conn = conn,
+                           cacheId = outputHash,
+                           linkToCacheId = linkToCacheId)
           )
         if (is.null(.reproEnv$alreadyMsgFuture)) {
           messageCache("  Cache saved in a separate 'future' process. ",
@@ -1113,7 +1116,7 @@ unmakeMemoisable.default <- function(x) {
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL),
-                        cacheId) {
+                        cacheId, linkToCacheId = NULL) {
   counter <- 0
   browser(expr = exists("._writeFuture_1"))
   if (!CacheIsACache(cachePath = cacheRepo, drv = drv, conn = conn)) {
@@ -1125,7 +1128,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
       cacheId <- .robustDigest(outputToSave)
     }
     output <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                          conn = conn, obj = outputToSave, cacheId = cacheId)
+                          conn = conn, obj = outputToSave, cacheId = cacheId,
+                          linkToCacheId = linkToCacheId)
     saved <- cacheId
   }
   return(saved)
