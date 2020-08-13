@@ -4,7 +4,7 @@
 
   if (requireNamespace("rgdal", quietly = TRUE))
     rgdal::set_thin_PROJ6_warnings(TRUE)
-  suppressWarnings(crs("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+  suppressWarnings(raster::crs("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
   ## set options using the approach used by devtools
   opts <- options()
   opts.reproducible <- reproducibleOptions()

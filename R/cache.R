@@ -1113,6 +1113,7 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @export
 #' @inheritParams Cache
+#' @inheritParams saveToCache
 writeFuture <- function(written, outputToSave, cacheRepo, userTags,
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL),

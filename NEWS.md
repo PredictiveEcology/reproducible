@@ -1,9 +1,12 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+
 version 1.2.1
 ==============
 ## New features
 * harmonized message colours: `blue` for all `Cache` functions; `cyan` for all `prepInputs` functions
+* improved messaging for `Cache` cases where a `file.link` is used instead of saving.
+
 version 1.2.0
 ==============
 
