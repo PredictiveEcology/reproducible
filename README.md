@@ -63,7 +63,7 @@ See vignettes and help files for many more real-world examples.
 
 [![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=master)](https://travis-ci.org/PredictiveEcology/reproducible)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/master?svg=true)](https://ci.appveyor.com/project/achubaty/reproducible/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=master)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=master)
 
 **Install from CRAN:**
 
@@ -83,7 +83,7 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE)
 
 [![Build Status](https://travis-ci.org/PredictiveEcology/reproducible.svg?branch=development)](https://travis-ci.org/PredictiveEcology/reproducible)
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/2fxqhgk6miv2fytd/branch/development?svg=true)](https://ci.appveyor.com/project/achubaty/reproducible/branch/development)
-[![Coverage Status](https://coveralls.io/repos/github/PredictiveEcology/reproducible/badge.svg?branch=development)](https://coveralls.io/github/PredictiveEcology/reproducible?branch=development)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/development/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=development)
 
 **Install from GitHub:**
 
