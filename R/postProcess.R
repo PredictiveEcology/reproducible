@@ -812,6 +812,16 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
         if (is.null(dots$method)) {
           # not foolproof method of determining reclass method:
           dots$method <- assessDataType(x, type = "projectRaster")
+          uniqueDotsMethod <- unique(dots$method)
+          if (length(uniqueDotsMethod) > 1) {
+            if (length(intersect(uniqueDotsMethod, "ngb")) == 1)
+              uniqueDotsMethod <- "ngb"
+            else
+              uniqueDotsMethod <- uniqueDotsMethod[1]
+            messagePrepInputs("There is more than one dataType in the layers of the Raster* object; reprojection will use", uniqueDotsMethod)
+          } else {
+            dots$method <- uniqueDotsMethod
+          }
         }
 
         messagePrepInputs(paste0("reprojecting using ", dots$method, "..."))
