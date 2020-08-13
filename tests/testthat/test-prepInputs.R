@@ -152,7 +152,7 @@ test_that("prepInputs doesn't work (part 1)", {
     destinationPath = asPath(dPath),
     studyArea = StudyArea,
     useCache = FALSE
-  ) ## TODO: searching for GDAL is slow on Windows (e.g., appveyor)
+  ) ## TODO: searching for GDAL is slow on Windows
   # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
   #  we make it a bit bigger so it doesn't crop the edges of the raster
   expect_is(LCC2005, "Raster")
