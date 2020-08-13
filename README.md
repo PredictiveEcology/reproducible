@@ -62,6 +62,7 @@ See vignettes and help files for many more real-world examples.
 
 ### Current release (on CRAN)
 
+[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=master)](https://github.com/PredictiveEcology/reproducible/actions)
 [![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=master)
 
 **Install from CRAN:**
@@ -80,6 +81,7 @@ install_github("PredictiveEcology/reproducible", dependencies = TRUE)
 
 ### Development version
 
+[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=development)](https://github.com/PredictiveEcology/reproducible/actions)
 [![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/development/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=development)
 
 **Install from GitHub:**
