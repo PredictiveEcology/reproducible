@@ -664,7 +664,10 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
                                  useGDAL = getOption("reproducible.useGDAL", TRUE),
                                  ...) {
   dots <- list(...)
+  browser(expr = exists("._projectInputs_1"))
+
   isFactorRaster <- FALSE
+  isStack <- is(x, "RasterStack")
   if (isTRUE(raster::is.factor(x))) {
     isFactorRaster <- TRUE
     rasterFactorLevels <- raster::levels(x)
@@ -828,10 +831,13 @@ projectInputs.Raster <- function(x, targetCRS = NULL, rasterToMatch = NULL, core
           tempRas <- suppressWarningsSpecific(
             projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
           Args <- append(dots, list(from = x, to = tempRas))
+
           x <- captureWarningsToAttr(
             suppressWarningsSpecific(falseWarnings = paste0(projNotWKT2warn, "|no non-missing arguments"),
-            do.call(projectRaster, args = Args)
-          ))
+                                     do.call(projectRaster, args = Args))
+          )
+          if (isStack)
+            if (!is(x, "RasterStack")) x <- raster::stack(x)
           # check for faulty datatype --> namely if it is an integer but classified as flt because of floating point problems
           if (isTRUE(grepl("FLT", dataType(x)))) {
             rrr <- round(x[], 0) %==% x[]
@@ -1253,6 +1259,9 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       if (is(x, "RasterStack")) {
         longerThanOne <- unlist(lapply(argsForWrite, function(x) length(x) > 1))
         nLayers <- raster::nlayers(x)
+        if (!identical(nLayers, argsForWrite$filename)) {
+          argsForWrite$filename <- file.path(dirname(argsForWrite$filename), paste0(names(x), "_", basename(argsForWrite$filename)))
+        }
         if (length(argsForWrite$filename) == 1) {
           argsForWrite <- lapply(argsForWrite, function(x) x[1])
           xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
@@ -2035,6 +2044,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     origColors <- checkColors(x)
     x[] <- x[]
     x <- rebuildColors(x, origColors)
+    names(x) <- layerName
   }
   if (needRenameAtEnd)
     x <- writeRaster(x, filename = filename2Orig, overwrite = TRUE)
