@@ -28,7 +28,6 @@ Caching is the principle tool to achieve this reproducible work-flow. There are 
 rnorm(1) # give a random number
 Cache(rnorm, 1) # generates a random number
 Cache(rnorm, 1) # recovers the previous random number because call is identical
-
 ```
 
 ## `prepInputs`
@@ -42,8 +41,6 @@ Get a geospatial dataset. It will be checksummed (locally), meaning if the file 
 test1 <- prepInputs(targetFile = "GADM_2.8_LUX_adm0.rds", # must specify currently
                     dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
                     path = dPath)
-                    
-                    
 ```
 
 ## `Cache` with `prepInputs`
