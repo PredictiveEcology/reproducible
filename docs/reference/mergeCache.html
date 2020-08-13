@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -36,13 +40,7 @@
 
 
 <meta property="og:title" content="Merge two cache repositories together — mergeCache" />
-<meta property="og:description" content="All the cacheFrom artifacts will be put into cacheTo
-repository. All userTags will be copied verbatim, including
-accessed, with 1 exception: date will be the
-current Sys.time() at the time of merging. The
-createdDate column will be similarly the current time
-of merging." />
-<meta name="twitter:card" content="summary" />
+<meta property="og:description" content="" />
 
 
 
@@ -70,7 +68,7 @@ of merging." />
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -84,7 +82,7 @@ of merging." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1.9001</span>
       </span>
     </div>
 
@@ -107,6 +105,9 @@ of merging." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
+    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul>
@@ -117,7 +118,7 @@ of merging." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/PredictiveEcology/reproducible">
+  <a href="https://github.com/PredictiveEcology/reproducible/">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -141,18 +142,27 @@ of merging." />
     </div>
 
     <div class="ref-description">
-    <p>All the <code>cacheFrom</code> artifacts will be put into <code>cacheTo</code>
-repository. All <code>userTags</code> will be copied verbatim, including
-<code>accessed</code>, with 1 exception: <code>date</code> will be the
-current <code><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time()</a></code> at the time of merging. The
-<code>createdDate</code> column will be similarly the current time
-of merging.</p>
+    <p><img src='figures/lifecycle-experimental.svg' alt="experimental" /></p>
     </div>
 
-    <pre class="usage"><span class='fu'>mergeCache</span>(<span class='no'>cacheTo</span>, <span class='no'>cacheFrom</span>)
+    <pre class="usage"><span class='fu'>mergeCache</span>(
+  <span class='no'>cacheTo</span>,
+  <span class='no'>cacheFrom</span>,
+  <span class='kw'>drvTo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>drvFrom</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>connTo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>connFrom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>mergeCache</span>(<span class='no'>cacheTo</span>, <span class='no'>cacheFrom</span>)</pre>
+<span class='fu'>mergeCache</span>(
+  <span class='no'>cacheTo</span>,
+  <span class='no'>cacheFrom</span>,
+  <span class='kw'>drvTo</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>drvFrom</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
+  <span class='kw'>connTo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>connFrom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -167,6 +177,24 @@ that will become larger, i.e., merge into this</p></td>
       <td><p>The cache repository (character string of the file path)
 from which all objects will be taken and copied from</p></td>
     </tr>
+    <tr>
+      <th>drvTo</th>
+      <td><p>The database driver for the <code>cacheTo</code>.</p></td>
+    </tr>
+    <tr>
+      <th>drvFrom</th>
+      <td><p>The database driver for the <code>cacheFrom</code></p></td>
+    </tr>
+    <tr>
+      <th>connTo</th>
+      <td><p>The connection for the <code>cacheTo</code>. If not provided, then
+a new one will be made from <code>drvTo</code> and <code>cacheTo</code></p></td>
+    </tr>
+    <tr>
+      <th>connFrom</th>
+      <td><p>The database for the <code>cacheFrom</code>. If not provided, then
+a new one will be made from <code>drvFrom</code> and <code>cacheFrom</code></p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -175,17 +203,18 @@ from which all objects will be taken and copied from</p></td>
 objects themselves.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>This is still experimental</p>
+    <p>All the <code>cacheFrom</code> artifacts will be put into <code>cacheTo</code>
+repository. All <code>userTags</code> will be copied verbatim, including
+<code>accessed</code>, with 1 exception: <code>date</code> will be the
+current <code><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time()</a></code> at the time of merging. The
+<code>createdDate</code> column will be similarly the current time
+of merging.</p>
 
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
-      <li><a href="#details">Details</a></li>
-    </ul>
-
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -196,7 +225,7 @@ objects themselves.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>

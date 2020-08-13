@@ -10,23 +10,27 @@
 
 
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/all.min.css" integrity="sha256-nAmazAk6vS34Xqo0BSrTb+abbtFlgsFK7NKSi6o7Y78=" crossorigin="anonymous" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.7.1/css/v4-shims.min.css" integrity="sha256-6qHlizsOWFskGlwVOKuns+D1nB6ssZrHQrNj1wGplHc=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
 <!-- headroom.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/headroom.min.js" integrity="sha256-DJFC1kqIhelURkuza0AvYal5RxMtpzLjFhsnVIeuk+U=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.9.4/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -36,12 +40,7 @@
 
 
 <meta property="og:title" content="Clear erroneous archivist artifacts — clearStubArtifacts" />
-<meta property="og:description" content="Stub artifacts can result from several causes. The most common being
-erroneous removal of a file in the SQLite database. This can be caused
-sometimes if an archive object is being saved multiple times by multiple
-threads. This function will clear entries in the SQLite database which
-have no actual file with data." />
-<meta name="twitter:card" content="summary" />
+<meta property="og:description" content="" />
 
 
 
@@ -69,7 +68,7 @@ have no actual file with data." />
 
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -83,7 +82,7 @@ have no actual file with data." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1.9001</span>
       </span>
     </div>
 
@@ -106,6 +105,9 @@ have no actual file with data." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
+      <a href="../articles/Cache-using-postgresql.html">Using alternate database backends for Cache</a>
+    </li>
+    <li>
       <a href="../articles/Intro-to-Cache.html">Introduction to Cache</a>
     </li>
   </ul>
@@ -116,7 +118,7 @@ have no actual file with data." />
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="https://github.com/PredictiveEcology/reproducible">
+  <a href="https://github.com/PredictiveEcology/reproducible/">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -135,16 +137,12 @@ have no actual file with data." />
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Clear erroneous archivist artifacts</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/cache-helpers.R'><code>R/cache-helpers.R</code></a></small>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/reproducible-deprecated.R'><code>R/reproducible-deprecated.R</code></a></small>
     <div class="hidden name"><code>clearStubArtifacts.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Stub artifacts can result from several causes. The most common being
-erroneous removal of a file in the SQLite database. This can be caused
-sometimes if an archive object is being saved multiple times by multiple
-threads. This function will clear entries in the SQLite database which
-have no actual file with data.</p>
+    <p><img src='figures/lifecycle-deprecated.svg' alt="deprecated" /></p>
     </div>
 
     <pre class="usage"><span class='fu'>clearStubArtifacts</span>(<span class='kw'>repoDir</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
@@ -166,15 +164,22 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>Invoked for its side effect on the <code>repoDir</code>.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Stub artifacts can result from several causes. The most common being
+erroneous removal of a file in the SQLite database. This can be caused
+sometimes if an archive object is being saved multiple times by multiple
+threads. This function will clear entries in the SQLite database which
+have no actual file with data.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"clearStubArtifacts"</span>)
 
 <span class='fu'><a href='https://rdrr.io/r/base/lapply.html'>lapply</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='no'>runif</span>, <span class='no'>rnorm</span>), <span class='kw'>function</span>(<span class='no'>f</span>) {
-  <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='http://reproducible.predictiveecology.org/reference/cache.html'>Cache</a></span>(<span class='no'>f</span>, <span class='fl'>10</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
+  <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>f</span>, <span class='fl'>10</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 })</div><div class='output co'>#&gt; [[1]]
-#&gt;  [1] 0.25488832 0.27304942 0.34963563 0.76105336 0.40419679 0.20539778
-#&gt;  [7] 0.58729542 0.59820192 0.06929129 0.79705145
+#&gt;  [1] 0.859625102 0.757621128 0.926860752 0.081588733 0.049136837 0.345142181
+#&gt;  [7] 0.002873588 0.678100822 0.604252266 0.119109327
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -185,8 +190,8 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; [1] ""
 #&gt; 
 #&gt; [[2]]
-#&gt;  [1]  0.72469120 -2.37751470 -0.06540921 -0.46970481 -0.28051629  0.57483659
-#&gt;  [7] -0.20567685  0.23488051  0.11062832  0.27420223
+#&gt;  [1]  1.02457159 -0.65918555 -0.38630438 -0.24249895  0.22059324 -1.48109003
+#&gt;  [7]  0.72469120 -2.37751470 -0.06540921 -0.46970481
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -197,255 +202,293 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 #&gt; [1] ""
 #&gt; </div><div class='input'>
 <span class='co'># clear out any stub artifacts</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 552 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 25b00e87c80ed1e9e45b36936fbae868         format
-#&gt;  2: 25b00e87c80ed1e9e45b36936fbae868           name
-#&gt;  3: 25b00e87c80ed1e9e45b36936fbae868          class
-#&gt;  4: 25b00e87c80ed1e9e45b36936fbae868           date
-#&gt;  5: 25b00e87c80ed1e9e45b36936fbae868        cacheId
-#&gt;  6: 25b00e87c80ed1e9e45b36936fbae868       function
-#&gt;  7: 25b00e87c80ed1e9e45b36936fbae868    object.size
-#&gt;  8: 25b00e87c80ed1e9e45b36936fbae868       accessed
-#&gt;  9: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 10: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 11: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 12: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 13: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 14: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 15: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 16: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 17: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 18: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 19: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 20: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 21: 25b00e87c80ed1e9e45b36936fbae868      preDigest
-#&gt; 22: 25b00e87c80ed1e9e45b36936fbae868      preDigest
-#&gt; 23: 63ca6e2ada8cc5192db268505bb6e0ac         format
-#&gt; 24: 63ca6e2ada8cc5192db268505bb6e0ac           name
-#&gt; 25: 63ca6e2ada8cc5192db268505bb6e0ac          class
-#&gt; 26: 63ca6e2ada8cc5192db268505bb6e0ac           date
-#&gt; 27: 63ca6e2ada8cc5192db268505bb6e0ac        cacheId
-#&gt; 28: 63ca6e2ada8cc5192db268505bb6e0ac       function
-#&gt; 29: 63ca6e2ada8cc5192db268505bb6e0ac    object.size
-#&gt; 30: 63ca6e2ada8cc5192db268505bb6e0ac       accessed
-#&gt; 31: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 32: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 33: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 34: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 35: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 36: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 37: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 38: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 39: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 40: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 41: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 42: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 43: 63ca6e2ada8cc5192db268505bb6e0ac      preDigest
-#&gt; 44: 63ca6e2ada8cc5192db268505bb6e0ac      preDigest
-#&gt;                             artifact         tagKey
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2019-11-16 22:19:55
-#&gt;  2: 25b00e87c80ed1e9e45b36936fbae868 2019-11-16 22:19:55
-#&gt;  3:                          numeric 2019-11-16 22:19:55
-#&gt;  4:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt;  5:                 87eee6212ba1ae0a 2019-11-16 22:19:55
-#&gt;  6:                                f 2019-11-16 22:19:55
-#&gt;  7:                             1104 2019-11-16 22:19:55
-#&gt;  8:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt;  9:                          saveRDS 2019-11-16 22:19:55
-#&gt; 10:                          do.call 2019-11-16 22:19:55
-#&gt; 11:                 build_site_local 2019-11-16 22:19:55
-#&gt; 12:                  build_reference 2019-11-16 22:19:55
-#&gt; 13:             data_reference_topic 2019-11-16 22:19:55
-#&gt; 14:                     run_examples 2019-11-16 22:19:55
-#&gt; 15:               highlight_examples 2019-11-16 22:19:55
-#&gt; 16:                        timing_fn 2019-11-16 22:19:55
-#&gt; 17:                           handle 2019-11-16 22:19:55
-#&gt; 18:                              try 2019-11-16 22:19:55
-#&gt; 19:                      withVisible 2019-11-16 22:19:55
-#&gt; 20:                           lapply 2019-11-16 22:19:55
-#&gt; 21:               n:c5775c3b366fb719 2019-11-16 22:19:55
-#&gt; 22:            .FUN:4f604aa46882b368 2019-11-16 22:19:55
-#&gt; 23:                              rda 2019-11-16 22:19:55
-#&gt; 24: 63ca6e2ada8cc5192db268505bb6e0ac 2019-11-16 22:19:55
-#&gt; 25:                          numeric 2019-11-16 22:19:55
-#&gt; 26:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt; 27:                 88dabbb6fbb67941 2019-11-16 22:19:55
-#&gt; 28:                                f 2019-11-16 22:19:55
-#&gt; 29:                             1104 2019-11-16 22:19:55
-#&gt; 30:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt; 31:                          saveRDS 2019-11-16 22:19:55
-#&gt; 32:                          do.call 2019-11-16 22:19:55
-#&gt; 33:                 build_site_local 2019-11-16 22:19:55
-#&gt; 34:                  build_reference 2019-11-16 22:19:55
-#&gt; 35:             data_reference_topic 2019-11-16 22:19:55
-#&gt; 36:                     run_examples 2019-11-16 22:19:55
-#&gt; 37:               highlight_examples 2019-11-16 22:19:55
-#&gt; 38:                        timing_fn 2019-11-16 22:19:55
-#&gt; 39:                           handle 2019-11-16 22:19:55
-#&gt; 40:                              try 2019-11-16 22:19:55
-#&gt; 41:                      withVisible 2019-11-16 22:19:55
-#&gt; 42:                           lapply 2019-11-16 22:19:55
-#&gt; 43:               n:c5775c3b366fb719 2019-11-16 22:19:55
-#&gt; 44:            .FUN:881ec847b7161f3c 2019-11-16 22:19:55
-#&gt;                             tagValue         createdDate</div><div class='input'>
-<span class='no'>file2Remove</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.files.html'>dir</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>tmpDir</span>, <span class='st'>"gallery"</span>), <span class='kw'>full.name</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>]
-<span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.remove</a></span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 552 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 25b00e87c80ed1e9e45b36936fbae868         format
-#&gt;  2: 25b00e87c80ed1e9e45b36936fbae868           name
-#&gt;  3: 25b00e87c80ed1e9e45b36936fbae868          class
-#&gt;  4: 25b00e87c80ed1e9e45b36936fbae868           date
-#&gt;  5: 25b00e87c80ed1e9e45b36936fbae868        cacheId
-#&gt;  6: 25b00e87c80ed1e9e45b36936fbae868       function
-#&gt;  7: 25b00e87c80ed1e9e45b36936fbae868    object.size
-#&gt;  8: 25b00e87c80ed1e9e45b36936fbae868       accessed
-#&gt;  9: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 10: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 11: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 12: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 13: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 14: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 15: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 16: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 17: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 18: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 19: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 20: 25b00e87c80ed1e9e45b36936fbae868 otherFunctions
-#&gt; 21: 25b00e87c80ed1e9e45b36936fbae868      preDigest
-#&gt; 22: 25b00e87c80ed1e9e45b36936fbae868      preDigest
-#&gt; 23: 63ca6e2ada8cc5192db268505bb6e0ac         format
-#&gt; 24: 63ca6e2ada8cc5192db268505bb6e0ac           name
-#&gt; 25: 63ca6e2ada8cc5192db268505bb6e0ac          class
-#&gt; 26: 63ca6e2ada8cc5192db268505bb6e0ac           date
-#&gt; 27: 63ca6e2ada8cc5192db268505bb6e0ac        cacheId
-#&gt; 28: 63ca6e2ada8cc5192db268505bb6e0ac       function
-#&gt; 29: 63ca6e2ada8cc5192db268505bb6e0ac    object.size
-#&gt; 30: 63ca6e2ada8cc5192db268505bb6e0ac       accessed
-#&gt; 31: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 32: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 33: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 34: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 35: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 36: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 37: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 38: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 39: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 40: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 41: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 42: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 43: 63ca6e2ada8cc5192db268505bb6e0ac      preDigest
-#&gt; 44: 63ca6e2ada8cc5192db268505bb6e0ac      preDigest
-#&gt;                             artifact         tagKey
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2019-11-16 22:19:55
-#&gt;  2: 25b00e87c80ed1e9e45b36936fbae868 2019-11-16 22:19:55
-#&gt;  3:                          numeric 2019-11-16 22:19:55
-#&gt;  4:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt;  5:                 87eee6212ba1ae0a 2019-11-16 22:19:55
-#&gt;  6:                                f 2019-11-16 22:19:55
-#&gt;  7:                             1104 2019-11-16 22:19:55
-#&gt;  8:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt;  9:                          saveRDS 2019-11-16 22:19:55
-#&gt; 10:                          do.call 2019-11-16 22:19:55
-#&gt; 11:                 build_site_local 2019-11-16 22:19:55
-#&gt; 12:                  build_reference 2019-11-16 22:19:55
-#&gt; 13:             data_reference_topic 2019-11-16 22:19:55
-#&gt; 14:                     run_examples 2019-11-16 22:19:55
-#&gt; 15:               highlight_examples 2019-11-16 22:19:55
-#&gt; 16:                        timing_fn 2019-11-16 22:19:55
-#&gt; 17:                           handle 2019-11-16 22:19:55
-#&gt; 18:                              try 2019-11-16 22:19:55
-#&gt; 19:                      withVisible 2019-11-16 22:19:55
-#&gt; 20:                           lapply 2019-11-16 22:19:55
-#&gt; 21:               n:c5775c3b366fb719 2019-11-16 22:19:55
-#&gt; 22:            .FUN:4f604aa46882b368 2019-11-16 22:19:55
-#&gt; 23:                              rda 2019-11-16 22:19:55
-#&gt; 24: 63ca6e2ada8cc5192db268505bb6e0ac 2019-11-16 22:19:55
-#&gt; 25:                          numeric 2019-11-16 22:19:55
-#&gt; 26:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt; 27:                 88dabbb6fbb67941 2019-11-16 22:19:55
-#&gt; 28:                                f 2019-11-16 22:19:55
-#&gt; 29:                             1104 2019-11-16 22:19:55
-#&gt; 30:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt; 31:                          saveRDS 2019-11-16 22:19:55
-#&gt; 32:                          do.call 2019-11-16 22:19:55
-#&gt; 33:                 build_site_local 2019-11-16 22:19:55
-#&gt; 34:                  build_reference 2019-11-16 22:19:55
-#&gt; 35:             data_reference_topic 2019-11-16 22:19:55
-#&gt; 36:                     run_examples 2019-11-16 22:19:55
-#&gt; 37:               highlight_examples 2019-11-16 22:19:55
-#&gt; 38:                        timing_fn 2019-11-16 22:19:55
-#&gt; 39:                           handle 2019-11-16 22:19:55
-#&gt; 40:                              try 2019-11-16 22:19:55
-#&gt; 41:                      withVisible 2019-11-16 22:19:55
-#&gt; 42:                           lapply 2019-11-16 22:19:55
-#&gt; 43:               n:c5775c3b366fb719 2019-11-16 22:19:55
-#&gt; 44:            .FUN:881ec847b7161f3c 2019-11-16 22:19:55
-#&gt;                             tagValue         createdDate</div><div class='input'>
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters):  552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters):  552 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 88dabbb6fbb67941            function                     f
+#&gt;  2: 88dabbb6fbb67941               class               numeric
+#&gt;  3: 88dabbb6fbb67941         object.size                  1104
+#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-13 10:54:38
+#&gt;  5: 88dabbb6fbb67941             inCloud                 FALSE
+#&gt;  6: 88dabbb6fbb67941          resultHash                      
+#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0003609657 secs
+#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun       1.0252e-05 secs
+#&gt;  9: 88dabbb6fbb67941      otherFunctions               saveRDS
+#&gt; 10: 88dabbb6fbb67941      otherFunctions               do.call
+#&gt; 11: 88dabbb6fbb67941      otherFunctions      build_site_local
+#&gt; 12: 88dabbb6fbb67941      otherFunctions       build_reference
+#&gt; 13: 88dabbb6fbb67941      otherFunctions  data_reference_topic
+#&gt; 14: 88dabbb6fbb67941      otherFunctions          run_examples
+#&gt; 15: 88dabbb6fbb67941      otherFunctions    highlight_examples
+#&gt; 16: 88dabbb6fbb67941      otherFunctions             timing_fn
+#&gt; 17: 88dabbb6fbb67941      otherFunctions                handle
+#&gt; 18: 88dabbb6fbb67941      otherFunctions                   try
+#&gt; 19: 88dabbb6fbb67941      otherFunctions                lapply
+#&gt; 20: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719
+#&gt; 21: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c
+#&gt; 22: 88dabbb6fbb67941           file.size                   205
+#&gt; 23: 87eee6212ba1ae0a            function                     f
+#&gt; 24: 87eee6212ba1ae0a               class               numeric
+#&gt; 25: 87eee6212ba1ae0a         object.size                  1104
+#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-13 10:54:38
+#&gt; 27: 87eee6212ba1ae0a             inCloud                 FALSE
+#&gt; 28: 87eee6212ba1ae0a          resultHash                      
+#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest     0.0005660057 secs
+#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun     1.645088e-05 secs
+#&gt; 31: 87eee6212ba1ae0a      otherFunctions               saveRDS
+#&gt; 32: 87eee6212ba1ae0a      otherFunctions               do.call
+#&gt; 33: 87eee6212ba1ae0a      otherFunctions      build_site_local
+#&gt; 34: 87eee6212ba1ae0a      otherFunctions       build_reference
+#&gt; 35: 87eee6212ba1ae0a      otherFunctions  data_reference_topic
+#&gt; 36: 87eee6212ba1ae0a      otherFunctions          run_examples
+#&gt; 37: 87eee6212ba1ae0a      otherFunctions    highlight_examples
+#&gt; 38: 87eee6212ba1ae0a      otherFunctions             timing_fn
+#&gt; 39: 87eee6212ba1ae0a      otherFunctions                handle
+#&gt; 40: 87eee6212ba1ae0a      otherFunctions                   try
+#&gt; 41: 87eee6212ba1ae0a      otherFunctions                lapply
+#&gt; 42: 87eee6212ba1ae0a           preDigest    n:c5775c3b366fb719
+#&gt; 43: 87eee6212ba1ae0a           preDigest .FUN:4f604aa46882b368
+#&gt; 44: 87eee6212ba1ae0a           file.size                   225
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-08-13 10:54:38
+#&gt;  2: 2020-08-13 10:54:38
+#&gt;  3: 2020-08-13 10:54:38
+#&gt;  4: 2020-08-13 10:54:38
+#&gt;  5: 2020-08-13 10:54:38
+#&gt;  6: 2020-08-13 10:54:38
+#&gt;  7: 2020-08-13 10:54:38
+#&gt;  8: 2020-08-13 10:54:38
+#&gt;  9: 2020-08-13 10:54:38
+#&gt; 10: 2020-08-13 10:54:38
+#&gt; 11: 2020-08-13 10:54:38
+#&gt; 12: 2020-08-13 10:54:38
+#&gt; 13: 2020-08-13 10:54:38
+#&gt; 14: 2020-08-13 10:54:38
+#&gt; 15: 2020-08-13 10:54:38
+#&gt; 16: 2020-08-13 10:54:38
+#&gt; 17: 2020-08-13 10:54:38
+#&gt; 18: 2020-08-13 10:54:38
+#&gt; 19: 2020-08-13 10:54:38
+#&gt; 20: 2020-08-13 10:54:38
+#&gt; 21: 2020-08-13 10:54:38
+#&gt; 22: 2020-08-13 10:54:38
+#&gt; 23: 2020-08-13 10:54:38
+#&gt; 24: 2020-08-13 10:54:38
+#&gt; 25: 2020-08-13 10:54:38
+#&gt; 26: 2020-08-13 10:54:38
+#&gt; 27: 2020-08-13 10:54:38
+#&gt; 28: 2020-08-13 10:54:38
+#&gt; 29: 2020-08-13 10:54:38
+#&gt; 30: 2020-08-13 10:54:38
+#&gt; 31: 2020-08-13 10:54:38
+#&gt; 32: 2020-08-13 10:54:38
+#&gt; 33: 2020-08-13 10:54:38
+#&gt; 34: 2020-08-13 10:54:38
+#&gt; 35: 2020-08-13 10:54:38
+#&gt; 36: 2020-08-13 10:54:38
+#&gt; 37: 2020-08-13 10:54:38
+#&gt; 38: 2020-08-13 10:54:38
+#&gt; 39: 2020-08-13 10:54:38
+#&gt; 40: 2020-08-13 10:54:38
+#&gt; 41: 2020-08-13 10:54:38
+#&gt; 42: 2020-08-13 10:54:38
+#&gt; 43: 2020-08-13 10:54:38
+#&gt; 44: 2020-08-13 10:54:38
+#&gt;             createdDate</div><div class='input'>
+<span class='no'>file2Remove</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/list.files.html'>dir</a></span>(<span class='fu'><a href='CacheHelpers.html'>CacheStorageDir</a></span>(<span class='no'>tmpDir</span>), <span class='kw'>full.name</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>]
+<span class='fu'><a href='https://rdrr.io/r/base/files.html'>file.remove</a></span>(<span class='no'>file2Remove</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># repository directory still thinks files are there</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters):  552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters):  552 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 88dabbb6fbb67941            function                     f
+#&gt;  2: 88dabbb6fbb67941               class               numeric
+#&gt;  3: 88dabbb6fbb67941         object.size                  1104
+#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-13 10:54:38
+#&gt;  5: 88dabbb6fbb67941             inCloud                 FALSE
+#&gt;  6: 88dabbb6fbb67941          resultHash                      
+#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0003609657 secs
+#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun       1.0252e-05 secs
+#&gt;  9: 88dabbb6fbb67941      otherFunctions               saveRDS
+#&gt; 10: 88dabbb6fbb67941      otherFunctions               do.call
+#&gt; 11: 88dabbb6fbb67941      otherFunctions      build_site_local
+#&gt; 12: 88dabbb6fbb67941      otherFunctions       build_reference
+#&gt; 13: 88dabbb6fbb67941      otherFunctions  data_reference_topic
+#&gt; 14: 88dabbb6fbb67941      otherFunctions          run_examples
+#&gt; 15: 88dabbb6fbb67941      otherFunctions    highlight_examples
+#&gt; 16: 88dabbb6fbb67941      otherFunctions             timing_fn
+#&gt; 17: 88dabbb6fbb67941      otherFunctions                handle
+#&gt; 18: 88dabbb6fbb67941      otherFunctions                   try
+#&gt; 19: 88dabbb6fbb67941      otherFunctions                lapply
+#&gt; 20: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719
+#&gt; 21: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c
+#&gt; 22: 88dabbb6fbb67941           file.size                   205
+#&gt; 23: 87eee6212ba1ae0a            function                     f
+#&gt; 24: 87eee6212ba1ae0a               class               numeric
+#&gt; 25: 87eee6212ba1ae0a         object.size                  1104
+#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-13 10:54:38
+#&gt; 27: 87eee6212ba1ae0a             inCloud                 FALSE
+#&gt; 28: 87eee6212ba1ae0a          resultHash                      
+#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest     0.0005660057 secs
+#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun     1.645088e-05 secs
+#&gt; 31: 87eee6212ba1ae0a      otherFunctions               saveRDS
+#&gt; 32: 87eee6212ba1ae0a      otherFunctions               do.call
+#&gt; 33: 87eee6212ba1ae0a      otherFunctions      build_site_local
+#&gt; 34: 87eee6212ba1ae0a      otherFunctions       build_reference
+#&gt; 35: 87eee6212ba1ae0a      otherFunctions  data_reference_topic
+#&gt; 36: 87eee6212ba1ae0a      otherFunctions          run_examples
+#&gt; 37: 87eee6212ba1ae0a      otherFunctions    highlight_examples
+#&gt; 38: 87eee6212ba1ae0a      otherFunctions             timing_fn
+#&gt; 39: 87eee6212ba1ae0a      otherFunctions                handle
+#&gt; 40: 87eee6212ba1ae0a      otherFunctions                   try
+#&gt; 41: 87eee6212ba1ae0a      otherFunctions                lapply
+#&gt; 42: 87eee6212ba1ae0a           preDigest    n:c5775c3b366fb719
+#&gt; 43: 87eee6212ba1ae0a           preDigest .FUN:4f604aa46882b368
+#&gt; 44: 87eee6212ba1ae0a           file.size                   225
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-08-13 10:54:38
+#&gt;  2: 2020-08-13 10:54:38
+#&gt;  3: 2020-08-13 10:54:38
+#&gt;  4: 2020-08-13 10:54:38
+#&gt;  5: 2020-08-13 10:54:38
+#&gt;  6: 2020-08-13 10:54:38
+#&gt;  7: 2020-08-13 10:54:38
+#&gt;  8: 2020-08-13 10:54:38
+#&gt;  9: 2020-08-13 10:54:38
+#&gt; 10: 2020-08-13 10:54:38
+#&gt; 11: 2020-08-13 10:54:38
+#&gt; 12: 2020-08-13 10:54:38
+#&gt; 13: 2020-08-13 10:54:38
+#&gt; 14: 2020-08-13 10:54:38
+#&gt; 15: 2020-08-13 10:54:38
+#&gt; 16: 2020-08-13 10:54:38
+#&gt; 17: 2020-08-13 10:54:38
+#&gt; 18: 2020-08-13 10:54:38
+#&gt; 19: 2020-08-13 10:54:38
+#&gt; 20: 2020-08-13 10:54:38
+#&gt; 21: 2020-08-13 10:54:38
+#&gt; 22: 2020-08-13 10:54:38
+#&gt; 23: 2020-08-13 10:54:38
+#&gt; 24: 2020-08-13 10:54:38
+#&gt; 25: 2020-08-13 10:54:38
+#&gt; 26: 2020-08-13 10:54:38
+#&gt; 27: 2020-08-13 10:54:38
+#&gt; 28: 2020-08-13 10:54:38
+#&gt; 29: 2020-08-13 10:54:38
+#&gt; 30: 2020-08-13 10:54:38
+#&gt; 31: 2020-08-13 10:54:38
+#&gt; 32: 2020-08-13 10:54:38
+#&gt; 33: 2020-08-13 10:54:38
+#&gt; 34: 2020-08-13 10:54:38
+#&gt; 35: 2020-08-13 10:54:38
+#&gt; 36: 2020-08-13 10:54:38
+#&gt; 37: 2020-08-13 10:54:38
+#&gt; 38: 2020-08-13 10:54:38
+#&gt; 39: 2020-08-13 10:54:38
+#&gt; 40: 2020-08-13 10:54:38
+#&gt; 41: 2020-08-13 10:54:38
+#&gt; 42: 2020-08-13 10:54:38
+#&gt; 43: 2020-08-13 10:54:38
+#&gt; 44: 2020-08-13 10:54:38
+#&gt;             createdDate</div><div class='input'>
 <span class='co'># run clearStubArtifacts</span>
 <span class='fu'><a href='https://rdrr.io/r/base/warning.html'>suppressWarnings</a></span>(<span class='fu'>clearStubArtifacts</span>(<span class='no'>tmpDir</span>))
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># stubs are removed</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 276 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 276 bytes</span></div><div class='output co'>#&gt;                             artifact         tagKey
-#&gt;  1: 63ca6e2ada8cc5192db268505bb6e0ac         format
-#&gt;  2: 63ca6e2ada8cc5192db268505bb6e0ac           name
-#&gt;  3: 63ca6e2ada8cc5192db268505bb6e0ac          class
-#&gt;  4: 63ca6e2ada8cc5192db268505bb6e0ac           date
-#&gt;  5: 63ca6e2ada8cc5192db268505bb6e0ac        cacheId
-#&gt;  6: 63ca6e2ada8cc5192db268505bb6e0ac       function
-#&gt;  7: 63ca6e2ada8cc5192db268505bb6e0ac    object.size
-#&gt;  8: 63ca6e2ada8cc5192db268505bb6e0ac       accessed
-#&gt;  9: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 10: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 11: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 12: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 13: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 14: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 15: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 16: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 17: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 18: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 19: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 20: 63ca6e2ada8cc5192db268505bb6e0ac otherFunctions
-#&gt; 21: 63ca6e2ada8cc5192db268505bb6e0ac      preDigest
-#&gt; 22: 63ca6e2ada8cc5192db268505bb6e0ac      preDigest
-#&gt;                             artifact         tagKey
-#&gt;                             tagValue         createdDate
-#&gt;  1:                              rda 2019-11-16 22:19:55
-#&gt;  2: 63ca6e2ada8cc5192db268505bb6e0ac 2019-11-16 22:19:55
-#&gt;  3:                          numeric 2019-11-16 22:19:55
-#&gt;  4:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt;  5:                 88dabbb6fbb67941 2019-11-16 22:19:55
-#&gt;  6:                                f 2019-11-16 22:19:55
-#&gt;  7:                             1104 2019-11-16 22:19:55
-#&gt;  8:              2019-11-16 22:19:55 2019-11-16 22:19:55
-#&gt;  9:                          saveRDS 2019-11-16 22:19:55
-#&gt; 10:                          do.call 2019-11-16 22:19:55
-#&gt; 11:                 build_site_local 2019-11-16 22:19:55
-#&gt; 12:                  build_reference 2019-11-16 22:19:55
-#&gt; 13:             data_reference_topic 2019-11-16 22:19:55
-#&gt; 14:                     run_examples 2019-11-16 22:19:55
-#&gt; 15:               highlight_examples 2019-11-16 22:19:55
-#&gt; 16:                        timing_fn 2019-11-16 22:19:55
-#&gt; 17:                           handle 2019-11-16 22:19:55
-#&gt; 18:                              try 2019-11-16 22:19:55
-#&gt; 19:                      withVisible 2019-11-16 22:19:55
-#&gt; 20:                           lapply 2019-11-16 22:19:55
-#&gt; 21:               n:c5775c3b366fb719 2019-11-16 22:19:55
-#&gt; 22:            .FUN:881ec847b7161f3c 2019-11-16 22:19:55
-#&gt;                             tagValue         createdDate</div><div class='input'>
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># stubs are removed</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters):  552 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters):  552 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 88dabbb6fbb67941            function                     f
+#&gt;  2: 88dabbb6fbb67941               class               numeric
+#&gt;  3: 88dabbb6fbb67941         object.size                  1104
+#&gt;  4: 88dabbb6fbb67941            accessed   2020-08-13 10:54:38
+#&gt;  5: 88dabbb6fbb67941             inCloud                 FALSE
+#&gt;  6: 88dabbb6fbb67941          resultHash                      
+#&gt;  7: 88dabbb6fbb67941   elapsedTimeDigest     0.0003609657 secs
+#&gt;  8: 88dabbb6fbb67941 elapsedTimeFirstRun       1.0252e-05 secs
+#&gt;  9: 88dabbb6fbb67941      otherFunctions               saveRDS
+#&gt; 10: 88dabbb6fbb67941      otherFunctions               do.call
+#&gt; 11: 88dabbb6fbb67941      otherFunctions      build_site_local
+#&gt; 12: 88dabbb6fbb67941      otherFunctions       build_reference
+#&gt; 13: 88dabbb6fbb67941      otherFunctions  data_reference_topic
+#&gt; 14: 88dabbb6fbb67941      otherFunctions          run_examples
+#&gt; 15: 88dabbb6fbb67941      otherFunctions    highlight_examples
+#&gt; 16: 88dabbb6fbb67941      otherFunctions             timing_fn
+#&gt; 17: 88dabbb6fbb67941      otherFunctions                handle
+#&gt; 18: 88dabbb6fbb67941      otherFunctions                   try
+#&gt; 19: 88dabbb6fbb67941      otherFunctions                lapply
+#&gt; 20: 88dabbb6fbb67941           preDigest    n:c5775c3b366fb719
+#&gt; 21: 88dabbb6fbb67941           preDigest .FUN:881ec847b7161f3c
+#&gt; 22: 88dabbb6fbb67941           file.size                   205
+#&gt; 23: 87eee6212ba1ae0a            function                     f
+#&gt; 24: 87eee6212ba1ae0a               class               numeric
+#&gt; 25: 87eee6212ba1ae0a         object.size                  1104
+#&gt; 26: 87eee6212ba1ae0a            accessed   2020-08-13 10:54:38
+#&gt; 27: 87eee6212ba1ae0a             inCloud                 FALSE
+#&gt; 28: 87eee6212ba1ae0a          resultHash                      
+#&gt; 29: 87eee6212ba1ae0a   elapsedTimeDigest     0.0005660057 secs
+#&gt; 30: 87eee6212ba1ae0a elapsedTimeFirstRun     1.645088e-05 secs
+#&gt; 31: 87eee6212ba1ae0a      otherFunctions               saveRDS
+#&gt; 32: 87eee6212ba1ae0a      otherFunctions               do.call
+#&gt; 33: 87eee6212ba1ae0a      otherFunctions      build_site_local
+#&gt; 34: 87eee6212ba1ae0a      otherFunctions       build_reference
+#&gt; 35: 87eee6212ba1ae0a      otherFunctions  data_reference_topic
+#&gt; 36: 87eee6212ba1ae0a      otherFunctions          run_examples
+#&gt; 37: 87eee6212ba1ae0a      otherFunctions    highlight_examples
+#&gt; 38: 87eee6212ba1ae0a      otherFunctions             timing_fn
+#&gt; 39: 87eee6212ba1ae0a      otherFunctions                handle
+#&gt; 40: 87eee6212ba1ae0a      otherFunctions                   try
+#&gt; 41: 87eee6212ba1ae0a      otherFunctions                lapply
+#&gt; 42: 87eee6212ba1ae0a           preDigest    n:c5775c3b366fb719
+#&gt; 43: 87eee6212ba1ae0a           preDigest .FUN:4f604aa46882b368
+#&gt; 44: 87eee6212ba1ae0a           file.size                   225
+#&gt;              cacheId              tagKey              tagValue
+#&gt;             createdDate
+#&gt;  1: 2020-08-13 10:54:38
+#&gt;  2: 2020-08-13 10:54:38
+#&gt;  3: 2020-08-13 10:54:38
+#&gt;  4: 2020-08-13 10:54:38
+#&gt;  5: 2020-08-13 10:54:38
+#&gt;  6: 2020-08-13 10:54:38
+#&gt;  7: 2020-08-13 10:54:38
+#&gt;  8: 2020-08-13 10:54:38
+#&gt;  9: 2020-08-13 10:54:38
+#&gt; 10: 2020-08-13 10:54:38
+#&gt; 11: 2020-08-13 10:54:38
+#&gt; 12: 2020-08-13 10:54:38
+#&gt; 13: 2020-08-13 10:54:38
+#&gt; 14: 2020-08-13 10:54:38
+#&gt; 15: 2020-08-13 10:54:38
+#&gt; 16: 2020-08-13 10:54:38
+#&gt; 17: 2020-08-13 10:54:38
+#&gt; 18: 2020-08-13 10:54:38
+#&gt; 19: 2020-08-13 10:54:38
+#&gt; 20: 2020-08-13 10:54:38
+#&gt; 21: 2020-08-13 10:54:38
+#&gt; 22: 2020-08-13 10:54:38
+#&gt; 23: 2020-08-13 10:54:38
+#&gt; 24: 2020-08-13 10:54:38
+#&gt; 25: 2020-08-13 10:54:38
+#&gt; 26: 2020-08-13 10:54:38
+#&gt; 27: 2020-08-13 10:54:38
+#&gt; 28: 2020-08-13 10:54:38
+#&gt; 29: 2020-08-13 10:54:38
+#&gt; 30: 2020-08-13 10:54:38
+#&gt; 31: 2020-08-13 10:54:38
+#&gt; 32: 2020-08-13 10:54:38
+#&gt; 33: 2020-08-13 10:54:38
+#&gt; 34: 2020-08-13 10:54:38
+#&gt; 35: 2020-08-13 10:54:38
+#&gt; 36: 2020-08-13 10:54:38
+#&gt; 37: 2020-08-13 10:54:38
+#&gt; 38: 2020-08-13 10:54:38
+#&gt; 39: 2020-08-13 10:54:38
+#&gt; 40: 2020-08-13 10:54:38
+#&gt; 41: 2020-08-13 10:54:38
+#&gt; 42: 2020-08-13 10:54:38
+#&gt; 43: 2020-08-13 10:54:38
+#&gt; 44: 2020-08-13 10:54:38
+#&gt;             createdDate</div><div class='input'>
 <span class='co'># cleanup</span>
 <span class='fu'><a href='viewCache.html'>clearCache</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 <span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>tmpDir</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div></pre>
   </div>
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
-      <li><a href="#value">Value</a></li>
-      <li><a href="#examples">Examples</a></li>
-    </ul>
-
-    <h2>Author</h2>
-    <p>Eliot McIntire</p>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
@@ -456,7 +499,7 @@ which metadata will be returned. If <code>NULL</code> (default), it will use the
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.4.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
 
       </footer>
