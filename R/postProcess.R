@@ -975,10 +975,15 @@ maskInputs <- function(x, studyArea, ...) {
 #' @export
 #' @importFrom raster stack
 #' @rdname maskInputs
-maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...) {
-  message("    masking...")
+maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = NULL, ...) {
+  messagePrepInputs("    masking...")
   browser(expr = exists("._maskInputs_1"))
   isStack <- is(x, "RasterStack")
+  if (is.null(studyArea) && !is.null(rasterToMatch) && is.null(maskWithRTM)) {
+    messagePrepInputs("studyArea is NULL; rasterToMatch provided. Masking with rasterToMatch NA values. ",
+            "To leave unmasked, set maskWithRTM = FALSE")
+    maskWithRTM <- TRUE
+  }
   if (isTRUE(maskWithRTM)) {
     x <- maskWithRasterNAs(x = x, y = rasterToMatch)
   } else {
