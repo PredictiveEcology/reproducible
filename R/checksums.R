@@ -78,7 +78,6 @@ setGeneric("Checksums", function(path, write, quickCheck = FALSE,
   standardGeneric("Checksums")
 })
 
-#' @importFrom crayon magenta
 #' @importFrom data.table setnames
 #' @importFrom methods formalArgs
 #' @importFrom utils read.table write.table
@@ -143,7 +142,7 @@ setMethod(
       }
     }
 
-    message(crayon::magenta("Checking local files...", sep = ""))
+    messagePrepInputs("Checking local files...", sep = "")
     filesToCheck <-  if (length(txt$file) & length(files)) {
       files[basename(files) %in% txt$file]
     } else {
@@ -174,8 +173,8 @@ setMethod(
 
     if (is.null(txt$filesize)) {
       quickCheck <- FALSE
-      message(crayon::magenta("  Not possible to use quickCheck;\n ",
-                              "    CHECKSUMS.txt file does not have filesizes", sep = ""))
+      messagePrepInputs("  Not possible to use quickCheck;\n ",
+                              "    CHECKSUMS.txt file does not have filesizes", sep = "")
     }
     checksums <- rep(list(rep("", length(filesToCheck))), 2)
     if (quickCheck | write) {
@@ -189,7 +188,7 @@ setMethod(
                                 args = append(list(file = filesToCheck, quickCheck = FALSE),
                                               dots))
     }
-    message(crayon::magenta("Finished checking local files.", sep = ""))
+    messagePrepInputs("Finished checking local files.", sep = "")
 
     out <- if (length(filesToCheck)) {
       data.table(file = basename(filesToCheck), checksum = checksums[[1]],
@@ -275,7 +274,7 @@ setMethod(
     #   dplyr::filter(row_number() == 1L)
 
     # if (!isTRUE(all.equal(as.data.frame(results.df1), as.data.frame(results.df))))
-    #   browser()
+    #   stop()
 
     return(invisible(results.df))
     #}

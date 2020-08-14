@@ -147,10 +147,6 @@ test_that("test file-backed raster caching", {
       }
       nOT <- Sys.time()
 
-      # xxxx <<- ssss <<- jjjj <<- aaaa <<- bbbb <<- cccc <<- dddd <<- eeee <<- ffff <<- gggg <<- 1
-      #rmFC <<- 1
-      #browser()
-
       for (i in 1:2) {
         assign(paste0("b", i), system.time(
           assign(paste0("a", i), Cache(rasterTobinary, a, cacheRepo = tmpCache, notOlderThan = nOT))

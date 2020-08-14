@@ -262,7 +262,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     on.exit({unlink(.tempPath, recursive = TRUE)},
             add = TRUE)
   }
-  message("Running preProcess")
+  messagePrepInputs("Running preProcess")
   out <- preProcess(
     targetFile = targetFile,
     url = url,
@@ -291,7 +291,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   if (!is.null(out$fun)) {
     x <- if (is.null(out$object)) {
-      message("Loading object into R")
+      messagePrepInputs("Loading object into R")
       if (identical(out$fun, raster::raster) |
           identical(out$fun, raster::stack) |
           identical(out$fun, raster::brick)) {
@@ -301,7 +301,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       } else {
         if (identical(out$fun, base::load)) {
           if (is.null(args$envir)) {
-            message("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
+            messagePrepInputs("  Running base::load, returning objects as a list. Pass envir = anEnvir ",
                     "if you would like it loaded to a specific environment")
             tmpEnv <- new.env(parent = emptyenv())
             returnAsList <- TRUE
@@ -333,7 +333,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
           mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
           if (length(mess) > 0)
-            message(mess)
+            messagePrepInputs(mess)
           obj
         }
       }
@@ -341,14 +341,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       out$object
     }
   } else {
-    message("No loading of object into R; fun = NULL")
+    messagePrepInputs("No loading of object into R; fun = NULL")
   }
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
   if (!(all(is.null(out$dots$studyArea),
             is.null(out$dots$rasterToMatch),
             is.null(out$dots$targetCRS)))) {
-    message("Running postProcess")
+    messagePrepInputs("Running postProcess")
 
     # The do.call doesn't quote its arguments, so it doesn't work for "debugging"
     #  This rlang stuff is a way to pass through objects without evaluating them
@@ -494,7 +494,7 @@ extractFromArchive <- function(archive,
           if (!nzchar(extractingTheseFiles))
             extractingTheseFiles <- paste0("all files: ", paste(basename(filesInArchive),
                                                                 collapse = ", "))
-          message("From:", basename(archive[1]), "  \nExtracting\n ",
+          messagePrepInputs("From:", basename(archive[1]), "  \nExtracting\n ",
                   paste(collapse = "\n ", extractingTheseFiles))
           filesExtracted <- c(filesExtracted,
                               .callArchiveExtractFn(funWArgs$fun, funWArgs$args,
@@ -528,14 +528,14 @@ extractFromArchive <- function(archive,
           }
         }
       } else {
-        message("  Skipping extractFromArchive: all files already present")
+        messagePrepInputs("  Skipping extractFromArchive: all files already present")
         filesExtracted <- checkSums[checkSums$expectedFile %in%
                                       basename(filesInArchive), ]$expectedFile
       }
     }
   } else {
     if (!is.null(archive)) { # if archive is null, it means there was no archive passed
-      message("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present")
+      messagePrepInputs("  Skipping extractFromArchive: ", paste(neededFiles, collapse = ", "), " already present")
     }
     filesExtracted <- setdiff(neededFiles, if (!is.null(archive)) basename(archive))
   }
@@ -580,10 +580,10 @@ extractFromArchive <- function(archive,
     }
   }
   if (is.null(targetFilePath)) {
-    message("  targetFile was not specified. ", if (any(isShapefile)) {
+    secondPartOfMess <- if (any(isShapefile)) {
       c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
-          " If that is not correct, please specify a different targetFile",
-          " and/or fun.")
+        " If that is not correct, please specify a different targetFile",
+        " and/or fun.")
 
     } else {
       c(" Trying ", fun,
@@ -591,7 +591,8 @@ extractFromArchive <- function(archive,
         " and/or different fun. The current files in the targetFilePath's ",
         "directory are: \n",
         paste(possibleFiles, collapse = "\n"))
-    })
+    }
+    messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess))
 
     targetFilePath <- if (is.null(fun)) {
       NULL
@@ -603,15 +604,15 @@ extractFromArchive <- function(archive,
       } else if (any(isRDS)) {
         possibleFiles[isRDS]
       } else {
-        message("  Don't know which file to load. Please specify targetFile.")
+        messagePrepInputs("  Don't know which file to load. Please specify targetFile.")
       }
     }
     if (length(targetFilePath) > 1)  {
-      message("  More than one possible files to load: ", paste(targetFilePath, collapse = ", "),
+      messagePrepInputs("  More than one possible files to load: ", paste(targetFilePath, collapse = ", "),
               ". Picking the last one. If not correct, specify a targetFile.")
       targetFilePath <- targetFilePath[length(targetFilePath)]
     } #else {
-      #message("  Trying ", targetFilePath, " with ", fun, ".")
+      #messagePrepInputs("  Trying ", targetFilePath, " with ", fun, ".")
     #}
     targetFile <- targetFilePath
     if (!is.null(targetFile)) targetFilePath <- file.path(destinationPath, targetFile)
@@ -659,7 +660,7 @@ extractFromArchive <- function(archive,
       fun <- eval(fun)
 
   if (is.character(fun)) {
-    message(paste0("The archive appears to be not a .zip. Trying a system call to ", fun))
+    messagePrepInputs(paste0("The archive appears to be not a .zip. Trying a system call to ", fun))
     extractSystemCallPath <- .testForArchiveExtract()
     #tempDir <- file.path(args$exdir, "extractedFiles") %>%
     #  checkPath(create = TRUE)
@@ -728,7 +729,7 @@ extractFromArchive <- function(archive,
       }
     }
     if (!isTRUE(worked) | isTRUE(tooBig)) {
-      message("File unzipping using R does not appear to have worked.",
+      messagePrepInputs("File unzipping using R does not appear to have worked.",
               " Trying a system call of unzip...")
 
       # tempDir <- file.path(args$exdir, "extractedFiles") %>%
@@ -807,7 +808,7 @@ extractFromArchive <- function(archive,
 .groupedMessage <- function(mess, omitPattern) {
   mess <- grep(mess, pattern = omitPattern,
                invert = TRUE, value = TRUE)
-  if (length(mess)) message(paste(mess, collapse = "\n    "))
+  if (length(mess)) messagePrepInputs(paste(mess, collapse = "\n    "))
 }
 
 #' @keywords internal
@@ -825,7 +826,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     } else {
       setDT(cs)
       nonCurrentFiles <- cs[!file %in% filesToChecksum]
-      # browser()
       # if (requireNamespace("dplyr")) {
       #   nonCurrentFiles1 <- cs %>%
       #     dplyr::filter(!file %in% filesToChecksum)
@@ -839,7 +839,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     messStart <- "Writing "
   }
-  message(messStart, "checksums to CHECKSUMS.txt. If you see this message repeatedly,\n",
+  messagePrepInputs(messStart, "checksums to CHECKSUMS.txt. If you see this messagePrepInputs repeatedly,\n",
           "  you can specify targetFile (and optionally alsoExtract) so it knows\n",
           "  what to look for.")
   csf <- if (append) tempfile(fileext = ".TXT") else checkSumFilePath
@@ -861,7 +861,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     currentFilesToRbind <- unique(currentFilesToRbind)
     anyDuplicates <- duplicated(currentFilesToRbind)
     if (any(anyDuplicates)) {
-      message("The current targetFile is not the same as the expected targetFile in the ",
+      messagePrepInputs("The current targetFile is not the same as the expected targetFile in the ",
               "CHECKSUMS.txt; appending new entry in CHECKSUMS.txt. If this is not ",
               "desired, please check files for discrepancies")
     }
@@ -1011,7 +1011,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE) %>%
           grepl("installed", .)
         if (.isFALSE(SevenZrarExists))
-          message("To extract .rar files, you will need p7zip-rar, not just p7zip-full. Try: \n",
+          messagePrepInputs("To extract .rar files, you will need p7zip-rar, not just p7zip-full. Try: \n",
                   "--------------------------\n",
                   "apt install p7zip-rar\n",
                   "--------------------------\n"
@@ -1023,7 +1023,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       if (isWindows()) {
         extractSystemCallPath <- Sys.which("7z.exe")
         if (extractSystemCallPath == "") {
-          message("prepInputs is looking for 'unrar' or '7z' in your system...")
+          messagePrepInputs("prepInputs is looking for 'unrar' or '7z' in your system...")
           extractSystemCallPath <- list.files("C:/Program Files",
                                               pattern = "unrar.exe|7z.exe",
                                               recursive = TRUE,
@@ -1035,9 +1035,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                                                 full.names = TRUE)
             if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
               extractSystemCallPath <- NULL
-              message(missingUnrarMess)
+              messagePrepInputs(missingUnrarMess)
             } else {
-              message("The extracting software was found in an unusual location: ",
+              messagePrepInputs("The extracting software was found in an unusual location: ",
                       extractSystemCallPath, ".",
                       "If you receive an error when extracting the archive, please install ",
                       "'7zip' or 'unrar' in 'Program Files' directory.")
@@ -1046,7 +1046,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           extractSystemCallPath <- extractSystemCallPath[1]
         }
       } else {
-        message(missingUnrarMess,
+        messagePrepInputs(missingUnrarMess,
              "Try installing with, e.g.,: \n",
              "--------------------------\n",
              "apt install p7zip p7zip-rar p7zip-full -y\n",

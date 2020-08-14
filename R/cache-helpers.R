@@ -57,12 +57,12 @@ setMethod(
   signature = "ANY",
   definition = function(object, functionName, fromMemoise) {
     if (isTRUE(fromMemoise)) {
-      message(crayon::blue(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName)))
+      messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName))
     } else if (!is.na(fromMemoise)) {
-      message(crayon::blue(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
-                           "adding to memoised copy...", sep = ""))
+      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
+                           "adding to memoised copy...", sep = "")
     } else {
-      message(crayon::blue(.loadedCacheMsg(.loadedCacheResultMsg, functionName)))
+      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName))
     }
 })
 
@@ -163,12 +163,12 @@ setMethod(
         # Test whether the user has accepted the default. If yes, then give message.
         #  If no, then user is aware and doesn't need a message
         if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
-          message("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
+          messageCache("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
                   "  this will not persist across R sessions.")
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        message("No cacheRepo supplied. Using ",.reproducibleTempCacheDir())
+        messageCache("No cacheRepo supplied. Using ",.reproducibleTempCacheDir())
         .reproducibleTempCacheDir()
       }
       checkPath(path = cacheRepo, create = create)

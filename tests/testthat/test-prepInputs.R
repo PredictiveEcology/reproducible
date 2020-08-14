@@ -1785,19 +1785,19 @@ test_that("rasters aren't properly resampled", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  a <- raster(extent(0, 20, 0, 20), res = 2, vals = 1:100*4)
-  b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1:100)
+  a <- raster(extent(0, 20, 0, 20), res = 2, vals = as.integer(1:100*4))
+  b <- raster(extent(0, 30, 0, 30), res = c(3,3), vals = 1L:100L)
   #suppressWarnings({
     crs(a) <- crsToUse
     crs(b) <- crsToUse
     #}) ## TODO: temporary until raster fixes all crs issues
 
-  tiftemp1 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  tiftemp2 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  tiftemp1 <- normPath(tempfile(tmpdir = tmpdir, fileext = ".tif"))
+  tiftemp2 <- normPath(tempfile(tmpdir = tmpdir, fileext = ".tif"))
 
   suppressWarnings({
-    writeRaster(a, filename = tiftemp1)
-    writeRaster(b, filename = tiftemp2)
+    a <- writeRaster(a, filename = tiftemp1, datatype = "INT2U")
+    b <- writeRaster(b, filename = tiftemp2, datatype = "INT2U")
   }) ## TODO: temporary GDAL>6
 
   out <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
@@ -1805,9 +1805,9 @@ test_that("rasters aren't properly resampled", {
   expect_true(dataType(out) == "INT2U")
 
   # Test bilinear --> but keeps integer if it is integer
-  out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
+  suppressWarnings(out2 <- prepInputs(targetFile = tiftemp1, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp1), method = "bilinear",
-                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
+                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))) # about "raster layer has integer values"
   expect_true(dataType(out2) %in% c("INT2S", "INT2U")) # because of "bilinear", it can become negative
 
   c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
@@ -1838,11 +1838,11 @@ test_that("System call gdal works", {
   ras2 <- raster(extent(0,8,0,8), res = 1, vals = 1:64)
   crs(ras2) <- crsToUse
 
-  raster::rasterOptions(todisk = TRUE) #to trigger GDAL
+  raster::rasterOptions(todisk = TRUE) # to trigger GDAL
 
   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE)
-  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+                      rasterToMatch = ras2, useCache = FALSE, filename2 = TRUE)
+  expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
   expect_true(dataType(test1) == "INT1U") #properly resampled
 
   ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
@@ -1891,28 +1891,25 @@ test_that("System call gdal works using multicores for both projecting and maski
 
   # Passing a specific integer for cores
   test1 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2)
-  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2, filename2 = TRUE)
+  expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
   # Passing as float for cores
   test2 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3)
-  expect_true(file.exists(test2@file@name)) #exists on disk after gdalwarp
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = 2.3, filename2 = TRUE)
+  expect_true(file.exists(test2@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
   # Not passing cores
   test3 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea)
-  expect_true(file.exists(test3@file@name)) #exists on disk after gdalwarp
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, filename2 = TRUE)
+  expect_true(file.exists(test3@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
   # Passing cores as AUTO
   test4 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO")
-  expect_true(file.exists(test4@file@name)) #exists on disk after gdalwarp
+                      rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "AUTO", filename2 = TRUE)
+  expect_true(file.exists(test4@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
   # Passing cores as any other character than 'AUTO'
   expect_error({
     test5 <- prepInputs(targetFile = ras@file@name, destinationPath = tempdir2(rnStr),
                         rasterToMatch = ras2, useCache = FALSE, studyArea = StudyArea, cores = "BLA")
   })
-
-  # ras <- raster::setValues(ras, values = runif(n = ncell(ras), min = 1, max = 2))
-  # ras <- writeRaster(ras, filename = tempfile(), format = "GTiff")
 
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
@@ -1941,9 +1938,9 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   raster::rasterOptions(todisk = TRUE) #to trigger GDAL
 
   test1 <- prepInputs(targetFile = ras1@file@name, destinationPath = tempdir2(rnStr),
-                      rasterToMatch = ras2, useCache = FALSE, method = 'ngb')
+                      rasterToMatch = ras2, useCache = FALSE, method = 'ngb', filename2 = TRUE)
 
-  expect_true(file.exists(test1@file@name)) #exists on disk after gdalwarp
+  expect_true(file.exists(test1@file@name)) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
   expect_true(dataType(test1) == "INT1U")
   expect_identical(raster::res(ras2), raster::res(test1))
   expect_identical(raster::extent(ras2), raster::extent(test1))
@@ -2157,11 +2154,11 @@ test_that("new gdalwarp all in one with grd with factor", {
   # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
   #  This invokes the new dealWithRastersOnRecovery fn
   rr <- postProcess(r, destinationPath = tmpdir,
-                    studyArea = StudyArea, useCache = TRUE, useGDAL = "force")
+                    studyArea = StudyArea, useCache = TRUE, useGDAL = "force", filename2 = TRUE)
   rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
-               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache, filename2 = TRUE)
   rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
-               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache)
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache, filename2 = TRUE)
   expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
   expect_true(identical(Filenames(rr1), Filenames(rr3)))
   expect_true(!identical(dirname(Filenames(rr)), tmpCache)) # used to be that the recovery path was Cache file
@@ -2173,6 +2170,7 @@ test_that("new gdalwarp all in one with grd with factor", {
   expect_true(identical(raster::levels(rr2), raster::levels(r)))
   expect_true(sum(abs(raster::extent(rr2)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
   expect_true(!identical(filename(rr), filename(rr2)))
-  expect_true(grepl(".tif$", filename(rr)))
+
+  expect_true(grepl(".tif$", filename(rr))) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
   expect_true(grepl(".grd$", filename(rr2)))
 })

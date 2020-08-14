@@ -9,7 +9,7 @@
 \usage{
 maskInputs(x, studyArea, ...)
 
-\method{maskInputs}{Raster}(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...)
+\method{maskInputs}{Raster}(x, studyArea, rasterToMatch, maskWithRTM = NULL, ...)
 
 \method{maskInputs}{Spatial}(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...)
 

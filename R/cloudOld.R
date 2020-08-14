@@ -92,7 +92,6 @@ cloudCache <- function(...) {
 #' @param ... Passed to \code{showCache} to get the artifacts to delete.
 #'
 #' @export
-#' @importFrom crayon blue
 #' @importFrom data.table data.table rbindlist
 #' @seealso \code{\link{cloudCache}}, \code{\link{Cache}}, \code{\link{cloudWriteOld}},
 #'   \code{\link{cloudCheckOld}}

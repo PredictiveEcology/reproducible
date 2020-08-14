@@ -5,7 +5,7 @@
 \title{Determine filename, either automatically or manually}
 \usage{
 determineFilename(
-  filename2 = TRUE,
+  filename2 = NULL,
   filename1 = NULL,
   destinationPath = getOption("reproducible.destinationPath", "."),
   prefix = "Small",

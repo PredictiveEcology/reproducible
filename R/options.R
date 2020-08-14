@@ -180,6 +180,6 @@ reproducibleOptions <- function() {
     reproducible.useMemoise = FALSE, #memoise
     reproducible.useNewDigestAlgorithm = TRUE,
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
-    reproducible.verbose = FALSE
+    reproducible.verbose = 1
   )
 }
