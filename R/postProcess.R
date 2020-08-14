@@ -720,7 +720,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
     }
 
     if (doProjection) {
-      browser()
       # need to double check that gdal executable exists before going down this path
       attemptGDAL <- attemptGDAL(x, useGDAL, verbose = verbose) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
 
