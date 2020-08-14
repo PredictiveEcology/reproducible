@@ -1419,7 +1419,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   }
   aa <- localTags[tag %in% userTags3][,.N, keyby = hashName]
   setkeyv(aa, "N")
-  similar <- if (NROW(localTags) > 0) {
+  similar <- if (NROW(aa) > 0) {
     localTags[tail(aa, as.numeric(showSimilar)), on = hashName][N == max(N)]
   } else {
     localTags
