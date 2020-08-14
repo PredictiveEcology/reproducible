@@ -94,7 +94,7 @@ setMethod(
   definition = function(object, # filebackedDir,
                         ...) {
     if (any(grepl("DBIConnection", is(object)))) {
-      message("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
+      messageCache("Copy will not do a deep copy of a DBI connection object; no copy being made. ",
               "This may have unexpected consequences...")
     }
 
@@ -105,7 +105,7 @@ setMethod(
     # keep this environment method here, as it will intercept "proto"
     #   and other environments that it shouldn't
     if (!identical(is(object)[1], "environment") && is.environment(object)) {
-      message("Trying to do a deep copy (Copy) of object of class ", class(object),
+      messageCache("Trying to do a deep copy (Copy) of object of class ", class(object),
               "which does not appear to be a normal environment. If it can be copied ",
               "like a normal environment, ignore this message; otherwise, may need to create ",
               "a Copy method for this class. See ?Copy")
@@ -135,7 +135,7 @@ setMethod("Copy",
           signature(object = "SQLiteConnection"),
           definition = function(object, ...) {
             con <- dbConnect(RSQLite::SQLite(), ":memory:")
-            message("Making a copy of the entire SQLite database: ",object@dbname,
+            messageCache("Making a copy of the entire SQLite database: ",object@dbname,
                     "; this may not be desireable ...")
             RSQLite::sqliteCopyDatabase(object, con)
 })
@@ -152,7 +152,7 @@ setMethod("Copy",
           signature(object = "list"),
           definition = function(object,  ...) {
             #if (missing(filebackedDir)) {
-            #  browser()
+            #  stop()
             #  filebackedDir <- tempdir2(rndstr(1, 10))
             #}
             lapply(object, function(x) {

@@ -216,16 +216,16 @@ downloadFile <- function(archive, targetFile, neededFiles,
       downloadResults <- list(needChecksums = needChecksums,
                               destFile = file.path(destinationPath, basename(fileAlreadyDownloaded)))
       if (is.null(targetFile)) {
-        message("   Skipping download because all needed files are listed in ",
+        messagePrepInputs("   Skipping download because all needed files are listed in ",
                 "CHECKSUMS.txt file and are present.",
                 " If this is not correct, rerun prepInputs with purge = TRUE")
       } else {
         if (exists("extractedFromArchive", inherits = FALSE)) {
-          message("  Skipping download: ", paste(neededFiles, collapse = ", ") ,
+          messagePrepInputs("  Skipping download: ", paste(neededFiles, collapse = ", ") ,
                   ": extracted from local archive:\n    ",
                   archive)
         } else {
-          message("  Skipping download: ", paste(neededFiles, collapse = ", ") ," already present")
+          messagePrepInputs("  Skipping download: ", paste(neededFiles, collapse = ", ") ," already present")
         }
       }
     }
@@ -291,7 +291,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 
   destFile <- file.path(destinationPath, basename(downloadFilename))
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
-    message("  Downloading from Google Drive.")
+    messagePrepInputs("  Downloading from Google Drive.")
     fs <- attr(archive, "fileSize")
     if (is.null(fs))
       fs <- attr(assessGoogle(url),"fileSize")
@@ -299,7 +299,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     isLargeFile <- if (is.null(fs)) FALSE else fs > 1e6
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
         !.isFALSE(getOption("reproducible.futurePlan"))) {
-      message("Downloading a large file")
+      messagePrepInputs("Downloading a large file")
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
         fpNew <- getOption("reproducible.futurePlan")
@@ -337,7 +337,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                                                    overwrite = overwrite, verbose = TRUE)))
     }
   } else {
-    message(skipDownloadMsg)
+    messagePrepInputs(skipDownloadMsg)
     needChecksums <- 0
   }
   return(list(destFile = destFile, needChecksums = needChecksums))
@@ -352,7 +352,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
-#' @importFrom crayon magenta
 #' @inheritParams preProcess
 dlGeneric <- function(url, needChecksums, destinationPath) {
   .requireNamespace("httr", stopOnFALSE = TRUE)
@@ -367,7 +366,7 @@ dlGeneric <- function(url, needChecksums, destinationPath) {
   # if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
   #   stop("Can not access url ", url)
 
-  message("  Downloading ", url, " ...")
+  messagePrepInputs("  Downloading ", url, " ...")
 
   ua <- httr::user_agent(getOption("reproducible.useragent"))
   request <- suppressWarnings(
@@ -498,11 +497,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
       #}
     } else {
-      message(skipDownloadMsg)
+      messagePrepInputs(skipDownloadMsg)
       downloadResults <- list(needChecksums = 0, destFile = NULL)
     }
   } else {
-    message("No downloading; no url")
+    messagePrepInputs("No downloading; no url")
   }
   downloadResults
 }
@@ -535,7 +534,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)
       class(fileSize) <- "object_size"
-      message("  File on Google Drive is ", format(fileSize, units = "auto"))
+      messagePrepInputs("  File on Google Drive is ", format(fileSize, units = "auto"))
     }
     archive <- .isArchive(fileAttr$name)
     if (is.null(archive)) {

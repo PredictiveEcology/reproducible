@@ -17,7 +17,7 @@ postProcess(x, ...)
 \method{postProcess}{spatialClasses}(
   x,
   filename1 = NULL,
-  filename2 = TRUE,
+  filename2 = NULL,
   studyArea = NULL,
   rasterToMatch = NULL,
   overwrite = getOption("reproducible.overwrite", TRUE),
@@ -29,7 +29,7 @@ postProcess(x, ...)
 \method{postProcess}{sf}(
   x,
   filename1 = NULL,
-  filename2 = TRUE,
+  filename2 = NULL,
   studyArea = NULL,
   rasterToMatch = NULL,
   overwrite = getOption("reproducible.overwrite", TRUE),

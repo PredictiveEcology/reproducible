@@ -63,7 +63,7 @@ test_that("test devMode", {
   options(opt)
   centralTendency <- function(x) median(x)
   mess <- capture_messages({
-    ranNumsG <- Cache(centralTendency, 1:12, cacheRepo = tmpdir, userTags = theTags, verbose = 1)
+    ranNumsG <- Cache(centralTendency, 1:12, cacheRepo = tmpdir, userTags = theTags, verbose = 3)
   })
   expect_true(any(grepl("not unique; defaulting", mess)))
 

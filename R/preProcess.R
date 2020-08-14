@@ -163,7 +163,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       archive <- .isArchive(fileGuess)
     archive <- moveAttributes(fileGuess, archive)
     if (is.null(archive) && !is.null(fileGuess)) {
-      message("targetFile was not supplied; guessed and will try ", fileGuess,
+      messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile")
       targetFile <- .basename(fileGuess)
       targetFilePath <- file.path(destinationPath, targetFile)
@@ -205,7 +205,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkPath(destinationPath, create = TRUE)
   }
 
-  message("Preparing: ", targetFile)
+  messagePrepInputs("Preparing: ", targetFile)
 
   needChecksums <- 0
 
@@ -453,7 +453,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums <- filesExtracted$checkSums
   } else {
     if (!is.null(.isArchive(archive)))
-      message("  Skipping extractFromArchive attempt: no files missing")
+      messagePrepInputs("  Skipping extractFromArchive attempt: no files missing")
 
     filesExtr <- c(filesToChecksum, neededFiles)
     filesExtr <- setdiff(filesExtr, .isArchive(filesExtr))
@@ -494,7 +494,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar"))) {
     nestedArchives <- .basename(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
     nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
-    message("There are still archives in the extracted files.",
+    messagePrepInputs("There are still archives in the extracted files.",
             " preProcess will try to extract the files from ", .basename(nestedArchives), ".",
             " If this is incorrect, please supply archive.")
     # Guess which files inside the new nested
@@ -747,7 +747,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (lookForSimilar) {
     allFiles <- .listFilesInArchive(archive)
     if (is.null(targetFile)) {
-      message("No targetFile supplied. ",
+      messagePrepInputs("No targetFile supplied. ",
               "Extracting all files from archive")
       neededFiles <- allFiles
     } else {
@@ -827,7 +827,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
           filesInHandIPLogical <- neededFiles %in% filesInHandIP
           if (any(filesInHandIPLogical)) {
-            #message("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",dirNameOPFiles," to ", destinationPath)
+            #messagePrepInputs("   Copying local copy of ", paste(neededFiles, collapse = ", "), " from ",dirNameOPFiles," to ", destinationPath)
             linkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
                        file.path(destinationPath, filesInHandIP))
             checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
@@ -942,12 +942,12 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
     attr(result, "warning") <- NULL
 
     if (isTRUE(all(result))) {
-      message("Hardlinked version of file created at: ", toCollapsed, ", which points to "
+      messagePrepInputs("Hardlinked version of file created at: ", toCollapsed, ", which points to "
               , fromCollapsed, "; no copy was made.")
     }
 
     if (any(grepl("file already exists", warns))) {
-      message("File named ", toCollapsed, " already exists; will try to use it/them")
+      messagePrepInputs("File named ", toCollapsed, " already exists; will try to use it/them")
       result <- TRUE
     }
 
@@ -956,7 +956,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
       if (!isWindows()) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
-          message("Symlinked version of file created at: ", toCollapsed, ", which points to ",
+          messagePrepInputs("Symlinked version of file created at: ", toCollapsed, ", which points to ",
                   fromCollapsed, "; no copy was made.")
         }
       }
@@ -964,10 +964,10 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
 
     if (.isFALSE(all(result))) {
       result <- file.copy(from, to)
-      message("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed)
+      messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed)
     }
   } else {
-    message("File ", fromCollapsed, " does not exist. Not copying.")
+    messagePrepInputs("File ", fromCollapsed, " does not exist. Not copying.")
     result <- FALSE
   }
   return(result)
@@ -1113,7 +1113,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
       identical(fileExt(normPath(.basename(downloadFileResult$downloaded))), "")) {
     if (!is.null(targetFile) && !identical(fileExt(normPath(.basename(downloadFileResult$neededFiles))), "")) {
       if (is.null(archive)) {
-        message(
+        messagePrepInputs(
           "Downloaded file has no extension: targetFile is provided, but archive is not.\n",
           " Downloaded file will be considered as the targetFile. If the downloaded file is an archive\n",
           " that contains the targetFile, please specify both archive and targetFile."
@@ -1125,7 +1125,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
       } else {
-        message(
+        messagePrepInputs(
           "Downloaded file has no extension: both targetFile and archive are provided.\n",
           " Downloaded file will be considered as the archive."
         )
@@ -1138,7 +1138,7 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
       }
     } else {
       if (!is.null(archive)) {
-        message(
+        messagePrepInputs(
           "Downloaded file has no extension: archive is provided. \n",
           " downloaded file will be considered as the archive.")
         downloadFileResult$neededFiles <- .basename(archive)
@@ -1149,12 +1149,12 @@ linkOrCopy <- function(from, to, symlink = TRUE) {
           to = newFileWithExtension))
         downloadFileResult$downloaded <- newFileWithExtension
       } else {
-        message(
+        messagePrepInputs(
           "Downloaded file has no extension: neither archive nor targetFile are provided. \n",
           "prepInputs will try accessing the file type.")
         fileExt <- .guessFileExtension(file = file.path(normPath(downloadFileResult$downloaded)))
         if (is.null(fileExt)) {
-          message("The file was not recognized by prepInputs.",
+          messagePrepInputs("The file was not recognized by prepInputs.",
                   "Will assume the file is an archive and add '.zip' extension.",
                   "If this is incorrect or return error, please supply archive or targetFile")
           fileExt <- ".zip"
@@ -1191,37 +1191,37 @@ moveAttributes <- function(source, receiving, attrs = NULL) {
 
 .checkDeprecated <- function(dots) {
   if (!is.null(dots$cacheTags))  {
-    message("cacheTags is being deprecated;",
+    messagePrepInputs("cacheTags is being deprecated;",
             " use userTags which will pass directly to Cache.")
     dots$userTags <- dots$cacheTags
     dots$cacheTags <- NULL
   }
   if (!is.null(dots$postProcessedFilename))  {
-    message("postProcessedFilename is being deprecated;",
+    messagePrepInputs("postProcessedFilename is being deprecated;",
             " use filename2, used in determineFilename.")
     dots$filename2 <- dots$postProcessedFilename
     dots$postProcessedFilename <- NULL
   }
   if (!is.null(dots$writeCropped))  {
-    message("writeCropped is being deprecated;",
+    messagePrepInputs("writeCropped is being deprecated;",
             " use filename2, used in determineFilename.")
     dots$filename2 <- dots$writeCropped
     dots$writeCropped <- NULL
   }
   if (!is.null(dots$rasterInterpMethod))  {
-    message("rasterInterpMethod is being deprecated;",
+    messagePrepInputs("rasterInterpMethod is being deprecated;",
             " use method which will pass directly to projectRaster.")
     dots$method <- dots$rasterInterpMethod
     dots$rasterInterpMethod <- NULL
   }
   if (!is.null(dots$rasterDatatype))  {
-    message("rasterDatatype is being deprecated;",
+    messagePrepInputs("rasterDatatype is being deprecated;",
             " use datatype which will pass directly to writeRaster.")
     dots$datatype <- dots$rasterDatatype
     dots$rasterDatatype <- NULL
   }
   if (!is.null(dots$pkg))  {
-    message("pkg is being deprecated;",
+    messagePrepInputs("pkg is being deprecated;",
             "name the package and function directly, if needed,\n",
             "  e.g., 'pkg::fun'.")
     dots$pkg <- NULL

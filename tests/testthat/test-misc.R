@@ -110,7 +110,7 @@ test_that("guessAtTargetAndFun works correctly", {
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "", fun = "load"),
                  "Don't know which file to load")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "hi.rds", fun = "readRDS"),
-                 "targetFile was not specified.  Trying readRDS")
+                 "targetFile was not specified.")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = c("hi.rds", "hello.rds"), fun = "readRDS"),
                  "More than one possible files to load")
 })
@@ -142,16 +142,6 @@ test_that("check GDAL version", {
       expect_false(checkGDALVersion("3.0"))
     }
   )
-})
-
-test_that("repo stuff works", {
-  skip_on_appveyor() # can't tell what the CRAN repo is
-
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
 })
 
 test_that("test miscellaneous fns (part 2)", {

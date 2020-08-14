@@ -41,8 +41,8 @@
     .reproEnv$hashDetails <- hashDetails
     on.exit({
       assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
-      print(.reproEnv$hashDetails)
-      message("The hashing details are available from .reproEnv$hashDetails")
+      messageDF(.reproEnv$hashDetails, colour = "blue")
+      messageCache("The hashing details are available from .reproEnv$hashDetails")
       rm("hashDetails", envir = .reproEnv)
     }, add = TRUE)
   }
@@ -131,7 +131,7 @@
 
 
 .CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN, ...) {
-  message("sideEffect argument is poorly tested. It may not function as desired")
+  messageCache("sideEffect argument is poorly tested. It may not function as desired")
   browser(expr = exists("sideE"))
   needDwd <- logical(0)
   fromCopy <- character(0)
@@ -182,7 +182,7 @@
     }
     #}
   } else {
-    message("  There was no record of files in sideEffects")
+    messageCache("  There was no record of files in sideEffects")
   }
 
   if (any(needDwd)) {
@@ -244,7 +244,7 @@
                          algo, preDigest, startCacheTime,
                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          conn = getOption("reproducible.conn", NULL), ...) {
-  if (verbose > 1) {
+  if (verbose > 3) {
     startLoadTime <- Sys.time()
   }
 
@@ -274,7 +274,7 @@
     }
   }
 
-  if (verbose > 1) {
+  if (verbose > 3) {
     endLoadTime <- Sys.time()
     verboseDF <- data.frame(
       functionName = fnDetails$functionName,
@@ -320,7 +320,7 @@
   #attr(output, ".Cache")$newCache <- FALSE
   if (!identical(attr(output, ".Cache")$newCache, FALSE)) stop("attributes are not correct 2")
 
-  if (verbose > 1) {
+  if (verbose > 3) {
     endCacheTime <- Sys.time()
     verboseDF <- data.frame(
       functionName = fnDetails$functionName,

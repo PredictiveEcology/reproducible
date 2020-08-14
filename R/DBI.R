@@ -17,7 +17,7 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   browser(expr = exists("aaaa"))
   alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
   if (alreadyExists && force == FALSE) {
-    message("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
+    messageCache("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
     return(invisible(cachePath))
   }
 
@@ -77,20 +77,14 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
     ftL <- CacheStoredFile(cachePath, linkToCacheId)
-    #if (identical(tolower(.Platform$OS.type), "windows")) {
     suppressWarnings({
       out <- try(file.link(from = ftL, to = fts), silent = TRUE)
     })
-    #} else {
-    #  suppressWarnings({
-    #    out <- try(file.symlink(from = ftL, to = fts), silent = TRUE)
-    #  })
-    #}
     if (is(out, "try-error") | !out)
       linkToCacheId <- NULL
     else {
-      message("  (A file with identical properties already exists in the Cache; ",
-              "creating a file.link instead of a new file)")
+      messageCache("  (A file with identical properties already exists in the Cache: ",basename(ftL),"; ",
+              "The newly added (",basename(fts),") is a file.link to that file)")
     }
     fs <- file.size(fts)
   }
@@ -142,7 +136,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     fsBig <- (as.numeric(tagValue[whichOS]) * 4 ) < fs
     if (isTRUE(fsBig)) {
       browser(expr = exists("._saveToCache_3"))
-      message("Object with cacheId ", cacheId, " appears to have a much larger size ",
+      messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
               "on disk than in memory. ",
               "This usually means that the object has captured an environment with ",
               "many objects due to how a function or a formula is defined. ",
@@ -181,8 +175,8 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (!file.exists(f)) {
     sameCacheID <- dir(dirname(f), pattern = filePathSansExt(basename(f)))
     if (length(sameCacheID)) {
-      message(blue(paste0("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
-              fileExt(f), ")")))
+      messageCache("     (Changing format of Cache entry from ", fileExt(sameCacheID), " to ",
+              fileExt(f), ")")
       obj <- loadFromCache(cachePath = cachePath, cacheId = cacheId,
                            format = fileExt(sameCacheID))
       fs <- saveToCache(obj = obj, cachePath = cachePath, drv = drv, conn = conn,
@@ -556,7 +550,7 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
   browser(expr = exists("._movedCache_2"))
   if (missing(old)) {
     if (length(tables) == 1) {
-      message("Assuming old database table is ", tables)
+      messageCache("Assuming old database table is ", tables)
     } else {
       dbname <- try(conn@dbname, silent = TRUE)
       if (is(dbname, "try-error"))

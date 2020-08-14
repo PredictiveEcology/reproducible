@@ -131,12 +131,12 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 
   if (is(x, "RasterLayer") && requireNamespace("sf", quietly = TRUE) &&
       requireNamespace("fasterize", quietly = TRUE)) {
-    message("fastMask is using sf and fasterize")
+    messagePrepInputs("fastMask is using sf and fasterize")
 
 
     if (attemptGDAL) {
       # call gdal
-      message("fastMask is using gdalwarp")
+      messagePrepInputs("fastMask is using gdalwarp")
 
       # rasters need to go to same directory that can be unlinked at end without losing other temp files
       tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
@@ -164,7 +164,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       tr <- res(x)
 
       if (isWindows()) {
-        message("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
+        messagePrepInputs("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
         exe <- ".exe"
       } else {
         exe <- ""
@@ -216,12 +216,12 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       }
     }
   } else {
-    message("This function is using raster::mask")
+    messagePrepInputs("This function is using raster::mask")
     if (is(x, "RasterStack") || is(x, "RasterBrick")) {
-      message(" because fastMask doesn't have a specific method ",
+      messagePrepInputs(" because fastMask doesn't have a specific method ",
               "for these RasterStack or RasterBrick yet")
     } else {
-      message("This may be slow in large cases. ",
+      messagePrepInputs("This may be slow in large cases. ",
               "To use sf and GDAL instead, see ",
               "https://github.com/r-spatial/sf to install GDAL ",
               "on your system. Then, 'install.packages(\"sf\")",
@@ -278,7 +278,7 @@ findGDAL <- function() {
                                 "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
                                 "C:/Program Files/GDAL",
                                 "C:/Program Files (x86)/GDAL")
-      message("Searching for gdal installation")
+      messagePrepInputs("Searching for gdal installation")
       gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
       if (any(gdalInfoExists))
         gdalPath <- possibleWindowsPaths[gdalInfoExists]
@@ -303,15 +303,15 @@ attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
       findGDAL()
     } else {
       if (crsIsNA && shouldUseGDAL)
-        message("Can't use GDAL because crs is NA")
+        messagePrepInputs("Can't use GDAL because crs is NA")
       if (cpim && isTRUEuseGDAL)
-        message("useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
+        messagePrepInputs("useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
                 "useGDAL = 'force' to override")
 
       FALSE
     }
   } else {
-    message("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')")
+    messagePrepInputs("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')")
     attemptGDAL <- FALSE
   }
   attemptGDAL

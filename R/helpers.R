@@ -261,9 +261,9 @@ messageDF <- function(df, round, colour = NULL, colnames = NULL) {
   if (skipColNames) outMess <- outMess[-1]
   out <- lapply(outMess, function(x) {
     if (!is.null(colour)) {
-      message(getFromNamespace(colour, ns = "crayon")(x))
+      messageColoured(x, colour = colour)
     } else {
-    message(x)
+      message(x)
     }
   })
 }
@@ -324,4 +324,39 @@ isAbsolutePath <- function(pathnames) {
   (components[1L] == "")
 }
 
+# This is so that we don't need to import from backports
 .isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
+
+messagePrepInputs <- function(...) {
+  messageColoured(..., colour = "cyan")
+}
+
+messageCache <- function(...) {
+  messageColoured(..., colour = "blue")
+}
+
+messageQuestion <- function(..., verboseLevel = 0) {
+  # force this message to print
+  messageColoured(..., colour = "green", verboseLevel = verboseLevel, verbose = 0)
+}
+
+messageColoured <- function(..., colour = NULL, verboseLevel = 1,
+                            verbose = getOption("reproducible.verbose", 1)) {
+  if (isTRUE(verboseLevel <= verbose)) {
+    needCrayon <- FALSE
+    if (!is.null(colour)) {
+      if (is.character(colour))
+        needCrayon <- TRUE
+    }
+    if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
+      message(getFromNamespace(colour, "crayon")(paste0(...)))
+    } else {
+      if (!isTRUE(.pkgEnv$.checkedCrayon)) {
+        message("To add colours to messages, install.packages('crayon')")
+        .pkgEnv$.checkedCrayon <- TRUE
+      }
+      message(paste0(...))
+    }
+  }
+
+}
