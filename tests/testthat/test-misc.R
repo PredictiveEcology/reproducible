@@ -144,16 +144,6 @@ test_that("check GDAL version", {
   )
 })
 
-test_that("repo stuff works", {
-  skip_on_appveyor() # can't tell what the CRAN repo is
-
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-})
-
 test_that("test miscellaneous fns (part 2)", {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   skip_if_no_token()
