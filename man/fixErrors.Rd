@@ -13,6 +13,7 @@ fixErrors(
   objectName,
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
   ...
 )
 
@@ -21,6 +22,7 @@ fixErrors(
   objectName,
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
   ...
 )
 
@@ -29,6 +31,7 @@ fixErrors(
   objectName,
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
   ...
 )
 
@@ -37,6 +40,7 @@ fixErrors(
   objectName = NULL,
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
   ...
 )
 
@@ -45,6 +49,7 @@ fixErrors(
   objectName = NULL,
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
   ...
 )
 }

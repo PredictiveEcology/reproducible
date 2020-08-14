@@ -12,19 +12,21 @@ if (getRversion() >= "3.1.0") {
 #'     This should be used with caution as there are no checks for overwriting.
 #'     See \code{googledrive::drive_mkdir}. Default \code{FALSE}.
 #' @param overwrite Logical. Passed to \code{googledrive::drive_mkdir}.
+#' @inheritParams Cache
 #' @export
 #' @inheritParams Cache
 checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cloudFolderID', NULL),
                                       cacheRepo = NULL,
                                       create = FALSE,
-                                      overwrite = FALSE) {
+                                      overwrite = FALSE,
+                                      verbose = getOption("reproducible.verbose", 1)) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   browser(expr = exists("._checkAndMakeCloudFolderID_1"))
   if (!is(cloudFolderID, "dribble")) {
     isNullCFI <- is.null(cloudFolderID)
     if (isNullCFI) {
       if (is.null(cacheRepo)) {
-        cacheRepo <- .checkCacheRepo(cacheRepo)
+        cacheRepo <- .checkCacheRepo(cacheRepo, verbose = verbose)
       }
       cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
     }
@@ -39,7 +41,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
       if (isTRUE(create)) {
         if (isID) {
           if (is.null(cacheRepo)) {
-            cacheRepo <- .checkCacheRepo(cacheRepo)
+            cacheRepo <- .checkCacheRepo(cacheRepo, verbose = verbose)
           }
           cloudFolderID <- cloudFolderFromCacheRepo(cacheRepo)
         }
@@ -51,19 +53,21 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
     }
     if (isNullCFI) {
       messageCache("Setting 'reproducible.cloudFolderID' option to be cloudFolder: ",
-              ifelse(!is.null(names(cloudFolderID)), cloudFolderID$name, cloudFolderID))
+              ifelse(!is.null(names(cloudFolderID)), cloudFolderID$name, cloudFolderID),
+              verbose = verbose)
     }
     options('reproducible.cloudFolderID' = cloudFolderID)
   }
   return(cloudFolderID)
 }
 
-driveLs <- function(cloudFolderID = NULL, pattern = NULL) {
+driveLs <- function(cloudFolderID = NULL, pattern = NULL, verbose = getOption("reproducible.verbose", 1)) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   browser(expr = exists("kkkk"))
   if (!is(cloudFolderID, "tbl"))
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = FALSE) # only deals with NULL case
-  messageCache("Retrieving file list in cloud folder")
+  messageCache("Retrieving file list in cloud folder",
+               verbose = verbose)
   gdriveLs <- retry(quote(googledrive::drive_ls(path = cloudFolderID,
                                    pattern = paste0(collapse = "|", c(cloudFolderID$id ,pattern)))))
   if (is(gdriveLs, "try-error")) {

@@ -1,5 +1,6 @@
 .CacheVerboseFn1 <- function(preDigest, fnDetails,
-                             startHashTime, modifiedDots, dotPipe, quick) {
+                             startHashTime, modifiedDots, dotPipe, quick,
+                             verbose = getOption("reproducible.verbose", 1)) {
   preDigestUnlist <- .unlistToCharacter(preDigest, 4)
   endHashTime <- Sys.time()
   verboseDF <- data.frame(
@@ -42,7 +43,7 @@
     on.exit({
       assign("hashDetailsAll", .reproEnv$hashDetails, envir = .reproEnv)
       messageDF(.reproEnv$hashDetails, colour = "blue")
-      messageCache("The hashing details are available from .reproEnv$hashDetails")
+      messageCache("The hashing details are available from .reproEnv$hashDetails", verbose = verbose)
       rm("hashDetails", envir = .reproEnv)
     }, add = TRUE)
   }
@@ -130,7 +131,8 @@
 }
 
 
-.CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN, ...) {
+.CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN,
+                                verbose = getOption("reproducible.verbose", 1), ...) {
   messageCache("sideEffect argument is poorly tested. It may not function as desired")
   browser(expr = exists("sideE"))
   needDwd <- logical(0)
@@ -182,7 +184,7 @@
     }
     #}
   } else {
-    messageCache("  There was no record of files in sideEffects")
+    messageCache("  There was no record of files in sideEffects", verbose = verbose)
   }
 
   if (any(needDwd)) {
@@ -291,7 +293,7 @@
 
   # Class-specific message
   browser(expr = exists("dddd"))
-  .cacheMessage(output, fnDetails$functionName, fromMemoise = fromMemoise)
+  .cacheMessage(output, fnDetails$functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # This is protected from multiple-write to SQL collisions
   # .addTagsRepo(isInRepo, cacheRepo, lastOne, drv, conn = conn)
@@ -300,7 +302,7 @@
 
   browser(expr = exists("._getFromRepo_1"))
   if (sideEffect != FALSE) {
-    .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, ...)
+    .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, verbose = verbose, ...)
   }
 
   # This allows for any class specific things

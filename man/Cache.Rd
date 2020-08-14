@@ -23,7 +23,7 @@ Cache(
   sideEffect = FALSE,
   makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", 0),
+  verbose = getOption("reproducible.verbose", 1),
   cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
@@ -51,7 +51,7 @@ Cache(
   sideEffect = FALSE,
   makeCopy = FALSE,
   quick = getOption("reproducible.quick", FALSE),
-  verbose = getOption("reproducible.verbose", 0),
+  verbose = getOption("reproducible.verbose", 1),
   cacheId = NULL,
   useCache = getOption("reproducible.useCache", TRUE),
   useCloud = FALSE,
@@ -146,9 +146,11 @@ If set to \code{FALSE} (default), the contents of the file(s) are hashed.
 If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
 as paths, if they are file-backed.}
 
-\item{verbose}{Numeric, with 0 being off, 1 being a little, 2 being more verbose etc.
-Above 1 will output much more information about the internals of
-Caching, which may help diagnose Caching challenges.}
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{cacheId}{Character string. If passed, this will override the calculated hash
 of the inputs, and return the result from this cacheId in the cacheRepo.

@@ -37,6 +37,7 @@ setMethod(
 #' @param functionName A character string indicating the function name
 #' @param fromMemoise Logical. If \code{TRUE}, the message will be about
 #'        recovery from memoised copy
+#' @inheritParams Cache
 #'
 #' @author Eliot McIntire
 #' @export
@@ -46,7 +47,8 @@ setMethod(
 #' .cacheMessage(a, "mean")
 #'
 setGeneric(".cacheMessage", function(object, functionName,
-                                     fromMemoise = getOption("reproducible.useMemoise", TRUE)) {
+                                     fromMemoise = getOption("reproducible.useMemoise", TRUE),
+                                     verbose = getOption("reproducible.verbose", 1)) {
   standardGeneric(".cacheMessage")
 })
 
@@ -55,14 +57,14 @@ setGeneric(".cacheMessage", function(object, functionName,
 setMethod(
   ".cacheMessage",
   signature = "ANY",
-  definition = function(object, functionName, fromMemoise) {
+  definition = function(object, functionName, fromMemoise, verbose = getOption("reproducible.verbose", 1)) {
     if (isTRUE(fromMemoise)) {
-      messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName))
+      messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName), verbose = verbose)
     } else if (!is.na(fromMemoise)) {
       messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
-                           "adding to memoised copy...", sep = "")
+                           "adding to memoised copy...", sep = "", verbose = verbose)
     } else {
-      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName))
+      messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), verbose = verbose)
     }
 })
 
@@ -137,6 +139,7 @@ setMethod(
 #'
 #' @param object An R object
 #' @param create Logical. If TRUE, then it will create the path for cache.
+#' @inheritParams Cache
 #'
 #' @return A character string with a path to a cache repository.
 #'
@@ -147,7 +150,8 @@ setMethod(
 #' a <- "test"
 #' .checkCacheRepo(a) # no cache repository supplied
 #'
-setGeneric(".checkCacheRepo", function(object, create = FALSE) {
+setGeneric(".checkCacheRepo", function(object, create = FALSE,
+                                       verbose = getOption("reproducible.verbose", 1)) {
   standardGeneric(".checkCacheRepo")
 })
 
@@ -156,7 +160,7 @@ setGeneric(".checkCacheRepo", function(object, create = FALSE) {
 setMethod(
   ".checkCacheRepo",
   signature = "ANY",
-  definition = function(object, create) {
+  definition = function(object, create, verbose = getOption("reproducible.verbose", 1)) {
     cacheRepo <- tryCatch(checkPath(object, create), error = function(x) {
       cacheRepo <- if (isTRUE(nzchar(getOption("reproducible.cachePath")[1]))) {
         tmpDir <- .reproducibleTempCacheDir()
@@ -164,11 +168,11 @@ setMethod(
         #  If no, then user is aware and doesn't need a message
         if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
           messageCache("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
-                  "  this will not persist across R sessions.")
+                  "  this will not persist across R sessions.", verbose = verbose)
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        messageCache("No cacheRepo supplied. Using ",.reproducibleTempCacheDir())
+        messageCache("No cacheRepo supplied. Using ",.reproducibleTempCacheDir(), verbose = verbose)
         .reproducibleTempCacheDir()
       }
       checkPath(path = cacheRepo, create = create)

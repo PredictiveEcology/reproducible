@@ -9,11 +9,25 @@
 \usage{
 maskInputs(x, studyArea, ...)
 
-\method{maskInputs}{Raster}(x, studyArea, rasterToMatch, maskWithRTM = NULL, ...)
+\method{maskInputs}{Raster}(
+  x,
+  studyArea,
+  rasterToMatch,
+  maskWithRTM = NULL,
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 
-\method{maskInputs}{Spatial}(x, studyArea, rasterToMatch, maskWithRTM = FALSE, ...)
+\method{maskInputs}{Spatial}(
+  x,
+  studyArea,
+  rasterToMatch,
+  maskWithRTM = FALSE,
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 
-\method{maskInputs}{sf}(x, studyArea, ...)
+\method{maskInputs}{sf}(x, studyArea, verbose = getOption("reproducible.verbose", 1), ...)
 }
 \arguments{
 \item{x}{An object to do a geographic raster::mask/raster::intersect.
@@ -33,6 +47,12 @@ resolution and projection).
 See details in \code{\link{postProcess}}.}
 
 \item{maskWithRTM}{Logical. If \code{TRUE}, then the default,}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 This function can be used to mask inputs from data. Masking here is

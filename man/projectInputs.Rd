@@ -8,27 +8,49 @@
 \alias{projectInputs.Spatial}
 \title{Project \code{Raster*} or {Spatial*} or \code{sf} objects}
 \usage{
-projectInputs(x, targetCRS, ...)
+projectInputs(
+  x,
+  targetCRS,
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 
 \method{projectInputs}{default}(x, targetCRS, ...)
 
 \method{projectInputs}{Raster}(
   x,
   targetCRS = NULL,
+  verbose = getOption("reproducible.verbose", 1),
   rasterToMatch = NULL,
   cores = NULL,
   useGDAL = getOption("reproducible.useGDAL", TRUE),
   ...
 )
 
-\method{projectInputs}{sf}(x, targetCRS, ...)
+\method{projectInputs}{sf}(
+  x,
+  targetCRS,
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 
-\method{projectInputs}{Spatial}(x, targetCRS, ...)
+\method{projectInputs}{Spatial}(
+  x,
+  targetCRS,
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{Raster*}, \code{Spatial*} or \code{sf} object}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Passed to \code{\link[raster]{projectRaster}}.}
 

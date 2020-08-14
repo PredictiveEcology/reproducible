@@ -327,17 +327,19 @@ isAbsolutePath <- function(pathnames) {
 # This is so that we don't need to import from backports
 .isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 
+
 messagePrepInputs <- function(...) {
-  messageColoured(..., colour = "cyan")
+  messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"))
 }
 
 messageCache <- function(...) {
-  messageColoured(..., colour = "blue")
+  messageColoured(..., colour = getOption("reproducible.messageColourCache"))
 }
 
 messageQuestion <- function(..., verboseLevel = 0) {
   # force this message to print
-  messageColoured(..., colour = "green", verboseLevel = verboseLevel, verbose = 0)
+  messageColoured(..., colour = getOption("reproducible.messageColourQuestion"),
+                  verboseLevel = verboseLevel, verbose = 0)
 }
 
 messageColoured <- function(..., colour = NULL, verboseLevel = 1,
@@ -351,7 +353,7 @@ messageColoured <- function(..., colour = NULL, verboseLevel = 1,
     if (needCrayon && requireNamespace("crayon", quietly = TRUE)) {
       message(getFromNamespace(colour, "crayon")(paste0(...)))
     } else {
-      if (!isTRUE(.pkgEnv$.checkedCrayon)) {
+      if (!isTRUE(.pkgEnv$.checkedCrayon) && !.requireNamespace("crayon")) {
         message("To add colours to messages, install.packages('crayon')")
         .pkgEnv$.checkedCrayon <- TRUE
       }

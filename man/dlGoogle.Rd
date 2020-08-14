@@ -12,7 +12,8 @@ dlGoogle(
   skipDownloadMsg,
   destinationPath,
   overwrite,
-  needChecksums
+  needChecksums,
+  verbose = getOption("reproducible.verbose", 1)
 )
 }
 \arguments{
@@ -42,6 +43,12 @@ search for the file before attempting to download. Default for that option is
 
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 Download file from Google Drive

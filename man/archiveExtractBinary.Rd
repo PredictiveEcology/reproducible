@@ -5,7 +5,7 @@
 \alias{.archiveExtractBinary}
 \title{Tests if unrar or 7zip exist}
 \usage{
-.archiveExtractBinary()
+.archiveExtractBinary(verbose = getOption("reproducible.verbose", 1))
 }
 \value{
 unrar or 7zip path if exist, or NULL

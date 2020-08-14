@@ -68,6 +68,7 @@ checkGDALVersion <- function(version) {
 #'
 #' @author Eliot McIntire
 #' @export
+#' @inheritParams Cache
 #' @inheritParams projectInputs.Raster
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
@@ -107,7 +108,8 @@ checkGDALVersion <- function(version) {
 #'   plot(shp, add = TRUE)
 #' }
 #'
-fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE), ...) {
+fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGDAL", TRUE),
+                     verbose = getOption("reproducible.verbose", 1), ...) {
   if (!identical(.crs(y), .crs(x))) {
     if (!is(y, "sf")) {
       y <- spTransform(x = y, CRSobj = .crs(x))
@@ -125,7 +127,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
   }
 
   # need to double check that gdal executable exists before going down this path
-  attemptGDAL <- attemptGDAL(x, useGDAL)
+  attemptGDAL <- attemptGDAL(x, useGDAL, verbose = verbose)
 
   browser(expr = exists("._fastMask_2"))
 
@@ -291,7 +293,8 @@ findGDAL <- function() {
   }
 }
 
-attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
+attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE),
+                        verbose = getOption("reproducible.verbose", 1)) {
   if (requireNamespace("gdalUtils", quietly = TRUE)) {
     browser(expr = exists("._attemptGDAL_1"))
     crsIsNA <- is.na(.crs(x))
@@ -303,15 +306,15 @@ attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE)) {
       findGDAL()
     } else {
       if (crsIsNA && shouldUseGDAL)
-        messagePrepInputs("Can't use GDAL because crs is NA")
+        messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
       if (cpim && isTRUEuseGDAL)
-        messagePrepInputs("useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
-                "useGDAL = 'force' to override")
+        messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
+                "useGDAL = 'force' to override", verbose = verbose)
 
       FALSE
     }
   } else {
-    messagePrepInputs("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')")
+    messagePrepInputs("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')", verbose = verbose)
     attemptGDAL <- FALSE
   }
   attemptGDAL

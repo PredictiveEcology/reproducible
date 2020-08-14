@@ -12,6 +12,7 @@
 #' @param checksumFile A character string indicating the absolute path to the \code{CHECKSUMS.txt}
 #'                     file.
 #'
+#' @inheritParams Cache
 #' @author Eliot McIntire
 #' @export
 #' @include checksums.R
@@ -20,6 +21,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          checksumFile, dlFun = NULL,
                          checkSums, url, needChecksums,
                          overwrite = getOption("reproducible.overwrite", TRUE),
+                         verbose = getOption("reproducible.verbose", 1),
                          purge = FALSE, .tempPath, ...) {
   browser(expr = exists("._downloadFile_1"))
   if (missing(.tempPath)) {
@@ -62,7 +64,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
                 checksumFile = checksumFile,
                 path = destinationPath,
                 quickCheck = quick,
-                write = FALSE
+                write = FALSE,
+                verbose = verbose
               )
             }
 
@@ -106,7 +109,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
                                               dlFun = dlFun,
                                               destinationPath = destinationPath,
                                               overwrite = overwrite,
-                                              needChecksums = needChecksums, .tempPath = .tempPath, ...))
+                                              needChecksums = needChecksums, verbose = verbose,
+                                              .tempPath = .tempPath, ...))
         if (is(downloadResults, "try-error")) {
           if (isTRUE(grepl("already exists", downloadResults)))
             stop(downloadResults)
@@ -132,7 +136,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
                 checksumFile = checksumFile,
                 path = destinationPath,
                 quickCheck = quick,
-                write = FALSE
+                write = FALSE,
+                verbose = verbose
               )
             isOK <- checkSums[checkSums$expectedFile %in% basename(fileToDownload) |
                                 checkSums$actualFile %in% basename(fileToDownload),]$result
@@ -218,14 +223,14 @@ downloadFile <- function(archive, targetFile, neededFiles,
       if (is.null(targetFile)) {
         messagePrepInputs("   Skipping download because all needed files are listed in ",
                 "CHECKSUMS.txt file and are present.",
-                " If this is not correct, rerun prepInputs with purge = TRUE")
+                " If this is not correct, rerun prepInputs with purge = TRUE", verbose = verbose)
       } else {
         if (exists("extractedFromArchive", inherits = FALSE)) {
           messagePrepInputs("  Skipping download: ", paste(neededFiles, collapse = ", ") ,
                   ": extracted from local archive:\n    ",
-                  archive)
+                  archive, verbose = verbose)
         } else {
-          messagePrepInputs("  Skipping download: ", paste(neededFiles, collapse = ", ") ," already present")
+          messagePrepInputs("  Skipping download: ", paste(neededFiles, collapse = ", ") ," already present", verbose = verbose)
         }
       }
     }
@@ -279,7 +284,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 #'
 dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                      checkSums, skipDownloadMsg, destinationPath,
-                     overwrite, needChecksums) {
+                     overwrite, needChecksums, verbose = getOption("reproducible.verbose", 1)) {
   .requireNamespace("googledrive", stopOnFALSE = TRUE)
 
   if (missing(destinationPath)) {
@@ -287,19 +292,20 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   }
   downloadFilename <- assessGoogle(url = url, archive = archive,
                                    targetFile = targetFile,
-                                   destinationPath = destinationPath)
+                                   destinationPath = destinationPath,
+                                   verbose = verbose)
 
   destFile <- file.path(destinationPath, basename(downloadFilename))
   if (!isTRUE(checkSums[checkSums$expectedFile ==  basename(destFile), ]$result == "OK")) {
-    messagePrepInputs("  Downloading from Google Drive.")
+    messagePrepInputs("  Downloading from Google Drive.", verbose = verbose)
     fs <- attr(archive, "fileSize")
     if (is.null(fs))
-      fs <- attr(assessGoogle(url),"fileSize")
+      fs <- attr(assessGoogle(url, verbose = verbose),"fileSize")
     class(fs) <- "object_size"
     isLargeFile <- if (is.null(fs)) FALSE else fs > 1e6
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
         !.isFALSE(getOption("reproducible.futurePlan"))) {
-      messagePrepInputs("Downloading a large file")
+      messagePrepInputs("Downloading a large file", verbose = verbose)
       fp <- future::plan()
       if (!is(fp, getOption("reproducible.futurePlan"))) {
         fpNew <- getOption("reproducible.futurePlan")
@@ -337,7 +343,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                                                    overwrite = overwrite, verbose = TRUE)))
     }
   } else {
-    messagePrepInputs(skipDownloadMsg)
+    messagePrepInputs(skipDownloadMsg, verbose = verbose)
     needChecksums <- 0
   }
   return(list(destFile = destFile, needChecksums = needChecksums))
@@ -353,7 +359,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
 #' @inheritParams preProcess
-dlGeneric <- function(url, needChecksums, destinationPath) {
+dlGeneric <- function(url, needChecksums, destinationPath, verbose = getOption("reproducible.verbose", 1)) {
   .requireNamespace("httr", stopOnFALSE = TRUE)
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
@@ -366,7 +372,7 @@ dlGeneric <- function(url, needChecksums, destinationPath) {
   # if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
   #   stop("Can not access url ", url)
 
-  messagePrepInputs("  Downloading ", url, " ...")
+  messagePrepInputs("  Downloading ", url, " ...", verbose = verbose)
 
   ua <- httr::user_agent(getOption("reproducible.useragent"))
   request <- suppressWarnings(
@@ -382,7 +388,8 @@ dlGeneric <- function(url, needChecksums, destinationPath) {
 #' @inheritParams prepInputs
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, skipDownloadMsg,
-                           destinationPath, overwrite, needChecksums, .tempPath, ...) {
+                           destinationPath, overwrite, needChecksums, .tempPath,
+                           verbose = getOption("reproducible.verbose", 1), ...) {
   browser(expr = exists("._downloadRemote_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
@@ -447,7 +454,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             skipDownloadMsg = skipDownloadMsg,
             destinationPath = .tempPath,
             overwrite = overwrite,
-            needChecksums = needChecksums
+            needChecksums = needChecksums,
+            verbose = verbose
           )
 
         } else if (grepl("dl.dropbox.com", url)) {
@@ -497,11 +505,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
       #}
     } else {
-      messagePrepInputs(skipDownloadMsg)
+      messagePrepInputs(skipDownloadMsg, verbose = verbose)
       downloadResults <- list(needChecksums = 0, destFile = NULL)
     }
   } else {
-    messagePrepInputs("No downloading; no url")
+    messagePrepInputs("No downloading; no url", verbose = verbose)
   }
   downloadResults
 }
@@ -520,7 +528,8 @@ missingFiles <- function(files, checkSums, targetFile) {
 }
 
 assessGoogle <- function(url, archive = NULL, targetFile = NULL,
-                         destinationPath = getOption("reproducible.destinationPath")) {
+                         destinationPath = getOption("reproducible.destinationPath"),
+                         verbose = getOption("reproducible.verbose", 1)) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   if (.isRstudioServer()) {
     .requireNamespace("httr", stopOnFALSE = TRUE)
@@ -534,7 +543,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)
       class(fileSize) <- "object_size"
-      messagePrepInputs("  File on Google Drive is ", format(fileSize, units = "auto"))
+      messagePrepInputs("  File on Google Drive is ", format(fileSize, units = "auto"), verbose = verbose)
     }
     archive <- .isArchive(fileAttr$name)
     if (is.null(archive)) {
