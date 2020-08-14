@@ -4,8 +4,14 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 1.2.1
 ==============
 ## New features
-* harmonized message colours: `blue` for all `Cache` functions; `cyan` for all `prepInputs` functions
+* harmonized message colours: `blue` for all `Cache` functions; `cyan` for all `prepInputs` functions; `green` for questions that require user input. These are therefore user-visible colour changes.
 * improved messaging for `Cache` cases where a `file.link` is used instead of saving.
+* `postProcess` and family now have `filename2 = NULL` as the default, so not saved to disk. This is a change.
+
+## Bug fixes
+* `RasterStack` objects were not correctly saved to disk under some conditions in `postProcess` - fixed
+* several minor
+
 
 version 1.2.0
 ==============
