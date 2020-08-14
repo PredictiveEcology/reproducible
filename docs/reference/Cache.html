@@ -90,7 +90,7 @@ will recover the object from RAM and is normally much faster." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
       </span>
     </div>
 
@@ -397,7 +397,7 @@ object (in order to clone an existing connection).</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>As with <code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code>, returns the value of the
+    <p>As with <code>archivist::cache</code>, returns the value of the
 function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
@@ -425,7 +425,7 @@ though quite common, cases by:</p><ol>
         Caching</em>.</p></li>
 </ol>
 
-<p>Caching R objects using <code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code> has five important limitations:</p><ol>
+<p>Caching R objects using <code>archivist::cache</code> has five important limitations:</p><ol>
 <li><p>the <span class="pkg">archivist</span> package detects different environments as different;</p></li>
 <li><p>it also does not detect S4 methods correctly due to method inheritance;</p></li>
 <li><p>it does not detect objects that have file-based storage of information
@@ -445,7 +445,7 @@ That way, artifacts can be shown (using <code>showCache</code>) or removed (usin
 <code>clearCache</code>) selectively, based on their access dates, rather than only
 by their creation dates. See example in <code><a href='viewCache.html'>clearCache</a></code>.
 <code>Cache</code> (uppercase C) is used here so that it is not confused with, and does
-not mask, the <code><a href='https://rdrr.io/pkg/archivist/man/cache.html'>archivist::cache</a></code> function.</p>
+not mask, the <code>archivist::cache</code> function.</p>
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
     <p>As indicated above, several objects require pre-treatment before
@@ -615,17 +615,17 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 <span class='no'>uniqueUserTags</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"thisIsUnique"</span>, <span class='st'>"reallyUnique"</span>)
 <span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>,
                   <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>) <span class='co'># sets new value to Cache</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters):  246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters):  246 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 71cd24ec3b0d0cac        thisIsUnique          thisIsUnique
 #&gt;  2: 71cd24ec3b0d0cac        reallyUnique          reallyUnique
 #&gt;  3: 71cd24ec3b0d0cac            function       centralTendency
 #&gt;  4: 71cd24ec3b0d0cac               class               numeric
 #&gt;  5: 71cd24ec3b0d0cac         object.size                   984
-#&gt;  6: 71cd24ec3b0d0cac            accessed   2020-08-13 11:26:11
+#&gt;  6: 71cd24ec3b0d0cac            accessed   2020-08-13 22:00:50
 #&gt;  7: 71cd24ec3b0d0cac             inCloud                 FALSE
 #&gt;  8: 71cd24ec3b0d0cac          resultHash                      
-#&gt;  9: 71cd24ec3b0d0cac   elapsedTimeDigest     0.0003521442 secs
-#&gt; 10: 71cd24ec3b0d0cac elapsedTimeFirstRun     8.845329e-05 secs
+#&gt;  9: 71cd24ec3b0d0cac   elapsedTimeDigest      0.001003027 secs
+#&gt; 10: 71cd24ec3b0d0cac elapsedTimeFirstRun      0.001002073 secs
 #&gt; 11: 71cd24ec3b0d0cac      otherFunctions               saveRDS
 #&gt; 12: 71cd24ec3b0d0cac      otherFunctions               do.call
 #&gt; 13: 71cd24ec3b0d0cac      otherFunctions      build_site_local
@@ -641,29 +641,29 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 #&gt; 23: 71cd24ec3b0d0cac           file.size                   143
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-13 11:26:12
-#&gt;  2: 2020-08-13 11:26:12
-#&gt;  3: 2020-08-13 11:26:12
-#&gt;  4: 2020-08-13 11:26:12
-#&gt;  5: 2020-08-13 11:26:12
-#&gt;  6: 2020-08-13 11:26:12
-#&gt;  7: 2020-08-13 11:26:12
-#&gt;  8: 2020-08-13 11:26:12
-#&gt;  9: 2020-08-13 11:26:12
-#&gt; 10: 2020-08-13 11:26:12
-#&gt; 11: 2020-08-13 11:26:12
-#&gt; 12: 2020-08-13 11:26:12
-#&gt; 13: 2020-08-13 11:26:12
-#&gt; 14: 2020-08-13 11:26:12
-#&gt; 15: 2020-08-13 11:26:12
-#&gt; 16: 2020-08-13 11:26:12
-#&gt; 17: 2020-08-13 11:26:12
-#&gt; 18: 2020-08-13 11:26:12
-#&gt; 19: 2020-08-13 11:26:12
-#&gt; 20: 2020-08-13 11:26:12
-#&gt; 21: 2020-08-13 11:26:12
-#&gt; 22: 2020-08-13 11:26:12
-#&gt; 23: 2020-08-13 11:26:12
+#&gt;  1: 2020-08-13 22:00:50
+#&gt;  2: 2020-08-13 22:00:50
+#&gt;  3: 2020-08-13 22:00:50
+#&gt;  4: 2020-08-13 22:00:50
+#&gt;  5: 2020-08-13 22:00:50
+#&gt;  6: 2020-08-13 22:00:50
+#&gt;  7: 2020-08-13 22:00:50
+#&gt;  8: 2020-08-13 22:00:50
+#&gt;  9: 2020-08-13 22:00:50
+#&gt; 10: 2020-08-13 22:00:50
+#&gt; 11: 2020-08-13 22:00:50
+#&gt; 12: 2020-08-13 22:00:50
+#&gt; 13: 2020-08-13 22:00:50
+#&gt; 14: 2020-08-13 22:00:50
+#&gt; 15: 2020-08-13 22:00:50
+#&gt; 16: 2020-08-13 22:00:50
+#&gt; 17: 2020-08-13 22:00:50
+#&gt; 18: 2020-08-13 22:00:50
+#&gt; 19: 2020-08-13 22:00:50
+#&gt; 20: 2020-08-13 22:00:50
+#&gt; 21: 2020-08-13 22:00:50
+#&gt; 22: 2020-08-13 22:00:50
+#&gt; 23: 2020-08-13 22:00:50
 #&gt;             createdDate</div><div class='input'>
 <span class='co'># During development, we often redefine function internals</span>
 <span class='no'>centralTendency</span> <span class='kw'>&lt;-</span> <span class='kw'>function</span>(<span class='no'>x</span>)
@@ -672,17 +672,17 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 <span class='co'>#   never again be defined that way. Here, because of userTags being the same,</span>
 <span class='co'>#   it will replace the entry in the Cache, effetively overwriting it, even though</span>
 <span class='co'>#   it has a different cacheId</span>
-<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>)</div><div class='output co'>#&gt; <span class='message'> ------ devMode -------</span></div><div class='output co'>#&gt; <span class='message'>This call to cache will replace</span></div><div class='output co'>#&gt; <span class='message'>... artifact with cacheId 71cd24ec3b0d0cac</span></div><div class='output co'>#&gt; <span class='message'>... different .FUN</span></div><div class='output co'>#&gt; <span class='message'> ------ end devMode -------</span></div><div class='output co'>#&gt; <span class='message'>Overwriting Cache entry with userTags: 'thisIsUnique, reallyUnique, centralTendency'</span></div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters):  246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters):  246 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>)</div><div class='output co'>#&gt; <span class='message'> ------ devMode -------</span></div><div class='output co'>#&gt; <span class='message'>This call to cache will replace</span></div><div class='output co'>#&gt; <span class='message'>... artifact with cacheId 71cd24ec3b0d0cac</span></div><div class='output co'>#&gt; <span class='message'>... different .FUN</span></div><div class='output co'>#&gt; <span class='message'> ------ end devMode -------</span></div><div class='output co'>#&gt; <span class='message'>Overwriting Cache entry with userTags: 'thisIsUnique, reallyUnique, centralTendency'</span></div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 632cd06f30e111be        thisIsUnique          thisIsUnique
 #&gt;  2: 632cd06f30e111be        reallyUnique          reallyUnique
 #&gt;  3: 632cd06f30e111be            function       centralTendency
 #&gt;  4: 632cd06f30e111be               class               numeric
 #&gt;  5: 632cd06f30e111be         object.size                   984
-#&gt;  6: 632cd06f30e111be            accessed   2020-08-13 11:26:12
+#&gt;  6: 632cd06f30e111be            accessed   2020-08-13 22:00:51
 #&gt;  7: 632cd06f30e111be             inCloud                 FALSE
 #&gt;  8: 632cd06f30e111be          resultHash                      
-#&gt;  9: 632cd06f30e111be   elapsedTimeDigest     0.0003416538 secs
-#&gt; 10: 632cd06f30e111be elapsedTimeFirstRun     0.0001215935 secs
+#&gt;  9: 632cd06f30e111be   elapsedTimeDigest      0.001002073 secs
+#&gt; 10: 632cd06f30e111be elapsedTimeFirstRun      0.001234055 secs
 #&gt; 11: 632cd06f30e111be      otherFunctions               saveRDS
 #&gt; 12: 632cd06f30e111be      otherFunctions               do.call
 #&gt; 13: 632cd06f30e111be      otherFunctions      build_site_local
@@ -698,29 +698,29 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 #&gt; 23: 632cd06f30e111be           file.size                   142
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-13 11:26:12
-#&gt;  2: 2020-08-13 11:26:12
-#&gt;  3: 2020-08-13 11:26:12
-#&gt;  4: 2020-08-13 11:26:12
-#&gt;  5: 2020-08-13 11:26:12
-#&gt;  6: 2020-08-13 11:26:12
-#&gt;  7: 2020-08-13 11:26:12
-#&gt;  8: 2020-08-13 11:26:12
-#&gt;  9: 2020-08-13 11:26:12
-#&gt; 10: 2020-08-13 11:26:12
-#&gt; 11: 2020-08-13 11:26:12
-#&gt; 12: 2020-08-13 11:26:12
-#&gt; 13: 2020-08-13 11:26:12
-#&gt; 14: 2020-08-13 11:26:12
-#&gt; 15: 2020-08-13 11:26:12
-#&gt; 16: 2020-08-13 11:26:12
-#&gt; 17: 2020-08-13 11:26:12
-#&gt; 18: 2020-08-13 11:26:12
-#&gt; 19: 2020-08-13 11:26:12
-#&gt; 20: 2020-08-13 11:26:12
-#&gt; 21: 2020-08-13 11:26:12
-#&gt; 22: 2020-08-13 11:26:12
-#&gt; 23: 2020-08-13 11:26:12
+#&gt;  1: 2020-08-13 22:00:51
+#&gt;  2: 2020-08-13 22:00:51
+#&gt;  3: 2020-08-13 22:00:51
+#&gt;  4: 2020-08-13 22:00:51
+#&gt;  5: 2020-08-13 22:00:51
+#&gt;  6: 2020-08-13 22:00:51
+#&gt;  7: 2020-08-13 22:00:51
+#&gt;  8: 2020-08-13 22:00:51
+#&gt;  9: 2020-08-13 22:00:51
+#&gt; 10: 2020-08-13 22:00:51
+#&gt; 11: 2020-08-13 22:00:51
+#&gt; 12: 2020-08-13 22:00:51
+#&gt; 13: 2020-08-13 22:00:51
+#&gt; 14: 2020-08-13 22:00:51
+#&gt; 15: 2020-08-13 22:00:51
+#&gt; 16: 2020-08-13 22:00:51
+#&gt; 17: 2020-08-13 22:00:51
+#&gt; 18: 2020-08-13 22:00:51
+#&gt; 19: 2020-08-13 22:00:51
+#&gt; 20: 2020-08-13 22:00:51
+#&gt; 21: 2020-08-13 22:00:51
+#&gt; 22: 2020-08-13 22:00:51
+#&gt; 23: 2020-08-13 22:00:51
 #&gt;             createdDate</div><div class='input'>
 <span class='co'># If it finds it by cacheID, doesn't matter what the userTags are</span>
 <span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"thisIsUnique"</span>)</div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (632cd06f30e111be.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous centralTendency call, </span></div><div class='input'>
@@ -736,7 +736,7 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
     <span class='fu'><a href='https://rdrr.io/r/base/Sys.setenv.html'>Sys.setenv</a></span>(<span class='kw'>PGUSER</span> <span class='kw'>=</span> <span class='st'>"mydbuser"</span>)
     <span class='fu'><a href='https://rdrr.io/r/base/Sys.setenv.html'>Sys.setenv</a></span>(<span class='kw'>PGPASSWORD</span> <span class='kw'>=</span> <span class='st'>"mysecurepassword"</span>)
 
-    <span class='no'>conn</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>DBI</span><span class='kw ns'>::</span><span class='fu'><a href='https://dbi.r-dbi.org/reference/dbConnect.html'>dbConnect</a></span>(<span class='kw pkg'>RPostgres</span><span class='kw ns'>::</span><span class='fu'><a href='https://rpostgres.r-dbi.org/reference/Postgres.html'>Postgres</a></span>())
+    <span class='no'>conn</span> <span class='kw'>&lt;-</span> <span class='kw pkg'>DBI</span><span class='kw ns'>::</span><span class='fu'><a href='https://dbi.r-dbi.org/reference/dbConnect.html'>dbConnect</a></span>(<span class='kw pkg'>RPostgres</span><span class='kw ns'>::</span><span class='fu'>Postgres</span>())
     <span class='fu'><a href='https://rdrr.io/r/base/options.html'>options</a></span>(<span class='st'>"reproducible.conn"</span> <span class='kw'>=</span> <span class='no'>conn</span>)
 
     <span class='co'># Will use postgres for cache data table, and tempdir() for saved R objects</span>

@@ -81,7 +81,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
       </span>
     </div>
 
@@ -147,6 +147,30 @@
 <h2 class="hasAnchor">
 <a href="#new-features" class="anchor"></a>New features</h2>
 <ul>
+<li>harmonized message colours: <code>blue</code> for all <code>Cache</code> functions; <code>cyan</code> for all <code>prepInputs</code> functions; <code>green</code> for questions that require user input. These are therefore user-visible colour changes.</li>
+<li>improved messaging for <code>Cache</code> cases where a <code>file.link</code> is used instead of saving.</li>
+<li>
+<code>postProcess</code> and family now have <code>filename2 = NULL</code> as the default, so not saved to disk. This is a change.</li>
+</ul>
+</div>
+<div id="bug-fixes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#bug-fixes" class="anchor"></a>Bug fixes</h2>
+<ul>
+<li>
+<code>RasterStack</code> objects were not correctly saved to disk under some conditions in <code>postProcess</code> - fixed</li>
+<li>several minor</li>
+</ul>
+</div>
+</div>
+    <div id="version-120" class="section level1">
+<h1 class="page-header" data-toc-text="1.2.0">
+<a href="#version-120" class="anchor"></a>version 1.2.0<small> 2020-08-03 </small>
+</h1>
+<div id="new-features-1" class="section level2">
+<h2 class="hasAnchor">
+<a href="#new-features-1" class="anchor"></a>New features</h2>
+<ul>
 <li>
 <code>postProcess</code> now uses a simpler single call to <code>gdalwarp</code>, if available, for <code>RasterLayer</code> class to accomplish <code>cropInputs</code>, <code>projectInputs</code>, <code>maskInputs</code>, and <code>writeOutputs</code> all at once. This should be faster, simpler and, perhaps, more stable. It will only be invoked if the <code>RasterLayer</code> is too large to fit into RAM. To force it to be used the user must set <code>useGDAL = "force"</code> in <code>prepInputs</code> or <code>postProcess</code> or globally with <code><a href="https://rdrr.io/r/base/options.html">options("reproducible.useGDAL" = "force")</a></code>
 </li>
@@ -173,9 +197,9 @@
 <li>net reduction in number of packages that are imported from by 14. Removed completely: <code>backports</code>, <code>memoise</code>, <code>quickPlot</code>, <code>R.utils</code>, <code>remotes</code>, <code>tools</code>, and <code>versions</code>; moved to Suggests: <code>fastdigest</code>, <code>gdalUtils</code>, <code>googledrive</code>, <code>httr</code>, <code>qs</code>, <code>rgdal</code>, <code>sf</code>, <code>testthat</code>; added: <code>Require</code>. Now there are 12 non-base packages listed in Imports. This is down from 31 prior to Ver 1.0.0.</li>
 </ul>
 </div>
-<div id="bug-fixes" class="section level2">
+<div id="bug-fixes-1" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes" class="anchor"></a>bug fixes</h2>
+<a href="#bug-fixes-1" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>fix over-wide tables in PDF manual (<a href='https://github.com/PredictiveEcology/reproducible/issues/144'>#144</a>)</li>
 <li>use <code>file.link</code> not <code>file.symlink</code> for <code>saveToCache</code>. This would have resulted in C Stack overflow errors due to missing original file in the <code>file.symlink</code>
@@ -192,9 +216,9 @@
 <h1 class="page-header" data-toc-text="1.1.1">
 <a href="#version-111" class="anchor"></a>version 1.1.1<small> 2020-05-20 </small>
 </h1>
-<div id="new-features-1" class="section level2">
+<div id="new-features-2" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-1" class="anchor"></a>New features</h2>
+<a href="#new-features-2" class="anchor"></a>New features</h2>
 <ul>
 <li>none</li>
 </ul>
@@ -206,9 +230,9 @@
 <li>none</li>
 </ul>
 </div>
-<div id="bug-fixes-1" class="section level2">
+<div id="bug-fixes-2" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-1" class="anchor"></a>bug fixes</h2>
+<a href="#bug-fixes-2" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>fix CRAN test failure when <code>file.link</code> does not succeed.</li>
 </ul>
@@ -218,9 +242,9 @@
 <h1 class="page-header" data-toc-text="1.1.0">
 <a href="#version-110" class="anchor"></a>version 1.1.0<small> 2020-05-15 </small>
 </h1>
-<div id="new-features-2" class="section level2">
+<div id="new-features-3" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-2" class="anchor"></a>New features</h2>
+<a href="#new-features-3" class="anchor"></a>New features</h2>
 <ul>
 <li>begin to accommodate changes in GDAL/PROJ and associated updates to other spatial packages. More updates are expected as other spatial packages (namely <code>raster</code>) are updated.</li>
 <li>can now change <code><a href="https://rdrr.io/r/base/options.html">options('reproducible.cacheSaveFormat')</a></code> on the fly; cache will look for the file by <code>cacheId</code> and write it using <code><a href="https://rdrr.io/r/base/options.html">options('reproducible.cacheSaveFormat')</a></code>. If it is in another format, Cache will load it and resave it with the new format. Experimental still.</li>
@@ -246,9 +270,9 @@
 <li>none</li>
 </ul>
 </div>
-<div id="bug-fixes-2" class="section level2">
+<div id="bug-fixes-3" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-2" class="anchor"></a>bug fixes</h2>
+<a href="#bug-fixes-3" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>
 <code>Copy</code> only creates a temporary directory for filebacked rasters; previously any <code>Copy</code> command was creating a temporary directory, regardless of whether it was needed</li>
@@ -270,9 +294,9 @@
 <h1 class="page-header" data-toc-text="1.0.0">
 <a href="#version-100" class="anchor"></a>version 1.0.0<small> 2020-02-20 </small>
 </h1>
-<div id="new-features-3" class="section level2">
+<div id="new-features-4" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-3" class="anchor"></a>New features</h2>
+<a href="#new-features-4" class="anchor"></a>New features</h2>
 <ul>
 <li>This version is not backwards-compatible out of the box. To maintain backwards compatibility, set: <code><a href="https://rdrr.io/r/base/options.html">options("reproducible.useDBI" = FALSE)</a></code>
 </li>
@@ -295,9 +319,9 @@
 <li>removed imports for <code>bitops</code>, <code>dplyr</code>, <code>fasterize</code>, <code>flock</code>, <code>git2r</code>, <code>lubridate</code>, <code>RcppArmadillo</code>, <code>RCurl</code> and <code>tidyselect</code>. Some of these went to Suggests.</li>
 </ul>
 </div>
-<div id="bug-fixes-3" class="section level2">
+<div id="bug-fixes-4" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-3" class="anchor"></a>bug fixes</h2>
+<a href="#bug-fixes-4" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>
 <code>postProcess</code> calls that use GDAL made more robust (including <a href='https://github.com/PredictiveEcology/reproducible/issues/93'>#93</a>).</li>
@@ -317,17 +341,17 @@
 </li>
 </ul>
 </div>
-<div id="new-features-4" class="section level2">
+<div id="new-features-5" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-4" class="anchor"></a>New features</h2>
+<a href="#new-features-5" class="anchor"></a>New features</h2>
 <ul>
 <li>new option: <code>reproducible.showSimilarDepth</code> allows for a deeper assessment of nested lists for differences between the nearest cached object and the present object. This greater depth may allow more fine tuned understanding of why an object is not correctly caching</li>
 <li>for downloading large files from GoogleDrive (currently only implemented), if user has set <code><a href="https://rdrr.io/r/base/options.html">options("reproducible.futurePlan")</a></code> to something other than <code>FALSE</code>, then it will show download progress if the file is “large”.</li>
 </ul>
 </div>
-<div id="bug-fixes-4" class="section level2">
+<div id="bug-fixes-5" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-4" class="anchor"></a>bug fixes</h2>
+<a href="#bug-fixes-5" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>Several minor, edge cases were detected and fixed.</li>
 </ul>
@@ -344,9 +368,9 @@
 <li>made compatible with <code>googledrive</code> v 1.0.0 (<a href='https://github.com/PredictiveEcology/reproducible/issues/119'>#119</a>)</li>
 </ul>
 </div>
-<div id="new-features-5" class="section level2">
+<div id="new-features-6" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-5" class="anchor"></a>New features</h2>
+<a href="#new-features-6" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <code>pkgDep2</code>, a new convenience function to get the dependencies of the “first order” dependencies.</li>
@@ -355,9 +379,9 @@
 </li>
 </ul>
 </div>
-<div id="bug-fixes-5" class="section level2">
+<div id="bug-fixes-6" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-5" class="anchor"></a>bug fixes</h2>
+<a href="#bug-fixes-6" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>
 <code>pkgDep</code> was becoming unreliable for unknown reasons. It has been reimplemented, much faster, without memoising. The speed gains should be immediately noticeable (6 second to 0.1 second for <code><a href="https://Require.predictiveecology.org/reference/pkgDep.html">pkgDep("reproducible")</a></code>)</li>
@@ -369,9 +393,9 @@
 <h1 class="page-header" data-toc-text="0.2.9">
 <a href="#version-029" class="anchor"></a>version 0.2.9<small> 2019-07-09 </small>
 </h1>
-<div id="new-features-6" class="section level2">
+<div id="new-features-7" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-6" class="anchor"></a>New features</h2>
+<a href="#new-features-7" class="anchor"></a>New features</h2>
 <ul>
 <li>Cache has 2 new arguments, <code>useCloud</code> and <code>cloudFolderID</code>. This is a new approach to cloud caching. It has been tested with file backed <code>RasterLayer</code>, <code>RasterStack</code> and <code>RasterBrick</code> and all normal R objects. It will not work for any other class of disk-backed files, e.g., <code>ff</code> or <code>bigmatrix</code>, nor is it likely to work for R6 class objects.</li>
 <li>Slowly deprecating cloudCache and family of functions in favour of a new approach using arguments to <code>Cache</code>, i.e., <code>useCache</code> and <code>cloudFolderID</code>
@@ -380,9 +404,9 @@
 <code>downloadData</code> from Google Drive now protects against HTTP2 error by capturing error and retrying. This is a curl issue for interrupted connections.</li>
 </ul>
 </div>
-<div id="bug-fixes-6" class="section level2">
+<div id="bug-fixes-7" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-6" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-7" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>fixes for <code>rcnst</code> errors on R-devel, tested using <code><a href="https://devtools.r-lib.org//reference/check.html">devtools::check(env_vars = list("R_COMPILE_PKGS"=1, "R_JIT_STRATEGY"=4, "R_CHECK_CONSTANTS"=5))</a></code>
 </li>
@@ -394,9 +418,9 @@
 <h1 class="page-header" data-toc-text="0.2.8">
 <a href="#version-028" class="anchor"></a>version 0.2.8<small> 2019-03-18 </small>
 </h1>
-<div id="new-features-7" class="section level2">
+<div id="new-features-8" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-7" class="anchor"></a>New features</h2>
+<a href="#new-features-8" class="anchor"></a>New features</h2>
 <ul>
 <li>new functions for accessing specific items from the <code>cacheRepo</code>: <code>getArtifact</code>, <code>getCacheId</code>, <code>getUserTags</code>
 </li>
@@ -405,9 +429,9 @@
 <li>removed all <code>Rcpp</code> functionality as the functions were no longer faster than their R base alternatives.</li>
 </ul>
 </div>
-<div id="bug-fixes-7" class="section level2">
+<div id="bug-fixes-8" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-7" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-8" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>
 <code>prepInputs</code> was not correctly passing <code>useCache</code>
@@ -422,9 +446,9 @@
 <h1 class="page-header" data-toc-text="0.2.7">
 <a href="#version-027" class="anchor"></a>version 0.2.7<small> 2019-03-07 </small>
 </h1>
-<div id="new-features-8" class="section level2">
+<div id="new-features-9" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-8" class="anchor"></a>New features</h2>
+<a href="#new-features-9" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <code>CHECKSUMS.txt</code> should now be ordered consistently across operating systems (note: <code><a href="https://rdrr.io/r/base/order.html">base::order</a></code> will not succeed in doing this –&gt; now using <code>.orderDotsUnderscoreFirst</code>)</li>
@@ -434,9 +458,9 @@
 <li>Experimental support within the <code>postProcess</code> family for <code>sf</code> class objects</li>
 </ul>
 </div>
-<div id="bug-fixes-8" class="section level2">
+<div id="bug-fixes-9" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-8" class="anchor"></a>bug fixes</h2>
+<a href="#bug-fixes-9" class="anchor"></a>bug fixes</h2>
 <ul>
 <li>mostly minor</li>
 <li>
@@ -455,9 +479,9 @@
 <li>remove <code>tibble</code> from Imports as it’s no longer being used</li>
 </ul>
 </div>
-<div id="new-features-9" class="section level2">
+<div id="new-features-10" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-9" class="anchor"></a>New features</h2>
+<a href="#new-features-10" class="anchor"></a>New features</h2>
 <ul>
 <li>remove <code>%&gt;%</code> pipe that was long ago deprecated. User should use <code><a href="../reference/pipe.html">%C%</a></code> if they want a pipe that is Cache-aware. See examples.</li>
 <li>Full rewrite of all <code>options</code> descriptions now in <code>reproducible</code>, see <code><a href="../reference/reproducibleOptions.html">?reproducibleOptions</a></code>
@@ -475,9 +499,9 @@
 <li>remove <code><a href="https://rdrr.io/pkg/fastdigest/man/fastdigest.html">fastdigest::fastdigest</a></code> as it is not return the identical hash across operating systems</li>
 </ul>
 </div>
-<div id="bug-fixes-9" class="section level2">
+<div id="bug-fixes-10" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-9" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-10" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>
 <code>prepInputs</code> on GIS objects that don’t use <code><a href="https://rdrr.io/pkg/raster/man/raster.html">raster::raster</a></code> to load object were skipping <code>postProcess</code>. Fixed.</li>
@@ -501,9 +525,9 @@
 </li>
 </ul>
 </div>
-<div id="new-features-10" class="section level2">
+<div id="new-features-11" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-10" class="anchor"></a>New features</h2>
+<a href="#new-features-11" class="anchor"></a>New features</h2>
 <ul>
 <li><p>New value possible for <code><a href="https://rdrr.io/r/base/options.html">options(reproducible.useCache = 'overwrite')</a></code>, which allows use of <code>Cache</code> in cases where the function call has an entry in the <code>cacheRepo</code>, will purge it and add the output of the current call instead.</p></li>
 <li><p>New option <code>reproducible.inputPaths</code> (default <code>NULL</code>) and <code>reproducible.inputPathsRecursive</code> (default <code>FALSE</code>), which will be used in <code>prepInputs</code> as possible directory sources (searched recursively or not) for files being downloaded/extracted/prepared. This allows the using of local copies of files in (an)other location(s) instead of downloading them. If local location does not have the required files, it will proceed to download so there is little cost in setting this option. If files do exist on local system, the function will attempt to use a hardlink before making a copy.</p></li>
@@ -521,9 +545,9 @@
 </li>
 </ul>
 </div>
-<div id="bug-fixes-10" class="section level2">
+<div id="bug-fixes-11" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-10" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-11" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>Work around internally inside <code>extractFromArchive</code> for large (&gt;2GB) zip files. In the <code>R</code> help manual, <code>unzip</code> fails for zip files &gt;2GB. This uses a system call if the zip file is too large and fails using <code>base::unzip</code>.</li>
 <li>Work around for <code><a href="https://rdrr.io/pkg/raster/man/getData.html">raster::getData</a></code> issues.</li>
@@ -566,9 +590,9 @@
 <li>Add <code>future</code> to Suggests.</li>
 </ul>
 </div>
-<div id="new-features-11" class="section level2">
+<div id="new-features-12" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-11" class="anchor"></a>New features</h2>
+<a href="#new-features-12" class="anchor"></a>New features</h2>
 <ul>
 <li>new option on non-Windows OSs to use <code>future</code> for <code>Cache</code> saving to SQLite database, via <code><a href="https://rdrr.io/r/base/options.html">options("reproducible.futurePlan")</a></code>, if the <code>future</code> package is installed. This is <code>FALSE</code> by default.</li>
 <li>If a <code>do.call</code> function is Cached, previously, it would be labelled in the database as <code>do.call</code>. Now it attempts to extract the actual function being called by the <code>do.call</code>. Messaging is similarly changed.</li>
@@ -584,9 +608,9 @@
 <li>new function <code>assessDataType</code>, used in <code>postProcess</code>, to identify smallest <code>datatype</code> for Raster* objects, if user does not pass an explicit <code>datatype</code> in <code>prepInputs</code> or <code>postProcess</code> (<a href='https://github.com/PredictiveEcology/reproducible/issues/39'>#39</a>, <a href='https://github.com/CeresBarros'>@CeresBarros</a>).</li>
 </ul>
 </div>
-<div id="bug-fixes-11" class="section level2">
+<div id="bug-fixes-12" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-11" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-12" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>fix problems with tests introduced by recent <code>git2r</code> update (<a href='https://github.com/stewid'>@stewid</a>, <a href='https://github.com/PredictiveEcology/reproducible/issues/36'>#36</a>).</li>
 <li>
@@ -624,9 +648,9 @@
 <h1 class="page-header" data-toc-text="0.2.1">
 <a href="#version-021" class="anchor"></a>version 0.2.1<small> 2018-07-07 </small>
 </h1>
-<div id="new-features-12" class="section level2">
+<div id="new-features-13" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-12" class="anchor"></a>New features</h2>
+<a href="#new-features-13" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <p>new functions:</p>
@@ -645,9 +669,9 @@
 </li>
 </ul>
 </div>
-<div id="bug-fixes-12" class="section level2">
+<div id="bug-fixes-13" class="section level2">
 <h2 class="hasAnchor">
-<a href="#bug-fixes-12" class="anchor"></a>Bug fixes</h2>
+<a href="#bug-fixes-13" class="anchor"></a>Bug fixes</h2>
 <ul>
 <li>
 <code>copyFile</code> correctly handles directory names containing spaces.</li>
@@ -661,9 +685,9 @@
 <h1 class="page-header" data-toc-text="0.2.0">
 <a href="#version-020" class="anchor"></a>version 0.2.0<small> 2018-06-17 </small>
 </h1>
-<div id="new-features-13" class="section level2">
+<div id="new-features-14" class="section level2">
 <h2 class="hasAnchor">
-<a href="#new-features-13" class="anchor"></a>New features</h2>
+<a href="#new-features-14" class="anchor"></a>New features</h2>
 <ul>
 <li>
 <p>new functions:</p>

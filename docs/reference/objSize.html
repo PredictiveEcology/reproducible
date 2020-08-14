@@ -87,7 +87,7 @@ See Details for the special case of functions and their enclosing environments."
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
       </span>
     </div>
 
@@ -436,7 +436,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 65320 bytes
 #&gt; 
 #&gt; $cropReprojMaskWGDAL
-#&gt; 69112 bytes
+#&gt; 70232 bytes
 #&gt; 
 #&gt; $datatypeVals
 #&gt; 8080 bytes
@@ -454,7 +454,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 178792 bytes
 #&gt; 
 #&gt; $determineFilename
-#&gt; 136120 bytes
+#&gt; 136064 bytes
 #&gt; 
 #&gt; $determineNestedTags
 #&gt; 106272 bytes
@@ -586,7 +586,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 5576 bytes
 #&gt; 
 #&gt; $loadFromCache
-#&gt; 116672 bytes
+#&gt; 109568 bytes
 #&gt; 
 #&gt; $makeMemoisable
 #&gt; 1552 bytes
@@ -598,7 +598,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1888 bytes
 #&gt; 
 #&gt; $maskInputs.Raster
-#&gt; 8016 bytes
+#&gt; 10696 bytes
 #&gt; 
 #&gt; $maskInputs.sf
 #&gt; 21136 bytes
@@ -618,8 +618,20 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; $mergeCache
 #&gt; 9880 bytes
 #&gt; 
+#&gt; $messageCache
+#&gt; 2240 bytes
+#&gt; 
+#&gt; $messageColoured
+#&gt; 43312 bytes
+#&gt; 
 #&gt; $messageDF
-#&gt; 87128 bytes
+#&gt; 81680 bytes
+#&gt; 
+#&gt; $messagePrepInputs
+#&gt; 2240 bytes
+#&gt; 
+#&gt; $messageQuestion
+#&gt; 4856 bytes
 #&gt; 
 #&gt; $MinVals
 #&gt; 1232 bytes
@@ -676,13 +688,13 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1648 bytes
 #&gt; 
 #&gt; $postProcess.sf
-#&gt; 47488 bytes
+#&gt; 47432 bytes
 #&gt; 
 #&gt; $postProcess.spatialClasses
-#&gt; 6008 bytes
+#&gt; 5952 bytes
 #&gt; 
 #&gt; $postProcessAllSpatial
-#&gt; 69920 bytes
+#&gt; 69416 bytes
 #&gt; 
 #&gt; $postProcessChecks
 #&gt; 49864 bytes
@@ -706,7 +718,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 1424 bytes
 #&gt; 
 #&gt; $projectInputs.Raster
-#&gt; 94192 bytes
+#&gt; 102752 bytes
 #&gt; 
 #&gt; $projectInputs.sf
 #&gt; 79168 bytes
@@ -724,7 +736,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 71440 bytes
 #&gt; 
 #&gt; $reproducibleOptions
-#&gt; 15344 bytes
+#&gt; 15360 bytes
 #&gt; 
 #&gt; $requireNamespaceMsg
 #&gt; 23824 bytes
@@ -751,7 +763,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 62952 bytes
 #&gt; 
 #&gt; $saveToCache
-#&gt; 37384 bytes
+#&gt; 38288 bytes
 #&gt; 
 #&gt; $searchFull
 #&gt; 37224 bytes
@@ -811,7 +823,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 24960 bytes
 #&gt; 
 #&gt; $writeFuture
-#&gt; 8648 bytes
+#&gt; 8928 bytes
 #&gt; 
 #&gt; $writeOutputs
 #&gt; 2360 bytes
@@ -823,7 +835,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 #&gt; 6032 bytes
 #&gt; 
 #&gt; $writeOutputs.Raster
-#&gt; 593512 bytes
+#&gt; 631456 bytes
 #&gt; 
 #&gt; $writeOutputs.sf
 #&gt; 71024 bytes
@@ -839,7 +851,7 @@ and <code>methods</code> packages and <code>Autoloads</code>, these are omitted.
 
 <span class='no'>os1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/utils/object.size.html'>object.size</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
 <span class='no'>os2</span> <span class='kw'>&lt;-</span> <span class='fu'>objSize</span>(<span class='fu'><a href='https://rdrr.io/r/base/as.environment.html'>as.environment</a></span>(<span class='st'>"package:reproducible"</span>))
-(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 584 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 12965600</div><div class='input'>                 # and imported functions
+(<span class='no'>os1</span>) <span class='co'># very small -- just the environment container</span></div><div class='output co'>#&gt; 648 bytes</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/sum.html'>sum</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/unlist.html'>unlist</a></span>(<span class='no'>os2</span>)) <span class='co'># around 13 MB, with all functions, objects</span></div><div class='output co'>#&gt; [1] 18047240</div><div class='input'>                 # and imported functions
 
 </div></pre>
   </div>

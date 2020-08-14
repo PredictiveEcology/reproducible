@@ -1,34 +1,31 @@
 ## Updated release
 
-This release fixes an error revealed during CRAN checks.
+This release adds several updated features, and several minor bug fixes.
 
 ## Test environments
 
-Tested and passed using winbuilder all three versions, and rhub with no errors, warnings, or notes.
-
-### Previous R versions
-* Ubuntu 16.04              (travis-ci), R 3.6.3
-* Windows                       (local), R 3.6.3
+### GitHub Actions
+- os: macOS-latest,   r: 'release'
+- os: windows-latest, r: 'release'
+- os: windows-latest, r: '3.6'
+- os: ubuntu-18.04,   r: 'devel', 
+- os: ubuntu-18.04,   r: 'release'
+- os: ubuntu-18.04,   r: 'oldrel'
+- os: ubuntu-18.04,   r: '3.5'
+          
+### Winbuilder
 * Windows                 (win-builder), R 3.6.3
-
-### Current R versions
-* macOS 10.13.3 High Sierra (travis-ci), R 4.0.2
-* Ubuntu 16.04              (travis-ci), R 4.0.2
-* Ubuntu 18.04                  (local), R 4.0.2
 * Windows                 (win-builder), R 4.0.2
-* Windows                       (local), R 4.0.2
+* Windows                 (win-builder), R 4.1.0 (2020-08-12)
 
-### Development R version
-* Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-07-27)
-* Ubuntu 18.04                  (local), R 4.1.0 (2020-07-27)
-* Windows                       (local), R 4.1.0 (2020-07-27)
-* Windows                 (win-builder), R 4.1.0 (2020-07-27)
+### rhub
+* Fedora Linux                      (clang, gfortran), R 4.1.0 (2020-08-12)
+* Windows     (Windows Server 2008 R2 SP1, 32/64 bit), R 4.1.0 (2020-08-12)
+* Ubuntu Linux                             (16.04 LTS, R-release, GCC)
 
 ## R CMD check results
 
-There were no ERRORs nor WARNINGs.
-
-There is one NOTE. A possibly misspelled word: `reproducibleOptions` is spelled correctly.
+There were no ERRORs nor WARNINGs, nor NOTEs
 
 ## Downstream dependencies
 

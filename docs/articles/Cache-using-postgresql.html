@@ -37,7 +37,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
       </span>
     </div>
 
@@ -131,9 +131,9 @@
 <span id="cb1-7"><a href="#cb1-7"></a>    <span class="ex">port</span>: 5432</span>
 <span id="cb1-8"><a href="#cb1-8"></a>    <span class="ex">database</span>: <span class="st">'mydatabase'</span></span></code></pre></div>
 <p>Then, in your main project script, add the following:</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">cachedb</span> <span class="kw">&lt;-</span> <span class="kw pkg">config</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/config/man/get.html">get</a></span>(<span class="st">"cachedb"</span>)
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">cachedb</span> <span class="kw">&lt;-</span> <span class="kw pkg">config</span><span class="kw ns">::</span><span class="fu">get</span>(<span class="st">"cachedb"</span>)
 
-<span class="no">conn</span> <span class="kw">&lt;-</span> <span class="kw pkg">DBI</span><span class="kw ns">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="kw">drv</span> <span class="kw">=</span> <span class="kw pkg">RPostgres</span><span class="kw ns">::</span><span class="fu"><a href="https://rpostgres.r-dbi.org/reference/Postgres.html">Postgres</a></span>(),
+<span class="no">conn</span> <span class="kw">&lt;-</span> <span class="kw pkg">DBI</span><span class="kw ns">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="kw">drv</span> <span class="kw">=</span> <span class="kw pkg">RPostgres</span><span class="kw ns">::</span><span class="fu">Postgres</span>(),
                       <span class="kw">host</span> <span class="kw">=</span> <span class="no">cachedb</span>$<span class="no">server</span>,
                       <span class="kw">port</span> <span class="kw">=</span> <span class="no">cachedb</span>$<span class="no">port</span>,
                       <span class="kw">dbname</span> <span class="kw">=</span> <span class="no">cachedb</span>$<span class="no">database</span>,
@@ -154,7 +154,7 @@
 <p>Then, in your main project script, add the following:</p>
 <div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/readRenviron.html">readRenviron</a></span>(<span class="st">".Renviron"</span>) <span class="co">## alternatively, use global ~/.Renviron</span>
 
-<span class="no">conn</span> <span class="kw">&lt;-</span>   <span class="kw pkg">DBI</span><span class="kw ns">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="kw">drv</span> <span class="kw">=</span> <span class="kw pkg">RPostgres</span><span class="kw ns">::</span><span class="fu"><a href="https://rpostgres.r-dbi.org/reference/Postgres.html">Postgres</a></span>(),
+<span class="no">conn</span> <span class="kw">&lt;-</span>   <span class="kw pkg">DBI</span><span class="kw ns">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="kw">drv</span> <span class="kw">=</span> <span class="kw pkg">RPostgres</span><span class="kw ns">::</span><span class="fu">Postgres</span>(),
                          <span class="kw">host</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGHOST"</span>),
                          <span class="kw">port</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGPORT"</span>),
                          <span class="kw">dbname</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGDATABASE"</span>),
