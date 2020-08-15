@@ -8,6 +8,7 @@ version 1.2.1
 * improved messaging for `Cache` cases where a `file.link` is used instead of saving.
 * with improved messaging, now `options(reproducible.verbose = 0)` will turn off almost all messaging.
 * `postProcess` and family now have `filename2 = NULL` as the default, so not saved to disk. This is a change.
+* `verbose` is now an argument throughout, whose default is `getOption(reproducible.verbose)`, which is set by default to `1`. Thus, individual function calls can be more or less verbose, or the whole session via option. 
 
 ## Bug fixes
 * `RasterStack` objects were not correctly saved to disk under some conditions in `postProcess` - fixed
