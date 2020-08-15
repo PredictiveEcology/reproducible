@@ -4,7 +4,12 @@
 \alias{linkOrCopy}
 \title{Hardlink, symlink, or copy a file}
 \usage{
-linkOrCopy(from, to, symlink = TRUE)
+linkOrCopy(
+  from,
+  to,
+  symlink = TRUE,
+  verbose = getOption("reproducible.verbose", 1)
+)
 }
 \arguments{
 \item{from, to}{Character vectors, containing file names or paths.
@@ -12,6 +17,12 @@ linkOrCopy(from, to, symlink = TRUE)
 
 \item{symlink}{Logical indicating whether to use symlink (instead of hardlink).
 Default \code{FALSE}.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 Attempt first to make a hardlink. If that fails, try to make

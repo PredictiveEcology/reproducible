@@ -19,6 +19,7 @@ preProcess(
   overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE,
   useCache = getOption("reproducible.useCache", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
   .tempPath,
   ...
 )
@@ -89,6 +90,12 @@ even if they pass the checksums or the files are all there.}
 
 \item{useCache}{Passed to \code{Cache} in various places.
 Defaults to \code{getOption("reproducible.useCache")}.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
 Will be cleared on.exit from this function.}

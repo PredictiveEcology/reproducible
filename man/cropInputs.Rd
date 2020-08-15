@@ -7,7 +7,13 @@
 \alias{cropInputs.sf}
 \title{Crop a \code{Spatial*} or \code{Raster*} object}
 \usage{
-cropInputs(x, studyArea, rasterToMatch, ...)
+cropInputs(
+  x,
+  studyArea,
+  rasterToMatch,
+  verbose = getOption("reproducible.verbose", 1),
+  ...
+)
 
 \method{cropInputs}{default}(x, studyArea, rasterToMatch, ...)
 
@@ -15,6 +21,7 @@ cropInputs(x, studyArea, rasterToMatch, ...)
   x,
   studyArea = NULL,
   rasterToMatch = NULL,
+  verbose = getOption("reproducible.verbose", 1),
   extentToMatch = NULL,
   extentCRS = NULL,
   useGDAL = getOption("reproducible.useGDAL", TRUE),
@@ -25,6 +32,7 @@ cropInputs(x, studyArea, rasterToMatch, ...)
   x,
   studyArea = NULL,
   rasterToMatch = NULL,
+  verbose = getOption("reproducible.verbose", 1),
   extentToMatch = NULL,
   extentCRS = NULL,
   ...
@@ -43,6 +51,12 @@ CRS of \code{x} before masking. Currently, this function will not reproject the
 the extent of desired outcome) and reprojecting (including changing the
 resolution and projection).
 See details in \code{\link{postProcess}}.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Passed to raster::crop}
 

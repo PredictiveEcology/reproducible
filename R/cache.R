@@ -286,9 +286,11 @@ utils::globalVariables(c(
 #'        If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
 #'        as paths, if they are file-backed.
 #'
-#' @param verbose Numeric, with 0 being off, 1 being a little, 2 being more verbose etc.
-#'        Above 1 will output much more information about the internals of
-#'        Caching, which may help diagnose Caching challenges.
+#' @param verbose Numeric, -1 silent (where possible), 0 being very quiet,
+#'        1 showing more messaging, 2 being more messaging, etc.
+#'        Default is 1. Above 3 will output much more information about the internals of
+#'        Caching, which may help diagnose Caching challenges. Can set globally with an
+#'        option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}
 #'
 #' @param cacheId Character string. If passed, this will override the calculated hash
 #'        of the inputs, and return the result from this cacheId in the cacheRepo.
@@ -369,7 +371,7 @@ setGeneric(
            classOptions = list(), debugCache = character(),
            sideEffect = FALSE, makeCopy = FALSE,
            quick = getOption("reproducible.quick", FALSE),
-           verbose = getOption("reproducible.verbose", 0), cacheId = NULL,
+           verbose = getOption("reproducible.verbose", 1), cacheId = NULL,
            useCache = getOption("reproducible.useCache", TRUE),
            useCloud = FALSE,
            cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
@@ -394,7 +396,8 @@ setMethod(
     # dots <- enquos(...)
     browser(expr = exists("._Cache_1"))
     if (!is.null(list(...)$objects)) {
-      messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated")
+      messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated",
+                   verbose = verbose)
     }
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
@@ -409,7 +412,8 @@ setMethod(
 
     if (.isFALSE(useCache) || isTRUE(0 == useCache)) {
       messageCache("useCache is FALSE, skipping Cache.",
-                            "To turn Caching on, use options(reproducible.useCache = TRUE)")
+                   "To turn Caching on, use options(reproducible.useCache = TRUE)",
+                   verbose = verbose)
       if (fnDetails$isDoCall) {
         do.call(modifiedDots$what, args = modifiedDots$args)
       } else {
@@ -419,16 +423,19 @@ setMethod(
       startCacheTime <- verboseTime(verbose)
 
       if (!missing(compareRasterFileLength)) {
-        messageCache("compareRasterFileLength argument being deprecated. Use 'length'")
+        messageCache("compareRasterFileLength argument being deprecated. Use 'length'",
+                     verbose = verbose)
         length <- compareRasterFileLength
       }
       if (!missing(digestPathContent)) {
-        messageCache("digestPathContent argument being deprecated. Use 'quick'.")
+        messageCache("digestPathContent argument being deprecated. Use 'quick'.",
+                     verbose = verbose)
         quick <- !digestPathContent
       }
 
+      mced <- match.call(expand.dots = TRUE)
       nestedTags <- determineNestedTags(envir = environment(),
-                                        mc = match.call(expand.dots = TRUE),
+                                        mc = mced,
                                         userTags = userTags)
       userTags <- unique(c(userTags, .reproEnv$userTags))
       if (any(!nestedTags$objOverride)) {
@@ -448,7 +455,7 @@ setMethod(
       }
 
       # get cacheRepo if not supplied
-      cacheRepos <- getCacheRepos(cacheRepo, modifiedDots)
+      cacheRepos <- getCacheRepos(cacheRepo, modifiedDots, verbose = verbose)
       cacheRepo <- cacheRepos[[1]]
 
       if (useDBI()) {
@@ -551,11 +558,13 @@ setMethod(
 
       if (verbose > 3) {
         a <- .CacheVerboseFn1(preDigest, fnDetails,
-                              startHashTime, modifiedDots, dotPipe, quick = quick)
+                              startHashTime, modifiedDots, dotPipe, quick = quick,
+                              verbose = verbose)
         on.exit({
           assign("cacheTimings", .reproEnv$verboseTiming, envir = .reproEnv)
           messageDF(.reproEnv$verboseTiming, colour = "blue")
-          messageCache("This object is also available from .reproEnv$cacheTimings")
+          messageCache("This object is also available from .reproEnv$cacheTimings",
+                       verbose = verbose)
           if (exists("verboseTiming", envir = .reproEnv))
             rm("verboseTiming", envir = .reproEnv)
         },
@@ -570,9 +579,11 @@ setMethod(
       if (!is.null(cacheId)) {
         outputHashManual <- cacheId
         if (identical(outputHashManual, outputHash)) {
-          messageCache("cacheId is same as calculated hash")
+          messageCache("cacheId is same as calculated hash",
+                       verbose = verbose)
         } else {
-          messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId)
+          messageCache("cacheId is not same as calculated hash. Manually searching for cacheId:", cacheId,
+                       verbose = verbose)
         }
         outputHash <- outputHashManual
       }
@@ -591,7 +602,8 @@ setMethod(
           cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, create = TRUE,
                                                      overwrite = FALSE)
         }
-        gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = outputHash)))
+        gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = outputHash,
+                                        verbose = verbose)))
       }
 
       # Check if it is in repository
@@ -660,7 +672,8 @@ setMethod(
           userTagsSimple <- gsub(".*:(.*)", "\\1", userTags)
           isInRepo <- isInRepo[!isInRepo[[.cacheTableTagColName()]] %in% userTagsSimple, , drop = FALSE]
           outputHash <- outputHashNew
-          messageCache("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'")
+          messageCache("Overwriting Cache entry with userTags: '",paste(userTagsSimple, collapse = ", ") ,"'",
+                       verbose = verbose)
         } else {
           # remove entries from the 2 data.frames of isInRep & gdriveLs
           if (useDBI()) {
@@ -670,7 +683,8 @@ setMethod(
           } else {
             isInRepo <- isInRepo[isInRepo[[.cacheTableTagColName()]] != paste0("cacheId:", outputHash), , drop = FALSE]
           }
-          messageCache("Overwriting Cache entry with function '",fnDetails$functionName ,"'")
+          messageCache("Overwriting Cache entry with function '",fnDetails$functionName ,"'",
+                       verbose = verbose)
         }
       }
 
@@ -694,7 +708,8 @@ setMethod(
                                       ")",
                                       if (bigFile) " is large: ",
                                       if (bigFile) format(objSize, units = "auto"),
-                                      ")")
+                                      ")",
+                       verbose = verbose)
 
           preLoadTime <- Sys.time()
           output <- try(.getFromRepo(FUN, isInRepo = isInRepo, notOlderThan = notOlderThan,
@@ -746,7 +761,7 @@ setMethod(
             if (!exists("localTags", inherits = FALSE)) #
               localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
-                         userTags, useCache = useCache)
+                         userTags, useCache = useCache, verbose = verbose)
           }
         }
       }
@@ -790,7 +805,17 @@ setMethod(
           # rlang::eval_tidy(call2(FUNx1, !!!FUNx2))
           # theCall <- expr(FUN(!!!dots))
           # output <- eval_tidy(theCall)
-          output <- FUN(...)
+          commonArgs <- .namesCacheFormalsSendToBoth[.namesCacheFormalsSendToBoth %in% formalArgs(FUN)]
+          if (length(commonArgs) > 0) {
+            messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
+                         "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
+          }
+          output <- if (length(commonArgs) == 0) {
+            FUN(...)
+          } else {# the do.call mechanism is flawed because of evaluating lists; only use in rare cases
+            do.call(FUN, append(alist(...), mget(commonArgs, inherits = FALSE)))
+          }
+
         }
         postRunFUNTime <- Sys.time()
         elapsedTimeFUN <- postRunFUNTime - preRunFUNTime
@@ -962,7 +987,8 @@ setMethod(
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess".\n',
                   'Please specify a plan by name, e.g.,\n',
-                  '  options("reproducible.futurePlan" = "multiprocess")')
+                  '  options("reproducible.futurePlan" = "multiprocess")',
+                  verbose = verbose)
           future::plan("multiprocess", workers = 2)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
@@ -987,7 +1013,8 @@ setMethod(
         if (is.null(.reproEnv$alreadyMsgFuture)) {
           messageCache("  Cache saved in a separate 'future' process. ",
                   "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
-                  "This message will not be shown again until next reload of reproducible")
+                  "This message will not be shown again until next reload of reproducible",
+                  verbose = verbose)
           .reproEnv$alreadyMsgFuture <- TRUE
         }
       } else {
@@ -996,13 +1023,21 @@ setMethod(
         otsObjSize <- as.numeric(otsObjSize)
         class(otsObjSize) <- "object_size"
         isBig <- otsObjSize > 1e7
-        messageCache("Saving ","large "[isBig],"object (cacheId: ", outputHash, ") to Cache", ": "[isBig],
-                  format(otsObjSize, units = "auto")[isBig], verboseLevel = 2 - isBig, verbose = verbose)
         if (useDBI()) {
           browser(expr = exists("._Cache_13"))
-          outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-                                      conn = conn, obj = outputToSave, cacheId = outputHash,
-                                      linkToCacheId = linkToCacheId)
+          outputToSave <- progressBarCode(
+            saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
+                        conn = conn, obj = outputToSave, cacheId = outputHash,
+                        linkToCacheId = linkToCacheId),
+            doProgress = isBig,
+            message = c("Saving ","large "[isBig],"object (cacheId: ", outputHash, ") to Cache", ": "[isBig],
+                        format(otsObjSize, units = "auto")[isBig]),
+            verboseLevel = 2 - isBig, verbose = verbose,
+            colour = getOption("reproducible.messageColourCache"))
+
+          #  outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
+        #                              conn = conn, obj = outputToSave, cacheId = outputHash,
+        #                              linkToCacheId = linkToCacheId)
         }
       }
 
@@ -1031,6 +1066,9 @@ setMethod(
 
 #' @keywords internal
 .namesCacheFormals <- names(.formalsCache)[]
+
+#' @keywords internal
+.namesCacheFormalsSendToBoth <- intersect("verbose", names(.formalsCache)[])
 
 #' @keywords internal
 .loadFromLocalRepoMem <- function(md5hash, repoDir, ...) {
@@ -1359,7 +1397,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
 #' @importFrom data.table setDT setkeyv melt
 #' @keywords internal
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
-                         useCache = getOption("reproducible.useCache", TRUE)) {
+                         useCache = getOption("reproducible.useCache", TRUE),
+                         verbose = getOption("reproducible.verbose", TRUE)) {
   setDT(localTags)
   isDevMode <- identical("devMode", useCache)
   if (isDevMode) {
@@ -1380,7 +1419,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   }
   aa <- localTags[tag %in% userTags3][,.N, keyby = hashName]
   setkeyv(aa, "N")
-  similar <- if (NROW(localTags) > 0) {
+  similar <- if (NROW(aa) > 0) {
     localTags[tail(aa, as.numeric(showSimilar)), on = hashName][N == max(N)]
   } else {
     localTags
@@ -1414,49 +1453,42 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     similar2[(hash %in% "other"), differs := NA]
     differed <- FALSE
     if (isDevMode) {
-      messageCache(" ------ devMode -------")
-      messageCache("This call to cache will replace")
+      messageCache(" ------ devMode -------", verbose = verbose)
+      messageCache("This call to cache will replace", verbose = verbose)
     } else {
-      messageCache(" ------ showSimilar -------")
-      messageCache("This call to cache differs from the next closest:")
+      messageCache(" ------ showSimilar -------", verbose = verbose)
+      messageCache("This call to cache differs from the next closest:", verbose = verbose)
     }
-    messageCache(paste0("... artifact with cacheId ", cacheIdOfSimilar))
+    messageCache(paste0("... artifact with cacheId ", cacheIdOfSimilar), verbose = verbose)
 
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
-      messageCache("... different ", paste(similar2[differs %in% TRUE]$fun, collapse = ", "))
+      messageCache("... different ", paste(similar2[differs %in% TRUE]$fun, collapse = ", "), verbose = verbose)
     }
 
     if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
       messageCache("... possible, unknown, differences in a nested list",
                            "that is deeper than",getOption("reproducible.showSimilarDepth",3),"in ",
-                           paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)))
+                           paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)),
+                   verbose = verbose)
     }
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
     if (length(missingArgs)) {
       differed <- TRUE
       messageCache("... because of (a) new argument(s): ",
                            #"argument currently specified that was not in similar cache: ",
-                           paste(as.character(missingArgs), collapse = ", "))
+                           paste(as.character(missingArgs), collapse = ", "), verbose = verbose)
     }
-    # messageCache("Only the following elements differ (dots are replacements for $ or @)"))
-    # oldColsToKeep <- c("fun", "differs")
-    # cleanDT <- similar2[, ..oldColsToKeep]
-    # data.table::setnames(cleanDT, old = oldColsToKeep, new = c("element", "different"))
-    # messageCache(
-    #   paste0(capture.output(
-    #     cleanDT)
-    # , collapse = "\n")))
     if (isDevMode) {
-      messageCache(" ------ end devMode -------")
+      messageCache(" ------ end devMode -------", verbose = verbose)
     } else {
-      messageCache(" ------ end showSimilar -------")
+      messageCache(" ------ end showSimilar -------", verbose = verbose)
     }
 
   } else {
     if (!identical("devMode", useCache))
-      messageCache("There is no similar item in the cacheRepo")
+      messageCache("There is no similar item in the cacheRepo", verbose = verbose)
   }
 }
 
@@ -1479,7 +1511,8 @@ verboseTime <- function(verbose) {
 verboseMessage1 <- function(verbose, userTags) {
   if (verbose > 2)
     messageCache("Using devMode; overwriting previous Cache entry with tags: ",
-            paste(userTags, collapse = ", "))
+            paste(userTags, collapse = ", "),
+            verbose = verbose)
   invisible(NULL)
 }
 
@@ -1487,7 +1520,8 @@ verboseMessage1 <- function(verbose, userTags) {
 verboseMessage2 <- function(verbose) {
   if (verbose > 2)
     messageCache("Using devMode; Found entry with identical userTags, ",
-            "but since it is very different, adding new entry")
+            "but since it is very different, adding new entry",
+            verbose = verbose)
   invisible(NULL)
 }
 
@@ -1495,7 +1529,8 @@ verboseMessage2 <- function(verbose) {
 verboseMessage3 <- function(verbose, artifact) {
   if (length(unique(artifact)) > 1) {
     if (verbose > 2)
-      messageCache("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE")
+      messageCache("Using devMode, but userTags are not unique; defaulting to normal useCache = TRUE",
+                   verbose = verbose)
   }
 }
 
@@ -1621,9 +1656,9 @@ determineNestedTags <- function(envir, mc, userTags) {
               objOverride = objOverride))
 }
 
-getCacheRepos <- function(cacheRepo, modifiedDots) {
+getCacheRepos <- function(cacheRepo, modifiedDots, verbose = getOption("reproducible.verbose", 1)) {
   if (is.null(cacheRepo)) {
-    cacheRepos <- .checkCacheRepo(modifiedDots, create = TRUE)
+    cacheRepos <- .checkCacheRepo(modifiedDots, create = TRUE, verbose = verbose)
   } else {
     cacheRepos <- lapply(cacheRepo, function(repo) {
       repo <- checkPath(repo, create = TRUE)
@@ -1659,7 +1694,8 @@ devModeFn1 <- function(localTags, userTags, scalls, preDigestUnlistTrunc, useCac
         similars <- .findSimilar(newLocalTags, scalls = scalls,
                                  preDigestUnlistTrunc = preDigestUnlistTrunc,
                                  userTags = userTags,
-                                 useCache = useCache)
+                                 useCache = useCache,
+                                 verbose = verbose)
       })
       similarsHaveNA <- sum(is.na(similars$differs))
       #similarsAreDifferent <- sum(similars$differs == TRUE, na.rm = TRUE)

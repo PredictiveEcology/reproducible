@@ -9,6 +9,7 @@ fastMask(
   y,
   cores = NULL,
   useGDAL = getOption("reproducible.useGDAL", TRUE),
+  verbose = getOption("reproducible.verbose", 1),
   ...
 )
 }
@@ -32,6 +33,12 @@ usually be faster than \code{raster::projectRaster}, the function used
 if this is \code{FALSE}. Since since the two options use different algorithms,
 there may be different projection results. \code{"force"} will cause it to
 use GDAL regardless of the memory test described here.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{Currently unused.}
 }

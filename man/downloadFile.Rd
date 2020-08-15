@@ -16,6 +16,7 @@ downloadFile(
   url,
   needChecksums,
   overwrite = getOption("reproducible.overwrite", TRUE),
+  verbose = getOption("reproducible.verbose", 1),
   purge = FALSE,
   .tempPath,
   ...
@@ -73,6 +74,12 @@ in subsequent calls to
 
 \item{overwrite}{Logical. Should downloading and all the other actions occur
 even if they pass the checksums or the files are all there.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
 \code{CHECKSUMS.txt} file and

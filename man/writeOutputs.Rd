@@ -20,6 +20,7 @@ writeOutputs(
   x,
   filename2 = NULL,
   overwrite = getOption("reproducible.overwrite", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
   ...
 )
 
@@ -34,6 +35,7 @@ writeOutputs(
   x,
   filename2 = NULL,
   overwrite = getOption("reproducible.overwrite", FALSE),
+  verbose = getOption("reproducible.verbose", 1),
   ...
 )
 
@@ -52,6 +54,12 @@ writeOutputs(
 
 \item{...}{Passed into \code{\link[raster]{shapefile}} or
 \code{\link[raster]{writeRaster}} or \code{\link[sf]{st_write}}}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 Can be used to write prepared inputs on disk.

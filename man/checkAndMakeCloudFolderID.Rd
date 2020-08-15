@@ -8,7 +8,8 @@ checkAndMakeCloudFolderID(
   cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
   cacheRepo = NULL,
   create = FALSE,
-  overwrite = FALSE
+  overwrite = FALSE,
+  verbose = getOption("reproducible.verbose", 1)
 )
 }
 \arguments{
@@ -22,6 +23,12 @@ This should be used with caution as there are no checks for overwriting.
 See \code{googledrive::drive_mkdir}. Default \code{FALSE}.}
 
 \item{overwrite}{Logical. Passed to \code{googledrive::drive_mkdir}.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \description{
 Will check for presence of a \code{cloudFolderID} and make a new one

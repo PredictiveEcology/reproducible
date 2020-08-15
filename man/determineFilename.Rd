@@ -8,6 +8,7 @@ determineFilename(
   filename2 = NULL,
   filename1 = NULL,
   destinationPath = getOption("reproducible.destinationPath", "."),
+  verbose = getOption("reproducible.verbose", 1),
   prefix = "Small",
   ...
 )
@@ -29,6 +30,12 @@ and \code{filename2}).}
 
 \item{destinationPath}{Optional. If \code{filename2} is a relative file path, then this
 will be the directory of the resulting absolute file path.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
