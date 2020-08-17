@@ -124,7 +124,7 @@
 
 <span class="no">tmpDir</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span>(), <span class="st">"reproducible_examples"</span>, <span class="st">"Cache"</span>)
 <span class="fu"><a href="https://Require.predictiveecology.org/reference/checkPath.html">checkPath</a></span>(<span class="no">tmpDir</span>, <span class="kw">create</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
-<pre><code>## [1] "C:/Users/EMCINT~1.L-V/AppData/Local/Temp/RtmpGeCOgp/reproducible_examples/Cache"</code></pre>
+<pre><code>## [1] "C:/Users/EMCINT~1.L-V/AppData/Local/Temp/Rtmp0UIDzZ/reproducible_examples/Cache"</code></pre>
 <div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">ras</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html">raster</a></span>(<span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html">extent</a></span>(<span class="fl">0</span>, <span class="fl">1000</span>, <span class="fl">0</span>, <span class="fl">1000</span>), <span class="kw">vals</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">1e6</span>, <span class="kw">res</span> <span class="kw">=</span> <span class="fl">1</span>)
 <span class="fu"><a href="https://rdrr.io/pkg/raster/man/projection.html">crs</a></span>(<span class="no">ras</span>) <span class="kw">&lt;-</span> <span class="st">"+proj=lcc +lat_1=48 +lat_2=33 +lon_0=-100 +datum=WGS84"</span>
 
@@ -133,26 +133,26 @@
 <span class="co"># No Cache</span>
 <span class="fu"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/warning.html">suppressWarnings</a></span>(<span class="no">map1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/projectRaster.html">projectRaster</a></span>(<span class="no">ras</span>, <span class="kw">crs</span> <span class="kw">=</span> <span class="no">newCRS</span>))) <span class="co"># Warnings due to new PROJ</span></pre></body></html></div>
 <pre><code>##    user  system elapsed 
-##    3.47    0.66    5.00</code></pre>
+##    2.54    0.35    3.06</code></pre>
 <div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="co"># Try with memoise for this example -- for many simple cases, memoising will not be faster</span>
 <span class="no">opts</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span>(<span class="st">"reproducible.useMemoise"</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
 <span class="co"># With Cache -- a little slower the first time because saving to disk</span>
 <span class="fu"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/warning.html">suppressWarnings</a></span>(<span class="no">map1</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span>(<span class="no">projectRaster</span>, <span class="no">ras</span>, <span class="kw">crs</span> <span class="kw">=</span> <span class="no">newCRS</span>, <span class="kw">cacheRepo</span> <span class="kw">=</span> <span class="no">tmpDir</span>,
                          <span class="kw">notOlderThan</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span>())))</pre></body></html></div>
 <pre><code>##    user  system elapsed 
-##    4.77    0.75    6.59</code></pre>
+##    3.27    0.46    4.05</code></pre>
 <div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="co"># vastly faster the second time</span>
 <span class="fu"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span>(<span class="no">map2</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span>(<span class="no">projectRaster</span>, <span class="no">ras</span>, <span class="kw">crs</span> <span class="kw">=</span> <span class="no">newCRS</span>, <span class="kw">cacheRepo</span> <span class="kw">=</span> <span class="no">tmpDir</span>))</pre></body></html></div>
 <pre><code>##   ...(Object to retrieve (f2fc4c7fa19afa06.rds) is large: 6.5 Mb)</code></pre>
 <pre><code>##      loaded memoised result from previous projectRaster call,</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.34    0.06    0.43</code></pre>
+##    0.36    0.09    0.47</code></pre>
 <div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="co"># may be faster the third time because of memoise; but this example is too simple to show</span>
 <span class="fu"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span>(<span class="no">map3</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/Cache.html">Cache</a></span>(<span class="no">projectRaster</span>, <span class="no">ras</span>, <span class="kw">crs</span> <span class="kw">=</span> <span class="no">newCRS</span>, <span class="kw">cacheRepo</span> <span class="kw">=</span> <span class="no">tmpDir</span>))</pre></body></html></div>
 <pre><code>##   ...(Object to retrieve (f2fc4c7fa19afa06.rds) is large: 6.5 Mb)
 ##      loaded memoised result from previous projectRaster call,</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.40    0.04    0.47</code></pre>
+##    0.48    0.11    0.75</code></pre>
 <div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span>(<span class="no">opts</span>)
 
 <span class="fu"><a href="https://rdrr.io/r/base/all.equal.html">all.equal</a></span>(<span class="no">map1</span>, <span class="no">map2</span>) <span class="co"># TRUE</span></pre></body></html></div>
@@ -206,10 +206,10 @@
 ##  2: 3aef38d1fc02aee5            function                 runif
 ##  3: 3aef38d1fc02aee5               class               numeric
 ##  4: 3aef38d1fc02aee5         object.size                  1008
-##  5: 3aef38d1fc02aee5            accessed   2020-08-17 12:49:44
+##  5: 3aef38d1fc02aee5            accessed   2020-08-17 13:09:05
 ##  6: 3aef38d1fc02aee5             inCloud                 FALSE
 ##  7: 3aef38d1fc02aee5          resultHash                      
-##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.001003027 secs
+##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.002002954 secs
 ##  9: 3aef38d1fc02aee5 elapsedTimeFirstRun                0 secs
 ## 10: 3aef38d1fc02aee5      otherFunctions               saveRDS
 ## 11: 3aef38d1fc02aee5      otherFunctions               do.call
@@ -223,15 +223,15 @@
 ## 19: 3aef38d1fc02aee5      otherFunctions                handle
 ## 20: 3aef38d1fc02aee5           preDigest    n:7eef4eae85fd9229
 ## 21: 3aef38d1fc02aee5           preDigest .FUN:881ec847b7161f3c
-## 22: 3aef38d1fc02aee5           file.size                   169
+## 22: 3aef38d1fc02aee5           file.size                   168
 ## 23: f7bee22047b8d0c1          objectName                     a
 ## 24: f7bee22047b8d0c1            function                 rnorm
 ## 25: f7bee22047b8d0c1               class               numeric
 ## 26: f7bee22047b8d0c1         object.size                  1008
-## 27: f7bee22047b8d0c1            accessed   2020-08-17 12:49:44
+## 27: f7bee22047b8d0c1            accessed   2020-08-17 13:09:05
 ## 28: f7bee22047b8d0c1             inCloud                 FALSE
 ## 29: f7bee22047b8d0c1          resultHash                      
-## 30: f7bee22047b8d0c1   elapsedTimeDigest      0.002005816 secs
+## 30: f7bee22047b8d0c1   elapsedTimeDigest      0.001003027 secs
 ## 31: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 32: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 33: f7bee22047b8d0c1      otherFunctions               do.call
@@ -248,50 +248,50 @@
 ## 44: f7bee22047b8d0c1           file.size                   174
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:44
-##  2: 2020-08-17 12:49:44
-##  3: 2020-08-17 12:49:44
-##  4: 2020-08-17 12:49:44
-##  5: 2020-08-17 12:49:44
-##  6: 2020-08-17 12:49:44
-##  7: 2020-08-17 12:49:44
-##  8: 2020-08-17 12:49:44
-##  9: 2020-08-17 12:49:44
-## 10: 2020-08-17 12:49:44
-## 11: 2020-08-17 12:49:44
-## 12: 2020-08-17 12:49:44
-## 13: 2020-08-17 12:49:44
-## 14: 2020-08-17 12:49:44
-## 15: 2020-08-17 12:49:44
-## 16: 2020-08-17 12:49:44
-## 17: 2020-08-17 12:49:44
-## 18: 2020-08-17 12:49:44
-## 19: 2020-08-17 12:49:44
-## 20: 2020-08-17 12:49:44
-## 21: 2020-08-17 12:49:44
-## 22: 2020-08-17 12:49:44
-## 23: 2020-08-17 12:49:44
-## 24: 2020-08-17 12:49:44
-## 25: 2020-08-17 12:49:44
-## 26: 2020-08-17 12:49:44
-## 27: 2020-08-17 12:49:44
-## 28: 2020-08-17 12:49:44
-## 29: 2020-08-17 12:49:44
-## 30: 2020-08-17 12:49:44
-## 31: 2020-08-17 12:49:44
-## 32: 2020-08-17 12:49:44
-## 33: 2020-08-17 12:49:44
-## 34: 2020-08-17 12:49:44
-## 35: 2020-08-17 12:49:44
-## 36: 2020-08-17 12:49:44
-## 37: 2020-08-17 12:49:44
-## 38: 2020-08-17 12:49:44
-## 39: 2020-08-17 12:49:44
-## 40: 2020-08-17 12:49:44
-## 41: 2020-08-17 12:49:44
-## 42: 2020-08-17 12:49:44
-## 43: 2020-08-17 12:49:44
-## 44: 2020-08-17 12:49:44
+##  1: 2020-08-17 13:09:05
+##  2: 2020-08-17 13:09:05
+##  3: 2020-08-17 13:09:05
+##  4: 2020-08-17 13:09:05
+##  5: 2020-08-17 13:09:05
+##  6: 2020-08-17 13:09:05
+##  7: 2020-08-17 13:09:05
+##  8: 2020-08-17 13:09:05
+##  9: 2020-08-17 13:09:05
+## 10: 2020-08-17 13:09:05
+## 11: 2020-08-17 13:09:05
+## 12: 2020-08-17 13:09:05
+## 13: 2020-08-17 13:09:05
+## 14: 2020-08-17 13:09:05
+## 15: 2020-08-17 13:09:05
+## 16: 2020-08-17 13:09:05
+## 17: 2020-08-17 13:09:05
+## 18: 2020-08-17 13:09:05
+## 19: 2020-08-17 13:09:05
+## 20: 2020-08-17 13:09:05
+## 21: 2020-08-17 13:09:05
+## 22: 2020-08-17 13:09:05
+## 23: 2020-08-17 13:09:05
+## 24: 2020-08-17 13:09:05
+## 25: 2020-08-17 13:09:05
+## 26: 2020-08-17 13:09:05
+## 27: 2020-08-17 13:09:05
+## 28: 2020-08-17 13:09:05
+## 29: 2020-08-17 13:09:05
+## 30: 2020-08-17 13:09:05
+## 31: 2020-08-17 13:09:05
+## 32: 2020-08-17 13:09:05
+## 33: 2020-08-17 13:09:05
+## 34: 2020-08-17 13:09:05
+## 35: 2020-08-17 13:09:05
+## 36: 2020-08-17 13:09:05
+## 37: 2020-08-17 13:09:05
+## 38: 2020-08-17 13:09:05
+## 39: 2020-08-17 13:09:05
+## 40: 2020-08-17 13:09:05
+## 41: 2020-08-17 13:09:05
+## 42: 2020-08-17 13:09:05
+## 43: 2020-08-17 13:09:05
+## 44: 2020-08-17 13:09:05
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb38"><html><body><pre class="r"><span class="fu"><a href="../reference/viewCache.html">showCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">userTags</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"^a$"</span>)) <span class="co"># regular expression ... "a" exactly</span></pre></body></html></div>
 <pre><code>## Cache size:</code></pre>
@@ -302,10 +302,10 @@
 ##  2: f7bee22047b8d0c1            function                 rnorm
 ##  3: f7bee22047b8d0c1               class               numeric
 ##  4: f7bee22047b8d0c1         object.size                  1008
-##  5: f7bee22047b8d0c1            accessed   2020-08-17 12:49:44
+##  5: f7bee22047b8d0c1            accessed   2020-08-17 13:09:05
 ##  6: f7bee22047b8d0c1             inCloud                 FALSE
 ##  7: f7bee22047b8d0c1          resultHash                      
-##  8: f7bee22047b8d0c1   elapsedTimeDigest      0.002005816 secs
+##  8: f7bee22047b8d0c1   elapsedTimeDigest      0.001003027 secs
 ##  9: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 10: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 11: f7bee22047b8d0c1      otherFunctions               do.call
@@ -322,28 +322,28 @@
 ## 22: f7bee22047b8d0c1           file.size                   174
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:44
-##  2: 2020-08-17 12:49:44
-##  3: 2020-08-17 12:49:44
-##  4: 2020-08-17 12:49:44
-##  5: 2020-08-17 12:49:44
-##  6: 2020-08-17 12:49:44
-##  7: 2020-08-17 12:49:44
-##  8: 2020-08-17 12:49:44
-##  9: 2020-08-17 12:49:44
-## 10: 2020-08-17 12:49:44
-## 11: 2020-08-17 12:49:44
-## 12: 2020-08-17 12:49:44
-## 13: 2020-08-17 12:49:44
-## 14: 2020-08-17 12:49:44
-## 15: 2020-08-17 12:49:44
-## 16: 2020-08-17 12:49:44
-## 17: 2020-08-17 12:49:44
-## 18: 2020-08-17 12:49:44
-## 19: 2020-08-17 12:49:44
-## 20: 2020-08-17 12:49:44
-## 21: 2020-08-17 12:49:44
-## 22: 2020-08-17 12:49:44
+##  1: 2020-08-17 13:09:05
+##  2: 2020-08-17 13:09:05
+##  3: 2020-08-17 13:09:05
+##  4: 2020-08-17 13:09:05
+##  5: 2020-08-17 13:09:05
+##  6: 2020-08-17 13:09:05
+##  7: 2020-08-17 13:09:05
+##  8: 2020-08-17 13:09:05
+##  9: 2020-08-17 13:09:05
+## 10: 2020-08-17 13:09:05
+## 11: 2020-08-17 13:09:05
+## 12: 2020-08-17 13:09:05
+## 13: 2020-08-17 13:09:05
+## 14: 2020-08-17 13:09:05
+## 15: 2020-08-17 13:09:05
+## 16: 2020-08-17 13:09:05
+## 17: 2020-08-17 13:09:05
+## 18: 2020-08-17 13:09:05
+## 19: 2020-08-17 13:09:05
+## 20: 2020-08-17 13:09:05
+## 21: 2020-08-17 13:09:05
+## 22: 2020-08-17 13:09:05
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb43"><html><body><pre class="r"><span class="fu"><a href="../reference/viewCache.html">showCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">userTags</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"runif"</span>)) <span class="co"># show only cached objects made during runif call</span></pre></body></html></div>
 <pre><code>## Cache size:</code></pre>
@@ -354,10 +354,10 @@
 ##  2: 3aef38d1fc02aee5            function                 runif
 ##  3: 3aef38d1fc02aee5               class               numeric
 ##  4: 3aef38d1fc02aee5         object.size                  1008
-##  5: 3aef38d1fc02aee5            accessed   2020-08-17 12:49:44
+##  5: 3aef38d1fc02aee5            accessed   2020-08-17 13:09:05
 ##  6: 3aef38d1fc02aee5             inCloud                 FALSE
 ##  7: 3aef38d1fc02aee5          resultHash                      
-##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.001003027 secs
+##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.002002954 secs
 ##  9: 3aef38d1fc02aee5 elapsedTimeFirstRun                0 secs
 ## 10: 3aef38d1fc02aee5      otherFunctions               saveRDS
 ## 11: 3aef38d1fc02aee5      otherFunctions               do.call
@@ -371,31 +371,31 @@
 ## 19: 3aef38d1fc02aee5      otherFunctions                handle
 ## 20: 3aef38d1fc02aee5           preDigest    n:7eef4eae85fd9229
 ## 21: 3aef38d1fc02aee5           preDigest .FUN:881ec847b7161f3c
-## 22: 3aef38d1fc02aee5           file.size                   169
+## 22: 3aef38d1fc02aee5           file.size                   168
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:44
-##  2: 2020-08-17 12:49:44
-##  3: 2020-08-17 12:49:44
-##  4: 2020-08-17 12:49:44
-##  5: 2020-08-17 12:49:44
-##  6: 2020-08-17 12:49:44
-##  7: 2020-08-17 12:49:44
-##  8: 2020-08-17 12:49:44
-##  9: 2020-08-17 12:49:44
-## 10: 2020-08-17 12:49:44
-## 11: 2020-08-17 12:49:44
-## 12: 2020-08-17 12:49:44
-## 13: 2020-08-17 12:49:44
-## 14: 2020-08-17 12:49:44
-## 15: 2020-08-17 12:49:44
-## 16: 2020-08-17 12:49:44
-## 17: 2020-08-17 12:49:44
-## 18: 2020-08-17 12:49:44
-## 19: 2020-08-17 12:49:44
-## 20: 2020-08-17 12:49:44
-## 21: 2020-08-17 12:49:44
-## 22: 2020-08-17 12:49:44
+##  1: 2020-08-17 13:09:05
+##  2: 2020-08-17 13:09:05
+##  3: 2020-08-17 13:09:05
+##  4: 2020-08-17 13:09:05
+##  5: 2020-08-17 13:09:05
+##  6: 2020-08-17 13:09:05
+##  7: 2020-08-17 13:09:05
+##  8: 2020-08-17 13:09:05
+##  9: 2020-08-17 13:09:05
+## 10: 2020-08-17 13:09:05
+## 11: 2020-08-17 13:09:05
+## 12: 2020-08-17 13:09:05
+## 13: 2020-08-17 13:09:05
+## 14: 2020-08-17 13:09:05
+## 15: 2020-08-17 13:09:05
+## 16: 2020-08-17 13:09:05
+## 17: 2020-08-17 13:09:05
+## 18: 2020-08-17 13:09:05
+## 19: 2020-08-17 13:09:05
+## 20: 2020-08-17 13:09:05
+## 21: 2020-08-17 13:09:05
+## 22: 2020-08-17 13:09:05
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb48"><html><body><pre class="r"><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">userTags</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"runif"</span>), <span class="kw">ask</span> <span class="kw">=</span> <span class="fl">FALSE</span>) <span class="co"># remove only cached objects made during runif call</span></pre></body></html></div>
 <pre><code>## Loading required namespace: googledrive</code></pre>
@@ -410,10 +410,10 @@
 ##  1: f11fb1a2880f8060            function                 rnorm
 ##  2: f11fb1a2880f8060               class               numeric
 ##  3: f11fb1a2880f8060         object.size                  1104
-##  4: f11fb1a2880f8060            accessed   2020-08-17 12:49:43
+##  4: f11fb1a2880f8060            accessed   2020-08-17 13:09:05
 ##  5: f11fb1a2880f8060             inCloud                 FALSE
 ##  6: f11fb1a2880f8060          resultHash                      
-##  7: f11fb1a2880f8060   elapsedTimeDigest      0.002007008 secs
+##  7: f11fb1a2880f8060   elapsedTimeDigest      0.002506018 secs
 ##  8: f11fb1a2880f8060 elapsedTimeFirstRun                0 secs
 ##  9: f11fb1a2880f8060      otherFunctions               saveRDS
 ## 10: f11fb1a2880f8060      otherFunctions               do.call
@@ -428,18 +428,18 @@
 ## 19: f11fb1a2880f8060           preDigest    n:c5775c3b366fb719
 ## 20: f11fb1a2880f8060           preDigest mean:15620f138033a66c
 ## 21: f11fb1a2880f8060           preDigest .FUN:4f604aa46882b368
-## 22: f11fb1a2880f8060           file.size                   224
-## 23: f11fb1a2880f8060            accessed   2020-08-17 12:49:44
-## 24: f11fb1a2880f8060     elapsedTimeLoad       0.01203489 secs
-## 25: f11fb1a2880f8060            accessed   2020-08-17 12:49:44
-## 26: f11fb1a2880f8060            accessed   2020-08-17 12:49:44
+## 22: f11fb1a2880f8060           file.size                   223
+## 23: f11fb1a2880f8060            accessed   2020-08-17 13:09:05
+## 24: f11fb1a2880f8060     elapsedTimeLoad       0.01102996 secs
+## 25: f11fb1a2880f8060            accessed   2020-08-17 13:09:05
+## 26: f11fb1a2880f8060            accessed   2020-08-17 13:09:05
 ## 27: c16f0e2c57596069            function 'rnorm' pipe sequence
 ## 28: c16f0e2c57596069               class               numeric
 ## 29: c16f0e2c57596069         object.size                  1104
-## 30: c16f0e2c57596069            accessed   2020-08-17 12:49:44
+## 30: c16f0e2c57596069            accessed   2020-08-17 13:09:05
 ## 31: c16f0e2c57596069             inCloud                 FALSE
 ## 32: c16f0e2c57596069          resultHash                      
-## 33: c16f0e2c57596069   elapsedTimeDigest      0.002002954 secs
+## 33: c16f0e2c57596069   elapsedTimeDigest      0.002506971 secs
 ## 34: c16f0e2c57596069 elapsedTimeFirstRun                0 secs
 ## 35: c16f0e2c57596069      otherFunctions               saveRDS
 ## 36: c16f0e2c57596069      otherFunctions               do.call
@@ -460,10 +460,10 @@
 ## 51: f7bee22047b8d0c1            function                 rnorm
 ## 52: f7bee22047b8d0c1               class               numeric
 ## 53: f7bee22047b8d0c1         object.size                  1008
-## 54: f7bee22047b8d0c1            accessed   2020-08-17 12:49:44
+## 54: f7bee22047b8d0c1            accessed   2020-08-17 13:09:05
 ## 55: f7bee22047b8d0c1             inCloud                 FALSE
 ## 56: f7bee22047b8d0c1          resultHash                      
-## 57: f7bee22047b8d0c1   elapsedTimeDigest      0.002005816 secs
+## 57: f7bee22047b8d0c1   elapsedTimeDigest      0.001003027 secs
 ## 58: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 59: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 60: f7bee22047b8d0c1      otherFunctions               do.call
@@ -480,77 +480,77 @@
 ## 71: f7bee22047b8d0c1           file.size                   174
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:44
-##  2: 2020-08-17 12:49:44
-##  3: 2020-08-17 12:49:44
-##  4: 2020-08-17 12:49:44
-##  5: 2020-08-17 12:49:44
-##  6: 2020-08-17 12:49:44
-##  7: 2020-08-17 12:49:44
-##  8: 2020-08-17 12:49:44
-##  9: 2020-08-17 12:49:44
-## 10: 2020-08-17 12:49:44
-## 11: 2020-08-17 12:49:44
-## 12: 2020-08-17 12:49:44
-## 13: 2020-08-17 12:49:44
-## 14: 2020-08-17 12:49:44
-## 15: 2020-08-17 12:49:44
-## 16: 2020-08-17 12:49:44
-## 17: 2020-08-17 12:49:44
-## 18: 2020-08-17 12:49:44
-## 19: 2020-08-17 12:49:44
-## 20: 2020-08-17 12:49:44
-## 21: 2020-08-17 12:49:44
-## 22: 2020-08-17 12:49:44
-## 23: 2020-08-17 12:49:44
-## 24: 2020-08-17 12:49:44
-## 25: 2020-08-17 12:49:44
-## 26: 2020-08-17 12:49:44
-## 27: 2020-08-17 12:49:44
-## 28: 2020-08-17 12:49:44
-## 29: 2020-08-17 12:49:44
-## 30: 2020-08-17 12:49:44
-## 31: 2020-08-17 12:49:44
-## 32: 2020-08-17 12:49:44
-## 33: 2020-08-17 12:49:44
-## 34: 2020-08-17 12:49:44
-## 35: 2020-08-17 12:49:44
-## 36: 2020-08-17 12:49:44
-## 37: 2020-08-17 12:49:44
-## 38: 2020-08-17 12:49:44
-## 39: 2020-08-17 12:49:44
-## 40: 2020-08-17 12:49:44
-## 41: 2020-08-17 12:49:44
-## 42: 2020-08-17 12:49:44
-## 43: 2020-08-17 12:49:44
-## 44: 2020-08-17 12:49:44
-## 45: 2020-08-17 12:49:44
-## 46: 2020-08-17 12:49:44
-## 47: 2020-08-17 12:49:44
-## 48: 2020-08-17 12:49:44
-## 49: 2020-08-17 12:49:44
-## 50: 2020-08-17 12:49:44
-## 51: 2020-08-17 12:49:44
-## 52: 2020-08-17 12:49:44
-## 53: 2020-08-17 12:49:44
-## 54: 2020-08-17 12:49:44
-## 55: 2020-08-17 12:49:44
-## 56: 2020-08-17 12:49:44
-## 57: 2020-08-17 12:49:44
-## 58: 2020-08-17 12:49:44
-## 59: 2020-08-17 12:49:44
-## 60: 2020-08-17 12:49:44
-## 61: 2020-08-17 12:49:44
-## 62: 2020-08-17 12:49:44
-## 63: 2020-08-17 12:49:44
-## 64: 2020-08-17 12:49:44
-## 65: 2020-08-17 12:49:44
-## 66: 2020-08-17 12:49:44
-## 67: 2020-08-17 12:49:44
-## 68: 2020-08-17 12:49:44
-## 69: 2020-08-17 12:49:44
-## 70: 2020-08-17 12:49:44
-## 71: 2020-08-17 12:49:44
+##  1: 2020-08-17 13:09:05
+##  2: 2020-08-17 13:09:05
+##  3: 2020-08-17 13:09:05
+##  4: 2020-08-17 13:09:05
+##  5: 2020-08-17 13:09:05
+##  6: 2020-08-17 13:09:05
+##  7: 2020-08-17 13:09:05
+##  8: 2020-08-17 13:09:05
+##  9: 2020-08-17 13:09:05
+## 10: 2020-08-17 13:09:05
+## 11: 2020-08-17 13:09:05
+## 12: 2020-08-17 13:09:05
+## 13: 2020-08-17 13:09:05
+## 14: 2020-08-17 13:09:05
+## 15: 2020-08-17 13:09:05
+## 16: 2020-08-17 13:09:05
+## 17: 2020-08-17 13:09:05
+## 18: 2020-08-17 13:09:05
+## 19: 2020-08-17 13:09:05
+## 20: 2020-08-17 13:09:05
+## 21: 2020-08-17 13:09:05
+## 22: 2020-08-17 13:09:05
+## 23: 2020-08-17 13:09:05
+## 24: 2020-08-17 13:09:05
+## 25: 2020-08-17 13:09:05
+## 26: 2020-08-17 13:09:05
+## 27: 2020-08-17 13:09:05
+## 28: 2020-08-17 13:09:05
+## 29: 2020-08-17 13:09:05
+## 30: 2020-08-17 13:09:05
+## 31: 2020-08-17 13:09:05
+## 32: 2020-08-17 13:09:05
+## 33: 2020-08-17 13:09:05
+## 34: 2020-08-17 13:09:05
+## 35: 2020-08-17 13:09:05
+## 36: 2020-08-17 13:09:05
+## 37: 2020-08-17 13:09:05
+## 38: 2020-08-17 13:09:05
+## 39: 2020-08-17 13:09:05
+## 40: 2020-08-17 13:09:05
+## 41: 2020-08-17 13:09:05
+## 42: 2020-08-17 13:09:05
+## 43: 2020-08-17 13:09:05
+## 44: 2020-08-17 13:09:05
+## 45: 2020-08-17 13:09:05
+## 46: 2020-08-17 13:09:05
+## 47: 2020-08-17 13:09:05
+## 48: 2020-08-17 13:09:05
+## 49: 2020-08-17 13:09:05
+## 50: 2020-08-17 13:09:05
+## 51: 2020-08-17 13:09:05
+## 52: 2020-08-17 13:09:05
+## 53: 2020-08-17 13:09:05
+## 54: 2020-08-17 13:09:05
+## 55: 2020-08-17 13:09:05
+## 56: 2020-08-17 13:09:05
+## 57: 2020-08-17 13:09:05
+## 58: 2020-08-17 13:09:05
+## 59: 2020-08-17 13:09:05
+## 60: 2020-08-17 13:09:05
+## 61: 2020-08-17 13:09:05
+## 62: 2020-08-17 13:09:05
+## 63: 2020-08-17 13:09:05
+## 64: 2020-08-17 13:09:05
+## 65: 2020-08-17 13:09:05
+## 66: 2020-08-17 13:09:05
+## 67: 2020-08-17 13:09:05
+## 68: 2020-08-17 13:09:05
+## 69: 2020-08-17 13:09:05
+## 70: 2020-08-17 13:09:05
+## 71: 2020-08-17 13:09:05
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb58"><html><body><pre class="r"><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">ask</span> <span class="kw">=</span> <span class="fl">FALSE</span>)</pre></body></html></div>
 </div>
@@ -591,10 +591,10 @@
 ##  2: f7bee22047b8d0c1            function                 rnorm
 ##  3: f7bee22047b8d0c1               class               numeric
 ##  4: f7bee22047b8d0c1         object.size                  1008
-##  5: f7bee22047b8d0c1            accessed   2020-08-17 12:49:45
+##  5: f7bee22047b8d0c1            accessed   2020-08-17 13:09:06
 ##  6: f7bee22047b8d0c1             inCloud                 FALSE
 ##  7: f7bee22047b8d0c1          resultHash                      
-##  8: f7bee22047b8d0c1   elapsedTimeDigest      0.003009081 secs
+##  8: f7bee22047b8d0c1   elapsedTimeDigest      0.002508879 secs
 ##  9: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 10: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 11: f7bee22047b8d0c1      otherFunctions               do.call
@@ -609,34 +609,34 @@
 ## 20: f7bee22047b8d0c1           preDigest    n:7eef4eae85fd9229
 ## 21: f7bee22047b8d0c1           preDigest .FUN:4f604aa46882b368
 ## 22: f7bee22047b8d0c1           file.size                   174
-## 23: f7bee22047b8d0c1            accessed   2020-08-17 12:49:46
-## 24: f7bee22047b8d0c1     elapsedTimeLoad       0.01052713 secs
+## 23: f7bee22047b8d0c1            accessed   2020-08-17 13:09:08
+## 24: f7bee22047b8d0c1     elapsedTimeLoad      0.009024143 secs
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:45
-##  2: 2020-08-17 12:49:45
-##  3: 2020-08-17 12:49:45
-##  4: 2020-08-17 12:49:45
-##  5: 2020-08-17 12:49:45
-##  6: 2020-08-17 12:49:45
-##  7: 2020-08-17 12:49:45
-##  8: 2020-08-17 12:49:45
-##  9: 2020-08-17 12:49:45
-## 10: 2020-08-17 12:49:45
-## 11: 2020-08-17 12:49:45
-## 12: 2020-08-17 12:49:45
-## 13: 2020-08-17 12:49:45
-## 14: 2020-08-17 12:49:45
-## 15: 2020-08-17 12:49:45
-## 16: 2020-08-17 12:49:45
-## 17: 2020-08-17 12:49:45
-## 18: 2020-08-17 12:49:45
-## 19: 2020-08-17 12:49:45
-## 20: 2020-08-17 12:49:45
-## 21: 2020-08-17 12:49:45
-## 22: 2020-08-17 12:49:45
-## 23: 2020-08-17 12:49:46
-## 24: 2020-08-17 12:49:46
+##  1: 2020-08-17 13:09:06
+##  2: 2020-08-17 13:09:06
+##  3: 2020-08-17 13:09:06
+##  4: 2020-08-17 13:09:06
+##  5: 2020-08-17 13:09:06
+##  6: 2020-08-17 13:09:06
+##  7: 2020-08-17 13:09:06
+##  8: 2020-08-17 13:09:06
+##  9: 2020-08-17 13:09:06
+## 10: 2020-08-17 13:09:06
+## 11: 2020-08-17 13:09:06
+## 12: 2020-08-17 13:09:06
+## 13: 2020-08-17 13:09:06
+## 14: 2020-08-17 13:09:06
+## 15: 2020-08-17 13:09:06
+## 16: 2020-08-17 13:09:06
+## 17: 2020-08-17 13:09:06
+## 18: 2020-08-17 13:09:06
+## 19: 2020-08-17 13:09:06
+## 20: 2020-08-17 13:09:06
+## 21: 2020-08-17 13:09:06
+## 22: 2020-08-17 13:09:06
+## 23: 2020-08-17 13:09:08
+## 24: 2020-08-17 13:09:08
 ##             createdDate</code></pre>
 </div>
 <div id="example-3-using-keepcache" class="section level2">
@@ -658,10 +658,10 @@
 ##  2: f7bee22047b8d0c1            function                 rnorm
 ##  3: f7bee22047b8d0c1               class               numeric
 ##  4: f7bee22047b8d0c1         object.size                  1008
-##  5: f7bee22047b8d0c1            accessed   2020-08-17 12:49:45
+##  5: f7bee22047b8d0c1            accessed   2020-08-17 13:09:06
 ##  6: f7bee22047b8d0c1             inCloud                 FALSE
 ##  7: f7bee22047b8d0c1          resultHash                      
-##  8: f7bee22047b8d0c1   elapsedTimeDigest      0.003009081 secs
+##  8: f7bee22047b8d0c1   elapsedTimeDigest      0.002508879 secs
 ##  9: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 10: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 11: f7bee22047b8d0c1      otherFunctions               do.call
@@ -676,17 +676,17 @@
 ## 20: f7bee22047b8d0c1           preDigest    n:7eef4eae85fd9229
 ## 21: f7bee22047b8d0c1           preDigest .FUN:4f604aa46882b368
 ## 22: f7bee22047b8d0c1           file.size                   174
-## 23: f7bee22047b8d0c1            accessed   2020-08-17 12:49:46
-## 24: f7bee22047b8d0c1     elapsedTimeLoad       0.03409004 secs
-## 25: f7bee22047b8d0c1            accessed   2020-08-17 12:49:47
+## 23: f7bee22047b8d0c1            accessed   2020-08-17 13:09:08
+## 24: f7bee22047b8d0c1     elapsedTimeLoad       0.01203299 secs
+## 25: f7bee22047b8d0c1            accessed   2020-08-17 13:09:08
 ## 26: 3aef38d1fc02aee5          objectName                     b
 ## 27: 3aef38d1fc02aee5            function                 runif
 ## 28: 3aef38d1fc02aee5               class               numeric
 ## 29: 3aef38d1fc02aee5         object.size                  1008
-## 30: 3aef38d1fc02aee5            accessed   2020-08-17 12:49:47
+## 30: 3aef38d1fc02aee5            accessed   2020-08-17 13:09:08
 ## 31: 3aef38d1fc02aee5             inCloud                 FALSE
 ## 32: 3aef38d1fc02aee5          resultHash                      
-## 33: 3aef38d1fc02aee5   elapsedTimeDigest      0.002005816 secs
+## 33: 3aef38d1fc02aee5   elapsedTimeDigest      0.001002073 secs
 ## 34: 3aef38d1fc02aee5 elapsedTimeFirstRun                0 secs
 ## 35: 3aef38d1fc02aee5      otherFunctions               saveRDS
 ## 36: 3aef38d1fc02aee5      otherFunctions               do.call
@@ -700,56 +700,56 @@
 ## 44: 3aef38d1fc02aee5      otherFunctions                handle
 ## 45: 3aef38d1fc02aee5           preDigest    n:7eef4eae85fd9229
 ## 46: 3aef38d1fc02aee5           preDigest .FUN:881ec847b7161f3c
-## 47: 3aef38d1fc02aee5           file.size                   168
+## 47: 3aef38d1fc02aee5           file.size                   169
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:45
-##  2: 2020-08-17 12:49:45
-##  3: 2020-08-17 12:49:45
-##  4: 2020-08-17 12:49:45
-##  5: 2020-08-17 12:49:45
-##  6: 2020-08-17 12:49:45
-##  7: 2020-08-17 12:49:45
-##  8: 2020-08-17 12:49:45
-##  9: 2020-08-17 12:49:45
-## 10: 2020-08-17 12:49:45
-## 11: 2020-08-17 12:49:45
-## 12: 2020-08-17 12:49:45
-## 13: 2020-08-17 12:49:45
-## 14: 2020-08-17 12:49:45
-## 15: 2020-08-17 12:49:45
-## 16: 2020-08-17 12:49:45
-## 17: 2020-08-17 12:49:45
-## 18: 2020-08-17 12:49:45
-## 19: 2020-08-17 12:49:45
-## 20: 2020-08-17 12:49:45
-## 21: 2020-08-17 12:49:45
-## 22: 2020-08-17 12:49:45
-## 23: 2020-08-17 12:49:46
-## 24: 2020-08-17 12:49:46
-## 25: 2020-08-17 12:49:47
-## 26: 2020-08-17 12:49:47
-## 27: 2020-08-17 12:49:47
-## 28: 2020-08-17 12:49:47
-## 29: 2020-08-17 12:49:47
-## 30: 2020-08-17 12:49:47
-## 31: 2020-08-17 12:49:47
-## 32: 2020-08-17 12:49:47
-## 33: 2020-08-17 12:49:47
-## 34: 2020-08-17 12:49:47
-## 35: 2020-08-17 12:49:47
-## 36: 2020-08-17 12:49:47
-## 37: 2020-08-17 12:49:47
-## 38: 2020-08-17 12:49:47
-## 39: 2020-08-17 12:49:47
-## 40: 2020-08-17 12:49:47
-## 41: 2020-08-17 12:49:47
-## 42: 2020-08-17 12:49:47
-## 43: 2020-08-17 12:49:47
-## 44: 2020-08-17 12:49:47
-## 45: 2020-08-17 12:49:47
-## 46: 2020-08-17 12:49:47
-## 47: 2020-08-17 12:49:47
+##  1: 2020-08-17 13:09:06
+##  2: 2020-08-17 13:09:06
+##  3: 2020-08-17 13:09:06
+##  4: 2020-08-17 13:09:06
+##  5: 2020-08-17 13:09:06
+##  6: 2020-08-17 13:09:06
+##  7: 2020-08-17 13:09:06
+##  8: 2020-08-17 13:09:06
+##  9: 2020-08-17 13:09:06
+## 10: 2020-08-17 13:09:06
+## 11: 2020-08-17 13:09:06
+## 12: 2020-08-17 13:09:06
+## 13: 2020-08-17 13:09:06
+## 14: 2020-08-17 13:09:06
+## 15: 2020-08-17 13:09:06
+## 16: 2020-08-17 13:09:06
+## 17: 2020-08-17 13:09:06
+## 18: 2020-08-17 13:09:06
+## 19: 2020-08-17 13:09:06
+## 20: 2020-08-17 13:09:06
+## 21: 2020-08-17 13:09:06
+## 22: 2020-08-17 13:09:06
+## 23: 2020-08-17 13:09:08
+## 24: 2020-08-17 13:09:08
+## 25: 2020-08-17 13:09:08
+## 26: 2020-08-17 13:09:08
+## 27: 2020-08-17 13:09:08
+## 28: 2020-08-17 13:09:08
+## 29: 2020-08-17 13:09:08
+## 30: 2020-08-17 13:09:08
+## 31: 2020-08-17 13:09:08
+## 32: 2020-08-17 13:09:08
+## 33: 2020-08-17 13:09:08
+## 34: 2020-08-17 13:09:08
+## 35: 2020-08-17 13:09:08
+## 36: 2020-08-17 13:09:08
+## 37: 2020-08-17 13:09:08
+## 38: 2020-08-17 13:09:08
+## 39: 2020-08-17 13:09:08
+## 40: 2020-08-17 13:09:08
+## 41: 2020-08-17 13:09:08
+## 42: 2020-08-17 13:09:08
+## 43: 2020-08-17 13:09:08
+## 44: 2020-08-17 13:09:08
+## 45: 2020-08-17 13:09:08
+## 46: 2020-08-17 13:09:08
+## 47: 2020-08-17 13:09:08
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb87"><html><body><pre class="r"><span class="co"># Keep all Cache items created with an rnorm() call</span>
 <span class="fu"><a href="../reference/viewCache.html">keepCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">userTags</span> <span class="kw">=</span> <span class="st">"rnorm"</span>, <span class="kw">ask</span> <span class="kw">=</span> <span class="fl">FALSE</span>)</pre></body></html></div>
@@ -761,10 +761,10 @@
 ##  2: f7bee22047b8d0c1            function                 rnorm
 ##  3: f7bee22047b8d0c1               class               numeric
 ##  4: f7bee22047b8d0c1         object.size                  1008
-##  5: f7bee22047b8d0c1            accessed   2020-08-17 12:49:45
+##  5: f7bee22047b8d0c1            accessed   2020-08-17 13:09:06
 ##  6: f7bee22047b8d0c1             inCloud                 FALSE
 ##  7: f7bee22047b8d0c1          resultHash                      
-##  8: f7bee22047b8d0c1   elapsedTimeDigest      0.003009081 secs
+##  8: f7bee22047b8d0c1   elapsedTimeDigest      0.002508879 secs
 ##  9: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 10: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 11: f7bee22047b8d0c1      otherFunctions               do.call
@@ -779,36 +779,36 @@
 ## 20: f7bee22047b8d0c1           preDigest    n:7eef4eae85fd9229
 ## 21: f7bee22047b8d0c1           preDigest .FUN:4f604aa46882b368
 ## 22: f7bee22047b8d0c1           file.size                   174
-## 23: f7bee22047b8d0c1            accessed   2020-08-17 12:49:46
-## 24: f7bee22047b8d0c1     elapsedTimeLoad       0.03409004 secs
-## 25: f7bee22047b8d0c1            accessed   2020-08-17 12:49:47
+## 23: f7bee22047b8d0c1            accessed   2020-08-17 13:09:08
+## 24: f7bee22047b8d0c1     elapsedTimeLoad       0.01203299 secs
+## 25: f7bee22047b8d0c1            accessed   2020-08-17 13:09:08
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:45
-##  2: 2020-08-17 12:49:45
-##  3: 2020-08-17 12:49:45
-##  4: 2020-08-17 12:49:45
-##  5: 2020-08-17 12:49:45
-##  6: 2020-08-17 12:49:45
-##  7: 2020-08-17 12:49:45
-##  8: 2020-08-17 12:49:45
-##  9: 2020-08-17 12:49:45
-## 10: 2020-08-17 12:49:45
-## 11: 2020-08-17 12:49:45
-## 12: 2020-08-17 12:49:45
-## 13: 2020-08-17 12:49:45
-## 14: 2020-08-17 12:49:45
-## 15: 2020-08-17 12:49:45
-## 16: 2020-08-17 12:49:45
-## 17: 2020-08-17 12:49:45
-## 18: 2020-08-17 12:49:45
-## 19: 2020-08-17 12:49:45
-## 20: 2020-08-17 12:49:45
-## 21: 2020-08-17 12:49:45
-## 22: 2020-08-17 12:49:45
-## 23: 2020-08-17 12:49:46
-## 24: 2020-08-17 12:49:46
-## 25: 2020-08-17 12:49:47
+##  1: 2020-08-17 13:09:06
+##  2: 2020-08-17 13:09:06
+##  3: 2020-08-17 13:09:06
+##  4: 2020-08-17 13:09:06
+##  5: 2020-08-17 13:09:06
+##  6: 2020-08-17 13:09:06
+##  7: 2020-08-17 13:09:06
+##  8: 2020-08-17 13:09:06
+##  9: 2020-08-17 13:09:06
+## 10: 2020-08-17 13:09:06
+## 11: 2020-08-17 13:09:06
+## 12: 2020-08-17 13:09:06
+## 13: 2020-08-17 13:09:06
+## 14: 2020-08-17 13:09:06
+## 15: 2020-08-17 13:09:06
+## 16: 2020-08-17 13:09:06
+## 17: 2020-08-17 13:09:06
+## 18: 2020-08-17 13:09:06
+## 19: 2020-08-17 13:09:06
+## 20: 2020-08-17 13:09:06
+## 21: 2020-08-17 13:09:06
+## 22: 2020-08-17 13:09:06
+## 23: 2020-08-17 13:09:08
+## 24: 2020-08-17 13:09:08
+## 25: 2020-08-17 13:09:08
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb92"><html><body><pre class="r"><span class="co"># Remove all Cache items that happened within a rnorm() call</span>
 <span class="fu"><a href="../reference/viewCache.html">clearCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">userTags</span> <span class="kw">=</span> <span class="st">"rnorm"</span>, <span class="kw">ask</span> <span class="kw">=</span> <span class="fl">FALSE</span>)</pre></body></html></div>
@@ -835,10 +835,10 @@
 ##  2: 142b4176fe87d51d            function                 rnorm
 ##  3: 142b4176fe87d51d               class               numeric
 ##  4: 142b4176fe87d51d         object.size                  1024
-##  5: 142b4176fe87d51d            accessed   2020-08-17 12:49:48
+##  5: 142b4176fe87d51d            accessed   2020-08-17 13:09:09
 ##  6: 142b4176fe87d51d             inCloud                 FALSE
 ##  7: 142b4176fe87d51d          resultHash                      
-##  8: 142b4176fe87d51d   elapsedTimeDigest        0.0020051 secs
+##  8: 142b4176fe87d51d   elapsedTimeDigest      0.003006935 secs
 ##  9: 142b4176fe87d51d elapsedTimeFirstRun                0 secs
 ## 10: 142b4176fe87d51d      otherFunctions               saveRDS
 ## 11: 142b4176fe87d51d      otherFunctions               do.call
@@ -855,28 +855,28 @@
 ## 22: 142b4176fe87d51d           file.size                   184
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:48
-##  2: 2020-08-17 12:49:48
-##  3: 2020-08-17 12:49:48
-##  4: 2020-08-17 12:49:48
-##  5: 2020-08-17 12:49:48
-##  6: 2020-08-17 12:49:48
-##  7: 2020-08-17 12:49:48
-##  8: 2020-08-17 12:49:48
-##  9: 2020-08-17 12:49:48
-## 10: 2020-08-17 12:49:48
-## 11: 2020-08-17 12:49:48
-## 12: 2020-08-17 12:49:48
-## 13: 2020-08-17 12:49:48
-## 14: 2020-08-17 12:49:48
-## 15: 2020-08-17 12:49:48
-## 16: 2020-08-17 12:49:48
-## 17: 2020-08-17 12:49:48
-## 18: 2020-08-17 12:49:48
-## 19: 2020-08-17 12:49:48
-## 20: 2020-08-17 12:49:48
-## 21: 2020-08-17 12:49:48
-## 22: 2020-08-17 12:49:48
+##  1: 2020-08-17 13:09:09
+##  2: 2020-08-17 13:09:09
+##  3: 2020-08-17 13:09:09
+##  4: 2020-08-17 13:09:09
+##  5: 2020-08-17 13:09:09
+##  6: 2020-08-17 13:09:09
+##  7: 2020-08-17 13:09:09
+##  8: 2020-08-17 13:09:09
+##  9: 2020-08-17 13:09:09
+## 10: 2020-08-17 13:09:09
+## 11: 2020-08-17 13:09:09
+## 12: 2020-08-17 13:09:09
+## 13: 2020-08-17 13:09:09
+## 14: 2020-08-17 13:09:09
+## 15: 2020-08-17 13:09:09
+## 16: 2020-08-17 13:09:09
+## 17: 2020-08-17 13:09:09
+## 18: 2020-08-17 13:09:09
+## 19: 2020-08-17 13:09:09
+## 20: 2020-08-17 13:09:09
+## 21: 2020-08-17 13:09:09
+## 22: 2020-08-17 13:09:09
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb106"><html><body><pre class="r"><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">ask</span> <span class="kw">=</span> <span class="fl">FALSE</span>)</pre></body></html></div>
 </div>
@@ -897,10 +897,10 @@
 ##  2: 3aef38d1fc02aee5            function                 runif
 ##  3: 3aef38d1fc02aee5               class               numeric
 ##  4: 3aef38d1fc02aee5         object.size                  1008
-##  5: 3aef38d1fc02aee5            accessed   2020-08-17 12:49:48
+##  5: 3aef38d1fc02aee5            accessed   2020-08-17 13:09:10
 ##  6: 3aef38d1fc02aee5             inCloud                 FALSE
 ##  7: 3aef38d1fc02aee5          resultHash                      
-##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.001502991 secs
+##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.004007101 secs
 ##  9: 3aef38d1fc02aee5 elapsedTimeFirstRun                0 secs
 ## 10: 3aef38d1fc02aee5      otherFunctions               saveRDS
 ## 11: 3aef38d1fc02aee5      otherFunctions               do.call
@@ -914,15 +914,15 @@
 ## 19: 3aef38d1fc02aee5      otherFunctions                handle
 ## 20: 3aef38d1fc02aee5           preDigest    n:7eef4eae85fd9229
 ## 21: 3aef38d1fc02aee5           preDigest .FUN:881ec847b7161f3c
-## 22: 3aef38d1fc02aee5           file.size                   166
+## 22: 3aef38d1fc02aee5           file.size                   167
 ## 23: f7bee22047b8d0c1          objectName                     b
 ## 24: f7bee22047b8d0c1            function                 rnorm
 ## 25: f7bee22047b8d0c1               class               numeric
 ## 26: f7bee22047b8d0c1         object.size                  1008
-## 27: f7bee22047b8d0c1            accessed   2020-08-17 12:49:48
+## 27: f7bee22047b8d0c1            accessed   2020-08-17 13:09:10
 ## 28: f7bee22047b8d0c1             inCloud                 FALSE
 ## 29: f7bee22047b8d0c1          resultHash                      
-## 30: f7bee22047b8d0c1   elapsedTimeDigest      0.001502991 secs
+## 30: f7bee22047b8d0c1   elapsedTimeDigest      0.002006054 secs
 ## 31: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 32: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 33: f7bee22047b8d0c1      otherFunctions               do.call
@@ -939,50 +939,50 @@
 ## 44: f7bee22047b8d0c1           file.size                   174
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:48
-##  2: 2020-08-17 12:49:48
-##  3: 2020-08-17 12:49:48
-##  4: 2020-08-17 12:49:48
-##  5: 2020-08-17 12:49:48
-##  6: 2020-08-17 12:49:48
-##  7: 2020-08-17 12:49:48
-##  8: 2020-08-17 12:49:48
-##  9: 2020-08-17 12:49:48
-## 10: 2020-08-17 12:49:48
-## 11: 2020-08-17 12:49:48
-## 12: 2020-08-17 12:49:48
-## 13: 2020-08-17 12:49:48
-## 14: 2020-08-17 12:49:48
-## 15: 2020-08-17 12:49:48
-## 16: 2020-08-17 12:49:48
-## 17: 2020-08-17 12:49:48
-## 18: 2020-08-17 12:49:48
-## 19: 2020-08-17 12:49:48
-## 20: 2020-08-17 12:49:48
-## 21: 2020-08-17 12:49:48
-## 22: 2020-08-17 12:49:48
-## 23: 2020-08-17 12:49:48
-## 24: 2020-08-17 12:49:48
-## 25: 2020-08-17 12:49:48
-## 26: 2020-08-17 12:49:48
-## 27: 2020-08-17 12:49:48
-## 28: 2020-08-17 12:49:48
-## 29: 2020-08-17 12:49:48
-## 30: 2020-08-17 12:49:48
-## 31: 2020-08-17 12:49:48
-## 32: 2020-08-17 12:49:48
-## 33: 2020-08-17 12:49:48
-## 34: 2020-08-17 12:49:48
-## 35: 2020-08-17 12:49:48
-## 36: 2020-08-17 12:49:48
-## 37: 2020-08-17 12:49:48
-## 38: 2020-08-17 12:49:48
-## 39: 2020-08-17 12:49:48
-## 40: 2020-08-17 12:49:48
-## 41: 2020-08-17 12:49:48
-## 42: 2020-08-17 12:49:48
-## 43: 2020-08-17 12:49:48
-## 44: 2020-08-17 12:49:48
+##  1: 2020-08-17 13:09:10
+##  2: 2020-08-17 13:09:10
+##  3: 2020-08-17 13:09:10
+##  4: 2020-08-17 13:09:10
+##  5: 2020-08-17 13:09:10
+##  6: 2020-08-17 13:09:10
+##  7: 2020-08-17 13:09:10
+##  8: 2020-08-17 13:09:10
+##  9: 2020-08-17 13:09:10
+## 10: 2020-08-17 13:09:10
+## 11: 2020-08-17 13:09:10
+## 12: 2020-08-17 13:09:10
+## 13: 2020-08-17 13:09:10
+## 14: 2020-08-17 13:09:10
+## 15: 2020-08-17 13:09:10
+## 16: 2020-08-17 13:09:10
+## 17: 2020-08-17 13:09:10
+## 18: 2020-08-17 13:09:10
+## 19: 2020-08-17 13:09:10
+## 20: 2020-08-17 13:09:10
+## 21: 2020-08-17 13:09:10
+## 22: 2020-08-17 13:09:10
+## 23: 2020-08-17 13:09:10
+## 24: 2020-08-17 13:09:10
+## 25: 2020-08-17 13:09:10
+## 26: 2020-08-17 13:09:10
+## 27: 2020-08-17 13:09:10
+## 28: 2020-08-17 13:09:10
+## 29: 2020-08-17 13:09:10
+## 30: 2020-08-17 13:09:10
+## 31: 2020-08-17 13:09:10
+## 32: 2020-08-17 13:09:10
+## 33: 2020-08-17 13:09:10
+## 34: 2020-08-17 13:09:10
+## 35: 2020-08-17 13:09:10
+## 36: 2020-08-17 13:09:10
+## 37: 2020-08-17 13:09:10
+## 38: 2020-08-17 13:09:10
+## 39: 2020-08-17 13:09:10
+## 40: 2020-08-17 13:09:10
+## 41: 2020-08-17 13:09:10
+## 42: 2020-08-17 13:09:10
+## 43: 2020-08-17 13:09:10
+## 44: 2020-08-17 13:09:10
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb112"><html><body><pre class="r"><span class="co"># show objects that are both runif and rnorm</span>
 <span class="co"># (i.e., none in this case, because objecs are either or, not both)</span>
@@ -1001,10 +1001,10 @@
 ##  2: 3aef38d1fc02aee5            function                 runif
 ##  3: 3aef38d1fc02aee5               class               numeric
 ##  4: 3aef38d1fc02aee5         object.size                  1008
-##  5: 3aef38d1fc02aee5            accessed   2020-08-17 12:49:48
+##  5: 3aef38d1fc02aee5            accessed   2020-08-17 13:09:10
 ##  6: 3aef38d1fc02aee5             inCloud                 FALSE
 ##  7: 3aef38d1fc02aee5          resultHash                      
-##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.001502991 secs
+##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.004007101 secs
 ##  9: 3aef38d1fc02aee5 elapsedTimeFirstRun                0 secs
 ## 10: 3aef38d1fc02aee5      otherFunctions               saveRDS
 ## 11: 3aef38d1fc02aee5      otherFunctions               do.call
@@ -1018,15 +1018,15 @@
 ## 19: 3aef38d1fc02aee5      otherFunctions                handle
 ## 20: 3aef38d1fc02aee5           preDigest    n:7eef4eae85fd9229
 ## 21: 3aef38d1fc02aee5           preDigest .FUN:881ec847b7161f3c
-## 22: 3aef38d1fc02aee5           file.size                   166
+## 22: 3aef38d1fc02aee5           file.size                   167
 ## 23: f7bee22047b8d0c1          objectName                     b
 ## 24: f7bee22047b8d0c1            function                 rnorm
 ## 25: f7bee22047b8d0c1               class               numeric
 ## 26: f7bee22047b8d0c1         object.size                  1008
-## 27: f7bee22047b8d0c1            accessed   2020-08-17 12:49:48
+## 27: f7bee22047b8d0c1            accessed   2020-08-17 13:09:10
 ## 28: f7bee22047b8d0c1             inCloud                 FALSE
 ## 29: f7bee22047b8d0c1          resultHash                      
-## 30: f7bee22047b8d0c1   elapsedTimeDigest      0.001502991 secs
+## 30: f7bee22047b8d0c1   elapsedTimeDigest      0.002006054 secs
 ## 31: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 32: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 33: f7bee22047b8d0c1      otherFunctions               do.call
@@ -1043,50 +1043,50 @@
 ## 44: f7bee22047b8d0c1           file.size                   174
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:48
-##  2: 2020-08-17 12:49:48
-##  3: 2020-08-17 12:49:48
-##  4: 2020-08-17 12:49:48
-##  5: 2020-08-17 12:49:48
-##  6: 2020-08-17 12:49:48
-##  7: 2020-08-17 12:49:48
-##  8: 2020-08-17 12:49:48
-##  9: 2020-08-17 12:49:48
-## 10: 2020-08-17 12:49:48
-## 11: 2020-08-17 12:49:48
-## 12: 2020-08-17 12:49:48
-## 13: 2020-08-17 12:49:48
-## 14: 2020-08-17 12:49:48
-## 15: 2020-08-17 12:49:48
-## 16: 2020-08-17 12:49:48
-## 17: 2020-08-17 12:49:48
-## 18: 2020-08-17 12:49:48
-## 19: 2020-08-17 12:49:48
-## 20: 2020-08-17 12:49:48
-## 21: 2020-08-17 12:49:48
-## 22: 2020-08-17 12:49:48
-## 23: 2020-08-17 12:49:48
-## 24: 2020-08-17 12:49:48
-## 25: 2020-08-17 12:49:48
-## 26: 2020-08-17 12:49:48
-## 27: 2020-08-17 12:49:48
-## 28: 2020-08-17 12:49:48
-## 29: 2020-08-17 12:49:48
-## 30: 2020-08-17 12:49:48
-## 31: 2020-08-17 12:49:48
-## 32: 2020-08-17 12:49:48
-## 33: 2020-08-17 12:49:48
-## 34: 2020-08-17 12:49:48
-## 35: 2020-08-17 12:49:48
-## 36: 2020-08-17 12:49:48
-## 37: 2020-08-17 12:49:48
-## 38: 2020-08-17 12:49:48
-## 39: 2020-08-17 12:49:48
-## 40: 2020-08-17 12:49:48
-## 41: 2020-08-17 12:49:48
-## 42: 2020-08-17 12:49:48
-## 43: 2020-08-17 12:49:48
-## 44: 2020-08-17 12:49:48
+##  1: 2020-08-17 13:09:10
+##  2: 2020-08-17 13:09:10
+##  3: 2020-08-17 13:09:10
+##  4: 2020-08-17 13:09:10
+##  5: 2020-08-17 13:09:10
+##  6: 2020-08-17 13:09:10
+##  7: 2020-08-17 13:09:10
+##  8: 2020-08-17 13:09:10
+##  9: 2020-08-17 13:09:10
+## 10: 2020-08-17 13:09:10
+## 11: 2020-08-17 13:09:10
+## 12: 2020-08-17 13:09:10
+## 13: 2020-08-17 13:09:10
+## 14: 2020-08-17 13:09:10
+## 15: 2020-08-17 13:09:10
+## 16: 2020-08-17 13:09:10
+## 17: 2020-08-17 13:09:10
+## 18: 2020-08-17 13:09:10
+## 19: 2020-08-17 13:09:10
+## 20: 2020-08-17 13:09:10
+## 21: 2020-08-17 13:09:10
+## 22: 2020-08-17 13:09:10
+## 23: 2020-08-17 13:09:10
+## 24: 2020-08-17 13:09:10
+## 25: 2020-08-17 13:09:10
+## 26: 2020-08-17 13:09:10
+## 27: 2020-08-17 13:09:10
+## 28: 2020-08-17 13:09:10
+## 29: 2020-08-17 13:09:10
+## 30: 2020-08-17 13:09:10
+## 31: 2020-08-17 13:09:10
+## 32: 2020-08-17 13:09:10
+## 33: 2020-08-17 13:09:10
+## 34: 2020-08-17 13:09:10
+## 35: 2020-08-17 13:09:10
+## 36: 2020-08-17 13:09:10
+## 37: 2020-08-17 13:09:10
+## 38: 2020-08-17 13:09:10
+## 39: 2020-08-17 13:09:10
+## 40: 2020-08-17 13:09:10
+## 41: 2020-08-17 13:09:10
+## 42: 2020-08-17 13:09:10
+## 43: 2020-08-17 13:09:10
+## 44: 2020-08-17 13:09:10
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb122"><html><body><pre class="r"><span class="co"># keep only objects that are either runif or rnorm ("or" search)</span>
 <span class="fu"><a href="../reference/viewCache.html">keepCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">userTags</span> <span class="kw">=</span> <span class="st">"runif|rnorm"</span>, <span class="kw">ask</span> <span class="kw">=</span> <span class="fl">FALSE</span>)</pre></body></html></div>
@@ -1098,10 +1098,10 @@
 ##  2: 3aef38d1fc02aee5            function                 runif
 ##  3: 3aef38d1fc02aee5               class               numeric
 ##  4: 3aef38d1fc02aee5         object.size                  1008
-##  5: 3aef38d1fc02aee5            accessed   2020-08-17 12:49:48
+##  5: 3aef38d1fc02aee5            accessed   2020-08-17 13:09:10
 ##  6: 3aef38d1fc02aee5             inCloud                 FALSE
 ##  7: 3aef38d1fc02aee5          resultHash                      
-##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.001502991 secs
+##  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.004007101 secs
 ##  9: 3aef38d1fc02aee5 elapsedTimeFirstRun                0 secs
 ## 10: 3aef38d1fc02aee5      otherFunctions               saveRDS
 ## 11: 3aef38d1fc02aee5      otherFunctions               do.call
@@ -1115,15 +1115,15 @@
 ## 19: 3aef38d1fc02aee5      otherFunctions                handle
 ## 20: 3aef38d1fc02aee5           preDigest    n:7eef4eae85fd9229
 ## 21: 3aef38d1fc02aee5           preDigest .FUN:881ec847b7161f3c
-## 22: 3aef38d1fc02aee5           file.size                   166
+## 22: 3aef38d1fc02aee5           file.size                   167
 ## 23: f7bee22047b8d0c1          objectName                     b
 ## 24: f7bee22047b8d0c1            function                 rnorm
 ## 25: f7bee22047b8d0c1               class               numeric
 ## 26: f7bee22047b8d0c1         object.size                  1008
-## 27: f7bee22047b8d0c1            accessed   2020-08-17 12:49:48
+## 27: f7bee22047b8d0c1            accessed   2020-08-17 13:09:10
 ## 28: f7bee22047b8d0c1             inCloud                 FALSE
 ## 29: f7bee22047b8d0c1          resultHash                      
-## 30: f7bee22047b8d0c1   elapsedTimeDigest      0.001502991 secs
+## 30: f7bee22047b8d0c1   elapsedTimeDigest      0.002006054 secs
 ## 31: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
 ## 32: f7bee22047b8d0c1      otherFunctions               saveRDS
 ## 33: f7bee22047b8d0c1      otherFunctions               do.call
@@ -1140,50 +1140,50 @@
 ## 44: f7bee22047b8d0c1           file.size                   174
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:48
-##  2: 2020-08-17 12:49:48
-##  3: 2020-08-17 12:49:48
-##  4: 2020-08-17 12:49:48
-##  5: 2020-08-17 12:49:48
-##  6: 2020-08-17 12:49:48
-##  7: 2020-08-17 12:49:48
-##  8: 2020-08-17 12:49:48
-##  9: 2020-08-17 12:49:48
-## 10: 2020-08-17 12:49:48
-## 11: 2020-08-17 12:49:48
-## 12: 2020-08-17 12:49:48
-## 13: 2020-08-17 12:49:48
-## 14: 2020-08-17 12:49:48
-## 15: 2020-08-17 12:49:48
-## 16: 2020-08-17 12:49:48
-## 17: 2020-08-17 12:49:48
-## 18: 2020-08-17 12:49:48
-## 19: 2020-08-17 12:49:48
-## 20: 2020-08-17 12:49:48
-## 21: 2020-08-17 12:49:48
-## 22: 2020-08-17 12:49:48
-## 23: 2020-08-17 12:49:48
-## 24: 2020-08-17 12:49:48
-## 25: 2020-08-17 12:49:48
-## 26: 2020-08-17 12:49:48
-## 27: 2020-08-17 12:49:48
-## 28: 2020-08-17 12:49:48
-## 29: 2020-08-17 12:49:48
-## 30: 2020-08-17 12:49:48
-## 31: 2020-08-17 12:49:48
-## 32: 2020-08-17 12:49:48
-## 33: 2020-08-17 12:49:48
-## 34: 2020-08-17 12:49:48
-## 35: 2020-08-17 12:49:48
-## 36: 2020-08-17 12:49:48
-## 37: 2020-08-17 12:49:48
-## 38: 2020-08-17 12:49:48
-## 39: 2020-08-17 12:49:48
-## 40: 2020-08-17 12:49:48
-## 41: 2020-08-17 12:49:48
-## 42: 2020-08-17 12:49:48
-## 43: 2020-08-17 12:49:48
-## 44: 2020-08-17 12:49:48
+##  1: 2020-08-17 13:09:10
+##  2: 2020-08-17 13:09:10
+##  3: 2020-08-17 13:09:10
+##  4: 2020-08-17 13:09:10
+##  5: 2020-08-17 13:09:10
+##  6: 2020-08-17 13:09:10
+##  7: 2020-08-17 13:09:10
+##  8: 2020-08-17 13:09:10
+##  9: 2020-08-17 13:09:10
+## 10: 2020-08-17 13:09:10
+## 11: 2020-08-17 13:09:10
+## 12: 2020-08-17 13:09:10
+## 13: 2020-08-17 13:09:10
+## 14: 2020-08-17 13:09:10
+## 15: 2020-08-17 13:09:10
+## 16: 2020-08-17 13:09:10
+## 17: 2020-08-17 13:09:10
+## 18: 2020-08-17 13:09:10
+## 19: 2020-08-17 13:09:10
+## 20: 2020-08-17 13:09:10
+## 21: 2020-08-17 13:09:10
+## 22: 2020-08-17 13:09:10
+## 23: 2020-08-17 13:09:10
+## 24: 2020-08-17 13:09:10
+## 25: 2020-08-17 13:09:10
+## 26: 2020-08-17 13:09:10
+## 27: 2020-08-17 13:09:10
+## 28: 2020-08-17 13:09:10
+## 29: 2020-08-17 13:09:10
+## 30: 2020-08-17 13:09:10
+## 31: 2020-08-17 13:09:10
+## 32: 2020-08-17 13:09:10
+## 33: 2020-08-17 13:09:10
+## 34: 2020-08-17 13:09:10
+## 35: 2020-08-17 13:09:10
+## 36: 2020-08-17 13:09:10
+## 37: 2020-08-17 13:09:10
+## 38: 2020-08-17 13:09:10
+## 39: 2020-08-17 13:09:10
+## 40: 2020-08-17 13:09:10
+## 41: 2020-08-17 13:09:10
+## 42: 2020-08-17 13:09:10
+## 43: 2020-08-17 13:09:10
+## 44: 2020-08-17 13:09:10
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb127"><html><body><pre class="r"><span class="fu"><a href="../reference/viewCache.html">clearCache</a></span>(<span class="no">tmpDir</span>, <span class="kw">ask</span> <span class="kw">=</span> <span class="fl">FALSE</span>)</pre></body></html></div>
 </div>
@@ -1211,7 +1211,7 @@
   <span class="co"># project raster generates warnings when run non-interactively</span>
   <span class="fu"><a href="../reference/Cache.html">Cache</a></span>(<span class="no">projectRaster</span>, <span class="no">ras</span>, <span class="kw">crs</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/projection.html">crs</a></span>(<span class="no">ras</span>), <span class="kw">res</span> <span class="kw">=</span> <span class="fl">5</span>, <span class="kw">cacheRepo</span> <span class="kw">=</span> <span class="no">tmpDir</span>)
 )</pre></body></html></div>
-<pre><code>##   ...(Object to retrieve (32b94bd979dd20e5.rds))</code></pre>
+<pre><code>##   ...(Object to retrieve (7aa653e36bb42d74.rds))</code></pre>
 <pre><code>##      loaded cached result from previous projectRaster call,</code></pre>
 <div class="sourceCode" id="cb131"><html><body><pre class="r"><span class="co"># recovered cached version is same as non-cached version</span>
 <span class="fu"><a href="https://rdrr.io/r/base/all.equal.html">all.equal</a></span>(<span class="no">notCached</span>, <span class="no">reRun</span>) <span class="co">## TRUE</span></pre></body></html></div>
@@ -1241,7 +1241,7 @@
 <span class="co">#   Cache calls, unless individually overridden ... here inner</span>
 <span class="co">#   uses tmpdir2 repository</span>
 <span class="fu"><a href="../reference/Cache.html">Cache</a></span>(<span class="no">outer</span>, <span class="kw">n</span> <span class="kw">=</span> <span class="fl">2</span>, <span class="kw">cacheRepo</span> <span class="kw">=</span> <span class="no">tmpdir1</span>, <span class="kw">notOlderThan</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span>())</pre></body></html></div>
-<pre><code>## [1] -0.4374200  0.3657675 -0.3325134
+<pre><code>## [1] -1.0656387 -1.7851212  0.6830708
 ## attr(,".Cache")
 ## attr(,".Cache")$newCache
 ## [1] TRUE
@@ -1258,10 +1258,10 @@
 ##  1: 4ac2b7c0f42d1e46            function                 rnorm
 ##  2: 4ac2b7c0f42d1e46               class               numeric
 ##  3: 4ac2b7c0f42d1e46         object.size                  1008
-##  4: 4ac2b7c0f42d1e46            accessed   2020-08-17 12:49:50
+##  4: 4ac2b7c0f42d1e46            accessed   2020-08-17 13:09:12
 ##  5: 4ac2b7c0f42d1e46             inCloud                 FALSE
 ##  6: 4ac2b7c0f42d1e46          resultHash                      
-##  7: 4ac2b7c0f42d1e46   elapsedTimeDigest      0.001504898 secs
+##  7: 4ac2b7c0f42d1e46   elapsedTimeDigest      0.003006935 secs
 ##  8: 4ac2b7c0f42d1e46 elapsedTimeFirstRun                0 secs
 ##  9: 4ac2b7c0f42d1e46      otherFunctions               saveRDS
 ## 10: 4ac2b7c0f42d1e46      otherFunctions               do.call
@@ -1280,11 +1280,11 @@
 ## 23: a7af5367c13aba8f            function                 outer
 ## 24: a7af5367c13aba8f               class               numeric
 ## 25: a7af5367c13aba8f         object.size                  1008
-## 26: a7af5367c13aba8f            accessed   2020-08-17 12:49:50
+## 26: a7af5367c13aba8f            accessed   2020-08-17 13:09:12
 ## 27: a7af5367c13aba8f             inCloud                 FALSE
 ## 28: a7af5367c13aba8f          resultHash                      
-## 29: a7af5367c13aba8f   elapsedTimeDigest      0.001502991 secs
-## 30: a7af5367c13aba8f elapsedTimeFirstRun         0.188005 secs
+## 29: a7af5367c13aba8f   elapsedTimeDigest      0.003009081 secs
+## 30: a7af5367c13aba8f elapsedTimeFirstRun        0.2862711 secs
 ## 31: a7af5367c13aba8f      otherFunctions               saveRDS
 ## 32: a7af5367c13aba8f      otherFunctions               do.call
 ## 33: a7af5367c13aba8f      otherFunctions          process_file
@@ -1300,49 +1300,49 @@
 ## 43: a7af5367c13aba8f           file.size                   166
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:50
-##  2: 2020-08-17 12:49:50
-##  3: 2020-08-17 12:49:50
-##  4: 2020-08-17 12:49:50
-##  5: 2020-08-17 12:49:50
-##  6: 2020-08-17 12:49:50
-##  7: 2020-08-17 12:49:50
-##  8: 2020-08-17 12:49:50
-##  9: 2020-08-17 12:49:50
-## 10: 2020-08-17 12:49:50
-## 11: 2020-08-17 12:49:50
-## 12: 2020-08-17 12:49:50
-## 13: 2020-08-17 12:49:50
-## 14: 2020-08-17 12:49:50
-## 15: 2020-08-17 12:49:50
-## 16: 2020-08-17 12:49:50
-## 17: 2020-08-17 12:49:50
-## 18: 2020-08-17 12:49:50
-## 19: 2020-08-17 12:49:50
-## 20: 2020-08-17 12:49:50
-## 21: 2020-08-17 12:49:50
-## 22: 2020-08-17 12:49:50
-## 23: 2020-08-17 12:49:50
-## 24: 2020-08-17 12:49:50
-## 25: 2020-08-17 12:49:50
-## 26: 2020-08-17 12:49:50
-## 27: 2020-08-17 12:49:50
-## 28: 2020-08-17 12:49:50
-## 29: 2020-08-17 12:49:50
-## 30: 2020-08-17 12:49:50
-## 31: 2020-08-17 12:49:50
-## 32: 2020-08-17 12:49:50
-## 33: 2020-08-17 12:49:50
-## 34: 2020-08-17 12:49:50
-## 35: 2020-08-17 12:49:50
-## 36: 2020-08-17 12:49:50
-## 37: 2020-08-17 12:49:50
-## 38: 2020-08-17 12:49:50
-## 39: 2020-08-17 12:49:50
-## 40: 2020-08-17 12:49:50
-## 41: 2020-08-17 12:49:50
-## 42: 2020-08-17 12:49:50
-## 43: 2020-08-17 12:49:50
+##  1: 2020-08-17 13:09:12
+##  2: 2020-08-17 13:09:12
+##  3: 2020-08-17 13:09:12
+##  4: 2020-08-17 13:09:12
+##  5: 2020-08-17 13:09:12
+##  6: 2020-08-17 13:09:12
+##  7: 2020-08-17 13:09:12
+##  8: 2020-08-17 13:09:12
+##  9: 2020-08-17 13:09:12
+## 10: 2020-08-17 13:09:12
+## 11: 2020-08-17 13:09:12
+## 12: 2020-08-17 13:09:12
+## 13: 2020-08-17 13:09:12
+## 14: 2020-08-17 13:09:12
+## 15: 2020-08-17 13:09:12
+## 16: 2020-08-17 13:09:12
+## 17: 2020-08-17 13:09:12
+## 18: 2020-08-17 13:09:12
+## 19: 2020-08-17 13:09:12
+## 20: 2020-08-17 13:09:12
+## 21: 2020-08-17 13:09:12
+## 22: 2020-08-17 13:09:12
+## 23: 2020-08-17 13:09:12
+## 24: 2020-08-17 13:09:12
+## 25: 2020-08-17 13:09:12
+## 26: 2020-08-17 13:09:12
+## 27: 2020-08-17 13:09:12
+## 28: 2020-08-17 13:09:12
+## 29: 2020-08-17 13:09:12
+## 30: 2020-08-17 13:09:12
+## 31: 2020-08-17 13:09:12
+## 32: 2020-08-17 13:09:12
+## 33: 2020-08-17 13:09:12
+## 34: 2020-08-17 13:09:12
+## 35: 2020-08-17 13:09:12
+## 36: 2020-08-17 13:09:12
+## 37: 2020-08-17 13:09:12
+## 38: 2020-08-17 13:09:12
+## 39: 2020-08-17 13:09:12
+## 40: 2020-08-17 13:09:12
+## 41: 2020-08-17 13:09:12
+## 42: 2020-08-17 13:09:12
+## 43: 2020-08-17 13:09:12
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb140"><html><body><pre class="r"><span class="fu"><a href="../reference/viewCache.html">showCache</a></span>(<span class="no">tmpdir2</span>) <span class="co"># 1 function call</span></pre></body></html></div>
 <pre><code>## Cache size:</code></pre>
@@ -1352,11 +1352,11 @@
 ##  1: 33ceb4fb525fd08f            function                 inner
 ##  2: 33ceb4fb525fd08f               class               numeric
 ##  3: 33ceb4fb525fd08f         object.size                  1008
-##  4: 33ceb4fb525fd08f            accessed   2020-08-17 12:49:50
+##  4: 33ceb4fb525fd08f            accessed   2020-08-17 13:09:12
 ##  5: 33ceb4fb525fd08f             inCloud                 FALSE
 ##  6: 33ceb4fb525fd08f          resultHash                      
-##  7: 33ceb4fb525fd08f   elapsedTimeDigest      0.002506018 secs
-##  8: 33ceb4fb525fd08f elapsedTimeFirstRun       0.06918597 secs
+##  7: 33ceb4fb525fd08f   elapsedTimeDigest      0.003006935 secs
+##  8: 33ceb4fb525fd08f elapsedTimeFirstRun        0.1178169 secs
 ##  9: 33ceb4fb525fd08f      otherFunctions               saveRDS
 ## 10: 33ceb4fb525fd08f      otherFunctions               do.call
 ## 11: 33ceb4fb525fd08f      otherFunctions          process_file
@@ -1372,27 +1372,27 @@
 ## 21: 33ceb4fb525fd08f           file.size                   166
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:50
-##  2: 2020-08-17 12:49:50
-##  3: 2020-08-17 12:49:50
-##  4: 2020-08-17 12:49:50
-##  5: 2020-08-17 12:49:50
-##  6: 2020-08-17 12:49:50
-##  7: 2020-08-17 12:49:50
-##  8: 2020-08-17 12:49:50
-##  9: 2020-08-17 12:49:50
-## 10: 2020-08-17 12:49:50
-## 11: 2020-08-17 12:49:50
-## 12: 2020-08-17 12:49:50
-## 13: 2020-08-17 12:49:50
-## 14: 2020-08-17 12:49:50
-## 15: 2020-08-17 12:49:50
-## 16: 2020-08-17 12:49:50
-## 17: 2020-08-17 12:49:50
-## 18: 2020-08-17 12:49:50
-## 19: 2020-08-17 12:49:50
-## 20: 2020-08-17 12:49:50
-## 21: 2020-08-17 12:49:50
+##  1: 2020-08-17 13:09:12
+##  2: 2020-08-17 13:09:12
+##  3: 2020-08-17 13:09:12
+##  4: 2020-08-17 13:09:12
+##  5: 2020-08-17 13:09:12
+##  6: 2020-08-17 13:09:12
+##  7: 2020-08-17 13:09:12
+##  8: 2020-08-17 13:09:12
+##  9: 2020-08-17 13:09:12
+## 10: 2020-08-17 13:09:12
+## 11: 2020-08-17 13:09:12
+## 12: 2020-08-17 13:09:12
+## 13: 2020-08-17 13:09:12
+## 14: 2020-08-17 13:09:12
+## 15: 2020-08-17 13:09:12
+## 16: 2020-08-17 13:09:12
+## 17: 2020-08-17 13:09:12
+## 18: 2020-08-17 13:09:12
+## 19: 2020-08-17 13:09:12
+## 20: 2020-08-17 13:09:12
+## 21: 2020-08-17 13:09:12
 ##             createdDate</code></pre>
 <div class="sourceCode" id="cb145"><html><body><pre class="r"><span class="co"># userTags get appended</span>
 <span class="co"># all items have the outer tag propagate, plus inner ones only have inner ones</span>
@@ -1417,10 +1417,10 @@
 ##  3: 4ac2b7c0f42d1e46            function                 rnorm
 ##  4: 4ac2b7c0f42d1e46               class               numeric
 ##  5: 4ac2b7c0f42d1e46         object.size                  1008
-##  6: 4ac2b7c0f42d1e46            accessed   2020-08-17 12:49:50
+##  6: 4ac2b7c0f42d1e46            accessed   2020-08-17 13:09:13
 ##  7: 4ac2b7c0f42d1e46             inCloud                 FALSE
 ##  8: 4ac2b7c0f42d1e46          resultHash                      
-##  9: 4ac2b7c0f42d1e46   elapsedTimeDigest      0.002506018 secs
+##  9: 4ac2b7c0f42d1e46   elapsedTimeDigest      0.005012989 secs
 ## 10: 4ac2b7c0f42d1e46 elapsedTimeFirstRun                0 secs
 ## 11: 4ac2b7c0f42d1e46      otherFunctions               saveRDS
 ## 12: 4ac2b7c0f42d1e46      otherFunctions               do.call
@@ -1440,11 +1440,11 @@
 ## 26: b06af03d5a73dc7d            function                 inner
 ## 27: b06af03d5a73dc7d               class               numeric
 ## 28: b06af03d5a73dc7d         object.size                  1008
-## 29: b06af03d5a73dc7d            accessed   2020-08-17 12:49:50
+## 29: b06af03d5a73dc7d            accessed   2020-08-17 13:09:13
 ## 30: b06af03d5a73dc7d             inCloud                 FALSE
 ## 31: b06af03d5a73dc7d          resultHash                      
-## 32: b06af03d5a73dc7d   elapsedTimeDigest        0.0020051 secs
-## 33: b06af03d5a73dc7d elapsedTimeFirstRun         0.073699 secs
+## 32: b06af03d5a73dc7d   elapsedTimeDigest      0.006016016 secs
+## 33: b06af03d5a73dc7d elapsedTimeFirstRun        0.1183181 secs
 ## 34: b06af03d5a73dc7d      otherFunctions               saveRDS
 ## 35: b06af03d5a73dc7d      otherFunctions               do.call
 ## 36: b06af03d5a73dc7d      otherFunctions          process_file
@@ -1462,11 +1462,11 @@
 ## 48: 88a34e1d033329e5            function                 outer
 ## 49: 88a34e1d033329e5               class               numeric
 ## 50: 88a34e1d033329e5         object.size                  1008
-## 51: 88a34e1d033329e5            accessed   2020-08-17 12:49:50
+## 51: 88a34e1d033329e5            accessed   2020-08-17 13:09:13
 ## 52: 88a34e1d033329e5             inCloud                 FALSE
 ## 53: 88a34e1d033329e5          resultHash                      
-## 54: 88a34e1d033329e5   elapsedTimeDigest        0.0020051 secs
-## 55: 88a34e1d033329e5 elapsedTimeFirstRun        0.1363659 secs
+## 54: 88a34e1d033329e5   elapsedTimeDigest      0.006518126 secs
+## 55: 88a34e1d033329e5 elapsedTimeFirstRun        0.2205951 secs
 ## 56: 88a34e1d033329e5      otherFunctions               saveRDS
 ## 57: 88a34e1d033329e5      otherFunctions               do.call
 ## 58: 88a34e1d033329e5      otherFunctions          process_file
@@ -1482,74 +1482,74 @@
 ## 68: 88a34e1d033329e5           file.size                   166
 ##              cacheId              tagKey              tagValue
 ##             createdDate
-##  1: 2020-08-17 12:49:50
-##  2: 2020-08-17 12:49:50
-##  3: 2020-08-17 12:49:50
-##  4: 2020-08-17 12:49:50
-##  5: 2020-08-17 12:49:50
-##  6: 2020-08-17 12:49:50
-##  7: 2020-08-17 12:49:50
-##  8: 2020-08-17 12:49:50
-##  9: 2020-08-17 12:49:50
-## 10: 2020-08-17 12:49:50
-## 11: 2020-08-17 12:49:50
-## 12: 2020-08-17 12:49:50
-## 13: 2020-08-17 12:49:50
-## 14: 2020-08-17 12:49:50
-## 15: 2020-08-17 12:49:50
-## 16: 2020-08-17 12:49:50
-## 17: 2020-08-17 12:49:50
-## 18: 2020-08-17 12:49:50
-## 19: 2020-08-17 12:49:50
-## 20: 2020-08-17 12:49:50
-## 21: 2020-08-17 12:49:50
-## 22: 2020-08-17 12:49:50
-## 23: 2020-08-17 12:49:50
-## 24: 2020-08-17 12:49:50
-## 25: 2020-08-17 12:49:50
-## 26: 2020-08-17 12:49:50
-## 27: 2020-08-17 12:49:50
-## 28: 2020-08-17 12:49:50
-## 29: 2020-08-17 12:49:50
-## 30: 2020-08-17 12:49:50
-## 31: 2020-08-17 12:49:50
-## 32: 2020-08-17 12:49:50
-## 33: 2020-08-17 12:49:50
-## 34: 2020-08-17 12:49:50
-## 35: 2020-08-17 12:49:50
-## 36: 2020-08-17 12:49:50
-## 37: 2020-08-17 12:49:50
-## 38: 2020-08-17 12:49:50
-## 39: 2020-08-17 12:49:50
-## 40: 2020-08-17 12:49:50
-## 41: 2020-08-17 12:49:50
-## 42: 2020-08-17 12:49:50
-## 43: 2020-08-17 12:49:50
-## 44: 2020-08-17 12:49:50
-## 45: 2020-08-17 12:49:50
-## 46: 2020-08-17 12:49:50
-## 47: 2020-08-17 12:49:50
-## 48: 2020-08-17 12:49:50
-## 49: 2020-08-17 12:49:50
-## 50: 2020-08-17 12:49:50
-## 51: 2020-08-17 12:49:50
-## 52: 2020-08-17 12:49:50
-## 53: 2020-08-17 12:49:50
-## 54: 2020-08-17 12:49:50
-## 55: 2020-08-17 12:49:50
-## 56: 2020-08-17 12:49:50
-## 57: 2020-08-17 12:49:50
-## 58: 2020-08-17 12:49:50
-## 59: 2020-08-17 12:49:50
-## 60: 2020-08-17 12:49:50
-## 61: 2020-08-17 12:49:50
-## 62: 2020-08-17 12:49:50
-## 63: 2020-08-17 12:49:50
-## 64: 2020-08-17 12:49:50
-## 65: 2020-08-17 12:49:50
-## 66: 2020-08-17 12:49:50
-## 67: 2020-08-17 12:49:50
-## 68: 2020-08-17 12:49:50
+##  1: 2020-08-17 13:09:13
+##  2: 2020-08-17 13:09:13
+##  3: 2020-08-17 13:09:13
+##  4: 2020-08-17 13:09:13
+##  5: 2020-08-17 13:09:13
+##  6: 2020-08-17 13:09:13
+##  7: 2020-08-17 13:09:13
+##  8: 2020-08-17 13:09:13
+##  9: 2020-08-17 13:09:13
+## 10: 2020-08-17 13:09:13
+## 11: 2020-08-17 13:09:13
+## 12: 2020-08-17 13:09:13
+## 13: 2020-08-17 13:09:13
+## 14: 2020-08-17 13:09:13
+## 15: 2020-08-17 13:09:13
+## 16: 2020-08-17 13:09:13
+## 17: 2020-08-17 13:09:13
+## 18: 2020-08-17 13:09:13
+## 19: 2020-08-17 13:09:13
+## 20: 2020-08-17 13:09:13
+## 21: 2020-08-17 13:09:13
+## 22: 2020-08-17 13:09:13
+## 23: 2020-08-17 13:09:13
+## 24: 2020-08-17 13:09:13
+## 25: 2020-08-17 13:09:13
+## 26: 2020-08-17 13:09:13
+## 27: 2020-08-17 13:09:13
+## 28: 2020-08-17 13:09:13
+## 29: 2020-08-17 13:09:13
+## 30: 2020-08-17 13:09:13
+## 31: 2020-08-17 13:09:13
+## 32: 2020-08-17 13:09:13
+## 33: 2020-08-17 13:09:13
+## 34: 2020-08-17 13:09:13
+## 35: 2020-08-17 13:09:13
+## 36: 2020-08-17 13:09:13
+## 37: 2020-08-17 13:09:13
+## 38: 2020-08-17 13:09:13
+## 39: 2020-08-17 13:09:13
+## 40: 2020-08-17 13:09:13
+## 41: 2020-08-17 13:09:13
+## 42: 2020-08-17 13:09:13
+## 43: 2020-08-17 13:09:13
+## 44: 2020-08-17 13:09:13
+## 45: 2020-08-17 13:09:13
+## 46: 2020-08-17 13:09:13
+## 47: 2020-08-17 13:09:13
+## 48: 2020-08-17 13:09:13
+## 49: 2020-08-17 13:09:13
+## 50: 2020-08-17 13:09:13
+## 51: 2020-08-17 13:09:13
+## 52: 2020-08-17 13:09:13
+## 53: 2020-08-17 13:09:13
+## 54: 2020-08-17 13:09:13
+## 55: 2020-08-17 13:09:13
+## 56: 2020-08-17 13:09:13
+## 57: 2020-08-17 13:09:13
+## 58: 2020-08-17 13:09:13
+## 59: 2020-08-17 13:09:13
+## 60: 2020-08-17 13:09:13
+## 61: 2020-08-17 13:09:13
+## 62: 2020-08-17 13:09:13
+## 63: 2020-08-17 13:09:13
+## 64: 2020-08-17 13:09:13
+## 65: 2020-08-17 13:09:13
+## 66: 2020-08-17 13:09:13
+## 67: 2020-08-17 13:09:13
+## 68: 2020-08-17 13:09:13
 ##             createdDate</code></pre>
 </div>
 <div id="cacheid" class="section level2">
