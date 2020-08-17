@@ -179,7 +179,7 @@ will recover the object from RAM and is normally much faster.</p>
   <span class='kw'>sideEffect</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>makeCopy</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>0</span>),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
   <span class='kw'>cacheId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>TRUE</span>),
   <span class='kw'>useCloud</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
@@ -208,7 +208,7 @@ will recover the object from RAM and is normally much faster.</p>
   <span class='kw'>sideEffect</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>makeCopy</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>0</span>),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
   <span class='kw'>cacheId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>TRUE</span>),
   <span class='kw'>useCloud</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
@@ -341,9 +341,11 @@ as paths, if they are file-backed.</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>Numeric, with 0 being off, 1 being a little, 2 being more verbose etc.
-Above 1 will output much more information about the internals of
-Caching, which may help diagnose Caching challenges.</p></td>
+      <td><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></td>
     </tr>
     <tr>
       <th>cacheId</th>
@@ -603,7 +605,7 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 <span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
 
 <span class='co'># All same</span>
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous rnorm call, </span></div><div class='input'><span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>)  <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='fu'><a href='https://rdrr.io/r/base/substitute.html'>quote</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span>)), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous rnorm call, </span></div><div class='input'>
+<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous rnorm call, </span><span></span></div><div class='input'><span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>)  <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='fu'><a href='https://rdrr.io/r/base/substitute.html'>quote</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span>)), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous rnorm call, </span><span></span></div><div class='input'>
 <span class='co'>###############################################</span>
 <span class='co'># experimental devMode</span>
 <span class='co'>###############################################</span>
@@ -615,16 +617,16 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 <span class='no'>uniqueUserTags</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"thisIsUnique"</span>, <span class='st'>"reallyUnique"</span>)
 <span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>,
                   <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>) <span class='co'># sets new value to Cache</span>
-<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+<span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is 8be9cf2a072bdbb0515c5f0b3578f474</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 246 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 246 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 71cd24ec3b0d0cac        thisIsUnique          thisIsUnique
 #&gt;  2: 71cd24ec3b0d0cac        reallyUnique          reallyUnique
 #&gt;  3: 71cd24ec3b0d0cac            function       centralTendency
 #&gt;  4: 71cd24ec3b0d0cac               class               numeric
 #&gt;  5: 71cd24ec3b0d0cac         object.size                   984
-#&gt;  6: 71cd24ec3b0d0cac            accessed   2020-08-13 22:00:50
+#&gt;  6: 71cd24ec3b0d0cac            accessed   2020-08-14 21:04:08
 #&gt;  7: 71cd24ec3b0d0cac             inCloud                 FALSE
 #&gt;  8: 71cd24ec3b0d0cac          resultHash                      
-#&gt;  9: 71cd24ec3b0d0cac   elapsedTimeDigest      0.001003027 secs
+#&gt;  9: 71cd24ec3b0d0cac   elapsedTimeDigest      0.003006935 secs
 #&gt; 10: 71cd24ec3b0d0cac elapsedTimeFirstRun      0.001002073 secs
 #&gt; 11: 71cd24ec3b0d0cac      otherFunctions               saveRDS
 #&gt; 12: 71cd24ec3b0d0cac      otherFunctions               do.call
@@ -641,29 +643,29 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 #&gt; 23: 71cd24ec3b0d0cac           file.size                   143
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-13 22:00:50
-#&gt;  2: 2020-08-13 22:00:50
-#&gt;  3: 2020-08-13 22:00:50
-#&gt;  4: 2020-08-13 22:00:50
-#&gt;  5: 2020-08-13 22:00:50
-#&gt;  6: 2020-08-13 22:00:50
-#&gt;  7: 2020-08-13 22:00:50
-#&gt;  8: 2020-08-13 22:00:50
-#&gt;  9: 2020-08-13 22:00:50
-#&gt; 10: 2020-08-13 22:00:50
-#&gt; 11: 2020-08-13 22:00:50
-#&gt; 12: 2020-08-13 22:00:50
-#&gt; 13: 2020-08-13 22:00:50
-#&gt; 14: 2020-08-13 22:00:50
-#&gt; 15: 2020-08-13 22:00:50
-#&gt; 16: 2020-08-13 22:00:50
-#&gt; 17: 2020-08-13 22:00:50
-#&gt; 18: 2020-08-13 22:00:50
-#&gt; 19: 2020-08-13 22:00:50
-#&gt; 20: 2020-08-13 22:00:50
-#&gt; 21: 2020-08-13 22:00:50
-#&gt; 22: 2020-08-13 22:00:50
-#&gt; 23: 2020-08-13 22:00:50
+#&gt;  1: 2020-08-14 21:04:08
+#&gt;  2: 2020-08-14 21:04:08
+#&gt;  3: 2020-08-14 21:04:08
+#&gt;  4: 2020-08-14 21:04:08
+#&gt;  5: 2020-08-14 21:04:08
+#&gt;  6: 2020-08-14 21:04:08
+#&gt;  7: 2020-08-14 21:04:08
+#&gt;  8: 2020-08-14 21:04:08
+#&gt;  9: 2020-08-14 21:04:08
+#&gt; 10: 2020-08-14 21:04:08
+#&gt; 11: 2020-08-14 21:04:08
+#&gt; 12: 2020-08-14 21:04:08
+#&gt; 13: 2020-08-14 21:04:08
+#&gt; 14: 2020-08-14 21:04:08
+#&gt; 15: 2020-08-14 21:04:08
+#&gt; 16: 2020-08-14 21:04:08
+#&gt; 17: 2020-08-14 21:04:08
+#&gt; 18: 2020-08-14 21:04:08
+#&gt; 19: 2020-08-14 21:04:08
+#&gt; 20: 2020-08-14 21:04:08
+#&gt; 21: 2020-08-14 21:04:08
+#&gt; 22: 2020-08-14 21:04:08
+#&gt; 23: 2020-08-14 21:04:08
 #&gt;             createdDate</div><div class='input'>
 <span class='co'># During development, we often redefine function internals</span>
 <span class='no'>centralTendency</span> <span class='kw'>&lt;-</span> <span class='kw'>function</span>(<span class='no'>x</span>)
@@ -672,17 +674,17 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 <span class='co'>#   never again be defined that way. Here, because of userTags being the same,</span>
 <span class='co'>#   it will replace the entry in the Cache, effetively overwriting it, even though</span>
 <span class='co'>#   it has a different cacheId</span>
-<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>)</div><div class='output co'>#&gt; <span class='message'> ------ devMode -------</span></div><div class='output co'>#&gt; <span class='message'>This call to cache will replace</span></div><div class='output co'>#&gt; <span class='message'>... artifact with cacheId 71cd24ec3b0d0cac</span></div><div class='output co'>#&gt; <span class='message'>... different .FUN</span></div><div class='output co'>#&gt; <span class='message'> ------ end devMode -------</span></div><div class='output co'>#&gt; <span class='message'>Overwriting Cache entry with userTags: 'thisIsUnique, reallyUnique, centralTendency'</span></div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b</span></div><div class='output co'>#&gt; <span class='message'>Cache size: </span></div><div class='output co'>#&gt; <span class='message'>  Total (including Rasters): 246 bytes</span></div><div class='output co'>#&gt; <span class='message'>  Selected objects (not including Rasters): 246 bytes</span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>uniqueUserTags</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'> ------ devMode -------</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>This call to cache will replace</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>... artifact with cacheId 71cd24ec3b0d0cac</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>... different .FUN</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'> ------ end devMode -------</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Overwriting Cache entry with userTags: 'thisIsUnique, reallyUnique, centralTendency'</span><span></span></div><div class='input'><span class='fu'><a href='viewCache.html'>showCache</a></span>(<span class='no'>tmpDir</span>) <span class='co'># 1 unique artifact -- cacheId is bb1195b40c8d37a60fd6004e5d526e6b</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 246 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 246 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 632cd06f30e111be        thisIsUnique          thisIsUnique
 #&gt;  2: 632cd06f30e111be        reallyUnique          reallyUnique
 #&gt;  3: 632cd06f30e111be            function       centralTendency
 #&gt;  4: 632cd06f30e111be               class               numeric
 #&gt;  5: 632cd06f30e111be         object.size                   984
-#&gt;  6: 632cd06f30e111be            accessed   2020-08-13 22:00:51
+#&gt;  6: 632cd06f30e111be            accessed   2020-08-14 21:04:10
 #&gt;  7: 632cd06f30e111be             inCloud                 FALSE
 #&gt;  8: 632cd06f30e111be          resultHash                      
-#&gt;  9: 632cd06f30e111be   elapsedTimeDigest      0.001002073 secs
-#&gt; 10: 632cd06f30e111be elapsedTimeFirstRun      0.001234055 secs
+#&gt;  9: 632cd06f30e111be   elapsedTimeDigest      0.003008842 secs
+#&gt; 10: 632cd06f30e111be elapsedTimeFirstRun      0.001003981 secs
 #&gt; 11: 632cd06f30e111be      otherFunctions               saveRDS
 #&gt; 12: 632cd06f30e111be      otherFunctions               do.call
 #&gt; 13: 632cd06f30e111be      otherFunctions      build_site_local
@@ -698,32 +700,32 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
 #&gt; 23: 632cd06f30e111be           file.size                   142
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-13 22:00:51
-#&gt;  2: 2020-08-13 22:00:51
-#&gt;  3: 2020-08-13 22:00:51
-#&gt;  4: 2020-08-13 22:00:51
-#&gt;  5: 2020-08-13 22:00:51
-#&gt;  6: 2020-08-13 22:00:51
-#&gt;  7: 2020-08-13 22:00:51
-#&gt;  8: 2020-08-13 22:00:51
-#&gt;  9: 2020-08-13 22:00:51
-#&gt; 10: 2020-08-13 22:00:51
-#&gt; 11: 2020-08-13 22:00:51
-#&gt; 12: 2020-08-13 22:00:51
-#&gt; 13: 2020-08-13 22:00:51
-#&gt; 14: 2020-08-13 22:00:51
-#&gt; 15: 2020-08-13 22:00:51
-#&gt; 16: 2020-08-13 22:00:51
-#&gt; 17: 2020-08-13 22:00:51
-#&gt; 18: 2020-08-13 22:00:51
-#&gt; 19: 2020-08-13 22:00:51
-#&gt; 20: 2020-08-13 22:00:51
-#&gt; 21: 2020-08-13 22:00:51
-#&gt; 22: 2020-08-13 22:00:51
-#&gt; 23: 2020-08-13 22:00:51
+#&gt;  1: 2020-08-14 21:04:10
+#&gt;  2: 2020-08-14 21:04:10
+#&gt;  3: 2020-08-14 21:04:10
+#&gt;  4: 2020-08-14 21:04:10
+#&gt;  5: 2020-08-14 21:04:10
+#&gt;  6: 2020-08-14 21:04:10
+#&gt;  7: 2020-08-14 21:04:10
+#&gt;  8: 2020-08-14 21:04:10
+#&gt;  9: 2020-08-14 21:04:10
+#&gt; 10: 2020-08-14 21:04:10
+#&gt; 11: 2020-08-14 21:04:10
+#&gt; 12: 2020-08-14 21:04:10
+#&gt; 13: 2020-08-14 21:04:10
+#&gt; 14: 2020-08-14 21:04:10
+#&gt; 15: 2020-08-14 21:04:10
+#&gt; 16: 2020-08-14 21:04:10
+#&gt; 17: 2020-08-14 21:04:10
+#&gt; 18: 2020-08-14 21:04:10
+#&gt; 19: 2020-08-14 21:04:10
+#&gt; 20: 2020-08-14 21:04:10
+#&gt; 21: 2020-08-14 21:04:10
+#&gt; 22: 2020-08-14 21:04:10
+#&gt; 23: 2020-08-14 21:04:10
 #&gt;             createdDate</div><div class='input'>
 <span class='co'># If it finds it by cacheID, doesn't matter what the userTags are</span>
-<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"thisIsUnique"</span>)</div><div class='output co'>#&gt; <span class='message'>  ...(Object to retrieve (632cd06f30e111be.rds))</span></div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous centralTendency call, </span></div><div class='input'>
+<span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'>Cache</span>(<span class='no'>centralTendency</span>, <span class='no'>funnyData</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"thisIsUnique"</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  ...(Object to retrieve (632cd06f30e111be.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous centralTendency call, </span><span></span></div><div class='input'>
 <span class='fu'><a href='https://rdrr.io/r/base/options.html'>options</a></span>(<span class='no'>opt</span>)
 
 <span class='co'># For more in depth uses, see vignette</span>
@@ -744,7 +746,7 @@ Currently, local recovery will only work if<code>makeCOpy</code> was set to <cod
   }
 
   <span class='fu'><a href='https://rdrr.io/r/utils/browseVignettes.html'>browseVignettes</a></span>(<span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"reproducible"</span>)
-}</div></pre>
+}</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

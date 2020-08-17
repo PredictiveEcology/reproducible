@@ -155,6 +155,7 @@
   <span class='kw'>filesExtracted</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
   <span class='kw'>checkSumFilePath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
   <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
   <span class='no'>.tempPath</span>,
   <span class='no'>...</span>
 )</pre>
@@ -201,6 +202,14 @@ extracted. Defaults to the archive directory.</p></td>
     <tr>
       <th>quick</th>
       <td><p>Passed to <code>Checksums</code></p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></td>
     </tr>
     <tr>
       <th>.tempPath</th>

@@ -147,10 +147,13 @@
 <h2 class="hasAnchor">
 <a href="#new-features" class="anchor"></a>New features</h2>
 <ul>
-<li>harmonized message colours: <code>blue</code> for all <code>Cache</code> functions; <code>cyan</code> for all <code>prepInputs</code> functions; <code>green</code> for questions that require user input. These are therefore user-visible colour changes.</li>
+<li>harmonized message colours that are use adjustable via options: <code>reproducible.messageColourPrepInputs</code> for all <code>prepInputs</code> functions; <code>reproducible.messageColourCache</code> for all <code>Cache</code> functions; and <code>reproducible.messageColourQuestion</code> for questions that require user input. Defaults are <code>cyan</code>, <code>blue</code> and <code>green</code> respectively. These are user-visible colour changes.</li>
 <li>improved messaging for <code>Cache</code> cases where a <code>file.link</code> is used instead of saving.</li>
+<li>with improved messaging, now <code><a href="https://rdrr.io/r/base/options.html">options(reproducible.verbose = 0)</a></code> will turn off almost all messaging.</li>
 <li>
 <code>postProcess</code> and family now have <code>filename2 = NULL</code> as the default, so not saved to disk. This is a change.</li>
+<li>
+<code>verbose</code> is now an argument throughout, whose default is <code><a href="https://rdrr.io/r/base/options.html">getOption(reproducible.verbose)</a></code>, which is set by default to <code>1</code>. Thus, individual function calls can be more or less verbose, or the whole session via option.</li>
 </ul>
 </div>
 <div id="bug-fixes" class="section level2">

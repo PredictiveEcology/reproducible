@@ -155,6 +155,7 @@ wrapper around <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest
   <span class='kw'>quickCheck</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>checksumFile</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>"CHECKSUMS.txt"</span>),
   <span class='kw'>files</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
   <span class='no'>...</span>
 )
 
@@ -165,6 +166,7 @@ wrapper around <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest
   <span class='kw'>quickCheck</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>checksumFile</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>"CHECKSUMS.txt"</span>),
   <span class='kw'>files</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
   <span class='no'>...</span>
 )
 
@@ -175,6 +177,7 @@ wrapper around <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest
   <span class='kw'>quickCheck</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>checksumFile</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>path</span>, <span class='st'>"CHECKSUMS.txt"</span>),
   <span class='kw'>files</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
   <span class='no'>...</span>
 )</pre>
 
@@ -213,6 +216,14 @@ evaluate if the <code>checksumFile</code> has changed.</p></td>
       <td><p>An optional character string or vector of specific files to checksum.
 This may be very important if there are many files listed in a
 <code>CHECKSUMS.txt</code> file, but only a few are to be checksummed.</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></td>
     </tr>
     <tr>
       <th>...</th>

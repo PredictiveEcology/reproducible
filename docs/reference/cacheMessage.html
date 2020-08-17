@@ -148,14 +148,16 @@
     <pre class="usage"><span class='fu'>.cacheMessage</span>(
   <span class='no'>object</span>,
   <span class='no'>functionName</span>,
-  <span class='kw'>fromMemoise</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useMemoise"</span>, <span class='fl'>TRUE</span>)
+  <span class='kw'>fromMemoise</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useMemoise"</span>, <span class='fl'>TRUE</span>),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>)
 )
 
 <span class='co'># S4 method for ANY</span>
 <span class='fu'>.cacheMessage</span>(
   <span class='no'>object</span>,
   <span class='no'>functionName</span>,
-  <span class='kw'>fromMemoise</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useMemoise"</span>, <span class='fl'>TRUE</span>)
+  <span class='kw'>fromMemoise</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useMemoise"</span>, <span class='fl'>TRUE</span>),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>)
 )</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -174,6 +176,14 @@
       <td><p>Logical. If <code>TRUE</code>, the message will be about
 recovery from memoised copy</p></td>
     </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -182,8 +192,8 @@ recovery from memoised copy</p></td>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='fu'>.cacheMessage</span>(<span class='no'>a</span>, <span class='st'>"mean"</span>)</div><div class='output co'>#&gt; <span class='message'>     loaded cached result from previous mean call, adding to memoised copy...</span></div><div class='input'>
-</div></pre>
+<span class='fu'>.cacheMessage</span>(<span class='no'>a</span>, <span class='st'>"mean"</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>     loaded cached result from previous mean call, adding to memoised copy...</span><span></span></div><div class='input'>
+</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

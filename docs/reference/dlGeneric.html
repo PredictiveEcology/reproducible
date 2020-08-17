@@ -145,7 +145,12 @@
     <p>Download file from generic source url</p>
     </div>
 
-    <pre class="usage"><span class='fu'>dlGeneric</span>(<span class='no'>url</span>, <span class='no'>needChecksums</span>, <span class='no'>destinationPath</span>)</pre>
+    <pre class="usage"><span class='fu'>dlGeneric</span>(
+  <span class='no'>url</span>,
+  <span class='no'>needChecksums</span>,
+  <span class='no'>destinationPath</span>,
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>)
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -168,6 +173,14 @@ To prevent repeated downloads in different locations, the user can also set
 <code><a href='https://rdrr.io/r/base/options.html'>options("reproducible.inputPaths")</a></code> to one or more local file paths to
 search for the file before attempting to download. Default for that option is
 <code>NULL</code> meaning do not search locally.</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></td>
     </tr>
     </table>
 

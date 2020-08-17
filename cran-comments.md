@@ -19,9 +19,10 @@ This release adds several updated features, and several minor bug fixes.
 * Windows                 (win-builder), R 4.1.0 (2020-08-12)
 
 ### rhub
-* Fedora Linux                      (clang, gfortran), R 4.1.0 (2020-08-12)
 * Windows     (Windows Server 2008 R2 SP1, 32/64 bit), R 4.1.0 (2020-08-12)
-* Ubuntu Linux                             (16.04 LTS, R-release, GCC)
+
+### local
+* Windows   R 4.0.2
 
 ## R CMD check results
 

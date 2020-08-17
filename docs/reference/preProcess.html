@@ -165,6 +165,7 @@ This is the first stage of three used in <code>prepInputs</code>.</p>
   <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
   <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
   <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
+  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
   <span class='no'>.tempPath</span>,
   <span class='no'>...</span>
 )</pre>
@@ -261,6 +262,14 @@ even if they pass the checksums or the files are all there.</p></td>
       <th>useCache</th>
       <td><p>Passed to <code>Cache</code> in various places.
 Defaults to <code><a href='https://rdrr.io/r/base/options.html'>getOption("reproducible.useCache")</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</code></p></td>
     </tr>
     <tr>
       <th>.tempPath</th>
