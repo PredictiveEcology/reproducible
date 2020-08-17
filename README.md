@@ -1,15 +1,14 @@
 # reproducible
 
 <!-- badges: start -->
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/reproducible)](https://cran.r-project.org/package=reproducible)
-[![CRAN Downloads](http://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/reproducible)](https://cran.r-project.org/package=reproducible)
+[![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
 [![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg)](https://github.com/PredictiveEcology/reproducible/actions)
 [![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=master)
 <!-- badges: end -->
 
-A set of tools for R that enhance reproducibility beyond package management.
-Built on top of `git2r` and `archivist`, this package aims at making high-level, robust, machine and OS independent tools for making deeply reproducible and reusable content in R.
-This extends beyond the package management utilities of `packrat` and `checkpoint` by including tools for caching and accessing GitHub repositories.
+A set of tools for R that enhance reproducibility for data analytics and forecasting.
+This package aims at making high-level, robust, machine and OS independent tools for making deeply reproducible and reusable content in R.
 
 ## News
 
