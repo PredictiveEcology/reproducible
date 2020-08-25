@@ -345,8 +345,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           yyy <- as(cropExtentRounded, "SpatialPolygons")
           crs(yyy) <- crsX
           x <- fixErrors(x)
-          xSF <- sf::st_as_sf(x)
-          yyySF <- sf::st_as_sf(yyy)
+          xSF <- sf::st_as_sf(x) %>% sf::st_buffer(., 0)
+          yyySF <- sf::st_as_sf(yyy) %>% sf::st_buffer(., 0)
 
           # This tryCatch seems to be finding a bug in st_intersection:
           #   The error was:
