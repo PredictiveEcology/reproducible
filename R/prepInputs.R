@@ -366,7 +366,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     browser(expr = exists("._prepInputs_2"))
 
     # make quosure out of all spatial objects and x
-    spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is (x, "sf"))
+    spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is(x, "sf"))
     out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
     xquo <- rlang::quo(x)
 
@@ -592,12 +592,11 @@ extractFromArchive <- function(archive,
       c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
         " If that is not correct, please specify a different targetFile",
         " and/or fun.")
-
     } else {
-      c(" Trying ", fun,
-        ". If that is not correct, please specify a targetFile",
-        " and/or different fun. The current files in the targetFilePath's ",
-        "directory are: \n",
+      c(" Trying ", fun, ".\n",
+        " If that is not correct, please specify a targetFile",
+        " and/or different fun. The current files in the targetFilePath's",
+        " directory are: \n",
         paste(possibleFiles, collapse = "\n"))
     }
     messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
