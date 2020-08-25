@@ -21,7 +21,7 @@ Version: 1.2.1.9005
 Authors@R: c(
     person("Eliot J B", "McIntire", email = "eliot.mcintire@canada.ca",
     role = c("aut", "cre"), comment = c(ORCID = "0000-0002-6914-8316")),
-    person("Alex M", "Chubaty", email = "alex.chubaty@gmail.com",
+    person("Alex M", "Chubaty", email = "achubaty@for-cast.ca",
     role = c("aut"), comment = c(ORCID = "0000-0001-7146-8135")),
     person("Tati", "Micheletti", email = "tati.micheletti@gmail.com",
     role = c("ctb"), comment = c(ORCID = "0000-0003-4838-8342")),
