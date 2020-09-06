@@ -529,7 +529,8 @@ missingFiles <- function(files, checkSums, targetFile) {
 
 assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                          destinationPath = getOption("reproducible.destinationPath"),
-                         verbose = getOption("reproducible.verbose", 1)) {
+                         verbose = getOption("reproducible.verbose", 1),
+                         team_drive = NULL) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   if (.isRstudioServer()) {
     .requireNamespace("httr", stopOnFALSE = TRUE)
@@ -538,7 +539,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   }
 
   if (is.null(archive)) {
-    fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url))))
+    fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url), team_drive = team_drive)))
     fileSize <- fileAttr$drive_resource[[1]]$size
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)

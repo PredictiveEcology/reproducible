@@ -15,7 +15,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     }, add = TRUE)
     clearCache(x = tmpCache)
     testsForPkgs <- "testsForPkgs"
-    df <- googledrive::drive_find(pattern = testsForPkgs)
+    df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
     if (NROW(df) == 0)
       testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
