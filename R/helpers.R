@@ -1,6 +1,6 @@
 #' @keywords internal
 .pkgSnapshot <- function(instPkgs, instVers, packageVersionFile = "._packageVersionsAuto.txt") {
-  browser(expr = exists("aaaa"))
+  # browser(expr = exists("aaaa"))
   inst <- data.frame(instPkgs, instVers = unlist(instVers), stringsAsFactors = FALSE)
   write.table(inst, file = packageVersionFile, row.names = FALSE)
   inst

@@ -98,7 +98,7 @@ setMethod(
   signature = "Raster",
   definition = function(obj, allowMultiple = TRUE) {
     fn <- filename(obj)
-    browser(expr = exists("._Filenames_1"))
+    # browser(expr = exists("._Filenames_1"))
     if (isTRUE(allowMultiple))
       if (endsWith(fn, suffix = "grd"))
         fn <- c(fn, gsub("grd$", "gri", fn))

@@ -14,7 +14,7 @@
 createCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), force = FALSE) {
-  browser(expr = exists("aaaa"))
+  # browser(expr = exists("aaaa"))
   alreadyExists <- CacheIsACache(cachePath, drv = drv, conn = conn, create = TRUE)
   if (alreadyExists && force == FALSE) {
     messageCache("Cache already exists at ", cachePath, " and force = FALSE. Not creating new cache.")
@@ -54,7 +54,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), obj, userTags, cacheId,
                         linkToCacheId = NULL) {
-  browser(expr = exists("._saveToCache_1"))
+  # browser(expr = exists("._saveToCache_1"))
   if (is.null(conn)) {
     conn <- dbConnectAll(drv, cachePath = cachePath)
     on.exit(dbDisconnect(conn))
@@ -72,7 +72,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   fts <- CacheStoredFile(cachePath, cacheId)
 
-  browser(expr = exists("._saveToCache_2"))
+  # browser(expr = exists("._saveToCache_2"))
 
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
@@ -135,7 +135,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (length(whichOS)) {
     fsBig <- (as.numeric(tagValue[whichOS]) * 4 ) < fs
     if (isTRUE(fsBig)) {
-      browser(expr = exists("._saveToCache_3"))
+      # browser(expr = exists("._saveToCache_3"))
       messageCache("Object with cacheId ", cacheId, " appears to have a much larger size ",
               "on disk than in memory. ",
               "This usually means that the object has captured an environment with ",
@@ -230,7 +230,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          cachePath = getOption("reproducible.cachePath"),
                          conn = getOption("reproducible.conn", NULL), create = TRUE) {
   args <- list(drv = drv)
-  browser(expr = exists("yyyy"))
+  # browser(expr = exists("yyyy"))
   if (is(drv, "SQLiteDriver")) {
     # if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn))
     #   if (.isFALSE(create)) {
@@ -250,7 +250,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          tagKey = character(), tagValue = character(),
                          drv = getOption("reproducible.drv", RSQLite::SQLite()),
                          conn = getOption("reproducible.conn", NULL)) {
-  browser(expr = exists("._addTagsRepo_1"))
+  # browser(expr = exists("._addTagsRepo_1"))
   if (length(cacheId) > 0) {
     if (length(cacheId) > 1) stop(".addTagsRepo can only handle appending 1 tag at a time")
     if (useDBI()) {
@@ -289,7 +289,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
                             add = TRUE,
                             drv = getOption("reproducible.drv", RSQLite::SQLite()),
                             conn = getOption("reproducible.conn", NULL)) {
-  browser(expr = exists("._updateTagsRepo_1"))
+  # browser(expr = exists("._updateTagsRepo_1"))
   if (length(cacheId) > 0) {
     if (length(cacheId) > 1) stop(".updateTagsRepo can only handle updating 1 tag at a time")
     if (useDBI()) {
@@ -463,7 +463,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
                           drv = getOption("reproducible.drv", RSQLite::SQLite()),
                           conn = getOption("reproducible.conn", NULL)) {
   checkPath(cachePath, create = TRUE)
-  browser(expr = exists("._CacheIsACache_1"))
+  # browser(expr = exists("._CacheIsACache_1"))
   if (useDBI()) {
     if (is.null(conn)) {
       conn <- dbConnectAll(drv, cachePath = cachePath)
@@ -473,11 +473,11 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   }
 
   ret <- FALSE
-  browser(expr = exists("jjjj"))
+  # browser(expr = exists("jjjj"))
   ret <- all(basename2(c(CacheDBFile(cachePath, drv, conn), CacheStorageDir(cachePath))) %in%
                list.files(cachePath))
   if (useDBI()) {
-    browser(expr = exists("._CacheIsACache_2"))
+    # browser(expr = exists("._CacheIsACache_2"))
     if (ret) {
       tablesInDB <- retry(retries = 250, exponentialDecayBase = 1.01,
                           quote(dbListTables(conn)))
@@ -547,7 +547,7 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
     }
   }
   tables <- dbListTables(conn)
-  browser(expr = exists("._movedCache_2"))
+  # browser(expr = exists("._movedCache_2"))
   if (missing(old)) {
     if (length(tables) == 1) {
       messageCache("Assuming old database table is ", tables)
@@ -578,7 +578,7 @@ movedCache <- function(new, old, drv = getOption("reproducible.drv", RSQLite::SQ
 }
 
 loadFile <- function(file, format) {
-  browser(expr = exists("._loadFile_1"))
+  # browser(expr = exists("._loadFile_1"))
   if (missing(format))
     format <- fileExt(file)
   if (format == "qs") {

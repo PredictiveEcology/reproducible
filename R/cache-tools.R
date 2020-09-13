@@ -102,7 +102,7 @@ setMethod(
                         drv = getOption("reproducible.drv", RSQLite::SQLite()),
                         conn = getOption("reproducible.conn", NULL), ...) {
     # isn't clearing the raster bacekd file
-    browser(expr = exists("._clearCache_1"))
+    # browser(expr = exists("._clearCache_1"))
 
     if (missing(x)) {
       x <- if (!is.null(list(...)$cacheRepo)) {
@@ -120,7 +120,7 @@ setMethod(
     if (isTRUEorForce(useCloud) || !clearWholeCache) {
       if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
-      browser(expr = exists("._clearCache_2"))
+      # browser(expr = exists("._clearCache_2"))
       # if (missing(after)) after <- NA # "1970-01-01"
       # if (missing(before)) before <- NA # Sys.time() + 1e5
 
@@ -129,7 +129,7 @@ setMethod(
 
       objsDT <- do.call(showCache, args = args, quote = TRUE)
       if (isTRUE(useCloud) && NROW(objsDT) > 0 || identical(useCloud, "force")) {
-        browser(expr = exists("._clearCache_3"))
+        # browser(expr = exists("._clearCache_3"))
         if (useDBI()) {
           cacheIds <- unique(objsDT[[.cacheTableHashColName()]])
         } else {
@@ -145,7 +145,7 @@ setMethod(
 
     }
 
-    browser(expr = exists("rrrr"))
+    # browser(expr = exists("rrrr"))
     if (useDBI()) {
       if (!CacheIsACache(x, drv = drv, conn = conn))
         return(invisible(.emptyCacheTable))
@@ -245,7 +245,7 @@ setMethod(
           if (exists(x, envir = .pkgEnv))
             suppressWarnings(rm(list = objToGet, envir = .pkgEnv[[x]]))
 
-        browser(expr = exists("rmFC"))
+        # browser(expr = exists("rmFC"))
       }
     }
     # memoise::forget(.loadFromLocalRepoMem)
@@ -281,7 +281,7 @@ setMethod(
 #' cc(ask = FALSE, x = tmpDir) # Cache is
 #' cc(ask = FALSE, x = tmpDir) # Cache is already empty
 cc <- function(secs, ...) {
-  browser(expr = exists("jjjj"))
+  # browser(expr = exists("jjjj"))
   if (missing(secs)) {
     messageCache("No time provided; removing the most recent entry to the Cache")
     suppressMessages({theCache <- reproducible::showCache(...)})
@@ -333,12 +333,12 @@ setGeneric("showCache", function(x, userTags = character(), after = NULL, before
 setMethod(
   "showCache",
   definition = function(x, userTags, after = NULL, before = NULL, drv, conn, ...) {
-    browser(expr = exists("rrrr"))
+    # browser(expr = exists("rrrr"))
     if (missing(x)) {
       messageCache("x not specified; using ", getOption("reproducible.cachePath")[1])
       x <- getOption("reproducible.cachePath")[1]
     }
-    browser(expr = exists("jjjj"))
+    # browser(expr = exists("jjjj"))
     if (useDBI()) {
       afterNA <- FALSE
       if (is.null(after)) {
@@ -407,7 +407,7 @@ setMethod(
           if ( !afterNA)
             objsDT3 <- objsDT3[(tagValue >= after)]
           # objsDT3 <- objsDT3[!duplicated(cacheId)]
-          browser(expr = exists("zzzz"))
+          # browser(expr = exists("zzzz"))
           # objsDT <- objsDT[cacheId %in% objsDT3$cacheId]
           objsDT <- objsDT[objsDT[[.cacheTableHashColName()]] %in%
                              unique(objsDT3[[.cacheTableHashColName()]])] # faster than data.table join
@@ -543,13 +543,13 @@ setMethod(
     suppressMessages({
       cacheToList <- showCache(cacheTo, drv = drvTo, connTo = connTo)
     })
-    browser(expr = exists("kkkk"))
+    # browser(expr = exists("kkkk"))
 
     artifacts <- unique(cacheFromList[[.cacheTableHashColName()]])
     objectList <- lapply(artifacts, function(artifact) {
-      browser(expr = exists("gggg"))
+      # browser(expr = exists("gggg"))
       if (!(artifact %in% cacheToList[[.cacheTableHashColName()]])) {
-        browser(expr = exists("gggg"))
+        # browser(expr = exists("gggg"))
         outputToSave <- if (useDBI()) {
           try(loadFromCache(cacheFrom, artifact))
         }
@@ -577,7 +577,7 @@ setMethod(
 
 #' @keywords internal
 .messageCacheSize <- function(x, artifacts = NULL, cacheTable) {
-  browser(expr = exists("ffff"))
+  # browser(expr = exists("ffff"))
 
   tagCol <- "tagValue"
   if (missing(cacheTable)) {
@@ -641,7 +641,7 @@ checkFutures <- function() {
       resol <- future::resolved(.reproEnv$futureEnv)
       resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
     }
-    browser(expr = exists("aaaa"))
+    # browser(expr = exists("aaaa"))
     if (length(resol) > 0)
       .reproEnv$futureEnv[[lsFutureEnv]] <- NULL
   }
@@ -746,7 +746,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds) {
     # stop("If using 'useCloud', 'cloudFolderID' must be provided. ",
     #      "If you don't know what should be used, try getOption('reproducible.cloudFolderID')")
   }
-  browser(expr = exists("._rmFromCloudFolder_1"))
+  # browser(expr = exists("._rmFromCloudFolder_1"))
 
   gdriveLs <- googledrive::drive_ls(path = cloudFolderID, pattern = paste(cacheIds, collapse = "|"))
   cacheIds <- gsub("\\..*", "", gdriveLs$name)

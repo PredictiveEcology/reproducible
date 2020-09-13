@@ -23,7 +23,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
                          overwrite = getOption("reproducible.overwrite", TRUE),
                          verbose = getOption("reproducible.verbose", 1),
                          purge = FALSE, .tempPath, ...) {
-  browser(expr = exists("._downloadFile_1"))
+  # browser(expr = exists("._downloadFile_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit(unlink(.tempPath, recursive = TRUE), add = TRUE)
@@ -83,7 +83,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
       if (needChecksums == 0) needChecksums <- 2 # use binary addition -- 1 is new file, 2 is append
     }
 
-    browser(expr = exists("._downloadFile_2"))
+    # browser(expr = exists("._downloadFile_2"))
 
     if (missingNeededFiles) {
       fileToDownload <- if (is.null(archive[1])) {
@@ -390,7 +390,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, skipDownloadMsg,
                            destinationPath, overwrite, needChecksums, .tempPath,
                            verbose = getOption("reproducible.verbose", 1), ...) {
-  browser(expr = exists("._downloadRemote_1"))
+  # browser(expr = exists("._downloadRemote_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit({unlink(.tempPath, recursive = TRUE)},
@@ -420,7 +420,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           if (is.null(targetFile)) {
             fileInfo <- file.info(dir(destinationPath))
           }
-          browser(expr = exists("._downloadRemote_1"))
+          # browser(expr = exists("._downloadRemote_1"))
           out <- do.call(dlFun, args = args)
           needSave <- TRUE
           if (is.null(targetFile)) {
@@ -444,7 +444,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           }
           downloadResults <- list(out = out, destFile = normPath(destFile), needChecksums = 2)
         } else if (grepl("drive.google.com", url)) {
-          browser(expr = exists("._downloadRemote_2"))
+          # browser(expr = exists("._downloadRemote_2"))
           if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
           downloadResults <- dlGoogle(
             url = url,
