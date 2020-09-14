@@ -1072,7 +1072,6 @@ setMethod(
 
 #' @keywords internal
 .loadFromLocalRepoMem <- function(md5hash, repoDir, ...) {
-  # browser(expr = exists("._loadFromLocalRepoMem2_1"))
   if (useDBI()) {
     out <- loadFromCache(cachePath = repoDir, cacheId = md5hash)
   }
