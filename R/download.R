@@ -300,7 +300,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     messagePrepInputs("  Downloading from Google Drive.", verbose = verbose)
     fs <- attr(archive, "fileSize")
     if (is.null(fs))
-      fs <- attr(assessGoogle(url, verbose = verbose),"fileSize")
+      fs <- attr(assessGoogle(url, verbose = verbose), "fileSize")
     class(fs) <- "object_size"
     isLargeFile <- if (is.null(fs)) FALSE else fs > 1e6
     if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&

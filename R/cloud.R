@@ -7,14 +7,15 @@ if (getRversion() >= "3.1.0") {
 #' Will check for presence of a \code{cloudFolderID} and make a new one
 #' if one not present on Google Drive, with a warning.
 #'
+#' @inheritParams Cache
 #' @param cloudFolderID The google folder ID where cloud caching will occur.
 #' @param create Logical. If \code{TRUE}, then the \code{cloudFolderID} will be created.
 #'     This should be used with caution as there are no checks for overwriting.
 #'     See \code{googledrive::drive_mkdir}. Default \code{FALSE}.
 #' @param overwrite Logical. Passed to \code{googledrive::drive_mkdir}.
-#' @inheritParams Cache
+#' @param team_drive Logical indicating whether to check team drives.
+#'
 #' @export
-#' @inheritParams Cache
 checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cloudFolderID', NULL),
                                       cacheRepo = NULL,
                                       create = FALSE,
