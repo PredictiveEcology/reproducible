@@ -1,5 +1,7 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
-  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  if (!requireNamespace("googledrive", quietly = TRUE))
+    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+
   skip_if_no_token()
   if (interactive()) {
 
@@ -224,7 +226,5 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Brick")
-
   }
 })
-

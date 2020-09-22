@@ -895,7 +895,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
                               extent(object)), dataSlotsToDigest), length = length, quick = quick,
                   algo = algo) # don't include object@data -- these are volatile
   else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     dig <- fastdigest::fastdigest(append(list(dim(object), res(object), crs(object),
                                   extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
@@ -908,7 +908,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
                   algo = algo) # don't include object@data -- these are volatile
   else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     dig2 <- fastdigest::fastdigest(legendSlotsToDigest) # don't include object@data -- these are volatile
   }
@@ -921,7 +921,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
                              algo = algo) # don't include object@file -- these are volatile
   else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     digFile <- fastdigest::fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
   }
@@ -942,7 +942,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
     dig <- .robustDigest(unlist(dig), length = length, quick = quick, algo = algo)
   else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     dig <- fastdigest::fastdigest(dig)
   }
