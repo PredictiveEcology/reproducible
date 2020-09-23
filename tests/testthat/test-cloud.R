@@ -228,3 +228,25 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
                       type = "Brick")
   }
 })
+
+test_that("prepInputs works with team drives", {
+  if (!requireNamespace("googledrive", quietly = TRUE))
+    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+
+  skip_if_no_token()
+  if (interactive()) {
+    testInitOut <- testInit(
+      "googledrive",
+      opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
+                  "reproducible.ask" = FALSE)
+    )
+    # googledrive::drive_auth("predictiveecology@gmail.com")
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+
+    zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2"
+    wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+                     alsoExtract = "similar", fun = "shapefile", team_drive = TRUE)
+  }
+})

@@ -157,9 +157,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
 
   if (is.null(targetFile)) {
-    fileGuess <- .guessAtFile(url = url, archive = archive,
-                              targetFile = targetFile,
-                              destinationPath = destinationPath, verbose = verbose)
+    fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
+                              destinationPath = destinationPath, verbose = verbose,
+                              team_drive = dots[["team_drive"]])
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
     archive <- moveAttributes(fileGuess, archive)
@@ -259,7 +259,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         #   an archive, either remotely, in the case of google or from the basename of url
         fileGuess <- .guessAtFile(url = url, archive = archive,
                                   targetFile = targetFile, destinationPath = destinationPath,
-                                  verbose = verbose)
+                                  verbose = verbose, team_drive = dots[["team_drive"]])
         archive <- .isArchive(fileGuess)
         # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
         archive <- moveAttributes(fileGuess, receiving = archive)
@@ -274,7 +274,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                       checkSums = checkSums,
                                       verbose = verbose)
       }
-
     }
   }
 
@@ -297,7 +296,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Deal with "similar" in alsoExtract -- maybe this is obsolete with new feature that uses file_name_sans_ext
   if (is.null(alsoExtract)) {
     filesInsideArchive <- .listFilesInArchive(archive)
-    if (isTRUE(length(filesInsideArchive)>0)) {
+    if (isTRUE(length(filesInsideArchive) > 0)) {
       checkSums <- .checkSumsUpdate(destinationPath, file.path(destinationPath, filesInsideArchive),
                                     checkSums = checkSums)
     }
@@ -396,8 +395,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   downloadFileResult <- .fixNoFileExtension(downloadFileResult = downloadFileResult,
-                      targetFile = targetFile, archive = archive,
-                      destinationPath = destinationPath, verbose = verbose)
+                                            targetFile = targetFile, archive = archive,
+                                            destinationPath = destinationPath, verbose = verbose)
 
   # Post downloadFile -- put objects into this environment
   if (!is.null(downloadFileResult$targetFilePath))
@@ -676,14 +675,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 }
 
 #' @keywords internal
-.guessAtFile <- function(url, archive, targetFile, destinationPath, verbose = getOption("reproducible.verbose", 1)) {
+.guessAtFile <- function(url, archive, targetFile, destinationPath,
+                         verbose = getOption("reproducible.verbose", 1), team_drive = NULL) {
   guessedFile <- if (!is.null(url)) {
     if (grepl("drive.google.com", url)) {
       ie <- isTRUE(internetExists())
       if (ie) {
-        assessGoogle(url = url, archive = archive,
-                     targetFile = targetFile,
-                     destinationPath = destinationPath, verbose = verbose)
+        assessGoogle(url = url, archive = archive, targetFile = targetFile,
+                     destinationPath = destinationPath, verbose = verbose, team_drive = NULL)
       } else {
         # likely offline
         file.path(destinationPath, .basename(url))
