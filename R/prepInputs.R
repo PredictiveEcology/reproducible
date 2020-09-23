@@ -259,7 +259,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
   # Download, Checksum, Extract from Archive
-  browser(expr = exists("._prepInputs_1"))
+  # browser(expr = exists("._prepInputs_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit({unlink(.tempPath, recursive = TRUE)},
@@ -318,7 +318,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           if (returnAsList)
             as.list(tmpEnv, all.names = TRUE)
         } else {
-          browser(expr = exists("._prepInputs_3"))
+          # browser(expr = exists("._prepInputs_3"))
           err <- tryCatch(error = function(xx) xx,
             mess <- capture.output(
               type = "message",
@@ -363,7 +363,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     #                        useCache = useCache), # passed into postProcess
     #                   out$dots)
     # rdal <- .robustDigest(argList)
-    browser(expr = exists("._prepInputs_2"))
+    # browser(expr = exists("._prepInputs_2"))
 
     # make quosure out of all spatial objects and x
     spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is(x, "sf"))
@@ -419,7 +419,7 @@ extractFromArchive <- function(archive,
                                verbose = getOption("reproducible.verbose", 1),
                                .tempPath, ...) {
 
-  browser(expr = exists('._extractFromArchive_1'))
+  # browser(expr = exists('._extractFromArchive_1'))
   if (!is.null(archive)) {
     if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% fileExt(archive)))) {
       stop("Archives of type ", fileExt(archive), " are not currently supported. ",
@@ -442,7 +442,7 @@ extractFromArchive <- function(archive,
     FALSE
   }
 
-  browser(expr = exists('._extractFromArchive_2'))
+  # browser(expr = exists('._extractFromArchive_2'))
   if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
     if (!is.null(archive)) {
       if (!file.exists(archive[1]))
@@ -837,7 +837,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       # if (requireNamespace("dplyr")) {
       #   nonCurrentFiles1 <- cs %>%
       #     dplyr::filter(!file %in% filesToChecksum)
-      #   browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
+      #   # browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
       #   stopifnot(identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
       # }
       setDF(cs)

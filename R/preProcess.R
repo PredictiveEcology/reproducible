@@ -247,7 +247,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     needChecksums <- 1
     checkSums <- .emptyChecksumsResult
   }
-  browser(expr = exists("._preProcess_5"))
+  # browser(expr = exists("._preProcess_5"))
 
   # This will populate a NULL archive if archive is local or
   if (is.null(archive)) {
@@ -308,7 +308,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums <- outFromSimilar$checkSums
   }
 
-  browser(expr = exists("._preProcess_6"))
+  # browser(expr = exists("._preProcess_6"))
 
   filesToChecksum <- if (is.null(archive))  NULL else .basename(archive)
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
@@ -374,7 +374,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
-  browser(expr = exists("._preProcess_7"))
+  # browser(expr = exists("._preProcess_7"))
   downloadFileResult <- downloadFile(
     archive = archive,
     targetFile = targetFile,
@@ -495,7 +495,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
   # if it was a nested file
-  browser(expr = exists("._preProcess_8"))
+  # browser(expr = exists("._preProcess_8"))
 
   if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar"))) {
     nestedArchives <- .basename(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
@@ -564,7 +564,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (is.null(targetFile) && !is.null(targetFilePath)) {
     targetFile <- .basename(targetFilePath)
   }
-  browser(expr = exists("._preProcess_9"))
+  # browser(expr = exists("._preProcess_9"))
 
   ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)
@@ -606,7 +606,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                   # on.exit because it is done here
   }
 
-  browser(expr = exists("._preProcess_10"))
+  # browser(expr = exists("._preProcess_10"))
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {

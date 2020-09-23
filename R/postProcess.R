@@ -24,7 +24,7 @@ postProcess.default <- function(x, ...) {
 
 #' @importFrom rlang eval_tidy
 postProcess.quosure <- function(x, ...) {
-  browser(expr = exists("._postProcess.quosure_1"))
+  # browser(expr = exists("._postProcess.quosure_1"))
   postProcess(eval_tidy(x), ...)
 }
 
@@ -155,7 +155,7 @@ postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
   on.exit(removeTmpFiles(h = 0), add = TRUE)
 
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
-  browser(expr = exists("._postProcess.spatialClasses_1"))
+  # browser(expr = exists("._postProcess.spatialClasses_1"))
   x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
                              rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
                              filename1 = filename1, filename2 = filename2,
@@ -248,7 +248,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL,
                                       useGDAL = getOption("reproducible.useGDAL", TRUE),
                                       ...) {
-  browser(expr = exists("._cropInputs_1"))
+  # browser(expr = exists("._cropInputs_1"))
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
   if (!useExtentToMatch) {
     extentToMatch <- NULL
@@ -291,7 +291,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
     }
 
     isStack <- is(x, "RasterStack") # will return a RasterBrick -- keep track of this
-    browser(expr = exists("._cropInputs_2"))
+    # browser(expr = exists("._cropInputs_2"))
     if (!is.null(cropExtent)) {
       # crop it
       if (!identical(cropExtent, extent(x))) {
@@ -689,7 +689,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
                                  ...) {
   messagePrepInputs("    reprojecting ...", verbose = verbose, verboseLevel = 0)
   dots <- list(...)
-  browser(expr = exists("._projectInputs_1"))
+  # browser(expr = exists("._projectInputs_1"))
 
   isFactorRaster <- FALSE
   isStack <- is(x, "RasterStack")
@@ -774,7 +774,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         cores <- dealWithCores(cores)
         prll <- paste0("-wo NUM_THREADS=", cores, " ")
 
-        browser(expr = exists("._projectInputs_2"))
+        # browser(expr = exists("._projectInputs_2"))
         # This will clear the Windows error that sometimes occurs:
         #  ERROR 1: PROJ: pj_obj_create: Cannot find proj.db ## Eliot Jan 22, 2020
         if (identical(.Platform[["OS.type"]], "windows")) {
@@ -1028,7 +1028,7 @@ maskInputs <- function(x, studyArea, ...) {
 maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = NULL,
                               verbose = getOption("reproducible.verbose", 1), ...) {
   messagePrepInputs("    masking ...", verbose = verbose, verboseLevel = 0)
-  browser(expr = exists("._maskInputs_1"))
+  # browser(expr = exists("._maskInputs_1"))
   isStack <- is(x, "RasterStack")
   if (is.null(studyArea) && !is.null(rasterToMatch) && is.null(maskWithRTM)) {
     messagePrepInputs("      studyArea is NULL; rasterToMatch provided. Masking with rasterToMatch NA values. ",
@@ -1056,7 +1056,7 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = NULL,
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
                                verbose = getOption("reproducible.verbose", 1), ...) {
-  browser(expr = exists("._maskInputs.Spatial_1"))
+  # browser(expr = exists("._maskInputs.Spatial_1"))
   x <- sf::st_as_sf(x)
   x <- fixErrors(x)
   x <- maskInputs(x, studyArea, rasterToMatch, maskWithRTM, verbose = verbose)
@@ -1068,7 +1068,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
 maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbose", 1), ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
 
-  browser(expr = exists("._maskInputs.sf_1"))
+  # browser(expr = exists("._maskInputs.sf_1"))
   if (!is.null(studyArea)) {
     if (is(studyArea, "Spatial"))
       studyArea <- sf::st_as_sf(studyArea)
@@ -1087,7 +1087,7 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
       y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
       y <- x[y2,]
     } else {
-      browser(expr = exists("._maskInputs.sf_2"))
+      # browser(expr = exists("._maskInputs.sf_2"))
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
       ## fixErrors doesn't work with multiple geometries; st_buffer does, so use it here
@@ -1477,7 +1477,7 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
   ## using ras@data@... is faster, but won't work for @values in large rasters
   N <- 1e5
 
-  browser(expr = exists("._assessDataType_1"))
+  # browser(expr = exists("._assessDataType_1"))
   datatype <- NULL
   if (ncell(ras) > 1e8) { # for very large rasters, try a different way
     maxValCurrent <- maxValue(ras)
@@ -1637,7 +1637,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                                   verbose = getOption("reproducible.verbose", 1),
                                   ...) {
   dots <- list(...)
-  browser(expr = exists("._postProcessAllSpatial_1"))
+  # browser(expr = exists("._postProcessAllSpatial_1"))
 
   if (!is.null(studyArea))
     if (is(studyArea, "quosure"))
@@ -1720,7 +1720,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         }
       }
 
-      browser(expr = exists("._postProcess.spatialClasses_2"))
+      # browser(expr = exists("._postProcess.spatialClasses_2"))
       if (!isTRUE(all.equal(extent(x), extRTM))) {
         x <- Cache(cropInputs, x = x, studyArea = studyArea,
                    extentToMatch = extRTM,
@@ -1735,7 +1735,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
       }
 
       # cropInputs may have returned NULL if they don't overlap
-      browser(expr = exists("._postProcess.spatialClasses_3"))
+      # browser(expr = exists("._postProcess.spatialClasses_3"))
       if (!is.null(x)) {
         objectName <- if (is.null(filename1)) NULL else basename(filename1)
         x <- fixErrors(x = x, objectName = objectName,
@@ -1747,7 +1747,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
                                    targetCRS)
 
-        browser(expr = exists("._postProcess.spatialClasses_4"))
+        # browser(expr = exists("._postProcess.spatialClasses_4"))
         runIt <- if (is(x, "Raster") && !is.null(rasterToMatch))
           differentRasters(x, rasterToMatch, targetCRS)
         else
@@ -1765,7 +1765,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         ##################################
         # maskInputs
         ##################################
-        browser(expr = exists("._postProcess.spatialClasses_5"))
+        # browser(expr = exists("._postProcess.spatialClasses_5"))
         x <- Cache(maskInputs, x = x, studyArea = studyArea,
                    rasterToMatch = rasterToMatch, useCache = useCache, verbose = verbose, ...)
 
@@ -1788,7 +1788,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           messageCache("  Skipping writeOutputs; filename2 is NULL")
         }
 
-        browser(expr = exists("._postProcess.spatialClasses_6"))
+        # browser(expr = exists("._postProcess.spatialClasses_6"))
         if (dir.exists(bigRastersTmpFolder())) {
           ## Delete gdalwarp results in temp
           unlink(bigRastersTmpFolder(), recursive = TRUE)
@@ -1989,7 +1989,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
                                 ...) {
   messagePrepInputs("crop, reproject, mask is using one-step gdalwarp")
 
-  browser(expr = exists("._cropReprojMaskWGDAL_1"))
+  # browser(expr = exists("._cropReprojMaskWGDAL_1"))
 
   # rasters need to go to same directory that can be unlinked at end without losing other temp files
   tempSrcRaster <- bigRastersTmpFile()
@@ -2093,7 +2093,7 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
 
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")
-  browser(expr = exists("._cropReprojMaskWGDAL_2"))
+  # browser(expr = exists("._cropReprojMaskWGDAL_2"))
   system(
     paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
            "-s_srs \"", srcCRS, "\"",
