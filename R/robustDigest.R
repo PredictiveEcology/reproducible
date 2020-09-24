@@ -365,7 +365,7 @@ setMethod(
     out <- if (cacheSpeed == 1) {
       digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      if (!requireNamespace("fastdigest"))
+      if (!requireNamespace("fastdigest", quietly = TRUE))
         stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
       fastdigest::fastdigest(x)
     } else {
