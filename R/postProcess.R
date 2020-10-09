@@ -526,17 +526,21 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #' @export
 #' @keywords internal
 #' @rdname fixErrors
-#' @importFrom raster origin origin<- xmax<- xmin<- ymax<- ymin<-
+#' @importFrom raster isLonLat origin origin<- xmax<- xmin<- ymax<- ymin<-
 fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
                               useCache = getOption("reproducible.useCache", FALSE),
                              verbose = getOption("reproducible.verbose", 1),
                              ...) {
-  origin(x) <- roundTo6Dec(origin(x))
-  xmin(x) <- roundTo6Dec(xmin(x))
-  ymin(x) <- roundTo6Dec(ymin(x))
-  xmax(x) <- roundTo6Dec(xmax(x))
-  ymax(x) <- roundTo6Dec(ymax(x))
-  res(x) <- roundTo6Dec(res(x))
+
+  #rounding lon lat resolution will break the raster
+  if (!isLonLat(x)) {
+    origin(x) <- roundTo6Dec(origin(x))
+    xmin(x) <- roundTo6Dec(xmin(x))
+    ymin(x) <- roundTo6Dec(ymin(x))
+    xmax(x) <- roundTo6Dec(xmax(x))
+    ymax(x) <- roundTo6Dec(ymax(x))
+    res(x) <- roundTo6Dec(res(x))
+  }
   # if (!identical(origin(x), round(origin(x), .Machine$double.eps))) {
   #   roundedOrigin <- round(origin(x),6)
   #   if (identical(origin(x), roundedOrigin))
