@@ -2055,7 +2055,11 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     if (isTRUE(useSAcrs)) {
       targCRS <- .crs(studyArea)
     } else {
-      targCRS <- srcCRS
+      if (!is.null(rasterToMatch)) {
+        targCRS <- crs(rasterToMatch)
+      } else {
+        targCRS <- srcCRS
+      }
       studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
     }
     # write the studyArea to disk -- go via sf because faster
@@ -2095,9 +2099,14 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     }
   }
 
+  if (!is.character(targCRS)) {
+    targCRS <- as.character(targCRS)
+  }
+
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")
   # browser(expr = exists("._cropReprojMaskWGDAL_2"))
+  browser()
   system(
     paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
            "-s_srs \"", srcCRS, "\"",
