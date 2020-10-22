@@ -1294,6 +1294,12 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
+      if (is(x, "RasterStack") && filename(x) == "") {
+        fnames <- unique(grep("[.]grd$", Filenames(x), value = TRUE))
+        if (length(fnames) > 1) warning("RasterStack made up of multiple filebacked RasterLayers")
+        x@filename <- fnames
+      }
+
       if (fileExt(filename(x)) == "grd") {
         if (!fileExt(filename2) == "grd") {
           warning("filename2 file type (", fileExt(filename2), ") was not same type (",
@@ -1301,14 +1307,30 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
                   "Changing filename2 so that it is ", fileExt(filename(x)))
           filename2 <- gsub(fileExt(filename2), "grd", filename2)
         }
-        file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
-                  overwrite = overwrite)
+        res1 <- file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
+                          overwrite = overwrite)
+        stopifnot(isTRUE(res1))
       }
 
-      file.copy(filename(x), filename2, overwrite = overwrite)
-      x@file@name <- filename2
-      if (dots$datatype != dataType(x)) {
-        dataType(x) <- dots$datatype
+      res2 <- file.copy(filename(x), filename2, overwrite = overwrite)
+      stopifnot(isTRUE(res2))
+
+      if (is(x, "RasterStack")) {
+        x@filename <- filename2
+        for (i in 1:nlayers(x)) {
+          x[[i]]@file@name <- filename2
+        }
+      } else {
+        x@file@name <- filename2
+      }
+      if (any(dots$datatype != dataType(x))) {
+        if (is(x, "RasterStack")) {
+          for (i in 1:nlayers(x)) {
+            dataType(x[[i]]) <- dots$datatype[i]
+          }
+        } else {
+          dataType(x) <- dots$datatype
+        }
       }
     } else {
       argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)

@@ -7,6 +7,7 @@ version 1.2.1.9000
 * moved `paddedFloatToChar` to reproducible from SpaDES.core.
 
 ## Bug fixes
+* fix issue getting and setting filenames for file-backed `RasterStack`s (#161)
 * several minor
 
 version 1.2.1
