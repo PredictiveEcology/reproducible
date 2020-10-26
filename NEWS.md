@@ -1,8 +1,17 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 1.2.1.9000
+==============
+
+## New features
+* moved `paddedFloatToChar` to reproducible from SpaDES.core.
+
+## Bug fixes
+* several minor
 
 version 1.2.1
 ==============
+
 ## New features
 * harmonized message colours: `blue` for all `Cache` functions; `cyan` for all `prepInputs` functions; `green` for questions that require user input. These are therefore user-visible colour changes.
 * improved messaging for `Cache` cases where a `file.link` is used instead of saving.
@@ -11,7 +20,6 @@ version 1.2.1
 ## Bug fixes
 * `RasterStack` objects were not correctly saved to disk under some conditions in `postProcess` - fixed
 * several minor
-
 
 version 1.2.0
 ==============
