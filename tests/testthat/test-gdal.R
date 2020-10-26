@@ -31,11 +31,16 @@ test_that("GDAL doesn't work (part 3)", {
     nc <- sf::st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
     nc1 <- sf::st_transform(nc, nonLatLongProj)
     #ncSmall <- sf::st_buffer(nc1, dist = -10000)
-    ncSmall <- sf::st_buffer(nc1, dist = -1000)
+    ncSmall <- sf::st_buffer(nc1, dist = -2000)
+    #The extent of a negatively buffered object doesn't change
 
-   rasterBig <- raster(extent(nc), vals = 0, res = c(0.5, 0.5), crs = crs(nc))
+   rasterBig <- raster(extent(nc), vals = asInteger(runif(n = 1056, min = 0, max = 10)), res = c(0.5, 0.5), crs = crs(nc))
    rasterSmall <- raster(extent(ncSmall), vals = 1, res = c(10000, 10000), crs = crs(ncSmall))
-   out <- postProcess(rasterBig, studyArea = ncSmall, rasterToMatch = rasterSmall, useGDAL = 'force')
+   rasterSmall <- rasterize(ncSmall, .)
+   out <- postProcess(rasterBig,
+                      studyArea = ncSmall,
+                      rasterToMatch = rasterSmall,
+                      useGDAL = 'force')
    expect_true(identical(crs(out), crs(rasterSmall)))
 
   }
