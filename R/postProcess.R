@@ -2070,12 +2070,15 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
 
 
   } else if (!is.null(rasterToMatch)) {
-    needNewRes <- !identical(res(x), res(rasterToMatch))
+
     cropExtent <- extent(rasterToMatch)
     targCRS <- .crs(rasterToMatch)
   }
   dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
 
+  if (!is.null(rasterToMatch)) {
+    needNewRes <- !identical(res(x), res(rasterToMatch))
+  }
   ## GDAL requires file path to cutline - write to disk
   tr <- if (needNewRes) res(rasterToMatch) else res(x)
 
@@ -2106,7 +2109,6 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")
   # browser(expr = exists("._cropReprojMaskWGDAL_2"))
-  browser()
   system(
     paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
            "-s_srs \"", srcCRS, "\"",
