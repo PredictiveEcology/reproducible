@@ -27,16 +27,19 @@ test_that("GDAL doesn't work (part 3)", {
 
     nonLatLongProj <- paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95",
                             "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
-    #dPath <- file.path(tmpdir, "ecozones")
     nc <- sf::st_as_sf(StudyArea)#system.file("shape/nc.shp", package="sf"))
     nc1 <- sf::st_transform(nc, nonLatLongProj)
     #ncSmall <- sf::st_buffer(nc1, dist = -10000)
     ncSmall <- sf::st_buffer(nc1, dist = -2000)
-    #The extent of a negatively buffered object doesn't change
 
-   rasterBig <- raster(extent(nc), vals = asInteger(runif(n = 1056, min = 0, max = 10)), res = c(0.5, 0.5), crs = crs(nc))
+
+
+   rasterBig <- raster(extent(nc), vals = as.integer(runif(n = 1056, min = 0, max = 10)),
+                       res = c(0.5, 0.5),
+                       crs = crs(nc))
    rasterSmall <- raster(extent(ncSmall), vals = 1, res = c(10000, 10000), crs = crs(ncSmall))
-   rasterSmall <- rasterize(ncSmall, .)
+   #The extent of a negatively buffered SpatialPolygonsDataFrame doesn't change
+   rasterSmall <- rasterize(ncSmall, rasterSmall)
    out <- postProcess(rasterBig,
                       studyArea = ncSmall,
                       rasterToMatch = rasterSmall,
