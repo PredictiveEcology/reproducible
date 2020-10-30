@@ -1126,3 +1126,25 @@ test_that("test file link with duplicate Cache", {
   warn <- capture_warnings({d1 <- Cache(sam1, N, cacheRepo = tmpCache)})
   expect_true(length(warn) == 0)
 })
+
+test_that("test file-backed raster caching", {
+  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  l <- list(a = 1, b = 2)
+  out1 <- Cache(unlist, l, .objects = "a")
+  out2 <- Cache(unlist, l, .objects = "b")
+  out3 <- Cache(unlist, l)
+  expect_false(identical(out1, out2))
+  expect_false(identical(out1, out3))
+  expect_false(identical(out2, out3))
+
+  out1 <- .robustDigest(l, .objects = "a")
+  out2 <- .robustDigest(l, .objects = "b")
+  out3 <- .robustDigest(l)
+  expect_false(identical(out1, out2))
+  expect_false(identical(out1, out3))
+  expect_false(identical(out2, out3))
+
+})
