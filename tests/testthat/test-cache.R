@@ -1145,8 +1145,8 @@ test_that("test .object arg for list in Cache", {
   expect_true(identical(out4, out5))
   expect_true(identical(out3, out6))
 
-  l <- list(a = 1, b = 2, f = 3, g = 4)
-  out7 <- Cache(unlist, l, .objects = c("a", "b", "f"))
+  l <- list(a = 1, b = 2, f = 3, g = 4) # change list
+  out7 <- Cache(unlist, l, .objects = c("a", "b", "f")) # subset should still be same as prev whole list
   expect_true(identical(out3, out7))
 
   out1 <- .robustDigest(l, .objects = "a")
