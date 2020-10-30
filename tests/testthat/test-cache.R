@@ -1128,17 +1128,26 @@ test_that("test file link with duplicate Cache", {
 })
 
 test_that("test .object arg for list in Cache", {
-  testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
+  testInitOut <- testInit()
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  l <- list(a = 1, b = 2)
+  l <- list(a = 1, b = 2, f = 3)
   out1 <- Cache(unlist, l, .objects = "a")
   out2 <- Cache(unlist, l, .objects = "b")
   out3 <- Cache(unlist, l)
+  out4 <- Cache(unlist, l, .objects = "c") # not in list, so cache empty list
+  out5 <- Cache(unlist, l, .objects = "d")
+  out6 <- Cache(unlist, l, .objects = c("a", "b", "f"))
   expect_false(identical(out1, out2))
   expect_false(identical(out1, out3))
   expect_false(identical(out2, out3))
+  expect_true(identical(out4, out5))
+  expect_true(identical(out3, out6))
+
+  l <- list(a = 1, b = 2, f = 3, g = 4)
+  out7 <- Cache(unlist, l, .objects = c("a", "b", "f"))
+  expect_true(identical(out3, out7))
 
   out1 <- .robustDigest(l, .objects = "a")
   out2 <- .robustDigest(l, .objects = "b")
