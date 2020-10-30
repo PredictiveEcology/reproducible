@@ -215,10 +215,11 @@ utils::globalVariables(c(
 #' @param ... Arguments passed to \code{FUN}
 #'
 #' @param .objects Character vector of objects to be digested. This is only applicable
-#'                if there is a list, environment (or similar) named objects
+#'                if there is a list, environment (or similar) with named objects
 #'                within it. Only this/these objects will be considered for caching,
 #'                i.e., only use a subset of
-#'                the list, environment or similar objects.
+#'                the list, environment or similar objects. In the case of nested list-type
+#'                objects, this will only be applied outermost first.
 #'
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
@@ -384,7 +385,7 @@ setGeneric(
 #' @rdname Cache
 setMethod(
   "Cache",
-  definition = function(FUN, ..., notOlderThan, .objects,
+  definition = function(FUN, ..., notOlderThan, .objects = NULL,
                         #objects,
                         outputObjects,  # nolint
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
@@ -942,7 +943,7 @@ setMethod(
       resultHash <- ""
       linkToCacheId <- NULL
       if (objSize > 1e6) {
-        resultHash <- CacheDigest(list(outputToSave))$outputHash
+        resultHash <- CacheDigest(list(outputToSave), .objects = .objects)$outputHash
         qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(double_quote(dbTabName))}",
                               dbTabName = dbTabNam,
                               .con = conn)
