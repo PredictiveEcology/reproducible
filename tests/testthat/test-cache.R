@@ -1127,7 +1127,7 @@ test_that("test file link with duplicate Cache", {
   expect_true(length(warn) == 0)
 })
 
-test_that("test file-backed raster caching", {
+test_that("test .object arg for list in Cache", {
   testInitOut <- testInit("raster", tmpFileExt = c(".tif", ".grd"))
   on.exit({
     testOnExit(testInitOut)
