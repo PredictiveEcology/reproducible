@@ -1142,12 +1142,12 @@ test_that("test .object arg for list in Cache", {
   expect_false(identical(out1, out2))
   expect_false(identical(out1, out3))
   expect_false(identical(out2, out3))
-  expect_true(identical(out4, out5))
-  expect_true(identical(out3, out6))
+  expect_true(sum(out4 - out5) == 0)
+  expect_true(sum(out3 - out6) == 0)
 
   l <- list(a = 1, b = 2, f = 3, g = 4) # change list
   out7 <- Cache(unlist, l, .objects = c("a", "b", "f")) # subset should still be same as prev whole list
-  expect_true(identical(out3, out7))
+  expect_true(sum(out3 - out7) == 0)
 
   out1 <- .robustDigest(l, .objects = "a")
   out2 <- .robustDigest(l, .objects = "b")
