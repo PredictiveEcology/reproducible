@@ -97,7 +97,7 @@
 #' .robustDigest(r)
 #' .robustDigest(r1) # different
 #'
-setGeneric(".robustDigest", function(object, .objects,
+setGeneric(".robustDigest", function(object, .objects = NULL,
                                      length = getOption("reproducible.length", Inf),
                                      algo = "xxhash64",
                                      quick = getOption("reproducible.quick", FALSE),
@@ -225,6 +225,7 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
     # browser(expr = exists("._robustDigest_2"))
+    if (!is.null(.objects)) object <- object[.objects]
     lapply(.sortDotsUnderscoreFirst(object), function(x) {
       .robustDigest(object = x, .objects = .objects,
                    length = length,
