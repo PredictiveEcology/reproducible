@@ -5,6 +5,7 @@
 [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
 [![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg)](https://github.com/PredictiveEcology/reproducible/actions)
 [![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://codecov.io/gh/PredictiveEcology/reproducible?branch=master)
+[![Gitter](https://badges.gitter.im/PredictiveEcology/reproducible.svg)](https://gitter.im/PredictiveEcology/reproducible?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) (still early days)
 <!-- badges: end -->
 
 A set of tools for R that enhance reproducibility for data analytics and forecasting.
