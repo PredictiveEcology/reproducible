@@ -4,7 +4,7 @@
 \alias{pipe}
 \alias{\%C\%}
 \alias{\%<\%}
-\title{A cache-aware pipe that does not mask with \code{\%>\%}}
+\title{A cache-aware pipe (currently not working)}
 \usage{
 lhs \%C\% rhs
 
@@ -22,7 +22,8 @@ With updates to \code{magrittr} to version 2.0, this Cache pipe is now broken.
 We are working on an update.
 
 This pipe can only be used at any point in a pipe chain, but must
-be preceded by \code{Cache(...)} (which allows other \code{Cache() \%C\% ... remaining pipes}
+be preceded by \code{Cache(...)} (which allows other \code{Cache()
+\%C\% ... remaining pipes}
 arguments to be passed).
 
 This will take the input arguments of the first function immediately following
