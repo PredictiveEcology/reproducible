@@ -159,7 +159,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
         aa <- Cache(fnCacheHelper, 1, verbose = 4, cacheRepo = tmpCache, cacheRepo2 = tmpCache)
       })
     })
-    expect_true(any(grepl("fnCacheHelper", bMess))) # TODO: fix this;
+    expect_true(any(grepl("fnCacheHelper", aMess))) # TODO: fix this;
     expect_true(any(grepl("The hashing details", aMess)))
   }
 })
