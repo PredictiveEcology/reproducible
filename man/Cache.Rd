@@ -70,10 +70,11 @@ Cache(
 \item{notOlderThan}{A time. Load an object from the Cache if it was created after this.}
 
 \item{.objects}{Character vector of objects to be digested. This is only applicable
-if there is a list, environment (or similar) named objects
+if there is a list, environment (or similar) with named objects
 within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
-the list, environment or similar objects.}
+the list, environment or similar objects. In the case of nested list-type
+objects, this will only be applied outermost first.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}

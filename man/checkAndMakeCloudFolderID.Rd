@@ -9,7 +9,8 @@ checkAndMakeCloudFolderID(
   cacheRepo = NULL,
   create = FALSE,
   overwrite = FALSE,
-  verbose = getOption("reproducible.verbose", 1)
+  verbose = getOption("reproducible.verbose", 1),
+  team_drive = NULL
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ See \code{googledrive::drive_mkdir}. Default \code{FALSE}.}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{team_drive}{Logical indicating whether to check team drives.}
 }
 \description{
 Will check for presence of a \code{cloudFolderID} and make a new one

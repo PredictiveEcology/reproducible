@@ -13,7 +13,8 @@ dlGoogle(
   destinationPath,
   overwrite,
   needChecksums,
-  verbose = getOption("reproducible.verbose", 1)
+  verbose = getOption("reproducible.verbose", 1),
+  team_drive = NULL
 )
 }
 \arguments{
