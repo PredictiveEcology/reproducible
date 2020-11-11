@@ -2055,7 +2055,11 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     if (isTRUE(useSAcrs)) {
       targCRS <- .crs(studyArea)
     } else {
-      targCRS <- srcCRS
+      if (!is.null(rasterToMatch)) {
+        targCRS <- crs(rasterToMatch)
+      } else {
+        targCRS <- srcCRS
+      }
       studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
     }
     # write the studyArea to disk -- go via sf because faster
@@ -2066,12 +2070,15 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
 
 
   } else if (!is.null(rasterToMatch)) {
-    needNewRes <- !identical(res(x), res(rasterToMatch))
+
     cropExtent <- extent(rasterToMatch)
     targCRS <- .crs(rasterToMatch)
   }
   dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
 
+  if (!is.null(rasterToMatch)) {
+    needNewRes <- !identical(res(x), res(rasterToMatch))
+  }
   ## GDAL requires file path to cutline - write to disk
   tr <- if (needNewRes) res(rasterToMatch) else res(x)
 
@@ -2093,6 +2100,10 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     if (dots$method == "ngb") {
       dots$method <- "near"
     }
+  }
+
+  if (!is.character(targCRS)) {
+    targCRS <- as.character(targCRS)
   }
 
   cores <- dealWithCores(cores)
