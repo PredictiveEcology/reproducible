@@ -45,7 +45,7 @@ it is a clean alternative for simple cases.
 \examples{
 # THIS IS CURRENTLY BROKEN DUE TO UPGRADES TO INTERNALS OF magrittr \%>\%
 library(magrittr) # standard pipe
-dontrun{ # these can't be automatically run due to package conflicts with magrittr
+\dontrun{ # these can't be automatically run due to package conflicts with magrittr
 tmpdir <- file.path(tempdir(), "testCache")
 checkPath(tmpdir, create = TRUE)
 a <- rnorm(10, 16) \%>\%
