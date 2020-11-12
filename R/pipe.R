@@ -100,7 +100,7 @@
 #' unlink(tmpdir, recursive = TRUE)
 #' }
 `%C%` <- function(lhs, rhs) {
-  stop("This %C% is currently broken due to magrittr 2.0 updates; working on a fix")
+  # stop("This %C% is currently broken due to magrittr 2.0 updates; working on a fix")
   # adapted from magrittr code below
   parent <- parent.frame()
   env <- new.env(parent = parent)
@@ -128,28 +128,38 @@
   }
 
   mc <- parse(text = gsub(deparse(mc), pattern = "%C%", replacement = "%>%"))[[1]]
-  chain_parts <- getFromNamespace("split_chain", ns = "magrittr")(mc, env = env) # nolint
-  pipes <- chain_parts[["pipes"]][-1]
-  rhss <- chain_parts[["rhss"]][-1]
-  lhs <- chain_parts[["rhss"]][1]
-  lhs <- lhs[[1]][-2] # remove the .
+  chain_parts <- split_chain(mc, env = env) # nolint
+  if (grepl("Cache", chain_parts[["lhs"]][1])) {
+    rhss <- chain_parts[["rhss"]][-1]
+    pipes <- chain_parts[["pipes"]][-1]
+    lhs <- chain_parts[["rhss"]][1]
+    lhs <- lhs[[1]][-2] # remove the .
+    cacheCall <- match.call(Cache, chain_parts[["lhs"]])
+    cacheArgs <- lapply(cacheCall, function(x) x)[-1]
+  } else {
+    rhss <- chain_parts[["rhss"]]
+    pipes <- chain_parts[["pipes"]]
+    lhs <- chain_parts[["lhs"]]
+    cacheArgs <- list()
+    # lhs <- lhs[[1]][-2] # remove the .
+
+  }
   if (numPipes < maxNumPipes)
     rhss <- rhss[seq(numPipes - 1)]
 
   env[["_function_list"]] <- lapply(seq(rhss), function(i) {
-    getFromNamespace("wrap_function", ns = "magrittr")(rhss[[i]], pipes[[i]], parent)
+    wrap_function(rhss[[i]], pipes[[i]], parent)
   })
   env[["_fseq"]] <- `class<-`(eval(quote(function(value) {
     freduce(value, `_function_list`)
   }), env, env), c("fseq", "function"))
   env[["freduce"]] <- freduce
 
-  if (getFromNamespace("is_placeholder", ns = "magrittr")(lhs)) {
+  if (is_placeholder(lhs)) {
     env[["_fseq"]]
   } else {
     # reproducible package code here until end of if statement
-    cacheCall <- match.call(Cache, chain_parts[["lhs"]])
-    cacheArgs <- lapply(cacheCall, function(x) x)[-1]
+    browser()
     #rhss[[1]] <- rhss[[1]][-2]
 
     args <- list(eval(lhs[[1]]),
@@ -200,4 +210,150 @@
   RHS <- as.list(mc)[[1]]
   assign(lhsChar, do.call(Cache, as.list(RHS)), envir = parent.frame())
   return(invisible(get(lhsChar, envir = parent.frame(), inherits = FALSE)))
+}
+
+split_chain <- function(expr, env) {
+  # lists for holding the right-hand sides and the pipe operators.
+  rhss  <- list()
+  pipes <- list()
+
+  # Process the call, splitting it at each valid magrittr pipe operator.
+  i <- 1L
+  while(is.call(expr) && is_pipe(expr[[1L]])) {
+    pipes[[i]] <- expr[[1L]]
+    rhs <- expr[[3L]]
+
+    if (is_parenthesized(rhs))
+      rhs <- eval(rhs, env, env)
+
+    rhss[[i]] <-
+      if (is_dollar(pipes[[i]]) || is_funexpr(rhs))
+        rhs
+    else if (is_function(rhs))
+      prepare_function(rhs)
+    else if (is_first(rhs))
+      prepare_first(rhs)
+    else
+      rhs
+
+    # Make sure no anonymous functions without parentheses are used.
+    if (is.call(rhss[[i]]) && identical(rhss[[i]][[1L]], quote(`function`)))
+      stop("Anonymous functions myst be parenthesized", call. = FALSE)
+
+    expr <- expr[[2L]]
+    i <- i + 1L
+  }
+
+  # return the components; expr will now hold the left-most left-hand side.
+  list(rhss = rev(rhss), pipes = rev(pipes), lhs = expr)
+}
+
+# Check whether a symbol is a valid magrittr pipe.
+#
+# @param pipe A quoted symbol
+# @return logical - TRUE if a valid magrittr pipe, FALSE otherwise.
+is_pipe <- function(pipe) {
+  identical(pipe, quote(`%>%`))   ||
+    identical(pipe, quote(`%T>%`))  ||
+    identical(pipe, quote(`%<>%`))  ||
+    identical(pipe, quote(`%$%`))
+}
+
+
+# Determine whether an non-evaluated call is parenthesized
+#
+# @param a non-evaluated expression
+# @retun logical - TRUE if expression is parenthesized, FALSE otherwise.
+is_parenthesized <- function(expr) {
+  is.call(expr) && identical(expr[[1]], quote(`(`))
+}
+
+# Check whether a pipe is the dollar pipe.
+#
+# @param pipe A (quoted) pipe
+# @return logical - TRUE if pipe is the dollar pipe, FALSE otherwise.
+is_dollar <- function(pipe)
+{
+  identical(pipe, quote(`%$%`))
+}
+
+# Check whether expression is enclosed in curly braces.
+#
+# @param  expr An expression to be tested.
+# @return logical - TRUE if expr is enclosed in `{`, FALSE otherwise.
+is_funexpr <- function(expr)
+{
+  is.call(expr) && identical(expr[[1]], quote(`{`))
+}
+
+# Determine whether an expression counts as a function in a magrittr chain.
+#
+# @param a non-evaluated expression.
+# @return logical - TRUE if expr represents a function, FALSE otherwise.
+is_function <- function(expr)
+{
+  is.symbol(expr) || is.function(expr)
+}
+
+# Determine whether an expression is of the type that needs a first argument.
+#
+# @param a non-evaluated expression.
+# @return logical - TRUE if expr is of "first-argument" type, FALSE otherwise.
+is_first <- function(expr)
+{
+  !any(vapply(expr[-1], identical, logical(1), quote(.)))
+}
+
+# Prepare a magrittr rhs of "first-argument" type.
+#
+# @param a an expression which passes \code{is_first}
+# @return an expression prepared for functional sequence construction.
+prepare_first <- function(expr)
+{
+  as.call(c(expr[[1L]], quote(.), as.list(expr[-1L])))
+}
+
+# Wrap an expression in a function
+#
+# This function takes the "body" part of a function and wraps it in
+# a function. The return value depends on whether the function is created
+# for its side effect with the tee operator. If the operator is \code{\%$\%}
+# then the expression will be evaluated in a \code{with(., )} statement.
+#
+# @param body an expression which will serve as function body in single-argument
+#    function with an argument names \code{.} (a dot)
+# @param pipe a quoted magrittr pipe, which determines how the function is made.
+# @param env The environment in which to contruct the function.
+
+# @details Currently, the only distinction made is whether the pipe is a tee
+#   or not.
+#
+# @return a function of a single argument, named \code{.}.
+wrap_function <- function(body, pipe, env)
+{
+
+  if (is_tee(pipe)) {
+    body <- call("{", body, quote(.))
+  } else if (is_dollar(pipe)) {
+    body <- substitute(with(., b), list(b = body))
+  }
+  eval(call("function", as.pairlist(alist(.=)), body), env, env)
+}
+
+# Check whether a symbol is the magrittr placeholder.
+#
+# @param  symbol A (quoted) symbol
+# @return logical - TRUE if symbol is the magrittr placeholder, FALSE otherwise.
+is_placeholder <- function(symbol)
+{
+  identical(symbol, quote(.))
+}
+
+# Check whether a pipe is a tee.
+#
+# @param pipe A (quoted) pipe
+# @return logical - TRUE if pipe is a tee, FALSE otherwise.
+is_tee <- function(pipe)
+{
+  identical(pipe, quote(`%T>%`))
 }
