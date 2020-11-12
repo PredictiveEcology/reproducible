@@ -1,11 +1,15 @@
 #################
-#' A cache-aware pipe that does not mask with \code{\%>\%}
+#' A cache-aware pipe (currently not working)
 #'
 #' @description
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
 #'
+#' With updates to \code{magrittr} to version 2.0, this Cache pipe is now broken.
+#' We are working on an update.
+#'
 #' This pipe can only be used at any point in a pipe chain, but must
-#' be preceded by \code{Cache(...)} (which allows other \code{Cache() \%C\% ... remaining pipes}
+#' be preceded by \code{Cache(...)} (which allows other \code{Cache()
+#' \%C\% ... remaining pipes}
 #' arguments to be passed).
 #'
 #' This will take the input arguments of the first function immediately following
@@ -28,8 +32,9 @@
 #' @rdname pipe
 #'
 #' @examples
+#' # THIS IS CURRENTLY BROKEN DUE TO UPGRADES TO INTERNALS OF magrittr %>%
 #' library(magrittr) # standard pipe
-#' # dontrun{ # these can't be automatically run due to package conflicts with magrittr
+#' \dontrun{ # these can't be automatically run due to package conflicts with magrittr
 #' tmpdir <- file.path(tempdir(), "testCache")
 #' checkPath(tmpdir, create = TRUE)
 #' a <- rnorm(10, 16) %>%
@@ -93,8 +98,9 @@
 #' sum(b1 - b2) # 0 # i.e., numbers are same
 #'
 #' unlink(tmpdir, recursive = TRUE)
-#' #}
+#' }
 `%C%` <- function(lhs, rhs) {
+  stop("This %C% is currently broken due to magrittr 2.0 updates; working on a fix")
   # adapted from magrittr code below
   parent <- parent.frame()
   env <- new.env(parent = parent)

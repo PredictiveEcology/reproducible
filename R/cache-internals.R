@@ -96,7 +96,6 @@
 }
 
 .CacheFn1 <- function(FUN, scalls) {
-
   if (!is(FUN, "function")) {
     # scalls <- sys.calls()
     if (any(startsWith(as.character(scalls), "function_list[[k"))) {
