@@ -1,3 +1,18 @@
+test_that("preProcess fails if user provides non-existing file", {
+  skip_on_cran()
+  testInitOut <- testInit("raster", needGoogle = FALSE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  errMsg <- testthat::capture_error <- capture_error(reproducible::preProcess(
+    url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+    destinationPath = tmpdir
+  ))
+  expect_true(grepl("try manual", errMsg))
+  expect_true(grepl("appendChecksumsTable", errMsg))
+
+})
+
 test_that("preProcess fails if user provides a non .zip/.tar as archive", {
   skip_on_cran()
   testInitOut <- testInit("raster", needGoogle = FALSE)

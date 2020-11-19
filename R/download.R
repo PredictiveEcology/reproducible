@@ -116,7 +116,13 @@ downloadFile <- function(archive, targetFile, neededFiles,
             stop(downloadResults)
           failed <- failed + 1
           if (failed >= 4)
-            stop("Download Failed")
+            stop("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
+                 "Perhaps try manually downloading it. In your browser, go to\n",
+                 url, "\n, download it manually, give it this name: '",targetFile,
+                 "', and place file here: ", destinationPath, ". You may also need to run Checksums manually after you download the file: ",
+                 "\n-------------------\n",
+                 "reproducible:::appendChecksumsTable(checkSumFilePath = '", checksumFile, "', filesToChecksum = '", targetFile,
+                      "', destinationPath = '", dirname(checksumFile), "', append = TRUE)")
             Sys.sleep(0.5)
         } else {
           if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
