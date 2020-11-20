@@ -34,13 +34,19 @@ test_that("preProcess fails if user provides non-existing file", {
         destinationPath = tmpdir
       )))
     })
-  expect_true(sum(grepl("manual download", mess)) == 1)
-  expect_true(sum(grepl("To prevent", mess)) == 1)
+  expect_true(sum(grepl("Download failed", errMsg)) == 1)
+  # expect_true(sum(grepl("To prevent", errMsg)) == 1)
 
+  optsOrig <- options('reproducible.interactiveOnDownloadFail' = TRUE)
   testthat::with_mock(
     `reproducible:::isInteractive` = function() {TRUE},
     `reproducible:::.readline` = function(prompt) {
-      file.create(file.path(tmpdir, "rasterTest.zip"))
+      theFile <- file.path(tmpdir, "rasterTestAA")
+      write.table(theFile, file = theFile)
+      zipFilename <- file.path(tmpdir, "rasterTest")
+      zip(zipfile = zipFilename, files = theFile)
+      zipFilenameWithDotZip <- dir(tmpdir, pattern = "\\.zip", full.names = TRUE)
+      file.move(from = zipFilenameWithDotZip, to = zipFilename)
       "y"
       },
     {
@@ -52,10 +58,12 @@ test_that("preProcess fails if user provides non-existing file", {
     })
   expect_true(sum(grepl("manual download", mess)) == 1)
   expect_true(sum(grepl("To prevent", mess)) == 1)
-  expect_true(file.exists(file.path(tmpdir, "rasterTest")))
+  expect_true(sum(grepl("Will assume the file is an archive", mess)) == 1)
+  expect_true(file.exists(file.path(tmpdir, "rasterTest.zip")))
   cs <- read.table(file.path(tmpdir, "CHECKSUMS.txt"), header = T)
-  expect_true(NROW(cs) == 1)
-  expect_true(identical(cs$file, "rasterTest"))
+  expect_true(NROW(cs) == 2)
+  expect_true(all(grepl("rasterTest", cs$file)))
+  options(optsOrig)
 
 
 })
