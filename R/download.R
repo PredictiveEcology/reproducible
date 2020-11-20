@@ -116,14 +116,15 @@ downloadFile <- function(archive, targetFile, neededFiles,
             stop(downloadResults)
           failed <- failed + 1
           if (failed >= 4) {
+            messCommon <- paste0("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
+                                         "If the url is correct, it is possible that manually downloading it will work. ",
+                                         "To try this, with your browser, go to\n",
+                                         url, ",\n ... then download it manually, give it this name: '", basename(fileToDownload),
+                                         "', and place file here: ", destinationPath)
             if (isInteractive() && getOption('reproducible.interactiveOnDownloadFail', TRUE)) {
-              mess <- paste0("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
-                   "If the url is correct, it is possible that manually downloading it will work. ",
-                   "To try this, with your browser, go to\n",
-                   url, "\n, download it manually, give it this name: '", basename(fileToDownload),
-                   "', and place file here: ", destinationPath,
-                   ". If you have completed a manual download, press 'y' to continue; otherwise press any other key.",
-                   "To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)"
+              mess <- paste0(messCommon,
+                   ".\n ------- \nIf you have completed a manual download, press 'y' to continue; otherwise press any other key to stop now. ",
+                   "\n(To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)  )"
               )
               message(mess)
               resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
@@ -134,11 +135,9 @@ downloadFile <- function(archive, targetFile, neededFiles,
               downloadResults <- list(destFile = file.path(destinationPath, targetFile),
                                       needChecksums = 2)
             } else {
-              stop("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
-                   "Perhaps try manually downloading it. In your browser, go to\n",
-                   url, "\n, download it manually, give it this name: '",targetFile,
-                   "', and place file here: ", destinationPath, ". You may also need to run Checksums manually after you download the file: ",
-                   "\n-------------------\n",
+              stop(messCommon, ".\n-------------------\n",
+                   "If manual download was successful, you will likely also need to run Checksums",
+                   " manually after you download the file with this command: ",
                    "reproducible:::appendChecksumsTable(checkSumFilePath = '", checksumFile, "', filesToChecksum = '", targetFile,
                    "', destinationPath = '", dirname(checksumFile), "', append = TRUE)")
             }
