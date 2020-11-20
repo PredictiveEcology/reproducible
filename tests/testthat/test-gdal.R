@@ -44,7 +44,7 @@ test_that("GDAL doesn't work (part 3)", {
                       studyArea = ncSmall,
                       rasterToMatch = rasterSmall,
                       useGDAL = 'force')
-   expect_true(identical(crs(out), crs(rasterSmall)))
+   expect_true(compareCRS(out, rasterSmall))
 
   }
 })
