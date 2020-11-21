@@ -1164,8 +1164,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
           "prepInputs will try accessing the file type.", verbose = verbose)
         fileExt <- .guessFileExtension(file = file.path(normPath(downloadFileResult$downloaded)))
         if (is.null(fileExt)) {
-          messagePrepInputs("The file was not recognized by prepInputs.",
-                  "Will assume the file is an archive and add '.zip' extension.",
+          messagePrepInputs("The file was not recognized by prepInputs. ",
+                  "Will assume the file is an archive and add '.zip' extension. ",
                   "If this is incorrect or return error, please supply archive or targetFile", verbose = verbose)
           fileExt <- ".zip"
         }

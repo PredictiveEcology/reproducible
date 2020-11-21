@@ -115,9 +115,36 @@ downloadFile <- function(archive, targetFile, neededFiles,
           if (isTRUE(grepl("already exists", downloadResults)))
             stop(downloadResults)
           failed <- failed + 1
-          if (failed >= 4)
-            stop("Download Failed")
+          if (failed >= 4) {
+            messCommon <- paste0("Download of ", targetFile, " from ", url, " failed. Please check the url that it is correct.\n",
+                                         "If the url is correct, it is possible that manually downloading it will work. ",
+                                         "To try this, with your browser, go to\n",
+                                         url, ",\n ... then download it manually, give it this name: '", basename(fileToDownload),
+                                         "', and place file here: ", destinationPath)
+            if (isInteractive() && getOption('reproducible.interactiveOnDownloadFail', TRUE)) {
+              mess <- paste0(messCommon,
+                   ".\n ------- \nIf you have completed a manual download, press 'y' to continue; otherwise press any other key to stop now. ",
+                   "\n(To prevent this behaviour in the future, set options('reproducible.interactiveOnDownloadFail' = FALSE)  )"
+              )
+              message(mess)
+              resultOfPrompt <- .readline("Type y if you have attempted a manual download and put it in the correct place: ")
+              resultOfPrompt <- tolower(resultOfPrompt)
+              if (!identical(resultOfPrompt, "y")) {
+                stop("Download failed")
+              }
+              downloadResults <- list(destFile = file.path(destinationPath, targetFile),
+                                      needChecksums = 2)
+            } else {
+              stop(messCommon, ".\n-------------------\n",
+                   "If manual download was successful, you will likely also need to run Checksums",
+                   " manually after you download the file with this command: ",
+                   "reproducible:::appendChecksumsTable(checkSumFilePath = '", checksumFile, "', filesToChecksum = '", targetFile,
+                   "', destinationPath = '", dirname(checksumFile), "', append = TRUE)")
+            }
+
+          } else {
             Sys.sleep(0.5)
+          }
         } else {
           if (is(downloadResults$out, "Spatial")) downloadResults$out <- NULL # TODO This appears to be a bug
           failed <- 0
