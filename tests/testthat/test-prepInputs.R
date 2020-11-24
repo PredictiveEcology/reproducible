@@ -1824,6 +1824,13 @@ test_that("rasters aren't properly resampled", {
 test_that("System call gdal works", {
   skip_on_cran()
 
+  if (requireNamespace("gdalUtils", quietly = TRUE)) {
+    suppressWarnings(gdalUtils::gdal_setInstallation())
+  }
+
+  if (is.null(getOption("gdalUtils_gdalPath")))
+    skip("no GDAL installation found")
+
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
@@ -1916,6 +1923,13 @@ test_that("System call gdal works using multicores for both projecting and maski
 
 test_that("System call gdal will make the rasters match for rasterStack", {
   skip_on_cran()
+  if (requireNamespace("gdalUtils", quietly = TRUE)) {
+    suppressWarnings(gdalUtils::gdal_setInstallation())
+  }
+
+  if (is.null(getOption("gdalUtils_gdalPath")))
+    skip("no GDAL installation found")
+
   testInitOut <- testInit("raster")
   on.exit({
     testOnExit(testInitOut)
