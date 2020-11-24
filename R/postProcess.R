@@ -859,11 +859,12 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
 
         messagePrepInputs("      reprojecting using ", dots$method, "...", verbose = verbose)
 
+        falseWarns <- paste0(projNotWKT2warn, "|input and ouput crs|no non-missing arguments")
         if (is.null(rasterToMatch)) {
           Args <- append(dots, list(from = x, crs = targetCRS))
           x <- # captureWarningsToAttr( Eliot
             suppressWarningsSpecific(do.call(projectRaster, args = Args),
-                                     falseWarnings = paste0(projNotWKT2warn,  "|no non-missing arguments"))
+                                     falseWarnings = falseWarns)
           #)
           #warn <- attr(x, "warning")
           #attr(x, "warning") <- NULL
@@ -875,9 +876,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
           tempRas <- suppressWarningsSpecific(
             projectExtent(object = rasterToMatch, crs = targetCRS), projNotWKT2warn)
           Args <- append(dots, list(from = x, to = tempRas))
-
           x <- # captureWarningsToAttr( Eliot
-            suppressWarningsSpecific(falseWarnings = paste0(projNotWKT2warn, "|no non-missing arguments"),
+            suppressWarningsSpecific(falseWarnings = falseWarns,
                                      do.call(projectRaster, args = Args), verbose = verbose)
           #)
           if (isStack)

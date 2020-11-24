@@ -5,7 +5,8 @@ test_that("test Copy", {
   }, add = TRUE)
 
   ras <- raster(extent(0, 10, 0, 10), vals = 1)
-  ras <- writeRaster(ras, filename = tmpfile, overwrite = TRUE)
+  ras <- suppressWarningsSpecific(falseWarnings = proj6Warn,
+                                  writeRaster(ras, filename = tmpfile, overwrite = TRUE))
   ras2 <- suppressWarningsSpecific(Copy(ras, tmpdir), "NOT UPDATED FOR PROJ >= 6")
   expect_true(all.equal(ras2[], ras[]))
   expect_false(filename(ras2) == filename(ras))
