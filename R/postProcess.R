@@ -1685,8 +1685,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         nonNulls <- !unlist(lapply(objsAreProjected, is.null))
         suppressWarningsSpecific(falseWarnings = "wkt|CRS object has no comment",
                                  projections <- sapply(objsAreProjected[nonNulls],
-                                                       function(xx) grepl("(longitude).*(latitude)",
-                                                                          tryCatch(wkt(xx), error = function(yy) NULL))))
+                                                       # function(xx) grepl("(longitude).*(latitude)",
+                                                       #                    tryCatch(wkt(xx), error = function(yy) NULL))))
+                                                       function(xx) !isProjected(xx)))
 
         #projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
         #projections <- na.omit(projections)
@@ -1987,7 +1988,8 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 
 
 #' @importFrom raster extension
-cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs,
+cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
+                                targetCRS, cores = 1, dots = list(), filename2, useSAcrs = FALSE,
                                 destinationPath = getOption("reproducible.destinationPath", "."),
                                 verbose = getOption("reproducible.verbose", 1),
                                 ...) {
@@ -2078,7 +2080,11 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
 
   if (!is.null(rasterToMatch)) {
     needNewRes <- !identical(res(x), res(rasterToMatch))
+  } else if (isTRUE(useSAcrs) ) {
+    if (!isProjected(x))
+      stop("Cannot set useSAcrs to TRUE if x is longitude and latitude; please provide a rasterToMatch")
   }
+
   ## GDAL requires file path to cutline - write to disk
   tr <- if (needNewRes) res(rasterToMatch) else res(x)
 
@@ -2171,4 +2177,8 @@ progressBarCode <- function(..., doProgress = TRUE, message,
   out <- eval(...)
   if (doProgress) messageColoured("\b Done!", colour = colour, verbose = verbose, verboseLevel = verboseLevel)
   out
+}
+
+isProjected <- function(x) {
+  !grepl("(longitude).*(latitude)", tryCatch(wkt(x), error = function(yy) NULL))
 }

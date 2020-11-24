@@ -7,7 +7,8 @@ test_that("GDAL doesn't work (part 3)", {
     skip("no GDAL installation found")
 
   if (requireNamespace("rgeos")) {
-    testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
+    testInitOut <- testInit(c("raster", "sf", "rgeos"), tmpFileExt = c(".grd", ".tif"),
+                            opts = list(
       "rasterTmpDir" = tempdir2(rndstr(1,6)),
       "reproducible.inputPaths" = NULL,
       "reproducible.overwrite" = TRUE,
@@ -46,11 +47,43 @@ test_that("GDAL doesn't work (part 3)", {
    rasterSmall <- raster(extent(ncSmall), vals = 1, res = c(10000, 10000), crs = crs(ncSmall))
    #The extent of a negatively buffered SpatialPolygonsDataFrame doesn't change
    rasterSmall <- rasterize(ncSmall, rasterSmall)
-   out <- postProcess(rasterBig,
+   ccc <- testthat::capture_output(
+     out <- postProcess(rasterBig,
                       studyArea = ncSmall,
                       rasterToMatch = rasterSmall,
                       useGDAL = 'force')
+   )
    expect_true(compareCRS(out, rasterSmall))
+
+   out2 <- cropReprojMaskWGDAL(rasterBig, useSAcrs = FALSE,
+                               rasterToMatch = rasterSmall, dots = list(),
+                               cores = 1)
+   expect_true(raster::compareRaster(out2, rasterSmall))
+
+   ccc <- testthat::capture_output(
+     out3 <- cropReprojMaskWGDAL(rasterBig, ncSmall, useSAcrs = FALSE,
+                               dots = list(),
+                               cores = 1)
+   )
+   expect_true(raster::compareCRS(out3, rasterBig))
+
+   ccc <- testthat::capture_output(
+     expect_error(out3a <- cropReprojMaskWGDAL(rasterBig, ncSmall, useSAcrs = TRUE,
+                               dots = list(),
+                               cores = 1))
+   )
+   ncSmallCRSNonLatLong <- sf::st_transform(ncSmall, crs = st_crs(rasterSmall))
+   ccc <- testthat::capture_output(
+     expect_error(out3b <- cropReprojMaskWGDAL(rasterBig, ncSmallCRSNonLatLong, useSAcrs = TRUE,
+                                             dots = list(),
+                                             cores = 1))
+   )
+
+   rasterBigOnDisk <- writeRaster(rasterBig, file = tmpfile[2], overwrite = TRUE)
+   out4 <- cropReprojMaskWGDAL(rasterBigOnDisk, rasterToMatch = rasterSmall,
+                               dots = list(),
+                               cores = 1)
+   expect_true(raster::compareRaster(out4, rasterSmall))
 
   }
 })
