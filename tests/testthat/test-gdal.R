@@ -1,4 +1,11 @@
 test_that("GDAL doesn't work (part 3)", {
+  if (requireNamespace("gdalUtils", quietly = TRUE)) {
+    suppressWarnings(gdalUtils::gdal_setInstallation())
+  }
+
+  if (is.null(getOption("gdalUtils_gdalPath")))
+    skip("no GDAL installation found")
+
   if (requireNamespace("rgeos")) {
     testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
       "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -11,7 +18,6 @@ test_that("GDAL doesn't work (part 3)", {
     }, add = TRUE)
 
     options("reproducible.cachePath" = tmpdir)
-
 
 
     #test GDAL
