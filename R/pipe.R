@@ -313,6 +313,11 @@ prepare_first <- function(expr)
   as.call(c(expr[[1L]], quote(.), as.list(expr[-1L])))
 }
 
+prepare_function <- function(f)
+{
+  as.call(list(f, quote(.)))
+}
+
 # Wrap an expression in a function
 #
 # This function takes the "body" part of a function and wraps it in
