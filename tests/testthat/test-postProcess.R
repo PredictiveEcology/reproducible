@@ -1,6 +1,7 @@
 test_that("prepInputs doesn't work (part 3)", {
-  if (requireNamespace("rgeos")) {
-    testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
+  # if (requireNamespace("rgeos")) {
+  testInitOut <- testInit(c("raster", "sf"), opts = list(
+  #  testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
       "rasterTmpDir" = tempdir2(rndstr(1,6)),
       "reproducible.inputPaths" = NULL,
       "reproducible.overwrite" = TRUE)
@@ -137,5 +138,5 @@ test_that("prepInputs doesn't work (part 3)", {
     #   expect_error(determineFilename(postProcessedFilename = "a"))
     #   expect_error(determineFilename(targetFilePath = "a"))
     # }
-  }
+
 })

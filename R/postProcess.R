@@ -486,7 +486,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' Do some minor error fixing
 #'
 #' These must be very common for this function to be useful. Currently, the only
-#' meaningful method is on \code{SpatialPolygons}, and it runs \code{rgeos::gIsValid}.
+#' meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
 #' If \code{FALSE}, then it runs a buffer of width 0.
 #'
 #' @param x A \code{SpatialPolygons*} or \code{sf} object.
@@ -555,10 +555,10 @@ fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
   x
 }
 
-#' Fix \code{rgeos::gIsValid} failures in \code{SpatialPolygons}
+#' Fix \code{sf::st_is_valid} failures in \code{SpatialPolygons}
 #'
 #' This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
-#' failures to \code{rgeos::gIsValid}
+#' failures to \code{sf::st_is_valid}
 #'
 #' @export
 #' @rdname fixErrors
@@ -571,16 +571,29 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
     if (is.null(objectName)) objectName = "SpatialPolygon"
     if (is(x, "SpatialPolygons")) {
       messagePrepInputs("Checking for errors in ", objectName, verbose = verbose)
-      anyNotValid <- if (requireNamespace("rgeos", quietly = TRUE)) {
-        anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
+      # anyNotValid <- if (requireNamespace("rgeos", quietly = TRUE)) {
+      #   anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
+      #   if (isTRUE(anv)) messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
+      #                                      verbose = verbose)
+      #   anv
+      # } else {
+      #   messagePrepInputs("fixErrors for SpatialPolygons will be faster with install.packages('rgeos')",
+      #                     verbose = verbose)
+      #   TRUE
+      # }
+      anyNotValid <- if (requireNamespace("sf", quietly = TRUE)) {
+        x1 <- sf::st_as_sf(x)
+        anv <- any(!sf::st_is_valid(x1))
+        #anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
         if (isTRUE(anv)) messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
                                            verbose = verbose)
         anv
       } else {
-        messagePrepInputs("fixErrors for SpatialPolygons will be faster with install.packages('rgeos')",
+        messagePrepInputs("please install sf package to evaluate whether there are errors in the polygons object: install.packages('sf')",
                           verbose = verbose)
         TRUE
       }
+
       if (anyNotValid) {
         messagePrepInputs("      Trying the buffer = 0 trick", verbose = verbose, verboseLevel = 2)
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
