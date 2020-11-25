@@ -5,6 +5,10 @@ version 1.2.1.9000
 
 ## New features
 * moved `paddedFloatToChar` to reproducible from SpaDES.core.
+* removed several uses of `rgeos`
+* increased code coverage
+* (temporarily) remove %C% as it cannot work with new magrittr pipe. It will possibly be returned in a future release.
+
 
 ## Bug fixes
 * several minor

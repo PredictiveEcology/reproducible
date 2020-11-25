@@ -486,7 +486,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #' Do some minor error fixing
 #'
 #' These must be very common for this function to be useful. Currently, the only
-#' meaningful method is on \code{SpatialPolygons}, and it runs \code{rgeos::gIsValid}.
+#' meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
 #' If \code{FALSE}, then it runs a buffer of width 0.
 #'
 #' @param x A \code{SpatialPolygons*} or \code{sf} object.
@@ -555,10 +555,10 @@ fixErrors.Raster <- function(x, objectName, attemptErrorFixes = TRUE,
   x
 }
 
-#' Fix \code{rgeos::gIsValid} failures in \code{SpatialPolygons}
+#' Fix \code{sf::st_is_valid} failures in \code{SpatialPolygons}
 #'
 #' This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
-#' failures to \code{rgeos::gIsValid}
+#' failures to \code{sf::st_is_valid}
 #'
 #' @export
 #' @rdname fixErrors
@@ -571,17 +571,31 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
     if (is.null(objectName)) objectName = "SpatialPolygon"
     if (is(x, "SpatialPolygons")) {
       messagePrepInputs("Checking for errors in ", objectName, verbose = verbose)
-      anyNotValid <- if (requireNamespace("rgeos", quietly = TRUE)) {
-        anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
+      # anyNotValid <- if (requireNamespace("rgeos", quietly = TRUE)) {
+      #   anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
+      #   if (isTRUE(anv)) messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
+      #                                      verbose = verbose)
+      #   anv
+      # } else {
+      #   messagePrepInputs("fixErrors for SpatialPolygons will be faster with install.packages('rgeos')",
+      #                     verbose = verbose)
+      #   TRUE
+      # }
+      anyNotValid <- if (requireNamespace("sf", quietly = TRUE)) {
+        x1 <- sf::st_as_sf(x)
+        anv <- any(!sf::st_is_valid(x1))
+        #anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
         if (isTRUE(anv)) messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
                                            verbose = verbose)
         anv
       } else {
-        messagePrepInputs("fixErrors for SpatialPolygons will be faster with install.packages('rgeos')",
+        messagePrepInputs("please install sf package to evaluate whether there are errors in the polygons object: install.packages('sf')",
                           verbose = verbose)
         TRUE
       }
+
       if (anyNotValid) {
+        if (!requireNamespace("rgeos", quietly = TRUE)) stop(messageRgeosMissing)
         messagePrepInputs("      Trying the buffer = 0 trick", verbose = verbose, verboseLevel = 2)
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
         x1 <- # captureWarningsToAttr( #Eliot
@@ -1434,8 +1448,9 @@ writeOutputs.sf <- function(x, filename2 = NULL,
     }
     if (!all(file.exists(filename2)))
       overwrite = FALSE
-
-    sf::st_write(obj = x, dsn = filename2, delete_dsn = overwrite)
+    muffld <- capture.output(
+      sf::st_write(obj = x, dsn = filename2, delete_dsn = overwrite)
+    )
   }
   x
 }
@@ -1685,8 +1700,9 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         nonNulls <- !unlist(lapply(objsAreProjected, is.null))
         suppressWarningsSpecific(falseWarnings = "wkt|CRS object has no comment",
                                  projections <- sapply(objsAreProjected[nonNulls],
-                                                       function(xx) grepl("(longitude).*(latitude)",
-                                                                          tryCatch(wkt(xx), error = function(yy) NULL))))
+                                                       # function(xx) grepl("(longitude).*(latitude)",
+                                                       #                    tryCatch(wkt(xx), error = function(yy) NULL))))
+                                                       function(xx) !isProjected(xx)))
 
         #projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
         #projections <- na.omit(projections)
@@ -1699,6 +1715,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
 
       if (useBuffer) {
         #replace extentRTM and crsRTM, because they will supersede all arguments
+        if (!requireNamespace("rgeos", quietly = TRUE)) stop(messageRgeosMissing)
         if (!is.null(rasterToMatch)) {
           #reproject rasterToMatch, extend by res
           newExtent <- suppressWarningsSpecific(projectExtent(rasterToMatch, crs = .crs(x)), projNotWKT2warn)
@@ -1987,7 +2004,8 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 
 
 #' @importFrom raster extension
-cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, dots, filename2, useSAcrs,
+cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
+                                targetCRS, cores = 1, dots = list(), filename2, useSAcrs = FALSE,
                                 destinationPath = getOption("reproducible.destinationPath", "."),
                                 verbose = getOption("reproducible.verbose", 1),
                                 ...) {
@@ -2066,7 +2084,11 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
     cropExtent <- extent(studyAreasf)
     if (!(grepl("longlat", targCRS)))
       cropExtent <- roundToRes(cropExtent, x = x)
-    sf::st_write(studyAreasf, tempSrcShape)
+
+    muffld <- capture.output(
+      sf::st_write(studyAreasf, tempSrcShape)
+    )
+
 
 
   } else if (!is.null(rasterToMatch)) {
@@ -2078,7 +2100,11 @@ cropReprojMaskWGDAL <- function(x, studyArea, rasterToMatch, targetCRS, cores, d
 
   if (!is.null(rasterToMatch)) {
     needNewRes <- !identical(res(x), res(rasterToMatch))
+  } else if (isTRUE(useSAcrs) ) {
+    if (!isProjected(x))
+      stop("Cannot set useSAcrs to TRUE if x is longitude and latitude; please provide a rasterToMatch")
   }
+
   ## GDAL requires file path to cutline - write to disk
   tr <- if (needNewRes) res(rasterToMatch) else res(x)
 
@@ -2172,3 +2198,16 @@ progressBarCode <- function(..., doProgress = TRUE, message,
   if (doProgress) messageColoured("\b Done!", colour = colour, verbose = verbose, verboseLevel = verboseLevel)
   out
 }
+
+isProjected <- function(x) {
+  txt <- suppressWarningsSpecific(falseWarnings = "no wkt comment", wkt(x))
+  if (nchar(txt) == 0 || is.null(txt)) {
+    txt <- crs(x)
+    !grepl("(longlat)", txt)
+  } else {
+    !grepl("(longitude).*(latitude)", tryCatch(
+      txt, error = function(yy) NULL))
+  }
+}
+
+messageRgeosMissing <- "Please run install.packages('rgeos') to address minor GIS issues"
