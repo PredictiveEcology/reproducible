@@ -1447,8 +1447,9 @@ writeOutputs.sf <- function(x, filename2 = NULL,
     }
     if (!all(file.exists(filename2)))
       overwrite = FALSE
-
-    sf::st_write(obj = x, dsn = filename2, delete_dsn = overwrite)
+    muffld <- capture.output(
+      sf::st_write(obj = x, dsn = filename2, delete_dsn = overwrite)
+    )
   }
   x
 }
@@ -2081,7 +2082,11 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
     cropExtent <- extent(studyAreasf)
     if (!(grepl("longlat", targCRS)))
       cropExtent <- roundToRes(cropExtent, x = x)
-    sf::st_write(studyAreasf, tempSrcShape)
+
+    muffld <- capture.output(
+      sf::st_write(studyAreasf, tempSrcShape)
+    )
+
 
 
   } else if (!is.null(rasterToMatch)) {
