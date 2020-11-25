@@ -2199,9 +2199,9 @@ progressBarCode <- function(..., doProgress = TRUE, message,
 
 isProjected <- function(x) {
   txt <- suppressWarningsSpecific(falseWarnings = "no wkt comment", wkt(x))
-  if (nchar(txt) == 0) {
+  if (nchar(txt) == 0 || is.null(txt)) {
     txt <- crs(x)
-    !grepl("(longlat)", tryCatch(txt, error = function(yy) NULL))
+    !grepl("(longlat)", txt)
   } else {
     !grepl("(longitude).*(latitude)", tryCatch(
       txt, error = function(yy) NULL))
