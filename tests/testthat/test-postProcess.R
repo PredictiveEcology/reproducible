@@ -164,11 +164,9 @@ test_that("writeOutputs with non-matching filename2", {
 })
 
 test_that("new gdalwarp all in one with grd with factor", {
-  if (requireNamespace("gdalUtils")) {
-    suppressWarnings(gdalUtils::gdal_setInstallation())
-  }
-
-  if (is.null(getOption("gdalUtils_gdalPath")))
+  skip_on_cran()
+  hasGDAL <- findGDAL()
+  if (!isTRUE(hasGDAL))
     skip("no GDAL installation found")
 
   testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))

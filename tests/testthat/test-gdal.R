@@ -1,9 +1,6 @@
 test_that("GDAL doesn't work (part 3)", {
-  if (requireNamespace("gdalUtils", quietly = TRUE)) {
-    suppressWarnings(gdalUtils::gdal_setInstallation())
-  }
-
-  if (is.null(getOption("gdalUtils_gdalPath")))
+  hasGDAL <- findGDAL()
+  if (!isTRUE(hasGDAL))
     skip("no GDAL installation found")
 
   #if (requireNamespace("rgeos")) {
