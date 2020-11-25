@@ -74,8 +74,7 @@ jobs:
       - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install pkg-config
-          brew install gdal --force
+          brew install gdal
 
       - name: Install dependencies
         run: |
