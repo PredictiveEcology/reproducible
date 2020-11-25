@@ -75,7 +75,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install pkg-config
-          brew install gdal
+          brew install gdal --force
 
       - name: Install dependencies
         run: |
