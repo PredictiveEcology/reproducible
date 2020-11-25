@@ -71,13 +71,13 @@ test_that("GDAL doesn't work (part 3)", {
   ccc <- testthat::capture_output(
     expect_error(out3a <- cropReprojMaskWGDAL(rasterBig, ncSmall, useSAcrs = TRUE,
                                               dots = list(),
-                                              cores = 1))
+                                              cores = 1), regexp = "Cannot set useSAcrs to TRUE")
   )
   ncSmallCRSNonLatLong <- sf::st_transform(ncSmall, crs = st_crs(rasterSmall))
   ccc <- testthat::capture_output(
     expect_error(out3b <- cropReprojMaskWGDAL(rasterBig, ncSmallCRSNonLatLong, useSAcrs = TRUE,
                                               dots = list(),
-                                              cores = 1))
+                                              cores = 1), regexp = "Cannot set useSAcrs to TRUE")
   )
 
   rasterBigOnDisk <- writeRaster(rasterBig, file = tmpfile[2], overwrite = TRUE)
