@@ -263,6 +263,7 @@ dealWithCores <- function(cores) {
 }
 
 findGDAL <- function() {
+  attemptGDAL <- FALSE
   if (.requireNamespace("gdalUtils")) {
     gdalPath <- NULL
     attemptGDAL <- TRUE
@@ -291,6 +292,7 @@ findGDAL <- function() {
       attemptGDAL <- FALSE
     attemptGDAL
   }
+  invisible(attemptGDAL)
 }
 
 attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE),

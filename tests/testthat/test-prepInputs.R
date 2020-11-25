@@ -1823,12 +1823,8 @@ test_that("rasters aren't properly resampled", {
 
 test_that("System call gdal works", {
   skip_on_cran()
-
-  if (requireNamespace("gdalUtils", quietly = TRUE)) {
-    suppressWarnings(gdalUtils::gdal_setInstallation())
-  }
-
-  if (is.null(getOption("gdalUtils_gdalPath")))
+  hasGDAL <- findGDAL()
+  if (!isTRUE(hasGDAL))
     skip("no GDAL installation found")
 
   testInitOut <- testInit("raster")
@@ -1866,12 +1862,8 @@ test_that("System call gdal works", {
 
 test_that("System call gdal works using multicores for both projecting and masking", {
   skip_on_cran()
-
-  if (requireNamespace("gdalUtils", quietly = TRUE)) {
-    suppressWarnings(gdalUtils::gdal_setInstallation())
-  }
-
-  if (is.null(getOption("gdalUtils_gdalPath")))
+  hasGDAL <- findGDAL()
+  if (!isTRUE(hasGDAL))
     skip("no GDAL installation found")
 
   testInitOut <- testInit("raster")
@@ -1923,11 +1915,8 @@ test_that("System call gdal works using multicores for both projecting and maski
 
 test_that("System call gdal will make the rasters match for rasterStack", {
   skip_on_cran()
-  if (requireNamespace("gdalUtils", quietly = TRUE)) {
-    suppressWarnings(gdalUtils::gdal_setInstallation())
-  }
-
-  if (is.null(getOption("gdalUtils_gdalPath")))
+  hasGDAL <- findGDAL()
+  if (!isTRUE(hasGDAL))
     skip("no GDAL installation found")
 
   testInitOut <- testInit("raster")
@@ -1963,228 +1952,4 @@ test_that("System call gdal will make the rasters match for rasterStack", {
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
 
-test_that("cropInputs crops too closely when input projections are different", {
-  skip_on_cran()
 
-  testInitOut <- testInit("raster", opts = list(
-    "rasterTmpDir" = tempdir2(rndstr(1,6)),
-    "reproducible.overwrite" = TRUE,
-    "reproducible.inputPaths" = NULL
-  ), needGoogle = TRUE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  ext <- new("Extent",
-             xmin = -3229772.32501426,
-             xmax = 3680227.67498574,
-             ymin = -365833.605586135,
-             ymax = 3454166.39441387)
-  x <- raster(ext,
-              crs = paste("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0",
-                          "+a=6370997 +b=6370997 +units=m +no_defs"),
-              res = c(10000, 10000))
-  x <- setValues(x, 1)
-
-  RTMext <- new("Extent",
-                xmin = -1613500.00000023,
-                xmax = -882500.000000228,
-                ymin = 7904500,
-                ymax = 9236000)
-  RTM <- raster(RTMext,
-                crs = paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0",
-                            "+ellps=GRS80 +units=m +no_defs"),
-                res = c(250, 250))
-  RTM <- setValues(RTM, 2)
-  out <- postProcess(x = x, rasterToMatch = RTM, filename2 = NULL)
-  expect_null(out[is.na(out) & !is.na(RTM)])
-})
-
-test_that("message when files from archive are already present", {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  ras <- reproducible::preProcess(url = url,
-                                  targetFile = "rasterTest.tif",
-                                  destinationPath = tmpdir)
-  testthat::expect_message({
-    ras <- reproducible::preProcess(archive = "rasterTest.zip", destinationPath = tmpdir)
-  })
-})
-
-test_that("message when file is a shapefile", {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
-  testthat::expect_message({
-    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-  })
-})
-
-test_that("message when doesn't know the targetFile extension", {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip"
-  testthat::expect_message({
-    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-  })
-})
-
-test_that("When supplying two files without archive, when archive and files have different names", {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/twoKnownFiles.zip"
-  testthat::expect_error({
-    ras <- reproducible::preProcess(url = url,
-                                    targetFile = c("rasterTest.tif", "shapefileTest.shp"),
-                                    destinationPath = tmpdir)
-  })
-})
-
-test_that("message when archive has two known files (raster and shapefile)", {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
-  testthat::expect_error({
-    ras <- reproducible::preProcess(url = url,
-                                    archive = "knownFiles.zip",
-                                    targetFile = c("knownFiles.tif", "knownFiles.shp"),
-                                    destinationPath = tmpdir)
-  })
-})
-
-test_that("message when extracting a file that is already present", {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-  url1 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  ras <- reproducible::preProcess(url = url1,
-                                  targetFile = "rasterTest.tif",
-                                  destinationPath = tmpdir)
-  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
-  shp <- reproducible::preProcess(url = url2,
-                                  destinationPath = tmpdir)
-  url3 <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
-  testthat::expect_message({
-    fl <- reproducible::preProcess(url = url3, destinationPath = tmpdir)
-  })
-})
-
-test_that("Test to fix issue #101 prepInputs on raster from disk", {
-  if (interactive()) {
-    testInitOut <- testInit("raster", needGoogle = TRUE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
-    smallRT <- prepInputs(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
-    a <- raster::extent(smallRT)
-    a <- raster::extend(a, -3.5e5) # make it small
-    test <- raster(a, res = 250, vals = 1)
-    crs(test) <- crs(smallRT)
-    a <- postProcess(x = test, rasterToMatch = smallRT, maskWithRTM = TRUE)
-    expect_true(is(a, "RasterLayer"))
-  }
-})
-
-test_that("Test of using future and progress indicator for lrg files on Google Drive", {
-  if (interactive()) {
-    if (requireNamespace("future")) {
-      testInitOut <- testInit(c("raster", "future"), needGoogle = TRUE, opts = list("reproducible.futurePlan" = "multiprocess"))
-      on.exit({
-        testOnExit(testInitOut)
-      }, add = TRUE)
-      #future::plan("multiprocess")
-      smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
-      expect_true(is(smallRT, "list"))
-    }
-  }
-})
-
-test_that("writeOutputs with non-matching filename2", {
-  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  r <- raster(extent(0,10,0,10), vals = rnorm(100))
-  r <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
-  warn <- capture_warnings({
-    r1 <- writeOutputs(r, filename2 = tmpfile[2])
-  })
-  expect_true(any(grepl("filename2 file type", warn)))
-  r2 <- raster(filename(r1))
-  vals1 <- r2[]
-  vals2 <- r1[]
-  vals3 <- r[]
-  expect_true(identical(vals1, vals2))
-  expect_true(identical(vals1, vals3))
-  expect_false(identical(normPath(filename(r)), normPath(filename(r1))))
-  expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
-})
-
-test_that("new gdalwarp all in one with grd with factor", {
-  if (requireNamespace("gdalUtils")) {
-    suppressWarnings(gdalUtils::gdal_setInstallation())
-  }
-
-  if (is.null(getOption("gdalUtils_gdalPath")))
-    skip("no GDAL installation found")
-
-  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
-
-  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L))
-  Sr1 <- Polygon(coords)
-  Srs1 <- Polygons(list(Sr1), "s1")
-  StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- crsToUse
-
-  r <- raster(extent(-130, -110, 55, 65), res = 1)
-  crs(r) <- crsToUse
-  r[] <- sample(0:10, size = ncell(r), replace = TRUE)
-  df <- data.frame(ID = 0:10, label = LETTERS[1:11])
-  levels(r) <- df
-
-  # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
-  #  This invokes the new dealWithRastersOnRecovery fn
-  rr <- postProcess(r, destinationPath = tmpdir,
-                    studyArea = StudyArea, useCache = TRUE, useGDAL = "force", filename2 = TRUE)
-  rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
-               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache, filename2 = TRUE)
-  rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
-               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache, filename2 = TRUE)
-  expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
-  expect_true(identical(Filenames(rr1), Filenames(rr3)))
-  expect_true(!identical(dirname(Filenames(rr)), tmpCache)) # used to be that the recovery path was Cache file
-
-  expect_true(identical(raster::levels(rr), raster::levels(r)))
-  expect_true(sum(abs(raster::extent(rr)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
-  expect_true(sum(abs(raster::extent(r)[1:4] - raster::extent(StudyArea)[1:4])) > 1)
-  rr2 <- postProcess(r, studyArea = StudyArea, useCache = FALSE, useGDAL = "force", filename2 = "out.grd")
-  expect_true(identical(raster::levels(rr2), raster::levels(r)))
-  expect_true(sum(abs(raster::extent(rr2)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
-  expect_true(!identical(filename(rr), filename(rr2)))
-
-  expect_true(grepl(".tif$", filename(rr))) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
-  expect_true(grepl(".grd$", filename(rr2)))
-})
