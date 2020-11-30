@@ -16,7 +16,7 @@
 \usage{
 .robustDigest(
   object,
-  .objects,
+  .objects = NULL,
   length = getOption("reproducible.length", Inf),
   algo = "xxhash64",
   quick = getOption("reproducible.quick", FALSE),
@@ -48,10 +48,11 @@
 \item{object}{an object to digest.}
 
 \item{.objects}{Character vector of objects to be digested. This is only applicable
-if there is a list, environment (or similar) named objects
+if there is a list, environment (or similar) with named objects
 within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
-the list, environment or similar objects.}
+the list, environment or similar objects. In the case of nested list-type
+objects, this will only be applied outermost first.}
 
 \item{length}{Numeric. If the element passed to Cache is a \code{Path} class
 object (from e.g., \code{asPath(filename)}) or it is a \code{Raster} with
@@ -63,7 +64,7 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 \item{algo}{The algorithms to be used; currently available choices are
     \code{md5}, which is also the default, \code{sha1}, \code{crc32},
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
-    \code{murmur32} and \code{spookyhash}.}
+    \code{murmur32}, \code{spookyhash} and \code{blake3}.}
 
 \item{quick}{Logical. If \code{TRUE},
 little or no disk-based information will be assessed, i.e., mostly its

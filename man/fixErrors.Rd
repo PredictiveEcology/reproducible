@@ -71,11 +71,11 @@ Cache is used on the internal \code{raster::buffer} command.}
 }
 \description{
 These must be very common for this function to be useful. Currently, the only
-meaningful method is on \code{SpatialPolygons}, and it runs \code{rgeos::gIsValid}.
+meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
 If \code{FALSE}, then it runs a buffer of width 0.
 
 This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
-failures to \code{rgeos::gIsValid}
+failures to \code{sf::st_is_valid}
 }
 \examples{
 # Add a study area to Crop and Mask to

@@ -542,6 +542,7 @@ test_that("test wrong ways of calling Cache", {
 })
 
 test_that("test pipe for Cache", {
+  skip("Temporary pipe for magrittr 2.0")
   testInitOut <- testInit(c("raster", "magrittr"), tmpFileExt = ".pdf")
   on.exit({
     testOnExit(testInitOut)
@@ -1125,4 +1126,35 @@ test_that("test file link with duplicate Cache", {
 
   warn <- capture_warnings({d1 <- Cache(sam1, N, cacheRepo = tmpCache)})
   expect_true(length(warn) == 0)
+})
+
+test_that("test .object arg for list in Cache", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+  l <- list(a = 1, b = 2, f = 3)
+  out1 <- Cache(unlist, l, .objects = "a")
+  out2 <- Cache(unlist, l, .objects = "b")
+  out3 <- Cache(unlist, l)
+  out4 <- Cache(unlist, l, .objects = "c") # not in list, so cache empty list
+  out5 <- Cache(unlist, l, .objects = "d")
+  out6 <- Cache(unlist, l, .objects = c("a", "b", "f"))
+  expect_false(identical(out1, out2))
+  expect_false(identical(out1, out3))
+  expect_false(identical(out2, out3))
+  expect_true(sum(out4 - out5) == 0)
+  expect_true(sum(out3 - out6) == 0)
+
+  l <- list(a = 1, b = 2, f = 3, g = 4) # change list
+  out7 <- Cache(unlist, l, .objects = c("a", "b", "f")) # subset should still be same as prev whole list
+  expect_true(sum(out3 - out7) == 0)
+
+  out1 <- .robustDigest(l, .objects = "a")
+  out2 <- .robustDigest(l, .objects = "b")
+  out3 <- .robustDigest(l)
+  expect_false(identical(out1, out2))
+  expect_false(identical(out1, out3))
+  expect_false(identical(out2, out3))
+
 })

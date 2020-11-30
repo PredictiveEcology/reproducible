@@ -4,7 +4,7 @@
 \alias{pipe}
 \alias{\%C\%}
 \alias{\%<\%}
-\title{A cache-aware pipe that does not mask with \code{\%>\%}}
+\title{A cache-aware pipe (currently not working)}
 \usage{
 lhs \%C\% rhs
 
@@ -18,8 +18,12 @@ lhs \%<\% rhs
 \description{
 \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
 
+With updates to \code{magrittr} to version 2.0, this Cache pipe is now broken.
+We are working on an update.
+
 This pipe can only be used at any point in a pipe chain, but must
-be preceded by \code{Cache(...)} (which allows other \code{Cache() \%C\% ... remaining pipes}
+be preceded by \code{Cache(...)} (which allows other \code{Cache()
+\%C\% ... remaining pipes}
 arguments to be passed).
 
 This will take the input arguments of the first function immediately following
@@ -39,8 +43,9 @@ Still experimental and may change. This form cannot pass any arguments to
 it is a clean alternative for simple cases.
 }
 \examples{
+# THIS IS CURRENTLY BROKEN DUE TO UPGRADES TO INTERNALS OF magrittr \%>\%
 library(magrittr) # standard pipe
-# dontrun{ # these can't be automatically run due to package conflicts with magrittr
+\dontrun{ # these can't be automatically run due to package conflicts with magrittr
 tmpdir <- file.path(tempdir(), "testCache")
 checkPath(tmpdir, create = TRUE)
 a <- rnorm(10, 16) \%>\%
@@ -104,7 +109,7 @@ b2 <- Cache(cacheRepo = tmpdir) \%>\%
 sum(b1 - b2) # 0 # i.e., numbers are same
 
 unlink(tmpdir, recursive = TRUE)
-#}
+}
 # Equivalent
 a <- Cache(rnorm, 1)
 b \%<\% rnorm(1)

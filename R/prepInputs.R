@@ -125,8 +125,9 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param fun Function or character string indicating the function to use to load
 #'   \code{targetFile} into an \code{R} object, e.g., in form with package name:
-#'   \code{"raster::raster"}. NOTE: passing \code{NULL} will skip loading object
-#'   into R.
+#'   \code{"raster::raster"}. If passing a custom function, it must be a function of
+#'   \code{x}, e.g., \code{loadFun <- function(x) shapefile(x)}.
+#'   NOTE: passing \code{NULL} will skip loading object into R.
 #'
 #' @param quick Logical. This is passed internally to \code{\link{Checksums}}
 #'   (the quickCheck argument), and to
@@ -259,7 +260,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
   # Download, Checksum, Extract from Archive
-  browser(expr = exists("._prepInputs_1"))
+  # browser(expr = exists("._prepInputs_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
     on.exit({unlink(.tempPath, recursive = TRUE)},
@@ -318,7 +319,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           if (returnAsList)
             as.list(tmpEnv, all.names = TRUE)
         } else {
-          browser(expr = exists("._prepInputs_3"))
+          # browser(expr = exists("._prepInputs_3"))
           err <- tryCatch(error = function(xx) xx,
             mess <- capture.output(
               type = "message",
@@ -363,10 +364,10 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     #                        useCache = useCache), # passed into postProcess
     #                   out$dots)
     # rdal <- .robustDigest(argList)
-    browser(expr = exists("._prepInputs_2"))
+    # browser(expr = exists("._prepInputs_2"))
 
     # make quosure out of all spatial objects and x
-    spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is (x, "sf"))
+    spatials <- sapply(out$dots, function(x) is(x, "Raster") || is(x, "Spatial") || is(x, "sf"))
     out$dots[spatials] <- lapply(out$dots[spatials], function(x) rlang::quo(x))
     xquo <- rlang::quo(x)
 
@@ -419,7 +420,7 @@ extractFromArchive <- function(archive,
                                verbose = getOption("reproducible.verbose", 1),
                                .tempPath, ...) {
 
-  browser(expr = exists('._extractFromArchive_1'))
+  # browser(expr = exists('._extractFromArchive_1'))
   if (!is.null(archive)) {
     if (!(any(c(knownInternalArchiveExtensions, knownSystemArchiveExtensions) %in% fileExt(archive)))) {
       stop("Archives of type ", fileExt(archive), " are not currently supported. ",
@@ -442,7 +443,7 @@ extractFromArchive <- function(archive,
     FALSE
   }
 
-  browser(expr = exists('._extractFromArchive_2'))
+  # browser(expr = exists('._extractFromArchive_2'))
   if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
     if (!is.null(archive)) {
       if (!file.exists(archive[1]))
@@ -592,12 +593,11 @@ extractFromArchive <- function(archive,
       c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
         " If that is not correct, please specify a different targetFile",
         " and/or fun.")
-
     } else {
-      c(" Trying ", fun,
-        ". If that is not correct, please specify a targetFile",
-        " and/or different fun. The current files in the targetFilePath's ",
-        "directory are: \n",
+      c(" Trying ", fun, ".\n",
+        " If that is not correct, please specify a targetFile",
+        " and/or different fun. The current files in the targetFilePath's",
+        " directory are: \n",
         paste(possibleFiles, collapse = "\n"))
     }
     messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
@@ -838,7 +838,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       # if (requireNamespace("dplyr")) {
       #   nonCurrentFiles1 <- cs %>%
       #     dplyr::filter(!file %in% filesToChecksum)
-      #   browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
+      #   # browser(expr = !identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
       #   stopifnot(identical(as.data.table(nonCurrentFiles1), nonCurrentFiles))
       # }
       setDF(cs)

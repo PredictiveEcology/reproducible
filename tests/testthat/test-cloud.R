@@ -1,5 +1,7 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
-  if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+  if (!requireNamespace("googledrive", quietly = TRUE))
+    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+
   skip_if_no_token()
   if (interactive()) {
 
@@ -15,7 +17,7 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     }, add = TRUE)
     clearCache(x = tmpCache)
     testsForPkgs <- "testsForPkgs"
-    df <- googledrive::drive_find(pattern = testsForPkgs)
+    df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
     if (NROW(df) == 0)
       testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
@@ -224,7 +226,27 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
 
     testRasterInCloud(".tif", cloudFolderID = cloudFolderID, numRasterFiles = 1, tmpdir = tmpdir,
                       type = "Brick")
-
   }
 })
 
+test_that("prepInputs works with team drives", {
+  if (!requireNamespace("googledrive", quietly = TRUE))
+    stop(requireNamespaceMsg("googledrive", "to use google drive files"))
+
+  skip_if_no_token()
+  if (interactive()) {
+    testInitOut <- testInit(
+      "googledrive",
+      opts = list("reproducible.cachePath" = file.path(tempdir(), rndstr(1, 7)),
+                  "reproducible.ask" = FALSE)
+    )
+    # googledrive::drive_auth("predictiveecology@gmail.com")
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+
+    zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2"
+    wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+                     alsoExtract = "similar", fun = "shapefile", team_drive = TRUE)
+  }
+})

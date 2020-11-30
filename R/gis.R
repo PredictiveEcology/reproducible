@@ -129,7 +129,7 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
   # need to double check that gdal executable exists before going down this path
   attemptGDAL <- attemptGDAL(x, useGDAL, verbose = verbose)
 
-  browser(expr = exists("._fastMask_2"))
+  # browser(expr = exists("._fastMask_2"))
 
   if (is(x, "RasterLayer") && requireNamespace("sf", quietly = TRUE) &&
       requireNamespace("fasterize", quietly = TRUE)) {
@@ -243,7 +243,7 @@ bigRastersTmpFolder <- function() checkPath(Require::tempdir2(sub = "bigRasters"
 bigRastersTmpFile <- function() file.path(bigRastersTmpFolder(), "bigRasInput.tif")
 
 dealWithCores <- function(cores) {
-  browser(expr = exists("._dealWithCores_1"))
+  # browser(expr = exists("._dealWithCores_1"))
   if (is.null(cores) || cores == "AUTO") {
     if (requireNamespace("parallel", quietly = TRUE)) {
       cores <- as.integer(parallel::detectCores() * 0.9)
@@ -263,6 +263,7 @@ dealWithCores <- function(cores) {
 }
 
 findGDAL <- function() {
+  attemptGDAL <- FALSE
   if (.requireNamespace("gdalUtils")) {
     gdalPath <- NULL
     attemptGDAL <- TRUE
@@ -291,12 +292,13 @@ findGDAL <- function() {
       attemptGDAL <- FALSE
     attemptGDAL
   }
+  invisible(attemptGDAL)
 }
 
 attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE),
                         verbose = getOption("reproducible.verbose", 1)) {
   if (requireNamespace("gdalUtils", quietly = TRUE)) {
-    browser(expr = exists("._attemptGDAL_1"))
+    # browser(expr = exists("._attemptGDAL_1"))
     crsIsNA <- is.na(.crs(x))
     cpim <- canProcessInMemory(x, 3)
     isTRUEuseGDAL <- isTRUE(useGDAL)

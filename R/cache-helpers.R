@@ -224,7 +224,7 @@ setMethod(
     # with this call to .prepareFileBackedRaster, it is from the same function call as a previous time
     #  overwrite is ok
     # .prepareFileBackedRaster(object, repoDir = cacheRepo, drv = drv, conn = conn, ...)
-    browser(expr = exists("._prepareOutputs_1"))
+    # browser(expr = exists("._prepareOutputs_1"))
     if (isTRUE(fromDisk(object))) {
       fns <- Filenames(object, allowMultiple = FALSE)
       fpShould <- normPath(file.path(cacheRepo, "rasters"))
@@ -232,7 +232,7 @@ setMethod(
                                  function(x) any(grepl(x, fns))))
       if (!any(isCorrect)) {
         if (is(object, "RasterStack")) {
-          browser(expr = exists("._prepareOutputs_2"))
+          # browser(expr = exists("._prepareOutputs_2"))
           for (i in seq(nlayers(object))) {
             object@layers[[i]]@file@name <- gsub(dirname(object@layers[[i]]@file@name),
                                                  fpShould, object@layers[[i]]@file@name)
@@ -564,7 +564,7 @@ setAs(from = "character", to = "Path", function(from) {
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
-  browser(expr = exists("._prepareFileBackedRaster_1"))
+  # browser(expr = exists("._prepareFileBackedRaster_1"))
   isRasterLayer <- TRUE
   isBrick <- is(obj, "RasterBrick")
   isStack <- is(obj, "RasterStack")
@@ -701,7 +701,7 @@ setAs(from = "character", to = "Path", function(from) {
         saveFilenames <- paste0(saveFilenamesBase, ".", exts)
 
 
-        browser(expr = exists("._prepareFileBackedRaster_2"))
+        # browser(expr = exists("._prepareFileBackedRaster_2"))
         # change filename if it already exists
         if (any(file.exists(saveFilenames))) {
           saveFilenames <- nextNumericName(saveFilenames)
@@ -815,7 +815,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   os <- tolower(Sys.info()[["sysname"]])
   .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
   if (!useFileCopy) {
-    if (isWindows()) {
+    if (isWindows() && isTRUE(file.size(from) > 1e6)) {
       if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
       robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
@@ -895,7 +895,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
                               extent(object)), dataSlotsToDigest), length = length, quick = quick,
                   algo = algo) # don't include object@data -- these are volatile
   else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     dig <- fastdigest::fastdigest(append(list(dim(object), res(object), crs(object),
                                   extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
@@ -908,7 +908,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
                   algo = algo) # don't include object@data -- these are volatile
   else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     dig2 <- fastdigest::fastdigest(legendSlotsToDigest) # don't include object@data -- these are volatile
   }
@@ -921,7 +921,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
                              algo = algo) # don't include object@file -- these are volatile
   else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     digFile <- fastdigest::fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
   }
@@ -942,7 +942,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
     dig <- .robustDigest(unlist(dig), length = length, quick = quick, algo = algo)
   else {
-    if (!requireNamespace("fastdigest"))
+    if (!requireNamespace("fastdigest", quietly = TRUE))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
     dig <- fastdigest::fastdigest(dig)
   }
@@ -1106,7 +1106,7 @@ nextNumericName <- function(string) {
 
 #' @importFrom raster fromDisk
 dealWithRasters <- function(obj, cachePath, drv, conn) {
-  browser(expr = exists("._dealWithRasters_1"))
+  # browser(expr = exists("._dealWithRasters_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
   if (outputToSaveIsList) {
     rasters <- unlist(lapply(obj, is, "Raster"))
@@ -1116,7 +1116,7 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
   if (any(rasters)) {
     objOrig <- obj
     atts <- attributes(obj)
-    browser(expr = exists("._dealWithRasters_2"))
+    # browser(expr = exists("._dealWithRasters_2"))
     if (outputToSaveIsList) {
       obj[rasters] <- lapply(obj[rasters], function(x)
         .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv, conn = conn))

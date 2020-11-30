@@ -1,8 +1,21 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 1.2.1.9000
+==============
+
+## New features
+* removed several uses of `rgeos`
+* moved `paddedFloatToChar` to reproducible from SpaDES.core.
+* increased code coverage
+* Pull in legacy `%>%` code from `magrittr` to allow the cached alternative, `%C%`. With new `magrittr` pipe now in compiled source code, more of the legacy code is required here.
+
+
+## Bug fixes
+* several minor
 
 version 1.2.1
 ==============
+
 ## New features
 * harmonized message colours that are use adjustable via options: `reproducible.messageColourPrepInputs` for all `prepInputs` functions;  `reproducible.messageColourCache` for all `Cache` functions; and `reproducible.messageColourQuestion` for questions that require user input. Defaults are `cyan`, `blue` and `green` respectively. These are user-visible colour changes.
 * improved messaging for `Cache` cases where a `file.link` is used instead of saving.
@@ -13,7 +26,6 @@ version 1.2.1
 ## Bug fixes
 * `RasterStack` objects were not correctly saved to disk under some conditions in `postProcess` - fixed
 * several minor
-
 
 version 1.2.0
 ==============

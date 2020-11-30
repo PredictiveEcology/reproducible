@@ -23,9 +23,9 @@
       "\n  'reproducible' has changed the default database backend.",
       "\n  See ?reproducibleOptions for details.",
       "\n  During transition to GDAL>3 and PROJ>6, many warnings will be suppressed until",
-      "\n    simple solutions are available; if these GDAL and PROJ changes",
-      "\n    are important to your project you will have to manually update",
-      "\n    proj and crs in spatial objects")
+      " simple solutions are available; if these GDAL and PROJ changes",
+      " are important to your project you will have to manually update",
+      " proj and crs in spatial objects.")
   }
 }
 

@@ -93,11 +93,10 @@ ranNumsA <- Cache(rnorm, 10, 16, cacheRepo = tmpDir)
 
 # All same
 ranNumsB <- Cache(rnorm, 10, 16, cacheRepo = tmpDir) # recovers cached copy
-ranNumsC <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 16)  # recovers cached copy
 ranNumsD <- Cache(quote(rnorm(n = 10, 16)), cacheRepo = tmpDir) # recovers cached copy
 
 # Any minor change makes it different
-ranNumsE <- Cache(cacheRepo = tmpDir) %C% rnorm(10, 6) # different
+ranNumsE <- Cache(rnorm, 10, 6, cacheRepo = tmpDir) # different
 ```
 
 ## Example 1: Basic cache use with tags

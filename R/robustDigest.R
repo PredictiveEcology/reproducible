@@ -97,7 +97,7 @@
 #' .robustDigest(r)
 #' .robustDigest(r1) # different
 #'
-setGeneric(".robustDigest", function(object, .objects,
+setGeneric(".robustDigest", function(object, .objects = NULL,
                                      length = getOption("reproducible.length", Inf),
                                      algo = "xxhash64",
                                      quick = getOption("reproducible.quick", FALSE),
@@ -113,7 +113,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, .objects, length, algo, quick,
                         classOptions) {
-    browser(expr = exists("._robustDigest_1"))
+    # browser(expr = exists("._robustDigest_1"))
     if (is(object, "quosure")) {# can't get this class from rlang via importClass rlang quosure
       object <- eval_tidy(object)
     }
@@ -157,9 +157,9 @@ setMethod(
 
     if (!quick) {
         if (any(unlist(lapply(object, file.exists)))) {
-          browser(expr = exists("hhhh"))
+          # browser(expr = exists("hhhh"))
           unlist(lapply(object, function(x) {
-            browser(expr = exists("hhhh"))
+            # browser(expr = exists("hhhh"))
             if (dir.exists(x)) {
               .doDigest(basename(x), algo)
             } else if (file.exists(x)) {
@@ -224,7 +224,8 @@ setMethod(
   signature = "list",
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
-    browser(expr = exists("._robustDigest_2"))
+    # browser(expr = exists("._robustDigest_2"))
+    if (!is.null(.objects)) object <- object[.objects]
     lapply(.sortDotsUnderscoreFirst(object), function(x) {
       .robustDigest(object = x, .objects = .objects,
                    length = length,
@@ -365,7 +366,7 @@ setMethod(
     out <- if (cacheSpeed == 1) {
       digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      if (!requireNamespace("fastdigest"))
+      if (!requireNamespace("fastdigest", quietly = TRUE))
         stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
       fastdigest::fastdigest(x)
     } else {

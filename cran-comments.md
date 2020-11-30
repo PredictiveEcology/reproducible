@@ -1,6 +1,6 @@
 ## Updated release
 
-This release adds several updated features, and several minor bug fixes.
+This release fixes an error that now occurs with the new `magrittr` >2.0.0. 
 
 ## Test environments
 
@@ -13,20 +13,14 @@ This release adds several updated features, and several minor bug fixes.
 - os: ubuntu-18.04,   r: 'oldrel'
 - os: ubuntu-18.04,   r: '3.5'
           
-### Winbuilder
+### Winbuilder -- all passed Sept 8, 2020
 * Windows                 (win-builder), R 3.6.3
 * Windows                 (win-builder), R 4.0.2
-* Windows                 (win-builder), R 4.1.0 (2020-08-12)
-
-### rhub
-* Windows     (Windows Server 2008 R2 SP1, 32/64 bit), R 4.1.0 (2020-08-12)
-
-### local
-* Windows   R 4.0.2
+* Windows                 (win-builder), R 4.1.0 (2020-11-30)
 
 ## R CMD check results
 
-There were no ERRORs nor WARNINGs, nor NOTEs
+There were no ERRORs nor WARNINGs or NOTEs.
 
 ## Downstream dependencies
 

@@ -4,7 +4,7 @@
 7z
 7zip
 algorithmically
-Appveyor
+analytics
 aren
 arg
 args
@@ -25,6 +25,7 @@ clearCache
 cloudCache
 cloudFolder
 CMD
+Codecov
 colortable
 config
 crs

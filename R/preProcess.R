@@ -157,9 +157,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
 
   if (is.null(targetFile)) {
-    fileGuess <- .guessAtFile(url = url, archive = archive,
-                              targetFile = targetFile,
-                              destinationPath = destinationPath, verbose = verbose)
+    fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
+                              destinationPath = destinationPath, verbose = verbose,
+                              team_drive = dots[["team_drive"]])
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
     archive <- moveAttributes(fileGuess, archive)
@@ -247,7 +247,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     needChecksums <- 1
     checkSums <- .emptyChecksumsResult
   }
-  browser(expr = exists("._preProcess_5"))
+  # browser(expr = exists("._preProcess_5"))
 
   # This will populate a NULL archive if archive is local or
   if (is.null(archive)) {
@@ -259,7 +259,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         #   an archive, either remotely, in the case of google or from the basename of url
         fileGuess <- .guessAtFile(url = url, archive = archive,
                                   targetFile = targetFile, destinationPath = destinationPath,
-                                  verbose = verbose)
+                                  verbose = verbose, team_drive = dots[["team_drive"]])
         archive <- .isArchive(fileGuess)
         # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
         archive <- moveAttributes(fileGuess, receiving = archive)
@@ -274,7 +274,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                       checkSums = checkSums,
                                       verbose = verbose)
       }
-
     }
   }
 
@@ -297,7 +296,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # Deal with "similar" in alsoExtract -- maybe this is obsolete with new feature that uses file_name_sans_ext
   if (is.null(alsoExtract)) {
     filesInsideArchive <- .listFilesInArchive(archive)
-    if (isTRUE(length(filesInsideArchive)>0)) {
+    if (isTRUE(length(filesInsideArchive) > 0)) {
       checkSums <- .checkSumsUpdate(destinationPath, file.path(destinationPath, filesInsideArchive),
                                     checkSums = checkSums)
     }
@@ -309,7 +308,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     checkSums <- outFromSimilar$checkSums
   }
 
-  browser(expr = exists("._preProcess_6"))
+  # browser(expr = exists("._preProcess_6"))
 
   filesToChecksum <- if (is.null(archive))  NULL else .basename(archive)
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
@@ -375,7 +374,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # Download
   ###############################################################
-  browser(expr = exists("._preProcess_7"))
+  # browser(expr = exists("._preProcess_7"))
   downloadFileResult <- downloadFile(
     archive = archive,
     targetFile = targetFile,
@@ -396,8 +395,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   downloadFileResult <- .fixNoFileExtension(downloadFileResult = downloadFileResult,
-                      targetFile = targetFile, archive = archive,
-                      destinationPath = destinationPath, verbose = verbose)
+                                            targetFile = targetFile, archive = archive,
+                                            destinationPath = destinationPath, verbose = verbose)
 
   # Post downloadFile -- put objects into this environment
   if (!is.null(downloadFileResult$targetFilePath))
@@ -496,7 +495,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     }
   }
   # if it was a nested file
-  browser(expr = exists("._preProcess_8"))
+  # browser(expr = exists("._preProcess_8"))
 
   if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar"))) {
     nestedArchives <- .basename(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
@@ -565,7 +564,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (is.null(targetFile) && !is.null(targetFilePath)) {
     targetFile <- .basename(targetFilePath)
   }
-  browser(expr = exists("._preProcess_9"))
+  # browser(expr = exists("._preProcess_9"))
 
   ## Convert the fun as character string to function class, if not already
   fun <- .extractFunction(fun)
@@ -607,7 +606,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                   # on.exit because it is done here
   }
 
-  browser(expr = exists("._preProcess_10"))
+  # browser(expr = exists("._preProcess_10"))
   failStop <- if (is.null(targetFilePath)) {
     TRUE
   } else if (!isTRUE(file.exists(targetFilePath))) {
@@ -676,14 +675,14 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 }
 
 #' @keywords internal
-.guessAtFile <- function(url, archive, targetFile, destinationPath, verbose = getOption("reproducible.verbose", 1)) {
+.guessAtFile <- function(url, archive, targetFile, destinationPath,
+                         verbose = getOption("reproducible.verbose", 1), team_drive = NULL) {
   guessedFile <- if (!is.null(url)) {
     if (grepl("drive.google.com", url)) {
       ie <- isTRUE(internetExists())
       if (ie) {
-        assessGoogle(url = url, archive = archive,
-                     targetFile = targetFile,
-                     destinationPath = destinationPath, verbose = verbose)
+        assessGoogle(url = url, archive = archive, targetFile = targetFile,
+                     destinationPath = destinationPath, verbose = verbose, team_drive = NULL)
       } else {
         # likely offline
         file.path(destinationPath, .basename(url))
@@ -1165,8 +1164,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
           "prepInputs will try accessing the file type.", verbose = verbose)
         fileExt <- .guessFileExtension(file = file.path(normPath(downloadFileResult$downloaded)))
         if (is.null(fileExt)) {
-          messagePrepInputs("The file was not recognized by prepInputs.",
-                  "Will assume the file is an archive and add '.zip' extension.",
+          messagePrepInputs("The file was not recognized by prepInputs. ",
+                  "Will assume the file is an archive and add '.zip' extension. ",
                   "If this is incorrect or return error, please supply archive or targetFile", verbose = verbose)
           fileExt <- ".zip"
         }

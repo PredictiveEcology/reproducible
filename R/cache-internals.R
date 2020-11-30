@@ -96,7 +96,6 @@
 }
 
 .CacheFn1 <- function(FUN, scalls) {
-
   if (!is(FUN, "function")) {
     # scalls <- sys.calls()
     if (any(startsWith(as.character(scalls), "function_list[[k"))) {
@@ -134,7 +133,7 @@
 .CacheSideEffectFn1 <- function(output, sideEffect, cacheRepo, quick, algo, FUN,
                                 verbose = getOption("reproducible.verbose", 1), ...) {
   messageCache("sideEffect argument is poorly tested. It may not function as desired")
-  browser(expr = exists("sideE"))
+  # browser(expr = exists("sideE"))
   needDwd <- logical(0)
   fromCopy <- character(0)
   cachedChcksum <- attributes(output)$chcksumFiles
@@ -202,7 +201,7 @@
 
 .CacheSideEffectFn2 <- function(sideEffect, cacheRepo, priorRepo, algo, output,
                                 makeCopy, quick) {
-  browser(expr = exists("sideE"))
+  # browser(expr = exists("sideE"))
   if (isTRUE(sideEffect)) {
     postRepo <- list.files(cacheRepo, full.names = TRUE)
   } else {
@@ -229,7 +228,7 @@
     if (!identical(attr(output, "chcksumFiles"), paste0(cacheName, ":", cachecurFlst)))
       stop("There is an unknown error 01")
 
-    browser(expr = exists("sideE"))
+    # browser(expr = exists("sideE"))
     if (makeCopy) {
       repoTo <- CacheStorageDir(cacheRepo)
       checkPath(repoTo, create = TRUE)
@@ -258,13 +257,7 @@
     if (!is.null(.pkgEnv[[cacheRepo]]))
       if (exists(cacheObj, envir = .pkgEnv[[cacheRepo]]))
         fromMemoise <- TRUE
-      # if (memoise::has_cache(.loadFromLocalRepoMem)(cacheObj, repoDir = cacheRepo, value = TRUE)) {
-      #   TRUE
-      # } else {
-      #   FALSE
-      # }
     loadFromMgs <- "Loading from memoised version of repo"
-    browser(expr = exists("eeee"))
     output <- .loadFromLocalRepoMem(md5hash = cacheObj, repoDir = cacheRepo, value = TRUE)
     output <- unmakeMemoisable(output)
     #if (is(output, "simList_")) output <- as(output, "simList")
@@ -292,7 +285,7 @@
   }
 
   # Class-specific message
-  browser(expr = exists("dddd"))
+  # browser(expr = exists("dddd"))
   .cacheMessage(output, fnDetails$functionName, fromMemoise = fromMemoise, verbose = verbose)
 
   # This is protected from multiple-write to SQL collisions
@@ -300,7 +293,7 @@
   .addTagsRepo(cacheId = isInRepo[[.cacheTableHashColName()]][lastOne],
                cachePath = cacheRepo, drv = drv, conn = conn)
 
-  browser(expr = exists("._getFromRepo_1"))
+  # browser(expr = exists("._getFromRepo_1"))
   if (sideEffect != FALSE) {
     .CacheSideEffectFn1(output, sideEffect, cacheRepo, quick, algo, FUN, verbose = verbose, ...)
   }

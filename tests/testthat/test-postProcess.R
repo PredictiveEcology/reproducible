@@ -1,6 +1,7 @@
 test_that("prepInputs doesn't work (part 3)", {
-  if (requireNamespace("rgeos")) {
-    testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
+  # if (requireNamespace("rgeos")) {
+  testInitOut <- testInit(c("raster", "sf"), opts = list(
+  #  testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
       "rasterTmpDir" = tempdir2(rndstr(1,6)),
       "reproducible.inputPaths" = NULL,
       "reproducible.overwrite" = TRUE)
@@ -137,5 +138,112 @@ test_that("prepInputs doesn't work (part 3)", {
     #   expect_error(determineFilename(postProcessedFilename = "a"))
     #   expect_error(determineFilename(targetFilePath = "a"))
     # }
-  }
+
+})
+
+test_that("writeOutputs with non-matching filename2", {
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  r <- raster(extent(0,10,0,10), vals = rnorm(100))
+  r <- writeRaster(r, file = tmpfile[1], overwrite = TRUE)
+  warn <- capture_warnings({
+    r1 <- writeOutputs(r, filename2 = tmpfile[2])
+  })
+  expect_true(any(grepl("filename2 file type", warn)))
+  r2 <- raster(filename(r1))
+  vals1 <- r2[]
+  vals2 <- r1[]
+  vals3 <- r[]
+  expect_true(identical(vals1, vals2))
+  expect_true(identical(vals1, vals3))
+  expect_false(identical(normPath(filename(r)), normPath(filename(r1))))
+  expect_true(identical(normPath(filename(r2)), normPath(filename(r1))))
+})
+
+test_that("new gdalwarp all in one with grd with factor", {
+  skip_on_cran()
+  hasGDAL <- findGDAL()
+  if (!isTRUE(hasGDAL))
+    skip("no GDAL installation found")
+
+  testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- crsToUse
+
+  r <- raster(extent(-130, -110, 55, 65), res = 1)
+  crs(r) <- crsToUse
+  r[] <- sample(0:10, size = ncell(r), replace = TRUE)
+  df <- data.frame(ID = 0:10, label = LETTERS[1:11])
+  levels(r) <- df
+
+  # Check that the file-backed location is NOT in the cacheRepo for 1st or 2nd time.
+  #  This invokes the new dealWithRastersOnRecovery fn
+  rr <- postProcess(r, destinationPath = tmpdir,
+                    studyArea = StudyArea, useCache = TRUE, useGDAL = "force", filename2 = TRUE)
+  rr1 <- Cache(postProcess, r, destinationPath = tmpdir,
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache, filename2 = TRUE)
+  rr3 <- Cache(postProcess, r, destinationPath = tmpdir,
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force", cacheRepo = tmpCache, filename2 = TRUE)
+  expect_true(identical(dirname(Filenames(rr)), dirname(Filenames(rr1))))
+  expect_true(identical(Filenames(rr1), Filenames(rr3)))
+  expect_true(!identical(dirname(Filenames(rr)), tmpCache)) # used to be that the recovery path was Cache file
+
+  expect_true(identical(raster::levels(rr), raster::levels(r)))
+  expect_true(sum(abs(raster::extent(rr)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
+  expect_true(sum(abs(raster::extent(r)[1:4] - raster::extent(StudyArea)[1:4])) > 1)
+  rr2 <- postProcess(r, studyArea = StudyArea, useCache = FALSE, useGDAL = "force", filename2 = "out.grd")
+  expect_true(identical(raster::levels(rr2), raster::levels(r)))
+  expect_true(sum(abs(raster::extent(rr2)[1:4] - raster::extent(StudyArea)[1:4])) < 1)
+  expect_true(!identical(filename(rr), filename(rr2)))
+
+  expect_true(grepl(".tif$", filename(rr))) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
+  expect_true(grepl(".grd$", filename(rr2)))
+})
+
+test_that("cropInputs crops too closely when input projections are different", {
+  skip_on_cran()
+
+  testInitOut <- testInit("raster", opts = list(
+    "rasterTmpDir" = tempdir2(rndstr(1,6)),
+    "reproducible.overwrite" = TRUE,
+    "reproducible.inputPaths" = NULL
+  ), needGoogle = TRUE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  ext <- new("Extent",
+             xmin = -3229772.32501426,
+             xmax = 3680227.67498574,
+             ymin = -365833.605586135,
+             ymax = 3454166.39441387)
+  x <- raster(ext,
+              crs = paste("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0",
+                          "+a=6370997 +b=6370997 +units=m +no_defs"),
+              res = c(10000, 10000))
+  x <- setValues(x, 1)
+
+  RTMext <- new("Extent",
+                xmin = -1613500.00000023,
+                xmax = -882500.000000228,
+                ymin = 7904500,
+                ymax = 9236000)
+  RTM <- raster(RTMext,
+                crs = paste("+proj=lcc +lat_1=49 +lat_2=77 +lat_0=0 +lon_0=-95 +x_0=0 +y_0=0",
+                            "+ellps=GRS80 +units=m +no_defs"),
+                res = c(250, 250))
+  RTM <- setValues(RTM, 2)
+  out <- postProcess(x = x, rasterToMatch = RTM, filename2 = NULL)
+  expect_null(out[is.na(out) & !is.na(RTM)])
 })
