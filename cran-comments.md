@@ -1,44 +1,26 @@
 ## Updated release
 
-This release fixes an error revealed during CRAN checks.
+This release fixes an error that now occurs with the new `magrittr` >2.0.0. 
 
 ## Test environments
 
-### Previous R versions
-* Ubuntu 16.04              (travis-ci), R 3.6.3
-* Windows                    (appveyor), R 3.6.3
+### GitHub Actions
+- os: macOS-latest,   r: 'release'
+- os: windows-latest, r: 'release'
+- os: windows-latest, r: '3.6'
+- os: ubuntu-18.04,   r: 'devel', 
+- os: ubuntu-18.04,   r: 'release'
+- os: ubuntu-18.04,   r: 'oldrel'
+- os: ubuntu-18.04,   r: '3.5'
+          
+### Winbuilder -- all passed Sept 8, 2020
 * Windows                 (win-builder), R 3.6.3
-
-### Current R versions
-* macOS 10.13.3 High Sierra (travis-ci), R 4.0.2
-* macOS 10.15.5 Catalina        (local), R 4.0.2
-* Ubuntu 16.04              (travis-ci), R 4.0.2
-* Ubuntu 20.04                  (local), R 4.0.2
-* Windows                    (appveyor), R 4.0.2
-* Windows                       (local), R 4.0.2
 * Windows                 (win-builder), R 4.0.2
-
-### Development R version
-* Ubuntu 16.04              (travis-ci), R 4.1.0 (2020-08-03 r78963)
-* Ubuntu 20.04                  (local), R 4.1.0 (2020-08-03 r78963)
-* Windows                    (appveyor), R 4.1.0 (2020-08-02 r78957)
-* Windows                 (win-builder), R 4.1.0 (2020-08-02 r78957)
+* Windows                 (win-builder), R 4.1.0 (2020-11-30)
 
 ## R CMD check results
 
-There were no ERRORs nor WARNINGs.
-
-There is one NOTE:
-
-```
-> checking package dependencies ... NOTE
-  Imports includes 25 non-default packages.
-  Importing from so many packages makes the package vulnerable to any of
-  them becoming unavailable.  Move as many as possible to Suggests and
-  use conditionally.
-```
-
-We will pare down the number of dependencies in future releases, as we plan to split some functionality into another package.
+There were no ERRORs nor WARNINGs or NOTEs.
 
 ## Downstream dependencies
 
