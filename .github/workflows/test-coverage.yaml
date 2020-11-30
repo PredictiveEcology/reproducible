@@ -42,6 +42,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install gdal
+          brew link --overwrite gcc
 
       - name: Install dependencies
         run: |
