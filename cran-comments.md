@@ -1,6 +1,6 @@
 ## Updated release
 
-This release fixes an error that now occurs with the new `magrittr` >2.0.0. 
+This release fixes an error that now occurs with the new `magrittr` >2.0.0. Other news is in `News.md` file.
 
 ## Test environments
 
