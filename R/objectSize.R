@@ -113,7 +113,7 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE),
 
 #' @details
 #' For functions, a user can include the enclosing environment as described
-#' \url{https://www.r-bloggers.com/using-closures-as-objects-in-r/} and
+#' \url{https://www.r-bloggers.com/2015/03/using-closures-as-objects-in-r/} and
 #' \url{http://adv-r.had.co.nz/memory.html}.
 #' It is not entirely clear which estimate is better.
 #' However, if the enclosing environment is the \code{.GlobalEnv}, it will
