@@ -1,6 +1,6 @@
 ## Updated release
 
-This release fixes an error that now occurs with the new `magrittr` >2.0.0. Other news is in `News.md` file.
+This release fixes a minor url change.
 
 ## Test environments
 
@@ -13,10 +13,10 @@ This release fixes an error that now occurs with the new `magrittr` >2.0.0. Othe
 - os: ubuntu-18.04,   r: 'oldrel'
 - os: ubuntu-18.04,   r: '3.5'
           
-### Winbuilder -- all passed Sept 8, 2020
+### Winbuilder -- all passed Dec 2, 2020
 * Windows                 (win-builder), R 3.6.3
 * Windows                 (win-builder), R 4.0.2
-* Windows                 (win-builder), R 4.1.0 (2020-11-30)
+* Windows                 (win-builder), R 4.1.0 (2020-12-02)
 
 ## R CMD check results
 
