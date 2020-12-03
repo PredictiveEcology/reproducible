@@ -1,5 +1,11 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+version 1.2.4
+==============
+
+## Bug fix
+* typo in date
+
 version 1.2.3
 ==============
 
