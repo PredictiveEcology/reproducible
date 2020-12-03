@@ -1,6 +1,6 @@
 ## Updated release
 
-This release fixes a minor url change.
+This release fixes a minor date change in DESCRIPTION file.
 
 ## Test environments
 
