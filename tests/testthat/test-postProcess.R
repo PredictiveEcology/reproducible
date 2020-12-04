@@ -247,3 +247,50 @@ test_that("cropInputs crops too closely when input projections are different", {
   out <- postProcess(x = x, rasterToMatch = RTM, filename2 = NULL)
   expect_null(out[is.na(out) & !is.na(RTM)])
 })
+
+test_that("maskInputs errors when x is Lat-Long", {
+  skip_on_cran()
+
+  testInitOut <- testInit("raster", opts = list(
+    "rasterTmpDir" = tempdir2(rndstr(1,6)),
+    "reproducible.overwrite" = TRUE,
+    "reproducible.inputPaths" = NULL
+  ), needGoogle = TRUE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  i <- 0
+  roads <- list()
+  clearCache()
+
+  smallSA <- new("Extent", xmin = -117.580383168455, xmax = -117.43120279669,
+                 ymin = 61.0576330401172, ymax = 61.0937107807574)
+  crs <- new("CRS", projargs = "+proj=longlat +ellps=GRS80 +no_defs")
+  smallSA <- as(smallSA, "SpatialPolygons");
+  crs(smallSA) <- crs
+
+  for (ii in c(TRUE, FALSE)) {
+    i <- i + 1
+    options(reproducible.polygonShortcut = ii)
+    roads[[i]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
+                        alsoExtract = "similar",
+                        url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC/view?usp=sharing",
+                        studyArea = smallSA,
+                        destinationPath = tmpdir,
+                        filename2 = "miniRoads")
+    roads[[i + 2]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
+                        alsoExtract = "similar",
+                        url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC/view?usp=sharing",
+                        # studyArea = smallSA,
+                        destinationPath = tmpdir,
+                        filename2 = "miniRoads")
+clearCache()
+    attr(roads[[i]], "tags") <- NULL
+  }
+  expect_true(all.equal(roads[[1]], roads[[2]]))
+  expect_true(compareRaster(raster(extent(roads[[1]])), raster(extent(smallSA))))
+  expect_true(compareRaster(raster(extent(roads[[3]])), raster(extent(smallSA))))
+  expect_true(extent(roads[[3]]) > extent(roads[[1]]))
+
+})
