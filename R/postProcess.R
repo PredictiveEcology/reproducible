@@ -1807,12 +1807,10 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         message("Using an experimental shortcut of maskInputs for special, simple case that x is polygon, ",
                 "rasterToMatch not provided, and studyArea provided.",
                 " If this is causing problems, set options(reproducible.polygonShortcut = FALSE)")
-        x <- fixErrors(x = x, objectName = objectName,
-                       useCache = useCache, verbose = verbose, ...)
+        x <- fixErrors(x = x, useCache = useCache, verbose = verbose, ...)
         x <- Cache(maskInputs, x = x, studyArea = studyArea,
                    useCache = useCache, verbose = verbose, ...)
-        x <- fixErrors(x = x, objectName = objectName,
-                       useCache = useCache, verbose = verbose, ...)
+        x <- fixErrors(x = x, useCache = useCache, verbose = verbose, ...)
 
       } else {
 

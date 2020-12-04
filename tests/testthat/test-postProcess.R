@@ -273,24 +273,26 @@ test_that("maskInputs errors when x is Lat-Long", {
   for (ii in c(TRUE, FALSE)) {
     i <- i + 1
     options(reproducible.polygonShortcut = ii)
-    roads[[i]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
+    suppressWarningsSpecific(falseWarnings = "attribute variables",
+                             roads[[i]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
                         alsoExtract = "similar",
                         url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC/view?usp=sharing",
                         studyArea = smallSA,
                         destinationPath = tmpdir,
-                        filename2 = "miniRoads")
+                        filename2 = "miniRoads"))
+    clearCache()
     roads[[i + 2]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
                         alsoExtract = "similar",
                         url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC/view?usp=sharing",
                         # studyArea = smallSA,
                         destinationPath = tmpdir,
                         filename2 = "miniRoads")
-clearCache()
+    clearCache()
     attr(roads[[i]], "tags") <- NULL
   }
   expect_true(all.equal(roads[[1]], roads[[2]]))
   expect_true(compareRaster(raster(extent(roads[[1]])), raster(extent(smallSA))))
-  expect_true(compareRaster(raster(extent(roads[[3]])), raster(extent(smallSA))))
+  expect_error(compareRaster(raster(extent(roads[[3]])), raster(extent(smallSA))))
   expect_true(extent(roads[[3]]) > extent(roads[[1]]))
 
 })
