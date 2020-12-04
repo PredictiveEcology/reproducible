@@ -1091,11 +1091,22 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
     if (is(studyArea, "Spatial"))
       studyArea <- sf::st_as_sf(studyArea)
 
+    xOrigCRS <- sf::st_crs(x)
+    changedCRS <- FALSE
+    isXLongLat <- sf::st_is_longlat(x)
     messagePrepInputs("maskInputs with sf class objects is still experimental", verbose = verbose)
     messagePrepInputs("    intersecting ...", verbose = verbose, verboseLevel = 0)
     #studyArea <- raster::aggregate(studyArea, dissolve = TRUE)
-    if (!identical(sf::st_crs(x), sf::st_crs(studyArea)))
-      studyArea <- sf::st_transform(studyArea, crs = sf::st_crs(x))
+    if (!identical(xOrigCRS, sf::st_crs(studyArea))) {
+      if (isXLongLat) {
+        changedCRS <- TRUE
+        x <- sf::st_transform(x, crs = sf::st_crs(studyArea))
+      } else {
+        studyArea <- sf::st_transform(studyArea, crs = xOrigCRS)
+      }
+
+    }
+
     if (NROW(studyArea) > 1) {
       studyArea <- sf::st_sf(sf::st_combine(studyArea))
     }
@@ -1109,12 +1120,16 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
       ## fixErrors doesn't work with multiple geometries; st_buffer does, so use it here
-      y <- suppressWarningsSpecific(sf::st_buffer(y, 0),
-                                    "st_buffer does not correctly buffer longitude/latitude data")
+      y <- fixErrors(y)
+      #y <- suppressWarningsSpecific(sf::st_buffer(y, 0),
+      #                              "st_buffer does not correctly buffer longitude/latitude data")
     }
     if (!identical(.crs(y), .crs(x))) {
       ## sometimes the proj4string is rearranged, so they are not identical; they should be
       crs(y) <- .crs(x)
+    }
+    if (changedCRS) {
+      y <- sf::st_transform(y, xOrigCRS)
     }
 
     return(y)
