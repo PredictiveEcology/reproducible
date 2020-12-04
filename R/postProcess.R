@@ -255,6 +255,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
     extentCRS <- NULL
   }
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
+    isX_Sp <- is(x, "Spatial")
+    isX_Sf <- is(x, "sf")
     if (!is.null(extentToMatch)) {
       rasterToMatch <- suppressWarningsSpecific(falseWarnings = "CRS object has comment",
                                                 raster(extentToMatch, crs = extentCRS))
@@ -310,6 +312,10 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
         attemptGDAL <- attemptGDAL(x, useGDAL, verbose = verbose) #!raster::canProcessInMemory(x, n = 3) && isTRUE(useGDAL)
 
         cropExtentRounded <- roundToRes(cropExtent, x)
+
+        isX_Sp_Int <- is(x, "Spatial")
+        isX_Sf_Int <- is(x, "sf")
+
         if (attemptGDAL && is(x, "Raster")) {
           tmpfile <- paste0(tempfile(fileext = ".tif"))
           if (inMemory(x))
@@ -1104,7 +1110,6 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
       } else {
         studyArea <- sf::st_transform(studyArea, crs = xOrigCRS)
       }
-
     }
 
     if (NROW(studyArea) > 1) {
@@ -1756,81 +1761,98 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         }
       }
 
-      # browser(expr = exists("._postProcess.spatialClasses_2"))
-      if (!isTRUE(all.equal(extent(x), extRTM))) {
-        x <- Cache(cropInputs, x = x, studyArea = studyArea,
-                   extentToMatch = extRTM,
-                   extentCRS = crsRTM,
+      if (is.null(rasterToMatch) && !is.null(studyArea) && (is(x, "Spatial") || is(x, "sf")) &&
+          getOption("reproducible.polygonShortcut", TRUE)) {
+        message("Using an experimental shortcut of maskInputs for special, simple case that x is polygon, ",
+                "rasterToMatch not provided, and studyArea provided.",
+                " If this is causing problems, set options(reproducible.polygonShortcut = FALSE)")
+        x <- fixErrors(x = x, objectName = objectName,
+                       useCache = useCache, verbose = verbose, ...)
+        x <- Cache(maskInputs, x = x, studyArea = studyArea,
                    useCache = useCache, verbose = verbose, ...)
-      } else {
-        messageCache("  Skipping cropInputs; already same extents")
-      }
-
-      if (bufferSA) {
-        studyArea <- origStudyArea
-      }
-
-      # cropInputs may have returned NULL if they don't overlap
-      # browser(expr = exists("._postProcess.spatialClasses_3"))
-      if (!is.null(x)) {
-        objectName <- if (is.null(filename1)) NULL else basename(filename1)
         x <- fixErrors(x = x, objectName = objectName,
                        useCache = useCache, verbose = verbose, ...)
 
-        ##################################
-        # projectInputs
-        ##################################
-        targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
-                                   targetCRS)
+      } else {
 
-        # browser(expr = exists("._postProcess.spatialClasses_4"))
-        runIt <- if (is(x, "Raster") && !is.null(rasterToMatch))
-          differentRasters(x, rasterToMatch, targetCRS)
-        else
-          TRUE
-        if (runIt) {
-          x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
-                     rasterToMatch = rasterToMatch, useCache = useCache,
-                     cores = cores, verbose = verbose, ...)
+
+        # browser(expr = exists("._postProcess.spatialClasses_2"))
+        if (!isTRUE(all.equal(extent(x), extRTM))) {
+          x <- Cache(cropInputs, x = x, studyArea = studyArea,
+                     extentToMatch = extRTM,
+                     extentCRS = crsRTM,
+                     useCache = useCache, verbose = verbose, ...)
+        } else {
+          messageCache("  Skipping cropInputs; already same extents")
+        }
+
+        if (bufferSA) {
+          studyArea <- origStudyArea
+        }
+
+        # cropInputs may have returned NULL if they don't overlap
+        # browser(expr = exists("._postProcess.spatialClasses_3"))
+        if (!is.null(x)) {
+          objectName <- if (is.null(filename1)) NULL else basename(filename1)
           x <- fixErrors(x = x, objectName = objectName,
                          useCache = useCache, verbose = verbose, ...)
-        } else {
-          messageCache("  Skipping projectInputs; identical crs, res, extent")
-        }
 
-        ##################################
-        # maskInputs
-        ##################################
-        # browser(expr = exists("._postProcess.spatialClasses_5"))
-        x <- Cache(maskInputs, x = x, studyArea = studyArea,
-                   rasterToMatch = rasterToMatch, useCache = useCache, verbose = verbose, ...)
+          ##################################
+          # projectInputs
+          ##################################
+          targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
+                                     targetCRS)
 
-        ##################################
-        # filename
-        ##################################
-        newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, verbose = verbose, ...)
+          # browser(expr = exists("._postProcess.spatialClasses_4"))
+          runIt <- if (is(x, "Raster") && !is.null(rasterToMatch))
+            differentRasters(x, rasterToMatch, targetCRS)
+          else
+            TRUE
+          if (runIt) {
+            x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
+                       rasterToMatch = rasterToMatch, useCache = useCache,
+                       cores = cores, verbose = verbose, ...)
+            x <- fixErrors(x = x, objectName = objectName,
+                           useCache = useCache, verbose = verbose, ...)
+          } else {
+            messageCache("  Skipping projectInputs; identical crs, res, extent")
+          }
 
-        ##################################
-        # writeOutputs
-        ##################################
-        if (!is.null(filename2)) {
-          x <- suppressWarningsSpecific(
-            do.call(writeOutputs, append(list(x = rlang::quo(x),
-                                              filename2 = normPath(newFilename),
-                                              overwrite = overwrite,
-                                              verbose = verbose), dots)),
-            proj6Warn)
-        } else {
-          messageCache("  Skipping writeOutputs; filename2 is NULL")
-        }
+          ##################################
+          # maskInputs
+          ##################################
+          # browser(expr = exists("._postProcess.spatialClasses_5"))
+          x <- Cache(maskInputs, x = x, studyArea = studyArea,
+                     rasterToMatch = rasterToMatch, useCache = useCache, verbose = verbose, ...)
 
-        # browser(expr = exists("._postProcess.spatialClasses_6"))
-        if (dir.exists(bigRastersTmpFolder())) {
-          ## Delete gdalwarp results in temp
-          unlink(bigRastersTmpFolder(), recursive = TRUE)
         }
       }
+      ##################################
+      # filename
+      ##################################
+      newFilename <- determineFilename(filename1 = filename1, filename2 = filename2, verbose = verbose, ...)
+
+      ##################################
+      # writeOutputs
+      ##################################
+      if (!is.null(filename2)) {
+        x <- suppressWarningsSpecific(
+          do.call(writeOutputs, append(list(x = rlang::quo(x),
+                                            filename2 = normPath(newFilename),
+                                            overwrite = overwrite,
+                                            verbose = verbose), dots)),
+          proj6Warn)
+      } else {
+        messageCache("  Skipping writeOutputs; filename2 is NULL")
+      }
+
+      # browser(expr = exists("._postProcess.spatialClasses_6"))
+      if (dir.exists(bigRastersTmpFolder())) {
+        ## Delete gdalwarp results in temp
+        unlink(bigRastersTmpFolder(), recursive = TRUE)
+      }
     }
+
   }
   x
 }
