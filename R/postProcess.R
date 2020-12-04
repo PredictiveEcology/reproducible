@@ -254,6 +254,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
     extentToMatch <- NULL
     extentCRS <- NULL
   }
+  transformToCRSX <- TRUE
   if (!is.null(studyArea) || !is.null(rasterToMatch) || !is.null(extentToMatch)) {
     isX_Sp <- is(x, "Spatial")
     isX_Sf <- is(x, "sf")
@@ -271,23 +272,44 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
     #   once cropped, then cropExtent should be rm
     crsX <- .crs(x)
     crsCropTo <- .crs(cropTo)
-    cropExtent <- if (compareCRS(crsX, crsCropTo)) {
-      extent(cropTo)
+    if (compareCRS(crsX, crsCropTo)) {
+      cropExtent <- extent(cropTo)
     } else {
       if (!is.null(rasterToMatch)) {
-        projectExtent(cropTo, crsX)
+        cropExtent <- projectExtent(cropTo, crsX)
       } else {
-        if (is(studyArea, "Spatial")) {
-          #theExtent <- as(extent(cropTo), "SpatialPolygons")
-          #crs(theExtent) <- crsCropTo
-          raster::extent(spTransform(x = cropTo, CRSobj = crsX))
-        } else if (is(studyArea, "sf")) {
-          .requireNamespace("sf", stopOnFALSE = TRUE)
-          extent(sf::st_transform(cropTo, crs = crsX))
+        isSA_Sp <- is(studyArea, "Spatial")
+        isSA_Sf <- is(studyArea, "sf")
+
+        # Here, basically, st_intersection doesn't work correctly on longlat data
+        #  So, need to do opposite transformation -- transform X to StudyArea
+        if ( (isX_Sp || isX_Sf) && (isSA_Sp || isSA_Sf) ) {
+          if (sf::st_is_longlat(crsX))
+            transformToCRSX <- FALSE
+        }
+
+        if (transformToCRSX) {
+          if (isSA_Sp || isSA_Sf) {
+            if (isSA_Sp) {
+              #theExtent <- as(extent(cropTo), "SpatialPolygons")
+              #crs(theExtent) <- crsCropTo
+              cropExtent <- raster::extent(spTransform(x = cropTo, CRSobj = crsX))
+            } else if (isSA_Sf) {
+              .requireNamespace("sf", stopOnFALSE = TRUE)
+              cropExtent <- extent(sf::st_transform(cropTo, crs = crsX))
+            }
+          } else {
+            messagePrepInputs("cropInputs must have a rasterToMatch raster, or studyArea Spatial or sf object. ",
+                              "Returning result with no cropping.", verbose = verbose)
+            cropExtent <- NULL
+          }
         } else {
-          messagePrepInputs("cropInputs must have a rasterToMatch raster, or studyArea Spatial or sf object. ",
-                  "Returning result with no cropping.", verbose = verbose)
-          NULL
+          cropExtent <- extent(cropTo)
+          if (isX_Sp) {
+            x <- sf::st_as_sf(x)
+          }
+          x <- sf::st_transform(x, crs = crsCropTo)
+
         }
       }
     }
@@ -347,22 +369,37 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           #        "-tr ", paste(tr, collapse = " "), " ",
           #        "\"", tempSrcRaster, "\"", " ",
           #        "\"", tempDstRaster, "\""),
-        } else if (is(x, "Spatial")) { # raster::crop has stopped working on SpatialPolygons
+        } else if (isX_Sp || isX_Sf) { # raster::crop has stopped working on SpatialPolygons
           yyy <- as(cropExtentRounded, "SpatialPolygons")
-          crs(yyy) <- crsX
-          x <- fixErrors(x)
-          xSF <- sf::st_as_sf(x) %>% sf::st_buffer(., 0)
-          yyySF <- sf::st_as_sf(yyy) %>% sf::st_buffer(., 0)
+          if (transformToCRSX) {
+            crs(yyy) <- crsX
+          } else {
+            crs(yyy) <- crsCropTo
+          }
+
+          if (isX_Sp_Int) {
+            x <- fixErrors(x)
+            x <- sf::st_as_sf(x)
+          }
+          suppressMessages(x <- fixErrors(x))#%>% sf::st_buffer(., 0)
+          yyySF <- sf::st_as_sf(yyy) # %>% sf::st_buffer(., 0)
+          suppressMessages(yyySF <- fixErrors(yyySF))#%>% sf::st_buffer(., 0)
 
           # This tryCatch seems to be finding a bug in st_intersection:
           #   The error was:
           #   Error in geos_op2_geom("intersection", x, y) :
           #      st_crs(x) == st_crs(y) is not TRUE
           #   But the st_crs are identical
-          y <- tryCatch(sf::st_intersection(xSF, yyySF), error = function(x) {
-            xSF <- sf::st_transform(xSF, sf::st_crs(crsX))
-            sf::st_intersection(xSF, yyySF)
+          x <- tryCatch(sf::st_intersection(x, yyySF), error = function(xxx) {
+            x <- sf::st_transform(x, sf::st_crs(crsX))
+            sf::st_intersection(x, yyySF)
           })
+
+          if (!transformToCRSX) {
+            x <- sf::st_transform(x, crsX)
+          }
+          if (isX_Sp)
+            x <- as(x, "Spatial")
           # whichIntersect <- suppressWarningsSpecific(
           #   falseWarnings = "have different proj4",
           #   rgeos::gIntersects(x, as(cropExtentRounded, "SpatialPolygons"), byid = TRUE))
