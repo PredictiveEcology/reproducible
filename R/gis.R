@@ -297,27 +297,30 @@ findGDAL <- function() {
 
 attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE),
                         verbose = getOption("reproducible.verbose", 1)) {
-  if (requireNamespace("gdalUtils", quietly = TRUE)) {
-    # browser(expr = exists("._attemptGDAL_1"))
-    crsIsNA <- is.na(.crs(x))
-    cpim <- canProcessInMemory(x, 3)
-    isTRUEuseGDAL <- isTRUE(useGDAL)
-    forceGDAL <- identical(useGDAL, "force")
-    shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
-    attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
-      findGDAL()
-    } else {
-      if (crsIsNA && shouldUseGDAL)
-        messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
-      if (cpim && isTRUEuseGDAL)
-        messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
-                "useGDAL = 'force' to override", verbose = verbose)
+  attemptGDAL <- FALSE
+  if (is(x, "Raster")) {
+    if (requireNamespace("gdalUtils", quietly = TRUE)) {
+      # browser(expr = exists("._attemptGDAL_1"))
+      crsIsNA <- is.na(.crs(x))
+      cpim <- canProcessInMemory(x, 3)
+      isTRUEuseGDAL <- isTRUE(useGDAL)
+      forceGDAL <- identical(useGDAL, "force")
+      shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
+      attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
+        findGDAL()
+      } else {
+        if (crsIsNA && shouldUseGDAL)
+          messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
+        if (cpim && isTRUEuseGDAL)
+          messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
+                            "useGDAL = 'force' to override", verbose = verbose)
 
-      FALSE
+        FALSE
+      }
+    } else {
+      messagePrepInputs("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')", verbose = verbose)
+      attemptGDAL <- FALSE
     }
-  } else {
-    messagePrepInputs("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')", verbose = verbose)
-    attemptGDAL <- FALSE
   }
   attemptGDAL
 }
