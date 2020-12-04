@@ -248,6 +248,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL,
                                       useGDAL = getOption("reproducible.useGDAL", TRUE),
                                       ...) {
+  #browser()
   # browser(expr = exists("._cropInputs_1"))
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
   if (!useExtentToMatch) {
@@ -265,6 +266,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
     cropTo <- if (!is.null(rasterToMatch)) {
       rasterToMatch
     } else {
+      if (is.na(crs(studyArea)))
+        stop("studyArea does not have a crs")
       studyArea
     }
 
@@ -464,6 +467,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           verbose = getOption("reproducible.verbose", 1),
                           extentToMatch = NULL, extentCRS = NULL,
                           ...) {
+  #browser()
   .requireNamespace("sf", stopOnFALSE = TRUE)
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
   if (useExtentToMatch) {
