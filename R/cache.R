@@ -418,7 +418,8 @@ setMethod(
       if (fnDetails$isDoCall) {
         do.call(modifiedDots$what, args = modifiedDots$args)
       } else {
-        do.call(FUN, args = modifiedDots)
+        FUN(...) # using do.call fails on quoted arguments because it evaluates them
+        # do.call(FUN, args = modifiedDots)
       }
     } else {
       startCacheTime <- verboseTime(verbose)
