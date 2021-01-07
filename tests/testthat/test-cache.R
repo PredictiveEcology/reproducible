@@ -1088,17 +1088,31 @@ test_that("test file link with duplicate Cache", {
   mess1 <- capture_messages({
     b <- Cache(sam, N, cacheRepo = tmpCache)
   })
+
+  # Change in RSQLite 2.2.2 -- there is now a random number used in dbAppend,
+  #   so this test no longer works after the second time -- running it a 3rd time
+  #   is sufficient for the test. The point it, if it is an identical result,
+  #   then there will be a file.link
   set.seed(123)
   mess2 <- capture_messages({
     d <- Cache(sample, N, cacheRepo = tmpCache)
   })
 
-  expect_true(grepl("A file with identical", mess2))
+  set.seed(123)
+  mess3 <- capture_messages({
+    g <- Cache(sam1, N, cacheRepo = tmpCache)
+  })
+
+  expect_true(grepl("A file with identical", mess3))
 
   set.seed(123)
   mess1 <- capture_messages({b <- Cache(sam, N, cacheRepo = tmpCache)})
   set.seed(123)
+  # Because of RSQLite 2.2.2 this 2nd time is not considered identical -- need 3rd time
   mess2 <- capture_messages({d <- Cache(sample, N, cacheRepo = tmpCache)})
+  clearCache(tmpCache, userTags = gsub("cacheId:", "", attr(b, "tags")))
+  set.seed(123)
+  mess2 <- capture_messages({d <- Cache(sam1, N, cacheRepo = tmpCache)})
   expect_true(any(grepl("loaded cached", mess2)))
   expect_true(any(grepl("loaded cached", mess1)))
   out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)

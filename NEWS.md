@@ -1,5 +1,12 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+
+version 1.2.5
+==============
+
+## Bug fix
+* Fix issue #185, RSQLite now uses a RNG during dbAppend; this affected 2 tests.
+
 version 1.2.4
 ==============
 
