@@ -564,7 +564,6 @@ setAs(from = "character", to = "Path", function(from) {
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
-  # browser(expr = exists("._prepareFileBackedRaster_1"))
   isRasterLayer <- TRUE
   isBrick <- is(obj, "RasterBrick")
   isStack <- is(obj, "RasterStack")
@@ -1063,7 +1062,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 nextNumericName <- function(string) {
   theExt <- fileExt(string)
   saveFilenameSansExt <- filePathSansExt(string)
-  finalNumericPattern <- "_[[:digit:]]*$"
+  finalNumericPattern <- "_[[:digit:]]+$"
   allSimilarFilesInDir <- dir(dirname(saveFilenameSansExt), pattern = basename(saveFilenameSansExt))
   allSimilarFilesInDirSansExt <- if (length(allSimilarFilesInDir) == 0) {
     unique(saveFilenameSansExt)
