@@ -517,50 +517,8 @@ setAs(from = "character", to = "Path", function(from) {
   asPath(from, 0)
 })
 
-#' Copy the file-backing of a file-backed Raster* object
-#'
-#' Rasters are sometimes file-based, so the normal save and copy and assign
-#' mechanisms in R don't work for saving, copying and assigning.
-#' This function creates an explicit file copy of the file that is backing the raster,
-#' and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
-#' to the new file.
-#'
-#' @param obj The raster object to save to the repository.
-#'
-#' @param repoDir Character denoting an existing directory in which an artifact will be saved.
-#'
-#' @param overwrite Logical. Should the raster be saved to disk, overwriting existing file.
-#'
-#' @param ... Not used
-#'
-#' @return A raster object and its newly located file backing.
-#'         Note that if this is a legitimate Cache repository, the new location
-#'         will be a subdirectory called \file{rasters/} of \file{repoDir/}.
-#'         If this is not a repository, the new location will be within \code{repoDir}.
-#'
-#' @author Eliot McIntire
-#' @export
-#' @importFrom digest digest
-#' @importFrom methods is selectMethod slot slot<-
-#' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
-#' @inheritParams Cache
-#' @rdname prepareFileBackedRaster
-#' @examples
-#' library(raster)
-#' # make a cache repository
-#' a <- Cache(rnorm, 1)
-#'
-#' r <- raster(extent(0,10,0,10), vals = 1:100)
-#'
-#' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
-#'
-#' # copy it to the cache repository
-#' r <- .prepareFileBackedRaster(r, tempdir())
-#'
-#' r # now in "rasters" subfolder of tempdir()
-#'
-.prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
+# Old one
+.prepareFileBackedRaster2 <- function(obj, repoDir = NULL, overwrite = FALSE,
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
@@ -571,6 +529,12 @@ setAs(from = "character", to = "Path", function(from) {
   isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
 
   ## check which files are backed
+  numFiles <- sum(nchar(unique(Filenames(obj)))>0)
+  if (isStack && numFiles > 0) {
+    innerFilenames <- unlist(lapply(obj@layers, filename))
+    allInOneFile <- isTRUE(sum(nchar(innerFilenames)>0) == length(obj@layers))
+  }
+
   whichInMemory <- if (!isStack) {
     im <- inMemory(obj)
     if (isBrick) {
@@ -586,7 +550,14 @@ setAs(from = "character", to = "Path", function(from) {
   } else {
     sapply(obj@layers, hasValues)
   }
+
   isFilebacked <- !(whichInMemory | !whichHasValues)
+  if (isStack && any(isFilebacked)) {
+    if (allInOneFile) {
+       isFilebacked <- rep(TRUE, numFiles)
+    }
+  }
+
 
   ## create a storage vector of file names to be filled
   curFilename <- if (isBrick) {
@@ -607,13 +578,15 @@ setAs(from = "character", to = "Path", function(from) {
     curFilename[!isFilebacked] <- tempName[!isFilebacked]
   }
   if (any(isFilebacked)) {
-    if (is(obj, "RasterLayer") || is(obj, "RasterBrick")) {
-      curFilename <- normalizePath(filename(obj), winslash = "/", mustWork = FALSE)
-    } else  {
-      curFilenames <- unlist(lapply(obj@layers, function(x)
-        normalizePath(filename(x), winslash = "/", mustWork = FALSE)))
-      curFilename[isFilebacked] <- curFilenames[isFilebacked]
-    }
+    curFilename <- normPath(Filenames(obj))
+    # if (is(obj, "RasterLayer") || is(obj, "RasterBrick") ||
+    #     (is(obj, "RasterStack") && numFiles == 1)) {
+    #   curFilename <- normalizePath(Filenames(obj), winslash = "/", mustWork = FALSE)
+    # } else  {
+    #   curFilenames <- unlist(lapply(obj@layers, function(x)
+    #     normalizePath(filename(x), winslash = "/", mustWork = FALSE)))
+    #   curFilename[isFilebacked] <- curFilenames[isFilebacked]
+    # }
   }
 
   ## check for files that should've been backed, but don't exist
@@ -705,9 +678,15 @@ setAs(from = "character", to = "Path", function(from) {
         if (any(file.exists(saveFilenames))) {
           saveFilenames <- nextNumericName(saveFilenames)
         }
-        copyFile(to = saveFilenames,
-                 overwrite = TRUE,
-                 from = curFilename, silent = TRUE)
+        outFL <- suppressWarnings(file.link(to = saveFilenames,
+                  # overwrite = TRUE,
+                  from = curFilename))
+        if (any(!outFL)) {
+          copyFile(to = saveFilenames[!outFL],
+                  overwrite = TRUE,
+                  from = curFilename[!outFL], silent = TRUE)
+
+        }
         saveFilenames[match(fileExt(curFilename2[x]), fileExt(saveFilenames))]
       })
 
@@ -1170,10 +1149,142 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
       slot(slot(obj, "file"), "name") <- newFilenames
     } else {
       for (i in seq_len(nlayers(obj))) {
-        whFilename <- match(basename(newFilenames), basename(curFilenames))
+        whFilename <- grep(filePathSansExt(basename(slot(slot(obj@layers[[i]], "file"), "name"))),
+                           basename(newFilenames))
+        # whFilename <- match(basename(newFilenames), basename(curFilenames))
         slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
       }
     }
   }
   obj
 }
+
+#' Copy the file-backing of a file-backed Raster* object
+#'
+#' Rasters are sometimes file-based, so the normal save and copy and assign
+#' mechanisms in R don't work for saving, copying and assigning.
+#' This function creates an explicit file copy of the file that is backing the raster,
+#' and changes the pointer (i.e., \code{filename(object)}) so that it is pointing
+#' to the new file.
+#'
+#' @param obj The raster object to save to the repository.
+#'
+#' @param repoDir Character denoting an existing directory in which an artifact will be saved.
+#'
+#' @param overwrite Logical. Should the raster be saved to disk, overwriting existing file.
+#'
+#' @param ... Not used
+#'
+#' @return A raster object and its newly located file backing.
+#'         Note that if this is a legitimate Cache repository, the new location
+#'         will be a subdirectory called \file{rasters/} of \file{repoDir/}.
+#'         If this is not a repository, the new location will be within \code{repoDir}.
+#'
+#' @author Eliot McIntire
+#' @export
+#' @importFrom digest digest
+#' @importFrom methods is selectMethod slot slot<-
+#' @importFrom raster dataType filename hasValues inMemory nlayers writeRaster
+#' @inheritParams Cache
+#' @rdname prepareFileBackedRaster
+#' @examples
+#' library(raster)
+#' # make a cache repository
+#' a <- Cache(rnorm, 1)
+#'
+#' r <- raster(extent(0,10,0,10), vals = 1:100)
+#'
+#' # write to disk manually -- will be in tempdir()
+#' r <- writeRaster(r, file = tempfile())
+#'
+#' # copy it to the cache repository
+#' r <- .prepareFileBackedRaster(r, tempdir())
+#'
+#' r # now in "rasters" subfolder of tempdir()
+#'
+.prepareFileBackedRaster <- function(obj, repoDir = NULL, overwrite = FALSE,
+                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                     conn = getOption("reproducible.conn", NULL),
+                                     ...) {
+  fnsAll <- Filenames(obj)
+  fnsShort <- Filenames(obj, FALSE)
+  if (!all(nchar(fnsAll) == 0)) {
+    repoDir <- checkPath(repoDir, create = TRUE)
+    isRepo <- CacheIsACache(cachePath = repoDir, drv = drv, conn = conn)
+    # thoseWithGRI <- endsWith(fnsAll, "gri")
+    fns <- fnsAll
+    FB <- nchar(fns) > 0
+    ########################
+    if (any(!file.exists(fns[FB]))) {
+      FBshort <- nchar(fnsShort) > 0
+      fnsOnly <- fnsShort[FBshort]
+      badFileNames <- fnsOnly[!file.exists(fnsOnly)]
+
+      trySaveFilename <- badFileNames
+      if (any(grepl(basename(repoDir), badFileNames))) {
+        # File is in wrong folder, usually the result of a copy of cache between 2 machines
+        splittedFilenames <- strsplit(badFileNames, split = basename(repoDir))
+        trySaveFilename <- if (length(splittedFilenames) == 1) {
+          normalizePath(
+            file.path(repoDir, splittedFilenames[[1]][[length(splittedFilenames[[1]])]]),
+            winslash = "/", mustWork = FALSE)
+        } else {
+          splittedFilenames2 <- lapply(splittedFilenames, function(x) {
+            ifelse(length(x), x[length(x)], "")
+          })
+          normalizePath(file.path(repoDir, splittedFilenames2), winslash = "/", mustWork = FALSE)
+        }
+      }
+      if (any(!file.exists(trySaveFilename))) {
+        stop("The following file-backed rasters are supposed to be on disk ",
+             "but appear to have been deleted:\n",
+             paste("    ", badFileNames, collapse = "\n"),
+             ". The most likely reason is that two functions had the same output ",
+             "and one of them was removed with clearCache(...). ",
+             "The best solution to this is never have two functions create the same ",
+             "file-backed raster.")
+      } else {
+        obj <- updateFilenameSlots(obj, curFilenames = fnsOnly, trySaveFilename)
+        fnsAll <- fns <- Filenames(obj)
+      }
+    }
+    #################
+
+
+    saveFilename <- fns
+    bn <- basename(fns)
+    bnFB <- bn[FB]
+
+
+    saveFilename[FB] <- if (isRepo) {
+      file.path(repoDir, "rasters"[isRepo], bnFB)
+    } else {
+      file.path(repoDir, bnFB)
+    }
+    dirForNewFiles <- unique(dirname(saveFilename[FB]))
+    checkPath(dirForNewFiles, create = TRUE)
+    saveFilename <- normPath(saveFilename)
+    saveFilenamePreNumeric <- saveFilename
+    exist <- file.exists(saveFilename)
+    if (any(exist)) {
+      saveFilename[exist] <- nextNumericName(saveFilename[exist])
+    }
+    FBAll <- nchar(fnsAll) > 0
+    out <- Map(from = fnsAll[FBAll], to = saveFilename[FBAll],
+        function(from, to) {
+      linkTry <- suppressWarningsSpecific(file.link(from = from, to = to),
+                                      falseWarnings = "already exists")
+      if (!linkTry)
+        linkTry <- copyFile(from = from, to = to, overwrite = TRUE, silent = TRUE)
+      linkTry
+    })
+
+    # FBshort <- nchar(fnsShort) > 0
+    saveFilenamesToUpdateSlot <- saveFilename[basename(saveFilenamePreNumeric) %in%
+                                                basename(fnsShort)]
+    obj <- updateFilenameSlots(obj, fnsShort, saveFilenamesToUpdateSlot)
+
+  }
+  obj
+}
+

@@ -1819,6 +1819,35 @@ test_that("rasters aren't properly resampled", {
                      destinationPath = dirname(tiftemp3),
                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
   expect_true(dataType(out3) == "FLT4S")
+
+  # Test for raster::stack
+  rasStack <- stack(tiftemp3, tiftemp3)
+  rasStack[] <- rasStack[]
+  tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+
+  rasStack <- writeRaster(rasStack, filename = tiftemp4)
+  rm(rasStack)
+  out3 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+                     destinationPath = dirname(tiftemp3),
+                     fun = "raster::stack",
+                     filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
+  expect_true(is(out3, "RasterStack"))
+  expect_true(identical(length(Filenames(out3)), 2L))
+
+  out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+                     destinationPath = dirname(tiftemp3),
+                     fun = "raster::stack",
+                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"), tempfile(tmpdir = tmpdir, fileext = ".grd")))
+  expect_true(is(out4, "RasterStack"))
+  expect_true(identical(length(Filenames(out4)), 4L))
+
+  out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
+                     destinationPath = dirname(tiftemp3),
+                     fun = raster::stack,
+                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"), tempfile(tmpdir = tmpdir, fileext = ".grd")))
+  expect_true(is(out4, "RasterStack"))
+  expect_true(identical(length(Filenames(out4)), 4L))
+
 })
 
 test_that("System call gdal works", {
