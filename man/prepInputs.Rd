@@ -61,7 +61,8 @@ search for the file before attempting to download. Default for that option is
 
 \item{fun}{Function or character string indicating the function to use to load
 \code{targetFile} into an \code{R} object, e.g., in form with package name:
-\code{"raster::raster"}. If passing a custom function, it must be a function of
+\code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
+If passing a custom function, it must be a function of
 \code{x}, e.g., \code{loadFun <- function(x) shapefile(x)}.
 NOTE: passing \code{NULL} will skip loading object into R.}
 
@@ -94,7 +95,8 @@ option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
  \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
 Since \code{...} is passed to \code{\link{postProcess}}, these will
 \code{...} will also be passed into the inner
-functions, e.g., \code{\link{cropInputs}}. See details and examples.}
+functions, e.g., \code{\link{cropInputs}}. Possibly useful other arguments include
+\code{dlFun} which is passed to \code{preProcess}. See details and examples.}
 }
 \description{
 \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
