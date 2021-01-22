@@ -209,6 +209,21 @@ test_that("new gdalwarp all in one with grd with factor", {
 
   expect_true(grepl(".tif$", filename(rr))) # now (Aug 12, 2020) does not exist on disk after gdalwarp -- because no filename2
   expect_true(grepl(".grd$", filename(rr2)))
+
+  # Try to move cache -- see if rasters in Cache recover
+  tmpCache2 <- file.path(dirname(tmpCache), "testCache2")
+  files <- dir(tmpCache, full.names = TRUE, recursive = TRUE)
+  newFiles <- gsub(basename(tmpCache), basename(tmpCache2), files)
+  nnn <- lapply(dirname(newFiles), checkPath, create = TRUE)
+  mmm <- Map(ff = files, nf = newFiles, function(ff, nf) file.link(ff, nf))
+  unlink(files)
+  expect_true(all(file.exists(newFiles)))
+  expect_warning(regexp = "being updated automatically",
+                 rr4 <- Cache(postProcess, r, destinationPath = tmpdir,
+               studyArea = StudyArea, useCache = TRUE, useGDAL = "force",
+               cacheRepo = tmpCache2, filename2 = TRUE))
+  expect_identical(rr3, rr4)
+
 })
 
 test_that("cropInputs crops too closely when input projections are different", {

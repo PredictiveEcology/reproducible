@@ -1125,7 +1125,7 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
         stop("There is an unknown error 04")
     }
     if (isFromDisk)
-      obj <- list(origRaster = objOrig, cacheRaster = obj)
+      obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
   }
   obj
 }
