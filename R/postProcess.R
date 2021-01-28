@@ -248,7 +248,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       extentToMatch = NULL, extentCRS = NULL,
                                       useGDAL = getOption("reproducible.useGDAL", TRUE),
                                       ...) {
-  #browser()
   # browser(expr = exists("._cropInputs_1"))
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
   if (!useExtentToMatch) {
@@ -1388,17 +1387,19 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     } else {
       argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)
       if (is(x, "RasterStack")) {
-        longerThanOne <- unlist(lapply(argsForWrite, function(x) length(x) > 1))
+        longerThanOne <- unlist(lapply(argsForWrite, function(x) length(unique(x)) > 1))
         nLayers <- raster::nlayers(x)
-        if (!identical(nLayers, length(argsForWrite$filename))) {
-          argsForWrite$filename <- file.path(dirname(argsForWrite$filename), paste0(names(x), "_", basename(argsForWrite$filename)))
+        if (any(unlist(longerThanOne))) {
+          if (!identical(nLayers, length(argsForWrite$filename))) {
+            argsForWrite$filename <- file.path(dirname(argsForWrite$filename), paste0(names(x), "_", basename(argsForWrite$filename)))
+          }
         }
         if (length(argsForWrite$filename) == 1) {
           argsForWrite <- lapply(argsForWrite, function(x) x[1])
           xTmp <- do.call(writeRaster, args = c(x = x, argsForWrite))
           names(xTmp) <- names(x)
-          messagePrepInputs("Object was a RasterStack; only one filename provided so returning a RasterBrick;", verbose = verbose)
-          messagePrepInputs("  layer names will likely be wrong.", verbose = verbose)
+          # messagePrepInputs("Object was a RasterStack; only one filename provided so returning a RasterBrick;", verbose = verbose)
+          # messagePrepInputs("  layer names will likely be wrong.", verbose = verbose)
         } else if (length(argsForWrite$filename) == nLayers) {
           dups <- duplicated(argsForWrite$filename)
           if (any(dups)) {
@@ -1421,10 +1422,11 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
             names(inside) <- names(x)[ind]
             inside
           })
-          xTmp <- raster::stack(xTmp)
+
         } else {
           stop("filename2 must be length 1 or length nlayers(...)")
         }
+        xTmp <- raster::stack(xTmp)
       } else {
         if (file.exists(argsForWrite$filename)) {
           if (interactive() && .isFALSE(argsForWrite$overwrite)) {
