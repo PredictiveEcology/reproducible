@@ -394,8 +394,8 @@ setMethod(
                         cacheId, useCache,
                         showSimilar, drv, conn) {
 
-    # dots <- enquos(...)
-    # browser(expr = exists("._Cache_1"))
+    if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
+
     if (!is.null(list(...)$objects)) {
       messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated",
                    verbose = verbose)
@@ -1773,8 +1773,9 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
       copyFile(Filenames(output$cacheRaster)[filesExist][!out],
                to = output$origRaster[filesExist][!out])
     }
-    newOutput <- updateFilenameSlots(output$cacheRaster, Filenames(output$cacheRaster),
-                        newFilenames = output$origRaster)
+    newOutput <- updateFilenameSlots(output$cacheRaster,
+                                     Filenames(output$cacheRaster, allowMultiple = FALSE),
+                                     newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
     output <- newOutput
     .setSubAttrInList(output, ".Cache", "newCache", FALSE)
   }
@@ -1790,7 +1791,6 @@ dealWithRastersOnRecovery2 <- function(output, cacheRepo, cacheId,
   #   If it is in both, take the one in the original location; if it has been deleted
   #   from the original location, then grab it from cache and put it in original place
   if (is(output, "list")) {
-    browser()
     if (identical(names(output), c("origRaster", "cacheRaster"))) {
       origFilenames <- Filenames(output$origRaster)
       cacheFilenames <- Filenames(output$cacheRaster)

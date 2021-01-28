@@ -530,10 +530,11 @@ setAs(from = "character", to = "Path", function(from) {
 
   ## check which files are backed
   numFiles <- sum(nchar(unique(Filenames(obj)))>0)
-  if (isStack && numFiles > 0) {
-    innerFilenames <- unlist(lapply(obj@layers, filename))
-    allInOneFile <- isTRUE(sum(nchar(innerFilenames)>0) == length(obj@layers))
-  }
+  allInOneFile <- allInOneFile(obj)
+  # if (isStack && numFiles > 0) {
+  #   innerFilenames <- unlist(lapply(obj@layers, filename))
+  #   allInOneFile <- isTRUE(sum(nchar(innerFilenames)>0) == length(obj@layers))
+  # }
 
   whichInMemory <- if (!isStack) {
     im <- inMemory(obj)
@@ -862,58 +863,67 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
-  sn <- slotNames(object@data)
-  sn <- sn[!(sn %in% c(#"min", "max", "haveminmax", "names", "isfactor",
-                       "dropped", "nlayers", "fromdisk", "inmemory"
-                       #"offset", "gain"
-                       ))]
-  dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
-                              extent(object)), dataSlotsToDigest), length = length, quick = quick,
-                  algo = algo) # don't include object@data -- these are volatile
-  else {
-    if (!requireNamespace("fastdigest", quietly = TRUE))
-      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
-    dig <- fastdigest::fastdigest(append(list(dim(object), res(object), crs(object),
-                                  extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
+  isRasterStack <- is(object, "RasterStack")
+  if (!isRasterStack) {
+    objList <- list(object)
+  } else {
+    objList <- object@layers
   }
-
-  # Legend
-  sn <- slotNames(object@legend)
-  legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
-                  algo = algo) # don't include object@data -- these are volatile
-  else {
-    if (!requireNamespace("fastdigest", quietly = TRUE))
-      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
-    dig2 <- fastdigest::fastdigest(legendSlotsToDigest) # don't include object@data -- these are volatile
-  }
-  dig <- c(dig, dig2)
-
-  sn <- slotNames(object@file)
-  sn <- sn[!(sn %in% c("name"))]
-  fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
-    digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
-                             algo = algo) # don't include object@file -- these are volatile
-  else {
-    if (!requireNamespace("fastdigest", quietly = TRUE))
-      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
-    digFile <- fastdigest::fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
-  }
-
-  dig <- c(dig, digFile)
-  if (nzchar(object@file@name)) {
-    # if the Raster is on disk, has the first length characters;
-    filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
-      sub(object@file@name, pattern = ".grd$", replacement = ".gri")
-    } else {
-      object@file@name
+  dig <- lapply(objList, function(object) {
+    sn <- slotNames(object@data)
+    sn <- sn[!(sn %in% c(#"min", "max", "haveminmax", "names", "isfactor",
+      "dropped", "nlayers", "fromdisk", "inmemory"
+      #"offset", "gain"
+    ))]
+    dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
+                                       extent(object)), dataSlotsToDigest), length = length, quick = quick,
+                           algo = algo) # don't include object@data -- these are volatile
+    else {
+      if (!requireNamespace("fastdigest", quietly = TRUE))
+        stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+      dig <- fastdigest::fastdigest(append(list(dim(object), res(object), crs(object),
+                                                extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
     }
-    # there is no good reason to use depth = 0, 1, or 2 or more -- but I think 2 is *more* reliable
-    dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
+
+    # Legend
+    sn <- slotNames(object@legend)
+    legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
+                            algo = algo) # don't include object@data -- these are volatile
+    else {
+      if (!requireNamespace("fastdigest", quietly = TRUE))
+        stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+      dig2 <- fastdigest::fastdigest(legendSlotsToDigest) # don't include object@data -- these are volatile
+    }
+    dig <- c(dig, dig2)
+
+    sn <- slotNames(object@file)
+    sn <- sn[!(sn %in% c("name"))]
+    fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+      digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
+                               algo = algo) # don't include object@file -- these are volatile
+    else {
+      if (!requireNamespace("fastdigest", quietly = TRUE))
+        stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+      digFile <- fastdigest::fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
+    }
+
+    dig <- c(dig, digFile)
+  })
+
+  fns <- Filenames(object, allowMultiple = FALSE)
+  if (length(fns[nchar(fns) > 0])) {
+    # if the Raster is on disk, has the first length characters;
+    isGrd <- endsWith(basename(fns), suffix = ".grd")
+    if (isTRUE(any(isGrd))) {
+      fns[isGrd] <- sub(fns[isGrd], pattern = ".grd$", replacement = ".gri")
+    }
+    # # there is no good reason to use depth = 0, 1, or 2 or more -- but I think 2 is *more* reliable
+    dig2 <- .robustDigest(asPath(fns, 2), length = length, quick = quick, algo = algo)
     dig <- c(dig, unname(dig2))
   }
 
@@ -1148,12 +1158,19 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
     if (!isStack) {
       slot(slot(obj, "file"), "name") <- newFilenames
     } else {
-      for (i in seq_len(nlayers(obj))) {
-        whFilename <- grep(filePathSansExt(basename(slot(slot(obj@layers[[i]], "file"), "name"))),
-                           basename(newFilenames))
-        # whFilename <- match(basename(newFilenames), basename(curFilenames))
-        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
-      }
+      # aiof <- allInOneFile(obj)
+
+      # if (isTRUE(aiof)) {
+      #   slot(obj, "filename") <- newFilenames
+      # } else {
+        for (i in seq_len(nlayers(obj))) {
+          whFilename <- match(withoutFinalNumeric(basename(newFilenames)),
+                              withoutFinalNumeric(basename(curFilenames)))
+          slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+        }
+      # }
+
+
     }
   }
   obj
@@ -1288,3 +1305,22 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
   obj
 }
 
+allInOneFile <- function(obj) {
+  aiof <- TRUE
+  if (is(obj, "RasterStack")) {
+    aiof <- FALSE
+    numFiles <- sum(nchar(unique(Filenames(obj)))>0)
+    if (numFiles > 0) {
+      innerFilenames <- unlist(lapply(obj@layers, filename))
+      aiof <- isTRUE(sum(nchar(innerFilenames)>0) == length(obj@layers))
+    }
+  }
+  aiof
+}
+
+withoutFinalNumeric <- function(string) {
+  ext <- fileExt(string)
+  string1 <- filePathSansExt(string)
+  woNumeric <- gsub("^(.+)\\_[[:digit:]]+$", "\\1", string1)
+  paste0(woNumeric, ".", ext)
+}
