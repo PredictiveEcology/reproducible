@@ -1810,10 +1810,10 @@ test_that("rasters aren't properly resampled", {
                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))) # about "raster layer has integer values"
   expect_true(dataType(out2) %in% c("INT2S", "INT2U")) # because of "bilinear", it can become negative
 
-  c <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
-  crs(c) <- crsToUse
+  rrr1 <- raster(extent(0, 20, 0, 20), res = 1, vals = runif(400, 0, 1))
+  crs(rrr1) <- crsToUse
   tiftemp3 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
-  suppressWarningsSpecific(writeRaster(c, filename = tiftemp3), proj6Warn)
+  suppressWarningsSpecific(writeRaster(rrr1, filename = tiftemp3), proj6Warn)
 
   out3 <- prepInputs(targetFile = tiftemp3, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp3),
@@ -1823,6 +1823,7 @@ test_that("rasters aren't properly resampled", {
   # Test for raster::stack
   rasStack <- stack(tiftemp3, tiftemp3)
   rasStack[] <- rasStack[]
+  rasStack[131][1] <- 1.5
   tiftemp4 <- tempfile(tmpdir = tmpdir, fileext = ".tif")
 
   rasStack <- writeRaster(rasStack, filename = tiftemp4)
@@ -1832,12 +1833,13 @@ test_that("rasters aren't properly resampled", {
                      fun = "raster::stack",
                      filename2 = tempfile(tmpdir = tmpdir, fileext = ".tif"))
   expect_true(is(out3, "RasterStack"))
-  expect_true(identical(length(Filenames(out3)), 2L))
+  expect_true(identical(length(Filenames(out3)), 1L))
 
   out4 <- prepInputs(targetFile = tiftemp4, rasterToMatch = raster(tiftemp2),
                      destinationPath = dirname(tiftemp3),
                      fun = "raster::stack",
-                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"), tempfile(tmpdir = tmpdir, fileext = ".grd")))
+                     filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"),
+                                   tempfile(tmpdir = tmpdir, fileext = ".grd")))
   expect_true(is(out4, "RasterStack"))
   expect_true(identical(length(Filenames(out4)), 4L))
 

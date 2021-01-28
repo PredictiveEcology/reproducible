@@ -262,8 +262,8 @@ test_that("test memory backed raster robustDigest", {
 
   r <- raster(matrix(1:10, 2, 5))
   b <- brick(r, r)
-  b <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
-  dig1 <- .robustDigest(b)
+  bb1 <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
+  dig1 <- .robustDigest(bb1)
 
   expect_identical(dig, dig1)
 
