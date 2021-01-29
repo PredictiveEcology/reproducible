@@ -1385,7 +1385,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     .robustDigest(x, algo = algo, ...)
   })
 
-  res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
+  res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0)) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
   } else {
     if (!requireNamespace("fastdigest"))

@@ -876,7 +876,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
       #"offset", "gain"
     ))]
     dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
-    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0))
       dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
                                        extent(object)), dataSlotsToDigest), length = length, quick = quick,
                            algo = algo) # don't include object@data -- these are volatile
@@ -890,7 +890,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     # Legend
     sn <- slotNames(object@legend)
     legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
-    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0))
       dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
                             algo = algo) # don't include object@data -- these are volatile
     else {
@@ -903,7 +903,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- slotNames(object@file)
     sn <- sn[!(sn %in% c("name"))]
     fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
-    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0))
       digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
                                algo = algo) # don't include object@file -- these are volatile
     else {
@@ -927,7 +927,7 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     dig <- c(dig, unname(dig2))
   }
 
-  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0))
     dig <- .robustDigest(unlist(dig), length = length, quick = quick, algo = algo)
   else {
     if (!requireNamespace("fastdigest", quietly = TRUE))
@@ -1223,6 +1223,10 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                      conn = getOption("reproducible.conn", NULL),
                                      ...) {
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+    return(.prepareFileBackedRaster2(obj, repoDir = repoDir, overwrite = overwrite,
+                              drv = drv, conn = conn, ...))
+  }
   fnsAll <- Filenames(obj)
   fnsShort <- Filenames(obj, FALSE)
   if (!all(nchar(fnsAll) == 0)) {
