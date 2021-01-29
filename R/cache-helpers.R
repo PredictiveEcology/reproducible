@@ -1207,8 +1207,15 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
       if (!identical(attr(obj, "function"), atts[["function"]]))
         stop("There is an unknown error 04")
     }
-    if (isFromDisk)
-      obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
+    if (isFromDisk) {
+      if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+        obj <- list(origRaster = objOrig, cacheRaster = obj)
+      } else {
+        obj <- list(origRaster = Filenames(objOrig), cacheRaster = obj)
+      }
+
+    }
+
   }
   obj
 }
@@ -1308,7 +1315,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' r <- raster(extent(0,10,0,10), vals = 1:100)
 #'
 #' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile())
+#' r <- writeRaster(r, file = tempfile(fileext = ".tif"))
 #'
 #' # copy it to the cache repository
 #' r <- .prepareFileBackedRaster(r, tempdir())

@@ -50,7 +50,7 @@ a <- Cache(rnorm, 1)
 r <- raster(extent(0,10,0,10), vals = 1:100)
 
 # write to disk manually -- will be in tempdir()
-r <- writeRaster(r, file = tempfile())
+r <- writeRaster(r, file = tempfile(fileext = ".tif"))
 
 # copy it to the cache repository
 r <- .prepareFileBackedRaster(r, tempdir())
