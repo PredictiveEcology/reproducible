@@ -863,6 +863,10 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
 .digestRasterLayer <- function(object, length, algo, quick) {
   # metadata -- only a few items of the long list because one thing (I don't recall)
   #  doesn't cache consistently
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+    return(.digestRasterLayer2(object, length, algo, quick))
+  }
+
   isRasterStack <- is(object, "RasterStack")
   if (!isRasterStack) {
     objList <- list(object)
@@ -936,6 +940,75 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   }
   dig
 }
+
+.digestRasterLayer2 <- function(object, length, algo, quick) {
+  # metadata -- only a few items of the long list because one thing (I don't recall)
+  #  doesn't cache consistently
+  sn <- slotNames(object@data)
+  sn <- sn[!(sn %in% c(#"min", "max", "haveminmax", "names", "isfactor",
+    "dropped", "nlayers", "fromdisk", "inmemory"
+    #"offset", "gain"
+  ))]
+  dataSlotsToDigest <- lapply(sn, function(s) slot(object@data, s))
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig <- .robustDigest(append(list(dim(object), res(object), crs(object),
+                                     extent(object)), dataSlotsToDigest), length = length, quick = quick,
+                         algo = algo) # don't include object@data -- these are volatile
+  else {
+    if (!requireNamespace("fastdigest", quietly = TRUE))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    dig <- fastdigest::fastdigest(append(list(dim(object), res(object), crs(object),
+                                              extent(object)), dataSlotsToDigest)) # don't include object@data -- these are volatile
+  }
+
+  # Legend
+  sn <- slotNames(object@legend)
+  legendSlotsToDigest <- lapply(sn, function(s) slot(object@legend, s))
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig2 <- .robustDigest(legendSlotsToDigest, length = length, quick = quick,
+                          algo = algo) # don't include object@data -- these are volatile
+  else {
+    if (!requireNamespace("fastdigest", quietly = TRUE))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    dig2 <- fastdigest::fastdigest(legendSlotsToDigest) # don't include object@data -- these are volatile
+  }
+  dig <- c(dig, dig2)
+
+  sn <- slotNames(object@file)
+  sn <- sn[!(sn %in% c("name"))]
+  fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    digFile <- .robustDigest(fileSlotsToDigest, length = length, quick = quick,
+                             algo = algo) # don't include object@file -- these are volatile
+  else {
+    if (!requireNamespace("fastdigest", quietly = TRUE))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    digFile <- fastdigest::fastdigest(fileSlotsToDigest) # don't include object@file -- these are volatile
+  }
+
+  dig <- c(dig, digFile)
+  if (nzchar(object@file@name)) {
+    # if the Raster is on disk, has the first length characters;
+    filename <- if (isTRUE(endsWith(basename(object@file@name), suffix = ".grd"))) {
+      sub(object@file@name, pattern = ".grd$", replacement = ".gri")
+    } else {
+      object@file@name
+    }
+    # there is no good reason to use depth = 0, 1, or 2 or more -- but I think 2 is *more* reliable
+    dig2 <- .robustDigest(asPath(filename, 2), length = length, quick = quick, algo = algo)
+    dig <- c(dig, unname(dig2))
+  }
+
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm")))
+    dig <- .robustDigest(unlist(dig), length = length, quick = quick, algo = algo)
+  else {
+    if (!requireNamespace("fastdigest", quietly = TRUE))
+      stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
+    dig <- fastdigest::fastdigest(dig)
+  }
+  dig
+}
+
 
 ################################################################################
 #' Sort or order any named object with dotted names and underscores first
@@ -1149,6 +1222,10 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
 }
 
 updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL) {
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+    return(updateFilenameSlots2(obj, curFilenames, newFilenames, isStack))
+  }
+
   if (length(curFilenames) > 1) {
     for (i in seq_along(curFilenames)) {
       slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
@@ -1171,6 +1248,25 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
       # }
 
 
+    }
+  }
+  obj
+}
+
+updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL) {
+  if (length(curFilenames) > 1) {
+    for (i in seq_along(curFilenames)) {
+      slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+    }
+  } else {
+    if (is.null(isStack)) isStack <- is(obj, "RasterStack")
+    if (!isStack) {
+      slot(slot(obj, "file"), "name") <- newFilenames
+    } else {
+      for (i in seq_len(nlayers(obj))) {
+        whFilename <- match(basename(newFilenames), basename(curFilenames))
+        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+      }
     }
   }
   obj

@@ -1743,6 +1743,10 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
 dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
                                       drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                       conn = getOption("reproducible.conn", NULL)) {
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+    return(dealWithRastersOnRecovery2(output, cacheRepo, cacheId,
+                               drv, conn))
+  }
   if (is(output, "list")) {
     origFilenames <- if (is(output$origRaster, "Raster")) {
       Filenames(output$origRaster) # This is legacy piece which allows backwards compatible
