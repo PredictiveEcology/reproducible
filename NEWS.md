@@ -4,7 +4,11 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 1.2.5
 ==============
 
+## Enhancements
+* Optional (and may be default soon) -- An update to the internal digesting for file-backed Rasters that should be substantially faster, and smaller disk footprint
+
 ## Bug fix
+* `RasterStack` objects with a single file (thus acting like a `RasterBrick`) are now handled correctly by `Cache` and `prepInputs` families
 * Fix issue #185, RSQLite now uses a RNG during dbAppend; this affected 2 tests.
 
 version 1.2.4

@@ -252,27 +252,6 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
 
-    # if (is(object, "RasterStack")) {
-    #   browser()
-    #   # Have to check if it is 1 file for all laayers, or many files, one for each
-    #   #   layer; noting that there can be a hybrid situation with 1 filename on
-    #   #   one layer and the rest are in memory
-    #   fn1 <- Filenames(object, allowMultiple = FALSE)
-    #   fromDisk <- unlist(lapply(object@layers, function(ll) fromDisk(ll)))
-    #   if (fn1 == 1 && sum(fromDisk) > 1) {
-    #     .digestRasterLayer(object, length = length, algo = algo, quick = quick)
-    #   }
-    #   fn2 <- unique(unlist(lapply(object@layers, function(ll) onDisk(ll))))
-    #
-    #   lapply(object@layers, function(ll) filename(ll))
-    #   # have to do one file at a time with Stack
-    #   dig <- suppressWarnings(
-    #          lapply(object@layers, function(yy) {
-    #            .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-    #          })
-    #   )
-    # } else {
-    #   # Brick and Layers have only one file
     if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
       if (is(object, "RasterStack")) {
         # have to do one file at a time with Stack
