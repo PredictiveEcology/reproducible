@@ -553,12 +553,11 @@ setAs(from = "character", to = "Path", function(from) {
   }
 
   isFilebacked <- !(whichInMemory | !whichHasValues)
-  if (isStack && any(isFilebacked)) {
-    if (allInOneFile) {
-       isFilebacked <- rep(TRUE, numFiles)
-    }
-  }
-
+  # if (isStack && any(isFilebacked)) {
+  #   if (allInOneFile) {
+  #      isFilebacked <- rep(TRUE, numFiles)
+  #   }
+  # }
 
   ## create a storage vector of file names to be filled
   curFilename <- if (isBrick) {
@@ -579,7 +578,12 @@ setAs(from = "character", to = "Path", function(from) {
     curFilename[!isFilebacked] <- tempName[!isFilebacked]
   }
   if (any(isFilebacked)) {
-    curFilename <- normPath(Filenames(obj))
+    if (isTRUE(allInOneFile)) {
+      curFiles <- normPath(Filenames(obj, allowMultiple = FALSE))
+    } else {
+      curFiles <- normPath(Filenames(obj, allowMultiple = FALSE)[isFilebacked])
+    }
+    curFilename[isFilebacked] <- curFiles
     # if (is(obj, "RasterLayer") || is(obj, "RasterBrick") ||
     #     (is(obj, "RasterStack") && numFiles == 1)) {
     #   curFilename <- normalizePath(Filenames(obj), winslash = "/", mustWork = FALSE)
@@ -692,7 +696,7 @@ setAs(from = "character", to = "Path", function(from) {
       })
 
       # for a stack with independent Raster Layers (each with own file)
-      obj <- updateFilenameSlots(obj, curFilename2, saveFilename2, isStack)
+      obj <- updateFilenameSlots2(obj, curFilename2, saveFilename2, isStack)
       # if (length(curFilename2) > 1) {
       #   for (i in seq_along(curFilename2)) {
       #     slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- saveFilename2[i]
@@ -1261,18 +1265,24 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
 }
 
 updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL) {
-  if (length(curFilenames) > 1) {
-    for (i in seq_along(curFilenames)) {
-      slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+  whichNotGri <- grep("\\.gri$", curFilenames, invert = TRUE)
+  curFilenamesNotGri <- curFilenames[whichNotGri]
+  newFilenamesNotGri <- newFilenames[whichNotGri]
+  if (length(curFilenamesNotGri) > 1 ) {
+    for (i in seq_along(curFilenamesNotGri)) {
+      slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenamesNotGri[i]
     }
   } else {
     if (is.null(isStack)) isStack <- is(obj, "RasterStack")
     if (!isStack) {
-      slot(slot(obj, "file"), "name") <- newFilenames
+      slot(slot(obj, "file"), "name") <- newFilenamesNotGri
     } else {
       for (i in seq_len(nlayers(obj))) {
-        whFilename <- match(basename(newFilenames), basename(curFilenames))
-        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+        if (fromDisk(obj[[i]])) {
+          whFilename <- match(withoutFinalNumeric(basename(newFilenamesNotGri)),
+                              withoutFinalNumeric(basename(curFilenamesNotGri)))
+          slot(slot(obj@layers[[i]], "file"), "name") <- newFilenamesNotGri[whFilename]
+        }
       }
     }
   }
@@ -1315,7 +1325,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
 #' r <- raster(extent(0,10,0,10), vals = 1:100)
 #'
 #' # write to disk manually -- will be in tempdir()
-#' r <- writeRaster(r, file = tempfile(fileext = ".tif"))
+#' r <- writeRaster(r, file = tempfile())
 #'
 #' # copy it to the cache repository
 #' r <- .prepareFileBackedRaster(r, tempdir())
