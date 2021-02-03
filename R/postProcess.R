@@ -1298,8 +1298,9 @@ determineFilename <- function(filename2 = NULL, filename1 = NULL,
       NULL
     }
     if (exists("tmpfile", inherits = FALSE)) {
-      messagePrepInputs("Saving output to ", filename2, ". Specify filename1 or filename2 for more control",
-              "\n  or set filename2 to NULL to prevent saving to disk", verbose = verbose)
+      messagePrepInputs("Saving output to ", filename2, ".",
+                        "Specify filename1 or filename2 for more control, ",
+                        "or set filename2 to NULL to prevent saving to disk", verbose = verbose)
     }
   }
   filename2
