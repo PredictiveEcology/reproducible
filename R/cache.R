@@ -396,10 +396,10 @@ setMethod(
 
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
-    if (!is.null(list(...)$objects)) {
-      messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated",
-                   verbose = verbose)
-    }
+    # if (!is.null(list(...)$objects)) {
+    #   messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated",
+    #                verbose = verbose)
+    # }
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
