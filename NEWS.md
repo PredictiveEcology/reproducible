@@ -5,7 +5,8 @@ version 1.2.5
 ==============
 
 ## Enhancements
-* Optional (and may be default soon) -- An update to the internal digesting for file-backed Rasters that should be substantially faster, and smaller disk footprint
+* Optional (and may be default soon) -- An update to the internal digesting for file-backed Rasters that should be substantially faster, and smaller disk footprint. Set using `options("reproducible.useNewDigestAlgorithm" = 2)`
+* changed default of `options("reproducible.polygonShortcut" = FALSE)` as there were still too many edge cases that were not covered.
 
 ## Bug fix
 * `RasterStack` objects with a single file (thus acting like a `RasterBrick`) are now handled correctly by `Cache` and `prepInputs` families

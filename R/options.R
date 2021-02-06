@@ -172,6 +172,7 @@ reproducibleOptions <- function() {
     reproducible.messageColourQuestion = "green",
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
+    reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
@@ -181,7 +182,7 @@ reproducibleOptions <- function() {
     reproducible.useDBI = TRUE,
     reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = FALSE, #memoise
-    reproducible.useNewDigestAlgorithm = TRUE,
+    reproducible.useNewDigestAlgorithm = 1,
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )
