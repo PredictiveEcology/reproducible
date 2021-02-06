@@ -262,8 +262,8 @@ test_that("test memory backed raster robustDigest", {
 
   r <- raster(matrix(1:10, 2, 5))
   b <- brick(r, r)
-  b <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
-  dig1 <- .robustDigest(b)
+  bb1 <- .writeRaster(b, file = tmpfile[1], overwrite = TRUE)
+  dig1 <- .robustDigest(bb1)
 
   expect_identical(dig, dig1)
 
@@ -886,16 +886,95 @@ test_that("test cache-helpers", {
   expect_true(identical(normalizePath(filename(b1$layer.1), winslash = "/", mustWork = FALSE),
                         normalizePath(file.path(tmpCache, "rasters", basename(filename(r))), winslash = "/", mustWork = FALSE)))
 
-  # Give them same name -- but will create a next numeric
-  r1 <- .writeRaster(r1, filename = tmpfile, overwrite = TRUE)
+  # Give them single file -- 2 layer stack; like a brick, but a stack
+  r[] <- r[]
+  r1[] <- r1[]
   b <- raster::stack(r, r1)
-  expect_true(identical(b$layer.1@file@name, b$layer.2@file@name))
-  b1 <- .prepareFileBackedRaster(b, tmpCache)
 
-  # there are 2 file names now
-  expect_true(length(unique(filePathSansExt(Filenames(b1)))) == 2)
+  b <- .writeRaster(b, filename = tmpfile, overwrite = TRUE)
+  b <- raster::stack(b)
+  expect_true(nlayers(b) == 2)
+  expect_true(identical(normPath(b$layer.1@file@name),
+                        normPath(b$layer.2@file@name)))
+
+  b1 <- .prepareFileBackedRaster(b, tmpCache)
+  expect_true(nlayers(b1) == 2)
+  b1a <- raster::stack(Filenames(b1)[1])
+  expect_true(nlayers(b1a) == 2)
 
 })
+
+test_that("test cache-helpers", {
+  testInitOut <- testInit("raster")
+  out <- reproducible::createCache(tmpCache)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  tmpfile <- tempfile(tmpdir = tmpdir, fileext = ".grd")
+  tmpfile2 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
+  tmpfile3 <- tempfile(tmpdir = tmpdir, fileext = ".grd")
+  tmpfile1tif <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  tmpfile2tif <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+  tmpfile3tif <- tempfile(tmpdir = tmpdir, fileext = ".tif")
+
+  r1 <- raster(extent(0,3,0,3), vals = 1)
+  r2 <- raster(extent(0,3,0,3), vals = 2)
+  r3 <- raster(extent(0,3,0,3), vals = 3)
+  r2 <- writeRaster(r1, filename = tmpfile2)
+  r3 <- writeRaster(r1, filename = tmpfile3)
+  r2tif <- suppressWarningsSpecific(falseWarning = proj6Warn,
+                                    writeRaster(r1, filename = tmpfile2tif))
+  r3tif <- suppressWarningsSpecific(falseWarning = proj6Warn,
+                           writeRaster(r1, filename = tmpfile3tif))
+
+  s1 <- raster::stack(r1, r1)
+  s2 <- raster::stack(r1, r2)
+  s3 <- raster::stack(r3, r2)
+  s1 <- raster::stack(r1, r1)
+  s2tif <- raster::stack(r1, r2tif)
+  s3tif <- raster::stack(r3tif, r2tif)
+
+
+
+  i <- 1
+  for (rr in list(r1, r2, r3, r2tif, r3tif, s1, s2, s3, s2tif, s3tif)) {
+    message(i); i <- i + 1
+
+    out2 <- .prepareFileBackedRaster(rr, repoDir = tmpCache)
+    test1 <- identical(out2, rr)
+    test2 <- identical(Filenames(out2), Filenames(rr))
+    test3 <- identical(Filenames(out2, allowMultiple = FALSE),
+                       Filenames(rr, allowMultiple = FALSE))
+    test4 <- identical(basename(Filenames(out2, allowMultiple = TRUE)),
+                       basename(Filenames(rr, allowMultiple = TRUE)))
+    test5 <- identical(length(Filenames(out2)), length(Filenames(rr)))
+    if (any(nchar(Filenames(out2)) > 0)) {
+      expect_false(test1 && test2 && test3)
+      expect_true(test4 && test5)
+    } else {
+      expect_true(test1 && test2 && test3 && test4 && test5)
+    }
+    unlink(Filenames(out2))
+  }
+
+  out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
+  out3 <- .prepareFileBackedRaster(s2, repoDir = tmpCache)
+  fn2 <- Filenames(out2)
+  fn3 <- Filenames(out3)
+  actualFiles <- nchar(fn2) > 0
+  bnfn2 <- basename(fn2[actualFiles])
+  bnfn3 <- basename(fn3[actualFiles])
+  bnfn2 <- unique(filePathSansExt(bnfn2))
+  bnfn3 <- unique(filePathSansExt(bnfn3))
+  sameFileBase <- grepl(pattern = bnfn2, x = bnfn3)
+  expect_true(sameFileBase)
+
+  unlink(Filenames(s2))
+  expect_error(out2 <- .prepareFileBackedRaster(s2, repoDir = tmpCache), "most likely")
+
+})
+
 
 test_that("test useCache = 'overwrite'", {
   testInitOut <- testInit(ask = FALSE)

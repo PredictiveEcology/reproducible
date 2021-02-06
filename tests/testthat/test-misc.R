@@ -106,7 +106,7 @@ test_that("guessAtTargetAndFun works correctly", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  expect_error(.guessAtTargetAndFun(fun = rnorm), "fun must be a")
+  # expect_error(.guessAtTargetAndFun(fun = rnorm), "fun must be a")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "", fun = "load"),
                  "Don't know which file to load")
   expect_message(.guessAtTargetAndFun(targetFilePath = NULL, filesExtracted = "hi.rds", fun = "readRDS"),

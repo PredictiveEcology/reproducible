@@ -252,15 +252,20 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
 
-    if (is(object, "RasterStack")) {
-      # have to do one file at a time with Stack
-      dig <- suppressWarnings(
-             lapply(object@layers, function(yy) {
-               .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
-             })
-      )
+    if (getOption("reproducible.useNewDigestAlgorithm") < 2)  {
+      if (is(object, "RasterStack")) {
+        # have to do one file at a time with Stack
+        dig <- suppressWarnings(
+          lapply(object@layers, function(yy) {
+            .digestRasterLayer(yy, length = length, algo = algo, quick = quick)
+          })
+        )
+      } else {
+        # Brick and Layers have only one file
+        dig <- suppressWarnings(
+          .digestRasterLayer(object, length = length, algo = algo, quick = quick))
+      }
     } else {
-      # Brick and Layers have only one file
       dig <- suppressWarnings(
         .digestRasterLayer(object, length = length, algo = algo, quick = quick))
     }
@@ -354,7 +359,7 @@ setMethod(
   out <- if (!missing(file)) {
     digest::digest(file = x, algo = algo, length = length)
   } else {
-    if (isTRUE(newAlgo)) {
+    if (isTRUE(newAlgo > 0)) {
       if (cacheSpeed == "fast") {
         cacheSpeed <- 2L
       } else if (cacheSpeed == "slow") {

@@ -125,7 +125,8 @@ if (getRversion() >= "3.1.0") {
 #'
 #' @param fun Function or character string indicating the function to use to load
 #'   \code{targetFile} into an \code{R} object, e.g., in form with package name:
-#'   \code{"raster::raster"}. If passing a custom function, it must be a function of
+#'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
+#'   If passing a custom function, it must be a function of
 #'   \code{x}, e.g., \code{loadFun <- function(x) shapefile(x)}.
 #'   NOTE: passing \code{NULL} will skip loading object into R.
 #'
@@ -146,7 +147,8 @@ if (getRversion() >= "3.1.0") {
 #'   \code{\link{postProcess}} and \code{\link[reproducible]{Cache}}.
 #'  Since \code{...} is passed to \code{\link{postProcess}}, these will
 #'  \code{...} will also be passed into the inner
-#'  functions, e.g., \code{\link{cropInputs}}. See details and examples.
+#'  functions, e.g., \code{\link{cropInputs}}. Possibly useful other arguments include
+#'  \code{dlFun} which is passed to \code{preProcess}. See details and examples.
 #'
 #' @param useCache Passed to \code{Cache} in various places.
 #'   Defaults to \code{getOption("reproducible.useCache")}.
@@ -568,9 +570,9 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
-  if (!is.null(fun) && !is.character(fun)) {
-    stop("fun must be a character string, not the function")
-  }
+  # if (!is.null(fun) && !is.character(fun)) {
+  #   stop("fun must be a character string, not the function")
+  # }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- fileExt(possibleFiles)
   isShapefile <- grepl("shp", fileExt)

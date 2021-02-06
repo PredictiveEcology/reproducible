@@ -45,7 +45,7 @@ test_that("test multiple cacheRepo with 1 of them a cloudCache", {
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  options("reproducible.useNewDigestAlgorithm" = TRUE) # need new approach for this to work correctly
+  options("reproducible.useNewDigestAlgorithm" = 2) # need new approach for this to work correctly
   # first time -- looks in cloudFolderID for checksums -- none there, so it makes it
   #   then it runs the function, caching locally, and uploading to cloud -- copy exists in
   #   2 places
