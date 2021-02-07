@@ -561,7 +561,7 @@ setAs(from = "character", to = "Path", function(from) {
 
   ## create a storage vector of file names to be filled
   curFilename <- if (isBrick) {
-    rep("", raster::nlayers(obj))
+    ""
   } else {
     rep("", length(isFilebacked))
   }
