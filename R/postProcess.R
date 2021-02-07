@@ -1407,7 +1407,17 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       }
       x <- updateFilenameSlots(x, curFilenames = theFilename, newFilenames = filename2)
       if (dots$datatype != dataType(x)) {
-        dataType(x) <- dots$datatype
+        if (is(x, "RasterStack")) {
+          newDT <- if (length(dots$datatype) == 1) {
+            rep(dots$datatype, nlayers(x))
+          } else {
+            dots$datatype
+          }
+          for (ln in seq(layerNames(x)))
+            dataType(x[[ln]]) <- newDT[ln]
+        } else {
+          dataType(x) <- dots$datatype
+        }
       }
     } else {
       argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)
