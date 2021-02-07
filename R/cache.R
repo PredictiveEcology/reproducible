@@ -1771,11 +1771,11 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
       unlink(origFilenames[filesExist])
     }
     out <- suppressWarnings(
-      file.link(cacheFilenames[filesExist],
-                origFilenames[filesExist]))
+      file.link(cacheFilenames[filesExistInCache],
+                origFilenames[filesExistInCache]))
     if (any(!out)) {
-      copyFile(Filenames(output$cacheRaster)[filesExist][!out],
-               to = output$origRaster[filesExist][!out])
+      copyFile(cacheFilenames[filesExistInCache][!out],
+               to = origFilenames[filesExistInCache][!out])
     }
     newOutput <- updateFilenameSlots(output$cacheRaster,
                                      Filenames(output$cacheRaster, allowMultiple = FALSE),
