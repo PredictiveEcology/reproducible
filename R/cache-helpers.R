@@ -1255,8 +1255,8 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
         newFilenames <- rep(newFilenames, nlayers(obj))
       }
       for (i in seq_len(nlayers(obj))) {
-        whFilename <- match(withoutFinalNumeric(basename(newFilenames)),
-                            withoutFinalNumeric(basename(curFilenames)))
+        whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
+                            withoutFinalNumeric(basename(curFilenames))))
         isNAwhFn <- is.na(whFilename)
         if (any(isNAwhFn))
           whFilename <- i
