@@ -1251,14 +1251,17 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
       # if (isTRUE(aiof)) {
       #   slot(obj, "filename") <- newFilenames
       # } else {
-        for (i in seq_len(nlayers(obj))) {
-          whFilename <- match(withoutFinalNumeric(basename(newFilenames)),
-                              withoutFinalNumeric(basename(curFilenames)))
-          isNAwhFn <- is.na(whFilename)
-          if (any(isNAwhFn))
-            whFilename <- i
-          slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
-        }
+      if (length(newFilenames) == 1) {
+        newFilenames <- rep(newFilenames, nlayers(obj))
+      }
+      for (i in seq_len(nlayers(obj))) {
+        whFilename <- match(withoutFinalNumeric(basename(newFilenames)),
+                            withoutFinalNumeric(basename(curFilenames)))
+        isNAwhFn <- is.na(whFilename)
+        if (any(isNAwhFn))
+          whFilename <- i
+        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+      }
       # }
 
 
