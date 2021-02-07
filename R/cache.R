@@ -1760,7 +1760,8 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     if (any(!filesExistInCache)) {
       fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
       correctFilenames <- file.path(cacheRepo, fileTails)
-      if (all(file.exists(correctFilenames))) {
+      filesExistInCache <- file.exists(correctFilenames)
+      if (all(filesExistInCache)) {
         cacheFilenames <- correctFilenames
       } else {
         stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
