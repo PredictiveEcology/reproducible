@@ -683,9 +683,9 @@ setAs(from = "character", to = "Path", function(from) {
         if (any(file.exists(saveFilenames))) {
           saveFilenames <- nextNumericName(saveFilenames)
         }
-        outFL <- suppressWarnings(file.link(to = saveFilenames,
-                  # overwrite = TRUE,
-                  from = curFilename))
+        outFL <- suppressWarningsSpecific(file.link(to = saveFilenames,
+                                                    from = curFilename),
+                                          falseWarnings = "already exists|Invalid cross-device")
         if (any(!outFL)) {
           copyFile(to = saveFilenames[!outFL],
                   overwrite = TRUE,
@@ -1413,7 +1413,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
     out <- Map(from = fnsAll[FBAll], to = saveFilename[FBAll],
         function(from, to) {
       linkTry <- suppressWarningsSpecific(file.link(from = from, to = to),
-                                      falseWarnings = "already exists")
+                                      falseWarnings = "already exists|Invalid cross-device")
       if (!linkTry)
         linkTry <- copyFile(from = from, to = to, overwrite = TRUE, silent = TRUE)
       linkTry

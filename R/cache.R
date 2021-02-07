@@ -1771,9 +1771,13 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     if (any(filesExist)) {
       unlink(origFilenames[filesExist])
     }
-    out <- suppressWarnings(
-      file.link(cacheFilenames[filesExistInCache],
-                origFilenames[filesExistInCache]))
+    out <- suppressWarningsSpecific(file.link(cacheFilenames[filesExistInCache],
+                                              origFilenames[filesExistInCache]),
+                                      falseWarnings = "already exists|Invalid cross-device")
+
+    # out <- suppressWarnings(
+    #   file.link(cacheFilenames[filesExistInCache],
+    #             origFilenames[filesExistInCache]))
     if (any(!out)) {
       copyFile(cacheFilenames[filesExistInCache][!out],
                to = origFilenames[filesExistInCache][!out])
