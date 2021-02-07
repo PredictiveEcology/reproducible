@@ -1406,7 +1406,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 
       }
       x <- updateFilenameSlots(x, curFilenames = theFilename, newFilenames = filename2)
-      if (dots$datatype != dataType(x)) {
+      if (any(dots$datatype != dataType(x))) {
         if (is(x, "RasterStack")) {
           newDT <- if (length(dots$datatype) == 1) {
             rep(dots$datatype, nlayers(x))
