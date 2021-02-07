@@ -1406,7 +1406,6 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
 
       }
       x <- updateFilenameSlots(x, curFilenames = theFilename, newFilenames = filename2)
-      x@file@name <- filename2
       if (dots$datatype != dataType(x)) {
         dataType(x) <- dots$datatype
       }
