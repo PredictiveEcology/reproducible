@@ -1373,18 +1373,39 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
-      if (fileExt(filename(x)) == "grd") {
+      theFilename <- Filenames(x, allowMultiple = FALSE)
+      if (fileExt(theFilename) == "grd") {
         if (!fileExt(filename2) == "grd") {
           warning("filename2 file type (", fileExt(filename2), ") was not same type (",
                   fileExt(filename(x)),") ", "as the filename of the raster; ",
                   "Changing filename2 so that it is ", fileExt(filename(x)))
           filename2 <- gsub(fileExt(filename2), "grd", filename2)
         }
-        file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
-                  overwrite = overwrite)
+        theFilenameGri <- gsub("grd$", "gri", theFilename)
+        filename2Gri <- gsub("grd$", "gri", filename2)
+        if (file.exists(filename2Gri)) {
+          if (isTRUE(overwrite))
+            unlink(filename2Gri)
+        }
+        out <- file.link(theFilenameGri, filename2Gri)
+        if (any(!out)) {
+          out <- file.copy(theFilenameGri[!out], filename2Gri[!out],
+                           overwrite = overwrite)
+
+        }
       }
 
-      file.copy(filename(x), filename2, overwrite = overwrite)
+      if (file.exists(filename2)) {
+        if (isTRUE(overwrite))
+          unlink(filename2)
+      }
+      out <- file.link(theFilename, filename2)
+      if (any(!out)) {
+        out <- file.copy(theFilename[!out], filename2[!out],
+                         overwrite = overwrite)
+
+      }
+      x <- updateFilenameSlots(x, curFilenames = theFilename, newFilenames = filename2)
       x@file@name <- filename2
       if (dots$datatype != dataType(x)) {
         dataType(x) <- dots$datatype

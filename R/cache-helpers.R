@@ -1254,6 +1254,9 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
         for (i in seq_len(nlayers(obj))) {
           whFilename <- match(withoutFinalNumeric(basename(newFilenames)),
                               withoutFinalNumeric(basename(curFilenames)))
+          isNAwhFn <- is.na(whFilename)
+          if (any(isNAwhFn))
+            whFilename <- i
           slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
         }
       # }
