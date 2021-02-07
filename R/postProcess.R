@@ -1343,7 +1343,11 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
                                 verbose = getOption("reproducible.verbose", 1),
                                 ...) {
   dots <- list(...)
-  datatype2 <- assessDataType(x, type = "writeRaster")
+  datatype2 <- if (is.null(dots$datatype)) {
+    assessDataType(x, type = "writeRaster")
+  } else {
+    dots$datatype
+  }
 
   if (!is.null(filename2)) {
     messagePrepInputs("    writing to disk", verbose = verbose, verboseLevel = 0)
