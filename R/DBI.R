@@ -78,13 +78,9 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   if (!is.null(linkToCacheId)) {
     ftL <- CacheStoredFile(cachePath, linkToCacheId)
     if (exists("._saveToCache_1")) browser()
-    suppressWarningsSpecific({
+    suppressWarnings({
       out <- try(file.link(from = ftL, to = fts), silent = TRUE)
-    },
-    falseWarnings = "already exists|Invalid cross-device|The system cannot find the file specified")
-    # suppressWarnings({
-    #   out <- try(file.link(from = ftL, to = fts), silent = TRUE)
-    # })
+    })
     if (is(out, "try-error") | !out)
       linkToCacheId <- NULL
     else {
