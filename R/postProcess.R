@@ -1387,28 +1387,31 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           if (isTRUE(overwrite))
             unlink(filename2Gri)
         }
-        out <- suppressWarningsSpecific(file.link(theFilenameGri, filename2Gri),
-                                        falseWarnings = "already exists|Invalid cross-device")
-        # out <- suppressWarnings(file.link(theFilenameGri, filename2Gri))
-        if (any(!out)) {
-          out <- file.copy(theFilenameGri[!out], filename2Gri[!out],
-                           overwrite = overwrite)
+        out <- hardLinkOrCopy(theFilenameGri, filename2Gri)
 
-        }
+        # out <- suppressWarningsSpecific(file.link(theFilenameGri, filename2Gri),
+        #                                 falseWarnings = "already exists|Invalid cross-device")
+        # # out <- suppressWarnings(file.link(theFilenameGri, filename2Gri))
+        # if (any(!out)) {
+        #   out <- file.copy(theFilenameGri[!out], filename2Gri[!out],
+        #                    overwrite = overwrite)
+        #
+        # }
       }
 
       if (file.exists(filename2)) {
         if (isTRUE(overwrite))
           unlink(filename2)
       }
-      out <- suppressWarningsSpecific(file.link(theFilename, filename2),
-                                      falseWarnings = "already exists|Invalid cross-device")
-      # out <- suppressWarnings(file.link(theFilename, filename2))
-      if (any(!out)) {
-        out <- file.copy(theFilename[!out], filename2[!out],
-                         overwrite = overwrite)
-
-      }
+      out <- hardLinkOrCopy(theFilename, filename2)
+      # out <- suppressWarningsSpecific(file.link(theFilename, filename2),
+      #                                 falseWarnings = "already exists|Invalid cross-device")
+      # # out <- suppressWarnings(file.link(theFilename, filename2))
+      # if (any(!out)) {
+      #   out <- file.copy(theFilename[!out], filename2[!out],
+      #                    overwrite = overwrite)
+      #
+      # }
       x <- updateFilenameSlots(x, curFilenames = theFilename, newFilenames = filename2)
       if (any(dots$datatype != dataType(x))) {
         if (is(x, "RasterStack")) {

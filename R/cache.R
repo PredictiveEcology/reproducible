@@ -1771,17 +1771,20 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     if (any(filesExist)) {
       unlink(origFilenames[filesExist])
     }
-    out <- suppressWarningsSpecific(file.link(cacheFilenames[filesExistInCache],
-                                              origFilenames[filesExistInCache]),
-                                      falseWarnings = "already exists|Invalid cross-device")
+    out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
+                          origFilenames[filesExistInCache])
 
-    # out <- suppressWarnings(
-    #   file.link(cacheFilenames[filesExistInCache],
-    #             origFilenames[filesExistInCache]))
-    if (any(!out)) {
-      copyFile(cacheFilenames[filesExistInCache][!out],
-               to = origFilenames[filesExistInCache][!out])
-    }
+    # out <- suppressWarningsSpecific(file.link(cacheFilenames[filesExistInCache],
+    #                                           origFilenames[filesExistInCache]),
+    #                                   falseWarnings = "already exists|Invalid cross-device")
+    #
+    # # out <- suppressWarnings(
+    # #   file.link(cacheFilenames[filesExistInCache],
+    # #             origFilenames[filesExistInCache]))
+    # if (any(!out)) {
+    #   copyFile(cacheFilenames[filesExistInCache][!out],
+    #            to = origFilenames[filesExistInCache][!out])
+    # }
     newOutput <- updateFilenameSlots(output$cacheRaster,
                                      Filenames(output$cacheRaster, allowMultiple = FALSE),
                                      newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
