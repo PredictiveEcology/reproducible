@@ -482,7 +482,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     if (isTRUE(any(copyToIP))) {
       logicalFilesExistIP <- file.exists(file.path(destinationPath, filesExtr[copyToIP]))
       if (!isTRUE(all(logicalFilesExistIP))) {
-        hardLinkOrCopy(file.path(destinationPathUser, filesExtr[!logicalFilesExistIP]),
+        outHLC <- hardLinkOrCopy(file.path(destinationPathUser, filesExtr[!logicalFilesExistIP]),
                        file.path(destinationPath, filesExtr[!logicalFilesExistIP]))
         # linkOrCopy(file.path(destinationPathUser, filesExtr[!logicalFilesExistIP]),
         #             file.path(destinationPath, filesExtr[!logicalFilesExistIP]), verbose = verbose)
@@ -492,7 +492,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     # Now make sure all are in original destinationPath
     logicalFilesExistDP <- file.exists(file.path(destinationPathUser, filesExtr))
     if (!isTRUE(all(logicalFilesExistDP))) {
-      hardLinkOrCopy(file.path(destinationPath, filesExtr[!logicalFilesExistDP]),
+      outHLC <- hardLinkOrCopy(file.path(destinationPath, filesExtr[!logicalFilesExistDP]),
                      file.path(destinationPathUser, filesExtr[!logicalFilesExistDP]))
       # linkOrCopy(file.path(destinationPath, filesExtr[!logicalFilesExistDP]),
       #            file.path(destinationPathUser, filesExtr[!logicalFilesExistDP]), verbose = verbose)
@@ -841,10 +841,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           filesInHandIPLogical <- neededFiles %in% filesInHandIP
           if (any(filesInHandIPLogical)) {
 
-            hardLinkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
-                           file.path(destinationPath, filesInHandIP))
-            # linkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
-            #            file.path(destinationPath, filesInHandIP), verbose = verbose)
+            outHLC <- hardLinkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
+                          file.path(destinationPath, filesInHandIP))
+            #linkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
+            #           file.path(destinationPath, filesInHandIP), verbose = verbose)
             checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
             checkSums <- unique(checkSums, by = "expectedFile")
             # needChecksums <- 2
@@ -1257,7 +1257,9 @@ moveAttributes <- function(source, receiving, attrs = NULL) {
   fun
 }
 
-hardLinkOrCopy <- function(from, to, overwrite = FALSE) {
+hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
+  outFL <- rep(FALSE, length(from))
+
   if (length(from)) {
     if (isTRUE(overwrite)) {
       fe <- file.exists(to)
@@ -1267,9 +1269,15 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE) {
     }
     # Basically -- all warnings are irrelevant; if fails, it will return FALSE, then it will try the file.copy
     outFL <- suppressWarnings(file.link(from = from, to = to))
+    if (any(outFL)) {
+      toCollapsed <- paste(to[outFL], collapse = ", ")
+      fromCollapsed <- paste(from[outFL], collapse = ", ")
+      messagePrepInputs("Hardlinked version of file created at: ", toCollapsed, ", which points to "
+                        , fromCollapsed, "; no copy was made.", verbose = verbose)
+    }
     if (any(!outFL)) {
-      copyFile(to = to[!outFL], from = from[!outFL], overwrite = overwrite, silent = TRUE)
+      outFL <- copyFile(to = to[!outFL], from = from[!outFL], overwrite = overwrite, silent = TRUE)
     }
   }
-
+  return(outFL)
 }

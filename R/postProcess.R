@@ -1420,7 +1420,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
           } else {
             dots$datatype
           }
-          for (ln in seq(layerNames(x)))
+          for (ln in seq(names(x)))
             dataType(x[[ln]]) <- newDT[ln]
         } else {
           dataType(x) <- dots$datatype
