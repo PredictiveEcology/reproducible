@@ -98,6 +98,7 @@ setMethod(
   signature = "Raster",
   definition = function(obj, allowMultiple = TRUE) {
     fn <- filename(obj)
+    if (exists("._Filenames_1")) browser()
     if (length(fn) == 0)
       fn <- ""
     # browser(expr = exists("._Filenames_1"))

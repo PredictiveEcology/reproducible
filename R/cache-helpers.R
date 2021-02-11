@@ -683,15 +683,18 @@ setAs(from = "character", to = "Path", function(from) {
         if (any(file.exists(saveFilenames))) {
           saveFilenames <- nextNumericName(saveFilenames)
         }
-        outFL <- suppressWarnings(file.link(to = saveFilenames,
-                  # overwrite = TRUE,
-                  from = curFilename))
-        if (any(!outFL)) {
-          copyFile(to = saveFilenames[!outFL],
-                  overwrite = TRUE,
-                  from = curFilename[!outFL], silent = TRUE)
-
-        }
+        out <- hardLinkOrCopy(from = curFilename, to = saveFilenames, overwrite = TRUE)
+        # if (FALSE) {
+        #   outFL <- suppressWarningsSpecific(file.link(to = saveFilenames,
+        #                                               from = curFilename),
+        #                                     falseWarnings = "already exists|Invalid cross-device")
+        #   if (any(!outFL)) {
+        #     copyFile(to = saveFilenames[!outFL],
+        #              overwrite = TRUE,
+        #              from = curFilename[!outFL], silent = TRUE)
+        #
+        #   }
+        # }
         saveFilenames[match(fileExt(curFilename2[x]), fileExt(saveFilenames))]
       })
 
@@ -1251,11 +1254,17 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
       # if (isTRUE(aiof)) {
       #   slot(obj, "filename") <- newFilenames
       # } else {
-        for (i in seq_len(nlayers(obj))) {
-          whFilename <- match(withoutFinalNumeric(basename(newFilenames)),
-                              withoutFinalNumeric(basename(curFilenames)))
-          slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
-        }
+      if (length(newFilenames) == 1) {
+        newFilenames <- rep(newFilenames, nlayers(obj))
+      }
+      for (i in seq_len(nlayers(obj))) {
+        whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
+                            withoutFinalNumeric(basename(curFilenames))))
+        isNAwhFn <- is.na(whFilename)
+        if (any(isNAwhFn))
+          whFilename <- i
+        slot(slot(obj@layers[[i]], "file"), "name") <- newFilenames[whFilename]
+      }
       # }
 
 
@@ -1404,14 +1413,17 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
       saveFilename[exist] <- nextNumericName(saveFilename[exist])
     }
     FBAll <- nchar(fnsAll) > 0
-    out <- Map(from = fnsAll[FBAll], to = saveFilename[FBAll],
-        function(from, to) {
-      linkTry <- suppressWarningsSpecific(file.link(from = from, to = to),
-                                      falseWarnings = "already exists")
-      if (!linkTry)
-        linkTry <- copyFile(from = from, to = to, overwrite = TRUE, silent = TRUE)
-      linkTry
-    })
+
+    out <- hardLinkOrCopy(from = fnsAll[FBAll], to = saveFilename[FBAll])
+
+    # out <- Map(from = fnsAll[FBAll], to = saveFilename[FBAll],
+    #     function(from, to) {
+    #   linkTry <- suppressWarningsSpecific(file.link(from = from, to = to),
+    #                                   falseWarnings = "already exists|Invalid cross-device")
+    #   if (!linkTry)
+    #     linkTry <- copyFile(from = from, to = to, overwrite = TRUE, silent = TRUE)
+    #   linkTry
+    # })
 
     # FBshort <- nchar(fnsShort) > 0
     saveFilenamesToUpdateSlot <- saveFilename[basename(saveFilenamePreNumeric) %in%

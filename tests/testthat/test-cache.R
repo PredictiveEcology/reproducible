@@ -1217,6 +1217,8 @@ test_that("test file link with duplicate Cache", {
   unlink(dir(CacheStorageDir(tmpCache), pattern = cacheIds[2], full.names = TRUE))
   set.seed(1234)
 
+#  ._saveToCache_1 <<- 1
+#  on.exit(rm(list = c("._saveToCache_1"), envir = .GlobalEnv), add = TRUE)
   warn <- capture_warnings({d1 <- Cache(sam1, N, cacheRepo = tmpCache)})
   expect_true(length(warn) == 0)
 })

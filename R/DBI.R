@@ -77,6 +77,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   # TRY link first, if there is a linkToCacheId, but some cases will fail; not sure what these cases are
   if (!is.null(linkToCacheId)) {
     ftL <- CacheStoredFile(cachePath, linkToCacheId)
+    if (exists("._saveToCache_1")) browser()
     suppressWarnings({
       out <- try(file.link(from = ftL, to = fts), silent = TRUE)
     })

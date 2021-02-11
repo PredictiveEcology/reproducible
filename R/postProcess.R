@@ -1343,7 +1343,11 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
                                 verbose = getOption("reproducible.verbose", 1),
                                 ...) {
   dots <- list(...)
-  datatype2 <- assessDataType(x, type = "writeRaster")
+  datatype2 <- if (is.null(dots$datatype)) {
+    assessDataType(x, type = "writeRaster")
+  } else {
+    dots$datatype
+  }
 
   if (!is.null(filename2)) {
     messagePrepInputs("    writing to disk", verbose = verbose, verboseLevel = 0)
@@ -1369,21 +1373,58 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
     if (fromDisk(x)) {
-      if (fileExt(filename(x)) == "grd") {
+      theFilename <- Filenames(x, allowMultiple = FALSE)
+      if (fileExt(theFilename) == "grd") {
         if (!fileExt(filename2) == "grd") {
           warning("filename2 file type (", fileExt(filename2), ") was not same type (",
                   fileExt(filename(x)),") ", "as the filename of the raster; ",
                   "Changing filename2 so that it is ", fileExt(filename(x)))
           filename2 <- gsub(fileExt(filename2), "grd", filename2)
         }
-        file.copy(gsub("grd$", "gri", filename(x)), gsub("grd$", "gri", filename2),
-                  overwrite = overwrite)
+        theFilenameGri <- gsub("grd$", "gri", theFilename)
+        filename2Gri <- gsub("grd$", "gri", filename2)
+        if (file.exists(filename2Gri)) {
+          if (isTRUE(overwrite))
+            unlink(filename2Gri)
+        }
+        out <- hardLinkOrCopy(theFilenameGri, filename2Gri)
+
+        # out <- suppressWarningsSpecific(file.link(theFilenameGri, filename2Gri),
+        #                                 falseWarnings = "already exists|Invalid cross-device")
+        # # out <- suppressWarnings(file.link(theFilenameGri, filename2Gri))
+        # if (any(!out)) {
+        #   out <- file.copy(theFilenameGri[!out], filename2Gri[!out],
+        #                    overwrite = overwrite)
+        #
+        # }
       }
 
-      file.copy(filename(x), filename2, overwrite = overwrite)
-      x@file@name <- filename2
-      if (dots$datatype != dataType(x)) {
-        dataType(x) <- dots$datatype
+      if (file.exists(filename2)) {
+        if (isTRUE(overwrite))
+          unlink(filename2)
+      }
+      out <- hardLinkOrCopy(theFilename, filename2)
+      # out <- suppressWarningsSpecific(file.link(theFilename, filename2),
+      #                                 falseWarnings = "already exists|Invalid cross-device")
+      # # out <- suppressWarnings(file.link(theFilename, filename2))
+      # if (any(!out)) {
+      #   out <- file.copy(theFilename[!out], filename2[!out],
+      #                    overwrite = overwrite)
+      #
+      # }
+      x <- updateFilenameSlots(x, curFilenames = theFilename, newFilenames = filename2)
+      if (any(dots$datatype != dataType(x))) {
+        if (is(x, "RasterStack")) {
+          newDT <- if (length(dots$datatype) == 1) {
+            rep(dots$datatype, nlayers(x))
+          } else {
+            dots$datatype
+          }
+          for (ln in seq(names(x)))
+            dataType(x[[ln]]) <- newDT[ln]
+        } else {
+          dataType(x) <- dots$datatype
+        }
       }
     } else {
       argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)

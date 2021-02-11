@@ -1747,7 +1747,7 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     return(dealWithRastersOnRecovery2(output, cacheRepo, cacheId,
                                drv, conn))
   }
-  if (is(output, "list")) {
+  if (is(output, "list") && !is.null(output$origRaster) && !is.null(output$cacheRaster)) {
     origFilenames <- if (is(output$origRaster, "Raster")) {
       Filenames(output$origRaster) # This is legacy piece which allows backwards compatible
     } else {
@@ -1760,7 +1760,8 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     if (any(!filesExistInCache)) {
       fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
       correctFilenames <- file.path(cacheRepo, fileTails)
-      if (all(file.exists(correctFilenames))) {
+      filesExistInCache <- file.exists(correctFilenames)
+      if (all(filesExistInCache)) {
         cacheFilenames <- correctFilenames
       } else {
         stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
@@ -1770,13 +1771,20 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     if (any(filesExist)) {
       unlink(origFilenames[filesExist])
     }
-    out <- suppressWarnings(
-      file.link(cacheFilenames[filesExist],
-                origFilenames[filesExist]))
-    if (any(!out)) {
-      copyFile(Filenames(output$cacheRaster)[filesExist][!out],
-               to = output$origRaster[filesExist][!out])
-    }
+    out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
+                          origFilenames[filesExistInCache])
+
+    # out <- suppressWarningsSpecific(file.link(cacheFilenames[filesExistInCache],
+    #                                           origFilenames[filesExistInCache]),
+    #                                   falseWarnings = "already exists|Invalid cross-device")
+    #
+    # # out <- suppressWarnings(
+    # #   file.link(cacheFilenames[filesExistInCache],
+    # #             origFilenames[filesExistInCache]))
+    # if (any(!out)) {
+    #   copyFile(cacheFilenames[filesExistInCache][!out],
+    #            to = origFilenames[filesExistInCache][!out])
+    # }
     newOutput <- updateFilenameSlots(output$cacheRaster,
                                      Filenames(output$cacheRaster, allowMultiple = FALSE),
                                      newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
