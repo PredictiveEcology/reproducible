@@ -90,86 +90,90 @@ test_that(
   expect_is(testZip7, "RasterLayer")
 })
 
-test_that(paste("prepInputs in a two files double nested rar file,",
-                "with the wanted file in the second layer, not specifying the targetFile"), {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+test_that(
+  paste("prepInputs in a two files double nested rar file,",
+        "with the wanted file in the second layer, not specifying the targetFile"), {
+          skip_on_cran()
+          skip_on_os("mac")
+          testInitOut <- testInit("raster", needGoogle = FALSE)
+          on.exit({
+            testOnExit(testInitOut)
+          }, add = TRUE)
 
-  extractSystemCallPath <- .archiveExtractBinary()
-  if (is.null(extractSystemCallPath)) {
-    warn <- capture_warnings({
-      expect_error({
-        testRar <- reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
-          destinationPath = tmpdir
-        )
-      })
-    })
-  } else {
-    testRar <- reproducible::prepInputs(
-      url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
-      destinationPath = tmpdir)
-    expect_true(exists("testRar"))
-    expect_is(testRar, "RasterLayer")
-  }
-})
+          extractSystemCallPath <- .archiveExtractBinary()
+          if (is.null(extractSystemCallPath)) {
+            warn <- capture_warnings({
+              expect_error({
+                testRar <- reproducible::prepInputs(
+                  url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
+                  destinationPath = tmpdir
+                )
+              })
+            })
+          } else {
+            testRar <- reproducible::prepInputs(
+              url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
+              destinationPath = tmpdir)
+            expect_true(exists("testRar"))
+            expect_is(testRar, "RasterLayer")
+          }
+        })
 
 test_that(
   paste0(
     "prepInputs in a two files double nested rar file, with the wanted file in",
     " the second layer, specifying the targetFile"), {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+      skip_on_cran()
+      skip_on_os("mac")
+      testInitOut <- testInit("raster", needGoogle = FALSE)
+      on.exit({
+        testOnExit(testInitOut)
+      }, add = TRUE)
 
-  extractSystemCallPath <- .archiveExtractBinary()
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
-  if (is.null(extractSystemCallPath)) {
-    expect_error({
-      testRar2 <- reproducible::prepInputs(url = url,
-                                           targetFile = "rasterTOtestRAR.tif",
-                                           destinationPath = tmpdir)
+      extractSystemCallPath <- .archiveExtractBinary()
+      url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
+      if (is.null(extractSystemCallPath)) {
+        expect_error({
+          testRar2 <- reproducible::prepInputs(url = url,
+                                               targetFile = "rasterTOtestRAR.tif",
+                                               destinationPath = tmpdir)
+        })
+      } else {
+        testRar2 <- reproducible::prepInputs(url = url,
+                                             targetFile = "rasterTOtestRAR.tif",
+                                             destinationPath = tmpdir)
+        expect_true(exists("testRar2"))
+        expect_is(testRar2, "RasterLayer")
+      }
     })
-  } else {
-    testRar2 <- reproducible::prepInputs(url = url,
-                                         targetFile = "rasterTOtestRAR.tif",
-                                         destinationPath = tmpdir)
-    expect_true(exists("testRar2"))
-    expect_is(testRar2, "RasterLayer")
-  }
-})
 
 test_that(paste0("prepInputs in a two files double nested rar file, with the wanted file in",
                  "the second layer, not specifying the targetFile, passing the main archive"), {
-  skip_on_cran()
-  testInitOut <- testInit("raster", needGoogle = FALSE)
-  on.exit({
-    testOnExit(testInitOut)
-  }, add = TRUE)
+                   skip_on_cran()
+                   skip_on_os("mac")
+                   testInitOut <- testInit("raster", needGoogle = FALSE)
+                   on.exit({
+                     testOnExit(testInitOut)
+                   }, add = TRUE)
 
-  extractSystemCallPath <- .archiveExtractBinary()
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
-  if (is.null(extractSystemCallPath)) {
-    expect_error({
-      testRar3 <- reproducible::prepInputs(url = url,
-                                           archive = "nestedRarTxtFiles.rar",
-                                           targetFile = "rasterTOtestRAR.tif",
-                                           destinationPath = tmpdir)
-    })
-  } else {
-    testRar3 <- reproducible::prepInputs(url = url,
-                                         archive = "nestedRarTxtFiles.rar",
-                                         targetFile = "rasterTOtestRAR.tif",
-                                         destinationPath = tmpdir)
-    expect_true(exists("testRar3"))
-    expect_is(testRar3, "RasterLayer")
-  }
-})
+                   extractSystemCallPath <- .archiveExtractBinary()
+                   url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
+                   if (is.null(extractSystemCallPath)) {
+                     expect_error({
+                       testRar3 <- reproducible::prepInputs(url = url,
+                                                            archive = "nestedRarTxtFiles.rar",
+                                                            targetFile = "rasterTOtestRAR.tif",
+                                                            destinationPath = tmpdir)
+                     })
+                   } else {
+                     testRar3 <- reproducible::prepInputs(url = url,
+                                                          archive = "nestedRarTxtFiles.rar",
+                                                          targetFile = "rasterTOtestRAR.tif",
+                                                          destinationPath = tmpdir)
+                     expect_true(exists("testRar3"))
+                     expect_is(testRar3, "RasterLayer")
+                   }
+                 })
 
 test_that("prepInputs works with nested rar file inside internal rar folder", {
   skip_on_cran()

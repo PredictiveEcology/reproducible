@@ -394,12 +394,12 @@ setMethod(
                         cacheId, useCache,
                         showSimilar, drv, conn) {
 
-    # dots <- enquos(...)
-    # browser(expr = exists("._Cache_1"))
-    if (!is.null(list(...)$objects)) {
-      messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated",
-                   verbose = verbose)
-    }
+    if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
+
+    # if (!is.null(list(...)$objects)) {
+    #   messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated",
+    #                verbose = verbose)
+    # }
 
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
@@ -418,7 +418,8 @@ setMethod(
       if (fnDetails$isDoCall) {
         do.call(modifiedDots$what, args = modifiedDots$args)
       } else {
-        do.call(FUN, args = modifiedDots)
+        FUN(...) # using do.call fails on quoted arguments because it evaluates them
+        # do.call(FUN, args = modifiedDots)
       }
     } else {
       startCacheTime <- verboseTime(verbose)
@@ -1384,7 +1385,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
     .robustDigest(x, algo = algo, ...)
   })
 
-  res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm"))) {
+  res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0)) {
     .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
   } else {
     if (!requireNamespace("fastdigest"))
@@ -1742,6 +1743,65 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
 dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
                                       drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                       conn = getOption("reproducible.conn", NULL)) {
+  if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
+    return(dealWithRastersOnRecovery2(output, cacheRepo, cacheId,
+                               drv, conn))
+  }
+  if (is(output, "list") && !is.null(output$origRaster) && !is.null(output$cacheRaster)) {
+    origFilenames <- if (is(output$origRaster, "Raster")) {
+      Filenames(output$origRaster) # This is legacy piece which allows backwards compatible
+    } else {
+      output$origRaster
+    }
+
+    filesExist <- file.exists(origFilenames)
+    cacheFilenames <- Filenames(output$cacheRaster)
+    filesExistInCache <- file.exists(cacheFilenames)
+    if (any(!filesExistInCache)) {
+      fileTails <- gsub("^.+(rasters.+)$", "\\1", cacheFilenames)
+      correctFilenames <- file.path(cacheRepo, fileTails)
+      filesExistInCache <- file.exists(correctFilenames)
+      if (all(filesExistInCache)) {
+        cacheFilenames <- correctFilenames
+      } else {
+        stop("File-backed raster files in the cache are corrupt for cacheId: ", cacheId)
+      }
+
+    }
+    if (any(filesExist)) {
+      unlink(origFilenames[filesExist])
+    }
+    out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
+                          origFilenames[filesExistInCache])
+
+    # out <- suppressWarningsSpecific(file.link(cacheFilenames[filesExistInCache],
+    #                                           origFilenames[filesExistInCache]),
+    #                                   falseWarnings = "already exists|Invalid cross-device")
+    #
+    # # out <- suppressWarnings(
+    # #   file.link(cacheFilenames[filesExistInCache],
+    # #             origFilenames[filesExistInCache]))
+    # if (any(!out)) {
+    #   copyFile(cacheFilenames[filesExistInCache][!out],
+    #            to = origFilenames[filesExistInCache][!out])
+    # }
+    newOutput <- updateFilenameSlots(output$cacheRaster,
+                                     Filenames(output$cacheRaster, allowMultiple = FALSE),
+                                     newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))
+    output <- newOutput
+    .setSubAttrInList(output, ".Cache", "newCache", FALSE)
+  }
+  output
+}
+
+# This one is old, overly complicated; defunct
+dealWithRastersOnRecovery2 <- function(output, cacheRepo, cacheId,
+                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                      conn = getOption("reproducible.conn", NULL)) {
+  # This function is because the user doesn't want the path of the file-backed raster to
+  #   be in the cacheRepo --> they want it in its original file location
+  #   If it is in both, take the one in the original location; if it has been deleted
+  #   from the original location, then grab it from cache and put it in original place
   if (is(output, "list")) {
     if (identical(names(output), c("origRaster", "cacheRaster"))) {
       origFilenames <- Filenames(output$origRaster)
@@ -1764,7 +1824,7 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
       }
       dirnamesRasters <- unique(dirname(dirname(cacheFilenamesNeed)))
       if (length(dirnamesRasters))
-        if (!isTRUE(all.equal(dirnamesRasters, cacheRepo))) { # if this is a moved cache, the filenames will be wrong
+        if (!isTRUE(all.equal(dirnamesRasters, cacheRepo))) { # if this is a moved cache, the filenames in the cache will be wrong
           cacheFilenamesNeed2 <- gsub(dirnamesRasters, cacheRepo, cacheFilenamesNeed)
           wrongFilenames <- file.exists(cacheFilenamesNeed2)
           if (any(wrongFilenames)) {

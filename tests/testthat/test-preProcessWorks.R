@@ -127,18 +127,19 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  extractSystemCallPath <- .testForArchiveExtract()
+  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- tatisRasterTestRar
 
-  if (is.null(extractSystemCallPath)) {
-    expect_error({
+  if (!is(extractSystemCallPath, "try-error"))
+    if (is.null(extractSystemCallPath)) {
+      expect_error({
+        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+      })
+    } else {
       ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-    })
-  } else {
-    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-    testthat::expect_is(object = ras, class = "list")
-    testthat::expect_true(file.exists(ras$targetFilePath))
-  }
+      testthat::expect_is(object = ras, class = "list")
+      testthat::expect_true(file.exists(ras$targetFilePath))
+    }
 })
 
 test_that("preProcess works when provides url, targetfile and destinationPath for a .rar file", {
@@ -147,22 +148,23 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  extractSystemCallPath <- .testForArchiveExtract()
+  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- tatisRasterTestRar
 
-  if (is.null(extractSystemCallPath)) {
-    expect_error({
+  if (!is(extractSystemCallPath, "try-error"))
+    if (is.null(extractSystemCallPath)) {
+      expect_error({
+        ras <- reproducible::preProcess(url = url, targetFile = tatisRasterTestFilename(suff = "tif"),
+                                        destinationPath = tmpdir)
+      })
+    } else {
+      wd <- getwd()
       ras <- reproducible::preProcess(url = url, targetFile = tatisRasterTestFilename(suff = "tif"),
                                       destinationPath = tmpdir)
-    })
-  } else {
-    wd <- getwd()
-    ras <- reproducible::preProcess(url = url, targetFile = tatisRasterTestFilename(suff = "tif"),
-                                    destinationPath = tmpdir)
-    testthat::expect_is(object = ras, class = "list")
-    testthat::expect_true(file.exists(ras$targetFilePath))
-    expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
-  }
+      testthat::expect_is(object = ras, class = "list")
+      testthat::expect_true(file.exists(ras$targetFilePath))
+      expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
+    }
 })
 
 test_that("preProcess works when provides url, archive and destinationPath for a .rar file", {
@@ -171,19 +173,20 @@ test_that("preProcess works when provides url, archive and destinationPath for a
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  extractSystemCallPath <- .testForArchiveExtract()
+  extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- tatisRasterTestRar
-
   rasterTestRarFilename <- tatisRasterTestFilename(suff = "rar")
-  if (is.null(extractSystemCallPath)) {
-    expect_error({
+
+  if (!is(extractSystemCallPath, "try-error"))
+    if (is.null(extractSystemCallPath)) {
+      expect_error({
+        ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+      })
+    } else {
       ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
-    })
-  } else {
-    ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
-    testthat::expect_is(object = ras, class = "list")
-    testthat::expect_true(file.exists(ras$targetFilePath))
-  }
+      testthat::expect_is(object = ras, class = "list")
+      testthat::expect_true(file.exists(ras$targetFilePath))
+    }
 })
 
 test_that("preProcess works, but gives a warning when supplying cacheTags", {

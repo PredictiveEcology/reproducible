@@ -121,8 +121,11 @@
 #'     \code{clearCache} of any sort will cause all memoising to be 'forgotten' (\code{memoise::forget}).
 #'   }
 #'   \item{\code{useNewDigestAlgorithm}}{
-#'     Default: \code{TRUE}. This will mean that previous cache repositories will be defunct.
-#'     This new algorithm will make \code{Cache} less sensitive to minor but irrelevant changes
+#'     Default: \code{1}. Option 1 is the version that has existed for sometime. There is now
+#'     and option \code{2} which is substantially faster. It will, however, create
+#'     Caches that are not compatible with previous ones. Options \code{1} and \code{2}
+#'     are not compatible with the earlier \code{0}.
+#'     \code{1} and \code{2} will make \code{Cache} less sensitive to minor but irrelevant changes
 #'     (like changing the order of arguments) and will work successfully across operating systems
 #'     (especially relevant for the new \code{cloudCache} function.
 #'   }
@@ -172,6 +175,7 @@ reproducibleOptions <- function() {
     reproducible.messageColourQuestion = "green",
     reproducible.nThreads = 1,
     reproducible.overwrite = FALSE,
+    reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
@@ -181,7 +185,7 @@ reproducibleOptions <- function() {
     reproducible.useDBI = TRUE,
     reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = FALSE, #memoise
-    reproducible.useNewDigestAlgorithm = TRUE,
+    reproducible.useNewDigestAlgorithm = 1,
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )

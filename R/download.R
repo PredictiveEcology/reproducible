@@ -528,13 +528,18 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           # Try hard link first -- the only type that R deeply recognizes
           # if that fails, fall back to copying the file.
           # NOTE: never use symlink because the original will be deleted.
-          result <- suppressWarnings(
-            file.link(downloadResults$destFile, desiredPath)
-          )
+          result <- hardLinkOrCopy(downloadResults$destFile, desiredPath)
 
-          if (.isFALSE(result)) {
-            result <- file.copy(downloadResults$destFile, desiredPath)
-          }
+          # result <- suppressWarningsSpecific(
+          #   file.link(downloadResults$destFile, desiredPath),
+          #   falseWarnings = "already exists|Invalid cross-device")
+          # # result <- suppressWarnings(
+          # #   file.link(downloadResults$destFile, desiredPath)
+          # # )
+          #
+          # if (.isFALSE(result)) {
+          #   result <- file.copy(downloadResults$destFile, desiredPath)
+          # }
 
           tmpFile <- downloadResults$destFile
           downloadResults$destFile <- file.path(destinationPath, basename(downloadResults$destFile))

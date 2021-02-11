@@ -231,6 +231,9 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
 #' @keywords internal
 isWindows <- function() identical(.Platform$OS.type, "windows")
 
+#' @keywords internal
+isMac <- function() identical(tolower(Sys.info()["sysname"]), "darwin")
+
 #' Provide standard messaging for missing package dependencies
 #'
 #' This provides a standard message format for missing packages, e.g.,
