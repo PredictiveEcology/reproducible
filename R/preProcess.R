@@ -617,7 +617,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     TRUE
   } else { FALSE }
   if (isTRUE(failStop))
-    stop("targetFile appears to be misspecified. ",
+    stop("targetFile appears to be misspecified at: ", targetFilePath, ". ",
          "Possibly, it does not exist in the specified archive, ",
          "or the file doesn't exist in destinationPath")
 
