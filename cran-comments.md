@@ -14,9 +14,9 @@ This release fixes a bug that was introduced by an updated RSQLite package. It a
 - os: ubuntu-18.04,   r: '3.5'
           
 ### Winbuilder -- all passed Feb 11, 2021
-* Windows                 (win-builder), R 3.6.3
-* Windows                 (win-builder), R 4.0.3
-* Windows                 (win-builder), R 4.1.0 (2020-12-02)
+* Windows                 (win-builder), R 3.6.3 (2021-02-11)
+* Windows                 (win-builder), R 4.0.3 (2021-02-11)
+* Windows                 (win-builder), R 4.1.0 (2021-02-11)
 
 ## R CMD check results
 
