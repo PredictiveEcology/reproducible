@@ -9,7 +9,7 @@ version 1.2.5
 * changed default of `options("reproducible.polygonShortcut" = FALSE)` as there were still too many edge cases that were not covered.
 
 ## Bug fix
-* `RasterStack` objects with a single file (thus acting like a `RasterBrick`) are now handled correctly by `Cache` and `prepInputs` families
+* `RasterStack` objects with a single file (thus acting like a `RasterBrick`) are now handled correctly by `Cache` and `prepInputs` families, especially with new `options("reproducible.useNewDigestAlgorithm" = 2)`, though in tests, it worked with default also
 * Fix issue #185, RSQLite now uses a RNG during dbAppend; this affected 2 tests.
 
 version 1.2.4
