@@ -24,5 +24,5 @@ There were no ERRORs nor WARNINGs or NOTEs.
 
 ## Downstream dependencies
 
-We will be submitting an update to SpaDES.core when `reproducible` is accepted. 
+Running `revdepcheck::revdep_check` revealed all downstream dependencies OK. 
 
