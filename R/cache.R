@@ -734,7 +734,7 @@ setMethod(
               isInRepo[[.cacheTableHashColName()]]
             else
               gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
-            stop("Error in trying to recover cacheID: ", cID,
+            stop(output, "\nError in trying to recover cacheID: ", cID,
                  "\nYou will likely need to remove that item from Cache, e.g., ",
                  "\nclearCache(userTags = '", cID, "')")
           }

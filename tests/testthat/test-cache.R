@@ -148,9 +148,10 @@ test_that("test file-backed raster caching", {
       nOT <- Sys.time()
 
       for (i in 1:2) {
-        assign(paste0("b", i), system.time(
-          assign(paste0("a", i), Cache(rasterTobinary, a, cacheRepo = tmpCache, notOlderThan = nOT))
-        ))
+        strt <- Sys.time()
+        assign(paste0("a", i), Cache(rasterTobinary, a, cacheRepo = tmpCache, notOlderThan = nOT))
+        fin <- Sys.time()
+        assign(paste0("b", i), fin - strt)
         nOT <- Sys.time() - 100
       }
 
@@ -1014,17 +1015,19 @@ test_that("test rm large non-file-backed rasters", {
     if (!grepl("SQLite", class(getOption("reproducible.conn", NULL))))
       skip("This is not for non-SQLite")
 
-  testInitOut <- testInit(ask = FALSE,
-                          opts = list("reproducible.tempPath" = tempdir2(),
-                                      "reproducible.cachePath" = .reproducibleTempCacheDir()))
+  testInitOut <- testInit(ask = FALSE)
+
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
 
-  st0 <- system.time({
-    r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1, userTags = "first")
-  })
-  st1 <- system.time(clearCache(userTags = "first", ask = FALSE))
+  opts11 <- options("reproducible.cacheSpeed" = "fast",
+                    "reproducible.cacheSaveFormat" = "qs")
+  on.exit(options(opts11), add = TRUE)
+
+  r <- Cache(raster, extent(0, 10000, 0, 10000), res = 1, vals = 1,
+             cacheRepo = tmpdir, userTags = "first")
+  st1 <- system.time(clearCache(tmpdir, userTags = "first", ask = FALSE ))
   expect_true(st1["user.self"] < 0.75) # This was > 2 seconds in old way
 })
 
@@ -1117,7 +1120,7 @@ test_that("test failed Cache recovery -- message to delete cacheId", {
     })
   })
   expect_true(grepl(paste0("(trying to recover).*(",ci,")"), err))
-  expect_true(grepl(paste0("cannot open compressed file"), warn))
+  expect_true(grepl(paste0("[cannot|failed to] open"), paste(warn, err)))
 
 })
 
@@ -1194,7 +1197,9 @@ test_that("test file link with duplicate Cache", {
   mess2 <- capture_messages({d <- Cache(sam1, N, cacheRepo = tmpCache)})
   expect_true(any(grepl("loaded cached", mess2)))
   expect_true(any(grepl("loaded cached", mess1)))
-  out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
+  # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
+  warns <- capture_warnings(out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE))
+  # out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out1, "try-error"))
     fs1 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out1))
 
