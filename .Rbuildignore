@@ -2,9 +2,11 @@
 ^\.Rproj\.user$
 .*\.toc$
 ^\.lintr$
+^\.github$
 ^\.httr-oauth$
 ^_pkgdown\.yml$
 ^cheatsheets$
+^codecov\.yml$
 ^CONTRIBUTING\.md$
 ^cran-comments\.md$
 ^CRAN-RELEASE$
@@ -12,8 +14,6 @@
 ^LICENSE$
 ^revdep$
 ^stickers$
-tests/testthat/\.httr-oauth$
-vignettes/.*_cache$
-vignettes/.*\.log$
-^\.github$
-^codecov\.yml$
+^tests/testthat/\.httr-oauth$
+^vignettes/.*_cache$
+^vignettes/.*\.log$
