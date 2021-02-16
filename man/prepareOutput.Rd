@@ -43,7 +43,7 @@ This is a generic definition that can be extended according to class.
 a <- 1
 .prepareOutput(a) # does nothing
 
-b <- "Null"
+b <- "NULL"
 .prepareOutput(b) # converts to NULL
 
 library(raster)
