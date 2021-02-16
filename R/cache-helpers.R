@@ -197,7 +197,7 @@ setMethod(
 #' a <- 1
 #' .prepareOutput(a) # does nothing
 #'
-#' b <- "Null"
+#' b <- "NULL"
 #' .prepareOutput(b) # converts to NULL
 #'
 #' library(raster)
@@ -254,7 +254,7 @@ setMethod(
     if (is.character(object)) {
       if (length(object) == 1) {
         # need something to attach tags to if it is actually NULL
-        if (object == "Null") object <- NULL
+        if (identical(object, "NULL")) object <- NULL
       }
     }
     object

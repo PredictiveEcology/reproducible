@@ -734,7 +734,7 @@ setMethod(
               isInRepo[[.cacheTableHashColName()]]
             else
               gsub("cacheId:", "", isInRepo[[.cacheTableTagColName()]])
-            stop("Error in trying to recover cacheID: ", cID,
+            stop(output, "\nError in trying to recover cacheID: ", cID,
                  "\nYou will likely need to remove that item from Cache, e.g., ",
                  "\nclearCache(userTags = '", cID, "')")
           }
@@ -844,8 +844,11 @@ setMethod(
 
       # need something to attach tags to if it is actually NULL
       isNullOutput <- if (is.null(output)) TRUE else FALSE
-      if (isNullOutput) output <- "NULL"
+      if (isNullOutput) {
+        output <- "NULL"
+      }
 
+      # browser(expr = identical(outputHash, "aa8b14f8ef51eddb"))
       .setSubAttrInList(output, ".Cache", "newCache", .CacheIsNew)
       setattr(output, "tags", paste0("cacheId:", outputHash))
       setattr(output, "call", "")

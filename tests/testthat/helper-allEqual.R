@@ -71,7 +71,8 @@ testInit <- function(libraries, ask = FALSE, verbose = FALSE, tmpFileExt = "",
     reproducible.cachePath = .reproducibleTempCacheDir(), ## TODO: deal with cachePath issues in non-interactive tests
     reproducible.showSimilar = FALSE,
     reproducible.overwrite = TRUE,
-    reproducible.useNewDigestAlgorithm = 2
+    reproducible.useNewDigestAlgorithm = 2,
+    reproducible.cacheSpeed = "slow"
   )
   if (length(opts) > 0)
     defaultOpts[names(opts)] <- opts
