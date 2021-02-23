@@ -3,14 +3,14 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 1.2.6.9000
 ==============
 
-## Ne features
+## New features
 * none
 
 ## Enhancements
 * none
 
 ## Bug fixees
-* none
+* `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
 
 version 1.2.6
 ==============
@@ -21,7 +21,7 @@ version 1.2.6
 
 ## Bug fix
 * `RasterStack` objects with a single file (thus acting like a `RasterBrick`) are now handled correctly by `Cache` and `prepInputs` families, especially with new `options("reproducible.useNewDigestAlgorithm" = 2)`, though in tests, it worked with default also
-* Fix issue #185, RSQLite now uses a RNG during dbAppend; this affected 2 tests.
+* `RSQLite` now uses a RNG during `dbAppend`; this affected 2 tests (#185).
 
 version 1.2.4
 ==============
