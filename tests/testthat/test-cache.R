@@ -1258,3 +1258,38 @@ test_that("test .object arg for list in Cache", {
   expect_false(identical(out2, out3))
 
 })
+
+test_that("quick arg in Cache as character", {
+  testInitOut <- testInit("raster", tmpFileExt = c("rds", "tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  tf <- tmpfile[[1]]
+  tf2 <- tmpfile[[2]]
+
+  messes <- list()
+  quicks <- rep(list(FALSE, FALSE, "file", "file", TRUE, TRUE), 2)
+  rasRan <- c(rep(TRUE, 6), rep(FALSE, 6))
+  for (i in seq(quicks)) {
+    vals <- if (rasRan[i]) sample(1:100) else 1:100
+    ranRas <- raster(extent(0,10,0,10), vals = vals);
+    ranRas <- suppressWarningsSpecific(
+      falseWarnings = proj6Warn,
+      writeRaster(ranRas, filename = tf2, overwrite = TRUE))
+    a <- sample(1e7, 1);
+    saveRDS(a, file = tf);
+
+    # new copy
+    messes[[i]] <- capture_messages(Cache(saveRDS, ranRas, file = tf, cacheRepo = tmpCache,
+                                          quick = quicks[[i]]))
+
+  }
+  expect_true(length(messes[[6]]) > 0) # undesireable quick = FALSE -- even when raster has changed
+  expect_true(length(messes[[8]]) == 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
+  # Desired -- 9 not cache, 10 cached
+  expect_true(length(messes[[9]]) == 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
+  expect_true(length(messes[[10]]) > 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
+  expect_true(sum(unlist(lapply(messes, function(x) length(x) > 0))) == 4L)
+
+})
