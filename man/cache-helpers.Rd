@@ -42,21 +42,9 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
     \code{sha256}, \code{sha512}, \code{xxhash32}, \code{xxhash64},
     \code{murmur32}, \code{spookyhash} and \code{blake3}.}
 
-\item{quick}{Logical. If \code{TRUE},
-little or no disk-based information will be assessed, i.e., mostly its
-memory content. This is relevant for objects of class \code{character},
-\code{Path} and \code{Raster} currently. For class \code{character}, it is ambiguous
-whether this represents a character string or a vector of file paths. The function
-will assess if it is a path to a file or directory first. If not, it will treat
-the object as a character string. If it is known that character strings should
-not be treated as paths, then \code{quick = TRUE} will be much faster, with no loss
-of information. If it is file or directory, then it will digest the file content,
-or \code{basename(object)}. For class \code{Path} objects, the file's metadata
-(i.e., filename and file size) will be hashed instead of the file contents if
-\code{quick = TRUE}.
-If set to \code{FALSE} (default), the contents of the file(s) are hashed.
-If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
-as paths, if they are file-backed.}
+\item{quick}{Logical or character. If \code{TRUE},
+no disk-based information will be assessed, i.e., only
+memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
 
 \item{cacheRepo}{A repository used for storing cached objects.
 This is optional if \code{Cache} is used inside a SpaDES module.}

@@ -3,11 +3,8 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 version 1.2.6.9000
 ==============
 
-## New features
-* none
-
 ## Enhancements
-* none
+* `quick` argument in `Cache` can now be a character vector, allowing individual character arguments to be digested as character vectors and others to be digested as files located at the specified path as represented by the character vector.
 
 ## Bug fixees
 * `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
