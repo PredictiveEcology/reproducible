@@ -157,10 +157,10 @@ postProcess.spatialClasses <- function(x, filename1 = NULL, filename2 = NULL,
   # Test if user supplied wrong type of file for "studyArea", "rasterToMatch"
   # browser(expr = exists("._postProcess.spatialClasses_1"))
   x1 <- postProcessAllSpatial(x = x, studyArea = eval_tidy(studyArea),
-                             rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
-                             filename1 = filename1, filename2 = filename2,
-                             useSAcrs = useSAcrs, overwrite = overwrite,
-                             verbose = verbose, ...)
+                              rasterToMatch = eval_tidy(rasterToMatch), useCache = useCache,
+                              filename1 = filename1, filename2 = filename2,
+                              useSAcrs = useSAcrs, overwrite = overwrite,
+                              verbose = verbose, ...)
   return(x1)
 }
 
@@ -617,26 +617,18 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
     if (is.null(objectName)) objectName = "SpatialPolygon"
     if (is(x, "SpatialPolygons")) {
       messagePrepInputs("Checking for errors in ", objectName, verbose = verbose)
-      # anyNotValid <- if (requireNamespace("rgeos", quietly = TRUE)) {
-      #   anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
-      #   if (isTRUE(anv)) messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
-      #                                      verbose = verbose)
-      #   anv
-      # } else {
-      #   messagePrepInputs("fixErrors for SpatialPolygons will be faster with install.packages('rgeos')",
-      #                     verbose = verbose)
-      #   TRUE
-      # }
+
       anyNotValid <- if (requireNamespace("sf", quietly = TRUE)) {
         x1 <- sf::st_as_sf(x)
         anv <- any(!sf::st_is_valid(x1))
-        #anv <- suppressWarnings(any(!rgeos::gIsValid(x, byid = TRUE)))
-        if (isTRUE(anv)) messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
-                                           verbose = verbose)
+        if (isTRUE(anv)) {
+          messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
+                            verbose = verbose)
+        }
         anv
       } else {
-        messagePrepInputs("please install sf package to evaluate whether there are errors in the polygons object: install.packages('sf')",
-                          verbose = verbose)
+        messagePrepInputs("please install sf package to evaluate whether there are errors in",
+                          " the polygons object: install.packages('sf')", verbose = verbose)
         TRUE
       }
 
@@ -668,23 +660,24 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          verbose = getOption("reproducible.verbose", 1), ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
   if (attemptErrorFixes) {
-    if (is.null(objectName)) objectName = "SimpleFeature"
+    if (is.null(objectName))
+      objectName <- "SimpleFeature"
+
     if ((is(sf::st_geometry(x), "sfc_MULTIPOLYGON") || is(sf::st_geometry(x), "sfc_GEOMETRY") ||
-         is(sf::st_geometry(x), "sfc_POLYGON")) && !(is(sf::st_geometry(x), "sfc_POINT"))) { # not sure if sfc_GEOMETRY cover sfc_POINT
+         is(sf::st_geometry(x), "sfc_POLYGON")) && !(is(sf::st_geometry(x), "sfc_POINT"))) {
       messagePrepInputs("Checking for errors in ", objectName, verbose = verbose)
+
+      ## sfc_GEOMETRY may itself contain points, so filter them out
+      x <- suppressWarnings(sf::st_collection_extract(x, "POLYGON"))
+
+      ## too computationally intensive to buffer everything all the time, so only do for invalid geometries
       if (suppressWarnings(any(!sf::st_is_valid(x)))) {
         messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
                           verbose = verbose)
 
         x <- suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
-                                                             "GEOS expects planar coordinates"),
-                                       #x1 <- captureWarningsToAttr(
-                                       try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache))#,
-                                       #verbose = verbose
-        )
-
-        #x <- bufferWarningSuppress(warn = attr(x1, "warning"), objectName = objectName,
-        #                           x1 = x1, bufferFn = "sf::st_buffer")
+                                                            "GEOS expects planar coordinates"),
+                                      try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache)))
       } else {
         messagePrepInputs("  Found no errors.", verbose = verbose)
       }
@@ -1164,10 +1157,7 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
       # browser(expr = exists("._maskInputs.sf_2"))
       studyArea <- fixErrors(studyArea)
       y <- sf::st_intersection(x, studyArea)
-      ## fixErrors doesn't work with multiple geometries; st_buffer does, so use it here
       y <- fixErrors(y)
-      #y <- suppressWarningsSpecific(sf::st_buffer(y, 0),
-      #                              "st_buffer does not correctly buffer longitude/latitude data")
     }
     if (!identical(.crs(y), .crs(x))) {
       ## sometimes the proj4string is rearranged, so they are not identical; they should be
@@ -1855,10 +1845,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         x <- Cache(maskInputs, x = x, studyArea = studyArea,
                    useCache = useCache, verbose = verbose, ...)
         x <- fixErrors(x = x, useCache = useCache, verbose = verbose, ...)
-
       } else {
-
-
         # browser(expr = exists("._postProcess.spatialClasses_2"))
         if (!isTRUE(all.equal(extent(x), extRTM))) {
           x <- Cache(cropInputs, x = x, studyArea = studyArea,
@@ -1883,8 +1870,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           ##################################
           # projectInputs
           ##################################
-          targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch,
-                                     targetCRS)
+          targetCRS <- .getTargetCRS(useSAcrs, studyArea, rasterToMatch, targetCRS)
 
           # browser(expr = exists("._postProcess.spatialClasses_4"))
           runIt <- if (is(x, "Raster") && !is.null(rasterToMatch))
@@ -1935,7 +1921,6 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
         unlink(bigRastersTmpFolder(), recursive = TRUE)
       }
     }
-
   }
   x
 }
