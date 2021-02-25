@@ -1,10 +1,11 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
-version 1.2.6.9000
-==============
+Version 1.2.7
+=============
 
 ## Enhancements
 * `quick` argument in `Cache` can now be a character vector, allowing individual character arguments to be digested as character vectors and others to be digested as files located at the specified path as represented by the character vector.
+* `objSize` previously included objects in `namespaces`, `baseenv` and `emptyenv`, so it was generally too large. Now uses the same criteria as `pryr::object_size`
 
 ## Bug fixees
 * `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
@@ -17,6 +18,7 @@ version 1.2.6
 * changed default of `options("reproducible.polygonShortcut" = FALSE)` as there were still too many edge cases that were not covered.
 
 ## Bug fix
+* fixed an error with *rcnst* on CRAN
 * `RasterStack` objects with a single file (thus acting like a `RasterBrick`) are now handled correctly by `Cache` and `prepInputs` families, especially with new `options("reproducible.useNewDigestAlgorithm" = 2)`, though in tests, it worked with default also
 * `RSQLite` now uses a RNG during `dbAppend`; this affected 2 tests (#185).
 
