@@ -957,7 +957,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
     attr(result, "warning") <- NULL
 
     if (isTRUE(all(result))) {
-      messagePrepInputs("Hardlinked version of file created at: ", toCollapsed, ", which points to "
+      messagePrepInputs(hardlinkMessagePrefix, ": ", toCollapsed, ", which points to "
               , fromCollapsed, "; no copy was made.", verbose = verbose)
     }
 
@@ -1272,8 +1272,8 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
     if (any(outFL)) {
       toCollapsed <- paste(to[outFL], collapse = ", ")
       fromCollapsed <- paste(from[outFL], collapse = ", ")
-      messagePrepInputs("Hardlinked version of file created at: ", toCollapsed, ", which points to "
-                        , fromCollapsed, "; no copy was made.", verbose = verbose)
+      messagePrepInputs(hardlinkMessagePrefix, ": ", toCollapsed, ", which point(s) to "
+                        , fromCollapsed, "; no copy/copies made.", verbose = verbose)
     }
     if (any(!outFL)) {
       outFL <- copyFile(to = to[!outFL], from = from[!outFL], overwrite = overwrite, silent = TRUE)
@@ -1281,3 +1281,5 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
   }
   return(outFL)
 }
+
+hardlinkMessagePrefix <- "Hardlinked version of file(s) created at"
