@@ -957,7 +957,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
     attr(result, "warning") <- NULL
 
     if (isTRUE(all(result))) {
-      messagePrepInputs(hardlinkMessagePrefix, ": ", toCollapsed, ", which points to "
+      messagePrepInputs(hardlinkMessagePrefix, ": ", toCollapsed, ", ",whPointsToMess," "
               , fromCollapsed, "; no copy was made.", verbose = verbose)
     }
 
@@ -971,7 +971,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
       if (!isWindows()) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
-          messagePrepInputs("Symlinked version of file created at: ", toCollapsed, ", which points to ",
+          messagePrepInputs("Symlinked version of file created at: ", toCollapsed, ", ",whPointsToMess," ",
                   fromCollapsed, "; no copy was made.", verbose = verbose)
         }
       }
@@ -1272,7 +1272,7 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
     if (any(outFL)) {
       toCollapsed <- paste(to[outFL], collapse = ", ")
       fromCollapsed <- paste(from[outFL], collapse = ", ")
-      messagePrepInputs(hardlinkMessagePrefix, ": ", toCollapsed, ", which point(s) to "
+      messagePrepInputs(hardlinkMessagePrefix, ": ", toCollapsed, ", ",whPointsToMess," "
                         , fromCollapsed, "; no copy/copies made.", verbose = verbose)
     }
     if (any(!outFL)) {
@@ -1282,4 +1282,15 @@ hardLinkOrCopy <- function(from, to, overwrite = FALSE, verbose = TRUE) {
   return(outFL)
 }
 
+escapeRegexChars <- function(str, repl = c("(", ")")) {
+  for (r in repl) {
+    str <- gsub(paste0("\\",r,""), paste0("\\\\",r), str)
+  }
+  str
+}
+
 hardlinkMessagePrefix <- "Hardlinked version of file(s) created at"
+hardlinkMessagePrefixForGrep <- escapeRegexChars(hardlinkMessagePrefix)
+
+whPointsToMess <- "which point(s) to"
+whPointsToMessForGrep <- escapeRegexChars(whPointsToMess)
