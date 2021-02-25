@@ -34,10 +34,12 @@ test_that("test miscellaneous fns (part 1)", {
 
   mess <- capture.output({d1 <- objSizeSession(enclosingEnvs = FALSE)})
   expect_true(is.list(d1))
-  g <- unlist(d1)
-  expect_true(is.numeric(g))
-  expect_true(any(grepl("package", names(g))))
-  expect_true(sum(unlist(d1)) < sum(unlist(d)))
+  g2 <- unlist(d1)
+  expect_true(is.numeric(g2))
+  expect_true(any(grepl("package", names(g2))))
+
+  # NO LONGER RELIABLE TEST BECAUSE OF NEW REMOVAL OF PACKAGES fEB 24 2021
+  # expect_true(sum(unlist(d1)) < sum(unlist(d)))
 
   mess <- capture.output({d <- objSizeSession(0)})
   expect_true(!is.list(d))
