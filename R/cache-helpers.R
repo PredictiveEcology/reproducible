@@ -1242,7 +1242,11 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
 
   if (length(curFilenames) > 1) {
     for (i in seq_along(curFilenames)) {
-      slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+      if (is.list(obj)) {
+        slot(slot(obj[[i]], "file"), "name") <- newFilenames[i]
+      } else {
+        slot(slot(slot(obj, "layers")[[i]], "file"), "name") <- newFilenames[i]
+      }
     }
   } else {
     if (is.null(isStack)) isStack <- is(obj, "RasterStack")

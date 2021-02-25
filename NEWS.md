@@ -9,6 +9,7 @@ Version 1.2.7
 
 ## Bug fixees
 * `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
+* inadvertent deleting of file-backed rasters in multi-filed stacks during `Cache`
 
 version 1.2.6
 ==============

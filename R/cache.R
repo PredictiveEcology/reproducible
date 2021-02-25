@@ -1513,8 +1513,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
 
     if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
-      messageCache("... possible, unknown, differences in a nested list",
-                           "that is deeper than",getOption("reproducible.showSimilarDepth",3),"in ",
+      messageCache("... possible, unknown, differences in a nested list ",
+                           "that is deeper than ",getOption("reproducible.showSimilarDepth",3)," in ",
                            paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)),
                    verbose = verbose)
     }
@@ -1812,23 +1812,9 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
       }
 
     }
-    if (any(filesExist)) {
-      unlink(origFilenames[filesExist])
-    }
     out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
-                          origFilenames[filesExistInCache])
+                          origFilenames[filesExistInCache], overwrite = TRUE)
 
-    # out <- suppressWarningsSpecific(file.link(cacheFilenames[filesExistInCache],
-    #                                           origFilenames[filesExistInCache]),
-    #                                   falseWarnings = "already exists|Invalid cross-device")
-    #
-    # # out <- suppressWarnings(
-    # #   file.link(cacheFilenames[filesExistInCache],
-    # #             origFilenames[filesExistInCache]))
-    # if (any(!out)) {
-    #   copyFile(cacheFilenames[filesExistInCache][!out],
-    #            to = origFilenames[filesExistInCache][!out])
-    # }
     newOutput <- updateFilenameSlots(output$cacheRaster,
                                      Filenames(output$cacheRaster, allowMultiple = FALSE),
                                      newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))

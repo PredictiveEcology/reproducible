@@ -174,5 +174,8 @@ setMethod(
   signature = "list",
   definition = function(obj, allowMultiple = TRUE) {
     ## convert a list to an environment -- this is to align it with a simList and environment
+    if (is.null(names(obj))) {
+      names(obj) <- as.character(seq(obj))
+    }
     Filenames(as.environment(obj), allowMultiple = allowMultiple)
 })

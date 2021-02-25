@@ -1628,7 +1628,7 @@ test_that("options inputPaths", {
                           path = if (useGADM) tmpdir else NULL,
                           destinationPath = tmpCache)
     })
-    expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpCache), mess1)) == 1)
+    expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", tmpCache), mess1)) == 1)
 
     # Now two folders - file not in destinationPath, not in 1st inputPaths, but yes 2nd
     #   should hardlink from 2nd IP to destinationPath, make sure CHECKSUMS.txt is correct in both
@@ -1647,7 +1647,7 @@ test_that("options inputPaths", {
       )
 
     })
-    expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", tmpdir3), mess1)) == 1)
+    expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", tmpdir3), mess1)) == 1)
 
     #  should copy from 2nd directory (tmpCache) because it is removed in the lower
     #  tmpdir directory & has a CHECKSUMS.txt
@@ -1666,8 +1666,8 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir1
       )
     })
-    expect_true(sum(grepl(paste0("Hardlinked version of file created at: ", file.path(tmpdir1, theFile)), mess1)) == 1)
-    expect_true(sum(grepl(paste0("which points to ", file.path(tmpdir3, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0(hardlinkMessagePrefixForGrep, ": ", file.path(tmpdir1, theFile)), mess1)) == 1)
+    expect_true(sum(grepl(paste0("",whPointsToMessForGrep," ", file.path(tmpdir3, theFile)), mess1)) == 1)
     expect_true(sum(basename(dir(file.path(tmpdir), recursive = TRUE)) %in% theFile) == 2)
 
     ## Try download to inputPath, intercepting the destination, creating a link
@@ -1688,7 +1688,7 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir2
       )
     })
-    expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1)
+    expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1)
 
     # Have file in inputPath, not in destinationPath
     unlink(file.path(tmpdir2, theFile))
@@ -1706,7 +1706,7 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir2
       )
     })
-    expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
+    expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
     expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 
     # Have file in destinationPath, not in inputPath
@@ -1724,7 +1724,7 @@ test_that("options inputPaths", {
                           destinationPath = tmpdir2
       )
     })
-    expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 1) # used a linked version
+    expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 1) # used a linked version
     expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 1) # it is now in tmpdir2, i.e., the destinationPath
 
     ## Try with inputPaths == destinationPath
@@ -1745,7 +1745,7 @@ test_that("options inputPaths", {
       )
     })
     expect_true(is(test1, "spatialClasses"))
-    expect_true(sum(grepl("Hardlinked version of file created", mess1)) == 0) # no link made b/c identical dir
+    expect_true(sum(grepl(hardlinkMessagePrefixForGrep, mess1)) == 0) # no link made b/c identical dir
     expect_true(sum(grepl(paste0("Hardlinked.*",basename(tmpdir2)), mess1)) == 0) # no link made b/c identical dir
   }
 })
