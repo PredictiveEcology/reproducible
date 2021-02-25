@@ -1410,7 +1410,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
     saveFilenamePreNumeric <- saveFilename
     exist <- file.exists(saveFilename)
     if (any(exist)) {
-      saveFilename[exist] <- nextNumericName(saveFilename[exist])
+      saveFilename[exist] <- unlist(lapply(saveFilename[exist], nextNumericName))
     }
     FBAll <- nchar(fnsAll) > 0
 
