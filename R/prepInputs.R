@@ -798,7 +798,6 @@ extractFromArchive <- function(archive,
   list(moduleName = moduleName, modulePath = modulePath, checkSums = checkSums)
 }
 
-
 .isArchive <- function(filename) {
   if (!is.null(filename)) {
     filename <- if (length(filename)) {
