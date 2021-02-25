@@ -1293,3 +1293,32 @@ test_that("quick arg in Cache as character", {
   expect_true(sum(unlist(lapply(messes, function(x) length(x) > 0))) == 4L)
 
 })
+
+test_that("List of Rasters", {
+  testInitOut <- testInit("raster", tmpFileExt = c("tif", "tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  listOfRas <- lapply(1:2, function(x) {
+    vals <- sample(1:100)
+    ranRas <- raster(extent(0,10,0,10), vals = vals);
+    ranRas <- suppressWarningsSpecific(
+      falseWarnings = proj6Warn,
+      writeRaster(ranRas, filename = tmpfile[[x]], overwrite = TRUE))
+  })
+
+  writeRasterList <- function(rasList) {
+    lapply(rasList, function(ras) {
+      filename <- paste0(Filenames(ras), rndstr(1, 6), ".tif")
+      ranRas <- suppressWarningsSpecific(
+        falseWarnings = proj6Warn,
+        writeRaster(ras, filename = filename, overwrite = TRUE))
+    }
+    )
+  }
+  a <- Cache(writeRasterList, listOfRas)
+  b <- Cache(writeRasterList, listOfRas)
+  expect_false(isTRUE(attr(b, ".Cache")$newCache))
+  expect_true(isTRUE(attr(a, ".Cache")$newCache))
+})
