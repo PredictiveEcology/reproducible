@@ -286,13 +286,20 @@ findGDAL <- function() {
       if (any(gdalInfoExists))
         gdalPath <- possibleWindowsPaths[gdalInfoExists]
     }
-    gdalUtils::gdal_setInstallation(gdalPath)
+    b <- try(setGDALInst(gdalPath), silent = TRUE)
 
     if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
       attemptGDAL <- FALSE
     attemptGDAL
   }
   invisible(attemptGDAL)
+}
+
+setGDALInst <- function(gdalPath) {
+  if (isWindows())
+    setTimeLimit(20, transient = TRUE)
+  out <- gdalUtils::gdal_setInstallation(gdalPath)
+  return(out)
 }
 
 attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE),
