@@ -528,7 +528,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
       if (!identical(cropExtent, extent(x))) {
         messagePrepInputs("    cropping with st_crop ...", verbose = verbose, verboseLevel = 0)
         dots <- list(...)
-        dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
+        dots[.formalsNotInCurrentDots("st_crop", ..., signature = is(x))] <- NULL
         completed <- FALSE
         while (!completed) {
           yy <- try(do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots)),
