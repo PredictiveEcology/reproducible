@@ -58,20 +58,20 @@ test_that("prepInputs doesn't work (part 3)", {
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
   expect_is(b1, "RasterBrick")
 
+  s <- raster::stack(r1, r2)
+  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
+  expect_is(s1, "RasterStack")
+  expect_equivalent(s1, b1)
+
   b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
   expect_is(b1, "RasterBrick")
 
-  s <- raster::stack(r1, r2)
-  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
-  expect_is(s1, "RasterStack")
 
   s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
   expect_is(s1, "RasterStack")
 
-
-  expect_equivalent(s1, b1)
 
   # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
   if (requireNamespace("fasterize")) {
