@@ -296,7 +296,8 @@ findGDAL <- function() {
 }
 
 setGDALInst <- function(gdalPath) {
-  out <- setTimeLimit(20, transient = TRUE)
+  if (isWindows())
+    setTimeLimit(20, transient = TRUE)
   out <- gdalUtils::gdal_setInstallation(gdalPath)
   return(out)
 }
