@@ -1876,7 +1876,6 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           else
             TRUE
           if (runIt) {
-            browser()
             x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
                        rasterToMatch = rasterToMatch, useCache = useCache,
                        cores = cores, verbose = verbose, ...)
