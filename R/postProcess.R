@@ -2320,27 +2320,27 @@ isProjected <- function(x) {
 messageRgeosMissing <- "Please run install.packages('rgeos') to address minor GIS issues"
 
 switchDataTypes <- function(datatype, type) {
-  switch(type,
+  datatype <- switch(type,
          GDAL = {
            switch(datatype,
-                  LOG1S = {datatype <- "Byte"},
-                  INT1S = {datatype <- "Int16"},
-                  INT2S = {datatype <- "Int16"},
-                  INT4S = {datatype <- "Int32"},
-                  INT1U = {datatype <- "Byte"},
-                  INT2U = {datatype <- "UInt16"},
-                  INT4U = {datatype <- "UInt32"},
+                  LOG1S = "Byte",
+                  INT1S = "Int16",
+                  INT2S = "Int16",
+                  INT4S = "Int32",
+                  INT1U = "Byte",
+                  INT2U = "UInt16",
+                  INT4U = "UInt32",
                   datatype <- "Float32" #there is no GDAL FLT8S
            )
          },
          projectRaster = {
            switch(datatype,
-                  Float32 = {datatype <- "bilinear"},
-                  Float64 = {datatype <- "bilinear"},
+                  Float32 = "bilinear",
+                  Float64 = "bilinear",
                   datatype <- "ngb"
            )
          },
-         writeRaster = {},
+         writeRaster = datatype,
          stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
   )
   return(datatype)
