@@ -4,7 +4,7 @@
 \alias{.formalsNotInCurrentDots}
 \title{Identify which formals to a function are not in the current \code{...}}
 \usage{
-.formalsNotInCurrentDots(fun, ..., dots, formalNames)
+.formalsNotInCurrentDots(fun, ..., dots, formalNames, signature = character())
 }
 \arguments{
 \item{fun}{A function}

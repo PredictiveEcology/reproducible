@@ -126,9 +126,20 @@ setMethod(
 #' @param dots Optional. If this is provided via say \code{dots = list(...)},
 #'             then this will cause the \code{...} to be ignored.
 #' @param formalNames Optional character vector. If provided then it will override the \code{fun}
-.formalsNotInCurrentDots <- function(fun, ..., dots, formalNames) {
-  if (missing(formalNames)) formalNames <- names(formals(fun))
-  if (!missing(dots)) {
+.formalsNotInCurrentDots <- function(fun, ..., dots, formalNames, signature = character()) {
+  if (is.character(fun)) {
+    fun <- get(fun, mode = "function", envir = parent.frame())
+  }
+
+  if (missing(formalNames))
+    if (isS4(fun)) {
+      forms <- methodFormals(fun, signature = signature, envir = parent.frame())
+      formalNames <- names(forms)
+    } else {
+      formalNames <- names(formals(fun))
+    }
+
+if (!missing(dots)) {
     out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
     out <- names(list(...))[!(names(list(...)) %in% formalNames)]
@@ -403,3 +414,21 @@ messageColoured <- function(..., colour = NULL, verboseLevel = 1,
 
 }
 
+
+
+methodFormals <- function(fun, signature = character(), envir = parent.frame()) {
+  if (is.character(fun))
+    fun <- get(fun, mode = "function", envir = envir)
+
+  fdef <- getGeneric(fun)
+  method <- selectMethod(fdef, signature)
+  genFormals <- base::formals(fdef)
+  b <- body(method)
+  if(is(b, "{") && is(b[[2]], "<-") && identical(b[[2]][[2]], as.name(".local"))) {
+    local <- eval(b[[2]][[3]])
+    if(is.function(local))
+      return(formals(local))
+    warning("Expected a .local assignment to be a function. Corrupted method?")
+  }
+  genFormals
+}
