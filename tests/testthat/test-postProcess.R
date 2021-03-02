@@ -1,6 +1,7 @@
 test_that("prepInputs doesn't work (part 3)", {
   # if (requireNamespace("rgeos")) {
-  testInitOut <- testInit(c("raster", "sf"), opts = list(
+  testInitOut <- testInit(c("raster", "sf"), tmpFileExt = c(".tif", ".tif"),
+                          opts = list(
     #  testInitOut <- testInit(c("raster", "sf", "rgeos"), opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
@@ -43,7 +44,34 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_true(sf::st_area(b) < sf::st_area(nc1))
 
   r <- suppressWarnings(raster(nc1, res = 1000)) # TODO: temporary until raster crs fixes
-  rSmall <- suppressWarnings(raster(ncSmall, res = 1000)) # TODO: temporary until raster crs fixes
+  # rSmall <- suppressWarnings(raster(ncSmall, res = 1000)) # TODO: temporary until raster crs fixes
+
+  rB <- suppressWarnings(raster(nc1, res = 4000)) # TODO: temporary until raster crs fixes
+  rSmall <- suppressWarnings(raster(ncSmall, res = 4000)) # TODO: temporary until raster crs fixes
+
+  # Tests with RasterBrick
+  r2 <- r1 <- rB
+  r1[] <- runif(ncell(rB))
+  r2[] <- runif(ncell(rB))
+
+  b <- raster::brick(r1, r2)
+  b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE)
+  expect_is(b1, "RasterBrick")
+
+  b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
+  b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
+  expect_is(b1, "RasterBrick")
+
+  s <- raster::stack(r1, r2)
+  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE)
+  expect_is(s1, "RasterStack")
+
+  s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
+  s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
+  expect_is(s1, "RasterStack")
+
+
+  expect_equivalent(s1, b1)
 
   # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
   if (requireNamespace("fasterize")) {

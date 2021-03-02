@@ -355,7 +355,10 @@ checkColors <- function(x) {
 rebuildColors <- function(x, origColors) {
   if (isTRUE(all(origColors$origMinValue != minValue(x)) || all(origColors$origMaxValue != maxValue(x)) ||
              !identical(.getColors(x)[[1]], origColors$origColors))) {
-    if (isTRUE(length(origColors$origColors) == length(origColors$origMinValue:origColors$origMaxValue))) {
+    colorSequences <- unlist(lapply(seq(origColors$origMinValue), function(ind) {
+      origColors$origMinValue[ind]:origColors$origMaxValue[ind]
+    }))
+    if (isTRUE(length(origColors$origColors) == length(colorSequences))) {
       newSeq <- minValue(x):maxValue(x)
       oldSeq <- origColors$origMinValue:origColors$origMaxValue
       whFromOld <- match(newSeq, oldSeq)
