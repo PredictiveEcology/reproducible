@@ -2302,7 +2302,7 @@ progressBarCode <- function(..., doProgress = TRUE, message,
 
 isProjected <- function(x) {
   if (is(x, "sf")) {
-    txt <- st_crs(x)
+    txt <- sf::st_crs(x)
   } else {
     txt <- suppressWarningsSpecific(falseWarnings = "no wkt comment", wkt(x))
   }
