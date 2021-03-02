@@ -30,7 +30,7 @@
 #' @author Eliot McIntire
 #' @exportClass spatialClasses
 setClassUnion(name = "spatialClasses",
-              members = c("RasterLayer", "RasterLayerSparse", "RasterStack",
+              members = c("RasterLayer", "RasterLayerSparse", "RasterStack", "RasterBrick",
                           "SpatialLines", "SpatialLinesDataFrame",
                           "SpatialPixels", "SpatialPixelsDataFrame",
                           "SpatialPoints", "SpatialPointsDataFrame",

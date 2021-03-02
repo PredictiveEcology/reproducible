@@ -317,13 +317,16 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
     }
 
     isStack <- is(x, "RasterStack") # will return a RasterBrick -- keep track of this
+    isBrick <- is(x, "RasterBrick")
     # browser(expr = exists("._cropInputs_2"))
     if (!is.null(cropExtent)) {
       # crop it
       if (!identical(cropExtent, extent(x))) {
         messagePrepInputs("    cropping ...", verbose = verbose, verboseLevel = 0)
         dots <- list(...)
-        dots[.formalsNotInCurrentDots("crop", ...)] <- NULL
+        dots[.formalsNotInCurrentDots("crop", ..., signature = is(x))] <- NULL
+
+        needOT <- if (!is.null(dots$datatype)) TRUE else FALSE
 
         if (is(x, "SpatialPolygonsDataFrame")) {
           if (ncol(x) == 0) {
@@ -340,24 +343,39 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
         isX_Sp_Int <- is(x, "Spatial")
         isX_Sf_Int <- is(x, "sf")
 
-        if (attemptGDAL && is(x, "Raster")) {
+        if (attemptGDAL && is(x, "Raster") &&
+            length(Filenames(x, allowMultiple = FALSE)) <= 1) {
+          if (needOT) {
+            datatype <- switchDataTypes(unique(dots$datatype)[[1]], "GDAL")
+          }
           tmpfile <- paste0(tempfile(fileext = ".tif"))
-          if (inMemory(x))
+          wasInMemory <- inMemory(x)
+          if (wasInMemory)
             x <- suppressWarningsSpecific(falseWarnings = "NOT UPDATED FOR PROJ",
                                           writeRaster(x, filename = tempfile(fileext = ".tif")))
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
-          gdalUtils::gdalwarp(srcfile = filename(x),
+          # "-ot ", dType, # Why is this missing?
+          gdalUtils::gdalwarp(srcfile = Filenames(x, allowMultiple = FALSE),
                               dstfile = tmpfile,
                               tr = c(res(x)[1], res(x)[2]),
                               overwrite = TRUE,
                               s_srs = crsX,
                               t_srs = crsX,
+                              if (needOT) ot = datatype,
                               te = c(cropExtentRounded[1], cropExtentRounded[3],
                                      cropExtentRounded[2], cropExtentRounded[4]),
                               te_srs = crsX,
                               tap = TRUE)
-          x <- raster(tmpfile)
+          if (isStack) {
+            x <- raster::stack(tmpfile)
+          } else if (isBrick) {
+            x <- raster::brick(tmpfile)
+          } else {
+            x <- raster(tmpfile)
+          }
+          if (wasInMemory)
+            x[] <- x[]
           x <- setMinMaxIfNeeded(x)
 
           # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
@@ -454,6 +472,9 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
     if (isStack) {
       if (!is(x, "RasterStack"))
         x <- raster::stack(x)
+    } else if (isBrick) {
+      if (!is(x, "RasterBrick"))
+        x <- raster::brick(x)
     }
   }
   return(x)
@@ -466,7 +487,6 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           verbose = getOption("reproducible.verbose", 1),
                           extentToMatch = NULL, extentCRS = NULL,
                           ...) {
-  #browser()
   .requireNamespace("sf", stopOnFALSE = TRUE)
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
   if (useExtentToMatch) {
@@ -1655,29 +1675,7 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
     #   if (!identical(datatype, datatype1))
     }
     #convert datatype if needed
-    switch(type,
-         GDAL = {
-           switch(datatype,
-                  LOG1S = {datatype <- "Byte"},
-                  INT1S = {datatype <- "Int16"},
-                  INT2S = {datatype <- "Int16"},
-                  INT4S = {datatype <- "Int32"},
-                  INT1U = {datatype <- "Byte"},
-                  INT2U = {datatype <- "UInt16"},
-                  INT4U = {datatype <- "UInt32"},
-                  datatype <- "Float32" #there is no GDAL FLT8S
-           )
-         },
-         projectRaster = {
-           switch(datatype,
-                  Float32 = {datatype <- "bilinear"},
-                  Float64 = {datatype <- "bilinear"},
-                  datatype <- "ngb"
-           )
-         },
-         writeRaster = {},
-         stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
-  )
+    datatype <- switchDataTypes(datatype, type = type)
   datatype
 }
 
@@ -1878,6 +1876,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           else
             TRUE
           if (runIt) {
+            browser()
             x <- Cache(projectInputs, x = x, targetCRS = targetCRS,
                        rasterToMatch = rasterToMatch, useCache = useCache,
                        cores = cores, verbose = verbose, ...)
@@ -1965,7 +1964,7 @@ setMinMaxIfNeeded <- function(ras) {
   # special case where the colours already match the discrete values
   suppressWarnings(maxValCurrent <- maxValue(ras))
   needSetMinMax <- FALSE
-  if (isTRUE(is.na(maxValCurrent))) {
+  if (isTRUE(any(is.na(maxValCurrent)))) {
     needSetMinMax <- TRUE
   } else {
 
@@ -1977,12 +1976,15 @@ setMinMaxIfNeeded <- function(ras) {
         }
     }
     possibleShortCut <- maxValCurrent %in% c(unlist(MaxVals), unlist(MaxVals) + 1)
-    if (isTRUE(possibleShortCut)) {
+    if (isTRUE(all(possibleShortCut))) {
       needSetMinMax <- TRUE
     }
   }
   if (isTRUE(needSetMinMax)) {
+    large <- if (nlayers(ras) > 25 || ncell(ras) > 1e7) TRUE else FALSE
+    if (large) message("  Large ",class(ras), " detected; setting minimum and maximum may take time")
     suppressWarnings(ras <- setMinMax(ras))
+    if (large) message("  ... Done")
   }
   ras
 }
@@ -2316,3 +2318,30 @@ isProjected <- function(x) {
 }
 
 messageRgeosMissing <- "Please run install.packages('rgeos') to address minor GIS issues"
+
+switchDataTypes <- function(datatype, type) {
+  out <- switch(type,
+         GDAL = {
+           switch(datatype,
+                  LOG1S = {datatype <- "Byte"},
+                  INT1S = {datatype <- "Int16"},
+                  INT2S = {datatype <- "Int16"},
+                  INT4S = {datatype <- "Int32"},
+                  INT1U = {datatype <- "Byte"},
+                  INT2U = {datatype <- "UInt16"},
+                  INT4U = {datatype <- "UInt32"},
+                  datatype <- "Float32" #there is no GDAL FLT8S
+           )
+         },
+         projectRaster = {
+           switch(datatype,
+                  Float32 = {datatype <- "bilinear"},
+                  Float64 = {datatype <- "bilinear"},
+                  datatype <- "ngb"
+           )
+         },
+         writeRaster = {},
+         stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
+  )
+  return(out)
+}
