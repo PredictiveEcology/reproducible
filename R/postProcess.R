@@ -1673,9 +1673,9 @@ assessDataType.Raster <- function(ras, type = "writeRaster") {
     #     }
     #   }
     #   if (!identical(datatype, datatype1))
-    }
-    #convert datatype if needed
-    datatype <- switchDataTypes(datatype, type = type)
+  }
+  #convert datatype if needed
+  datatype <- switchDataTypes(datatype, type = type)
   datatype
 }
 
@@ -2152,7 +2152,8 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
     dType <- assessDataType(x, type = "writeRaster")
     dTypeGDAL <- assessDataType(x, type = "GDAL")
 
-    x <- progressBarCode(writeRaster(x, filename = tempSrcRaster, datatype = dType, overwrite = TRUE),
+    x <- progressBarCode(writeRaster(x, filename = tempSrcRaster,
+                                     datatype = dType, overwrite = TRUE),
                          doProgress = ncell(x) > 2e6,
                          message = "Writing temporary raster to disk for GDAL ...",
                          colour = getOption("reproducible.messageColourPrepInputs"),
@@ -2319,7 +2320,7 @@ isProjected <- function(x) {
 messageRgeosMissing <- "Please run install.packages('rgeos') to address minor GIS issues"
 
 switchDataTypes <- function(datatype, type) {
-  out <- switch(type,
+  switch(type,
          GDAL = {
            switch(datatype,
                   LOG1S = {datatype <- "Byte"},
@@ -2342,5 +2343,5 @@ switchDataTypes <- function(datatype, type) {
          writeRaster = {},
          stop("incorrect argument: type must be one of writeRaster, projectRaster, or GDAL")
   )
-  return(out)
+  return(datatype)
 }
