@@ -318,7 +318,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
     isStack <- is(x, "RasterStack") # will return a RasterBrick -- keep track of this
     isBrick <- is(x, "RasterBrick")
-    # browser(expr = exists("._cropInputs_2"))
     if (!is.null(cropExtent)) {
       # crop it
       if (!identical(cropExtent, extent(x))) {
@@ -427,8 +426,16 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           completed <- FALSE
           i <- 1
           while (!completed & i < 3) {
+            if (!is.null(dots$datatype)) {
+              if (length(dots$datatype) > 1) {
+                warning("datatype can only be length 1 for raster::crop. Using first value: ",
+                        dots$datatype[1])
+                dots$datatype <- dots$datatype[1]
+              }
+            }
             if (canProcessInMemory(x, 3)) {
-              yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded), dots)),
+              yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded),
+                                                            dots)),
                         silent = TRUE)
             } else {
               yy <- try(do.call(raster::crop,
