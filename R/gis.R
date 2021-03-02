@@ -281,7 +281,6 @@ findGDAL <- function() {
                                 "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
                                 "C:/Program Files/GDAL",
                                 "C:/Program Files (x86)/GDAL")
-      messagePrepInputs("Searching for gdal installation")
       gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
       if (any(gdalInfoExists))
         gdalPath <- possibleWindowsPaths[gdalInfoExists]
@@ -300,7 +299,10 @@ setGDALInst <- function(gdalPath) {
   on.exit({
     setTimeLimit(cpu = Inf, elapsed = Inf, transient = FALSE)
   })
+  messagePrepInputs("Searching for gdal installation")
   out <- gdalUtils::gdal_setInstallation(gdalPath)
+  if (is.null(getOption("gdalUtils_gdalPath")))
+    messagePrepInputs("  .. Done")
   return(out)
 }
 

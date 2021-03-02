@@ -2316,11 +2316,12 @@ isProjected <- function(x) {
 
   if (nchar(txt) == 0 || is.null(txt)) {
     txt <- crs(x)
-    !grepl("(longlat)", txt)
+    out <- any(!grepl("(longlat)", txt))
   } else {
-    tryCatch(any(!grepl("(longitude).*(latitude)",
+    out <- tryCatch(any(!grepl("(longitude).*(latitude)",
       txt)), error = function(yy) NULL)
   }
+  out
 }
 
 messageRgeosMissing <- "Please run install.packages('rgeos') to address minor GIS issues"
