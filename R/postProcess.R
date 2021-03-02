@@ -418,17 +418,11 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           if (!transformToCRSX) {
             x <- sf::st_transform(x, crsX)
           }
+          if (NROW(x) == 0)
+            stop("    polygons do not intersect.")
           if (isX_Sp)
             x <- as(x, "Spatial")
-          # whichIntersect <- suppressWarningsSpecific(
-          #   falseWarnings = "have different proj4",
-          #   rgeos::gIntersects(x, as(cropExtentRounded, "SpatialPolygons"), byid = TRUE))
-          # whichIntersect <- which(whichIntersect)
-          # xx <- x[whichIntersect,]
-          # yy <- suppressWarningsSpecific(falseWarnings = "non identical CRS|which is lost in output",
-          #                               raster::intersect(xx, cropExtentRounded))
-          # if (is(x, "SpatialPolygonsDataFrame"))
-          #   x <- SpatialPolygonsDataFrame(yy, data = as.data.frame(x[whichIntersect,]), match.ID = FALSE)
+
         } else {
           completed <- FALSE
           i <- 1
@@ -663,8 +657,9 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
           #verbose = verbose
         )
 
-        #x <- bufferWarningSuppress(warn = attr(x1, "warning"), objectName = objectName,
-        #                      x1 = x1, bufferFn = "raster::buffer")
+        x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
+                                   objectName = objectName,
+                              x1 = x1, bufferFn = "raster::buffer")
       } else {
         messagePrepInputs("  Found no errors.", verbose = verbose)
       }
@@ -695,9 +690,13 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
         messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
                           verbose = verbose)
 
-        x <- suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
+        x1 <- suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
                                                             "GEOS expects planar coordinates"),
                                       try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache)))
+        x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
+          objectName = objectName,
+          x1 = x1, bufferFn = "sf::st_buffer")
+
       } else {
         messagePrepInputs("  Found no errors.", verbose = verbose)
       }
@@ -1934,22 +1933,17 @@ useETM <- function(extentToMatch, extentCRS, verbose) {
   return(FALSE)
 }
 
-# bufferWarningSuppress <- function(warn, objectName, x1, bufferFn, verbose = getOption("reproducible.verbose", 1)) {
-#   warnAboutNotProjected <- startsWith(warn, paste("Spatial object is not projected;",
-#                                                   "GEOS expects planar coordinates"))
-#   if (any(warnAboutNotProjected))
-#     warn <- warn[!warnAboutNotProjected]
-#   if (length(warn))
-#     warning(warn)
-#
-#   if (is(x1, "try-error")) {
-#     messagePrepInputs("There are errors with ", objectName,
-#             ". Couldn't fix them with ",bufferFn,"(..., width = 0)", verbose = verbose)
-#   } else {
-#     messagePrepInputs("  Some or all of the errors fixed.", verbose = verbose)
-#   }
-#   x1
-# }
+bufferWarningSuppress <- function(# warn,
+                                  objectName,
+                                  x1, bufferFn, verbose = getOption("reproducible.verbose", 1)) {
+  if (is(x1, "try-error")) {
+    messagePrepInputs("There are errors with ", objectName,
+            ". Couldn't fix them with ",bufferFn,"(..., width = 0)", verbose = verbose)
+  } else {
+    messagePrepInputs("  Some or all of the errors fixed.", verbose = verbose)
+  }
+  x1
+}
 
 roundToRes <- function(extent, x) {
   if (is(x, "Raster"))
