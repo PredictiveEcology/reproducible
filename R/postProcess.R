@@ -1398,7 +1398,9 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
     # There is a weird thing that doing a writeRaster changes the digest of the file, even
     #   when the object is identical, confirmed by loading each into R, and comparing everything
     # So, skip that writeRaster if it is already a file-backed Raster, and just copy it
-    if (fromDisk(x)) {
+    #    ERROR ALERT -- You can't change the dataType this way, so you will need to
+    #    go the writeRaster route if dots$datatype is passed and it isn't equal to dataType(x)
+    if (fromDisk(x) && all(dots$datatype == dataType(x))) {
       theFilename <- Filenames(x, allowMultiple = FALSE)
       if (fileExt(theFilename) == "grd") {
         if (!fileExt(filename2) == "grd") {
@@ -1439,19 +1441,19 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       #
       # }
       x <- updateFilenameSlots(x, curFilenames = theFilename, newFilenames = filename2)
-      if (any(dots$datatype != dataType(x))) {
-        if (is(x, "RasterStack")) {
-          newDT <- if (length(dots$datatype) == 1) {
-            rep(dots$datatype, nlayers(x))
-          } else {
-            dots$datatype
-          }
-          for (ln in seq(names(x)))
-            dataType(x[[ln]]) <- newDT[ln]
-        } else {
-          dataType(x) <- dots$datatype
-        }
-      }
+      # if (any(dots$datatype != dataType(x))) {
+      #   if (is(x, "RasterStack")) {
+      #     newDT <- if (length(dots$datatype) == 1) {
+      #       rep(dots$datatype, nlayers(x))
+      #     } else {
+      #       dots$datatype
+      #     }
+      #     for (ln in seq(names(x)))
+      #       dataType(x[[ln]]) <- newDT[ln]
+      #   } else {
+      #     dataType(x) <- dots$datatype
+      #   }
+      # }
     } else {
       argsForWrite <- append(list(filename = filename2, overwrite = overwrite), dots)
       if (is(x, "RasterStack")) {
