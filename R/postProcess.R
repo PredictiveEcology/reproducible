@@ -1190,7 +1190,8 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
       y <- x[y2, ]
     } else {
       # browser(expr = exists("._maskInputs.sf_2"))
-      studyArea <- fixErrors(studyArea)
+      x <- sf::st_set_precision(x, 1e5) %>% fixErrors(.)
+      studyArea <- sf::st_set_precision(studyArea, 1e5) %>% fixErrors(.)
       y <- sf::st_intersection(x, studyArea)
       y <- fixErrors(y)
     }
