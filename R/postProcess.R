@@ -311,7 +311,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             x <- sf::st_as_sf(x)
           }
           x <- sf::st_transform(x, crs = crsCropTo)
-
         }
       }
     }
@@ -1162,8 +1161,9 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
 
   # browser(expr = exists("._maskInputs.sf_1"))
   if (!is.null(studyArea)) {
-    if (is(studyArea, "Spatial"))
+    if (is(studyArea, "Spatial")) {
       studyArea <- sf::st_as_sf(studyArea)
+    }
 
     xOrigCRS <- sf::st_crs(x)
     changedCRS <- FALSE
@@ -1187,7 +1187,7 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
     if (is(sf::st_geometry(x), "sfc_POINT")) {
       y1 <- sf::st_intersects(x, studyArea)
       y2 <- vapply(y1, function(x) length(x) == 1, logical(1))
-      y <- x[y2,]
+      y <- x[y2, ]
     } else {
       # browser(expr = exists("._maskInputs.sf_2"))
       studyArea <- fixErrors(studyArea)
