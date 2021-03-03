@@ -400,9 +400,13 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             x <- fixErrors(x)
             x <- sf::st_as_sf(x)
           }
-          suppressMessages(x <- fixErrors(x))#%>% sf::st_buffer(., 0)
+          suppressMessages({
+            x <- fixErrors(x)
+          })#%>% sf::st_buffer(., 0)
           yyySF <- sf::st_as_sf(yyy) # %>% sf::st_buffer(., 0)
-          suppressMessages(yyySF <- fixErrors(yyySF))#%>% sf::st_buffer(., 0)
+          suppressMessages({
+            yyySF <- fixErrors(yyySF)
+          })#%>% sf::st_buffer(., 0)
 
           # This tryCatch seems to be finding a bug in st_intersection:
           #   The error was:
@@ -2318,8 +2322,7 @@ isProjected <- function(x) {
     txt <- crs(x)
     out <- any(!grepl("(longlat)", txt))
   } else {
-    out <- tryCatch(any(!grepl("(longitude).*(latitude)",
-      txt)), error = function(yy) NULL)
+    tryCatch(any(!grepl("(longitude).*(latitude)", txt)), error = function(yy) NULL)
   }
   out
 }
