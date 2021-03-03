@@ -323,7 +323,12 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
       if (!identical(cropExtent, extent(x))) {
         messagePrepInputs("    cropping ...", verbose = verbose, verboseLevel = 0)
         dots <- list(...)
-        dots[.formalsNotInCurrentDots("crop", ..., signature = is(x))] <- NULL
+        if (is(x, "sf")) {
+          dots[.formalsNotInCurrentDots(sf::st_crop, ..., signature = is(x))] <- NULL
+        } else {
+          dots[.formalsNotInCurrentDots("crop", ..., signature = is(x))] <- NULL
+        }
+
 
         needOT <- if (!is.null(dots$datatype)) TRUE else FALSE
 
