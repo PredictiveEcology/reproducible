@@ -2327,7 +2327,7 @@ isProjected <- function(x) {
     txt <- crs(x)
     out <- any(!grepl("(longlat)", txt))
   } else {
-    tryCatch(any(!grepl("(longitude).*(latitude)", txt)), error = function(yy) NULL)
+    out <- tryCatch(any(!grepl("(longitude).*(latitude)", txt)), error = function(yy) NULL)
   }
   out
 }
