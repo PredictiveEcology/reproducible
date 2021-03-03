@@ -40,7 +40,7 @@ test_that("prepInputs doesn't work (part 3)", {
   ncSmall <- sf::st_buffer(ncSmall, dist = -10000)
   b <- postProcess(nc1, studyArea = ncSmall, filename2 = NULL)
   expect_true(is(b, "sf"))
-  expect_true(identical(extent(b), extent(ncSmall)))
+  expect_equal(extent(b), extent(ncSmall))
   expect_true(sf::st_area(b) < sf::st_area(nc1))
 
   r <- suppressWarnings(raster(nc1, res = 1000)) # TODO: temporary until raster crs fixes
@@ -63,11 +63,9 @@ test_that("prepInputs doesn't work (part 3)", {
   expect_is(s1, "RasterStack")
   expect_equivalent(s1, b1)
 
-
   b <- writeRaster(b, filename = tmpfile[1], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
   expect_is(b1, "RasterBrick")
-
 
   s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE)
@@ -78,20 +76,22 @@ test_that("prepInputs doesn't work (part 3)", {
   s <- raster::stack(writeRaster(s, filename = tmpfile[2], overwrite = TRUE))
   s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
                     datatype = dt1)
-  expect_true(identical(dataType(s1), rep(dt1,nlayers(s))))
+  expect_identical(dataType(s1), rep(dt1, nlayers(s)))
 
   # Test datatype setting
   dt1 <- c("INT2U", "INT4U")
   s <- raster::stack(writeRaster(s, filename = tmpfile[1], overwrite = TRUE))
-  warns <- capture_warnings(s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
-                    datatype = dt1))
+  warns <- capture_warnings({
+    s1 <- postProcess(s, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[2], overwrite = TRUE,
+                      datatype = dt1)
+  })
   expect_true(any(grepl("can only be length", warns)))
 
   dt1 <- "INT4U"
   b <- writeRaster(b, filename = tmpfile[2], overwrite = TRUE)
   b1 <- postProcess(b, studyArea = ncSmall, useCache = FALSE, filename2 = tmpfile[1], overwrite = TRUE,
                     datatype = dt1)
-  expect_true(identical(dataType(b1), dt1))
+  expect_identical(dataType(b1), dt1)
 
   # now raster with sf ## TODO: temporarily skip these tests due to fasterize not being updated yet for crs changes
   if (requireNamespace("fasterize")) {
@@ -109,7 +109,7 @@ test_that("prepInputs doesn't work (part 3)", {
     expect_true(identical(list(1, 1), postProcess(list(1, 1))))
     expect_error(postProcess(nc1, rasterToMatch = r))
     nc2 <- postProcess(nc1, studyArea = as(ncSmall, "Spatial"))
-    expect_true(identical(st_area(nc2), st_area(ncSmall)))
+    expect_equal(st_area(nc2), st_area(ncSmall))
 
     # cropInputs
     expect_true(identical(1, cropInputs(1)))
@@ -189,7 +189,6 @@ test_that("prepInputs doesn't work (part 3)", {
     # expect_error(determineFilename(postProcessedFilename = "a"))
     # expect_error(determineFilename(targetFilePath = "a"))
   }
-
 })
 
 test_that("writeOutputs with non-matching filename2", {
