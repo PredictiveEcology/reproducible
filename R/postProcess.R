@@ -325,7 +325,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
         if (is(x, "sf")) {
           dots[.formalsNotInCurrentDots(sf::st_crop, ..., signature = is(x))] <- NULL
         } else {
-          dots[.formalsNotInCurrentDots("crop", ..., signature = is(x))] <- NULL
+          dots[.formalsNotInCurrentDots(raster::crop, ..., signature = is(x))] <- NULL
         }
 
 
@@ -537,7 +537,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
       if (!identical(cropExtent, extent(x))) {
         messagePrepInputs("    cropping with st_crop ...", verbose = verbose, verboseLevel = 0)
         dots <- list(...)
-        dots[.formalsNotInCurrentDots("st_crop", ..., signature = is(x))] <- NULL
+        dots[.formalsNotInCurrentDots(sf::st_crop, ..., signature = is(x))] <- NULL
         completed <- FALSE
         while (!completed) {
           yy <- try(do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots)),
@@ -1815,8 +1815,6 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                                                        #                    tryCatch(wkt(xx), error = function(yy) NULL))))
                                                        function(xx) !isProjected(xx)))
 
-        #projections <- sapply(list(x, studyArea, crsRTM), FUN = sf::st_is_longlat)
-        #projections <- na.omit(projections)
         if (!any(unlist(projections))) {
           if (is.null(rasterToMatch) || max(res(rasterToMatch)) < min(res(x))) {
             useBuffer <- TRUE
@@ -2326,7 +2324,7 @@ isProjected <- function(x) {
     txt <- suppressWarningsSpecific(falseWarnings = "no wkt comment", wkt(x))
   }
 
-  if (nchar(txt) == 0 || is.null(txt)) {
+  if (identical(nchar(txt), 0L) || is.null(txt)) {
     txt <- crs(x)
     out <- any(!grepl("(longlat)", txt))
   } else {
