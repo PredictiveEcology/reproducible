@@ -355,7 +355,8 @@ test_that("maskInputs errors when x is Lat-Long", {
     clearCache()
     attr(roads[[i]], "tags") <- NULL
   }
-  expect_true(all.equal(roads[[1]], roads[[2]]))
+  expect_true(all.equal(roads[[1]], roads[[2]], check.attributes = FALSE))
+  expect_true(all.equal(roads[[3]], roads[[4]], check.attributes = FALSE))
   expect_true(compareRaster(raster(extent(roads[[1]])), raster(extent(smallSA))))
   expect_error(compareRaster(raster(extent(roads[[3]])), raster(extent(smallSA))))
   expect_true(extent(roads[[3]]) > extent(roads[[1]]))
