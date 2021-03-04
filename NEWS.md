@@ -10,6 +10,7 @@ Version 1.2.7
 ## Bug fixees
 * `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
 * inadvertent deleting of file-backed rasters in multi-filed stacks during `Cache`
+* `writeOutputs.Raster` attempted to change `datatype` of `Raster` class objects using the setReplacement `dataType<-`, without subsequently writing to disk via `writeRaster`. This created bad values in the `Raster*` object. This now performs a `writeRaster` if there is a `datatype` passed to `writeOutputs` e.g., through `prepInputs` or `postProcess`.
 
 version 1.2.6
 ==============
