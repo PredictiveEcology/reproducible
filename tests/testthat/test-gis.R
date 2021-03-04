@@ -156,3 +156,14 @@ test_that("testing prepInputs with deauthorized googledrive", {
       warnings(warn)
   }
 })
+
+test_that("testing rebuildColors", {
+  testInitOut <- testInit(needGoogle = FALSE, "raster")
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  x <- raster::raster(extent(0, 10, 0, 10), vals = runif(100, 0, 197))
+  origColors <- list(origColors = character(0), origMinValue = 0, origMaxValue = 197.100006103516)
+  expect_is(rebuildColors(x, origColors), "Raster")
+})
