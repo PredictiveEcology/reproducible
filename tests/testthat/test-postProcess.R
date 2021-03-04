@@ -340,18 +340,18 @@ test_that("maskInputs errors when x is Lat-Long", {
     options(reproducible.polygonShortcut = ii)
     suppressWarningsSpecific(falseWarnings = "attribute variables",
                              roads[[i]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
-                        alsoExtract = "similar",
-                        url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC/view?usp=sharing",
-                        studyArea = smallSA,
-                        destinationPath = tmpdir,
-                        filename2 = "miniRoads"))
+                             alsoExtract = "similar",
+                             url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
+                             studyArea = smallSA,
+                             destinationPath = tmpdir,
+                             filename2 = "miniRoads"))
     clearCache()
     roads[[i + 2]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
-                        alsoExtract = "similar",
-                        url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC/view?usp=sharing",
-                        # studyArea = smallSA,
-                        destinationPath = tmpdir,
-                        filename2 = "miniRoads")
+                            alsoExtract = "similar",
+                            url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
+                            # studyArea = smallSA,
+                            destinationPath = tmpdir,
+                            filename2 = "miniRoads")
     clearCache()
     attr(roads[[i]], "tags") <- NULL
   }
