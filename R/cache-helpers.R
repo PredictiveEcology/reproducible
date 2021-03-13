@@ -838,10 +838,10 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
         rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
         opts <- if (silent) " -a " else " -avP "
-        # rsync command can't handle spaces in dirnames -- must protect them
+        # rsync command can't handle spaces file/dir names -- must protect them
         toDir <- gsub("\ ", "\\ ", toDir, fixed = TRUE)
         rsync <- paste0(rsyncBin, " ", opts, " --delete "[delDestination],
-                        normalizePath(from, mustWork = TRUE), " ",
+                        "'", normalizePath(from, mustWork = TRUE), "' ",
                         normalizePath(toDir, mustWork = FALSE), "/")
 
         useFileCopy <- tryCatch(system(rsync, intern = TRUE), error = function(x) TRUE)
