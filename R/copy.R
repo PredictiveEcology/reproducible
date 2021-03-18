@@ -83,7 +83,7 @@ file.move <- function(from, to, overwrite = FALSE) {
 #'   # write deep copy code here
 #' })
 #' }
-setGeneric("Copy", function(object, filebackedDir, ...) {
+setGeneric("Copy", function(object, ...) {
   standardGeneric("Copy")
 })
 
@@ -163,7 +163,7 @@ setMethod("Copy",
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "refClass"),
-          definition = function(object,  filebackedDir, ...) {
+          definition = function(object,  ...) {
             if (exists("copy", envir = object)) {
               object$copy()
             } else {
@@ -175,7 +175,7 @@ setMethod("Copy",
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "data.frame"),
-          definition = function(object,  filebackedDir, ...) {
+          definition = function(object,  ...) {
             object
 })
 
