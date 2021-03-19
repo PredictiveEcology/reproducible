@@ -1235,9 +1235,58 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
   paste0("     ", root," ", functionName, " call, ")
 }
 
+
+
+
+
+
+
+#' @export
+#' @param x  An object of postProcessing, e.g., \code{spatialClasses}.
+#'           See individual methods. This can be provided as a
+#'           \code{rlang::quosure} or a normal R object.
+#' @rdname updateFilenameSlots
 updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL) {
+  UseMethod("updateFilenameSlots")
+}
+
+#' @rdname updateFilenameSlots
+updateFilenameSlots.default <- function(obj, curFilenames, newFilenames, isStack = NULL)  {
+  obj
+}
+
+#' @rdname updateFilenameSlots
+updateFilenameSlots.list <- function(obj, curFilenames, newFilenames, isStack = NULL)  {
+  lapply(obj, function(o) {
+    updateFilenameSlots(o, curFilenames, newFilenames, isStack = isStack)
+  })
+}
+
+#' @rdname updateFilenameSlots
+updateFilenameSlots.environment <- function(obj, curFilenames, newFilenames, isStack = NULL)  {
+  if (is.null(names(obj))) {
+    names(obj) <- as.character(seq(obj))
+  }
+  lapply(obj, function(o) {
+    updateFilenameSlots(as.list(o), curFilenames, newFilenames, isStack = isStack)
+  })
+}
+
+
+#' @rdname updateFilenameSlots
+updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack = NULL) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
     return(updateFilenameSlots2(obj, curFilenames, newFilenames, isStack))
+  }
+
+  if (missing(curFilenames)) {
+    curFilenames <- Filenames(obj, allowMultiple = FALSE)
+  }
+
+  if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
+  # if newFilenames is a directory
+  if (dir.exists(newFilenames) && length(newFilenames) == 1) {
+    newFilenames <- file.path(newFilenames, basename(curFilenames))
   }
 
   if (length(curFilenames) > 1) {

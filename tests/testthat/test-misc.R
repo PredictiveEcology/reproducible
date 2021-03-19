@@ -217,7 +217,7 @@ test_that("test miscellaneous fns (part 2)", {
 
   a <- new.env(parent = emptyenv())
   a$a = list(ras, ras)
-  expect_true(all(isOrHasRaster(a)))
+  expect_true(all(unlist(isOrHasRaster(a))))
 })
 
 test_that("Filenames for environment", {
