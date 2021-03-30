@@ -149,10 +149,10 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
   expect_true(length(files) == numFiles)
   expect_is(test, class)
   messagePrepInputs(mess)
-  hasMessageNum <- print(paste(collapse = "_", which(unlist(
+  hasMessageNum <- paste(collapse = "_", which(unlist(
     lapply(strsplit(expectedMess, "\\|")[[1]], function(m)
       any(grepl(m, mess)))
-  ))))
+  )))
 
   isOK <- hasMessageNum == prod
   if (!isOK) {
