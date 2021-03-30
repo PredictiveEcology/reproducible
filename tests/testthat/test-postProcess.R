@@ -338,24 +338,36 @@ test_that("maskInputs errors when x is Lat-Long", {
   for (ii in c(TRUE, FALSE)) {
     i <- i + 1
     options(reproducible.polygonShortcut = ii)
-    suppressWarningsSpecific(falseWarnings = "attribute variables",
-                             roads[[i]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
+    noisyOutput <- capture.output(
+      suppressWarningsSpecific(falseWarnings = "attribute variables",
+                             roads[[i]] <- prepInputs(targetFile = "miniRoad.shp",
                              alsoExtract = "similar",
                              url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
                              studyArea = smallSA,
+                             useCache = FALSE,
                              destinationPath = tmpdir,
                              filename2 = "miniRoads"))
-    clearCache()
-    roads[[i + 2]] <- Cache(prepInputs, targetFile = "miniRoad.shp",
+    )
+    # clearCache()
+    noisyOutput <- capture.output(
+      roads[[i + 2]] <- prepInputs(targetFile = "miniRoad.shp",
                             alsoExtract = "similar",
                             url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
                             # studyArea = smallSA,
+                            useCache = FALSE,
                             destinationPath = tmpdir,
                             filename2 = "miniRoads")
-    clearCache()
+    )
+    # clearCache()
     attr(roads[[i]], "tags") <- NULL
   }
-  expect_true(all.equal(roads[[1]], roads[[2]], check.attributes = FALSE))
+
+  # There are floating point issues with 32 bit vs 64 bit approaches. The following fails:
+  # expect_true(all.equal(roads[[1]], roads[[2]], check.attributes = FALSE))
+
+  diffs <- sum(abs(unlist(lapply(st_geometry(roads[[1]]), as.numeric)) -
+                     unlist(lapply(st_geometry(roads[[2]]), as.numeric))))
+  expect_true(diffs < 0.0001)
   expect_true(all.equal(roads[[3]], roads[[4]], check.attributes = FALSE))
   expect_true(compareRaster(raster(extent(roads[[1]])), raster(extent(smallSA))))
   expect_error(compareRaster(raster(extent(roads[[3]])), raster(extent(smallSA))))

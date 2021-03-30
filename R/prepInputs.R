@@ -597,6 +597,8 @@ extractFromArchive <- function(archive,
       c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
         " If that is not correct, please specify a different targetFile",
         " and/or fun.")
+    } else if (is.null(fun)) {
+      c(" Also, file extension does not unambiguously specify how it should be loaded. Please specify fun.")
     } else {
       c(" Trying ", fun, ".\n",
         " If that is not correct, please specify a targetFile",
