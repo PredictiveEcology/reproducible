@@ -1310,7 +1310,8 @@ updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack 
 
   if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
   # if newFilenames is a directory
-  if (dir.exists(newFilenames) && length(newFilenames) == 1) {
+  areDirs <- dir.exists(newFilenames)
+  if (any(areDirs) && length(newFilenames) == 1) {
     newFilenames <- file.path(newFilenames, basename(curFilenames))
   }
 
