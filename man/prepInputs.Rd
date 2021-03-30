@@ -64,7 +64,8 @@ search for the file before attempting to download. Default for that option is
 \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
 If passing a custom function, it must be a function of
 \code{x}, e.g., \code{loadFun <- function(x) shapefile(x)}.
-NOTE: passing \code{NULL} will skip loading object into R.}
+NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
+replicate the functionality of simply calling \code{preProcess} directly.}
 
 \item{quick}{Logical. This is passed internally to \code{\link{Checksums}}
 (the quickCheck argument), and to
