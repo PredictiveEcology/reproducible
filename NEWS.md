@@ -3,7 +3,11 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 Version 1.2.7
 =============
 
+`reproducible` will be slowly changing the defaults for vector GIS datasets from the `sp` package to the `sf` package. 
+There is a large user-visible change in this release which will cause `prepInputs` to read `.shp` files with `sf::st_read` instead of `raster::shapefile`, as it is much faster.
+
 ## Enhancements
+* default `fun` in `prepInputs` for shapefiles (`.shp`) is now `sf::st_read` if the system has `sf` installed. This can be overridden with `options("reproducible.shapefileRead" = "raster::shapefile")`, and this is indicated with a message at the moment this is occurring, as it will cause different behaviour.
 * `quick` argument in `Cache` can now be a character vector, allowing individual character arguments to be digested as character vectors and others to be digested as files located at the specified path as represented by the character vector.
 * `objSize` previously included objects in `namespaces`, `baseenv` and `emptyenv`, so it was generally too large. Now uses the same criteria as `pryr::object_size`
 * improvements with messaging when `unzip` missing (thanks to C. Barros #202)
