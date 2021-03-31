@@ -1277,9 +1277,22 @@ updateFilenameSlots.default <- function(obj, ...)  {
 #' @export
 #' @keywords internal
 updateFilenameSlots.list <- function(obj, ...)  {
-  lapply(obj, function(o) {
-    updateFilenameSlots(o, ...)
-  })
+
+  areRasters <- vapply(obj, is, "RasterLayer", FUN.VALUE = logical(1))
+  if (all(areRasters)) {
+    # a separate option for list of RasterLayers because curFilename will be
+    #   as long as all the filenames because there is a method for lists;
+    #   passing this to updateFilaneSlots will fail if it is one RasterLayer
+    #   at a time
+    out <- updateFilenameSlots(raster::stack(obj), ...)
+    out <- raster::unstack(out)
+  } else {
+    out <- lapply(obj, function(o) {
+      updateFilenameSlots(o, ...)
+    })
+  }
+  out
+
 }
 
 #' @rdname updateFilenameSlots
@@ -1302,8 +1315,6 @@ updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack 
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
     return(updateFilenameSlots2(obj, curFilenames, newFilenames, isStack))
   }
-
-  browser(expr = exists("aaaa"))
   if (missing(curFilenames)) {
     curFilenames <- Filenames(obj, allowMultiple = FALSE)
   }

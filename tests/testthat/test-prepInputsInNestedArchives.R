@@ -70,7 +70,7 @@ test_that(
     testZip6 <- reproducible::prepInputs(url = url, destinationPath = tmpdir)
   })
   expect_true(exists("testZip6"))
-  expect_is(testZip6, "SpatialPolygonsDataFrame")
+  expect_is(testZip6, "sf")
 })
 
 test_that(

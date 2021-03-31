@@ -315,6 +315,7 @@ test_that("cropInputs crops too closely when input projections are different", {
 
 test_that("maskInputs errors when x is Lat-Long", {
   skip_on_cran()
+  skip_if_not(requireNamespace("sf", quietly = TRUE))
 
   testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
@@ -365,8 +366,8 @@ test_that("maskInputs errors when x is Lat-Long", {
   # There are floating point issues with 32 bit vs 64 bit approaches. The following fails:
   # expect_true(all.equal(roads[[1]], roads[[2]], check.attributes = FALSE))
 
-  diffs <- sum(abs(unlist(lapply(st_geometry(roads[[1]]), as.numeric)) -
-                     unlist(lapply(st_geometry(roads[[2]]), as.numeric))))
+  diffs <- sum(abs(unlist(lapply(sf::st_geometry(roads[[1]]), as.numeric)) -
+                     unlist(lapply(sf::st_geometry(roads[[2]]), as.numeric))))
   expect_true(diffs < 0.0001)
   expect_true(all.equal(roads[[3]], roads[[4]], check.attributes = FALSE))
   expect_true(compareRaster(raster(extent(roads[[1]])), raster(extent(smallSA))))
