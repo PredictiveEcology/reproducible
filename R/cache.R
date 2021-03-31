@@ -1791,6 +1791,7 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     return(dealWithRastersOnRecovery2(output, cacheRepo, cacheId,
                                drv, conn))
   }
+
   if (is(output, "list") && !is.null(output$origRaster) && !is.null(output$cacheRaster)) {
     origFilenames <- if (is(output$origRaster, "Raster")) {
       Filenames(output$origRaster) # This is legacy piece which allows backwards compatible

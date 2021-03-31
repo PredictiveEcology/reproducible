@@ -24,7 +24,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) {
     NULL
-})
+  })
 
 ################################################################################
 #' Create a custom cache message by class
@@ -62,11 +62,11 @@ setMethod(
       messageCache(.loadedCacheMsg(.loadedMemoisedResultMsg, functionName), verbose = verbose)
     } else if (!is.na(fromMemoise)) {
       messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName),
-                           "adding to memoised copy...", sep = "", verbose = verbose)
+                   "adding to memoised copy...", sep = "", verbose = verbose)
     } else {
       messageCache(.loadedCacheMsg(.loadedCacheResultMsg, functionName), verbose = verbose)
     }
-})
+  })
 
 ################################################################################
 #' Add tags to object
@@ -99,7 +99,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, outputObjects, FUN, preDigestByClass) { # nolint
     object
-})
+  })
 
 ################################################################################
 #' Any miscellaneous things to do before \code{.robustDigest} and after \code{FUN} call
@@ -129,7 +129,7 @@ setMethod(
   signature = "ANY",
   definition = function(object) { # nolint
     NULL
-})
+  })
 
 ################################################################################
 #' Check for cache repository info in ...
@@ -168,7 +168,7 @@ setMethod(
         #  If no, then user is aware and doesn't need a message
         if (any(identical(normPath(tmpDir), normPath(getOption("reproducible.cachePath"))))) {
           messageCache("No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;\n",
-                  "  this will not persist across R sessions.", verbose = verbose)
+                       "  this will not persist across R sessions.", verbose = verbose)
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
@@ -177,7 +177,7 @@ setMethod(
       }
       checkPath(path = cacheRepo, create = create)
     })
-})
+  })
 
 ################################################################################
 #' Make any modifications to object recovered from cacheRepo
@@ -243,7 +243,7 @@ setMethod(
       }
     }
     object
-})
+  })
 
 #' @export
 #' @rdname prepareOutput
@@ -258,7 +258,7 @@ setMethod(
       }
     }
     object
-})
+  })
 
 ################################################################################
 #' Add an attribute to an object indicating which named elements change
@@ -291,7 +291,7 @@ setMethod(
   signature = "ANY",
   definition = function(object, preDigest, origArguments, ...) {
     object
-})
+  })
 
 #' A set of helpers for Cache
 #'
@@ -519,9 +519,9 @@ setAs(from = "character", to = "Path", function(from) {
 
 # Old one
 .prepareFileBackedRaster2 <- function(obj, repoDir = NULL, overwrite = FALSE,
-                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                     conn = getOption("reproducible.conn", NULL),
-                                     ...) {
+                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                      conn = getOption("reproducible.conn", NULL),
+                                      ...) {
   isRasterLayer <- TRUE
   isBrick <- is(obj, "RasterBrick")
   isStack <- is(obj, "RasterStack")
@@ -1235,9 +1235,95 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
   paste0("     ", root," ", functionName, " call, ")
 }
 
+
+
+
+
+
+
+#' A helper function to change the filename slot of \code{Raster*} objects
+#'
+#' This is intended for internal use, though it is exported because other packages
+#' use this. This function exists because when copying file-backed rasters, the
+#' usual mechanism of \code{writeRaster} can be very slow. This function allows
+#' for a user to optionally create a hard link to the old file, give it a new
+#' name, then update the filename slot(s) in the \code{Raster*} class object. This
+#' can be 100s of times faster for large rasters.
+#'
+#' @export
+#' @keywords internal
+#' @param obj An object. This function only has useful methods for \code{Raster*},
+#'   with all other classes being simply a pass-through
+#' @param curFilenames An optional character vector of filenames currently existing
+#'   and that are pointed to in the obj. If omitted, will take from the \code{obj}
+#'   using \code{Filenames(obj)}
+#' @param newFilenames An optional character vector of filenames to use instead of
+#'   the curFilenames. This can also be a single directory, in which case the
+#'   renaming will be given:
+#'   \code{file.path(newFilenames, basename(Filenames(obj, allowMultiple = FALSE)))}
+#' @rdname updateFilenameSlots
 updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL) {
+  UseMethod("updateFilenameSlots")
+}
+
+#' @rdname updateFilenameSlots
+#' @export
+#' @keywords internal
+updateFilenameSlots.default <- function(obj, ...)  {
+  obj
+}
+
+#' @rdname updateFilenameSlots
+#' @export
+#' @keywords internal
+updateFilenameSlots.list <- function(obj, ...)  {
+
+  areRasters <- vapply(obj, is, "RasterLayer", FUN.VALUE = logical(1))
+  if (all(areRasters)) {
+    # a separate option for list of RasterLayers because curFilename will be
+    #   as long as all the filenames because there is a method for lists;
+    #   passing this to updateFilaneSlots will fail if it is one RasterLayer
+    #   at a time
+    out <- updateFilenameSlots(raster::stack(obj), ...)
+    out <- raster::unstack(out)
+  } else {
+    out <- lapply(obj, function(o) {
+      updateFilenameSlots(o, ...)
+    })
+  }
+  out
+
+}
+
+#' @rdname updateFilenameSlots
+#' @export
+#' @keywords internal
+updateFilenameSlots.environment <- function(obj, ...)  {
+  if (is.null(names(obj))) {
+    names(obj) <- as.character(seq(obj))
+  }
+  lapply(obj, function(o) {
+    updateFilenameSlots(as.list(o), ...)
+  })
+}
+
+
+#' @rdname updateFilenameSlots
+#' @export
+#' @keywords internal
+updateFilenameSlots.Raster <- function(obj, curFilenames, newFilenames, isStack = NULL) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
     return(updateFilenameSlots2(obj, curFilenames, newFilenames, isStack))
+  }
+  if (missing(curFilenames)) {
+    curFilenames <- Filenames(obj, allowMultiple = FALSE)
+  }
+
+  if (missing(newFilenames)) stop("newFilenames can't be missing: either new filenames or a single directory")
+  # if newFilenames is a directory
+  areDirs <- dir.exists(newFilenames)
+  if (any(areDirs) && length(newFilenames) == 1) {
+    newFilenames <- file.path(newFilenames, basename(curFilenames))
   }
 
   if (length(curFilenames) > 1) {
@@ -1263,7 +1349,7 @@ updateFilenameSlots <- function(obj, curFilenames, newFilenames, isStack = NULL)
       }
       for (i in seq_len(nlayers(obj))) {
         whFilename <- unique(match(withoutFinalNumeric(basename(newFilenames)),
-                            withoutFinalNumeric(basename(curFilenames))))
+                                   withoutFinalNumeric(basename(curFilenames))))
         isNAwhFn <- is.na(whFilename)
         if (any(isNAwhFn))
           whFilename <- i
@@ -1351,7 +1437,7 @@ updateFilenameSlots2 <- function(obj, curFilenames, newFilenames, isStack = NULL
                                      ...) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
     return(.prepareFileBackedRaster2(obj, repoDir = repoDir, overwrite = overwrite,
-                              drv = drv, conn = conn, ...))
+                                     drv = drv, conn = conn, ...))
   }
   fnsAll <- Filenames(obj)
   fnsShort <- Filenames(obj, FALSE)

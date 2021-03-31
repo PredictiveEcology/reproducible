@@ -664,16 +664,20 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 #' @keywords internal
 .extractFunction <- function(fun) {
   if (!is.null(fun)) {
-    if (!is.function(fun)) {
-      if (grepl("::", fun)) {
-        fun2 <- strsplit(fun, "::")[[1]]
-        pkg <- fun2[1]
-        fun <- fun2[2]
-        fun <- getFromNamespace(fun, pkg)
-      } else {
-        fun <- get(fun)
+    suppressWarnings(isNAFun <- is.na(fun))
+    if (!isNAFun) {
+      if (!is.function(fun)) {
+        if (grepl("::", fun)) {
+          fun2 <- strsplit(fun, "::")[[1]]
+          pkg <- fun2[1]
+          fun <- fun2[2]
+          fun <- getFromNamespace(fun, pkg)
+        } else {
+          fun <- get(fun)
+        }
       }
     }
+
   }
   fun
 }

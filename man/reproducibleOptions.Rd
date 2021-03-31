@@ -83,6 +83,11 @@ The following options are likely of interest to most users:
     \code{file.size(file)} instead of the \code{digest::digest(file)}.
     Less robust to changes, but faster. \emph{NOTE: this will only affect objects on disk}.
   }
+  \item{\code{shapefileRead}}{
+    Default \code{NULL}. Used during \code{prepInputs} when reading a \code{.shp} file.
+    If \code{NULL}, it will use `sf::st_read` if `sf` package is available; otherwise,
+    it will use `raster::shapefile`
+  }
   \item{\code{showSimilar}}{
     Default \code{FALSE}. Passed to \code{Cache}.
   }
