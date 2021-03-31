@@ -134,7 +134,7 @@ test_that("testing prepInputs with deauthorized googledrive", {
         })
       )
   })
-  expect_true(is(BCR6_VT, "sf"))
+  expect_true(is(BCR6_VT, shapefileClassDefault))
 
   if (interactive()) {
     NFDB_PT <- #Cache(
