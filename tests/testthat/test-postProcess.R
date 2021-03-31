@@ -346,6 +346,7 @@ test_that("maskInputs errors when x is Lat-Long", {
                              url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
                              studyArea = smallSA,
                              useCache = FALSE,
+                             fun = "sf::st_read",
                              destinationPath = tmpdir,
                              filename2 = "miniRoads"))
     )
@@ -356,6 +357,7 @@ test_that("maskInputs errors when x is Lat-Long", {
                             url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
                             # studyArea = smallSA,
                             useCache = FALSE,
+                            fun = "sf::st_read",
                             destinationPath = tmpdir,
                             filename2 = "miniRoads")
     )
