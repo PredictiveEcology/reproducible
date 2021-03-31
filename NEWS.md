@@ -6,11 +6,18 @@ Version 1.2.7
 ## Enhancements
 * `quick` argument in `Cache` can now be a character vector, allowing individual character arguments to be digested as character vectors and others to be digested as files located at the specified path as represented by the character vector.
 * `objSize` previously included objects in `namespaces`, `baseenv` and `emptyenv`, so it was generally too large. Now uses the same criteria as `pryr::object_size`
+* improvements with messaging when `unzip` missing (thanks to C. Barros #202)
+* while unzipping, will also search for `7z.exe` on Windows if the object is larger than 2GB, if can't find `unzip`.
+* many minor improvements to functioning of esp. `prepInputs`
 
 ## Bug fixees
 * `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
 * inadvertent deleting of file-backed rasters in multi-filed stacks during `Cache`
 * `writeOutputs.Raster` attempted to change `datatype` of `Raster` class objects using the setReplacement `dataType<-`, without subsequently writing to disk via `writeRaster`. This created bad values in the `Raster*` object. This now performs a `writeRaster` if there is a `datatype` passed to `writeOutputs` e.g., through `prepInputs` or `postProcess`.
+* `updateSlotFilename` has many more tests.
+* `prepInputs(..., fun = NA)` now is the correct specification for "do not load object into R". This essentially replicates `preProcess` with same arguments.
+* several minor bugfixes
+
 
 version 1.2.6
 ==============
