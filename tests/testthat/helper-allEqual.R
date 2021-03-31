@@ -435,10 +435,12 @@ messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cache
                            writeRaster(...))
 }
 
-tatisRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"
-tatisRasterTestFilename <- function(pre = "", suff = "") {
+theRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"
+theRasterTestFilename <- function(pre = "", suff = "") {
   paste0(pre, "rasterTest.", suff)
 }
-tatisRasterTestZip <- tatisRasterTestFilename(tatisRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-tatisRasterTestRar <- tatisRasterTestFilename(tatisRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-tatisRasterTestTar <- tatisRasterTestFilename(tatisRasterTests, "tar")
+theRasterTestZip <- theRasterTestFilename(theRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar")
+
+shapefileClassDefault <- if (getOption("reproducible.shapefileRead") == "raster::shapefile") "SpatialPolygons" else "sf"

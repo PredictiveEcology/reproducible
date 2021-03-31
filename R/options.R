@@ -182,7 +182,7 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.polygonShortcut = FALSE,
     reproducible.quick = FALSE,
-    reproducible.shapefileRead = NULL,
+    reproducible.shapefileRead = "raster::shapefile", # TODO: change in next release
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = .reproducibleTempPath(),
@@ -191,7 +191,7 @@ reproducibleOptions <- function() {
     reproducible.useDBI = TRUE,
     reproducible.useGDAL = TRUE, #
     reproducible.useMemoise = FALSE, #memoise
-    reproducible.useNewDigestAlgorithm = 1,
+    reproducible.useNewDigestAlgorithm = 1, # TODO: change in next release
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1
   )
