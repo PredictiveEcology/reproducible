@@ -844,14 +844,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           filesInHandIP <- checkSumsIPOnlyNeeded$expectedFile
           filesInHandIPLogical <- neededFiles %in% filesInHandIP
           if (any(filesInHandIPLogical)) {
-
             outHLC <- hardLinkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
                           file.path(destinationPath, filesInHandIP))
-            #linkOrCopy(file.path(dirNameOPFiles, filesInHandIP),
-            #           file.path(destinationPath, filesInHandIP), verbose = verbose)
             checkSums <- rbindlist(list(checkSumsIPOnlyNeeded, checkSums))
             checkSums <- unique(checkSums, by = "expectedFile")
-            # needChecksums <- 2
           }
           foundInInputPaths <- c(foundInInputPaths, filesInHandIP)
           if (isTRUE(all(filesInHandIPLogical))) {
