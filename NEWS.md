@@ -15,6 +15,7 @@ There is a large user-visible change in this release which will cause `prepInput
 * many minor improvements to functioning of esp. `prepInputs`
 
 ## Bug fixees
+* `Copy` generic no longer has `fileBackedDir` argument. It is now passed through with the `...`. This was creating a bug with some cases where `fileBackedDir` was not being correctly executed.
 * `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
 * inadvertent deleting of file-backed rasters in multi-filed stacks during `Cache`
 * `writeOutputs.Raster` attempted to change `datatype` of `Raster` class objects using the setReplacement `dataType<-`, without subsequently writing to disk via `writeRaster`. This created bad values in the `Raster*` object. This now performs a `writeRaster` if there is a `datatype` passed to `writeOutputs` e.g., through `prepInputs` or `postProcess`.
