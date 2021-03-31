@@ -1722,23 +1722,23 @@ test_that("options inputPaths", {
     tmpdir2 <- file.path(tmpdir, rndstr(1,5))
     noisyOutput <- capture.output(
       noisyOutput <- capture.output(type = "message",
-                                  mess1 <- capture_messages({
-                                    test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
-                                                        targetFile = if (useGADM) theFile else f$targetFile,
-                                                        dlFun = if (useGADM) getDataFn else NULL,
-                                                        name = if (useGADM) "GADM" else NULL,
-                                                        country = if (useGADM) "LUX" else NULL,
-                                                        level = if (useGADM) 0 else NULL,
-                                                        path = if (useGADM) tmpdir else NULL,
-                                                        destinationPath = tmpdir2
-                                    )
-                                  })
-    ))
+                                    mess1 <- capture_messages({
+                                      test1 <- prepInputs(url = if (!useGADM) url2 else f$url,
+                                                          targetFile = if (useGADM) theFile else f$targetFile,
+                                                          dlFun = if (useGADM) getDataFn else NULL,
+                                                          name = if (useGADM) "GADM" else NULL,
+                                                          country = if (useGADM) "LUX" else NULL,
+                                                          level = if (useGADM) 0 else NULL,
+                                                          path = if (useGADM) tmpdir else NULL,
+                                                          destinationPath = tmpdir2
+                                      )
+                                    })
+      ))
 
     # Must remove the link that happens during downloading to a .tempPath
-    test11 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
-    test11 <- grep(tmpdir2, test11, invert = TRUE, value = TRUE)
-    expect_true(length(test11) == 1) # no link made b/c identical dir
+    test10 <- grep(hardlinkMessagePrefixForGrep, mess1, value = TRUE)
+    test10 <- grep(tmpdir2, test10, invert = TRUE, value = TRUE)
+    expect_true(length(test10) == (1 - useGADM)) #
 
     # Have file in inputPath, not in destinationPath
     unlink(file.path(tmpdir2, theFile))
