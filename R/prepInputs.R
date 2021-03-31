@@ -780,6 +780,9 @@ extractFromArchive <- function(archive,
                 wait = TRUE,
                 stdout = NULL)
       } else {
+        if (nchar(unz) == 0) {
+          stop("unzip command cannot be found. Please try reinstalling Rtools and/or adding it to system path (see 'https://cran.r-project.org/bin/windows/Rtools/')")
+        }
         stop("There was no way to unzip all files; try manually. The file is located at: \n",
              pathToFile)
       }
