@@ -22,6 +22,7 @@ There is a large user-visible change that will come (in the next release), which
 * `updateSlotFilename` has many more tests.
 * `prepInputs(..., fun = NA)` now is the correct specification for "do not load object into R". This essentially replicates `preProcess` with same arguments.
 * several minor bugfixes
+* `Copy` did not correctly copy `RasterStack`s when some of the `RasterLayer` objects were in memory, some on disk; `raster::fromDisk` returned `FALSE` in those cases, so `Copy` didn't occur on the file-backed layer files. Using `Filenames` instead to determine if there are any files that need copying.
 
 
 version 1.2.6
