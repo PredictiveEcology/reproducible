@@ -4,7 +4,7 @@ Version 1.2.7
 =============
 
 `reproducible` will be slowly changing the defaults for vector GIS datasets from the `sp` package to the `sf` package. 
-There is a large user-visible change in this release which will cause `prepInputs` to read `.shp` files with `sf::st_read` instead of `raster::shapefile`, as it is much faster.
+There is a large user-visible change that will come (in the next release), which will cause `prepInputs` to read `.shp` files with `sf::st_read` instead of `raster::shapefile`, as it is much faster. To change now, set  `options("reproducible.shapefileRead" = "sf::st_read")`
 
 ## Enhancements
 * default `fun` in `prepInputs` for shapefiles (`.shp`) is now `sf::st_read` if the system has `sf` installed. This can be overridden with `options("reproducible.shapefileRead" = "raster::shapefile")`, and this is indicated with a message at the moment this is occurring, as it will cause different behaviour.
