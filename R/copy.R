@@ -20,7 +20,6 @@ file.move <- function(from, to, overwrite = FALSE) {
   }
 }
 
-
 #' Recursive copying of nested environments, and other "hard to copy" objects
 #'
 #' When copying environments and all the objects contained within them, there are

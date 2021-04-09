@@ -267,7 +267,6 @@ if (utils::packageVersion("raster") <= "2.6.7") {
   getDataFn <- raster::getData
 }
 
-
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, type = c("Raster", "Stack", "Brick")) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
 
