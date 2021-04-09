@@ -505,7 +505,8 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         # if destinationPath is tempdir, then don't copy and remove
 
         # Don't use .tempPath directly because of non-google approaches too
-        if (!(identical(dirname(normPath(downloadResults$destFile)), normPath(destinationPath)))) {
+        if (!(identical(dirname(normPath(downloadResults$destFile)),
+                        normPath(as.character(destinationPath))))) {
           desiredPath <- normPath(file.path(destinationPath, basename(downloadResults$destFile)))
 
           desiredPathExists <- file.exists(desiredPath)
