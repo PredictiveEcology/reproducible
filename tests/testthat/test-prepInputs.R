@@ -30,10 +30,11 @@ test_that("prepInputs doesn't work (part 1)", {
   #######################################
   url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
 
-  noisyOutput <-
-    capture.output(mess <- capture_messages({
-    shpEcozone <- prepInputs(destinationPath = dPath, url = url)
-  }))
+  noisyOutput <- capture.output({
+    mess <- capture_messages({
+      shpEcozone <- prepInputs(destinationPath = dPath, url = url)
+    })
+  })
   expect_true(any(grepl(mess, pattern = "ecozone_shp.zip")))
   expect_true(any(grepl(mess, pattern = "Appending")))
   expect_true(any(grepl(mess, pattern = "Finished")))
@@ -43,9 +44,9 @@ test_that("prepInputs doesn't work (part 1)", {
   unlink(dir(dPath, full.names = TRUE)[1:3])
   expect_error(raster::shapefile(file.path(dPath, "ecozone_shp.zip")))
   rm(shpEcozone)
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     shpEcozone1 <- prepInputs(destinationPath = dPath, url = url)
-  )
+  })
   expect_true(is(shpEcozone1, shapefileClassDefault))
   unlink(dPath, recursive = TRUE)
 
@@ -63,15 +64,15 @@ test_that("prepInputs doesn't work (part 1)", {
     "ecozones.shp",
     "ecozones.shx"
   )
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     shpEcozone2 <- prepInputs(
-    targetFile = ecozoneFilename,
-    url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
-    alsoExtract = ecozoneFiles,
-    fun = "shapefile",
-    destinationPath = dPath
-  )
-  )
+      targetFile = ecozoneFilename,
+      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      alsoExtract = ecozoneFiles,
+      fun = "shapefile",
+      destinationPath = dPath
+    )
+  })
 
   expect_true(is(shpEcozone2, "SpatialPolygons"))
   testObj <- if (!is(shpEcozone1, "Spatial")) as(shpEcozone1, "Spatial") else shpEcozone1
@@ -110,7 +111,7 @@ test_that("prepInputs doesn't work (part 1)", {
 
   unlink(dirname(ecozoneFilename), recursive = TRUE)
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     warn <- suppressWarningsSpecific(
     falseWarnings = "attribute variables are assumed to be spatially constant", {
     mess <- capture_messages({
@@ -126,8 +127,8 @@ test_that("prepInputs doesn't work (part 1)", {
         useCache = FALSE
       )
     })
+    })
   })
-  )
   expect_false(all(grepl("loading", mess)))
 
   # Test useCache -- doesn't error and loads from cache
@@ -156,21 +157,21 @@ test_that("prepInputs doesn't work (part 1)", {
   ### url                          ######
   #######################################
   # messages received below may help for filling in more arguments in the subsequent call
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     LCC2005 <- prepInputs(
-    url = url,
-    destinationPath = asPath(dPath),
-    studyArea = StudyArea,
-    useCache = FALSE
-  ) ## TODO: searching for GDAL is slow on Windows
-  )
+      url = url,
+      destinationPath = asPath(dPath),
+      studyArea = StudyArea,
+      useCache = FALSE
+    ) ## TODO: searching for GDAL is slow on Windows
+  })
   # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
   #  we make it a bit bigger so it doesn't crop the edges of the raster
   expect_is(LCC2005, "Raster")
 
   StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
   expect_true(all(abs(extent(LCC2005)[1:4] -
-                   round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+                        round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
 
   lcc <- LCC2005[] # speeds up the next line -- used to be maxValue and minValue -- but now these are
                    #  incorrect due to changes in prepInputs that preserves original colortable
