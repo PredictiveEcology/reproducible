@@ -176,7 +176,7 @@ test_that("prepInputs doesn't work (part 1)", {
   lcc <- LCC2005[] # speeds up the next line -- used to be maxValue and minValue -- but now these are
                    #  incorrect due to changes in prepInputs that preserves original colortable
   expect_equal(length(which(LCC2005@legend@colortable != "#000000")),
-               (max(lcc, na.rm = TRUE) - min(lcc, na.rm = TRUE)) )
+               max(lcc, na.rm = TRUE) - min(lcc, na.rm = TRUE) + 1)
 
   #######################################
   ### url, targetFile, archive     ######
