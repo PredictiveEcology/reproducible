@@ -330,20 +330,28 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             as.list(tmpEnv, all.names = TRUE)
         } else {
           # browser(expr = exists("._prepInputs_3"))
-          err <- tryCatch(error = function(xx) xx,
-            mess <- capture.output(
-              type = "message",
-              obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                           useCache = useCache)))
-          if (is(err, "simpleError")) {
-             stop(err$message)
-          }
-          # if (!is.null(errOld)) stop(errOld)
+          browser()
+          if (is.call(out$fun)) {
+            out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
+                                 out[-which(names(out) == "targetFilePath")]),
+                          args)
+            obj <- eval(out$fun, envir = out)
+          } else {
+            err <- tryCatch(error = function(xx) xx,
+                            mess <- capture.output(
+                              type = "message",
+                              obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                                           useCache = useCache)))
+            if (is(err, "simpleError")) {
+              stop(err$message)
+            }
+            # if (!is.null(errOld)) stop(errOld)
 
-          mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
-          if (length(mess) > 0)
-            messagePrepInputs(mess, verbose = verbose)
-          obj
+            mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
+            if (length(mess) > 0)
+              messagePrepInputs(mess, verbose = verbose)
+            obj
+          }
         }
       }
     } else {
