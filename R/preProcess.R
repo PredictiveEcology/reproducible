@@ -412,7 +412,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   needChecksums <- downloadFileResult$needChecksums
   neededFiles <- downloadFileResult$neededFiles
   # If the download was of an archive, then it is possible the archive path is wrong
-  if (isTRUE(!is.na(archive))) {
+  if (!isTRUE(is.na(archive))) {
     if (identical(.basename(downloadFileResult$downloaded),
                   .basename(downloadFileResult$archive)))
       archive <- downloadFileResult$downloaded
@@ -434,10 +434,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
 
   # To this point, we only have the archive in hand -- include this in the list of filesToChecksum
-  filesToChecksum <- if (isTRUE(!is.na(archive))) {
-    if (is.null(archive)) downloadFileResult$downloaded else .basename(archive)
+  filesToChecksum <- if (isTRUE(is.na(archive)) || (is.null(archive))) {
+    downloadFileResult$downloaded
   } else {
-    NULL
+    .basename(archive)
   }
   on.exit({
     if (needChecksums > 0) {
@@ -514,7 +514,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # if it was a nested file
   # browser(expr = exists("._preProcess_8"))
 
-  if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar")) && isTRUE(!is.na(archive))) {
+  if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar")) && !isTRUE(is.na(archive))) {
     nestedArchives <- .basename(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
     nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
     messagePrepInputs("There are still archives in the extracted files.",
@@ -1029,46 +1029,46 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
   filesExtr <- NULL
   if (!is.null(archive)) {
     if (!is.na(archive)) {
-    if (any(file.exists(archive))) {
-      filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
-                                           neededFiles = neededFiles,
-                                           checkSums = checkSums, needChecksums = needChecksums,
-                                           checkSumFilePath = checkSumFilePath, quick = quick,
-                                           verbose = verbose,
-                                           .tempPath = .tempPath)
+      if (any(file.exists(archive))) {
+        filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
+                                             neededFiles = neededFiles,
+                                             checkSums = checkSums, needChecksums = needChecksums,
+                                             checkSumFilePath = checkSumFilePath, quick = quick,
+                                             verbose = verbose,
+                                             .tempPath = .tempPath)
 
-      checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
-                                    newFilesToCheck = .basename(filesExtracted$filesExtracted),
-                                    checkSums = filesExtracted$checkSums, verbose = verbose)
+        checkSums <- .checkSumsUpdate(destinationPath = destinationPath,
+                                      newFilesToCheck = .basename(filesExtracted$filesExtracted),
+                                      checkSums = filesExtracted$checkSums, verbose = verbose)
 
-      filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
-                                  .basename(filesExtracted$filesExtr)))
-      needChecksums <- filesExtracted$needChecksums
-      data.table::setDT(filesExtracted$checkSums)
-      dontNeedChecksums <- filesExtracted$checkSums[filesExtracted$checkSums$expectedFile %in%
-                                                      filesToChecksum & compareNA(result, "OK"),
-                                                    expectedFile]
-      filesToChecksum <- setdiff(filesToChecksum, dontNeedChecksums)
+        filesToChecksum <- unique(c(filesToChecksum, targetFile, alsoExtract,
+                                    .basename(filesExtracted$filesExtr)))
+        needChecksums <- filesExtracted$needChecksums
+        data.table::setDT(filesExtracted$checkSums)
+        dontNeedChecksums <- filesExtracted$checkSums[filesExtracted$checkSums$expectedFile %in%
+                                                        filesToChecksum & compareNA(result, "OK"),
+                                                      expectedFile]
+        filesToChecksum <- setdiff(filesToChecksum, dontNeedChecksums)
 
-      if (needChecksums > 0) {
-        checkSums <- appendChecksumsTable(
-          checkSumFilePath = checkSumFilePath,
-          filesToChecksum = unique(.basename(filesToChecksum)),
-          destinationPath = destinationPath,
-          append = needChecksums >= 2
-        )
-        needChecksums <- 0
+        if (needChecksums > 0) {
+          checkSums <- appendChecksumsTable(
+            checkSumFilePath = checkSumFilePath,
+            filesToChecksum = unique(.basename(filesToChecksum)),
+            destinationPath = destinationPath,
+            append = needChecksums >= 2
+          )
+          needChecksums <- 0
+        }
+
+        ## targetFilePath might still be NULL, need destinationPath too
+        filesExtr <- c(filesToChecksum,
+                       if (is.null(filesExtracted$filesExtr) ||
+                           length(filesExtracted$filesExtr) == 0)
+                         character() #downloadFileResult$downloaded
+                       else
+                         filesExtracted$filesExtr)
       }
-
-      ## targetFilePath might still be NULL, need destinationPath too
-      filesExtr <- c(filesToChecksum,
-                     if (is.null(filesExtracted$filesExtr) ||
-                         length(filesExtracted$filesExtr) == 0)
-                       character() #downloadFileResult$downloaded
-                     else
-                       filesExtracted$filesExtr)
     }
-  }
   }
   if (!is.null(filesExtr)) {
     #filesExtrTemp <- filesExtr # keep this non-uniqued version... contains full paths
