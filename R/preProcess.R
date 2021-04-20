@@ -320,7 +320,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
   if (isTRUE(!all(isOK))) {
-    results <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
+    results <- .tryExtractFromArchive(archive = if (isTRUE(is.na(archive))) NULL else archive,
+                                      neededFiles = neededFiles,
                                       alsoExtract = alsoExtract, destinationPath = dp,
                                       checkSums = checkSums, needChecksums = needChecksums,
                                       checkSumFilePath = checkSumFilePath,

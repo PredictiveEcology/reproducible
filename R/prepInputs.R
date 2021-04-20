@@ -340,7 +340,6 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                             args)
                               obj <- eval(out$fun, envir = out)
                             } else {
-
                               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
                                            useCache = useCache)
                             }))
@@ -353,9 +352,9 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
           if (length(mess) > 0)
             messagePrepInputs(mess, verbose = verbose)
           obj
+
         }
       }
-    }
     } else {
       out$object
     }
