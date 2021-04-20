@@ -578,7 +578,7 @@ extractFromArchive <- function(archive,
   # }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- fileExt(possibleFiles)
-  isShapefile <- grepl("shp", fileExt)
+  isShapefile <- grepl("shp$|gdb$", fileExt)
   isRaster <- fileExt %in% c("tif", "grd")
   isRDS <- fileExt %in% c("rds")
   if (is.null(fun)) { #i.e., the default
