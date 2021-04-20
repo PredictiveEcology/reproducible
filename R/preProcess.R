@@ -212,10 +212,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   filesToCheck <- c(targetFilePath, alsoExtract)
   if (!is.null(archive)) {
-    tmpArchive <- archive
-    archive <- file.path(destinationPath, .basename(archive))
-    filesToCheck <- unique(c(filesToCheck, archive))
-    archive <- moveAttributes(tmpArchive, archive)
+    if (!is.na(archive)) {
+      tmpArchive <- archive
+      archive <- file.path(destinationPath, .basename(archive))
+      filesToCheck <- unique(c(filesToCheck, archive))
+      archive <- moveAttributes(tmpArchive, archive)
+    }
   }
 
   # Need to run checksums on all files in destinationPath because we may not know what files we
@@ -310,7 +312,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # browser(expr = exists("._preProcess_6"))
 
-  filesToChecksum <- if (is.null(archive))  NULL else .basename(archive)
+  filesToChecksum <- if (is.null(archive) || isTRUE(is.na(archive))) {
+    NULL
+  } else {
+    .basename(archive)
+  }
+
   isOK <- .compareChecksumsAndFiles(checkSums, c(filesToChecksum, neededFiles))
   if (isTRUE(!all(isOK))) {
     results <- .tryExtractFromArchive(archive = archive, neededFiles = neededFiles,
@@ -320,7 +327,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                                       filesToChecksum = filesToChecksum,
                                       targetFile = targetFile, quick = quick,
                                       verbose = verbose, .tempPath = .tempPath)
-
     checkSums <- results$checkSums
     needChecksums <- results$needChecksums
     neededFiles <- results$neededFiles
@@ -376,7 +382,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ###############################################################
   # browser(expr = exists("._preProcess_7"))
   downloadFileResult <- downloadFile(
-    archive = archive,
+    archive = if (isTRUE(is.na(archive))) NULL else archive,
     targetFile = targetFile,
     neededFiles = neededFiles,
     destinationPath = destinationPath,
@@ -405,11 +411,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   needChecksums <- downloadFileResult$needChecksums
   neededFiles <- downloadFileResult$neededFiles
   # If the download was of an archive, then it is possible the archive path is wrong
-  if (identical(.basename(downloadFileResult$downloaded),
-                .basename(downloadFileResult$archive)))
-    archive <- downloadFileResult$downloaded
-  # archive specified, alsoExtract is NULL --> now means will extract all
-  if (is.null(archive)) archive <- downloadFileResult$archive
+  if (isTRUE(!is.na(archive))) {
+    if (identical(.basename(downloadFileResult$downloaded),
+                  .basename(downloadFileResult$archive)))
+      archive <- downloadFileResult$downloaded
+    # archive specified, alsoExtract is NULL --> now means will extract all
+    if (is.null(archive)) archive <- downloadFileResult$archive
+  }
 
   ###############################################################
   # redo "similar" after download
@@ -425,7 +433,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (length(neededFiles) > 1) alsoExtract <- setdiff(neededFiles, targetFile)
 
   # To this point, we only have the archive in hand -- include this in the list of filesToChecksum
-  filesToChecksum <- if (is.null(archive)) downloadFileResult$downloaded else .basename(archive)
+  filesToChecksum <- if (isTRUE(!is.na(archive))) {
+    if (is.null(archive)) downloadFileResult$downloaded else .basename(archive)
+  } else {
+    NULL
+  }
   on.exit({
     if (needChecksums > 0) {
       # needChecksums 1 --> write a new checksums.txt file
@@ -501,7 +513,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # if it was a nested file
   # browser(expr = exists("._preProcess_8"))
 
-  if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar"))) {
+  if (any(fileExt(neededFiles) %in% c("zip", "tar", "rar")) && isTRUE(!is.na(archive))) {
     nestedArchives <- .basename(neededFiles[fileExt(neededFiles) %in% c("zip", "tar", "rar")])
     nestedArchives <- normPath(file.path(destinationPath, nestedArchives[1]))
     messagePrepInputs("There are still archives in the extracted files.",

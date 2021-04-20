@@ -97,7 +97,10 @@ if (getRversion() >= "3.1.0") {
 #'   containing \code{targetFile}, or a vector giving a set of nested archives
 #'   (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 #'   archive(s), but they are unknown, the function will try all until it finds
-#'   the \code{targetFile}. See table in \code{\link{preProcess}}.
+#'   the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+#'   then it will \emph{not} attempt to see it as an archive, even if it has archive-like
+#'   file extension (e.g., \code{.zip}). This may be useful when an R function
+#'   is expecting an archive directly.
 #'
 #' @param url Optional character string indicating the URL to download from.
 #'   If not specified, then no download will be attempted. If not entry
