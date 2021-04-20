@@ -1028,6 +1028,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
 
   filesExtr <- NULL
   if (!is.null(archive)) {
+    if (!is.na(archive)) {
     if (any(file.exists(archive))) {
       filesExtracted <- extractFromArchive(archive = archive, destinationPath = destinationPath,
                                            neededFiles = neededFiles,
@@ -1067,6 +1068,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
                      else
                        filesExtracted$filesExtr)
     }
+  }
   }
   if (!is.null(filesExtr)) {
     #filesExtrTemp <- filesExtr # keep this non-uniqued version... contains full paths
