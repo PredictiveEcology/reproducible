@@ -126,11 +126,14 @@ if (getRversion() >= "3.1.0") {
 #'   search for the file before attempting to download. Default for that option is
 #'   \code{NULL} meaning do not search locally.
 #'
-#' @param fun Function or character string indicating the function to use to load
-#'   \code{targetFile} into an \code{R} object, e.g., in form with package name:
+#' @param fun Function, character string, or quoted call with which to load the
+#'   \code{targetFile} into an \code{R} object. It must be either a function
+#'   as a character string, or the function itself.
+#'   If a character string or function, is should have the package name e.g.,
 #'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
-#'   If passing a custom function, it must be a function of
-#'   \code{x}, e.g., \code{loadFun <- function(x) shapefile(x)}.
+#'   If it is to be a custom function call, then use `quote`, e.g.,
+#'   `quote(customFunction(x = targetFilePath))`, using
+#'   `targetFilePath` as the file path of the object that has been `preProcess`ed.
 #'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
 #'   replicate the functionality of simply calling \code{preProcess} directly.
 #'
@@ -982,8 +985,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
   needSystemCall <- (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions )
-  if (file.exists(archive[1]))
-    needSystemCall <- needSystemCall || file.size(archive[1]) > 2e9
+  if (length(archive) > 0)
+    if (file.exists(archive[1]))
+      needSystemCall <- needSystemCall || file.size(archive[1]) > 2e9
 
   if (needSystemCall) {
     extractSystemCallPath <- .testForArchiveExtract()

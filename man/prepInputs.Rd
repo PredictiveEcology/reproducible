@@ -41,7 +41,10 @@ in subsequent calls to
 containing \code{targetFile}, or a vector giving a set of nested archives
 (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the \code{targetFile}. See table in \code{\link{preProcess}}.}
+the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+then it will \emph{not} attempt to see it as an archive, even if it has archive-like
+file extension (e.g., \code{.zip}). This may be useful when an R function
+is expecting an archive directly.}
 
 \item{alsoExtract}{Optional character string naming files other than
 \code{targetFile} that must be extracted from the \code{archive}. If

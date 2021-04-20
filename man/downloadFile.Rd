@@ -27,7 +27,10 @@ downloadFile(
 containing \code{targetFile}, or a vector giving a set of nested archives
 (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the \code{targetFile}. See table in \code{\link{preProcess}}.}
+the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+then it will \emph{not} attempt to see it as an archive, even if it has archive-like
+file extension (e.g., \code{.zip}). This may be useful when an R function
+is expecting an archive directly.}
 
 \item{targetFile}{Character string giving the path to the eventual file
 (raster, shapefile, csv, etc.) after downloading and extracting from a zip
