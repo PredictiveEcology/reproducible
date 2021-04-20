@@ -736,9 +736,9 @@ extractFromArchive <- function(archive,
     opt <- options("warn")$warn
     on.exit(options(warn = opt), add = TRUE)
     options(warn = 1)
-    tooBig <- FALSE
+    tooBig <- file.size(args[[1]]) > 2e9
     worked <- FALSE
-    if (isUnzip) {
+    if (isUnzip && !tooBig) {
       fattrs <- unzip(args[[1]], list = TRUE)
       ids <- which(fattrs[["Name"]] %in% argList$files)
       tooBig <- any(fattrs[ids, ]["Length"][[1]] >= 4294967295) ## files >= 4GB are truncated; see ?unzip
@@ -972,14 +972,21 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
-  if (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions) {
+  needSystemCall <- (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions )
+  if (file.exists(archive[1]))
+    needSystemCall <- needSystemCall || file.size(archive[1]) > 2e9
+
+  if (needSystemCall) {
     extractSystemCallPath <- .testForArchiveExtract()
+    funWArgs <- list(fun = extractSystemCallPath)
+  } else {
+    funWArgs <- .whichExtractFn(archive[1], NULL)
   }
-  funWArgs <- .whichExtractFn(archive[1], NULL)
+
   filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
-      if (!fileExt(archive[1]) %in% knownSystemArchiveExtensions) {
+      if (!needSystemCall) {
         filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
         if ("Name" %in% names(filesInArchive)) {
           # for zips, rm directories (length = 0)
