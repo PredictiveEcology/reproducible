@@ -12,6 +12,8 @@ There is a large user-visible change that will come (in the next release), which
 * `objSize` previously included objects in `namespaces`, `baseenv` and `emptyenv`, so it was generally too large. Now uses the same criteria as `pryr::object_size`
 * improvements with messaging when `unzip` missing (thanks to C. Barros #202)
 * while unzipping, will also search for `7z.exe` on Windows if the object is larger than 2GB, if can't find `unzip`.
+* `fun` argument in `prepInputs` and family can now be a quoted expression.
+* `archive` argument in `prepInputs` can now be `NA` which means to treat the file downloaded not as an archive, even if it has a `.zip` file extension
 * many minor improvements to functioning of esp. `prepInputs`
 
 ## Bug fixees
