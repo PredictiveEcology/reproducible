@@ -16,11 +16,12 @@ There is a large user-visible change that will come (in the next release), which
 * `archive` argument in `prepInputs` can now be `NA` which means to treat the file downloaded not as an archive, even if it has a `.zip` file extension
 * many minor improvements to functioning of esp. `prepInputs`
 * speed improvements during `postProcess` especially for very large objects (>5GB tested). Previously, it was running many `fixErrors` calls; now only calls `fixErrors` on fail of the proximate call (e.g., st_crop or whatever)
-* `retry` now has a new argument `exprBetween` to allow for doing something after the fail (i.e., if st_crop fails, then run fixErrors, then back to st_crop
+* `retry` now has a new argument `exprBetween` to allow for doing something after the fail (for example, if an operation fails, e.g., `st_crop`, then run `fixErrors`, then return back to `st_crop` for the retry)
 * `Cache` now has MUCH better nested levels detection, with messaging... and control of how deep the Caching goes seems good, via useCache = 2 will only Cache 2 levels in...
 * `archive` argument in `prepInputs` family can now be NA ... meaning do not try to unzip even if it is a `.zip` file or other standard archive extension
-* `gdb.zip` files can now be opened with `prepInputs(url = "whateverUrl", archive = NA, fun = "sf::st_read")`
+* `gdb.zip` files (e.g., a file with a .zip extension, but that should not be opened with an unzip-type program) can now be opened with `prepInputs(url = "whateverUrl", archive = NA, fun = "sf::st_read")`
 * `fun` argument in `prepInputs` can now be a quoted function call.
+* `preProcess` now does a better job with large archives that can't be correctly handled with the default `zip` and `unzip` with R, by trying `system2` calls to possible `7z.exe` or other options on Linux-alikes.
 
 
 ## Bug fixees
