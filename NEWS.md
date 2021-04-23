@@ -20,7 +20,7 @@ There is a large user-visible change that will come (in the next release), which
 * `Cache` now has MUCH better nested levels detection, with messaging... and control of how deep the Caching goes seems good, via useCache = 2 will only Cache 2 levels in...
 * `archive` argument in `prepInputs` family can now be NA ... meaning do not try to unzip even if it is a `.zip` file or other standard archive extension
 * `gdb.zip` files can now be opened with `prepInputs(url = "whateverUrl", archive = NA, fun = "sf::st_read")`
-
+* `fun` argument in `prepInputs` can now be a quoted function call.
 
 
 ## Bug fixees
