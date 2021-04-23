@@ -15,6 +15,13 @@ There is a large user-visible change that will come (in the next release), which
 * `fun` argument in `prepInputs` and family can now be a quoted expression.
 * `archive` argument in `prepInputs` can now be `NA` which means to treat the file downloaded not as an archive, even if it has a `.zip` file extension
 * many minor improvements to functioning of esp. `prepInputs`
+* speed improvements during `postProcess` especially for very large objects (>5GB tested). Previously, it was running many `fixErrors` calls; now only calls `fixErrors` on fail of the proximate call (e.g., st_crop or whatever)
+* `retry` now has a new argument `exprBetween` to allow for doing something after the fail (i.e., if st_crop fails, then run fixErrors, then back to st_crop
+* `Cache` now has MUCH better nested levels detection, with messaging... and control of how deep the Caching goes seems good, via useCache = 2 will only Cache 2 levels in...
+* `archive` argument in `prepInputs` family can now be NA ... meaning do not try to unzip even if it is a `.zip` file or other standard archive extension
+* `gdb.zip` files can now be opened with `prepInputs(url = "whateverUrl", archive = NA, fun = "sf::st_read")`
+
+
 
 ## Bug fixees
 * `Copy` generic no longer has `fileBackedDir` argument. It is now passed through with the `...`. This was creating a bug with some cases where `fileBackedDir` was not being correctly executed.
