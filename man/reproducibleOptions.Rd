@@ -92,9 +92,14 @@ The following options are likely of interest to most users:
     Default \code{FALSE}. Passed to \code{Cache}.
   }
   \item{\code{useCache}}{
-    Default: \code{TRUE}. Used in \code{\link{Cache}}. If \code{FALSE}, then the entire
+    Default: \code{NULL}. Used in \code{\link{Cache}}, \code{\link{prepInputs}} and family.
+    If \code{FALSE}, then the entire
     \code{Cache} machinery is skipped and the functions are run as if there was no Cache occurring.
-    Can also take 2 other values: \code{'overwrite'} and \code{'devMode'}.
+    Can also take 3 other values: a numeric, where the number indicates what depth
+    of nested caching should occur (where depths above this number will not be cached),
+    \code{'overwrite'} and \code{'devMode'},
+    \emph{though these last two appear to be unreliable in some cases and should
+    be used with caution.}
     \code{'overwrite'} will cause no recovery of objects from the cache repository, only new
     ones will be created. If the hash is identical to a previous one, then this will overwrite
     the previous one.

@@ -18,7 +18,6 @@ preProcess(
   quick = getOption("reproducible.quick"),
   overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
   .tempPath,
   ...
@@ -96,9 +95,6 @@ even if they pass the checksums or the files are all there.}
 \code{CHECKSUMS.txt} file and
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
-
-\item{useCache}{Passed to \code{Cache} in various places.
-Defaults to \code{getOption("reproducible.useCache")}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

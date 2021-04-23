@@ -25,6 +25,7 @@ cropInputs(
   extentToMatch = NULL,
   extentCRS = NULL,
   useGDAL = getOption("reproducible.useGDAL", TRUE),
+  useCache = getOption("reproducible.useCache", FALSE),
   ...
 )
 
@@ -35,6 +36,7 @@ cropInputs(
   verbose = getOption("reproducible.verbose", 1),
   extentToMatch = NULL,
   extentCRS = NULL,
+  useCache = getOption("reproducible.useCache", FALSE),
   ...
 )
 }

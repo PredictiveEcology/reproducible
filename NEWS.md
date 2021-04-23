@@ -24,7 +24,7 @@ There is a large user-visible change that will come (in the next release), which
 * `preProcess` now does a better job with large archives that can't be correctly handled with the default `zip` and `unzip` with R, by trying `system2` calls to possible `7z.exe` or other options on Linux-alikes.
 
 
-## Bug fixees
+## Bug fixes
 * `Copy` generic no longer has `fileBackedDir` argument. It is now passed through with the `...`. This was creating a bug with some cases where `fileBackedDir` was not being correctly executed.
 * `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
 * inadvertent deleting of file-backed rasters in multi-filed stacks during `Cache`

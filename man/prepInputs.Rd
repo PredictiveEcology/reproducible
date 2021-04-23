@@ -14,7 +14,7 @@ prepInputs(
   quick = getOption("reproducible.quick"),
   overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE),
+  useCache = getOption("reproducible.useCache", 2),
   .tempPath,
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -87,7 +87,12 @@ even if they pass the checksums or the files are all there.}
 \code{CHECKSUMS.txt} file. Other options, see details.}
 
 \item{useCache}{Passed to \code{Cache} in various places.
-Defaults to \code{getOption("reproducible.useCache")}.}
+Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
+\code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
+functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
+only up to 2 nested levels, which will generally including \code{postProcess} and
+the first level of \code{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
+\code{maskInputs}, but not \code{fixErrors}.}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
 Will be cleared on.exit from this function.}

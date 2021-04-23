@@ -24,10 +24,17 @@ maskInputs(x, studyArea, ...)
   rasterToMatch,
   maskWithRTM = FALSE,
   verbose = getOption("reproducible.verbose", 1),
+  useCache = getOption("reproducible.useCache", FALSE),
   ...
 )
 
-\method{maskInputs}{sf}(x, studyArea, verbose = getOption("reproducible.verbose", 1), ...)
+\method{maskInputs}{sf}(
+  x,
+  studyArea,
+  verbose = getOption("reproducible.verbose", 1),
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
 }
 \arguments{
 \item{x}{An object to do a geographic raster::mask/raster::intersect.

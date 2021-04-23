@@ -158,7 +158,12 @@ if (getRversion() >= "3.1.0") {
 #'  \code{dlFun} which is passed to \code{preProcess}. See details and examples.
 #'
 #' @param useCache Passed to \code{Cache} in various places.
-#'   Defaults to \code{getOption("reproducible.useCache")}.
+#'   Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
+#'   \code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
+#'   functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
+#'   only up to 2 nested levels, which will generally including \code{postProcess} and
+#'   the first level of \code{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
+#'   \code{maskInputs}, but not \code{fixErrors}.
 #'
 #' @param .tempPath Optional temporary path for internal file intermediate steps.
 #'   Will be cleared on.exit from this function.
@@ -264,7 +269,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
-                       useCache = getOption("reproducible.useCache", FALSE),
+                       useCache = getOption("reproducible.useCache", 2),
                        .tempPath,
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {

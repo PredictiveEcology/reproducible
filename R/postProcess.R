@@ -247,6 +247,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       verbose = getOption("reproducible.verbose", 1),
                                       extentToMatch = NULL, extentCRS = NULL,
                                       useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                      useCache = getOption("reproducible.useCache", FALSE),
                                       ...) {
   # browser(expr = exists("._cropInputs_1"))
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
@@ -406,7 +407,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           sf::st_as_sf(x)
                         ),
                         exprBetween = quote(
-                          x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                          x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                         ))
             x <- yy
           }
@@ -419,7 +420,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                         sf::st_as_sf(yyy)
                       ),
                       exprBetween = quote(
-                        yyy <- fixErrors(yyy, testValidity = FALSE, useCache = FALSE)
+                        yyy <- fixErrors(yyy, testValidity = FALSE, useCache = useCache)
                       ))
 
           # yyySF <- sf::st_as_sf(yyy)
@@ -471,7 +472,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                         }
                       ),
                       exprBetween = quote(
-                        x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                        x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                       ))
           # yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded),
           #                                               dots)),
@@ -527,6 +528,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
 cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           verbose = getOption("reproducible.verbose", 1),
                           extentToMatch = NULL, extentCRS = NULL,
+                          useCache = getOption("reproducible.useCache", FALSE),
                           ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
@@ -575,7 +577,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                       do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots))
                     ),
                     exprBetween = quote(
-                      x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                      x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                     ))
         x <- yy
 
@@ -1191,7 +1193,9 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = NULL,
 #' @export
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
-                               verbose = getOption("reproducible.verbose", 1), ...) {
+                               verbose = getOption("reproducible.verbose", 1),
+                               useCache = getOption("reproducible.useCache", FALSE),
+                               ...) {
 
   x <- sf::st_as_sf(x)
 
@@ -1200,7 +1204,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
                maskInputs(x, studyArea, rasterToMatch, maskWithRTM, verbose = verbose)
              ),
              exprBetween = quote(
-               x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+               x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
              ))
 
   as(x, "Spatial")
@@ -1208,7 +1212,9 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
 
 #' @export
 #' @rdname maskInputs
-maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbose", 1), ...) {
+maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbose", 1),
+                          useCache = getOption("reproducible.useCache", FALSE),
+                          ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
 
   if (!is.null(studyArea)) {
@@ -1242,14 +1248,14 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
     } else {
       x <- sf::st_set_precision(x, 1e5)
       studyArea <- sf::st_set_precision(studyArea, 1e5)
-      studyArea <- fixErrors(studyArea, useCache = FALSE)
+      studyArea <- fixErrors(studyArea, useCache = useCache)
 
       y <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                  expr = quote(
-                   sf::st_intersection(x, studyArea, useCache = FALSE)
+                   sf::st_intersection(x, studyArea)
                  ),
                  exprBetween = quote(
-                   x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                   x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                  ))
       # x <- sf::st_set_precision(x, 1e5) %>% fixErrors(.)
       # studyArea <- sf::st_set_precision(studyArea, 1e5) %>% fixErrors(.)
@@ -1821,7 +1827,9 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots,
 #' @importFrom raster projectExtent
 #' @importFrom sp wkt
 #' @importFrom Require normPath
-postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
+postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
+                                  useCache = getOption("reproducible.useCache", FALSE),
+                                  filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL,
                                   useGDAL = getOption("reproducible.useGDAL", TRUE),
                                   cores = getOption("reproducible.GDALcores", 2),
@@ -1968,7 +1976,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                        ),
                        exprBetween = quote(
                          x <- fixErrors(x, objectName = objectName,
-                                        testValidity = FALSE, useCache = FALSE)
+                                        testValidity = FALSE, useCache = useCache)
                        ))
           } else {
             messageCache("  Skipping projectInputs; identical crs, res, extent")
@@ -1980,11 +1988,12 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           yy <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                       expr = quote(
                         maskInputs(x = x, studyArea = studyArea,
-                                   rasterToMatch = rasterToMatch, useCache = useCache, verbose = verbose, ...)
+                                   rasterToMatch = rasterToMatch, useCache = useCache,
+                                   verbose = verbose, ...)
                       ),
                       exprBetween = quote(
                         x <- fixErrors(x, objectName = objectName,
-                                       testValidity = FALSE, useCache = FALSE)
+                                       testValidity = FALSE, useCache = useCache)
                       ))
           x <- yy
 
