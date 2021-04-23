@@ -337,7 +337,7 @@ test_that("maskInputs errors when x is Lat-Long", {
     i <- i + 1
     options(reproducible.polygonShortcut = ii)
     noisyOutput <- capture.output(
-      suppressWarningsSpecific(falseWarnings = "attribute variables",
+      suppressWarningsSpecific(falseWarnings = "attribute variables|st_buffer does not correctly buffer longitude",
                              roads[[i]] <- prepInputs(targetFile = "miniRoad.shp",
                              alsoExtract = "similar",
                              url = "https://drive.google.com/file/d/1Z6ueq8yXtUPuPWoUcC7_l2p0_Uem34CC",
