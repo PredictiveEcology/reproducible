@@ -838,7 +838,7 @@ setMethod(
           # rlang::eval_tidy(call2(FUNx1, !!!FUNx2))
           # theCall <- expr(FUN(!!!dots))
           # output <- eval_tidy(theCall)
-          commonArgs <- .namesCacheFormalsSendToBoth[.namesCacheFormalsSendToBoth %in% formalArgs(FUN)]
+          commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
           if (length(commonArgs) > 0) {
             messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
                          "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
