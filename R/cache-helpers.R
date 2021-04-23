@@ -313,6 +313,7 @@ setMethod(
 #' @rdname cache-helpers
 getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # nolint
   callIndex <- numeric()
+  scalls <- sys.calls()
   if (isS4(FUN)) {
     # Have to extract the correct dispatched method
     firstElems <- strsplit(showMethods(FUN, inherited = TRUE, printTo = FALSE), split = ", ")
@@ -363,7 +364,6 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     functionName <- FUN@generic
     FUN <- methodUsed@.Data  # nolint
   } else {
-    scalls <- sys.calls()
     if (!missing(overrideCall)) {
       callIndices <- .grepSysCalls(scalls, pattern = paste0("^", overrideCall))
       functionCall <- scalls[callIndices]
