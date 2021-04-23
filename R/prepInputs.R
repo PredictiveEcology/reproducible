@@ -333,29 +333,23 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             as.list(tmpEnv, all.names = TRUE)
         } else {
           # browser(expr = exists("._prepInputs_3"))
-          err <- tryCatch(error = function(xx) xx,
-                          mess <- capture.output(
-                            type = "message",
-                            if (is.call(out$fun)) {
-                              # put `targetFilePath` in the first position -- allows quoted call to use first arg
-                              out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
-                                                   out[-which(names(out) == "targetFilePath")]),
-                                            args)
-                              obj <- eval(out$fun, envir = out)
-                            } else {
-                              obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                                           useCache = useCache)
-                            }))
-          if (is(err, "simpleError")) {
-            stop(err$message)
-          }
-          # if (!is.null(errOld)) stop(errOld)
-
-          mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
-          if (length(mess) > 0)
-            messagePrepInputs(mess, verbose = verbose)
+          #err <- tryCatch(error = function(xx) xx,
+          withRestarts(
+            if (is.call(out$fun)) {
+              # put `targetFilePath` in the first position -- allows quoted call to use first arg
+              out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
+                                   out[-which(names(out) == "targetFilePath")]),
+                            args)
+              obj <- Cache(eval, out$fun, envir = out, useCache = useCache)
+            } else {
+              obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
+                           useCache = useCache)
+            }, message = function(m) {
+              m <- grep("No cacheRepo supplied", m, invert = TRUE, value = TRUE)
+              if (length(m))
+                messagePrepInputs(m)
+            })
           obj
-
         }
       }
     } else {
