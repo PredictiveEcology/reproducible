@@ -1167,7 +1167,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
              expr = quote(
                maskInputs(x, studyArea, rasterToMatch, maskWithRTM, verbose = verbose)
              ),
-             exprAfter = quote(
+             exprBetween = quote(
                x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
              ))
 
