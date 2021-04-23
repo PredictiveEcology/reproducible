@@ -401,16 +401,32 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           }
 
           if (isX_Sp_Int) {
-            x <- fixErrors(x)
-            x <- sf::st_as_sf(x)
+            yy <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
+                        expr = quote(
+                          sf::st_as_sf(x)
+                        ),
+                        exprBetween = quote(
+                          x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                        ))
+            x <- yy
           }
-          suppressMessages({
-            x <- fixErrors(x)
-          })#%>% sf::st_buffer(., 0)
-          yyySF <- sf::st_as_sf(yyy) # %>% sf::st_buffer(., 0)
-          suppressMessages({
-            yyySF <- fixErrors(yyySF)
-          })#%>% sf::st_buffer(., 0)
+          # suppressMessages({
+          #   x <- fixErrors(x)
+          # })
+
+          yyySF <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
+                      expr = quote(
+                        sf::st_as_sf(yyy)
+                      ),
+                      exprBetween = quote(
+                        yyy <- fixErrors(yyy, testValidity = FALSE, useCache = FALSE)
+                      ))
+
+          # yyySF <- sf::st_as_sf(yyy)
+          #
+          # suppressMessages({
+          #   yyySF <- fixErrors(yyySF)
+          # })
 
           # This tryCatch seems to be finding a bug in st_intersection:
           #   The error was:
@@ -431,46 +447,62 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             x <- as(x, "Spatial")
 
         } else {
-          completed <- FALSE
-          i <- 1
-          while (!completed & i < 3) {
-            if (!is.null(dots$datatype)) {
-              if (length(dots$datatype) > 1) {
-                warning("datatype can only be length 1 for raster::crop. Using first value: ",
-                        dots$datatype[1])
-                dots$datatype <- dots$datatype[1]
-              }
-            }
-            if (canProcessInMemory(x, 3)) {
-              yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded),
-                                                            dots)),
-                        silent = TRUE)
-            } else {
-              yy <- try(do.call(raster::crop,
-                                args = append(list(x = x, y = cropExtentRounded,
-                                                   filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-                                              dots)), silent = TRUE)
-            }
-            if (is(yy, "try-error")) {
-              x <- fixErrors(x)
-            } else {
-              completed <- TRUE
-              x <- yy
-            }
-            i <- i + 1
-          }
-          if (!completed) {
-            ## if not completed because file doesn't exist, let the user know with a sensible error.
-            noFileError <- grepl("Error in .local(.Object, ...)", yy, fixed = TRUE)
-            fileDoesntExist <- fromDisk(x) && !file.exists(filename(x))
-            if (noFileError && fileDoesntExist) {
-              stop("The following file-backed raster is supposed to be on disk ",
-                   "but appears to to be missing:\n",
-                   paste("    ", filename(x), collapse = "\n"))
-            } else {
-              stop(as.character(yy))
+          # completed <- FALSE
+          # i <- 1
+          # while (!completed & i < 3) {
+          if (!is.null(dots$datatype)) {
+            if (length(dots$datatype) > 1) {
+              warning("datatype can only be length 1 for raster::crop. Using first value: ",
+                      dots$datatype[1])
+              dots$datatype <- dots$datatype[1]
             }
           }
+          # if (canProcessInMemory(x, 3)) {
+          yy <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
+                      expr = quote(
+                        if (canProcessInMemory(x, 3)) {
+                          do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded),
+                                                              dots))
+                        } else {
+                          do.call(raster::crop,
+                                  args = append(list(x = x, y = cropExtentRounded,
+                                                     filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
+                                                dots))
+                        }
+                      ),
+                      exprBetween = quote(
+                        x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                      ))
+          # yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded),
+          #                                               dots)),
+          #           silent = TRUE)
+          # } else {
+          #
+          #   yy <- try(do.call(raster::crop,
+          #                     args = append(list(x = x, y = cropExtentRounded,
+          #                                        filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
+          #                                   dots)), silent = TRUE)
+          # }
+          # if (is(yy, "try-error")) {
+          #   x <- fixErrors(x)
+          # } else {
+          #   completed <- TRUE
+          x <- yy
+          #   }
+          #   i <- i + 1
+          # }
+          # if (!completed) {
+          #   ## if not completed because file doesn't exist, let the user know with a sensible error.
+          #   noFileError <- grepl("Error in .local(.Object, ...)", yy, fixed = TRUE)
+          #   fileDoesntExist <- fromDisk(x) && !file.exists(filename(x))
+          #   if (noFileError && fileDoesntExist) {
+          #     stop("The following file-backed raster is supposed to be on disk ",
+          #          "but appears to to be missing:\n",
+          #          paste("    ", filename(x), collapse = "\n"))
+          #   } else {
+          #     stop(as.character(yy))
+          #   }
+          # }
         }
 
         if (is.null(x)) {
