@@ -417,11 +417,6 @@ setMethod(
 
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
-    # if (!is.null(list(...)$objects)) {
-    #   messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated",
-    #                verbose = verbose)
-    # }
-
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
@@ -431,16 +426,31 @@ setMethod(
     FUN <- fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots
+    skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
 
-    if (.isFALSE(useCache) || isTRUE(0 == useCache)) {
-      messageCache("useCache is FALSE, skipping Cache.",
-                   "To turn Caching on, use options(reproducible.useCache = TRUE)",
-                   verbose = verbose)
+    if (.isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
+      nestedLev <- as.numeric(fnDetails$nestLevel)
+      spacing <- paste(collapse = "",
+                       rep("  ", nestedLev)
+      )
+      #if (fnDetails$nestLevel > 0 && !is.numeric(useCache)) {
+        messageCache(spacing, "useCache is ", useCache,
+                     "; skipping Cache on function ", fnDetails$functionName,
+                     if (nestedLev > 0) paste0(" (currently running nested Cache level ",nestedLev + 1),
+                     ")",
+                     verbose = verbose)
+      #} else {
+      #  messageCache(spacing, "useCache is ", useCache, ", skipping Cache.",
+      #               verbose = verbose)
+      #}
+
       if (fnDetails$isDoCall) {
         do.call(modifiedDots$what, args = modifiedDots$args)
       } else {
-        FUN(...) # using do.call fails on quoted arguments because it evaluates them
-        # do.call(FUN, args = modifiedDots)
+        commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
+        do.call(FUN, append(alist(...), modifiedDots[commonArgs]))
+        # FUN(...) # using do.call fails on quoted arguments because it evaluates them
+        # do.call(FUN, args = list(expr(modifiedDots)))
       }
     } else {
       startCacheTime <- verboseTime(verbose)
@@ -1321,7 +1331,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   # If arguments to FUN and Cache are identical, pass them through to FUN
   if (length(formalsInCallingAndFUN)) {
     formalsInCallingAndFUN <- grep("\\.\\.\\.", formalsInCallingAndFUN, value = TRUE, invert = TRUE)
-    commonArguments <- try(mget(formalsInCallingAndFUN, inherits = FALSE, envir = parent.frame()),
+    commonArguments <- try(mget(formalsInCallingAndFUN, inherits = FALSE,
+                                envir = parent.frame()),
                            silent = TRUE)
     if (!is(commonArguments, "try-error")) {
       if (isDoCall) {

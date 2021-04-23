@@ -442,7 +442,10 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
   if (isTRUE(grepl(functionName, pattern = "\\(")))
     functionName <- NA_character_
 
-  return(list(functionName = functionName, .FUN = .FUN))#, callIndex = callIndex))
+  nestLevel <- length(grep(lapply(scalls, function(x) x[1:2]),
+                           pattern = "standardGeneric.+Cache"))
+
+  return(list(functionName = functionName, .FUN = .FUN, nestLevel = nestLevel - 1))#, callIndex = callIndex))
 }
 
 #' @exportClass Path

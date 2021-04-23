@@ -688,12 +688,12 @@ test_that("test Cache argument inheritance to inner functions", {
   expect_true(sum(grepl(paste(.loadedCacheResultMsg, "outer call"), out)) == 1)
 
   # doubly nested
-  inner <- function(mean) {
+  inner <- function(mean, useCache = TRUE) {
     d <- 1
-    Cache(rnorm, n = 3, mean = mean)
+    Cache(rnorm, n = 3, mean = mean, useCache = useCache)
   }
-  outer <- function(n) {
-    Cache(inner, 0.1)
+  outer <- function(n, useCache = TRUE, ...) {
+    Cache(inner, 0.1, useCache = useCache, ...)
   }
   out <- capture_messages(Cache(outer, n = 2, cacheRepo = tmpdir))
   #expect_true(all(grepl("There is no similar item in the cacheRepo", out)))
