@@ -299,7 +299,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
-  fun <- .fnCleanup(out$fun, callingFun = "prepInputs")
+  fun <- .fnCleanup(out$fun, callingFun = "prepInputs", ...)
   suppressWarnings(naFun <- all(is.na(out$fun)))
 
   ## dots will contain too many things for some functions
