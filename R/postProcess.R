@@ -448,9 +448,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             x <- as(x, "Spatial")
 
         } else {
-          # completed <- FALSE
-          # i <- 1
-          # while (!completed & i < 3) {
           if (!is.null(dots$datatype)) {
             if (length(dots$datatype) > 1) {
               warning("datatype can only be length 1 for raster::crop. Using first value: ",
@@ -458,7 +455,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
               dots$datatype <- dots$datatype[1]
             }
           }
-          # if (canProcessInMemory(x, 3)) {
+          layerNamesNow <- names(x)
+          # Need to assign to "not x" so that retry can do its thing on fail
           yy <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                       expr = quote(
                         if (canProcessInMemory(x, 3)) {
@@ -474,36 +472,9 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                       exprBetween = quote(
                         x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                       ))
-          # yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded),
-          #                                               dots)),
-          #           silent = TRUE)
-          # } else {
-          #
-          #   yy <- try(do.call(raster::crop,
-          #                     args = append(list(x = x, y = cropExtentRounded,
-          #                                        filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-          #                                   dots)), silent = TRUE)
-          # }
-          # if (is(yy, "try-error")) {
-          #   x <- fixErrors(x)
-          # } else {
-          #   completed <- TRUE
+          if (!identical(names(yy), layerNamesNow))
+            names(yy) <- layerNamesNow
           x <- yy
-          #   }
-          #   i <- i + 1
-          # }
-          # if (!completed) {
-          #   ## if not completed because file doesn't exist, let the user know with a sensible error.
-          #   noFileError <- grepl("Error in .local(.Object, ...)", yy, fixed = TRUE)
-          #   fileDoesntExist <- fromDisk(x) && !file.exists(filename(x))
-          #   if (noFileError && fileDoesntExist) {
-          #     stop("The following file-backed raster is supposed to be on disk ",
-          #          "but appears to to be missing:\n",
-          #          paste("    ", filename(x), collapse = "\n"))
-          #   } else {
-          #     stop(as.character(yy))
-          #   }
-          # }
         }
 
         if (is.null(x)) {

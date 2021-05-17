@@ -77,6 +77,9 @@ If a character string or function, is should have the package name e.g.,
 If it is to be a custom function call, then use `quote`, e.g.,
 `quote(customFunction(x = targetFilePath))`, using
 `targetFilePath` as the file path of the object that has been `preProcess`ed.
+If the custom function is local, not in a package, or otherwise difficult for
+R to find, you may have to pass the function as a named element to `prepInputs`,
+e.g., `prepInputs(..., customFunction = customFunction)`.
 NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
 replicate the functionality of simply calling \code{preProcess} directly.}
 
