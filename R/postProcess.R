@@ -447,9 +447,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             x <- as(x, "Spatial")
 
         } else {
-          # completed <- FALSE
-          # i <- 1
-          # while (!completed & i < 3) {
           if (!is.null(dots$datatype)) {
             if (length(dots$datatype) > 1) {
               warning("datatype can only be length 1 for raster::crop. Using first value: ",
