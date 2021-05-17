@@ -132,11 +132,12 @@ if (getRversion() >= "3.1.0") {
 #'   If a character string or function, is should have the package name e.g.,
 #'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
 #'   If it is to be a custom function call, then use `quote`, e.g.,
-#'   `quote(customFunction(x = targetFilePath))`, using
+#'   `quote(customFun(x = targetFilePath))`, using
 #'   `targetFilePath` as the file path of the object that has been `preProcess`ed.
-#'   If the custom function is local, not in a package, or otherwise difficult for
-#'   R to find, you may have to pass the function as a named element to `prepInputs`,
-#'   e.g., `prepInputs(..., customFunction = customFunction)`.
+#'   If the custom function is not in a package, `prepInputs` may not find it. In such
+#'   cases, simply pass the function as a named argument (with same name as function)
+#'   e.g.,
+#'   `prepInputs(..., fun = quote(customFun(x = targetFilePath), customFun = customFun)`.
 #'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
 #'   replicate the functionality of simply calling \code{preProcess} directly.
 #'

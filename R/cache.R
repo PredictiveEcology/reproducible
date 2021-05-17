@@ -1218,7 +1218,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   # If passed with 'quote'
   if (!is.function(FUN)) {
     parsedFun <- parse(text = FUN)
-    evaledParsedFun <- eval(parsedFun[[1]])
+    evaledParsedFun <- eval(parsedFun[[1]], envir = modifiedDots)
     if (is.function(evaledParsedFun)) {
       tmpFUN <- evaledParsedFun
       mc <- match.call(tmpFUN, FUN)
