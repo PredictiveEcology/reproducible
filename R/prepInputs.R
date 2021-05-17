@@ -134,6 +134,9 @@ if (getRversion() >= "3.1.0") {
 #'   If it is to be a custom function call, then use `quote`, e.g.,
 #'   `quote(customFunction(x = targetFilePath))`, using
 #'   `targetFilePath` as the file path of the object that has been `preProcess`ed.
+#'   If the custom function is local, not in a package, or otherwise difficult for
+#'   R to find, you may have to pass the function as a named element to `prepInputs`,
+#'   e.g., `prepInputs(..., customFunction = customFunction)`.
 #'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
 #'   replicate the functionality of simply calling \code{preProcess} directly.
 #'
@@ -340,6 +343,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
                                    out[-which(names(out) == "targetFilePath")]),
                             args)
+              out[[fun[["functionName"]]]] <- fun$FUN
               obj <- Cache(eval, out$fun, envir = out, useCache = useCache)
             } else {
               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
