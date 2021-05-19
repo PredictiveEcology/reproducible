@@ -663,10 +663,12 @@ extractFromArchive <- function(archive,
 
 #' @importFrom utils untar unzip
 .whichExtractFn <- function(archive, args) {
+  out <- NULL
   if (!(is.null(archive))) {
-    ext <- tolower(fileExt(archive))
-    if (!ext %in% knownArchiveExtensions)
-      stop("preProcess can only deal with archives with following extensions:\n",
+    if (!is.na(archive)) {
+      ext <- tolower(fileExt(archive))
+      if (!ext %in% knownArchiveExtensions)
+        stop("preProcess can only deal with archives with following extensions:\n",
            paste(knownArchiveExtensions, collapse = ", "))
     if (ext == "zip") {
       fun <- unzip
@@ -676,11 +678,10 @@ extractFromArchive <- function(archive,
     } else if (ext == "rar") {
       fun <- "unrar"
     } else if (ext == "7z") {
-      fun <- "7z"
+        fun <- "7z"
+      }
+      out <- list(fun = fun, args = args)
     }
-    out <- list(fun = fun, args = args)
-  } else {
-    out <- NULL
   }
   return(out)
 }
@@ -1056,13 +1057,16 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 }
 
 .compareChecksumsAndFiles <- function(checkSums, files) {
-  checkSumsDT <- data.table(checkSums)
-  filesDT <- data.table(files = basename(files))
-  isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
-  isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
-  # fill in any OKs from "actualFile" intot he isOKDT
-  isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
-  isOK <- compareNA(isOKDT$result, "OK")
+  isOK <- NULL
+  if (!is.null(files)) {
+    checkSumsDT <- data.table(checkSums)
+    filesDT <- data.table(files = .basename(files))
+    isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
+    isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
+    # fill in any OKs from "actualFile" intot he isOKDT
+    isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+    isOK <- compareNA(isOKDT$result, "OK")
+  }
   isOK
 }
 

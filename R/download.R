@@ -581,7 +581,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     on.exit(options(opts))
   }
 
-  if (is.null(archive)) {
+  if (is.null(archive) || is.na(archive)) {
     fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url), team_drive = team_drive)))
     fileSize <- fileAttr$drive_resource[[1]]$size ## TODO: not returned with team drive (i.e., NULL)
     if (!is.null(fileSize)) {
@@ -597,7 +597,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
       downloadFilename <- targetFile # override if the targetFile is not an archive
     } else {
-      archive <- file.path(destinationPath, basename(archive))
+      archive <- file.path(destinationPath, .basename(archive))
       downloadFilename <- archive
     }
   } else {
