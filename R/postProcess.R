@@ -719,7 +719,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       } else {
         FALSE
       }
-      if (isTRUE(!knownNotValid)) {
+      if (isTRUE(knownNotValid)) {
         messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
                           verbose = verbose)
 
