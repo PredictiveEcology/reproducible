@@ -179,7 +179,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom digest digest
 #' @importFrom methods is
 #' @importFrom rlang quo
-#' @importFrom utils methods
+#' @importFrom utils methods modifyList
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
 #' @seealso \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
@@ -393,7 +393,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     xquo <- rlang::quo(x)
 
     x <- Cache(
-      do.call, postProcess, append(list(x = xquo, filename1 = out$targetFilePath,
+      do.call, postProcess, modifyList(list(x = xquo, filename1 = out$targetFilePath,
                                         overwrite = overwrite,
                                         destinationPath = out$destinationPath,
                                         useCache = useCache,
@@ -669,15 +669,15 @@ extractFromArchive <- function(archive,
       ext <- tolower(fileExt(archive))
       if (!ext %in% knownArchiveExtensions)
         stop("preProcess can only deal with archives with following extensions:\n",
-           paste(knownArchiveExtensions, collapse = ", "))
-    if (ext == "zip") {
-      fun <- unzip
-      args <- c(args, list(junkpaths = TRUE))
-    } else if (ext %in% c("tar", "tar.gz", "gz")) {
-      fun <- untar
-    } else if (ext == "rar") {
-      fun <- "unrar"
-    } else if (ext == "7z") {
+             paste(knownArchiveExtensions, collapse = ", "))
+      if (ext == "zip") {
+        fun <- unzip
+        args <- c(args, list(junkpaths = TRUE))
+      } else if (ext %in% c("tar", "tar.gz", "gz")) {
+        fun <- untar
+      } else if (ext == "rar") {
+        fun <- "unrar"
+      } else if (ext == "7z") {
         fun <- "7z"
       }
       out <- list(fun = fun, args = args)
