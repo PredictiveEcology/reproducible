@@ -1156,7 +1156,7 @@ test_that("prepInputs doesn't work (part 2)", {
     if (requireNamespace("RCurl")) {
       if (RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
                      timeout = 1)) {
-        noisyOutput <- capture.output(type = "message",
+        noisyOutput <- capture.output(type = "message", {
           mess1 <- capture_messages({
             test1 <- prepInputs(
               #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
@@ -1166,7 +1166,7 @@ test_that("prepInputs doesn't work (part 2)", {
               #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
               path = tmpdir)
           })
-        )
+        })
         mess2 <- capture_messages({
           test2 <- prepInputs(targetFile = targetFileLuxRDS,
                               dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
@@ -1192,8 +1192,7 @@ test_that("prepInputs doesn't work (part 2)", {
         testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
                                                       "reproducible.overwrite" = TRUE),
                                 needGoogle = TRUE)
-        noisyOutput <- capture.output(
-          type = "message",
+        noisyOutput <- capture.output(type = "message", {
           mess2 <- capture_messages({
             warn <- capture_warnings({
               test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
@@ -1201,7 +1200,7 @@ test_that("prepInputs doesn't work (part 2)", {
                                   filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
             })
           })
-        )
+        })
         runTest("1_2_5_6_13_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir,
                 test = test3)
