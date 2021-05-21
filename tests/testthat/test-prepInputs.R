@@ -147,71 +147,71 @@ test_that("prepInputs doesn't work (part 1)", {
   })
   expect_true(any(grepl("loaded", mess)))
 
-  # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
-  #   but the StudyArea does get reprojected, need to use rasterToMatch
-  lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
-  url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
-                   "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
-
-  #######################################
-  ### url                          ######
-  #######################################
-  # messages received below may help for filling in more arguments in the subsequent call
-  noisyOutput <- capture.output({
-    LCC2005 <- prepInputs(
-      url = url,
-      destinationPath = asPath(dPath),
-      studyArea = StudyArea,
-      useCache = FALSE
-    ) ## TODO: searching for GDAL is slow on Windows
-  })
-  # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
-  #  we make it a bit bigger so it doesn't crop the edges of the raster
-  expect_is(LCC2005, "Raster")
-
-  StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-  expect_true(all(abs(extent(LCC2005)[1:4] -
-                        round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
-
-  lcc <- LCC2005[] # speeds up the next line -- used to be maxValue and minValue -- but now these are
-                   #  incorrect due to changes in prepInputs that preserves original colortable
-  expect_equal(length(which(LCC2005@legend@colortable != "#000000")),
-               max(lcc, na.rm = TRUE) - min(lcc, na.rm = TRUE) + 1)
-
-  #######################################
-  ### url, targetFile, archive     ######
-  #######################################
-  # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
-  LCC2005_2 <- Cache(
-    prepInputs,
-    url = url,
-    targetFile = lcc2005Filename,
-    archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-    destinationPath = asPath(dPath),
-    studyArea = StudyArea
-  )
-
-  # Test the no allow overwrite if two functions (here postProcess and prepInputs)
-  #  return same file-backed raster
-  reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
-  # previously, this would cause an error because prepInputs file is gone b/c of previous
-  #  line, but postProcess is still in a Cache recovery situation, to same file, which is
-  #  not there. Now should be no error.
-  mess <- capture_messages({
-    LCC2005_2 <- Cache(
-      prepInputs,
-      url = url,
-      targetFile = lcc2005Filename,
-      archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
-      destinationPath = asPath(dPath),
-      studyArea = StudyArea
-    )
-  })
-  expect_true(isTRUE(any(grepl(pattern = "Loading", mess))))
-
-  expect_is(LCC2005_2, "Raster")
-  names(LCC2005) <- names(LCC2005_2) <- "LCC2005" ## workaround names mismatch
-  expect_equivalent(LCC2005, LCC2005_2)
+  # # Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,
+  # #   but the StudyArea does get reprojected, need to use rasterToMatch
+  # lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
+  # url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
+  #                  "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
+  #
+  # #######################################
+  # ### url                          ######
+  # #######################################
+  # # messages received below may help for filling in more arguments in the subsequent call
+  # noisyOutput <- capture.output({
+  #   LCC2005 <- prepInputs(
+  #     url = url,
+  #     destinationPath = asPath(dPath),
+  #     studyArea = StudyArea,
+  #     useCache = FALSE
+  #   ) ## TODO: searching for GDAL is slow on Windows
+  # })
+  # # The above studyArea is "buffered" before spTransform because it is "unprojected". This means
+  # #  we make it a bit bigger so it doesn't crop the edges of the raster
+  # expect_is(LCC2005, "Raster")
+  #
+  # StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
+  # expect_true(all(abs(extent(LCC2005)[1:4] -
+  #                       round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+  #
+  # lcc <- LCC2005[] # speeds up the next line -- used to be maxValue and minValue -- but now these are
+  #                  #  incorrect due to changes in prepInputs that preserves original colortable
+  # expect_equal(length(which(LCC2005@legend@colortable != "#000000")),
+  #              max(lcc, na.rm = TRUE) - min(lcc, na.rm = TRUE) + 1)
+  #
+  # #######################################
+  # ### url, targetFile, archive     ######
+  # #######################################
+  # # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
+  # LCC2005_2 <- Cache(
+  #   prepInputs,
+  #   url = url,
+  #   targetFile = lcc2005Filename,
+  #   archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+  #   destinationPath = asPath(dPath),
+  #   studyArea = StudyArea
+  # )
+  #
+  # # Test the no allow overwrite if two functions (here postProcess and prepInputs)
+  # #  return same file-backed raster
+  # reproducible::clearCache(userTags = "prepInputs", ask = FALSE)
+  # # previously, this would cause an error because prepInputs file is gone b/c of previous
+  # #  line, but postProcess is still in a Cache recovery situation, to same file, which is
+  # #  not there. Now should be no error.
+  # mess <- capture_messages({
+  #   LCC2005_2 <- Cache(
+  #     prepInputs,
+  #     url = url,
+  #     targetFile = lcc2005Filename,
+  #     archive = asPath("LandCoverOfCanada2005_V1_4.zip"),
+  #     destinationPath = asPath(dPath),
+  #     studyArea = StudyArea
+  #   )
+  # })
+  # expect_true(isTRUE(any(grepl(pattern = "Loading", mess))))
+  #
+  # expect_is(LCC2005_2, "Raster")
+  # names(LCC2005) <- names(LCC2005_2) <- "LCC2005" ## workaround names mismatch
+  # expect_equivalent(LCC2005, LCC2005_2)
 
   ######################################
   ##  archive                     ######
@@ -249,59 +249,59 @@ test_that("prepInputs doesn't work (part 1)", {
                                            "ecozones.sbx", "ecozones.shp", "ecozones.shx"))
   expect_true(is(shpEcozone, shapefileClassDefault))
 
-  lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
-  url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
-                   "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
-
-  #######################################
-  ### archive                     ######
-  #######################################
-  # only archive -- i.e., skip download, but do extract and postProcess
-  rm(LCC2005)
-  mess <- capture_messages({
-    LCC2005 <- prepInputs(archive = "LandCoverOfCanada2005_V1_4.zip",
-                          destinationPath = asPath(dPath),
-                          studyArea = StudyArea,
-                          purge = TRUE)
-  })
-  expect_true(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
-  expect_true(is(LCC2005, "Raster"))
-
-  #######################################
-  ### archive                      ######
-  #######################################
-  rm(LCC2005)
-  mess <- capture_messages({
-    LCC2005 <- prepInputs(
-      archive = "LandCoverOfCanada2005_V1_4.zip",
-      destinationPath = asPath(dPath),
-      studyArea = StudyArea
-    )
-  })
-  expect_true(any(grepl("No targetFile supplied. Extracting all files from archive", mess)))
-  expect_true(is(LCC2005, "Raster"))
-
-  #######################################
-  ### targetFile                   ######
-  #######################################
-  # only targetFile -- i.e., skip download, extract ... but do postProcess
-  rm(LCC2005)
-  mess <- capture_messages({
-    LCC2005 <- prepInputs(
-      targetFile = lcc2005Filename,
-      destinationPath = asPath(dPath),
-      studyArea = StudyArea,
-      purge = TRUE
-    )
-  })
-  expect_false(any(grepl("extract", mess))) # nothing that talks about extracting ...
-  #which means no extractFromArchive or even skipping extract
-
-  expect_true(is(LCC2005, "Raster"))
-  StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
-  # crop and mask worked -- remember the buffering that happens when it is longlat
-  expect_true(all(abs(extent(LCC2005)[1:4] -
-                        round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
+  # lcc2005Filename <- file.path(dPath, "LCC2005_V1_4a.tif")
+  # url <- file.path("ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover",
+  #                  "LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip")
+  #
+  # #######################################
+  # ### archive                     ######
+  # #######################################
+  # # only archive -- i.e., skip download, but do extract and postProcess
+  # rm(LCC2005)
+  # mess <- capture_messages({
+  #   LCC2005 <- prepInputs(archive = "LandCoverOfCanada2005_V1_4.zip",
+  #                         destinationPath = asPath(dPath),
+  #                         studyArea = StudyArea,
+  #                         purge = TRUE)
+  # })
+  # expect_true(any(grepl("From:LandCoverOfCanada2005_V1_4.zip", mess)))
+  # expect_true(is(LCC2005, "Raster"))
+  #
+  # #######################################
+  # ### archive                      ######
+  # #######################################
+  # rm(LCC2005)
+  # mess <- capture_messages({
+  #   LCC2005 <- prepInputs(
+  #     archive = "LandCoverOfCanada2005_V1_4.zip",
+  #     destinationPath = asPath(dPath),
+  #     studyArea = StudyArea
+  #   )
+  # })
+  # expect_true(any(grepl("No targetFile supplied. Extracting all files from archive", mess)))
+  # expect_true(is(LCC2005, "Raster"))
+  #
+  # #######################################
+  # ### targetFile                   ######
+  # #######################################
+  # # only targetFile -- i.e., skip download, extract ... but do postProcess
+  # rm(LCC2005)
+  # mess <- capture_messages({
+  #   LCC2005 <- prepInputs(
+  #     targetFile = lcc2005Filename,
+  #     destinationPath = asPath(dPath),
+  #     studyArea = StudyArea,
+  #     purge = TRUE
+  #   )
+  # })
+  # expect_false(any(grepl("extract", mess))) # nothing that talks about extracting ...
+  # #which means no extractFromArchive or even skipping extract
+  #
+  # expect_true(is(LCC2005, "Raster"))
+  # StudyAreaCRSLCC2005 <- spTransform(StudyArea, crs(LCC2005))
+  # # crop and mask worked -- remember the buffering that happens when it is longlat
+  # expect_true(all(abs(extent(LCC2005)[1:4] -
+  #                       round(extent(StudyAreaCRSLCC2005)[1:4] / 250, 0) * 250) <= res(LCC2005)))
 })
 
 test_that("interactive prepInputs", {
