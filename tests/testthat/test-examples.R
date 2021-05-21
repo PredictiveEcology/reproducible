@@ -5,11 +5,11 @@ test_that("all exported functions have examples", {
   ## for debugging only:
   tmpDir <- "~/tmp"
   tmpExFile <- file.path(tmpDir, "test-examples-out.txt")
-  if (!dir.exists(tmpDir)) dir.create(tmpDir, recursive = TRUE)
+
   if (grepl("VIC-", Sys.info()["nodename"]))  {
-     cat("#START##############\n", file = tmpExFile, append = FALSE)
-  #   cat(fns[-omit], sep = "\n", file = tmpExFile, append = TRUE)
-  #   cat("#END##############\n", file = tmpExFile, append = TRUE)
+    cat("#START##############\n", file = tmpExFile, append = FALSE)
+    # cat(fns[-omit], sep = "\n", file = tmpExFile, append = TRUE)
+    # cat("#END##############\n", file = tmpExFile, append = TRUE)
   }
 
   manDir <- if (dir.exists("../../man")) {
