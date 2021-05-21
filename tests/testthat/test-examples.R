@@ -3,7 +3,11 @@ test_that("all exported functions have examples", {
   omit <- which(fns == "cache") ## cache is deprecated, so omit it
 
   ## for debugging only:
-  tmpDir <- "~/tmp"
+  tmpDir <- if (grepl("VIC-", Sys.info()["nodename"]))  {
+    checkPath("~/tmp", create = TRUE)
+  } else {
+    checkPath(tempdir(), create = TRUE)
+  }
   tmpExFile <- file.path(tmpDir, "test-examples-out.txt")
 
   if (grepl("VIC-", Sys.info()["nodename"]))  {
