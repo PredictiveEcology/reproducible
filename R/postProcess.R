@@ -214,8 +214,13 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 #'                      resolution and projection).
 #'                      See details in \code{\link{postProcess}}.
 #'
-#' @param ... Passed to raster::crop
+#' @param ... Passed to \code{raster::crop}
+#'
+#' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
+#'                 \code{Cache} is used internally.
+#'
 #' @inheritParams projectInputs
+#'
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_postProcess.R
 #' @export
@@ -1118,9 +1123,10 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
 #'          See methods.
 #' @param ... Passed to methods. None currently implemented.
 #'
+#' @inheritParams cropInputs
+#'
 #' @author Eliot McIntire and Jean Marchal
 #' @export
-#' @inheritParams cropInputs
 #' @importFrom utils capture.output
 #' @rdname maskInputs
 #' @example inst/examples/example_postProcess.R
