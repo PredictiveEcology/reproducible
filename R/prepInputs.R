@@ -1030,13 +1030,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput))))
           stop("archive appears defective")
         filesInBetween <- grep(pattern = "----", filesOutput)
-        filesLines <- filesOutput[(min(filesInBetween)+1):(max(filesInBetween)-1)]
+        filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
         filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line){
           fullString <- unlist(strsplit(filesLines[[line]], split = " "))
           return(fullString[length(fullString)])
         })
         )
-        if (length(filesInArchive)==0) {
+        if (length(filesInArchive) == 0) {
           stop("preProcess could not find any files in the archive ", archive)
         }
       }
