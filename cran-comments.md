@@ -16,7 +16,7 @@ This release fixes a bug that was introduced by an updated RSQLite package. It a
 ### Winbuilder -- all passed Feb 11, 2021
 * Windows                 (win-builder), R 3.6.3 (2021-02-11)
 * Windows                 (win-builder), R 4.0.3 (2021-02-11)
-* Windows                 (win-builder), R 4.1.0 (2021-02-11)
+* Windows                 (win-builder), R-devel (2021-05-18 r80323)
 
 ## R CMD check results
 

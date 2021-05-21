@@ -139,7 +139,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
-                       useCache = getOption("reproducible.useCache", FALSE),
+                       # useCache = getOption("reproducible.useCache", FALSE),
                        verbose = getOption("reproducible.verbose", 1),
                        .tempPath, ...) {
   if (missing(.tempPath)) {
@@ -156,14 +156,21 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
 
+  if (!is.null(archive))
+    if (any(is.na(archive)))
+      if (all(!is.character(archive))) {
+        archive <- as.character(archive)
+      }
+
   if (is.null(targetFile)) {
     fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
                               destinationPath = destinationPath, verbose = verbose,
                               team_drive = dots[["team_drive"]])
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
-    archive <- moveAttributes(fileGuess, archive)
-    if (is.null(archive) && !is.null(fileGuess)) {
+    if (isTRUE(!is.na(archive)))
+      archive <- moveAttributes(fileGuess, archive)
+    if ((is.null(archive) || is.na(archive)) && !is.null(fileGuess)) {
       messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile", verbose = verbose)
       targetFile <- .basename(fileGuess)
@@ -189,7 +196,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   }
-
   if (!is.null(alsoExtract)) {
     alsoExtract <- if (isTRUE(all(is.na(alsoExtract)))) {
       character()
@@ -570,11 +576,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   ## targetFilePath might still be NULL, need destinationPath too
   if (is.null(targetFilePath)) {
-    if (is.null(filesExtracted$filesExtr)) {
+    if (is.null(filesExtr)) {
       if (!is.null(downloadFileResult$downloaded))
         targetFilePath <- downloadFileResult$downloaded
     } else {
-      targetFilePath <- filesExtracted$filesExtr
+      targetFilePath <- filesExtr
     }
   }
 

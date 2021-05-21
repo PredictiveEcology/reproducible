@@ -14,7 +14,7 @@ prepInputs(
   quick = getOption("reproducible.quick"),
   overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE),
+  useCache = getOption("reproducible.useCache", 2),
   .tempPath,
   verbose = getOption("reproducible.verbose", 1),
   ...
@@ -68,8 +68,12 @@ as a character string, or the function itself.
 If a character string or function, is should have the package name e.g.,
 \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
 If it is to be a custom function call, then use `quote`, e.g.,
-`quote(customFunction(x = targetFilePath))`, using
+`quote(customFun(x = targetFilePath))`, using
 `targetFilePath` as the file path of the object that has been `preProcess`ed.
+If the custom function is not in a package, `prepInputs` may not find it. In such
+cases, simply pass the function as a named argument (with same name as function)
+e.g.,
+`prepInputs(..., fun = quote(customFun(x = targetFilePath), customFun = customFun)`.
 NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
 replicate the functionality of simply calling \code{preProcess} directly.}
 
@@ -87,7 +91,12 @@ even if they pass the checksums or the files are all there.}
 \code{CHECKSUMS.txt} file. Other options, see details.}
 
 \item{useCache}{Passed to \code{Cache} in various places.
-Defaults to \code{getOption("reproducible.useCache")}.}
+Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
+\code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
+functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
+only up to 2 nested levels, which will generally including \code{postProcess} and
+the first level of \code{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
+\code{maskInputs}, but not \code{fixErrors}.}
 
 \item{.tempPath}{Optional temporary path for internal file intermediate steps.
 Will be cleared on.exit from this function.}

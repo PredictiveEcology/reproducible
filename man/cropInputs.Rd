@@ -25,6 +25,7 @@ cropInputs(
   extentToMatch = NULL,
   extentCRS = NULL,
   useGDAL = getOption("reproducible.useGDAL", TRUE),
+  useCache = getOption("reproducible.useCache", FALSE),
   ...
 )
 
@@ -35,6 +36,7 @@ cropInputs(
   verbose = getOption("reproducible.verbose", 1),
   extentToMatch = NULL,
   extentCRS = NULL,
+  useCache = getOption("reproducible.useCache", FALSE),
   ...
 )
 }
@@ -58,7 +60,7 @@ Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
 
-\item{...}{Passed to raster::crop}
+\item{...}{Passed to \code{raster::crop}}
 
 \item{extentToMatch}{Optional. Can pass an extent here and a \code{crs} to
 \code{extentCRS} instead of \code{rasterToMatch}. These
@@ -77,6 +79,9 @@ usually be faster than \code{raster::projectRaster}, the function used
 if this is \code{FALSE}. Since since the two options use different algorithms,
 there may be different projection results. \code{"force"} will cause it to
 use GDAL regardless of the memory test described here.}
+
+\item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
+\code{Cache} is used internally.}
 }
 \description{
 This function can be used to crop or reproject module inputs from raw data.

@@ -1218,7 +1218,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   # If passed with 'quote'
   if (!is.function(FUN)) {
     parsedFun <- parse(text = FUN)
-    evaledParsedFun <- eval(parsedFun[[1]])
+    evaledParsedFun <- eval(parsedFun[[1]], envir = modifiedDots)
     if (is.function(evaledParsedFun)) {
       tmpFUN <- evaledParsedFun
       mc <- match.call(tmpFUN, FUN)
@@ -1238,8 +1238,16 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
         if (is.primitive(FUN)) {
           modifiedDots <- list(...)
         } else {
+          nams <- names(modifiedDots)
+          if (!is.null(nams)) {
+            whHasNames <- nams != "" | !is.na(nams)
+            whHasNames[is.na(whHasNames)] <- FALSE
+            namedNames <- names(modifiedDots)[whHasNames]
+            modifiedDotsArgsToUse <- intersect(names(formals(FUN)), namedNames)
+            modifiedDots <- append(modifiedDots[!whHasNames], modifiedDots[modifiedDotsArgsToUse])
+          }
           modifiedDots <- as.list(
-            match.call(FUN, as.call(list(FUN, ...))))[-1]
+            match.call(FUN, as.call(append(list(FUN), modifiedDots))))[-1]
         }
       }
     } else {

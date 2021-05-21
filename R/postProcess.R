@@ -214,8 +214,13 @@ postProcess.sf <- function(x, filename1 = NULL, filename2 = NULL,
 #'                      resolution and projection).
 #'                      See details in \code{\link{postProcess}}.
 #'
-#' @param ... Passed to raster::crop
+#' @param ... Passed to \code{raster::crop}
+#'
+#' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
+#'                 \code{Cache} is used internally.
+#'
 #' @inheritParams projectInputs
+#'
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @example inst/examples/example_postProcess.R
 #' @export
@@ -247,6 +252,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                       verbose = getOption("reproducible.verbose", 1),
                                       extentToMatch = NULL, extentCRS = NULL,
                                       useGDAL = getOption("reproducible.useGDAL", TRUE),
+                                      useCache = getOption("reproducible.useCache", FALSE),
                                       ...) {
   # browser(expr = exists("._cropInputs_1"))
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
@@ -406,7 +412,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           sf::st_as_sf(x)
                         ),
                         exprBetween = quote(
-                          x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                          x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                         ))
             x <- yy
           }
@@ -419,7 +425,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                         sf::st_as_sf(yyy)
                       ),
                       exprBetween = quote(
-                        yyy <- fixErrors(yyy, testValidity = FALSE, useCache = FALSE)
+                        yyy <- fixErrors(yyy, testValidity = FALSE, useCache = useCache)
                       ))
 
           # yyySF <- sf::st_as_sf(yyy)
@@ -447,9 +453,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             x <- as(x, "Spatial")
 
         } else {
-          # completed <- FALSE
-          # i <- 1
-          # while (!completed & i < 3) {
           if (!is.null(dots$datatype)) {
             if (length(dots$datatype) > 1) {
               warning("datatype can only be length 1 for raster::crop. Using first value: ",
@@ -457,7 +460,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
               dots$datatype <- dots$datatype[1]
             }
           }
-          # if (canProcessInMemory(x, 3)) {
+          layerNamesNow <- names(x)
+          # Need to assign to "not x" so that retry can do its thing on fail
           yy <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                       expr = quote(
                         if (canProcessInMemory(x, 3)) {
@@ -471,38 +475,11 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                         }
                       ),
                       exprBetween = quote(
-                        x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                        x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                       ))
-          # yy <- try(do.call(raster::crop, args = append(list(x = x, y = cropExtentRounded),
-          #                                               dots)),
-          #           silent = TRUE)
-          # } else {
-          #
-          #   yy <- try(do.call(raster::crop,
-          #                     args = append(list(x = x, y = cropExtentRounded,
-          #                                        filename = paste0(tempfile(tmpdir = tmpDir()), ".tif")),
-          #                                   dots)), silent = TRUE)
-          # }
-          # if (is(yy, "try-error")) {
-          #   x <- fixErrors(x)
-          # } else {
-          #   completed <- TRUE
+          if (!identical(names(yy), layerNamesNow))
+            names(yy) <- layerNamesNow
           x <- yy
-          #   }
-          #   i <- i + 1
-          # }
-          # if (!completed) {
-          #   ## if not completed because file doesn't exist, let the user know with a sensible error.
-          #   noFileError <- grepl("Error in .local(.Object, ...)", yy, fixed = TRUE)
-          #   fileDoesntExist <- fromDisk(x) && !file.exists(filename(x))
-          #   if (noFileError && fileDoesntExist) {
-          #     stop("The following file-backed raster is supposed to be on disk ",
-          #          "but appears to to be missing:\n",
-          #          paste("    ", filename(x), collapse = "\n"))
-          #   } else {
-          #     stop(as.character(yy))
-          #   }
-          # }
         }
 
         if (is.null(x)) {
@@ -527,6 +504,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
 cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           verbose = getOption("reproducible.verbose", 1),
                           extentToMatch = NULL, extentCRS = NULL,
+                          useCache = getOption("reproducible.useCache", FALSE),
                           ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
   useExtentToMatch <- useETM(extentToMatch = extentToMatch, extentCRS = extentCRS, verbose = verbose)
@@ -575,7 +553,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                       do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots))
                     ),
                     exprBetween = quote(
-                      x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                      x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                     ))
         x <- yy
 
@@ -746,7 +724,7 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       } else {
         FALSE
       }
-      if (isTRUE(!knownNotValid)) {
+      if (isTRUE(knownNotValid)) {
         messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
                           verbose = verbose)
 
@@ -1145,9 +1123,10 @@ projectInputs.Spatial <- function(x, targetCRS, verbose = getOption("reproducibl
 #'          See methods.
 #' @param ... Passed to methods. None currently implemented.
 #'
+#' @inheritParams cropInputs
+#'
 #' @author Eliot McIntire and Jean Marchal
 #' @export
-#' @inheritParams cropInputs
 #' @importFrom utils capture.output
 #' @rdname maskInputs
 #' @example inst/examples/example_postProcess.R
@@ -1191,7 +1170,9 @@ maskInputs.Raster <- function(x, studyArea, rasterToMatch, maskWithRTM = NULL,
 #' @export
 #' @rdname maskInputs
 maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
-                               verbose = getOption("reproducible.verbose", 1), ...) {
+                               verbose = getOption("reproducible.verbose", 1),
+                               useCache = getOption("reproducible.useCache", FALSE),
+                               ...) {
 
   x <- sf::st_as_sf(x)
 
@@ -1200,7 +1181,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
                maskInputs(x, studyArea, rasterToMatch, maskWithRTM, verbose = verbose)
              ),
              exprBetween = quote(
-               x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+               x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
              ))
 
   as(x, "Spatial")
@@ -1208,7 +1189,9 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
 
 #' @export
 #' @rdname maskInputs
-maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbose", 1), ...) {
+maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbose", 1),
+                          useCache = getOption("reproducible.useCache", FALSE),
+                          ...) {
   .requireNamespace("sf", stopOnFALSE = TRUE)
 
   if (!is.null(studyArea)) {
@@ -1242,14 +1225,14 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
     } else {
       x <- sf::st_set_precision(x, 1e5)
       studyArea <- sf::st_set_precision(studyArea, 1e5)
-      studyArea <- fixErrors(studyArea, useCache = FALSE)
+      studyArea <- fixErrors(studyArea, useCache = useCache)
 
       y <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                  expr = quote(
-                   sf::st_intersection(x, studyArea, useCache = FALSE)
+                   sf::st_intersection(x, studyArea)
                  ),
                  exprBetween = quote(
-                   x <- fixErrors(x, testValidity = FALSE, useCache = FALSE)
+                   x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
                  ))
       # x <- sf::st_set_precision(x, 1e5) %>% fixErrors(.)
       # studyArea <- sf::st_set_precision(studyArea, 1e5) %>% fixErrors(.)
@@ -1821,7 +1804,9 @@ postProcessChecks <- function(studyArea, rasterToMatch, dots,
 #' @importFrom raster projectExtent
 #' @importFrom sp wkt
 #' @importFrom Require normPath
-postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filename1,
+postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
+                                  useCache = getOption("reproducible.useCache", FALSE),
+                                  filename1,
                                   filename2, useSAcrs, overwrite, targetCRS = NULL,
                                   useGDAL = getOption("reproducible.useGDAL", TRUE),
                                   cores = getOption("reproducible.GDALcores", 2),
@@ -1968,7 +1953,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
                        ),
                        exprBetween = quote(
                          x <- fixErrors(x, objectName = objectName,
-                                        testValidity = FALSE, useCache = FALSE)
+                                        testValidity = FALSE, useCache = useCache)
                        ))
           } else {
             messageCache("  Skipping projectInputs; identical crs, res, extent")
@@ -1980,11 +1965,12 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch, useCache, filenam
           yy <- retry(retries = 2, silent = FALSE, exponentialDecayBase = 1,
                       expr = quote(
                         maskInputs(x = x, studyArea = studyArea,
-                                   rasterToMatch = rasterToMatch, useCache = useCache, verbose = verbose, ...)
+                                   rasterToMatch = rasterToMatch, useCache = useCache,
+                                   verbose = verbose, ...)
                       ),
                       exprBetween = quote(
                         x <- fixErrors(x, objectName = objectName,
-                                       testValidity = FALSE, useCache = FALSE)
+                                       testValidity = FALSE, useCache = useCache)
                       ))
           x <- yy
 

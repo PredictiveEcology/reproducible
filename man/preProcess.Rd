@@ -18,7 +18,6 @@ preProcess(
   quick = getOption("reproducible.quick"),
   overwrite = getOption("reproducible.overwrite", FALSE),
   purge = FALSE,
-  useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
   .tempPath,
   ...
@@ -76,8 +75,12 @@ as a character string, or the function itself.
 If a character string or function, is should have the package name e.g.,
 \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
 If it is to be a custom function call, then use `quote`, e.g.,
-`quote(customFunction(x = targetFilePath))`, using
+`quote(customFun(x = targetFilePath))`, using
 `targetFilePath` as the file path of the object that has been `preProcess`ed.
+If the custom function is not in a package, `prepInputs` may not find it. In such
+cases, simply pass the function as a named argument (with same name as function)
+e.g.,
+`prepInputs(..., fun = quote(customFun(x = targetFilePath), customFun = customFun)`.
 NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
 replicate the functionality of simply calling \code{preProcess} directly.}
 
@@ -96,9 +99,6 @@ even if they pass the checksums or the files are all there.}
 \code{CHECKSUMS.txt} file and
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
 \code{CHECKSUMS.txt} file. Other options, see details.}
-
-\item{useCache}{Passed to \code{Cache} in various places.
-Defaults to \code{getOption("reproducible.useCache")}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

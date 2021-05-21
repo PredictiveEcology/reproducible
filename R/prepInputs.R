@@ -132,8 +132,12 @@ if (getRversion() >= "3.1.0") {
 #'   If a character string or function, is should have the package name e.g.,
 #'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
 #'   If it is to be a custom function call, then use `quote`, e.g.,
-#'   `quote(customFunction(x = targetFilePath))`, using
+#'   `quote(customFun(x = targetFilePath))`, using
 #'   `targetFilePath` as the file path of the object that has been `preProcess`ed.
+#'   If the custom function is not in a package, `prepInputs` may not find it. In such
+#'   cases, simply pass the function as a named argument (with same name as function)
+#'   e.g.,
+#'   `prepInputs(..., fun = quote(customFun(x = targetFilePath), customFun = customFun)`.
 #'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
 #'   replicate the functionality of simply calling \code{preProcess} directly.
 #'
@@ -158,7 +162,12 @@ if (getRversion() >= "3.1.0") {
 #'  \code{dlFun} which is passed to \code{preProcess}. See details and examples.
 #'
 #' @param useCache Passed to \code{Cache} in various places.
-#'   Defaults to \code{getOption("reproducible.useCache")}.
+#'   Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
+#'   \code{getOption("reproducible.useCache", FALSE)} if calling any of the inner
+#'   functions manually. For \code{prepInputs}, this mean it will use \code{Cache}
+#'   only up to 2 nested levels, which will generally including \code{postProcess} and
+#'   the first level of \code{*Input} functions, e.g., \code{cropInputs}, \code{projectInputs},
+#'   \code{maskInputs}, but not \code{fixErrors}.
 #'
 #' @param .tempPath Optional temporary path for internal file intermediate steps.
 #'   Will be cleared on.exit from this function.
@@ -170,7 +179,7 @@ if (getRversion() >= "3.1.0") {
 #' @importFrom digest digest
 #' @importFrom methods is
 #' @importFrom rlang quo
-#' @importFrom utils methods
+#' @importFrom utils methods modifyList
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
 #' @seealso \code{\link{downloadFile}}, \code{\link{extractFromArchive}},
@@ -264,7 +273,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
-                       useCache = getOption("reproducible.useCache", FALSE),
+                       useCache = getOption("reproducible.useCache", 2),
                        .tempPath,
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
@@ -296,7 +305,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
 
   # Load object to R
-  fun <- .fnCleanup(out$fun, callingFun = "prepInputs")
+  fun <- .fnCleanup(out$fun, callingFun = "prepInputs", ...)
   suppressWarnings(naFun <- all(is.na(out$fun)))
 
   ## dots will contain too many things for some functions
@@ -340,6 +349,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
               out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
                                    out[-which(names(out) == "targetFilePath")]),
                             args)
+              out[[fun[["functionName"]]]] <- fun$FUN
               obj <- Cache(eval, out$fun, envir = out, useCache = useCache)
             } else {
               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
@@ -383,7 +393,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     xquo <- rlang::quo(x)
 
     x <- Cache(
-      do.call, postProcess, append(list(x = xquo, filename1 = out$targetFilePath,
+      do.call, postProcess, modifyList(list(x = xquo, filename1 = out$targetFilePath,
                                         overwrite = overwrite,
                                         destinationPath = out$destinationPath,
                                         useCache = useCache,
@@ -653,24 +663,25 @@ extractFromArchive <- function(archive,
 
 #' @importFrom utils untar unzip
 .whichExtractFn <- function(archive, args) {
+  out <- NULL
   if (!(is.null(archive))) {
-    ext <- tolower(fileExt(archive))
-    if (!ext %in% knownArchiveExtensions)
-      stop("preProcess can only deal with archives with following extensions:\n",
-           paste(knownArchiveExtensions, collapse = ", "))
-    if (ext == "zip") {
-      fun <- unzip
-      args <- c(args, list(junkpaths = TRUE))
-    } else if (ext %in% c("tar", "tar.gz", "gz")) {
-      fun <- untar
-    } else if (ext == "rar") {
-      fun <- "unrar"
-    } else if (ext == "7z") {
-      fun <- "7z"
+    if (!is.na(archive)) {
+      ext <- tolower(fileExt(archive))
+      if (!ext %in% knownArchiveExtensions)
+        stop("preProcess can only deal with archives with following extensions:\n",
+             paste(knownArchiveExtensions, collapse = ", "))
+      if (ext == "zip") {
+        fun <- unzip
+        args <- c(args, list(junkpaths = TRUE))
+      } else if (ext %in% c("tar", "tar.gz", "gz")) {
+        fun <- untar
+      } else if (ext == "rar") {
+        fun <- "unrar"
+      } else if (ext == "7z") {
+        fun <- "7z"
+      }
+      out <- list(fun = fun, args = args)
     }
-    out <- list(fun = fun, args = args)
-  } else {
-    out <- NULL
   }
   return(out)
 }
@@ -1046,13 +1057,16 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 }
 
 .compareChecksumsAndFiles <- function(checkSums, files) {
-  checkSumsDT <- data.table(checkSums)
-  filesDT <- data.table(files = basename(files))
-  isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
-  isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
-  # fill in any OKs from "actualFile" intot he isOKDT
-  isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
-  isOK <- compareNA(isOKDT$result, "OK")
+  isOK <- NULL
+  if (!is.null(files)) {
+    checkSumsDT <- data.table(checkSums)
+    filesDT <- data.table(files = .basename(files))
+    isOKDT <- checkSumsDT[filesDT, on = c(expectedFile = "files")]
+    isOKDT2 <- checkSumsDT[filesDT, on = c(actualFile = "files")]
+    # fill in any OKs from "actualFile" intot he isOKDT
+    isOKDT[compareNA(isOKDT2$result, "OK"), "result"] <- "OK"
+    isOK <- compareNA(isOKDT$result, "OK")
+  }
   isOK
 }
 

@@ -24,10 +24,17 @@ maskInputs(x, studyArea, ...)
   rasterToMatch,
   maskWithRTM = FALSE,
   verbose = getOption("reproducible.verbose", 1),
+  useCache = getOption("reproducible.useCache", FALSE),
   ...
 )
 
-\method{maskInputs}{sf}(x, studyArea, verbose = getOption("reproducible.verbose", 1), ...)
+\method{maskInputs}{sf}(
+  x,
+  studyArea,
+  verbose = getOption("reproducible.verbose", 1),
+  useCache = getOption("reproducible.useCache", FALSE),
+  ...
+)
 }
 \arguments{
 \item{x}{An object to do a geographic raster::mask/raster::intersect.
@@ -53,6 +60,9 @@ See details in \code{\link{postProcess}}.}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \code{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
+\code{Cache} is used internally.}
 }
 \description{
 This function can be used to mask inputs from data. Masking here is

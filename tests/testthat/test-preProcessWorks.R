@@ -405,28 +405,27 @@ test_that("message when extracting a file that is already present", {
     testOnExit(testInitOut)
   }, add = TRUE)
   url1 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(
+  noisyOutput <- capture.output({
+    ccc <- testthat::capture_output({
       ras <- reproducible::preProcess(url = url1,
                                       targetFile = "rasterTest.tif",
                                       destinationPath = tmpdir)
-    )
-  )
+    })
+  })
   url2 <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
-  noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(
-      shp <- reproducible::preProcess(url = url2,
-                                      destinationPath = tmpdir)
-    )
-  )
+  noisyOutput <- capture.output({
+    ccc <- testthat::capture_output({
+      shp <- reproducible::preProcess(url = url2, destinationPath = tmpdir)
+    })
+  })
   url3 <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
-  noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(
+  noisyOutput <- capture.output({
+    ccc <- testthat::capture_output({
       testthat::expect_message({
         fl <- reproducible::preProcess(url = url3, destinationPath = tmpdir)
       })
-    )
-  )
+    })
+  })
 })
 
 test_that("Test to fix issue #101 prepInputs on raster from disk", {
