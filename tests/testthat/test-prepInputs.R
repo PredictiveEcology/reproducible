@@ -1205,7 +1205,7 @@ test_that("prepInputs doesn't work (part 2)", {
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir,
                 test = test3)
 
-        runTest("1_2_4_6", "SpatialPolygonsDataFrame", 5, mess2,
+        runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 5, mess2,
                 expectedMess = expectedMessagePostProcess,
                 filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
