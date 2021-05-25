@@ -1198,7 +1198,9 @@ test_that("test file link with duplicate Cache", {
   expect_true(any(grepl("loaded cached", mess2)))
   expect_true(any(grepl("loaded cached", mess1)))
   # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
-  warns <- capture_warnings(out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE))
+  warns <- capture_warnings({
+    out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
+  })
   # out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out1, "try-error"))
     fs1 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out1))
@@ -1273,7 +1275,7 @@ test_that("quick arg in Cache as character", {
   rasRan <- c(rep(TRUE, 6), rep(FALSE, 6))
   for (i in seq(quicks)) {
     vals <- if (rasRan[i]) sample(1:100) else 1:100
-    ranRas <- raster(extent(0,10,0,10), vals = vals);
+    ranRas <- raster(extent(0, 10, 0, 10), vals = vals);
     ranRas <- suppressWarningsSpecific(
       falseWarnings = proj6Warn,
       writeRaster(ranRas, filename = tf2, overwrite = TRUE))
@@ -1283,15 +1285,14 @@ test_that("quick arg in Cache as character", {
     # new copy
     messes[[i]] <- capture_messages(Cache(saveRDS, ranRas, file = tf, cacheRepo = tmpCache,
                                           quick = quicks[[i]]))
-
   }
-  expect_true(length(messes[[6]]) > 0) # undesireable quick = FALSE -- even when raster has changed
-  expect_true(length(messes[[8]]) == 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
+  ## TODO: fix tests for messes[[9]] and sum of all tests
+  expect_true(length(messes[[6]]) > 0) # undesirable quick = FALSE -- even when raster has changed
+  expect_true(length(messes[[8]]) == 0) # undesirable quick = FALSE -- even when raster not changed, but file yes
   # Desired -- 9 not cache, 10 cached
-  expect_true(length(messes[[9]]) == 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
-  expect_true(length(messes[[10]]) > 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
+  expect_true(length(messes[[9]]) == 0) # undesirable quick = FALSE -- even when raster not changed, but file yes
+  expect_true(length(messes[[10]]) > 0) # undesirable quick = FALSE -- even when raster not changed, but file yes
   expect_true(sum(unlist(lapply(messes, function(x) length(x) > 0))) == 4L)
-
 })
 
 test_that("List of Rasters", {

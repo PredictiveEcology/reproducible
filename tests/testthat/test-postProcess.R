@@ -184,7 +184,6 @@ test_that("prepInputs doesn't work (part 3)", {
     # projectInputs pass through
     nc5 <- projectInputs(x = 1)
     expect_identical(nc5, 1)
-
   }
 })
 
@@ -265,12 +264,12 @@ test_that("new gdalwarp all in one with grd with factor", {
   mmm <- Map(ff = files, nf = newFiles, function(ff, nf) file.link(ff, nf))
   unlink(files)
   expect_true(all(file.exists(newFiles)))
-  expect_warning(regexp = "being updated automatically",
-                 rr4 <- Cache(postProcess, r, destinationPath = tmpdir,
-               studyArea = StudyArea, useCache = TRUE, useGDAL = "force",
-               cacheRepo = tmpCache2, filename2 = TRUE))
+  expect_warning(regexp = "being updated automatically", {
+    rr4 <- Cache(postProcess, r, destinationPath = tmpdir,
+                 studyArea = StudyArea, useCache = TRUE, useGDAL = "force",
+                 cacheRepo = tmpCache2, filename2 = TRUE)
+  })
   expect_identical(rr3, rr4)
-
 })
 
 test_that("cropInputs crops too closely when input projections are different", {
