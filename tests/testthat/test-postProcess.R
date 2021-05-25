@@ -178,8 +178,9 @@ test_that("prepInputs doesn't work (part 3)", {
       mess <- capture_messages({
         p6a <- fixErrors(st_as_sf(p6))
       })
-      expect_true(any(grepl("Found no errors", mess)))
       expect_true(any(grepl("Checking for errors", mess)))
+      expect_true(any(grepl("Found errors", mess)))
+      expect_true(any(grepl("errors fixed", mess)))
     }
     # projectInputs pass through
     nc5 <- projectInputs(x = 1)
