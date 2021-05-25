@@ -16,13 +16,13 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2021-04-22
-Version: 1.2.6.9017
+Date: 2021-05-25
+Version: 1.2.7.9000
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
              role = c("aut", "cre"),
-             email = "achubaty@for-cast.ca",
+             email = "eliot.mcintire@canada.ca",
              comment = c(ORCID = "0000-0002-6914-8316")),
       person(given = "Alex M",
              family = "Chubaty",
