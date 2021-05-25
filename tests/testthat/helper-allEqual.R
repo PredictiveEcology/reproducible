@@ -149,10 +149,10 @@ runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpd
   expect_true(length(files) == numFiles)
   expect_is(test, class)
   messagePrepInputs(mess)
-  hasMessageNum <- print(paste(collapse = "_", which(unlist(
+  hasMessageNum <- paste(collapse = "_", which(unlist(
     lapply(strsplit(expectedMess, "\\|")[[1]], function(m)
       any(grepl(m, mess)))
-  ))))
+  )))
 
   isOK <- hasMessageNum == prod
   if (!isOK) {
@@ -266,7 +266,6 @@ if (utils::packageVersion("raster") <= "2.6.7") {
 } else {
   getDataFn <- raster::getData
 }
-
 
 testRasterInCloud <- function(fileext, cloudFolderID, numRasterFiles, tmpdir, type = c("Raster", "Stack", "Brick")) {
   if (!requireNamespace("googledrive")) stop(requireNamespaceMsg("googledrive", "to use google drive files"))
@@ -435,10 +434,12 @@ messageNoCacheRepo <- "No cacheRepo supplied and getOption\\('reproducible.cache
                            writeRaster(...))
 }
 
-tatisRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"
-tatisRasterTestFilename <- function(pre = "", suff = "") {
+theRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"
+theRasterTestFilename <- function(pre = "", suff = "") {
   paste0(pre, "rasterTest.", suff)
 }
-tatisRasterTestZip <- tatisRasterTestFilename(tatisRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-tatisRasterTestRar <- tatisRasterTestFilename(tatisRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-tatisRasterTestTar <- tatisRasterTestFilename(tatisRasterTests, "tar")
+theRasterTestZip <- theRasterTestFilename(theRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
+theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar")
+
+shapefileClassDefault <- if (getOption("reproducible.shapefileRead") == "raster::shapefile") "SpatialPolygons" else "sf"

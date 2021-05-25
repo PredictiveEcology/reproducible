@@ -49,7 +49,10 @@ in subsequent calls to
 containing \code{targetFile}, or a vector giving a set of nested archives
 (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the \code{targetFile}. See table in \code{\link{preProcess}}.}
+the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+then it will \emph{not} attempt to see it as an archive, even if it has archive-like
+file extension (e.g., \code{.zip}). This may be useful when an R function
+is expecting an archive directly.}
 
 \item{alsoExtract}{Optional character string naming files other than
 \code{targetFile} that must be extracted from the \code{archive}. If
@@ -67,12 +70,16 @@ To prevent repeated downloads in different locations, the user can also set
 search for the file before attempting to download. Default for that option is
 \code{NULL} meaning do not search locally.}
 
-\item{fun}{Function or character string indicating the function to use to load
-\code{targetFile} into an \code{R} object, e.g., in form with package name:
+\item{fun}{Function, character string, or quoted call with which to load the
+\code{targetFile} into an \code{R} object. It must be either a function
+as a character string, or the function itself.
+If a character string or function, is should have the package name e.g.,
 \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
-If passing a custom function, it must be a function of
-\code{x}, e.g., \code{loadFun <- function(x) shapefile(x)}.
-NOTE: passing \code{NULL} will skip loading object into R.}
+If it is to be a custom function call, then use `quote`, e.g.,
+`quote(customFunction(x = targetFilePath))`, using
+`targetFilePath` as the file path of the object that has been `preProcess`ed.
+NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
+replicate the functionality of simply calling \code{preProcess} directly.}
 
 \item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
 custom downloading, in addition to loading into R. Still experimental.}

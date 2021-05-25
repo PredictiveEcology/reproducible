@@ -9,7 +9,8 @@ retry(
   envir = parent.frame(),
   retries = 5,
   exponentialDecayBase = 1.3,
-  silent = TRUE
+  silent = TRUE,
+  exprBetween = NULL
 )
 }
 \arguments{
@@ -25,6 +26,11 @@ successive retries will be \code{runif(1, min = 0, max = exponentialDecayBase ^ 
 where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})}
 
 \item{silent}{Logical indicating whether to \code{try} silently.}
+
+\item{exprBetween}{Another expression that should be run after a failed attempt
+of the `expr`. It must include an assignment operator, specifying what
+object (that is used in `expr`) will be updated prior to running
+the `expr` again.}
 }
 \description{
 This is useful for functions that are "flaky", such as \code{curl}, which may fail for unknown

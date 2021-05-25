@@ -20,7 +20,6 @@ file.move <- function(from, to, overwrite = FALSE) {
   }
 }
 
-
 #' Recursive copying of nested environments, and other "hard to copy" objects
 #'
 #' When copying environments and all the objects contained within them, there are
@@ -83,7 +82,7 @@ file.move <- function(from, to, overwrite = FALSE) {
 #'   # write deep copy code here
 #' })
 #' }
-setGeneric("Copy", function(object, filebackedDir, ...) {
+setGeneric("Copy", function(object, ...) {
   standardGeneric("Copy")
 })
 
@@ -163,7 +162,7 @@ setMethod("Copy",
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "refClass"),
-          definition = function(object,  filebackedDir, ...) {
+          definition = function(object,  ...) {
             if (exists("copy", envir = object)) {
               object$copy()
             } else {
@@ -175,7 +174,7 @@ setMethod("Copy",
 #' @rdname Copy
 setMethod("Copy",
           signature(object = "data.frame"),
-          definition = function(object,  filebackedDir, ...) {
+          definition = function(object,  ...) {
             object
 })
 
@@ -186,7 +185,10 @@ setMethod("Copy",
           definition = function(object, filebackedDir,
                                 drv = getOption("reproducible.drv", RSQLite::SQLite()),
                                 conn = getOption("reproducible.conn", NULL), ...) {
-            if (fromDisk(object)) {
+            # raster::fromDisk fails when only some of the RasterLayers in a RasterStack are fromDisk
+            #  --> changing to Filenames
+            # if (fromDisk(object)) {
+            if (any(nchar(Filenames(object)) > 0)) {
               if (missing(filebackedDir)) {
                 filebackedDir <- tempdir2(rndstr(1, 11))
               }

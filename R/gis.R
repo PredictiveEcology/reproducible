@@ -281,18 +281,29 @@ findGDAL <- function() {
                                 "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
                                 "C:/Program Files/GDAL",
                                 "C:/Program Files (x86)/GDAL")
-      messagePrepInputs("Searching for gdal installation")
       gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
       if (any(gdalInfoExists))
         gdalPath <- possibleWindowsPaths[gdalInfoExists]
     }
-    gdalUtils::gdal_setInstallation(gdalPath)
+    b <- try(setGDALInst(gdalPath), silent = TRUE)
 
     if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
       attemptGDAL <- FALSE
     attemptGDAL
   }
   invisible(attemptGDAL)
+}
+
+setGDALInst <- function(gdalPath) {
+  setTimeLimit(20, transient = TRUE)
+  on.exit({
+    setTimeLimit(cpu = Inf, elapsed = Inf, transient = FALSE)
+  })
+  messagePrepInputs("Searching for gdal installation")
+  out <- gdalUtils::gdal_setInstallation(gdalPath)
+  if (is.null(getOption("gdalUtils_gdalPath")))
+    messagePrepInputs("  .. Done")
+  return(out)
 }
 
 attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE),
@@ -346,7 +357,10 @@ checkColors <- function(x) {
 rebuildColors <- function(x, origColors) {
   if (isTRUE(all(origColors$origMinValue != minValue(x)) || all(origColors$origMaxValue != maxValue(x)) ||
              !identical(.getColors(x)[[1]], origColors$origColors))) {
-    if (isTRUE(length(origColors$origColors) == length(origColors$origMinValue:origColors$origMaxValue))) {
+    colorSequences <- unlist(lapply(seq(length(origColors$origMinValue)), function(ind) {
+      origColors$origMinValue[ind]:origColors$origMaxValue[ind]
+    }))
+    if (isTRUE(length(origColors$origColors) == length(colorSequences))) {
       newSeq <- minValue(x):maxValue(x)
       oldSeq <- origColors$origMinValue:origColors$origMaxValue
       whFromOld <- match(newSeq, oldSeq)

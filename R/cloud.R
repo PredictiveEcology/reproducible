@@ -285,13 +285,13 @@ cloudDownloadRasterBackend <- function(output, cacheRepo, cloudFolderID,
 isOrHasRaster <- function(obj) {
   rasters <- if (is(obj, "environment")) {
     if (inherits_only(obj, "environment")) {
-      unlist(lapply(mget(ls(obj), envir = obj), function(x) isOrHasRaster(x)))
+      lapply(mget(ls(obj), envir = obj), function(x) isOrHasRaster(x))
     } else {
-      tryCatch(unlist(lapply(mget(ls(obj), envir = obj@.xData),
-                             function(x) isOrHasRaster(x))), error = function(x) FALSE)
+      tryCatch(lapply(mget(ls(obj), envir = obj@.xData),
+                             function(x) isOrHasRaster(x)), error = function(x) FALSE)
     }
   } else if (is.list(obj)) {
-    unlist(lapply(obj, function(x) isOrHasRaster(x)))
+    lapply(obj, function(x) isOrHasRaster(x))
   } else {
     is(obj, "Raster")
   }

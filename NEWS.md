@@ -1,5 +1,39 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+Version 1.2.7
+=============
+
+`reproducible` will be slowly changing the defaults for vector GIS datasets from the `sp` package to the `sf` package. 
+There is a large user-visible change that will come (in the next release), which will cause `prepInputs` to read `.shp` files with `sf::st_read` instead of `raster::shapefile`, as it is much faster. To change now, set  `options("reproducible.shapefileRead" = "sf::st_read")`
+
+## Enhancements
+* default `fun` in `prepInputs` for shapefiles (`.shp`) is now `sf::st_read` if the system has `sf` installed. This can be overridden with `options("reproducible.shapefileRead" = "raster::shapefile")`, and this is indicated with a message at the moment this is occurring, as it will cause different behaviour.
+* `quick` argument in `Cache` can now be a character vector, allowing individual character arguments to be digested as character vectors and others to be digested as files located at the specified path as represented by the character vector.
+* `objSize` previously included objects in `namespaces`, `baseenv` and `emptyenv`, so it was generally too large. Now uses the same criteria as `pryr::object_size`
+* improvements with messaging when `unzip` missing (thanks to C. Barros #202)
+* while unzipping, will also search for `7z.exe` on Windows if the object is larger than 2GB, if can't find `unzip`.
+* `fun` argument in `prepInputs` and family can now be a quoted expression.
+* `archive` argument in `prepInputs` can now be `NA` which means to treat the file downloaded not as an archive, even if it has a `.zip` file extension
+* many minor improvements to functioning of esp. `prepInputs`
+* speed improvements during `postProcess` especially for very large objects (>5GB tested). Previously, it was running many `fixErrors` calls; now only calls `fixErrors` on fail of the proximate call (e.g., st_crop or whatever)
+* `retry` now has a new argument `exprBetween` to allow for doing something after the fail (for example, if an operation fails, e.g., `st_crop`, then run `fixErrors`, then return back to `st_crop` for the retry)
+* `Cache` now has MUCH better nested levels detection, with messaging... and control of how deep the Caching goes seems good, via useCache = 2 will only Cache 2 levels in...
+* `archive` argument in `prepInputs` family can now be NA ... meaning do not try to unzip even if it is a `.zip` file or other standard archive extension
+* `gdb.zip` files (e.g., a file with a .zip extension, but that should not be opened with an unzip-type program) can now be opened with `prepInputs(url = "whateverUrl", archive = NA, fun = "sf::st_read")`
+* `fun` argument in `prepInputs` can now be a quoted function call.
+* `preProcess` now does a better job with large archives that can't be correctly handled with the default `zip` and `unzip` with R, by trying `system2` calls to possible `7z.exe` or other options on Linux-alikes.
+
+
+## Bug fixees
+* `Copy` generic no longer has `fileBackedDir` argument. It is now passed through with the `...`. This was creating a bug with some cases where `fileBackedDir` was not being correctly executed.
+* `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
+* inadvertent deleting of file-backed rasters in multi-filed stacks during `Cache`
+* `writeOutputs.Raster` attempted to change `datatype` of `Raster` class objects using the setReplacement `dataType<-`, without subsequently writing to disk via `writeRaster`. This created bad values in the `Raster*` object. This now performs a `writeRaster` if there is a `datatype` passed to `writeOutputs` e.g., through `prepInputs` or `postProcess`.
+* `updateSlotFilename` has many more tests.
+* `prepInputs(..., fun = NA)` now is the correct specification for "do not load object into R". This essentially replicates `preProcess` with same arguments.
+* several minor bugfixes
+* `Copy` did not correctly copy `RasterStack`s when some of the `RasterLayer` objects were in memory, some on disk; `raster::fromDisk` returned `FALSE` in those cases, so `Copy` didn't occur on the file-backed layer files. Using `Filenames` instead to determine if there are any files that need copying.
+
 
 version 1.2.6
 ==============
@@ -9,8 +43,9 @@ version 1.2.6
 * changed default of `options("reproducible.polygonShortcut" = FALSE)` as there were still too many edge cases that were not covered.
 
 ## Bug fix
+* fixed an error with *rcnst* on CRAN
 * `RasterStack` objects with a single file (thus acting like a `RasterBrick`) are now handled correctly by `Cache` and `prepInputs` families, especially with new `options("reproducible.useNewDigestAlgorithm" = 2)`, though in tests, it worked with default also
-* Fix issue #185, RSQLite now uses a RNG during dbAppend; this affected 2 tests.
+* `RSQLite` now uses a RNG during `dbAppend`; this affected 2 tests (#185).
 
 version 1.2.4
 ==============

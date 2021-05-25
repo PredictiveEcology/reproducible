@@ -87,6 +87,39 @@ utils::globalVariables(c(
 #' \code{userTags} is unique of all arguments: its values will be appended to the
 #' inherited \code{userTags}.
 #'
+#' @section quick:
+#' The \code{quick} argument is attempting to sort out an ambiguity with character strings:
+#' are they file paths or are they simply character strings. When \code{quick = TRUE},
+#' \code{Cache} will treat these as character strings; when \code{quick = FALSE},
+#' they will be attempted to be treated as file paths first; if there is no file, then
+#' it will revert to treating them as character strings. If user passes a
+#' character vector to this, then this will behave like \code{omitArgs}:
+#' \code{quick = "file"} will treat the argument \code{"file"} as character string.
+#'
+#' The most often encountered situation where this ambiguity matters is in arguments about
+#' filenames: is the filename an input pointing to an object whose content we want to
+#' assess (e.g., a file-backed raster), or an output (as in saveRDS) and it should not
+#' be assessed. If only run once, the output file won't exist, so it will be treated
+#' as a character string. However, once the function has been run once, the output file
+#' will exist, and \code{Cache(...)} will assess it, which is incorrect. In these cases,
+#' the user is advised to use \code{quick = "TheOutputFilenameArgument"} to
+#' specify the argument whose content on disk should not be assessed, but whose
+#' character string should be assessed (distinguishing it from \code{omitArgs =
+#' "TheOutputFilenameArgument"}, which will not assess the file content nor the
+#' character string).
+#'
+#' This is relevant for objects of class \code{character}, \code{Path} and
+#' \code{Raster} currently. For class \code{character}, it is ambiguous whether
+#' this represents a character string or a vector of file paths. If it is known
+#' that character strings should not be treated as paths, then \code{quick =
+#' TRUE} will be much faster, with no loss of information. If it is file or
+#' directory, then it will digest the file content, or \code{basename(object)}.
+#' For class \code{Path} objects, the file's metadata (i.e., filename and file
+#' size) will be hashed instead of the file contents if \code{quick = TRUE}. If
+#' set to \code{FALSE} (default), the contents of the file(s) are hashed. If
+#' \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are
+#' treated as paths, if they are file-backed.
+#'
 #' @section Caching Speed:
 #' Caching speed may become a critical aspect of a final product. For example,
 #' if the final product is a shiny app, rerunning the entire project may need
@@ -271,21 +304,9 @@ utils::globalVariables(c(
 #'
 #' @param notOlderThan A time. Load an object from the Cache if it was created after this.
 #'
-#' @param quick Logical. If \code{TRUE},
-#'        little or no disk-based information will be assessed, i.e., mostly its
-#'        memory content. This is relevant for objects of class \code{character},
-#'        \code{Path} and \code{Raster} currently. For class \code{character}, it is ambiguous
-#'        whether this represents a character string or a vector of file paths. The function
-#'        will assess if it is a path to a file or directory first. If not, it will treat
-#'        the object as a character string. If it is known that character strings should
-#'        not be treated as paths, then \code{quick = TRUE} will be much faster, with no loss
-#'        of information. If it is file or directory, then it will digest the file content,
-#'        or \code{basename(object)}. For class \code{Path} objects, the file's metadata
-#'        (i.e., filename and file size) will be hashed instead of the file contents if
-#'        \code{quick = TRUE}.
-#'        If set to \code{FALSE} (default), the contents of the file(s) are hashed.
-#'        If \code{quick = TRUE}, \code{length} is ignored. \code{Raster} objects are treated
-#'        as paths, if they are file-backed.
+#' @param quick Logical or character. If \code{TRUE},
+#'        no disk-based information will be assessed, i.e., only
+#'        memory content. See Details section about \code{quick} in \code{\link{Cache}}.
 #'
 #' @param verbose Numeric, -1 silent (where possible), 0 being very quiet,
 #'        1 showing more messaging, 2 being more messaging, etc.
@@ -396,11 +417,6 @@ setMethod(
 
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
 
-    # if (!is.null(list(...)$objects)) {
-    #   messageCache("Please use .objects (if trying to pass to Cache) instead of objects which is being deprecated",
-    #                verbose = verbose)
-    # }
-
     if (missing(FUN)) stop("Cache requires the FUN argument")
 
     # returns "modifiedDots", "originalDots", "FUN", "funName", which will
@@ -410,16 +426,31 @@ setMethod(
     FUN <- fnDetails$FUN
     modifiedDots <- fnDetails$modifiedDots
     originalDots <- fnDetails$originalDots
+    skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
 
-    if (.isFALSE(useCache) || isTRUE(0 == useCache)) {
-      messageCache("useCache is FALSE, skipping Cache.",
-                   "To turn Caching on, use options(reproducible.useCache = TRUE)",
-                   verbose = verbose)
+    if (.isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
+      nestedLev <- as.numeric(fnDetails$nestLevel)
+      spacing <- paste(collapse = "",
+                       rep("  ", nestedLev)
+      )
+      #if (fnDetails$nestLevel > 0 && !is.numeric(useCache)) {
+        messageCache(spacing, "useCache is ", useCache,
+                     "; skipping Cache on function ", fnDetails$functionName,
+                     if (nestedLev > 0) paste0(" (currently running nested Cache level ",nestedLev + 1),
+                     ")",
+                     verbose = verbose)
+      #} else {
+      #  messageCache(spacing, "useCache is ", useCache, ", skipping Cache.",
+      #               verbose = verbose)
+      #}
+
       if (fnDetails$isDoCall) {
         do.call(modifiedDots$what, args = modifiedDots$args)
       } else {
-        FUN(...) # using do.call fails on quoted arguments because it evaluates them
-        # do.call(FUN, args = modifiedDots)
+        commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
+        do.call(FUN, append(alist(...), modifiedDots[commonArgs]))
+        # FUN(...) # using do.call fails on quoted arguments because it evaluates them
+        # do.call(FUN, args = list(expr(modifiedDots)))
       }
     } else {
       startCacheTime <- verboseTime(verbose)
@@ -807,7 +838,7 @@ setMethod(
           # rlang::eval_tidy(call2(FUNx1, !!!FUNx2))
           # theCall <- expr(FUN(!!!dots))
           # output <- eval_tidy(theCall)
-          commonArgs <- .namesCacheFormalsSendToBoth[.namesCacheFormalsSendToBoth %in% formalArgs(FUN)]
+          commonArgs <- .namesCacheFormals[.namesCacheFormals %in% formalArgs(FUN)]
           if (length(commonArgs) > 0) {
             messageCache("Cache and ", fnDetails$functionName, " have 1 or more common arguments: ", commonArgs,
                          "\nSending the argument(s) to both ", verboseLevel = 2, verbose = verbose)
@@ -1300,7 +1331,8 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
   # If arguments to FUN and Cache are identical, pass them through to FUN
   if (length(formalsInCallingAndFUN)) {
     formalsInCallingAndFUN <- grep("\\.\\.\\.", formalsInCallingAndFUN, value = TRUE, invert = TRUE)
-    commonArguments <- try(mget(formalsInCallingAndFUN, inherits = FALSE, envir = parent.frame()),
+    commonArguments <- try(mget(formalsInCallingAndFUN, inherits = FALSE,
+                                envir = parent.frame()),
                            silent = TRUE)
     if (!is(commonArguments, "try-error")) {
       if (isDoCall) {
@@ -1363,7 +1395,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
 #'   CacheDigest(list(rnorm, 1))
 #'
 #' }
-CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", ...) {
+CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", quick = FALSE, ...) {
   if (identical("Cache", calledFrom)) {
     namesOTD <- names(objsToDigest)
     lengthChars <- nchar(namesOTD)
@@ -1378,18 +1410,38 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
   # need to omit arguments that are in Cache function call
   objsToDigest[names(objsToDigest) %in% .defaultCacheOmitArgs] <- NULL
 
+  if (is.character(quick) || isTRUE(quick)) {
+    quickObjs <- if (isTRUE(quick)) rep(TRUE, length(objsToDigest)) else
+      names(objsToDigest) %in% quick
+    objsToDigestQuick <- objsToDigest[quickObjs]
+    objsToDigest <- objsToDigest[!quickObjs]
+
+    preDigestQuick <- lapply(objsToDigestQuick, function(x) {
+      # remove the "newCache" attribute, which is irrelevant for digest
+      if (!is.null(attr(x, ".Cache")$newCache)) {
+        .setSubAttrInList(x, ".Cache", "newCache", NULL)
+        if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
+      }
+      .robustDigest(x, algo = algo, quick = TRUE, ...)
+    })
+
+  }
+
+
   preDigest <- lapply(objsToDigest, function(x) {
     # remove the "newCache" attribute, which is irrelevant for digest
     if (!is.null(attr(x, ".Cache")$newCache)) {
       .setSubAttrInList(x, ".Cache", "newCache", NULL)
-      # attr(x, ".Cache")$newCache <- NULL
       if (!identical(attr(x, ".Cache")$newCache, NULL)) stop("attributes are not correct 1")
     }
-    .robustDigest(x, algo = algo, ...)
+    .robustDigest(x, algo = algo, quick = FALSE, ...)
   })
+  if (is.character(quick)) {
+    preDigest <- append(preDigest, preDigestQuick)
+  }
 
   res <- if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") > 0)) {
-    .robustDigest(unname(sort(unlist(preDigest))), algo = algo, ...)
+    .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)
   } else {
     if (!requireNamespace("fastdigest"))
       stop(requireNamespaceMsg("fastdigest", "to use options('reproducible.useNewDigestAlgorithm' = FALSE"))
@@ -1472,8 +1524,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", .
 
     if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
-      messageCache("... possible, unknown, differences in a nested list",
-                           "that is deeper than",getOption("reproducible.showSimilarDepth",3),"in ",
+      messageCache("... possible, unknown, differences in a nested list ",
+                           "that is deeper than ",getOption("reproducible.showSimilarDepth",3)," in ",
                            paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)),
                    verbose = verbose)
     }
@@ -1750,6 +1802,7 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     return(dealWithRastersOnRecovery2(output, cacheRepo, cacheId,
                                drv, conn))
   }
+
   if (is(output, "list") && !is.null(output$origRaster) && !is.null(output$cacheRaster)) {
     origFilenames <- if (is(output$origRaster, "Raster")) {
       Filenames(output$origRaster) # This is legacy piece which allows backwards compatible
@@ -1771,23 +1824,9 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
       }
 
     }
-    if (any(filesExist)) {
-      unlink(origFilenames[filesExist])
-    }
     out <- hardLinkOrCopy(cacheFilenames[filesExistInCache],
-                          origFilenames[filesExistInCache])
+                          origFilenames[filesExistInCache], overwrite = TRUE)
 
-    # out <- suppressWarningsSpecific(file.link(cacheFilenames[filesExistInCache],
-    #                                           origFilenames[filesExistInCache]),
-    #                                   falseWarnings = "already exists|Invalid cross-device")
-    #
-    # # out <- suppressWarnings(
-    # #   file.link(cacheFilenames[filesExistInCache],
-    # #             origFilenames[filesExistInCache]))
-    # if (any(!out)) {
-    #   copyFile(cacheFilenames[filesExistInCache][!out],
-    #            to = origFilenames[filesExistInCache][!out])
-    # }
     newOutput <- updateFilenameSlots(output$cacheRaster,
                                      Filenames(output$cacheRaster, allowMultiple = FALSE),
                                      newFilenames = grep("\\.gri$", origFilenames, value = TRUE, invert = TRUE))

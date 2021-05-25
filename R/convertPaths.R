@@ -133,38 +133,44 @@ setMethod(
   "Filenames",
   signature = "environment",
   definition = function(obj, allowMultiple = TRUE) {
-    rastersLogical <- isOrHasRaster(obj)
-    rasterFilename <- NULL
-    if (any(rastersLogical)) {
-      rasterNames <- names(rastersLogical)[rastersLogical]
-      if (!is.null(rasterNames)) {
-        no <- names(obj)
-        names(no) <- no
-        ## TODO: sapply is not type-safe; use vapply
-        nestedOnes <- lapply(no, function(rn) grep(paste0("^", rn, "\\."), rasterNames, value = TRUE))
-        nestedOnes1 <- nestedOnes[sapply(nestedOnes, function(x) length(x) > 0)]
-        nonNested <- nestedOnes[sapply(nestedOnes, function(x) length(x) == 0)]
-        nonNestedRasterNames <- rasterNames[rasterNames %in% names(nonNested)]
-        diskBacked <- sapply(mget(nonNestedRasterNames, envir = obj), fromDisk)
-
-        names(rasterNames) <- rasterNames
-        rasterFilename <- if (sum(diskBacked) > 0) {
-          lapply(mget(rasterNames[diskBacked], envir = obj), Filenames,
-                 allowMultiple = allowMultiple)
-        } else {
-          NULL
-        }
-        if (length(nestedOnes1) > 0) {
-          rasterFilename2 <- sapply(mget(names(nestedOnes1), envir = obj), Filenames,
-                                    allowMultiple = allowMultiple)
-          rasterFilename <- c(rasterFilename, rasterFilename2)
-        }
-      }
-    }
+    rasterFilename <- Filenames(as.list(obj), allowMultiple = allowMultiple)
+    # rastersLogicalList <- isOrHasRaster(obj)
+    # rastersLogical <- vapply(rastersLogicalList, function(x) any(unlist(x)), logical(1))
+    # rastersLogicalLong <- unlist(rastersLogicalList)
+    # rasterFilename <- NULL
+    # if (any(rastersLogical)) {
+    #   rasterNames <- names(rastersLogical)[rastersLogical]
+    #   if (!is.null(rasterNames)) {
+    #     no <- names(obj)
+    #     names(no) <- no
+    #     ## TODO: sapply is not type-safe; use vapply
+    #     nestedOnes <- lapply(no, function(rn) grep(paste0("^", rn, "\\."), rasterNames, value = TRUE))
+    #     nestedOnes1 <- nestedOnes[sapply(nestedOnes, function(x) length(x) > 0)]
+    #     nonNested <- nestedOnes[sapply(nestedOnes, function(x) length(x) == 0)]
+    #     nonNestedRasterNames <- rasterNames[rasterNames %in% names(nonNested)]
+    #     diskBacked <- sapply(mget(nonNestedRasterNames, envir = obj), fromDisk)
+    #
+    #     names(rasterNames) <- rasterNames
+    #     rasterFilename <- if (sum(diskBacked) > 0) {
+    #       browser()
+    #       lapply(mget(rasterNames[diskBacked], envir = obj), Filenames,
+    #              allowMultiple = allowMultiple)
+    #     } else {
+    #       NULL
+    #     }
+    #     if (length(nestedOnes1) > 0) {
+    #       rasterFilename2 <- sapply(mget(names(nestedOnes1), envir = obj), Filenames,
+    #                                 allowMultiple = allowMultiple)
+    #       rasterFilename <- c(rasterFilename, rasterFilename2)
+    #     }
+    #   }
+    # }
     rasterFilenameDups <- lapply(rasterFilename, duplicated)
-    rasterFilename <- lapply(names(rasterFilenameDups), function(nam)
-      rasterFilename[[nam]][!rasterFilenameDups[[nam]]])
-    return(unlist(rasterFilename))
+
+    if (any(unlist(rasterFilenameDups))) {
+      rasterFilename <- rasterFilename[!unlist(rasterFilenameDups)]
+    }
+    return(rasterFilename)
 })
 
 #' @export
@@ -174,5 +180,9 @@ setMethod(
   signature = "list",
   definition = function(obj, allowMultiple = TRUE) {
     ## convert a list to an environment -- this is to align it with a simList and environment
-    Filenames(as.environment(obj), allowMultiple = allowMultiple)
+    if (is.null(names(obj))) {
+      names(obj) <- as.character(seq(obj))
+    }
+    unlist(lapply(obj, function(o) Filenames(o, allowMultiple = allowMultiple)))
+    # Filenames(as.environment(obj), allowMultiple = allowMultiple)
 })

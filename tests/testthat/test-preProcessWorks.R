@@ -4,8 +4,10 @@ test_that("preProcess works for .tar files", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestTar
-  ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  url <- theRasterTestTar
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -16,8 +18,10 @@ test_that("preProcess works for .zip when provided only url and destinationPath"
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -28,8 +32,10 @@ test_that("preProcess works with only url", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  ras <- reproducible::preProcess(url = url)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url)
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -40,13 +46,17 @@ test_that("preProcess works when provides only archive", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  )
   testthat::expect_is(object = pre, class = "list")
-  ras <- reproducible::preProcess(archive = file.path(pre$destinationPath,
-                                                      list.files(pre$destinationPath)[
-                                                        grepl(x = list.files(pre$destinationPath),
-                                                              pattern = ".zip|.tar")]))
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(archive = file.path(pre$destinationPath,
+                                                        list.files(pre$destinationPath)[
+                                                          grepl(x = list.files(pre$destinationPath),
+                                                                pattern = ".zip|.tar")]))
+  )
   testthat::expect_is(object = ras, class = "list")
 })
 
@@ -56,14 +66,18 @@ test_that("preProcess works when provides archive and destinationPath", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  )
   testthat::expect_is(object = pre, class = "list")
-  ras <- reproducible::preProcess(archive = file.path(pre$destinationPath,
-                                                      list.files(pre$destinationPath)[
-                                                        grepl(x = list.files(pre$destinationPath),
-                                                              pattern = ".zip|.tar")]),
-                                  destinationPath = tmpdir)
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(archive = file.path(pre$destinationPath,
+                                                        list.files(pre$destinationPath)[
+                                                          grepl(x = list.files(pre$destinationPath),
+                                                                pattern = ".zip|.tar")]),
+                                    destinationPath = tmpdir)
+  )
   testthat::expect_is(object = ras, class = "list")
 })
 
@@ -73,10 +87,14 @@ test_that("preProcess works when provides only targetFile", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  )
   testthat::expect_is(object = pre, class = "list")
-  ras <- reproducible::preProcess(targetFile = pre$targetFilePath)
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(targetFile = pre$targetFilePath)
+  )
   testthat::expect_is(object = ras, class = "list")
 })
 
@@ -86,11 +104,15 @@ test_that("preProcess works when provides targetfile and destinationPath", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    pre <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+  )
   testthat::expect_is(object = pre, class = "list")
-  ras <- reproducible::preProcess(targetFile = pre$targetFilePath,
-                                  destinationPath = tmpdir)
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(targetFile = pre$targetFilePath,
+                                    destinationPath = tmpdir)
+  )
   testthat::expect_is(object = ras, class = "list")
 })
 
@@ -100,10 +122,12 @@ test_that("preProcess works when provides url, archive, targetfile and destinati
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  ras <- reproducible::preProcess(url = url, targetFile = tatisRasterTestFilename(suff = "tif"),
-                                  archive = tatisRasterTestFilename(suff = "zip"),
-                                  destinationPath = tmpdir)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url, targetFile = theRasterTestFilename(suff = "tif"),
+                                    archive = theRasterTestFilename(suff = "zip"),
+                                    destinationPath = tmpdir)
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -114,9 +138,11 @@ test_that("preProcess works when provides url, targetfile and destinationPath", 
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  ras <- reproducible::preProcess(url = url, targetFile = tatisRasterTestFilename(suff = "tif"),
-                                  destinationPath = tmpdir)
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    ras <- reproducible::preProcess(url = url, targetFile = theRasterTestFilename(suff = "tif"),
+                                    destinationPath = tmpdir)
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -128,15 +154,19 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
-  url <- tatisRasterTestRar
+  url <- theRasterTestRar
 
   if (!is(extractSystemCallPath, "try-error"))
     if (is.null(extractSystemCallPath)) {
-      expect_error({
-        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-      })
+      noisyOutput <- capture.output(
+        expect_error({
+          ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+        })
+      )
     } else {
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+      noisyOutput <- capture.output(
+        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+      )
       testthat::expect_is(object = ras, class = "list")
       testthat::expect_true(file.exists(ras$targetFilePath))
     }
@@ -149,18 +179,22 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
-  url <- tatisRasterTestRar
+  url <- theRasterTestRar
 
   if (!is(extractSystemCallPath, "try-error"))
     if (is.null(extractSystemCallPath)) {
-      expect_error({
-        ras <- reproducible::preProcess(url = url, targetFile = tatisRasterTestFilename(suff = "tif"),
-                                        destinationPath = tmpdir)
-      })
+      noisyOutput <- capture.output(
+        expect_error({
+          ras <- reproducible::preProcess(url = url, targetFile = theRasterTestFilename(suff = "tif"),
+                                          destinationPath = tmpdir)
+        })
+      )
     } else {
       wd <- getwd()
-      ras <- reproducible::preProcess(url = url, targetFile = tatisRasterTestFilename(suff = "tif"),
-                                      destinationPath = tmpdir)
+      noisyOutput <- capture.output(
+        ras <- reproducible::preProcess(url = url, targetFile = theRasterTestFilename(suff = "tif"),
+                                        destinationPath = tmpdir)
+      )
       testthat::expect_is(object = ras, class = "list")
       testthat::expect_true(file.exists(ras$targetFilePath))
       expect_equal(wd, getwd()) # Test that working directory is restored after unrar call
@@ -174,16 +208,20 @@ test_that("preProcess works when provides url, archive and destinationPath for a
     testOnExit(testInitOut)
   }, add = TRUE)
   extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
-  url <- tatisRasterTestRar
-  rasterTestRarFilename <- tatisRasterTestFilename(suff = "rar")
+  url <- theRasterTestRar
+  rasterTestRarFilename <- theRasterTestFilename(suff = "rar")
 
   if (!is(extractSystemCallPath, "try-error"))
     if (is.null(extractSystemCallPath)) {
-      expect_error({
-        ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
-      })
+      noisyOutput <- capture.output(
+        expect_error({
+          ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+        })
+      )
     } else {
-      ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+      noisyOutput <- capture.output(
+        ras <- reproducible::preProcess(url = url, archive = rasterTestRarFilename, destinationPath = tmpdir)
+      )
       testthat::expect_is(object = ras, class = "list")
       testthat::expect_true(file.exists(ras$targetFilePath))
     }
@@ -195,10 +233,12 @@ test_that("preProcess works, but gives a warning when supplying cacheTags", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  testthat::expect_message({
-    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, cacheTags = "objectName::ras")
-  })
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    testthat::expect_message({
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, cacheTags = "objectName::ras")
+    })
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -209,11 +249,13 @@ test_that("preProcess works, but gives a warning when supplying postProcessedFil
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  testthat::expect_message({
-    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir,
-                                    postProcessedFilename = "ras.tif")
-  })
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    testthat::expect_message({
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir,
+                                      postProcessedFilename = "ras.tif")
+    })
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -224,10 +266,12 @@ test_that("preProcess works, but gives a warning when supplying rasterInterpMeth
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  testthat::expect_message({
-    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterInterpMethod = "ngb")
-  })
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    testthat::expect_message({
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterInterpMethod = "ngb")
+    })
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -238,10 +282,12 @@ test_that("preProcess works, but gives a warning when supplying rasterDatatype",
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  testthat::expect_message({
-    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterDatatype = "INT1U")
-  })
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    testthat::expect_message({
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, rasterDatatype = "INT1U")
+    })
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -252,10 +298,12 @@ test_that("preProcess works, but gives a warning when supplying pkg", {
   on.exit({
     testOnExit(testInitOut)
   }, add = TRUE)
-  url <- tatisRasterTestZip
-  testthat::expect_message({
-    ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, pkg = "utils", fun = "unzip")
-})
+  url <- theRasterTestZip
+  noisyOutput <- capture.output(
+    testthat::expect_message({
+      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir, pkg = "utils", fun = "unzip")
+    })
+  )
   testthat::expect_is(object = ras, class = "list")
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
@@ -267,14 +315,18 @@ test_that("message when files from archive are already present", {
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  ccc <- testthat::capture_output(
-    ras <- reproducible::preProcess(url = url,
-                                    targetFile = "rasterTest.tif",
-                                    destinationPath = tmpdir)
+  noisyOutput <- capture.output(
+    ccc <- testthat::capture_output(
+      ras <- reproducible::preProcess(url = url,
+                                      targetFile = "rasterTest.tif",
+                                      destinationPath = tmpdir)
+    )
   )
-  testthat::expect_message({
-    ras <- reproducible::preProcess(archive = "rasterTest.zip", destinationPath = tmpdir)
-  })
+  noisyOutput <- capture.output(
+    testthat::expect_message({
+      ras <- reproducible::preProcess(archive = "rasterTest.zip", destinationPath = tmpdir)
+    })
+  )
 })
 
 test_that("message when file is a shapefile", {
@@ -284,10 +336,12 @@ test_that("message when file is a shapefile", {
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
-  ccc <- testthat::capture_output(
-    testthat::expect_message({
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-    })
+  noisyOutput <- capture.output(
+    ccc <- testthat::capture_output(
+      testthat::expect_message({
+        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+      })
+    )
   )
 })
 
@@ -298,10 +352,12 @@ test_that("message when doesn't know the targetFile extension", {
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip"
-  ccc <- testthat::capture_output(
-    testthat::expect_message({
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-    })
+  noisyOutput <- capture.output(
+    ccc <- testthat::capture_output(
+      testthat::expect_message(regexp = "does not unambiguously specify", {
+        ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+      })
+    )
   )
 })
 
@@ -312,12 +368,14 @@ test_that("When supplying two files without archive, when archive and files have
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/twoKnownFiles.zip"
-  ccc <- testthat::capture_output(
-    testthat::expect_error({
-      ras <- reproducible::preProcess(url = url,
-                                      targetFile = c("rasterTest.tif", "shapefileTest.shp"),
-                                      destinationPath = tmpdir)
-    })
+  noisyOutput <- capture.output(
+    ccc <- testthat::capture_output(
+      testthat::expect_error({
+        ras <- reproducible::preProcess(url = url,
+                                        targetFile = c("rasterTest.tif", "shapefileTest.shp"),
+                                        destinationPath = tmpdir)
+      })
+    )
   )
 })
 
@@ -328,13 +386,15 @@ test_that("message when archive has two known files (raster and shapefile)", {
     testOnExit(testInitOut)
   }, add = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
-  ccc <- testthat::capture_output(
-    testthat::expect_error({
-      ras <- reproducible::preProcess(url = url,
-                                      archive = "knownFiles.zip",
-                                      targetFile = c("knownFiles.tif", "knownFiles.shp"),
-                                      destinationPath = tmpdir)
-    })
+  noisyOutput <- capture.output(
+    ccc <- testthat::capture_output(
+      testthat::expect_error({
+        ras <- reproducible::preProcess(url = url,
+                                        archive = "knownFiles.zip",
+                                        targetFile = c("knownFiles.tif", "knownFiles.shp"),
+                                        destinationPath = tmpdir)
+      })
+    )
   )
 })
 
@@ -345,21 +405,27 @@ test_that("message when extracting a file that is already present", {
     testOnExit(testInitOut)
   }, add = TRUE)
   url1 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-  ccc <- testthat::capture_output(
-    ras <- reproducible::preProcess(url = url1,
-                                    targetFile = "rasterTest.tif",
-                                    destinationPath = tmpdir)
+  noisyOutput <- capture.output(
+    ccc <- testthat::capture_output(
+      ras <- reproducible::preProcess(url = url1,
+                                      targetFile = "rasterTest.tif",
+                                      destinationPath = tmpdir)
+    )
   )
   url2 <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
-  ccc <- testthat::capture_output(
-    shp <- reproducible::preProcess(url = url2,
-                                    destinationPath = tmpdir)
+  noisyOutput <- capture.output(
+    ccc <- testthat::capture_output(
+      shp <- reproducible::preProcess(url = url2,
+                                      destinationPath = tmpdir)
+    )
   )
   url3 <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
-  ccc <- testthat::capture_output(
-    testthat::expect_message({
-      fl <- reproducible::preProcess(url = url3, destinationPath = tmpdir)
-    })
+  noisyOutput <- capture.output(
+    ccc <- testthat::capture_output(
+      testthat::expect_message({
+        fl <- reproducible::preProcess(url = url3, destinationPath = tmpdir)
+      })
+    )
   )
 })
 
@@ -387,8 +453,10 @@ test_that("Test of using future and progress indicator for lrg files on Google D
         testOnExit(testInitOut)
       }, add = TRUE)
       #future::plan("multiprocess")
-      ccc <- testthat::capture_output(
-        smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
+      noisyOutput <- capture.output(
+        ccc <- testthat::capture_output(
+          smallRT <- preProcess(url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN")
+        )
       )
       expect_true(is(smallRT, "list"))
     }

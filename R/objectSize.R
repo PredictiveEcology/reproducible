@@ -124,7 +124,7 @@ objSize.Path <- function(x, quick = getOption("reproducible.quick", FALSE),
 objSize.function <- function(x, quick = getOption("reproducible.quick", FALSE),
                              enclosingEnvs = TRUE, .prevEnvirs = list(), ...) {
   varName <- deparse(substitute(x))
-  if (isTRUE(enclosingEnvs) && (!identical(.GlobalEnv, environment(x)))) {
+  if (isTRUE(enclosingEnvs) && (!isTopLevelEnv(environment(x)))) {
     if (is.primitive(x)) {
       os <- list(object.size(x))
     } else {
@@ -179,4 +179,24 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
   }
 
   return(os)
+}
+
+#' Determine if an environment is a top level environment
+#'
+#' Here, we define that as .GlobalEnv, any namespace, emptyenv,
+#' or baseenv. This is useful to determine the effective size
+#' of an R function, due to R including the objects from enclosing
+#' environments
+#'
+#' @param x Any environment
+#'
+#' @return
+#' A logical. \code{FALSE} if it is not one of the "Top Level Environments",
+#' \code{TRUE} otherwise.
+#' @export
+isTopLevelEnv <- function(x) {
+  identical(.GlobalEnv, x) ||
+       isNamespace(x) ||
+       identical(emptyenv(), x) ||
+       identical(baseenv(), x)
 }

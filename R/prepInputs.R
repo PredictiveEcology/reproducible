@@ -97,7 +97,10 @@ if (getRversion() >= "3.1.0") {
 #'   containing \code{targetFile}, or a vector giving a set of nested archives
 #'   (e.g., \code{c("xxx.tar", "inner.zip", "inner.rar")}). If there is/are (an) inner
 #'   archive(s), but they are unknown, the function will try all until it finds
-#'   the \code{targetFile}. See table in \code{\link{preProcess}}.
+#'   the \code{targetFile}. See table in \code{\link{preProcess}}. If it is \code{NA},
+#'   then it will \emph{not} attempt to see it as an archive, even if it has archive-like
+#'   file extension (e.g., \code{.zip}). This may be useful when an R function
+#'   is expecting an archive directly.
 #'
 #' @param url Optional character string indicating the URL to download from.
 #'   If not specified, then no download will be attempted. If not entry
@@ -123,12 +126,16 @@ if (getRversion() >= "3.1.0") {
 #'   search for the file before attempting to download. Default for that option is
 #'   \code{NULL} meaning do not search locally.
 #'
-#' @param fun Function or character string indicating the function to use to load
-#'   \code{targetFile} into an \code{R} object, e.g., in form with package name:
+#' @param fun Function, character string, or quoted call with which to load the
+#'   \code{targetFile} into an \code{R} object. It must be either a function
+#'   as a character string, or the function itself.
+#'   If a character string or function, is should have the package name e.g.,
 #'   \code{"raster::raster"} or as an actual function, e.g., \code{base::readRDS}.
-#'   If passing a custom function, it must be a function of
-#'   \code{x}, e.g., \code{loadFun <- function(x) shapefile(x)}.
-#'   NOTE: passing \code{NULL} will skip loading object into R.
+#'   If it is to be a custom function call, then use `quote`, e.g.,
+#'   `quote(customFunction(x = targetFilePath))`, using
+#'   `targetFilePath` as the file path of the object that has been `preProcess`ed.
+#'   NOTE: passing \code{NA} will skip loading object into R. Note this will essentially
+#'   replicate the functionality of simply calling \code{preProcess} directly.
 #'
 #' @param quick Logical. This is passed internally to \code{\link{Checksums}}
 #'   (the quickCheck argument), and to
@@ -265,9 +272,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   # browser(expr = exists("._prepInputs_1"))
   if (missing(.tempPath)) {
     .tempPath <- tempdir2(rndstr(1, 6))
-    on.exit({unlink(.tempPath, recursive = TRUE)},
-            add = TRUE)
+    on.exit({
+      unlink(.tempPath, recursive = TRUE)
+    }, add = TRUE)
   }
+  mess <- character(0)
+
   messagePrepInputs("Running preProcess", verbose = verbose, verboseLevel = 0)
   out <- preProcess(
     targetFile = targetFile,
@@ -287,6 +297,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   # Load object to R
   fun <- .fnCleanup(out$fun, callingFun = "prepInputs")
+  suppressWarnings(naFun <- all(is.na(out$fun)))
 
   ## dots will contain too many things for some functions
   ## -- need to remove those that are known going into prepInputs
@@ -296,7 +307,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   args <- args[(names(args) %in% fun$formalArgs)]
   if (length(args) == 0) args <- NULL
 
-  if (!is.null(out$fun)) {
+  if (!(naFun || is.null(out$fun))) {
     x <- if (is.null(out$object)) {
       messagePrepInputs("Loading object into R", verbose = verbose)
       if (identical(out$fun, raster::raster) |
@@ -322,25 +333,22 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             as.list(tmpEnv, all.names = TRUE)
         } else {
           # browser(expr = exists("._prepInputs_3"))
-          err <- tryCatch(error = function(xx) xx,
-            mess <- capture.output(
-              type = "message",
+          #err <- tryCatch(error = function(xx) xx,
+          withRestarts(
+            if (is.call(out$fun)) {
+              # put `targetFilePath` in the first position -- allows quoted call to use first arg
+              out <- append(append(list(targetFilePath = out[["targetFilePath"]]),
+                                   out[-which(names(out) == "targetFilePath")]),
+                            args)
+              obj <- Cache(eval, out$fun, envir = out, useCache = useCache)
+            } else {
               obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-                           useCache = useCache)))
-          # errOld <- capture_error(
-          #  mess <- capture.output(
-          #    type = "message",
-          #    obj <- Cache(do.call, out$fun, append(list(asPath(out$targetFilePath)), args),
-          #                 useCache = useCache)))
-          if (is(err, "simpleError")) {
-          #   if (!identical(errOld, err$message)) browser()
-             stop(err$message)
-          }
-          # if (!is.null(errOld)) stop(errOld)
-
-          mess <- grep("No cacheRepo supplied", mess, invert = TRUE, value = TRUE)
-          if (length(mess) > 0)
-            messagePrepInputs(mess, verbose = verbose)
+                           useCache = useCache)
+            }, message = function(m) {
+              m <- grep("No cacheRepo supplied", m, invert = TRUE, value = TRUE)
+              if (length(m))
+                messagePrepInputs(m)
+            })
           obj
         }
       }
@@ -348,7 +356,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       out$object
     }
   } else {
-    messagePrepInputs("No loading of object into R; fun = NULL", verbose = verbose)
+    messagePrepInputs("No loading of object into R; fun = ", out$fun, verbose = verbose)
+    x <- out
   }
 
   ## postProcess -- skip if no studyArea or rasterToMatch -- Caching could be slow otherwise
@@ -575,12 +584,23 @@ extractFromArchive <- function(archive,
   # }
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- fileExt(possibleFiles)
-  isShapefile <- grepl("shp", fileExt)
+  isShapefile <- grepl("shp$|gdb$", fileExt)
   isRaster <- fileExt %in% c("tif", "grd")
   isRDS <- fileExt %in% c("rds")
   if (is.null(fun)) { #i.e., the default
     fun <- if (any(isShapefile)) {
-      "raster::shapefile"
+      funPoss <- getOption('reproducible.shapefileRead')
+      if (is.null(funPoss)) {
+        funPoss <- if (requireNamespace("sf", quietly = TRUE)) {
+          messagePrepInputs("Using sf::st_read because sf package is available; to force old ",
+                            "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
+                            "options('reproducible.shapefileRead' = 'raster::shapefile')")
+          "sf::st_read"
+        } else {
+          "raster::shapefile"
+        }
+      }
+      funPoss
     } else if (any(isRaster)) {
       "raster::raster"
     } else if (any(isRDS)) {
@@ -595,6 +615,8 @@ extractFromArchive <- function(archive,
       c(" Trying ",fun," on ", paste(possibleFiles[isShapefile], collapse = ", "), ".",
         " If that is not correct, please specify a different targetFile",
         " and/or fun.")
+    } else if (is.null(fun)) {
+      c(" Also, file extension does not unambiguously specify how it should be loaded. Please specify fun.")
     } else {
       c(" Trying ", fun, ".\n",
         " If that is not correct, please specify a targetFile",
@@ -720,9 +742,9 @@ extractFromArchive <- function(archive,
     opt <- options("warn")$warn
     on.exit(options(warn = opt), add = TRUE)
     options(warn = 1)
-    tooBig <- FALSE
+    tooBig <- file.size(args[[1]]) > 2e9
     worked <- FALSE
-    if (isUnzip) {
+    if (isUnzip && !tooBig) {
       fattrs <- unzip(args[[1]], list = TRUE)
       ids <- which(fattrs[["Name"]] %in% argList$files)
       tooBig <- any(fattrs[ids, ]["Length"][[1]] >= 4294967295) ## files >= 4GB are truncated; see ?unzip
@@ -738,11 +760,13 @@ extractFromArchive <- function(archive,
       }
     }
     if (!isTRUE(worked) | isTRUE(tooBig)) {
-      messagePrepInputs("File unzipping using R does not appear to have worked.",
-              " Trying a system call of unzip...", verbose = verbose)
+      if (!isTRUE(tooBig)) {
+        messagePrepInputs("File unzipping using R does not appear to have worked.",
+                          " Trying a system call of unzip...", verbose = verbose)
+      } else {
+        messagePrepInputs("R's unzip utility cannot handle a zip file this size.", verbose = verbose)
+      }
 
-      # tempDir <- file.path(args$exdir, "extractedFiles") %>%
-      #   checkPath(create = TRUE)
       if (file.exists(args[[1]])) {
         pathToFile <-  normPath(args[[1]])
       } else {
@@ -754,23 +778,50 @@ extractFromArchive <- function(archive,
                ". The file might have been moved during unzipping or is corrupted")
         }
       }
-      system2("unzip",
-              args = paste0(pathToFile," -d ", .tempPath),
-              wait = TRUE,
-              stdout = NULL)
+      unz <- Sys.which("unzip.exe")
+      sZip <- Sys.which("7z.exe")
+      if (nchar(sZip) > 0) {
+        messagePrepInputs("Using 7zip.exe")
+        op <- setwd(.tempPath)
+        on.exit({
+          setwd(op)
+        }, add = TRUE)
+        system2(sZip,
+                args = paste0(" e ", pathToFile),
+                wait = TRUE,
+                stdout = NULL)
+
+      } else if (nchar(unz) > 0) {
+        messagePrepInputs("Using unzip.exe")
+        system2(unz,
+                args = paste0(pathToFile," -d ", .tempPath),
+                wait = TRUE,
+                stdout = NULL)
+      } else {
+        if (nchar(unz) == 0) {
+          stop("unzip command cannot be found. Please try reinstalling Rtools and/or adding it to system path (see 'https://cran.r-project.org/bin/windows/Rtools/')")
+        }
+        stop("There was no way to unzip all files; try manually. The file is located at: \n",
+             pathToFile)
+      }
       extractedFiles <- list.files(path = .tempPath,
                                    # list of full paths of all extracted files!
                                    recursive = TRUE,
                                    include.dirs = TRUE)
-      invisible(lapply(
-        X = extractedFiles,
-        FUN = function(fileToMove) {
-          invisible(file.move(from = file.path(.tempPath, fileToMove),
-                              to = file.path(args$exdir, fileToMove)))
-        }
-      ))
-      extractedFiles <- file.path(args$exdir, extractedFiles)
-      unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
+      from <- file.path(.tempPath, extractedFiles)
+      on.exit({
+        if (any(file.exists(from)))
+          suppressWarnings(try(unlink(from), silent = TRUE))
+      }, add = TRUE)
+      to <- file.path(args$exdir, extractedFiles)
+
+      suppressWarnings(out <- try(file.link(from, to)))
+
+      if (any(!out == TRUE)) {
+        out <- try(file.move(from, to))
+      }
+      extractedFiles <- to
+      unlink(.tempPath, recursive = TRUE)
     }
     if (!isUnzip) {
       extractedFiles <- files
@@ -797,7 +848,6 @@ extractFromArchive <- function(archive,
   )
   list(moduleName = moduleName, modulePath = modulePath, checkSums = checkSums)
 }
-
 
 .isArchive <- function(filename) {
   if (!is.null(filename)) {
@@ -928,14 +978,22 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @keywords internal
 #' @rdname listFilesInArchive
 .listFilesInArchive <- function(archive) {
-  if (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions) {
+  needSystemCall <- (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions )
+  if (length(archive) > 0)
+    if (file.exists(archive[1]))
+      needSystemCall <- needSystemCall || file.size(archive[1]) > 2e9
+
+  if (needSystemCall) {
     extractSystemCallPath <- .testForArchiveExtract()
+    funWArgs <- list(fun = extractSystemCallPath)
+  } else {
+    funWArgs <- .whichExtractFn(archive[1], NULL)
   }
-  funWArgs <- .whichExtractFn(archive[1], NULL)
+
   filesInArchive <- NULL
   if (!is.null(funWArgs$fun)) {
     if (file.exists(archive[1])) {
-      if (!fileExt(archive[1]) %in% knownSystemArchiveExtensions) {
+      if (!needSystemCall) {
         filesInArchive <- funWArgs$fun(archive[1], list = TRUE)
         if ("Name" %in% names(filesInArchive)) {
           # for zips, rm directories (length = 0)
@@ -972,13 +1030,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         if (isTRUE(any(grepl("(Can not open the file as archive)|(Errors: 1)", filesOutput))))
           stop("archive appears defective")
         filesInBetween <- grep(pattern = "----", filesOutput)
-        filesLines <- filesOutput[(min(filesInBetween)+1):(max(filesInBetween)-1)]
+        filesLines <- filesOutput[(min(filesInBetween) + 1):(max(filesInBetween) - 1)]
         filesInArchive <- unlist(lapply(X = seq_along(filesLines), FUN = function(line){
           fullString <- unlist(strsplit(filesLines[[line]], split = " "))
           return(fullString[length(fullString)])
         })
         )
-        if (length(filesInArchive)==0) {
+        if (length(filesInArchive) == 0) {
           stop("preProcess could not find any files in the archive ", archive)
         }
       }

@@ -126,9 +126,20 @@ setMethod(
 #' @param dots Optional. If this is provided via say \code{dots = list(...)},
 #'             then this will cause the \code{...} to be ignored.
 #' @param formalNames Optional character vector. If provided then it will override the \code{fun}
-.formalsNotInCurrentDots <- function(fun, ..., dots, formalNames) {
-  if (missing(formalNames)) formalNames <- names(formals(fun))
-  if (!missing(dots)) {
+.formalsNotInCurrentDots <- function(fun, ..., dots, formalNames, signature = character()) {
+  if (is.character(fun)) {
+    fun <- get(fun, mode = "function", envir = parent.frame())
+  }
+
+  if (missing(formalNames))
+    if (isS4(fun)) {
+      forms <- methodFormals(fun, signature = signature, envir = parent.frame())
+      formalNames <- names(forms)
+    } else {
+      formalNames <- names(formals(fun))
+    }
+
+if (!missing(dots)) {
     out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
     out <- names(list(...))[!(names(list(...)) %in% formalNames)]
@@ -198,16 +209,29 @@ basename2 <- function(x) {
 #'   successive retries will be \code{runif(1, min = 0, max = exponentialDecayBase ^ i - 1)}
 #'   where \code{i} is the retry number (i.e., follows \code{seq_len(retries)})
 #' @param silent   Logical indicating whether to \code{try} silently.
+#' @param exprBetween Another expression that should be run after a failed attempt
+#'   of the `expr`. It must include an assignment operator, specifying what
+#'   object (that is used in `expr`) will be updated prior to running
+#'   the `expr` again.
 #'
 #' @export
 retry <- function(expr, envir = parent.frame(), retries = 5,
-                  exponentialDecayBase = 1.3, silent = TRUE) {
-  if (exponentialDecayBase <= 1)
-    stop("exponentialDecayBase must be greater than 1.0")
+                  exponentialDecayBase = 1.3, silent = TRUE,
+                  exprBetween = NULL) {
+  if (exponentialDecayBase < 1)
+    stop("exponentialDecayBase must be equal to or greater than 1")
   for (i in seq_len(retries)) {
     if (!(is.call(expr) || is.name(expr))) warning("expr is not a quoted expression")
     result <- try(expr = eval(expr, envir = envir), silent = silent)
     if (inherits(result, "try-error")) {
+      if (!is.null(exprBetween)) {
+        if (!identical(as.character(exprBetween[[1]]), "<-"))
+          stop("exprBetween must have an assignment operator <- with a object on",
+               "the LHS that is used on the RHS of expr ")
+        objName <- as.character(exprBetween[[2]])
+        result <- try(expr = eval(exprBetween, envir = envir), silent = silent)
+        assign(objName, result, envir = envir)
+      }
       backoff <- sample(1:1000/1000, size = 1) * (exponentialDecayBase^i - 1)
       if (backoff > 3) {
         message("Waiting for ", round(backoff, 1), " seconds to retry; the attempt is failing")
@@ -403,3 +427,21 @@ messageColoured <- function(..., colour = NULL, verboseLevel = 1,
 
 }
 
+
+
+methodFormals <- function(fun, signature = character(), envir = parent.frame()) {
+  if (is.character(fun))
+    fun <- get(fun, mode = "function", envir = envir)
+
+  fdef <- getGeneric(fun)
+  method <- selectMethod(fdef, signature)
+  genFormals <- base::formals(fdef)
+  b <- body(method)
+  if(is(b, "{") && is(b[[2]], "<-") && identical(b[[2]][[2]], as.name(".local"))) {
+    local <- eval(b[[2]][[3]])
+    if(is.function(local))
+      return(formals(local))
+    warning("Expected a .local assignment to be a function. Corrupted method?")
+  }
+  genFormals
+}

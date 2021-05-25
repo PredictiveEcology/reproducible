@@ -4,7 +4,13 @@
 \alias{CacheDigest}
 \title{The exact digest function that \code{Cache} uses}
 \usage{
-CacheDigest(objsToDigest, algo = "xxhash64", calledFrom = "Cache", ...)
+CacheDigest(
+  objsToDigest,
+  algo = "xxhash64",
+  calledFrom = "Cache",
+  quick = FALSE,
+  ...
+)
 }
 \arguments{
 \item{objsToDigest}{A list of all the objects (e.g., arguments) to be digested}
@@ -17,6 +23,10 @@ CacheDigest(objsToDigest, algo = "xxhash64", calledFrom = "Cache", ...)
 \item{calledFrom}{a Character string, length 1, with the function to
 compare with. Default is "Cache". All other values may not produce
 robust CacheDigest results.}
+
+\item{quick}{Logical or character. If \code{TRUE},
+no disk-based information will be assessed, i.e., only
+memory content. See Details section about \code{quick} in \code{\link{Cache}}.}
 
 \item{...}{passed to \code{.robustDigest}; this is generally empty except
 for advanced use.}

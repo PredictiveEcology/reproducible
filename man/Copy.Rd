@@ -11,19 +11,19 @@
 \alias{Copy,Raster-method}
 \title{Recursive copying of nested environments, and other "hard to copy" objects}
 \usage{
-Copy(object, filebackedDir, ...)
+Copy(object, ...)
 
-\S4method{Copy}{ANY}(object, filebackedDir, ...)
+\S4method{Copy}{ANY}(object, ...)
 
-\S4method{Copy}{SQLiteConnection}(object, filebackedDir, ...)
+\S4method{Copy}{SQLiteConnection}(object, ...)
 
-\S4method{Copy}{data.table}(object, filebackedDir, ...)
+\S4method{Copy}{data.table}(object, ...)
 
-\S4method{Copy}{list}(object, filebackedDir, ...)
+\S4method{Copy}{list}(object, ...)
 
-\S4method{Copy}{refClass}(object, filebackedDir, ...)
+\S4method{Copy}{refClass}(object, ...)
 
-\S4method{Copy}{data.frame}(object, filebackedDir, ...)
+\S4method{Copy}{data.frame}(object, ...)
 
 \S4method{Copy}{Raster}(
   object,
@@ -36,6 +36,8 @@ Copy(object, filebackedDir, ...)
 \arguments{
 \item{object}{An R object (likely containing environments) or an environment.}
 
+\item{...}{Only used for custom Methods}
+
 \item{filebackedDir}{A directory to copy any files that are backing R objects,
 currently only valid for \code{Raster} classes. Defaults
 to \code{.reproducibleTempPath()}, which is unlikely to be very useful.
@@ -43,8 +45,6 @@ Can be \code{NULL}, which means that the file will not be
 copied and could therefore cause a collision as the
 pre-copied object and post-copied object would have the same
 file backing them.}
-
-\item{...}{Only used for custom Methods}
 
 \item{drv}{an object that inherits from \linkS4class{DBIDriver},
 or an existing \linkS4class{DBIConnection}

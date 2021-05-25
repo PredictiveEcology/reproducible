@@ -14,6 +14,7 @@ fixErrors(
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
+  testValidity = getOption("reproducible.testValidity", TRUE),
   ...
 )
 
@@ -23,6 +24,7 @@ fixErrors(
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
+  testValidity = getOption("reproducible.testValidity", TRUE),
   ...
 )
 
@@ -32,6 +34,7 @@ fixErrors(
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
+  testValidity = getOption("reproducible.testValidity", TRUE),
   ...
 )
 
@@ -41,6 +44,7 @@ fixErrors(
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
+  testValidity = getOption("reproducible.testValidity", TRUE),
   ...
 )
 
@@ -50,6 +54,7 @@ fixErrors(
   attemptErrorFixes = TRUE,
   useCache = getOption("reproducible.useCache", FALSE),
   verbose = getOption("reproducible.verbose", 1),
+  testValidity = getOption("reproducible.testValidity", TRUE),
   ...
 )
 }
