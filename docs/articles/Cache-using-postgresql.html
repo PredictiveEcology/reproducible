@@ -37,7 +37,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -45,7 +45,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -74,7 +74,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -88,14 +88,14 @@
 
       
 
-      </header><script src="Cache-using-postgresql_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+      </header><script src="Cache-using-postgresql_files/header-attrs-2.8/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Using alternate database backends for Cache</h1>
                         <h4 class="author">Alex M. Chubaty</h4>
                         <h4 class="author">Eliot J. B. McIntire</h4>
             
-            <h4 class="date">August 17 2020</h4>
+            <h4 class="date">May 24 2021</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/master/vignettes/Cache-using-postgresql.Rmd"><code>vignettes/Cache-using-postgresql.Rmd</code></a></small>
       <div class="hidden name"><code>Cache-using-postgresql.Rmd</code></div>
@@ -122,46 +122,48 @@
 <h2 class="hasAnchor">
 <a href="#using-config-files" class="anchor"></a>Using config files</h2>
 <p>Add the following to your project’s <code>config.yml</code> file:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">default</span>:</span>
-<span id="cb1-2"><a href="#cb1-2"></a>  <span class="ex">cachedb</span>:</span>
-<span id="cb1-3"><a href="#cb1-3"></a>    <span class="ex">driver</span>: <span class="st">'postgres'</span> </span>
-<span id="cb1-4"><a href="#cb1-4"></a>    <span class="ex">server</span>: <span class="st">'localhost'</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a>    <span class="ex">user</span>: <span class="st">'mydbuser'</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a>    <span class="ex">password</span>: <span class="st">'mysecurepassword'</span>  </span>
-<span id="cb1-7"><a href="#cb1-7"></a>    <span class="ex">port</span>: 5432</span>
-<span id="cb1-8"><a href="#cb1-8"></a>    <span class="ex">database</span>: <span class="st">'mydatabase'</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">default</span>:</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">cachedb</span>:</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">driver</span>: <span class="st">'postgres'</span> </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">server</span>: <span class="st">'localhost'</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">user</span>: <span class="st">'mydbuser'</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="ex">password</span>: <span class="st">'mysecurepassword'</span>  </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="ex">port</span>: 5432</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">database</span>: <span class="st">'mydatabase'</span></span></code></pre></div>
 <p>Then, in your main project script, add the following:</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">cachedb</span> <span class="kw">&lt;-</span> <span class="kw pkg">config</span><span class="kw ns">::</span><span class="fu">get</span>(<span class="st">"cachedb"</span>)
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">cachedb</span> <span class="op">&lt;-</span> <span class="fu">config</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/config/man/get.html">get</a></span><span class="op">(</span><span class="st">"cachedb"</span><span class="op">)</span>
 
-<span class="no">conn</span> <span class="kw">&lt;-</span> <span class="kw pkg">DBI</span><span class="kw ns">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="kw">drv</span> <span class="kw">=</span> <span class="kw pkg">RPostgres</span><span class="kw ns">::</span><span class="fu">Postgres</span>(),
-                      <span class="kw">host</span> <span class="kw">=</span> <span class="no">cachedb</span>$<span class="no">server</span>,
-                      <span class="kw">port</span> <span class="kw">=</span> <span class="no">cachedb</span>$<span class="no">port</span>,
-                      <span class="kw">dbname</span> <span class="kw">=</span> <span class="no">cachedb</span>$<span class="no">database</span>,
-                      <span class="kw">user</span> <span class="kw">=</span> <span class="no">cachedb</span>$<span class="no">user</span>,
-                      <span class="kw">password</span> <span class="kw">=</span> <span class="no">cachedb</span>$<span class="no">password</span>)
+<span class="va">conn</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span><span class="op">(</span>drv <span class="op">=</span> <span class="fu">RPostgres</span><span class="fu">::</span><span class="fu"><a href="https://rpostgres.r-dbi.org/reference/Postgres.html">Postgres</a></span><span class="op">(</span><span class="op">)</span>,
+                      host <span class="op">=</span> <span class="va">cachedb</span><span class="op">$</span><span class="va">server</span>,
+                      port <span class="op">=</span> <span class="va">cachedb</span><span class="op">$</span><span class="va">port</span>,
+                      dbname <span class="op">=</span> <span class="va">cachedb</span><span class="op">$</span><span class="va">database</span>,
+                      user <span class="op">=</span> <span class="va">cachedb</span><span class="op">$</span><span class="va">user</span>,
+                      password <span class="op">=</span> <span class="va">cachedb</span><span class="op">$</span><span class="va">password</span><span class="op">)</span>
 
-<span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span>(<span class="st">"reproducible.conn"</span> <span class="kw">=</span> <span class="no">conn</span>) <span class="co"># sets the default connection globally</span></pre></body></html></div>
+<span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span> <span class="op">=</span> <span class="va">conn</span><span class="op">)</span> <span class="co"># sets the default connection globally</span></code></pre></div>
 </div>
 <div id="using-environment-variables" class="section level2">
 <h2 class="hasAnchor">
 <a href="#using-environment-variables" class="anchor"></a>Using environment variables</h2>
 <p>Add the following to your project’s <code>.Renviron</code> file:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="va">PGHOST=</span><span class="st">"localhost"</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a><span class="va">PGPORT=</span>5432</span>
-<span id="cb3-3"><a href="#cb3-3"></a><span class="va">PGDATABASE=</span><span class="st">"mydatabase"</span></span>
-<span id="cb3-4"><a href="#cb3-4"></a><span class="va">PGUSER=</span><span class="st">"mydbuser"</span></span>
-<span id="cb3-5"><a href="#cb3-5"></a><span class="va">PGPASSWORD=</span><span class="st">"mysecurepassword"</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">PGHOST=</span><span class="st">"localhost"</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">PGPORT=</span>5432</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="va">PGDATABASE=</span><span class="st">"mydatabase"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="va">PGUSER=</span><span class="st">"mydbuser"</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="va">PGPASSWORD=</span><span class="st">"mysecurepassword"</span></span></code></pre></div>
 <p>Then, in your main project script, add the following:</p>
-<div class="sourceCode" id="cb4"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/readRenviron.html">readRenviron</a></span>(<span class="st">".Renviron"</span>) <span class="co">## alternatively, use global ~/.Renviron</span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/readRenviron.html">readRenviron</a></span><span class="op">(</span><span class="st">".Renviron"</span><span class="op">)</span> <span class="co">## alternatively, use global ~/.Renviron</span>
 
-<span class="no">conn</span> <span class="kw">&lt;-</span>   <span class="kw pkg">DBI</span><span class="kw ns">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span>(<span class="kw">drv</span> <span class="kw">=</span> <span class="kw pkg">RPostgres</span><span class="kw ns">::</span><span class="fu">Postgres</span>(),
-                         <span class="kw">host</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGHOST"</span>),
-                         <span class="kw">port</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGPORT"</span>),
-                         <span class="kw">dbname</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGDATABASE"</span>),
-                         <span class="kw">user</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGUSER"</span>),
-                         <span class="kw">password</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"PGPASSWORD"</span>))
+<span class="va">conn</span> <span class="op">&lt;-</span>   <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html">dbConnect</a></span><span class="op">(</span>drv <span class="op">=</span> <span class="fu">RPostgres</span><span class="fu">::</span><span class="fu"><a href="https://rpostgres.r-dbi.org/reference/Postgres.html">Postgres</a></span><span class="op">(</span><span class="op">)</span>,
+                         host <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span><span class="op">(</span><span class="st">"PGHOST"</span><span class="op">)</span>,
+                         port <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span><span class="op">(</span><span class="st">"PGPORT"</span><span class="op">)</span>,
+                         dbname <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span><span class="op">(</span><span class="st">"PGDATABASE"</span><span class="op">)</span>,
+                         user <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span><span class="op">(</span><span class="st">"PGUSER"</span><span class="op">)</span>,
+                         password <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span><span class="op">(</span><span class="st">"PGPASSWORD"</span><span class="op">)</span><span class="op">)</span>
 
-<span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span>(<span class="st">"reproducible.conn"</span> <span class="kw">=</span> <span class="no">conn</span>) <span class="co"># sets the default connection globally</span></pre></body></html></div>
+<span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span><span class="op">(</span><span class="st">"reproducible.conn"</span> <span class="op">=</span> <span class="va">conn</span><span class="op">)</span> <span class="co"># sets the default connection globally</span></code></pre></div>
 </div>
 </div>
   </div>
@@ -181,7 +183,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

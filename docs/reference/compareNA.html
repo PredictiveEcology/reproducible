@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title><code>NA</code>-aware comparison of two vectors — compareNA • reproducible</title>
+<title>NA-aware comparison of two vectors — compareNA • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="<code>NA</code>-aware comparison of two vectors — compareNA" />
+<meta property="og:title" content="NA-aware comparison of two vectors — compareNA" />
 <meta property="og:description" content="Copied from
 http://www.cookbook-r.com/Manipulating_data/Comparing_vectors_or_factors_with_NA/.
 This function returns TRUE wherever elements are the same, including NA's,
@@ -85,7 +85,7 @@ and FALSE everywhere else." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -93,7 +93,7 @@ and FALSE everywhere else." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -122,7 +122,7 @@ and FALSE everywhere else." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -151,7 +151,7 @@ This function returns <code>TRUE</code> wherever elements are the same, includin
 and <code>FALSE</code> everywhere else.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>compareNA</span>(<span class='no'>v1</span>, <span class='no'>v2</span>)</pre>
+    <pre class="usage"><span class='fu'>compareNA</span><span class='op'>(</span><span class='va'>v1</span>, <span class='va'>v2</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -168,9 +168,10 @@ and <code>FALSE</code> everywhere else.</p>
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>NA</span>, <span class='fl'>1</span>, <span class='fl'>2</span>, <span class='fl'>NA</span>)
-<span class='no'>b</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>1</span>, <span class='fl'>NA</span>, <span class='fl'>2</span>, <span class='fl'>NA</span>)
-<span class='fu'>compareNA</span>(<span class='no'>a</span>, <span class='no'>b</span>)</div><div class='output co'>#&gt; [1] FALSE FALSE  TRUE  TRUE</div><div class='input'>
+    <pre class="examples"><div class='input'><span class='va'>a</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='cn'>NA</span>, <span class='fl'>1</span>, <span class='fl'>2</span>, <span class='cn'>NA</span><span class='op'>)</span>
+<span class='va'>b</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>1</span>, <span class='cn'>NA</span>, <span class='fl'>2</span>, <span class='cn'>NA</span><span class='op'>)</span>
+<span class='fu'>compareNA</span><span class='op'>(</span><span class='va'>a</span>, <span class='va'>b</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] FALSE FALSE  TRUE  TRUE</div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -187,7 +188,7 @@ and <code>FALSE</code> everywhere else.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

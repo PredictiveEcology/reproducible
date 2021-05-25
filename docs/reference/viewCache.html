@@ -83,7 +83,7 @@ They allow the user a bit of control over what is being cached." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -91,7 +91,7 @@ They allow the user a bit of control over what is being cached." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -120,7 +120,7 @@ They allow the user a bit of control over what is being cached." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -147,78 +147,78 @@ They allow the user a bit of control over what is being cached." />
 They allow the user a bit of control over what is being cached.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>clearCache</span>(
-  <span class='no'>x</span>,
-  <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
-  <span class='kw'>after</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>before</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.ask"</span>),
-  <span class='kw'>useCloud</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cloudFolderID"</span>, <span class='kw'>NULL</span>),
-  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
-  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
-  <span class='no'>...</span>
-)
+    <pre class="usage"><span class='fu'>clearCache</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span><span class='op'>(</span><span class='op'>)</span>,
+  after <span class='op'>=</span> <span class='cn'>NULL</span>,
+  before <span class='op'>=</span> <span class='cn'>NULL</span>,
+  ask <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.ask"</span><span class='op'>)</span>,
+  useCloud <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  cloudFolderID <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.cloudFolderID"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  drv <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.drv"</span>, <span class='fu'>RSQLite</span><span class='fu'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  conn <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.conn"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>clearCache</span>(
-  <span class='no'>x</span>,
-  <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
-  <span class='kw'>after</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>before</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.ask"</span>),
-  <span class='kw'>useCloud</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>cloudFolderID</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.cloudFolderID"</span>, <span class='kw'>NULL</span>),
-  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
-  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
-  <span class='no'>...</span>
-)
+<span class='fu'>clearCache</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span><span class='op'>(</span><span class='op'>)</span>,
+  after <span class='op'>=</span> <span class='cn'>NULL</span>,
+  before <span class='op'>=</span> <span class='cn'>NULL</span>,
+  ask <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.ask"</span><span class='op'>)</span>,
+  useCloud <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  cloudFolderID <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.cloudFolderID"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  drv <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.drv"</span>, <span class='fu'>RSQLite</span><span class='fu'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  conn <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.conn"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
 
-<span class='fu'>cc</span>(<span class='no'>secs</span>, <span class='no'>...</span>)
+<span class='fu'>cc</span><span class='op'>(</span><span class='va'>secs</span>, <span class='va'>...</span><span class='op'>)</span>
 
-<span class='fu'>showCache</span>(
-  <span class='no'>x</span>,
-  <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
-  <span class='kw'>after</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>before</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
-  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
-  <span class='no'>...</span>
-)
-
-<span class='co'># S4 method for ANY</span>
-<span class='fu'>showCache</span>(
-  <span class='no'>x</span>,
-  <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
-  <span class='kw'>after</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>before</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
-  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
-  <span class='no'>...</span>
-)
-
-<span class='fu'>keepCache</span>(
-  <span class='no'>x</span>,
-  <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
-  <span class='kw'>after</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>before</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.ask"</span>),
-  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
-  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
-  <span class='no'>...</span>
-)
+<span class='fu'>showCache</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span><span class='op'>(</span><span class='op'>)</span>,
+  after <span class='op'>=</span> <span class='cn'>NULL</span>,
+  before <span class='op'>=</span> <span class='cn'>NULL</span>,
+  drv <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.drv"</span>, <span class='fu'>RSQLite</span><span class='fu'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  conn <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.conn"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
 
 <span class='co'># S4 method for ANY</span>
-<span class='fu'>keepCache</span>(
-  <span class='no'>x</span>,
-  <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span>(),
-  <span class='kw'>after</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>before</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.ask"</span>),
-  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
-  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
-  <span class='no'>...</span>
-)</pre>
+<span class='fu'>showCache</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span><span class='op'>(</span><span class='op'>)</span>,
+  after <span class='op'>=</span> <span class='cn'>NULL</span>,
+  before <span class='op'>=</span> <span class='cn'>NULL</span>,
+  drv <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.drv"</span>, <span class='fu'>RSQLite</span><span class='fu'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  conn <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.conn"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
+
+<span class='fu'>keepCache</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span><span class='op'>(</span><span class='op'>)</span>,
+  after <span class='op'>=</span> <span class='cn'>NULL</span>,
+  before <span class='op'>=</span> <span class='cn'>NULL</span>,
+  ask <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.ask"</span><span class='op'>)</span>,
+  drv <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.drv"</span>, <span class='fu'>RSQLite</span><span class='fu'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  conn <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.conn"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span>
+
+<span class='co'># S4 method for ANY</span>
+<span class='fu'>keepCache</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/character.html'>character</a></span><span class='op'>(</span><span class='op'>)</span>,
+  after <span class='op'>=</span> <span class='cn'>NULL</span>,
+  before <span class='op'>=</span> <span class='cn'>NULL</span>,
+  ask <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.ask"</span><span class='op'>)</span>,
+  drv <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.drv"</span>, <span class='fu'>RSQLite</span><span class='fu'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  conn <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.conn"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -241,7 +241,7 @@ characters are used.
 Matching will be against any of the 3 columns returned by <code>showCache()</code>,
 i.e., <code>artifact</code>, <code>tagValue</code> or <code>tagName</code>.
 Also, length <code>userTags</code> &gt; 1, then matching is by `and`.
-For `or` matching, use <code>|</code> in a single character string.
+For `or` matching, use <code><a href='https://rdrr.io/r/base/Logic.html'>|</a></code> in a single character string.
 See examples.</p></td>
     </tr>
     <tr>
@@ -318,7 +318,7 @@ If both <code>after</code> and <code>before</code> are specified, then all objec
 If <code>userTags</code> is used, this will override <code>after</code> or <code>before</code>.</p>
 <p><code>cc(secs)</code> is just a shortcut for <code>clearCache(repo = Paths$cachePath, after = secs)</code>,
 i.e., to remove any cache entries touched in the last <code>secs</code> seconds.</p>
-<dl'>
+<dl>
   <dt><code>clearCache</code></dt><dd><p>remove items from the cache based on their
                            <code>userTag</code> or <code>times</code> values.</p></dd>
   <dt><code>keepCache</code></dt><dd><p>remove all cached items <em>except</em> those based on
@@ -338,33 +338,37 @@ large cache repository.</p>
 in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
+    <pre class="examples"><div class='input'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://rspatial.org/raster'>raster</a></span><span class='op'>)</span>
 
-<span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"Cache"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/try.html'>try</a></span>(<span class='fu'>clearCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>), <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># just to make sure it is clear</span>
+<span class='va'>tmpDir</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>, <span class='st'>"reproducible_examples"</span>, <span class='st'>"Cache"</span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/try.html'>try</a></span><span class='op'>(</span><span class='fu'>clearCache</span><span class='op'>(</span><span class='va'>tmpDir</span>, ask <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>, silent <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span> <span class='co'># just to make sure it is clear</span>
 
 <span class='co'># Basic use</span>
-<span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)
+<span class='va'>ranNumsA</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span>
 
 <span class='co'># All same</span>
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous rnorm call, </span><span></span></div><div class='input'><span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>16</span>)  <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'><span class='no'>ranNumsD</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/substitute.html'>quote</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span>)), <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># recovers cached copy</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous rnorm call, </span><span></span></div><div class='input'>
+<span class='va'>ranNumsB</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>16</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span> <span class='co'># recovers cached copy</span>
+</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous rnorm call, </span><span></span></div><div class='input'><span class='va'>ranNumsD</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/substitute.html'>quote</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span>n <span class='op'>=</span> <span class='fl'>10</span>, <span class='fl'>16</span><span class='op'>)</span><span class='op'>)</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span> <span class='co'># recovers cached copy</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  ...(Object to retrieve (f11fb1a2880f8060.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous rnorm call, </span><span></span></div><div class='input'>
 <span class='co'># Any minor change makes it different</span>
-<span class='no'>ranNumsE</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='kw'>%C%</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>, <span class='fl'>6</span>)<span class='co'># different</span></div><div class='output co'>#&gt; <span class='error'>Error in match.call(definition, call, expand.dots, envir): unused argument (envir = &lt;environment&gt;)</span></div><div class='input'>
-<span class='co'>## Example 1: basic cache use with tags</span>
-<span class='no'>ranNumsA</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:a"</span>)
-<span class='no'>ranNumsB</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>runif</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
-<span class='no'>ranNumsC</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>runif</span>, <span class='fl'>40</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='st'>"objectName:b"</span>)
+<span class='va'>ranNumsE</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>10</span>, <span class='fl'>6</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span> <span class='co'># different</span>
 
-<span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"objectName"</span>))</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 828 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 828 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+<span class='co'>## Example 1: basic cache use with tags</span>
+<span class='va'>ranNumsA</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>4</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span>, userTags <span class='op'>=</span> <span class='st'>"objectName:a"</span><span class='op'>)</span>
+<span class='va'>ranNumsB</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>runif</span>, <span class='fl'>4</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span>, userTags <span class='op'>=</span> <span class='st'>"objectName:b"</span><span class='op'>)</span>
+<span class='va'>ranNumsC</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>runif</span>, <span class='fl'>40</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span>, userTags <span class='op'>=</span> <span class='st'>"objectName:b"</span><span class='op'>)</span>
+
+<span class='fu'>showCache</span><span class='op'>(</span><span class='va'>tmpDir</span>, userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"objectName"</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 828 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 828 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 3aef38d1fc02aee5          objectName                     b
 #&gt;  2: 3aef38d1fc02aee5            function                 runif
 #&gt;  3: 3aef38d1fc02aee5               class               numeric
 #&gt;  4: 3aef38d1fc02aee5         object.size                  1008
-#&gt;  5: 3aef38d1fc02aee5            accessed   2020-08-17 13:08:28
+#&gt;  5: 3aef38d1fc02aee5            accessed   2021-05-24 19:36:27
 #&gt;  6: 3aef38d1fc02aee5             inCloud                 FALSE
 #&gt;  7: 3aef38d1fc02aee5          resultHash                      
-#&gt;  8: 3aef38d1fc02aee5   elapsedTimeDigest      0.001502991 secs
-#&gt;  9: 3aef38d1fc02aee5 elapsedTimeFirstRun                0 secs
+#&gt;  8: 3aef38d1fc02aee5   elapsedTimeDigest     0.0002968311 secs
+#&gt;  9: 3aef38d1fc02aee5 elapsedTimeFirstRun     1.716614e-05 secs
 #&gt; 10: 3aef38d1fc02aee5      otherFunctions               saveRDS
 #&gt; 11: 3aef38d1fc02aee5      otherFunctions               do.call
 #&gt; 12: 3aef38d1fc02aee5      otherFunctions      build_site_local
@@ -377,16 +381,16 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 19: 3aef38d1fc02aee5      otherFunctions                   try
 #&gt; 20: 3aef38d1fc02aee5           preDigest    n:7eef4eae85fd9229
 #&gt; 21: 3aef38d1fc02aee5           preDigest .FUN:881ec847b7161f3c
-#&gt; 22: 3aef38d1fc02aee5           file.size                   167
+#&gt; 22: 3aef38d1fc02aee5           file.size                   169
 #&gt; 23: 7225b47fe5dc51d0          objectName                     b
 #&gt; 24: 7225b47fe5dc51d0            function                 runif
 #&gt; 25: 7225b47fe5dc51d0               class               numeric
 #&gt; 26: 7225b47fe5dc51d0         object.size                  1296
-#&gt; 27: 7225b47fe5dc51d0            accessed   2020-08-17 13:08:29
+#&gt; 27: 7225b47fe5dc51d0            accessed   2021-05-24 19:36:28
 #&gt; 28: 7225b47fe5dc51d0             inCloud                 FALSE
 #&gt; 29: 7225b47fe5dc51d0          resultHash                      
-#&gt; 30: 7225b47fe5dc51d0   elapsedTimeDigest      0.008024931 secs
-#&gt; 31: 7225b47fe5dc51d0 elapsedTimeFirstRun                0 secs
+#&gt; 30: 7225b47fe5dc51d0   elapsedTimeDigest     0.0003044605 secs
+#&gt; 31: 7225b47fe5dc51d0 elapsedTimeFirstRun     1.811981e-05 secs
 #&gt; 32: 7225b47fe5dc51d0      otherFunctions               saveRDS
 #&gt; 33: 7225b47fe5dc51d0      otherFunctions               do.call
 #&gt; 34: 7225b47fe5dc51d0      otherFunctions      build_site_local
@@ -399,16 +403,16 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 41: 7225b47fe5dc51d0      otherFunctions                   try
 #&gt; 42: 7225b47fe5dc51d0           preDigest    n:1393aef18608c8be
 #&gt; 43: 7225b47fe5dc51d0           preDigest .FUN:881ec847b7161f3c
-#&gt; 44: 7225b47fe5dc51d0           file.size                   396
+#&gt; 44: 7225b47fe5dc51d0           file.size                   391
 #&gt; 45: f7bee22047b8d0c1          objectName                     a
 #&gt; 46: f7bee22047b8d0c1            function                 rnorm
 #&gt; 47: f7bee22047b8d0c1               class               numeric
 #&gt; 48: f7bee22047b8d0c1         object.size                  1008
-#&gt; 49: f7bee22047b8d0c1            accessed   2020-08-17 13:08:28
+#&gt; 49: f7bee22047b8d0c1            accessed   2021-05-24 19:36:27
 #&gt; 50: f7bee22047b8d0c1             inCloud                 FALSE
 #&gt; 51: f7bee22047b8d0c1          resultHash                      
-#&gt; 52: f7bee22047b8d0c1   elapsedTimeDigest      0.001002073 secs
-#&gt; 53: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
+#&gt; 52: f7bee22047b8d0c1   elapsedTimeDigest     0.0003063679 secs
+#&gt; 53: f7bee22047b8d0c1 elapsedTimeFirstRun     1.811981e-05 secs
 #&gt; 54: f7bee22047b8d0c1      otherFunctions               saveRDS
 #&gt; 55: f7bee22047b8d0c1      otherFunctions               do.call
 #&gt; 56: f7bee22047b8d0c1      otherFunctions      build_site_local
@@ -424,82 +428,83 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 66: f7bee22047b8d0c1           file.size                   174
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-17 13:08:28
-#&gt;  2: 2020-08-17 13:08:28
-#&gt;  3: 2020-08-17 13:08:28
-#&gt;  4: 2020-08-17 13:08:28
-#&gt;  5: 2020-08-17 13:08:28
-#&gt;  6: 2020-08-17 13:08:28
-#&gt;  7: 2020-08-17 13:08:28
-#&gt;  8: 2020-08-17 13:08:28
-#&gt;  9: 2020-08-17 13:08:28
-#&gt; 10: 2020-08-17 13:08:28
-#&gt; 11: 2020-08-17 13:08:28
-#&gt; 12: 2020-08-17 13:08:28
-#&gt; 13: 2020-08-17 13:08:28
-#&gt; 14: 2020-08-17 13:08:28
-#&gt; 15: 2020-08-17 13:08:28
-#&gt; 16: 2020-08-17 13:08:28
-#&gt; 17: 2020-08-17 13:08:28
-#&gt; 18: 2020-08-17 13:08:28
-#&gt; 19: 2020-08-17 13:08:28
-#&gt; 20: 2020-08-17 13:08:28
-#&gt; 21: 2020-08-17 13:08:28
-#&gt; 22: 2020-08-17 13:08:28
-#&gt; 23: 2020-08-17 13:08:29
-#&gt; 24: 2020-08-17 13:08:29
-#&gt; 25: 2020-08-17 13:08:29
-#&gt; 26: 2020-08-17 13:08:29
-#&gt; 27: 2020-08-17 13:08:29
-#&gt; 28: 2020-08-17 13:08:29
-#&gt; 29: 2020-08-17 13:08:29
-#&gt; 30: 2020-08-17 13:08:29
-#&gt; 31: 2020-08-17 13:08:29
-#&gt; 32: 2020-08-17 13:08:29
-#&gt; 33: 2020-08-17 13:08:29
-#&gt; 34: 2020-08-17 13:08:29
-#&gt; 35: 2020-08-17 13:08:29
-#&gt; 36: 2020-08-17 13:08:29
-#&gt; 37: 2020-08-17 13:08:29
-#&gt; 38: 2020-08-17 13:08:29
-#&gt; 39: 2020-08-17 13:08:29
-#&gt; 40: 2020-08-17 13:08:29
-#&gt; 41: 2020-08-17 13:08:29
-#&gt; 42: 2020-08-17 13:08:29
-#&gt; 43: 2020-08-17 13:08:29
-#&gt; 44: 2020-08-17 13:08:29
-#&gt; 45: 2020-08-17 13:08:28
-#&gt; 46: 2020-08-17 13:08:28
-#&gt; 47: 2020-08-17 13:08:28
-#&gt; 48: 2020-08-17 13:08:28
-#&gt; 49: 2020-08-17 13:08:28
-#&gt; 50: 2020-08-17 13:08:28
-#&gt; 51: 2020-08-17 13:08:28
-#&gt; 52: 2020-08-17 13:08:28
-#&gt; 53: 2020-08-17 13:08:28
-#&gt; 54: 2020-08-17 13:08:28
-#&gt; 55: 2020-08-17 13:08:28
-#&gt; 56: 2020-08-17 13:08:28
-#&gt; 57: 2020-08-17 13:08:28
-#&gt; 58: 2020-08-17 13:08:28
-#&gt; 59: 2020-08-17 13:08:28
-#&gt; 60: 2020-08-17 13:08:28
-#&gt; 61: 2020-08-17 13:08:28
-#&gt; 62: 2020-08-17 13:08:28
-#&gt; 63: 2020-08-17 13:08:28
-#&gt; 64: 2020-08-17 13:08:28
-#&gt; 65: 2020-08-17 13:08:28
-#&gt; 66: 2020-08-17 13:08:28
-#&gt;             createdDate</div><div class='input'><span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"^a$"</span>)) <span class='co'># regular expression ... "a" exactly</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 252 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 252 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 2021-05-24 19:36:27
+#&gt;  2: 2021-05-24 19:36:27
+#&gt;  3: 2021-05-24 19:36:27
+#&gt;  4: 2021-05-24 19:36:27
+#&gt;  5: 2021-05-24 19:36:27
+#&gt;  6: 2021-05-24 19:36:27
+#&gt;  7: 2021-05-24 19:36:27
+#&gt;  8: 2021-05-24 19:36:27
+#&gt;  9: 2021-05-24 19:36:27
+#&gt; 10: 2021-05-24 19:36:27
+#&gt; 11: 2021-05-24 19:36:27
+#&gt; 12: 2021-05-24 19:36:27
+#&gt; 13: 2021-05-24 19:36:27
+#&gt; 14: 2021-05-24 19:36:27
+#&gt; 15: 2021-05-24 19:36:27
+#&gt; 16: 2021-05-24 19:36:27
+#&gt; 17: 2021-05-24 19:36:27
+#&gt; 18: 2021-05-24 19:36:27
+#&gt; 19: 2021-05-24 19:36:27
+#&gt; 20: 2021-05-24 19:36:27
+#&gt; 21: 2021-05-24 19:36:27
+#&gt; 22: 2021-05-24 19:36:27
+#&gt; 23: 2021-05-24 19:36:28
+#&gt; 24: 2021-05-24 19:36:28
+#&gt; 25: 2021-05-24 19:36:28
+#&gt; 26: 2021-05-24 19:36:28
+#&gt; 27: 2021-05-24 19:36:28
+#&gt; 28: 2021-05-24 19:36:28
+#&gt; 29: 2021-05-24 19:36:28
+#&gt; 30: 2021-05-24 19:36:28
+#&gt; 31: 2021-05-24 19:36:28
+#&gt; 32: 2021-05-24 19:36:28
+#&gt; 33: 2021-05-24 19:36:28
+#&gt; 34: 2021-05-24 19:36:28
+#&gt; 35: 2021-05-24 19:36:28
+#&gt; 36: 2021-05-24 19:36:28
+#&gt; 37: 2021-05-24 19:36:28
+#&gt; 38: 2021-05-24 19:36:28
+#&gt; 39: 2021-05-24 19:36:28
+#&gt; 40: 2021-05-24 19:36:28
+#&gt; 41: 2021-05-24 19:36:28
+#&gt; 42: 2021-05-24 19:36:28
+#&gt; 43: 2021-05-24 19:36:28
+#&gt; 44: 2021-05-24 19:36:28
+#&gt; 45: 2021-05-24 19:36:27
+#&gt; 46: 2021-05-24 19:36:27
+#&gt; 47: 2021-05-24 19:36:27
+#&gt; 48: 2021-05-24 19:36:27
+#&gt; 49: 2021-05-24 19:36:27
+#&gt; 50: 2021-05-24 19:36:27
+#&gt; 51: 2021-05-24 19:36:27
+#&gt; 52: 2021-05-24 19:36:27
+#&gt; 53: 2021-05-24 19:36:27
+#&gt; 54: 2021-05-24 19:36:27
+#&gt; 55: 2021-05-24 19:36:27
+#&gt; 56: 2021-05-24 19:36:27
+#&gt; 57: 2021-05-24 19:36:27
+#&gt; 58: 2021-05-24 19:36:27
+#&gt; 59: 2021-05-24 19:36:27
+#&gt; 60: 2021-05-24 19:36:27
+#&gt; 61: 2021-05-24 19:36:27
+#&gt; 62: 2021-05-24 19:36:27
+#&gt; 63: 2021-05-24 19:36:27
+#&gt; 64: 2021-05-24 19:36:27
+#&gt; 65: 2021-05-24 19:36:27
+#&gt; 66: 2021-05-24 19:36:27
+#&gt;             createdDate</div><div class='input'><span class='fu'>showCache</span><span class='op'>(</span><span class='va'>tmpDir</span>, userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"^a$"</span><span class='op'>)</span><span class='op'>)</span> <span class='co'># regular expression ... "a" exactly</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 252 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 252 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: f7bee22047b8d0c1          objectName                     a
 #&gt;  2: f7bee22047b8d0c1            function                 rnorm
 #&gt;  3: f7bee22047b8d0c1               class               numeric
 #&gt;  4: f7bee22047b8d0c1         object.size                  1008
-#&gt;  5: f7bee22047b8d0c1            accessed   2020-08-17 13:08:28
+#&gt;  5: f7bee22047b8d0c1            accessed   2021-05-24 19:36:27
 #&gt;  6: f7bee22047b8d0c1             inCloud                 FALSE
 #&gt;  7: f7bee22047b8d0c1          resultHash                      
-#&gt;  8: f7bee22047b8d0c1   elapsedTimeDigest      0.001002073 secs
-#&gt;  9: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
+#&gt;  8: f7bee22047b8d0c1   elapsedTimeDigest     0.0003063679 secs
+#&gt;  9: f7bee22047b8d0c1 elapsedTimeFirstRun     1.811981e-05 secs
 #&gt; 10: f7bee22047b8d0c1      otherFunctions               saveRDS
 #&gt; 11: f7bee22047b8d0c1      otherFunctions               do.call
 #&gt; 12: f7bee22047b8d0c1      otherFunctions      build_site_local
@@ -515,36 +520,40 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 22: f7bee22047b8d0c1           file.size                   174
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-17 13:08:28
-#&gt;  2: 2020-08-17 13:08:28
-#&gt;  3: 2020-08-17 13:08:28
-#&gt;  4: 2020-08-17 13:08:28
-#&gt;  5: 2020-08-17 13:08:28
-#&gt;  6: 2020-08-17 13:08:28
-#&gt;  7: 2020-08-17 13:08:28
-#&gt;  8: 2020-08-17 13:08:28
-#&gt;  9: 2020-08-17 13:08:28
-#&gt; 10: 2020-08-17 13:08:28
-#&gt; 11: 2020-08-17 13:08:28
-#&gt; 12: 2020-08-17 13:08:28
-#&gt; 13: 2020-08-17 13:08:28
-#&gt; 14: 2020-08-17 13:08:28
-#&gt; 15: 2020-08-17 13:08:28
-#&gt; 16: 2020-08-17 13:08:28
-#&gt; 17: 2020-08-17 13:08:28
-#&gt; 18: 2020-08-17 13:08:28
-#&gt; 19: 2020-08-17 13:08:28
-#&gt; 20: 2020-08-17 13:08:28
-#&gt; 21: 2020-08-17 13:08:28
-#&gt; 22: 2020-08-17 13:08:28
+#&gt;  1: 2021-05-24 19:36:27
+#&gt;  2: 2021-05-24 19:36:27
+#&gt;  3: 2021-05-24 19:36:27
+#&gt;  4: 2021-05-24 19:36:27
+#&gt;  5: 2021-05-24 19:36:27
+#&gt;  6: 2021-05-24 19:36:27
+#&gt;  7: 2021-05-24 19:36:27
+#&gt;  8: 2021-05-24 19:36:27
+#&gt;  9: 2021-05-24 19:36:27
+#&gt; 10: 2021-05-24 19:36:27
+#&gt; 11: 2021-05-24 19:36:27
+#&gt; 12: 2021-05-24 19:36:27
+#&gt; 13: 2021-05-24 19:36:27
+#&gt; 14: 2021-05-24 19:36:27
+#&gt; 15: 2021-05-24 19:36:27
+#&gt; 16: 2021-05-24 19:36:27
+#&gt; 17: 2021-05-24 19:36:27
+#&gt; 18: 2021-05-24 19:36:27
+#&gt; 19: 2021-05-24 19:36:27
+#&gt; 20: 2021-05-24 19:36:27
+#&gt; 21: 2021-05-24 19:36:27
+#&gt; 22: 2021-05-24 19:36:27
 #&gt;             createdDate</div><div class='input'>
 <span class='co'># Fine control of cache elements -- pick out only the large runif object, and remove it</span>
-<span class='no'>cache1</span> <span class='kw'>&lt;-</span> <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"runif"</span>)) <span class='co'># show only cached objects made during runif</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 576 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 576 bytes</span><span></span></div><div class='input'><span class='no'>toRemove</span> <span class='kw'>&lt;-</span> <span class='no'>cache1</span>[<span class='no'>tagKey</span> <span class='kw'>==</span> <span class='st'>"object.size"</span>][<span class='fu'><a href='https://rdrr.io/r/base/numeric.html'>as.numeric</a></span>(<span class='no'>tagValue</span>) <span class='kw'>&gt;</span> <span class='fl'>700</span>]$<span class='no'>cacheId</span>
-<span class='fu'>clearCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='no'>toRemove</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 0 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 0 bytes</span><span></span></div><div class='input'><span class='no'>cacheAfter</span> <span class='kw'>&lt;-</span> <span class='fu'>showCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>userTags</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"runif"</span>)) <span class='co'># Only the small one is left</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 576 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 576 bytes</span><span></span></div><div class='input'>
-<span class='no'>tmpDir</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"reproducible_examples"</span>, <span class='st'>"Cache"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/try.html'>try</a></span>(<span class='fu'>clearCache</span>(<span class='no'>tmpDir</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>), <span class='kw'>silent</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>) <span class='co'># just to make sure it is clear</span>
+<span class='va'>cache1</span> <span class='op'>&lt;-</span> <span class='fu'>showCache</span><span class='op'>(</span><span class='va'>tmpDir</span>, userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"runif"</span><span class='op'>)</span><span class='op'>)</span> <span class='co'># show only cached objects made during runif</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 576 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 576 bytes</span><span></span></div><div class='input'><span class='va'>toRemove</span> <span class='op'>&lt;-</span> <span class='va'>cache1</span><span class='op'>[</span><span class='va'>tagKey</span> <span class='op'>==</span> <span class='st'>"object.size"</span><span class='op'>]</span><span class='op'>[</span><span class='fu'><a href='https://rdrr.io/r/base/numeric.html'>as.numeric</a></span><span class='op'>(</span><span class='va'>tagValue</span><span class='op'>)</span> <span class='op'>&gt;</span> <span class='fl'>700</span><span class='op'>]</span><span class='op'>$</span><span class='va'>cacheId</span>
+<span class='fu'>clearCache</span><span class='op'>(</span><span class='va'>tmpDir</span>, userTags <span class='op'>=</span> <span class='va'>toRemove</span>, ask <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 0 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 0 bytes</span><span></span></div><div class='input'><span class='va'>cacheAfter</span> <span class='op'>&lt;-</span> <span class='fu'>showCache</span><span class='op'>(</span><span class='va'>tmpDir</span>, userTags <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"runif"</span><span class='op'>)</span><span class='op'>)</span> <span class='co'># Only the small one is left</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 576 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 576 bytes</span><span></span></div><div class='input'>
+<span class='va'>tmpDir</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>, <span class='st'>"reproducible_examples"</span>, <span class='st'>"Cache"</span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/try.html'>try</a></span><span class='op'>(</span><span class='fu'>clearCache</span><span class='op'>(</span><span class='va'>tmpDir</span>, ask <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>, silent <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span> <span class='co'># just to make sure it is clear</span>
 
-<span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] 1.251884
+<span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>1</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] 0.4539844
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -552,8 +561,9 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:7072c305d8c69df0"
 #&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'><span class='no'>thisTime</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time</a></span>()
-<span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>2</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1]  0.2503195 -1.7055817
+#&gt; [1] ""</div><div class='input'><span class='va'>thisTime</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time</a></span><span class='op'>(</span><span class='op'>)</span>
+<span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>2</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] -0.27877244 -0.02420641
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -561,7 +571,8 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:3b347dee8f6305c7"
 #&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'><span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>3</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] -0.8554131 -0.1449016 -0.3244470
+#&gt; [1] ""</div><div class='input'><span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>3</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] -0.2294519  0.6612776 -0.9750906
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -569,7 +580,8 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:f0da91a44b839434"
 #&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'><span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>4</span>, <span class='kw'>cacheRepo</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; [1] -0.17256490 -1.23606292 -1.90230421 -0.09450402
+#&gt; [1] ""</div><div class='input'><span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>4</span>, cacheRepo <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] -0.05946397 -1.86389510 -1.27450892 -1.78177081
 #&gt; attr(,".Cache")
 #&gt; attr(,".Cache")$newCache
 #&gt; [1] TRUE
@@ -577,15 +589,16 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; attr(,"tags")
 #&gt; [1] "cacheId:f7bee22047b8d0c1"
 #&gt; attr(,"call")
-#&gt; [1] ""</div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># shows all 4 entries</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 998 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 998 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt; [1] ""</div><div class='input'><span class='fu'>showCache</span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span> <span class='co'># shows all 4 entries</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 998 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 998 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 7072c305d8c69df0            function                 rnorm
 #&gt;  2: 7072c305d8c69df0               class               numeric
 #&gt;  3: 7072c305d8c69df0         object.size                   984
-#&gt;  4: 7072c305d8c69df0            accessed   2020-08-17 13:08:29
+#&gt;  4: 7072c305d8c69df0            accessed   2021-05-24 19:36:28
 #&gt;  5: 7072c305d8c69df0             inCloud                 FALSE
 #&gt;  6: 7072c305d8c69df0          resultHash                      
-#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest      0.001503944 secs
-#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun                0 secs
+#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest     0.0003266335 secs
+#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun     1.978874e-05 secs
 #&gt;  9: 7072c305d8c69df0      otherFunctions               saveRDS
 #&gt; 10: 7072c305d8c69df0      otherFunctions               do.call
 #&gt; 11: 7072c305d8c69df0      otherFunctions      build_site_local
@@ -602,11 +615,11 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 22: 3b347dee8f6305c7            function                 rnorm
 #&gt; 23: 3b347dee8f6305c7               class               numeric
 #&gt; 24: 3b347dee8f6305c7         object.size                   992
-#&gt; 25: 3b347dee8f6305c7            accessed   2020-08-17 13:08:29
+#&gt; 25: 3b347dee8f6305c7            accessed   2021-05-24 19:36:28
 #&gt; 26: 3b347dee8f6305c7             inCloud                 FALSE
 #&gt; 27: 3b347dee8f6305c7          resultHash                      
-#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest      0.003010035 secs
-#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun                0 secs
+#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest     0.0002889633 secs
+#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun     1.835823e-05 secs
 #&gt; 30: 3b347dee8f6305c7      otherFunctions               saveRDS
 #&gt; 31: 3b347dee8f6305c7      otherFunctions               do.call
 #&gt; 32: 3b347dee8f6305c7      otherFunctions      build_site_local
@@ -623,11 +636,11 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 43: f0da91a44b839434            function                 rnorm
 #&gt; 44: f0da91a44b839434               class               numeric
 #&gt; 45: f0da91a44b839434         object.size                  1008
-#&gt; 46: f0da91a44b839434            accessed   2020-08-17 13:08:29
+#&gt; 46: f0da91a44b839434            accessed   2021-05-24 19:36:28
 #&gt; 47: f0da91a44b839434             inCloud                 FALSE
 #&gt; 48: f0da91a44b839434          resultHash                      
-#&gt; 49: f0da91a44b839434   elapsedTimeDigest      0.001003027 secs
-#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun                0 secs
+#&gt; 49: f0da91a44b839434   elapsedTimeDigest      0.000279665 secs
+#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun     1.835823e-05 secs
 #&gt; 51: f0da91a44b839434      otherFunctions               saveRDS
 #&gt; 52: f0da91a44b839434      otherFunctions               do.call
 #&gt; 53: f0da91a44b839434      otherFunctions      build_site_local
@@ -640,15 +653,15 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 60: f0da91a44b839434      otherFunctions                   try
 #&gt; 61: f0da91a44b839434           preDigest    n:7f12988bd88a0fb8
 #&gt; 62: f0da91a44b839434           preDigest .FUN:4f604aa46882b368
-#&gt; 63: f0da91a44b839434           file.size                   166
+#&gt; 63: f0da91a44b839434           file.size                   165
 #&gt; 64: f7bee22047b8d0c1            function                 rnorm
 #&gt; 65: f7bee22047b8d0c1               class               numeric
 #&gt; 66: f7bee22047b8d0c1         object.size                  1008
-#&gt; 67: f7bee22047b8d0c1            accessed   2020-08-17 13:08:29
+#&gt; 67: f7bee22047b8d0c1            accessed   2021-05-24 19:36:28
 #&gt; 68: f7bee22047b8d0c1             inCloud                 FALSE
 #&gt; 69: f7bee22047b8d0c1          resultHash                      
-#&gt; 70: f7bee22047b8d0c1   elapsedTimeDigest      0.001001835 secs
-#&gt; 71: f7bee22047b8d0c1 elapsedTimeFirstRun                0 secs
+#&gt; 70: f7bee22047b8d0c1   elapsedTimeDigest     0.0002923012 secs
+#&gt; 71: f7bee22047b8d0c1 elapsedTimeFirstRun     1.955032e-05 secs
 #&gt; 72: f7bee22047b8d0c1      otherFunctions               saveRDS
 #&gt; 73: f7bee22047b8d0c1      otherFunctions               do.call
 #&gt; 74: f7bee22047b8d0c1      otherFunctions      build_site_local
@@ -661,102 +674,104 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 81: f7bee22047b8d0c1      otherFunctions                   try
 #&gt; 82: f7bee22047b8d0c1           preDigest    n:7eef4eae85fd9229
 #&gt; 83: f7bee22047b8d0c1           preDigest .FUN:4f604aa46882b368
-#&gt; 84: f7bee22047b8d0c1           file.size                   175
+#&gt; 84: f7bee22047b8d0c1           file.size                   174
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-17 13:08:29
-#&gt;  2: 2020-08-17 13:08:29
-#&gt;  3: 2020-08-17 13:08:29
-#&gt;  4: 2020-08-17 13:08:29
-#&gt;  5: 2020-08-17 13:08:29
-#&gt;  6: 2020-08-17 13:08:29
-#&gt;  7: 2020-08-17 13:08:29
-#&gt;  8: 2020-08-17 13:08:29
-#&gt;  9: 2020-08-17 13:08:29
-#&gt; 10: 2020-08-17 13:08:29
-#&gt; 11: 2020-08-17 13:08:29
-#&gt; 12: 2020-08-17 13:08:29
-#&gt; 13: 2020-08-17 13:08:29
-#&gt; 14: 2020-08-17 13:08:29
-#&gt; 15: 2020-08-17 13:08:29
-#&gt; 16: 2020-08-17 13:08:29
-#&gt; 17: 2020-08-17 13:08:29
-#&gt; 18: 2020-08-17 13:08:29
-#&gt; 19: 2020-08-17 13:08:29
-#&gt; 20: 2020-08-17 13:08:29
-#&gt; 21: 2020-08-17 13:08:29
-#&gt; 22: 2020-08-17 13:08:29
-#&gt; 23: 2020-08-17 13:08:29
-#&gt; 24: 2020-08-17 13:08:29
-#&gt; 25: 2020-08-17 13:08:29
-#&gt; 26: 2020-08-17 13:08:29
-#&gt; 27: 2020-08-17 13:08:29
-#&gt; 28: 2020-08-17 13:08:29
-#&gt; 29: 2020-08-17 13:08:29
-#&gt; 30: 2020-08-17 13:08:29
-#&gt; 31: 2020-08-17 13:08:29
-#&gt; 32: 2020-08-17 13:08:29
-#&gt; 33: 2020-08-17 13:08:29
-#&gt; 34: 2020-08-17 13:08:29
-#&gt; 35: 2020-08-17 13:08:29
-#&gt; 36: 2020-08-17 13:08:29
-#&gt; 37: 2020-08-17 13:08:29
-#&gt; 38: 2020-08-17 13:08:29
-#&gt; 39: 2020-08-17 13:08:29
-#&gt; 40: 2020-08-17 13:08:29
-#&gt; 41: 2020-08-17 13:08:29
-#&gt; 42: 2020-08-17 13:08:29
-#&gt; 43: 2020-08-17 13:08:29
-#&gt; 44: 2020-08-17 13:08:29
-#&gt; 45: 2020-08-17 13:08:29
-#&gt; 46: 2020-08-17 13:08:29
-#&gt; 47: 2020-08-17 13:08:29
-#&gt; 48: 2020-08-17 13:08:29
-#&gt; 49: 2020-08-17 13:08:29
-#&gt; 50: 2020-08-17 13:08:29
-#&gt; 51: 2020-08-17 13:08:29
-#&gt; 52: 2020-08-17 13:08:29
-#&gt; 53: 2020-08-17 13:08:29
-#&gt; 54: 2020-08-17 13:08:29
-#&gt; 55: 2020-08-17 13:08:29
-#&gt; 56: 2020-08-17 13:08:29
-#&gt; 57: 2020-08-17 13:08:29
-#&gt; 58: 2020-08-17 13:08:29
-#&gt; 59: 2020-08-17 13:08:29
-#&gt; 60: 2020-08-17 13:08:29
-#&gt; 61: 2020-08-17 13:08:29
-#&gt; 62: 2020-08-17 13:08:29
-#&gt; 63: 2020-08-17 13:08:29
-#&gt; 64: 2020-08-17 13:08:29
-#&gt; 65: 2020-08-17 13:08:29
-#&gt; 66: 2020-08-17 13:08:29
-#&gt; 67: 2020-08-17 13:08:29
-#&gt; 68: 2020-08-17 13:08:29
-#&gt; 69: 2020-08-17 13:08:29
-#&gt; 70: 2020-08-17 13:08:29
-#&gt; 71: 2020-08-17 13:08:29
-#&gt; 72: 2020-08-17 13:08:29
-#&gt; 73: 2020-08-17 13:08:29
-#&gt; 74: 2020-08-17 13:08:29
-#&gt; 75: 2020-08-17 13:08:29
-#&gt; 76: 2020-08-17 13:08:29
-#&gt; 77: 2020-08-17 13:08:29
-#&gt; 78: 2020-08-17 13:08:29
-#&gt; 79: 2020-08-17 13:08:29
-#&gt; 80: 2020-08-17 13:08:29
-#&gt; 81: 2020-08-17 13:08:29
-#&gt; 82: 2020-08-17 13:08:29
-#&gt; 83: 2020-08-17 13:08:29
-#&gt; 84: 2020-08-17 13:08:29
-#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No time provided; removing the most recent entry to the Cache</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 252 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 252 bytes</span><span></span></div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># most recent is gone</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 746 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 746 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 2021-05-24 19:36:28
+#&gt;  2: 2021-05-24 19:36:28
+#&gt;  3: 2021-05-24 19:36:28
+#&gt;  4: 2021-05-24 19:36:28
+#&gt;  5: 2021-05-24 19:36:28
+#&gt;  6: 2021-05-24 19:36:28
+#&gt;  7: 2021-05-24 19:36:28
+#&gt;  8: 2021-05-24 19:36:28
+#&gt;  9: 2021-05-24 19:36:28
+#&gt; 10: 2021-05-24 19:36:28
+#&gt; 11: 2021-05-24 19:36:28
+#&gt; 12: 2021-05-24 19:36:28
+#&gt; 13: 2021-05-24 19:36:28
+#&gt; 14: 2021-05-24 19:36:28
+#&gt; 15: 2021-05-24 19:36:28
+#&gt; 16: 2021-05-24 19:36:28
+#&gt; 17: 2021-05-24 19:36:28
+#&gt; 18: 2021-05-24 19:36:28
+#&gt; 19: 2021-05-24 19:36:28
+#&gt; 20: 2021-05-24 19:36:28
+#&gt; 21: 2021-05-24 19:36:28
+#&gt; 22: 2021-05-24 19:36:28
+#&gt; 23: 2021-05-24 19:36:28
+#&gt; 24: 2021-05-24 19:36:28
+#&gt; 25: 2021-05-24 19:36:28
+#&gt; 26: 2021-05-24 19:36:28
+#&gt; 27: 2021-05-24 19:36:28
+#&gt; 28: 2021-05-24 19:36:28
+#&gt; 29: 2021-05-24 19:36:28
+#&gt; 30: 2021-05-24 19:36:28
+#&gt; 31: 2021-05-24 19:36:28
+#&gt; 32: 2021-05-24 19:36:28
+#&gt; 33: 2021-05-24 19:36:28
+#&gt; 34: 2021-05-24 19:36:28
+#&gt; 35: 2021-05-24 19:36:28
+#&gt; 36: 2021-05-24 19:36:28
+#&gt; 37: 2021-05-24 19:36:28
+#&gt; 38: 2021-05-24 19:36:28
+#&gt; 39: 2021-05-24 19:36:28
+#&gt; 40: 2021-05-24 19:36:28
+#&gt; 41: 2021-05-24 19:36:28
+#&gt; 42: 2021-05-24 19:36:28
+#&gt; 43: 2021-05-24 19:36:28
+#&gt; 44: 2021-05-24 19:36:28
+#&gt; 45: 2021-05-24 19:36:28
+#&gt; 46: 2021-05-24 19:36:28
+#&gt; 47: 2021-05-24 19:36:28
+#&gt; 48: 2021-05-24 19:36:28
+#&gt; 49: 2021-05-24 19:36:28
+#&gt; 50: 2021-05-24 19:36:28
+#&gt; 51: 2021-05-24 19:36:28
+#&gt; 52: 2021-05-24 19:36:28
+#&gt; 53: 2021-05-24 19:36:28
+#&gt; 54: 2021-05-24 19:36:28
+#&gt; 55: 2021-05-24 19:36:28
+#&gt; 56: 2021-05-24 19:36:28
+#&gt; 57: 2021-05-24 19:36:28
+#&gt; 58: 2021-05-24 19:36:28
+#&gt; 59: 2021-05-24 19:36:28
+#&gt; 60: 2021-05-24 19:36:28
+#&gt; 61: 2021-05-24 19:36:28
+#&gt; 62: 2021-05-24 19:36:28
+#&gt; 63: 2021-05-24 19:36:28
+#&gt; 64: 2021-05-24 19:36:28
+#&gt; 65: 2021-05-24 19:36:28
+#&gt; 66: 2021-05-24 19:36:28
+#&gt; 67: 2021-05-24 19:36:28
+#&gt; 68: 2021-05-24 19:36:28
+#&gt; 69: 2021-05-24 19:36:28
+#&gt; 70: 2021-05-24 19:36:28
+#&gt; 71: 2021-05-24 19:36:28
+#&gt; 72: 2021-05-24 19:36:28
+#&gt; 73: 2021-05-24 19:36:28
+#&gt; 74: 2021-05-24 19:36:28
+#&gt; 75: 2021-05-24 19:36:28
+#&gt; 76: 2021-05-24 19:36:28
+#&gt; 77: 2021-05-24 19:36:28
+#&gt; 78: 2021-05-24 19:36:28
+#&gt; 79: 2021-05-24 19:36:28
+#&gt; 80: 2021-05-24 19:36:28
+#&gt; 81: 2021-05-24 19:36:28
+#&gt; 82: 2021-05-24 19:36:28
+#&gt; 83: 2021-05-24 19:36:28
+#&gt; 84: 2021-05-24 19:36:28
+#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span><span class='op'>(</span>ask <span class='op'>=</span> <span class='cn'>FALSE</span>, x <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No time provided; removing the most recent entry to the Cache</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 252 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 252 bytes</span><span></span></div><div class='input'><span class='fu'>showCache</span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span> <span class='co'># most recent is gone</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 746 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 746 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 7072c305d8c69df0            function                 rnorm
 #&gt;  2: 7072c305d8c69df0               class               numeric
 #&gt;  3: 7072c305d8c69df0         object.size                   984
-#&gt;  4: 7072c305d8c69df0            accessed   2020-08-17 13:08:29
+#&gt;  4: 7072c305d8c69df0            accessed   2021-05-24 19:36:28
 #&gt;  5: 7072c305d8c69df0             inCloud                 FALSE
 #&gt;  6: 7072c305d8c69df0          resultHash                      
-#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest      0.001503944 secs
-#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun                0 secs
+#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest     0.0003266335 secs
+#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun     1.978874e-05 secs
 #&gt;  9: 7072c305d8c69df0      otherFunctions               saveRDS
 #&gt; 10: 7072c305d8c69df0      otherFunctions               do.call
 #&gt; 11: 7072c305d8c69df0      otherFunctions      build_site_local
@@ -773,11 +788,11 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 22: 3b347dee8f6305c7            function                 rnorm
 #&gt; 23: 3b347dee8f6305c7               class               numeric
 #&gt; 24: 3b347dee8f6305c7         object.size                   992
-#&gt; 25: 3b347dee8f6305c7            accessed   2020-08-17 13:08:29
+#&gt; 25: 3b347dee8f6305c7            accessed   2021-05-24 19:36:28
 #&gt; 26: 3b347dee8f6305c7             inCloud                 FALSE
 #&gt; 27: 3b347dee8f6305c7          resultHash                      
-#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest      0.003010035 secs
-#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun                0 secs
+#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest     0.0002889633 secs
+#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun     1.835823e-05 secs
 #&gt; 30: 3b347dee8f6305c7      otherFunctions               saveRDS
 #&gt; 31: 3b347dee8f6305c7      otherFunctions               do.call
 #&gt; 32: 3b347dee8f6305c7      otherFunctions      build_site_local
@@ -794,11 +809,11 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 43: f0da91a44b839434            function                 rnorm
 #&gt; 44: f0da91a44b839434               class               numeric
 #&gt; 45: f0da91a44b839434         object.size                  1008
-#&gt; 46: f0da91a44b839434            accessed   2020-08-17 13:08:29
+#&gt; 46: f0da91a44b839434            accessed   2021-05-24 19:36:28
 #&gt; 47: f0da91a44b839434             inCloud                 FALSE
 #&gt; 48: f0da91a44b839434          resultHash                      
-#&gt; 49: f0da91a44b839434   elapsedTimeDigest      0.001003027 secs
-#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun                0 secs
+#&gt; 49: f0da91a44b839434   elapsedTimeDigest      0.000279665 secs
+#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun     1.835823e-05 secs
 #&gt; 51: f0da91a44b839434      otherFunctions               saveRDS
 #&gt; 52: f0da91a44b839434      otherFunctions               do.call
 #&gt; 53: f0da91a44b839434      otherFunctions      build_site_local
@@ -811,81 +826,83 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 60: f0da91a44b839434      otherFunctions                   try
 #&gt; 61: f0da91a44b839434           preDigest    n:7f12988bd88a0fb8
 #&gt; 62: f0da91a44b839434           preDigest .FUN:4f604aa46882b368
-#&gt; 63: f0da91a44b839434           file.size                   166
+#&gt; 63: f0da91a44b839434           file.size                   165
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-17 13:08:29
-#&gt;  2: 2020-08-17 13:08:29
-#&gt;  3: 2020-08-17 13:08:29
-#&gt;  4: 2020-08-17 13:08:29
-#&gt;  5: 2020-08-17 13:08:29
-#&gt;  6: 2020-08-17 13:08:29
-#&gt;  7: 2020-08-17 13:08:29
-#&gt;  8: 2020-08-17 13:08:29
-#&gt;  9: 2020-08-17 13:08:29
-#&gt; 10: 2020-08-17 13:08:29
-#&gt; 11: 2020-08-17 13:08:29
-#&gt; 12: 2020-08-17 13:08:29
-#&gt; 13: 2020-08-17 13:08:29
-#&gt; 14: 2020-08-17 13:08:29
-#&gt; 15: 2020-08-17 13:08:29
-#&gt; 16: 2020-08-17 13:08:29
-#&gt; 17: 2020-08-17 13:08:29
-#&gt; 18: 2020-08-17 13:08:29
-#&gt; 19: 2020-08-17 13:08:29
-#&gt; 20: 2020-08-17 13:08:29
-#&gt; 21: 2020-08-17 13:08:29
-#&gt; 22: 2020-08-17 13:08:29
-#&gt; 23: 2020-08-17 13:08:29
-#&gt; 24: 2020-08-17 13:08:29
-#&gt; 25: 2020-08-17 13:08:29
-#&gt; 26: 2020-08-17 13:08:29
-#&gt; 27: 2020-08-17 13:08:29
-#&gt; 28: 2020-08-17 13:08:29
-#&gt; 29: 2020-08-17 13:08:29
-#&gt; 30: 2020-08-17 13:08:29
-#&gt; 31: 2020-08-17 13:08:29
-#&gt; 32: 2020-08-17 13:08:29
-#&gt; 33: 2020-08-17 13:08:29
-#&gt; 34: 2020-08-17 13:08:29
-#&gt; 35: 2020-08-17 13:08:29
-#&gt; 36: 2020-08-17 13:08:29
-#&gt; 37: 2020-08-17 13:08:29
-#&gt; 38: 2020-08-17 13:08:29
-#&gt; 39: 2020-08-17 13:08:29
-#&gt; 40: 2020-08-17 13:08:29
-#&gt; 41: 2020-08-17 13:08:29
-#&gt; 42: 2020-08-17 13:08:29
-#&gt; 43: 2020-08-17 13:08:29
-#&gt; 44: 2020-08-17 13:08:29
-#&gt; 45: 2020-08-17 13:08:29
-#&gt; 46: 2020-08-17 13:08:29
-#&gt; 47: 2020-08-17 13:08:29
-#&gt; 48: 2020-08-17 13:08:29
-#&gt; 49: 2020-08-17 13:08:29
-#&gt; 50: 2020-08-17 13:08:29
-#&gt; 51: 2020-08-17 13:08:29
-#&gt; 52: 2020-08-17 13:08:29
-#&gt; 53: 2020-08-17 13:08:29
-#&gt; 54: 2020-08-17 13:08:29
-#&gt; 55: 2020-08-17 13:08:29
-#&gt; 56: 2020-08-17 13:08:29
-#&gt; 57: 2020-08-17 13:08:29
-#&gt; 58: 2020-08-17 13:08:29
-#&gt; 59: 2020-08-17 13:08:29
-#&gt; 60: 2020-08-17 13:08:29
-#&gt; 61: 2020-08-17 13:08:29
-#&gt; 62: 2020-08-17 13:08:29
-#&gt; 63: 2020-08-17 13:08:29
-#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='no'>thisTime</span>, <span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 0 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 0 bytes</span><span></span></div><div class='input'><span class='fu'>showCache</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># all those after thisTime gone, i.e., only 1 left</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 746 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 746 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
+#&gt;  1: 2021-05-24 19:36:28
+#&gt;  2: 2021-05-24 19:36:28
+#&gt;  3: 2021-05-24 19:36:28
+#&gt;  4: 2021-05-24 19:36:28
+#&gt;  5: 2021-05-24 19:36:28
+#&gt;  6: 2021-05-24 19:36:28
+#&gt;  7: 2021-05-24 19:36:28
+#&gt;  8: 2021-05-24 19:36:28
+#&gt;  9: 2021-05-24 19:36:28
+#&gt; 10: 2021-05-24 19:36:28
+#&gt; 11: 2021-05-24 19:36:28
+#&gt; 12: 2021-05-24 19:36:28
+#&gt; 13: 2021-05-24 19:36:28
+#&gt; 14: 2021-05-24 19:36:28
+#&gt; 15: 2021-05-24 19:36:28
+#&gt; 16: 2021-05-24 19:36:28
+#&gt; 17: 2021-05-24 19:36:28
+#&gt; 18: 2021-05-24 19:36:28
+#&gt; 19: 2021-05-24 19:36:28
+#&gt; 20: 2021-05-24 19:36:28
+#&gt; 21: 2021-05-24 19:36:28
+#&gt; 22: 2021-05-24 19:36:28
+#&gt; 23: 2021-05-24 19:36:28
+#&gt; 24: 2021-05-24 19:36:28
+#&gt; 25: 2021-05-24 19:36:28
+#&gt; 26: 2021-05-24 19:36:28
+#&gt; 27: 2021-05-24 19:36:28
+#&gt; 28: 2021-05-24 19:36:28
+#&gt; 29: 2021-05-24 19:36:28
+#&gt; 30: 2021-05-24 19:36:28
+#&gt; 31: 2021-05-24 19:36:28
+#&gt; 32: 2021-05-24 19:36:28
+#&gt; 33: 2021-05-24 19:36:28
+#&gt; 34: 2021-05-24 19:36:28
+#&gt; 35: 2021-05-24 19:36:28
+#&gt; 36: 2021-05-24 19:36:28
+#&gt; 37: 2021-05-24 19:36:28
+#&gt; 38: 2021-05-24 19:36:28
+#&gt; 39: 2021-05-24 19:36:28
+#&gt; 40: 2021-05-24 19:36:28
+#&gt; 41: 2021-05-24 19:36:28
+#&gt; 42: 2021-05-24 19:36:28
+#&gt; 43: 2021-05-24 19:36:28
+#&gt; 44: 2021-05-24 19:36:28
+#&gt; 45: 2021-05-24 19:36:28
+#&gt; 46: 2021-05-24 19:36:28
+#&gt; 47: 2021-05-24 19:36:28
+#&gt; 48: 2021-05-24 19:36:28
+#&gt; 49: 2021-05-24 19:36:28
+#&gt; 50: 2021-05-24 19:36:28
+#&gt; 51: 2021-05-24 19:36:28
+#&gt; 52: 2021-05-24 19:36:28
+#&gt; 53: 2021-05-24 19:36:28
+#&gt; 54: 2021-05-24 19:36:28
+#&gt; 55: 2021-05-24 19:36:28
+#&gt; 56: 2021-05-24 19:36:28
+#&gt; 57: 2021-05-24 19:36:28
+#&gt; 58: 2021-05-24 19:36:28
+#&gt; 59: 2021-05-24 19:36:28
+#&gt; 60: 2021-05-24 19:36:28
+#&gt; 61: 2021-05-24 19:36:28
+#&gt; 62: 2021-05-24 19:36:28
+#&gt; 63: 2021-05-24 19:36:28
+#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span><span class='op'>(</span><span class='va'>thisTime</span>, ask <span class='op'>=</span> <span class='cn'>FALSE</span>, x <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 0 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 0 bytes</span><span></span></div><div class='input'><span class='fu'>showCache</span><span class='op'>(</span>x <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span> <span class='co'># all those after thisTime gone, i.e., only 1 left</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 746 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 746 bytes</span><span></span></div><div class='output co'>#&gt;              cacheId              tagKey              tagValue
 #&gt;  1: 7072c305d8c69df0            function                 rnorm
 #&gt;  2: 7072c305d8c69df0               class               numeric
 #&gt;  3: 7072c305d8c69df0         object.size                   984
-#&gt;  4: 7072c305d8c69df0            accessed   2020-08-17 13:08:29
+#&gt;  4: 7072c305d8c69df0            accessed   2021-05-24 19:36:28
 #&gt;  5: 7072c305d8c69df0             inCloud                 FALSE
 #&gt;  6: 7072c305d8c69df0          resultHash                      
-#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest      0.001503944 secs
-#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun                0 secs
+#&gt;  7: 7072c305d8c69df0   elapsedTimeDigest     0.0003266335 secs
+#&gt;  8: 7072c305d8c69df0 elapsedTimeFirstRun     1.978874e-05 secs
 #&gt;  9: 7072c305d8c69df0      otherFunctions               saveRDS
 #&gt; 10: 7072c305d8c69df0      otherFunctions               do.call
 #&gt; 11: 7072c305d8c69df0      otherFunctions      build_site_local
@@ -902,11 +919,11 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 22: 3b347dee8f6305c7            function                 rnorm
 #&gt; 23: 3b347dee8f6305c7               class               numeric
 #&gt; 24: 3b347dee8f6305c7         object.size                   992
-#&gt; 25: 3b347dee8f6305c7            accessed   2020-08-17 13:08:29
+#&gt; 25: 3b347dee8f6305c7            accessed   2021-05-24 19:36:28
 #&gt; 26: 3b347dee8f6305c7             inCloud                 FALSE
 #&gt; 27: 3b347dee8f6305c7          resultHash                      
-#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest      0.003010035 secs
-#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun                0 secs
+#&gt; 28: 3b347dee8f6305c7   elapsedTimeDigest     0.0002889633 secs
+#&gt; 29: 3b347dee8f6305c7 elapsedTimeFirstRun     1.835823e-05 secs
 #&gt; 30: 3b347dee8f6305c7      otherFunctions               saveRDS
 #&gt; 31: 3b347dee8f6305c7      otherFunctions               do.call
 #&gt; 32: 3b347dee8f6305c7      otherFunctions      build_site_local
@@ -923,11 +940,11 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 43: f0da91a44b839434            function                 rnorm
 #&gt; 44: f0da91a44b839434               class               numeric
 #&gt; 45: f0da91a44b839434         object.size                  1008
-#&gt; 46: f0da91a44b839434            accessed   2020-08-17 13:08:29
+#&gt; 46: f0da91a44b839434            accessed   2021-05-24 19:36:28
 #&gt; 47: f0da91a44b839434             inCloud                 FALSE
 #&gt; 48: f0da91a44b839434          resultHash                      
-#&gt; 49: f0da91a44b839434   elapsedTimeDigest      0.001003027 secs
-#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun                0 secs
+#&gt; 49: f0da91a44b839434   elapsedTimeDigest      0.000279665 secs
+#&gt; 50: f0da91a44b839434 elapsedTimeFirstRun     1.835823e-05 secs
 #&gt; 51: f0da91a44b839434      otherFunctions               saveRDS
 #&gt; 52: f0da91a44b839434      otherFunctions               do.call
 #&gt; 53: f0da91a44b839434      otherFunctions      build_site_local
@@ -940,73 +957,75 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 #&gt; 60: f0da91a44b839434      otherFunctions                   try
 #&gt; 61: f0da91a44b839434           preDigest    n:7f12988bd88a0fb8
 #&gt; 62: f0da91a44b839434           preDigest .FUN:4f604aa46882b368
-#&gt; 63: f0da91a44b839434           file.size                   166
+#&gt; 63: f0da91a44b839434           file.size                   165
 #&gt;              cacheId              tagKey              tagValue
 #&gt;             createdDate
-#&gt;  1: 2020-08-17 13:08:29
-#&gt;  2: 2020-08-17 13:08:29
-#&gt;  3: 2020-08-17 13:08:29
-#&gt;  4: 2020-08-17 13:08:29
-#&gt;  5: 2020-08-17 13:08:29
-#&gt;  6: 2020-08-17 13:08:29
-#&gt;  7: 2020-08-17 13:08:29
-#&gt;  8: 2020-08-17 13:08:29
-#&gt;  9: 2020-08-17 13:08:29
-#&gt; 10: 2020-08-17 13:08:29
-#&gt; 11: 2020-08-17 13:08:29
-#&gt; 12: 2020-08-17 13:08:29
-#&gt; 13: 2020-08-17 13:08:29
-#&gt; 14: 2020-08-17 13:08:29
-#&gt; 15: 2020-08-17 13:08:29
-#&gt; 16: 2020-08-17 13:08:29
-#&gt; 17: 2020-08-17 13:08:29
-#&gt; 18: 2020-08-17 13:08:29
-#&gt; 19: 2020-08-17 13:08:29
-#&gt; 20: 2020-08-17 13:08:29
-#&gt; 21: 2020-08-17 13:08:29
-#&gt; 22: 2020-08-17 13:08:29
-#&gt; 23: 2020-08-17 13:08:29
-#&gt; 24: 2020-08-17 13:08:29
-#&gt; 25: 2020-08-17 13:08:29
-#&gt; 26: 2020-08-17 13:08:29
-#&gt; 27: 2020-08-17 13:08:29
-#&gt; 28: 2020-08-17 13:08:29
-#&gt; 29: 2020-08-17 13:08:29
-#&gt; 30: 2020-08-17 13:08:29
-#&gt; 31: 2020-08-17 13:08:29
-#&gt; 32: 2020-08-17 13:08:29
-#&gt; 33: 2020-08-17 13:08:29
-#&gt; 34: 2020-08-17 13:08:29
-#&gt; 35: 2020-08-17 13:08:29
-#&gt; 36: 2020-08-17 13:08:29
-#&gt; 37: 2020-08-17 13:08:29
-#&gt; 38: 2020-08-17 13:08:29
-#&gt; 39: 2020-08-17 13:08:29
-#&gt; 40: 2020-08-17 13:08:29
-#&gt; 41: 2020-08-17 13:08:29
-#&gt; 42: 2020-08-17 13:08:29
-#&gt; 43: 2020-08-17 13:08:29
-#&gt; 44: 2020-08-17 13:08:29
-#&gt; 45: 2020-08-17 13:08:29
-#&gt; 46: 2020-08-17 13:08:29
-#&gt; 47: 2020-08-17 13:08:29
-#&gt; 48: 2020-08-17 13:08:29
-#&gt; 49: 2020-08-17 13:08:29
-#&gt; 50: 2020-08-17 13:08:29
-#&gt; 51: 2020-08-17 13:08:29
-#&gt; 52: 2020-08-17 13:08:29
-#&gt; 53: 2020-08-17 13:08:29
-#&gt; 54: 2020-08-17 13:08:29
-#&gt; 55: 2020-08-17 13:08:29
-#&gt; 56: 2020-08-17 13:08:29
-#&gt; 57: 2020-08-17 13:08:29
-#&gt; 58: 2020-08-17 13:08:29
-#&gt; 59: 2020-08-17 13:08:29
-#&gt; 60: 2020-08-17 13:08:29
-#&gt; 61: 2020-08-17 13:08:29
-#&gt; 62: 2020-08-17 13:08:29
-#&gt; 63: 2020-08-17 13:08:29
-#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># Cache is</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No time provided; removing the most recent entry to the Cache</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 252 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 252 bytes</span><span></span></div><div class='input'><span class='fu'>cc</span>(<span class='kw'>ask</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>tmpDir</span>) <span class='co'># Cache is already empty</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No time provided; removing the most recent entry to the Cache</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 248 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 248 bytes</span><span></span></div></span></pre>
+#&gt;  1: 2021-05-24 19:36:28
+#&gt;  2: 2021-05-24 19:36:28
+#&gt;  3: 2021-05-24 19:36:28
+#&gt;  4: 2021-05-24 19:36:28
+#&gt;  5: 2021-05-24 19:36:28
+#&gt;  6: 2021-05-24 19:36:28
+#&gt;  7: 2021-05-24 19:36:28
+#&gt;  8: 2021-05-24 19:36:28
+#&gt;  9: 2021-05-24 19:36:28
+#&gt; 10: 2021-05-24 19:36:28
+#&gt; 11: 2021-05-24 19:36:28
+#&gt; 12: 2021-05-24 19:36:28
+#&gt; 13: 2021-05-24 19:36:28
+#&gt; 14: 2021-05-24 19:36:28
+#&gt; 15: 2021-05-24 19:36:28
+#&gt; 16: 2021-05-24 19:36:28
+#&gt; 17: 2021-05-24 19:36:28
+#&gt; 18: 2021-05-24 19:36:28
+#&gt; 19: 2021-05-24 19:36:28
+#&gt; 20: 2021-05-24 19:36:28
+#&gt; 21: 2021-05-24 19:36:28
+#&gt; 22: 2021-05-24 19:36:28
+#&gt; 23: 2021-05-24 19:36:28
+#&gt; 24: 2021-05-24 19:36:28
+#&gt; 25: 2021-05-24 19:36:28
+#&gt; 26: 2021-05-24 19:36:28
+#&gt; 27: 2021-05-24 19:36:28
+#&gt; 28: 2021-05-24 19:36:28
+#&gt; 29: 2021-05-24 19:36:28
+#&gt; 30: 2021-05-24 19:36:28
+#&gt; 31: 2021-05-24 19:36:28
+#&gt; 32: 2021-05-24 19:36:28
+#&gt; 33: 2021-05-24 19:36:28
+#&gt; 34: 2021-05-24 19:36:28
+#&gt; 35: 2021-05-24 19:36:28
+#&gt; 36: 2021-05-24 19:36:28
+#&gt; 37: 2021-05-24 19:36:28
+#&gt; 38: 2021-05-24 19:36:28
+#&gt; 39: 2021-05-24 19:36:28
+#&gt; 40: 2021-05-24 19:36:28
+#&gt; 41: 2021-05-24 19:36:28
+#&gt; 42: 2021-05-24 19:36:28
+#&gt; 43: 2021-05-24 19:36:28
+#&gt; 44: 2021-05-24 19:36:28
+#&gt; 45: 2021-05-24 19:36:28
+#&gt; 46: 2021-05-24 19:36:28
+#&gt; 47: 2021-05-24 19:36:28
+#&gt; 48: 2021-05-24 19:36:28
+#&gt; 49: 2021-05-24 19:36:28
+#&gt; 50: 2021-05-24 19:36:28
+#&gt; 51: 2021-05-24 19:36:28
+#&gt; 52: 2021-05-24 19:36:28
+#&gt; 53: 2021-05-24 19:36:28
+#&gt; 54: 2021-05-24 19:36:28
+#&gt; 55: 2021-05-24 19:36:28
+#&gt; 56: 2021-05-24 19:36:28
+#&gt; 57: 2021-05-24 19:36:28
+#&gt; 58: 2021-05-24 19:36:28
+#&gt; 59: 2021-05-24 19:36:28
+#&gt; 60: 2021-05-24 19:36:28
+#&gt; 61: 2021-05-24 19:36:28
+#&gt; 62: 2021-05-24 19:36:28
+#&gt; 63: 2021-05-24 19:36:28
+#&gt;             createdDate</div><div class='input'><span class='fu'>cc</span><span class='op'>(</span>ask <span class='op'>=</span> <span class='cn'>FALSE</span>, x <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span> <span class='co'># Cache is</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No time provided; removing the most recent entry to the Cache</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 252 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 252 bytes</span><span></span></div><div class='input'><span class='fu'>cc</span><span class='op'>(</span>ask <span class='op'>=</span> <span class='cn'>FALSE</span>, x <span class='op'>=</span> <span class='va'>tmpDir</span><span class='op'>)</span> <span class='co'># Cache is already empty</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No time provided; removing the most recent entry to the Cache</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Cache size: </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Total (including Rasters): 248 bytes</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Selected objects (not including Rasters): 248 bytes</span><span></span></div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -1022,7 +1041,7 @@ in <code><a href='Cache.html'>Cache</a></code>.</p></div>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

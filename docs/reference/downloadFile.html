@@ -83,7 +83,7 @@ and download.file." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -91,7 +91,7 @@ and download.file." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -120,7 +120,7 @@ and download.file." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -147,23 +147,23 @@ and download.file." />
 and <code><a href='https://rdrr.io/r/utils/download.file.html'>download.file</a></code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>downloadFile</span>(
-  <span class='no'>archive</span>,
-  <span class='no'>targetFile</span>,
-  <span class='no'>neededFiles</span>,
-  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.destinationPath"</span>),
-  <span class='no'>quick</span>,
-  <span class='no'>checksumFile</span>,
-  <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>checkSums</span>,
-  <span class='no'>url</span>,
-  <span class='no'>needChecksums</span>,
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>TRUE</span>),
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
-  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='no'>.tempPath</span>,
-  <span class='no'>...</span>
-)</pre>
+    <pre class="usage"><span class='fu'>downloadFile</span><span class='op'>(</span>
+  <span class='va'>archive</span>,
+  <span class='va'>targetFile</span>,
+  <span class='va'>neededFiles</span>,
+  destinationPath <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.destinationPath"</span><span class='op'>)</span>,
+  <span class='va'>quick</span>,
+  <span class='va'>checksumFile</span>,
+  dlFun <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>checkSums</span>,
+  <span class='va'>url</span>,
+  <span class='va'>needChecksums</span>,
+  overwrite <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.overwrite"</span>, <span class='cn'>TRUE</span><span class='op'>)</span>,
+  verbose <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span><span class='op'>)</span>,
+  purge <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>.tempPath</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -174,7 +174,10 @@ and <code><a href='https://rdrr.io/r/utils/download.file.html'>download.file</a>
 containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code><a href='https://rdrr.io/r/base/c.html'>c("xxx.tar", "inner.zip", "inner.rar")</a></code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the <code>targetFile</code>. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+the <code>targetFile</code>. See table in <code><a href='preProcessParams.html'>preProcess</a></code>. If it is <code>NA</code>,
+then it will <em>not</em> attempt to see it as an archive, even if it has archive-like
+file extension (e.g., <code>.zip</code>). This may be useful when an R function
+is expecting an archive directly.</p></td>
     </tr>
     <tr>
       <th>targetFile</th>
@@ -184,7 +187,7 @@ or tar archive. This is the file <em>before</em> it is passed to
 <code>postProcess</code>. Currently, the internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
 Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
-See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+See table in <code><a href='preProcessParams.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>neededFiles</th>
@@ -229,7 +232,7 @@ exists in the <code>CHECKSUMS.txt</code> (in <code>destinationPath</code>), an e
 will be created or appended to. This <code>CHECKSUMS.txt</code> entry will be used
 in subsequent calls to
 <code>prepInputs</code> or <code>preProcess</code>, comparing the file on hand with the ad hoc
-<code>CHECKSUMS.txt</code>. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+<code>CHECKSUMS.txt</code>. See table in <code><a href='preProcessParams.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>needChecksums</th>
@@ -268,6 +271,9 @@ Will be cleared on.exit from this function.</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Eliot McIntire</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -284,7 +290,7 @@ Will be cleared on.exit from this function.</p></td>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

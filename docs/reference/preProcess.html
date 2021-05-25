@@ -85,7 +85,7 @@ This is the first stage of three used in prepInputs." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -93,7 +93,7 @@ This is the first stage of three used in prepInputs." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -122,7 +122,7 @@ This is the first stage of three used in prepInputs." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -151,24 +151,24 @@ arguments (e.g., paths, function names).
 This is the first stage of three used in <code>prepInputs</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>preProcessParams</span>(<span class='kw'>n</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)
+    <pre class="usage"><span class='fu'>preProcessParams</span><span class='op'>(</span>n <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span>
 
-<span class='fu'>preProcess</span>(
-  <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span>),
-  <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>),
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
-  <span class='no'>.tempPath</span>,
-  <span class='no'>...</span>
-)</pre>
+<span class='fu'>preProcess</span><span class='op'>(</span>
+  targetFile <span class='op'>=</span> <span class='cn'>NULL</span>,
+  url <span class='op'>=</span> <span class='cn'>NULL</span>,
+  archive <span class='op'>=</span> <span class='cn'>NULL</span>,
+  alsoExtract <span class='op'>=</span> <span class='cn'>NULL</span>,
+  destinationPath <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span><span class='op'>)</span>,
+  fun <span class='op'>=</span> <span class='cn'>NULL</span>,
+  dlFun <span class='op'>=</span> <span class='cn'>NULL</span>,
+  quick <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.quick"</span><span class='op'>)</span>,
+  overwrite <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.overwrite"</span>, <span class='cn'>FALSE</span><span class='op'>)</span>,
+  purge <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  useCache <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.useCache"</span>, <span class='cn'>FALSE</span><span class='op'>)</span>,
+  verbose <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span><span class='op'>)</span>,
+  <span class='va'>.tempPath</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -205,7 +205,10 @@ in subsequent calls to
 containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code><a href='https://rdrr.io/r/base/c.html'>c("xxx.tar", "inner.zip", "inner.rar")</a></code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the <code>targetFile</code>. See table in <code>preProcess</code>.</p></td>
+the <code>targetFile</code>. See table in <code>preProcess</code>. If it is <code>NA</code>,
+then it will <em>not</em> attempt to see it as an archive, even if it has archive-like
+file extension (e.g., <code>.zip</code>). This may be useful when an R function
+is expecting an archive directly.</p></td>
     </tr>
     <tr>
       <th>alsoExtract</th>
@@ -229,10 +232,16 @@ search for the file before attempting to download. Default for that option is
     </tr>
     <tr>
       <th>fun</th>
-      <td><p>Function or character string indicating the function to use to load
-<code>targetFile</code> into an <code>R</code> object, e.g., in form with package name:
-<code>"raster::raster"</code>. NOTE: passing <code>NULL</code> will skip loading object
-into R.</p></td>
+      <td><p>Function, character string, or quoted call with which to load the
+<code>targetFile</code> into an <code>R</code> object. It must be either a function
+as a character string, or the function itself.
+If a character string or function, is should have the package name e.g.,
+<code>"raster::raster"</code> or as an actual function, e.g., <code><a href='https://rdrr.io/r/base/readRDS.html'>base::readRDS</a></code>.
+If it is to be a custom function call, then use `quote`, e.g.,
+`quote(customFunction(x = targetFilePath))`, using
+`targetFilePath` as the file path of the object that has been `preProcess`ed.
+NOTE: passing <code>NA</code> will skip loading object into R. Note this will essentially
+replicate the functionality of simply calling <code>preProcess</code> directly.</p></td>
     </tr>
     <tr>
       <th>dlFun</th>
@@ -282,7 +291,8 @@ Will be cleared on.exit from this function.</p></td>
  <code><a href='postProcess.html'>postProcess</a></code> and <code><a href='Cache.html'>Cache</a></code>.
 Since <code>...</code> is passed to <code><a href='postProcess.html'>postProcess</a></code>, these will
 <code>...</code> will also be passed into the inner
-functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See details and examples.</p></td>
+functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. Possibly useful other arguments include
+<code>dlFun</code> which is passed to <code>preProcess</code>. See details and examples.</p></td>
     </tr>
     </table>
 
@@ -299,10 +309,13 @@ and <code>targetFilePath</code> (the fully qualified path to the <code>targetFil
 
 <p>Use <code>preProcessParams()</code> for a table describing various parameter combinations and their
   outcomes.</p>
-<p><code>*</code> If the <code>url</code> is a file on Google Drive, checksumming will work
+<p><code><a href='https://rdrr.io/r/base/Arithmetic.html'>*</a></code> If the <code>url</code> is a file on Google Drive, checksumming will work
  even without a <code>targetFile</code> specified because there is an initial attempt
  to get the remove file information (e.g., file name). With that, the connection
  between the <code>url</code> and the filename used in the <code class="file">CHECKSUMS.txt</code> file can be made.</p>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Eliot McIntire</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -319,7 +332,7 @@ and <code>targetFilePath</code> (the fully qualified path to the <code>targetFil
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

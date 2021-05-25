@@ -14,16 +14,18 @@ env R_CHECK_CONSTANTS=5 R CMD check reproducible_1.2.6.tar.gz
 ### GitHub Actions
 - os: macOS-latest,   r: 'release'
 - os: windows-latest, r: 'release'
+- os: windows-latest, r: '4.0'
 - os: windows-latest, r: '3.6'
 - os: ubuntu-18.04,   r: 'devel', 
 - os: ubuntu-18.04,   r: 'release'
 - os: ubuntu-18.04,   r: 'oldrel'
-- os: ubuntu-18.04,   r: '3.5'
-          
+- os: ubuntu-18.04,   r: '3.6'
+
 ### Winbuilder -- all passed Feb 16, 2021
 * Windows                 (win-builder), R 3.6.3 (2021-02-11)
 * Windows                 (win-builder), R 4.0.3 (2021-02-11)
 * Windows                 (win-builder), R 4.1.0 (2021-02-11)
+* Windows                 (win-builder), R-devel (2021-02-11)
 
 ## R CMD check results
 

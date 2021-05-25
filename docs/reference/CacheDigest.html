@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>The exact digest function that <code>Cache</code> uses — CacheDigest • reproducible</title>
+<title>The exact digest function that Cache uses — CacheDigest • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="The exact digest function that <code>Cache</code> uses — CacheDigest" />
+<meta property="og:title" content="The exact digest function that Cache uses — CacheDigest" />
 <meta property="og:description" content="This can be used by a user to pre-test their arguments before running
 Cache, for example to determine whether there is a cached copy." />
 
@@ -83,7 +83,7 @@ Cache, for example to determine whether there is a cached copy." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -91,7 +91,7 @@ Cache, for example to determine whether there is a cached copy." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -120,7 +120,7 @@ Cache, for example to determine whether there is a cached copy." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -147,7 +147,13 @@ Cache, for example to determine whether there is a cached copy." />
 <code>Cache</code>, for example to determine whether there is a cached copy.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>CacheDigest</span>(<span class='no'>objsToDigest</span>, <span class='kw'>algo</span> <span class='kw'>=</span> <span class='st'>"xxhash64"</span>, <span class='kw'>calledFrom</span> <span class='kw'>=</span> <span class='st'>"Cache"</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>CacheDigest</span><span class='op'>(</span>
+  <span class='va'>objsToDigest</span>,
+  algo <span class='op'>=</span> <span class='st'>"xxhash64"</span>,
+  calledFrom <span class='op'>=</span> <span class='st'>"Cache"</span>,
+  quick <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -161,13 +167,19 @@ Cache, for example to determine whether there is a cached copy." />
       <td><p>The algorithms to be used; currently available choices are
     <code>md5</code>, which is also the default, <code>sha1</code>, <code>crc32</code>,
     <code>sha256</code>, <code>sha512</code>, <code>xxhash32</code>, <code>xxhash64</code>,
-    <code>murmur32</code> and <code>spookyhash</code>.</p></td>
+    <code>murmur32</code>, <code>spookyhash</code> and <code>blake3</code>.</p></td>
     </tr>
     <tr>
       <th>calledFrom</th>
       <td><p>a Character string, length 1, with the function to
 compare with. Default is "Cache". All other values may not produce
 robust CacheDigest results.</p></td>
+    </tr>
+    <tr>
+      <th>quick</th>
+      <td><p>Logical or character. If <code>TRUE</code>,
+no disk-based information will be assessed, i.e., only
+memory content. See Details section about <code>quick</code> in <code><a href='Cache.html'>Cache</a></code>.</p></td>
     </tr>
     <tr>
       <th>...</th>
@@ -183,11 +195,12 @@ that Cache uses for <code>cacheId</code> and also <code>preDigest</code>, which 
 the digest of each sub-element in <code>objsToDigest</code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-  <span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>)
-  <span class='fu'>CacheDigest</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>rnorm</span>, <span class='fl'>1</span>))
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+  <span class='va'>a</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>1</span><span class='op'>)</span>
+  <span class='fu'>CacheDigest</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>rnorm</span>, <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span>
 
-}</div></pre>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -203,7 +216,7 @@ the digest of each sub-element in <code>objsToDigest</code>.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

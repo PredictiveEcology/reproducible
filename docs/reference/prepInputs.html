@@ -82,7 +82,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -90,7 +90,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -119,7 +119,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -145,21 +145,21 @@
     <p><img src='figures/lifecycle-maturing.svg' alt="maturing" /></p>
     </div>
 
-    <pre class="usage"><span class='fu'>prepInputs</span>(
-  <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>url</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span>),
-  <span class='kw'>fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>quick</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.quick"</span>),
-  <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.overwrite"</span>, <span class='fl'>FALSE</span>),
-  <span class='kw'>purge</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-  <span class='kw'>useCache</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.useCache"</span>, <span class='fl'>FALSE</span>),
-  <span class='no'>.tempPath</span>,
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
-  <span class='no'>...</span>
-)</pre>
+    <pre class="usage"><span class='fu'>prepInputs</span><span class='op'>(</span>
+  targetFile <span class='op'>=</span> <span class='cn'>NULL</span>,
+  url <span class='op'>=</span> <span class='cn'>NULL</span>,
+  archive <span class='op'>=</span> <span class='cn'>NULL</span>,
+  alsoExtract <span class='op'>=</span> <span class='cn'>NULL</span>,
+  destinationPath <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span><span class='op'>)</span>,
+  fun <span class='op'>=</span> <span class='cn'>NULL</span>,
+  quick <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.quick"</span><span class='op'>)</span>,
+  overwrite <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.overwrite"</span>, <span class='cn'>FALSE</span><span class='op'>)</span>,
+  purge <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  useCache <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.useCache"</span>, <span class='cn'>FALSE</span><span class='op'>)</span>,
+  <span class='va'>.tempPath</span>,
+  verbose <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span><span class='op'>)</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -172,7 +172,7 @@ or tar archive. This is the file <em>before</em> it is passed to
 <code>postProcess</code>. Currently, the internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
 Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
-See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+See table in <code><a href='preProcessParams.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>url</th>
@@ -182,7 +182,7 @@ exists in the <code>CHECKSUMS.txt</code> (in <code>destinationPath</code>), an e
 will be created or appended to. This <code>CHECKSUMS.txt</code> entry will be used
 in subsequent calls to
 <code>prepInputs</code> or <code>preProcess</code>, comparing the file on hand with the ad hoc
-<code>CHECKSUMS.txt</code>. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+<code>CHECKSUMS.txt</code>. See table in <code><a href='preProcessParams.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>archive</th>
@@ -190,7 +190,10 @@ in subsequent calls to
 containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code><a href='https://rdrr.io/r/base/c.html'>c("xxx.tar", "inner.zip", "inner.rar")</a></code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the <code>targetFile</code>. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+the <code>targetFile</code>. See table in <code><a href='preProcessParams.html'>preProcess</a></code>. If it is <code>NA</code>,
+then it will <em>not</em> attempt to see it as an archive, even if it has archive-like
+file extension (e.g., <code>.zip</code>). This may be useful when an R function
+is expecting an archive directly.</p></td>
     </tr>
     <tr>
       <th>alsoExtract</th>
@@ -200,7 +203,7 @@ the <code>targetFile</code>. See table in <code><a href='preProcess.html'>prePro
 <code>"similar"</code> will extract all files with the same filename without
 file extension as <code>targetFile</code>. <code>NA</code> will extract nothing other
 than <code>targetFile</code>. A character string of specific file names will cause
-only those to be extracted. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+only those to be extracted. See table in <code><a href='preProcessParams.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>destinationPath</th>
@@ -214,10 +217,16 @@ search for the file before attempting to download. Default for that option is
     </tr>
     <tr>
       <th>fun</th>
-      <td><p>Function or character string indicating the function to use to load
-<code>targetFile</code> into an <code>R</code> object, e.g., in form with package name:
-<code>"raster::raster"</code>. NOTE: passing <code>NULL</code> will skip loading object
-into R.</p></td>
+      <td><p>Function, character string, or quoted call with which to load the
+<code>targetFile</code> into an <code>R</code> object. It must be either a function
+as a character string, or the function itself.
+If a character string or function, is should have the package name e.g.,
+<code>"raster::raster"</code> or as an actual function, e.g., <code><a href='https://rdrr.io/r/base/readRDS.html'>base::readRDS</a></code>.
+If it is to be a custom function call, then use `quote`, e.g.,
+`quote(customFunction(x = targetFilePath))`, using
+`targetFilePath` as the file path of the object that has been `preProcess`ed.
+NOTE: passing <code>NA</code> will skip loading object into R. Note this will essentially
+replicate the functionality of simply calling <code>preProcess</code> directly.</p></td>
     </tr>
     <tr>
       <th>quick</th>
@@ -262,7 +271,8 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
  <code><a href='postProcess.html'>postProcess</a></code> and <code><a href='Cache.html'>Cache</a></code>.
 Since <code>...</code> is passed to <code><a href='postProcess.html'>postProcess</a></code>, these will
 <code>...</code> will also be passed into the inner
-functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. See details and examples.</p></td>
+functions, e.g., <code><a href='cropInputs.html'>cropInputs</a></code>. Possibly useful other arguments include
+<code>dlFun</code> which is passed to <code>preProcess</code>. See details and examples.</p></td>
     </tr>
     </table>
 
@@ -285,7 +295,7 @@ See examples.</p>
     
 
 
-<p>See <code><a href='preProcess.html'>preProcess</a></code> for combinations of arguments.</p>
+<p>See <code><a href='preProcessParams.html'>preProcess</a></code> for combinations of arguments.</p>
 <p></p><ol>
 <li><p>Download from the web via either <code><a href='https://googledrive.tidyverse.org/reference/drive_download.html'>drive_download</a></code>,
     <code><a href='https://rdrr.io/r/utils/download.file.html'>download.file</a></code>;</p></li>
@@ -318,7 +328,7 @@ See examples.</p>
   there are no file downloads. To achieve fast results, wrap
   <code>prepInputs</code> with <code>Cache</code>.</p>
 <p>NOTE: <code>sf</code> objects are still very experimental.</p>
-<h3>postProcessing of <code>Raster*</code> and <code>Spatial*</code> objects:</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>postProcessing of <code>Raster*</code> and <code>Spatial*</code> objects:</h3>
 
 
 <p>If <code>rasterToMatch</code> or <code>studyArea</code> are used, then this will
@@ -335,7 +345,7 @@ See examples.</p>
 
 
 <p>In options for control of purging the <code>CHECKSUMS.txt</code> file are:</p>
-<p></p><dl'>
+<p></p><dl>
     <dt><code>0</code></dt><dd><p>keep file</p></dd>
     <dt><code>1</code></dt><dd><p>delete file</p></dd>
     <dt><code>2</code></dt><dd><p>delete entry for <code>targetFile</code></p></dd>
@@ -353,89 +363,94 @@ See examples.</p>
 
     <div class='dont-index'><p><code><a href='downloadFile.html'>downloadFile</a></code>, <code><a href='extractFromArchive.html'>extractFromArchive</a></code>,
          <code><a href='postProcess.html'>postProcess</a></code>.</p></div>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Eliot McIntire, Jean Marchal, and Tati Micheletti</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># This function works within a module; however, currently,</span>
 <span class='co'>#   \cde{sourceURL} is not yet working as desired. Use \code{url}.</span>
-<span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+<span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='co'># download a zip file from internet, unzip all files, load as shapefile, Cache the call</span>
 <span class='co'># First time: don't know all files - prepInputs will guess, if download file is an archive,</span>
 <span class='co'>#   then extract all files, then if there is a .shp, it will load with raster::shapefile</span>
-<span class='no'>dPath</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"ecozones"</span>)
-<span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>,
-                         <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>)
+<span class='va'>dPath</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>, <span class='st'>"ecozones"</span><span class='op'>)</span>
+<span class='va'>shpEcozone</span> <span class='op'>&lt;-</span> <span class='fu'>prepInputs</span><span class='op'>(</span>destinationPath <span class='op'>=</span> <span class='va'>dPath</span>,
+                         url <span class='op'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span><span class='op'>)</span>
 
 <span class='co'># Robust to partial file deletions:</span>
-<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.files.html'>dir</a></span>(<span class='no'>dPath</span>, <span class='kw'>full.names</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)[<span class='fl'>1</span>:<span class='fl'>3</span>])
-<span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>,
-                         <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>dPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.files.html'>dir</a></span><span class='op'>(</span><span class='va'>dPath</span>, full.names <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>[</span><span class='fl'>1</span><span class='op'>:</span><span class='fl'>3</span><span class='op'>]</span><span class='op'>)</span>
+<span class='va'>shpEcozone</span> <span class='op'>&lt;-</span> <span class='fu'>prepInputs</span><span class='op'>(</span>destinationPath <span class='op'>=</span> <span class='va'>dPath</span>,
+                         url <span class='op'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span><span class='op'>(</span><span class='va'>dPath</span>, recursive <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
 
 <span class='co'># Once this is done, can be more precise in operational code:</span>
 <span class='co'>#  specify targetFile, alsoExtract, and fun, wrap with Cache</span>
-<span class='no'>ecozoneFilename</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>dPath</span>, <span class='st'>"ecozones.shp"</span>)
-<span class='no'>ecozoneFiles</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"ecozones.dbf"</span>, <span class='st'>"ecozones.prj"</span>,
-                  <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span>)
-<span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='no'>ecozoneFilename</span>,
-                         <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
-                         <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='no'>ecozoneFiles</span>,
-                         <span class='kw'>fun</span> <span class='kw'>=</span> <span class='st'>"shapefile"</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>dPath</span>, <span class='kw'>recursive</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='va'>ecozoneFilename</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='va'>dPath</span>, <span class='st'>"ecozones.shp"</span><span class='op'>)</span>
+<span class='va'>ecozoneFiles</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"ecozones.dbf"</span>, <span class='st'>"ecozones.prj"</span>,
+                  <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span><span class='op'>)</span>
+<span class='va'>shpEcozone</span> <span class='op'>&lt;-</span> <span class='fu'>prepInputs</span><span class='op'>(</span>targetFile <span class='op'>=</span> <span class='va'>ecozoneFilename</span>,
+                         url <span class='op'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
+                         alsoExtract <span class='op'>=</span> <span class='va'>ecozoneFiles</span>,
+                         fun <span class='op'>=</span> <span class='st'>"shapefile"</span>, destinationPath <span class='op'>=</span> <span class='va'>dPath</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span><span class='op'>(</span><span class='va'>dPath</span>, recursive <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
 
 <span class='co'>#' # Add a study area to Crop and Mask to</span>
 <span class='co'># Create a "study area"</span>
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>sp</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
-<span class='no'>coords</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>122.98</span>, -<span class='fl'>116.1</span>, -<span class='fl'>99.2</span>, -<span class='fl'>106</span>, -<span class='fl'>122.98</span>, <span class='fl'>59.9</span>, <span class='fl'>65.73</span>, <span class='fl'>63.58</span>, <span class='fl'>54.79</span>, <span class='fl'>59.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
-<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords</span>)
-<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
-<span class='no'>StudyArea</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
-<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>StudyArea</span>) <span class='kw'>&lt;-</span> <span class='st'>"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://github.com/edzer/sp/'>sp</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://rspatial.org/raster'>raster</a></span><span class='op'>)</span>
+<span class='va'>coords</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>-</span><span class='fl'>122.98</span>, <span class='op'>-</span><span class='fl'>116.1</span>, <span class='op'>-</span><span class='fl'>99.2</span>, <span class='op'>-</span><span class='fl'>106</span>, <span class='op'>-</span><span class='fl'>122.98</span>, <span class='fl'>59.9</span>, <span class='fl'>65.73</span>, <span class='fl'>63.58</span>, <span class='fl'>54.79</span>, <span class='fl'>59.9</span><span class='op'>)</span>,
+                    .Dim <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>5L</span>, <span class='fl'>2L</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>Sr1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span><span class='op'>(</span><span class='va'>coords</span><span class='op'>)</span>
+<span class='va'>Srs1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>Sr1</span><span class='op'>)</span>, <span class='st'>"s1"</span><span class='op'>)</span>
+<span class='va'>StudyArea</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>Srs1</span><span class='op'>)</span>, <span class='fl'>1L</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span><span class='op'>(</span><span class='va'>StudyArea</span><span class='op'>)</span> <span class='op'>&lt;-</span> <span class='st'>"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
 
 <span class='co'>#  specify targetFile, alsoExtract, and fun, wrap with Cache</span>
-<span class='no'>ecozoneFilename</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>dPath</span>, <span class='st'>"ecozones.shp"</span>)
+<span class='va'>ecozoneFilename</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='va'>dPath</span>, <span class='st'>"ecozones.shp"</span><span class='op'>)</span>
 <span class='co'># Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the</span>
 <span class='co'>#   targetFile is there, it will not redownload the archive.</span>
-<span class='no'>ecozoneFiles</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"ecozones.dbf"</span>, <span class='st'>"ecozones.prj"</span>,
-                  <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span>)
-<span class='no'>shpEcozoneSm</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>,
-                      <span class='kw'>url</span> <span class='kw'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
-                      <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFilename</span>),
-                      <span class='kw'>alsoExtract</span> <span class='kw'>=</span> <span class='kw pkg'>reproducible</span><span class='kw ns'>::</span><span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>ecozoneFiles</span>),
-                      <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>,
-                      <span class='kw'>fun</span> <span class='kw'>=</span> <span class='st'>"shapefile"</span>, <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='no'>dPath</span>,
-                      <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='st'>"EcozoneFile.shp"</span>) <span class='co'># passed to determineFilename</span>
+<span class='va'>ecozoneFiles</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"ecozones.dbf"</span>, <span class='st'>"ecozones.prj"</span>,
+                  <span class='st'>"ecozones.sbn"</span>, <span class='st'>"ecozones.sbx"</span>, <span class='st'>"ecozones.shp"</span>, <span class='st'>"ecozones.shx"</span><span class='op'>)</span>
+<span class='va'>shpEcozoneSm</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>prepInputs</span>,
+                      url <span class='op'>=</span> <span class='st'>"http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"</span>,
+                      targetFile <span class='op'>=</span> <span class='fu'>reproducible</span><span class='fu'>::</span><span class='fu'><a href='Path-class.html'>asPath</a></span><span class='op'>(</span><span class='va'>ecozoneFilename</span><span class='op'>)</span>,
+                      alsoExtract <span class='op'>=</span> <span class='fu'>reproducible</span><span class='fu'>::</span><span class='fu'><a href='Path-class.html'>asPath</a></span><span class='op'>(</span><span class='va'>ecozoneFiles</span><span class='op'>)</span>,
+                      studyArea <span class='op'>=</span> <span class='va'>StudyArea</span>,
+                      fun <span class='op'>=</span> <span class='st'>"shapefile"</span>, destinationPath <span class='op'>=</span> <span class='va'>dPath</span>,
+                      filename2 <span class='op'>=</span> <span class='st'>"EcozoneFile.shp"</span><span class='op'>)</span> <span class='co'># passed to determineFilename</span>
 
-<span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span>(<span class='no'>shpEcozone</span>)
-<span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span>(<span class='no'>shpEcozoneSm</span>, <span class='kw'>add</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>col</span> <span class='kw'>=</span> <span class='st'>"red"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span>(<span class='no'>dPath</span>)
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span><span class='op'>(</span><span class='va'>shpEcozone</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span><span class='op'>(</span><span class='va'>shpEcozoneSm</span>, add <span class='op'>=</span> <span class='cn'>TRUE</span>, col <span class='op'>=</span> <span class='st'>"red"</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/unlink.html'>unlink</a></span><span class='op'>(</span><span class='va'>dPath</span><span class='op'>)</span>
 
 <span class='co'># Big Raster, with crop and mask to Study Area - no reprojecting (lossy) of raster,</span>
 <span class='co'>#   but the StudyArea does get reprojected, need to use rasterToMatch</span>
-<span class='no'>dPath</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>(), <span class='st'>"LCC"</span>)
-<span class='no'>lcc2005Filename</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='no'>dPath</span>, <span class='st'>"LCC2005_V1_4a.tif"</span>)
-<span class='no'>url</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span>(<span class='st'>"ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover"</span>,
-                 <span class='st'>"LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip"</span>)
+<span class='va'>dPath</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span>, <span class='st'>"LCC"</span><span class='op'>)</span>
+<span class='va'>lcc2005Filename</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='va'>dPath</span>, <span class='st'>"LCC2005_V1_4a.tif"</span><span class='op'>)</span>
+<span class='va'>url</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/file.path.html'>file.path</a></span><span class='op'>(</span><span class='st'>"ftp://ftp.ccrs.nrcan.gc.ca/ad/NLCCLandCover"</span>,
+                 <span class='st'>"LandcoverCanada2005_250m/LandCoverOfCanada2005_V1_4.zip"</span><span class='op'>)</span>
 
 <span class='co'># messages received below may help for filling in more arguments in the subsequent call</span>
-<span class='no'>LCC2005</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>url</span> <span class='kw'>=</span> <span class='no'>url</span>,
-                      <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>dPath</span>),
-                      <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)
+<span class='va'>LCC2005</span> <span class='op'>&lt;-</span> <span class='fu'>prepInputs</span><span class='op'>(</span>url <span class='op'>=</span> <span class='va'>url</span>,
+                      destinationPath <span class='op'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span><span class='op'>(</span><span class='va'>dPath</span><span class='op'>)</span>,
+                      studyArea <span class='op'>=</span> <span class='va'>StudyArea</span><span class='op'>)</span>
 
-<span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span>(<span class='no'>LCC2005</span>)
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span><span class='op'>(</span><span class='va'>LCC2005</span><span class='op'>)</span>
 
 <span class='co'># if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)</span>
-<span class='no'>LCC2005</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span>(<span class='no'>prepInputs</span>, <span class='kw'>url</span> <span class='kw'>=</span> <span class='no'>url</span>,
-                 <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='no'>lcc2005Filename</span>,
-                 <span class='kw'>archive</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='st'>"LandCoverOfCanada2005_V1_4.zip"</span>),
-                 <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span>(<span class='no'>dPath</span>),
-                 <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)
+<span class='va'>LCC2005</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Cache.html'>Cache</a></span><span class='op'>(</span><span class='va'>prepInputs</span>, url <span class='op'>=</span> <span class='va'>url</span>,
+                 targetFile <span class='op'>=</span> <span class='va'>lcc2005Filename</span>,
+                 archive <span class='op'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span><span class='op'>(</span><span class='st'>"LandCoverOfCanada2005_V1_4.zip"</span><span class='op'>)</span>,
+                 destinationPath <span class='op'>=</span> <span class='fu'><a href='Path-class.html'>asPath</a></span><span class='op'>(</span><span class='va'>dPath</span><span class='op'>)</span>,
+                 studyArea <span class='op'>=</span> <span class='va'>StudyArea</span><span class='op'>)</span>
 <span class='co'># Using dlFun -- a custom download function -- passed to preProcess</span>
-<span class='no'>test1</span> <span class='kw'>&lt;-</span> <span class='fu'>prepInputs</span>(<span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='st'>"GADM_2.8_LUX_adm0.rds"</span>, <span class='co'># must specify currently</span>
-                    <span class='kw'>dlFun</span> <span class='kw'>=</span> <span class='st'>"raster::getData"</span>, <span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"GADM"</span>, <span class='kw'>country</span> <span class='kw'>=</span> <span class='st'>"LUX"</span>, <span class='kw'>level</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-                    <span class='kw'>path</span> <span class='kw'>=</span> <span class='no'>dPath</span>)
-}</div></pre>
+<span class='va'>test1</span> <span class='op'>&lt;-</span> <span class='fu'>prepInputs</span><span class='op'>(</span>targetFile <span class='op'>=</span> <span class='st'>"GADM_2.8_LUX_adm0.rds"</span>, <span class='co'># must specify currently</span>
+                    dlFun <span class='op'>=</span> <span class='st'>"raster::getData"</span>, name <span class='op'>=</span> <span class='st'>"GADM"</span>, country <span class='op'>=</span> <span class='st'>"LUX"</span>, level <span class='op'>=</span> <span class='fl'>0</span>,
+                    path <span class='op'>=</span> <span class='va'>dPath</span><span class='op'>)</span>
+<span class='op'>}</span>
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -451,7 +466,7 @@ See examples.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

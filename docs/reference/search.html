@@ -90,7 +90,7 @@ whose only function is to show the Scope of a package function.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -98,7 +98,7 @@ whose only function is to show the Scope of a package function.
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -127,7 +127,7 @@ whose only function is to show the Scope of a package function.
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -161,9 +161,9 @@ whose only function is to show the Scope of a package function.</p>
 
     </div>
 
-    <pre class="usage"><span class='fu'>searchFull</span>(<span class='kw'>env</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sys.parent.html'>parent.frame</a></span>(), <span class='kw'>simplify</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+    <pre class="usage"><span class='fu'>searchFull</span><span class='op'>(</span>env <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/sys.parent.html'>parent.frame</a></span><span class='op'>(</span><span class='op'>)</span>, simplify <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
 
-<span class='fu'>searchFullEx</span>()</pre>
+<span class='fu'>searchFullEx</span><span class='op'>(</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -194,14 +194,66 @@ packages.</p>
     <div class='dont-index'><p><code><a href='https://rdrr.io/r/base/search.html'>search</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>seeScope</span> <span class='kw'>&lt;-</span> <span class='kw'>function</span>() {
-  <span class='fu'>searchFull</span>()
-}
-<span class='fu'>seeScope</span>()</div><div class='output co'>#&gt; [[1]]
-#&gt; &lt;environment: 0x0000000029995208&gt;
+    <pre class="examples"><div class='input'><span class='va'>seeScope</span> <span class='op'>&lt;-</span> <span class='kw'>function</span><span class='op'>(</span><span class='op'>)</span> <span class='op'>{</span>
+  <span class='fu'>searchFull</span><span class='op'>(</span><span class='op'>)</span>
+<span class='op'>}</span>
+<span class='fu'>seeScope</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [[1]]
+#&gt; &lt;environment: 0x55875f8ec700&gt;
 #&gt; 
 #&gt; [[2]]
-#&gt; &lt;environment: 0x0000000029995128&gt;
+#&gt; &lt;environment: 0x55875fd1e718&gt;
+#&gt; 
+#&gt; [[3]]
+#&gt; &lt;environment: 0x55875fd1e638&gt;
+#&gt; 
+#&gt; [[4]]
+#&gt; &lt;environment: R_GlobalEnv&gt;
+#&gt; 
+#&gt; [[5]]
+#&gt; [1] "package:magrittr"
+#&gt; 
+#&gt; [[6]]
+#&gt; [1] "package:raster"
+#&gt; 
+#&gt; [[7]]
+#&gt; [1] "package:sp"
+#&gt; 
+#&gt; [[8]]
+#&gt; [1] "package:reproducible"
+#&gt; 
+#&gt; [[9]]
+#&gt; [1] "package:stats"
+#&gt; 
+#&gt; [[10]]
+#&gt; [1] "package:graphics"
+#&gt; 
+#&gt; [[11]]
+#&gt; [1] "package:grDevices"
+#&gt; 
+#&gt; [[12]]
+#&gt; [1] "package:utils"
+#&gt; 
+#&gt; [[13]]
+#&gt; [1] "package:datasets"
+#&gt; 
+#&gt; [[14]]
+#&gt; [1] "package:methods"
+#&gt; 
+#&gt; [[15]]
+#&gt; [1] "Autoloads"
+#&gt; 
+#&gt; [[16]]
+#&gt; [1] "tools:callr"
+#&gt; 
+#&gt; [[17]]
+#&gt; &lt;environment: base&gt;
+#&gt; </div><div class='input'><span class='fu'>searchFull</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [[1]]
+#&gt; &lt;environment: 0x55875fd1e718&gt;
+#&gt; 
+#&gt; [[2]]
+#&gt; &lt;environment: 0x55875fd1e638&gt;
 #&gt; 
 #&gt; [[3]]
 #&gt; &lt;environment: R_GlobalEnv&gt;
@@ -244,51 +296,8 @@ packages.</p>
 #&gt; 
 #&gt; [[16]]
 #&gt; &lt;environment: base&gt;
-#&gt; </div><div class='input'><span class='fu'>searchFull</span>()</div><div class='output co'>#&gt; [[1]]
-#&gt; &lt;environment: 0x0000000029995128&gt;
-#&gt; 
-#&gt; [[2]]
-#&gt; &lt;environment: R_GlobalEnv&gt;
-#&gt; 
-#&gt; [[3]]
-#&gt; [1] "package:magrittr"
-#&gt; 
-#&gt; [[4]]
-#&gt; [1] "package:raster"
-#&gt; 
-#&gt; [[5]]
-#&gt; [1] "package:sp"
-#&gt; 
-#&gt; [[6]]
-#&gt; [1] "package:reproducible"
-#&gt; 
-#&gt; [[7]]
-#&gt; [1] "package:stats"
-#&gt; 
-#&gt; [[8]]
-#&gt; [1] "package:graphics"
-#&gt; 
-#&gt; [[9]]
-#&gt; [1] "package:grDevices"
-#&gt; 
-#&gt; [[10]]
-#&gt; [1] "package:utils"
-#&gt; 
-#&gt; [[11]]
-#&gt; [1] "package:datasets"
-#&gt; 
-#&gt; [[12]]
-#&gt; [1] "package:methods"
-#&gt; 
-#&gt; [[13]]
-#&gt; [1] "Autoloads"
-#&gt; 
-#&gt; [[14]]
-#&gt; [1] "tools:callr"
-#&gt; 
-#&gt; [[15]]
-#&gt; &lt;environment: base&gt;
-#&gt; </div><div class='input'><span class='fu'>searchFullEx</span>()</div><div class='output co'>#&gt; [[1]]
+#&gt; </div><div class='input'><span class='fu'>searchFullEx</span><span class='op'>(</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [[1]]
 #&gt; &lt;environment: namespace:reproducible&gt;
 #&gt; 
 #&gt; [[2]]
@@ -354,7 +363,7 @@ packages.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

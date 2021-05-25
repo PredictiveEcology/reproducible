@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Check a neededFile for commonly needed auxiliary files — .checkForAuxiliaryFiles • reproducible</title>
+<title>Determine if an environment is a top level environment — isTopLevelEnv • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,11 @@
 
 
 
-<meta property="og:title" content="Check a neededFile for commonly needed auxiliary files — .checkForAuxiliaryFiles" />
-<meta property="og:description" content="Currently, this is only used for shapefiles." />
+<meta property="og:title" content="Determine if an environment is a top level environment — isTopLevelEnv" />
+<meta property="og:description" content="Here, we define that as .GlobalEnv, any namespace, emptyenv,
+or baseenv. This is useful to determine the effective size
+of an R function, due to R including the objects from enclosing
+environments" />
 
 
 
@@ -136,29 +139,33 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Check a neededFile for commonly needed auxiliary files</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/prepInputs.R'><code>R/prepInputs.R</code></a></small>
-    <div class="hidden name"><code>checkForAuxiliaryFiles.Rd</code></div>
+    <h1>Determine if an environment is a top level environment</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/objectSize.R'><code>R/objectSize.R</code></a></small>
+    <div class="hidden name"><code>isTopLevelEnv.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Currently, this is only used for shapefiles.</p>
+    <p>Here, we define that as .GlobalEnv, any namespace, emptyenv,
+or baseenv. This is useful to determine the effective size
+of an R function, due to R including the objects from enclosing
+environments</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.checkForAuxiliaryFiles</span><span class='op'>(</span><span class='va'>neededFiles</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>isTopLevelEnv</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>neededFiles</th>
-      <td><p>A character string of file name(s) that will be checked. Specifically
-if the file extension is <code>.shp</code> it will output the names of files with
-these extensions also:
-c("shx", "dbf", "prj", "sbx", "sbn") files also.</p></td>
+      <th>x</th>
+      <td><p>Any environment</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A logical. <code>FALSE</code> if it is not one of the "Top Level Environments",
+<code>TRUE</code> otherwise.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

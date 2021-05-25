@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Write to cache repository, using <code>future::future</code> — writeFuture • reproducible</title>
+<title>Write to cache repository, using future::future — writeFuture • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="Write to cache repository, using <code>future::future</code> — writeFuture" />
+<meta property="og:title" content="Write to cache repository, using future::future — writeFuture" />
 <meta property="og:description" content="This will be used internally if options(&quot;reproducible.futurePlan&quot; = TRUE).
 This is still experimental." />
 
@@ -83,7 +83,7 @@ This is still experimental." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -91,7 +91,7 @@ This is still experimental." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -120,7 +120,7 @@ This is still experimental." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -147,16 +147,16 @@ This is still experimental." />
 This is still experimental.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>writeFuture</span>(
-  <span class='no'>written</span>,
-  <span class='no'>outputToSave</span>,
-  <span class='no'>cacheRepo</span>,
-  <span class='no'>userTags</span>,
-  <span class='kw'>drv</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.drv"</span>, <span class='kw pkg'>RSQLite</span><span class='kw ns'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span>()),
-  <span class='kw'>conn</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.conn"</span>, <span class='kw'>NULL</span>),
-  <span class='no'>cacheId</span>,
-  <span class='kw'>linkToCacheId</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre>
+    <pre class="usage"><span class='fu'>writeFuture</span><span class='op'>(</span>
+  <span class='va'>written</span>,
+  <span class='va'>outputToSave</span>,
+  <span class='va'>cacheRepo</span>,
+  <span class='va'>userTags</span>,
+  drv <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.drv"</span>, <span class='fu'>RSQLite</span><span class='fu'>::</span><span class='fu'><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>SQLite</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>,
+  conn <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.conn"</span>, <span class='cn'>NULL</span><span class='op'>)</span>,
+  <span class='va'>cacheId</span>,
+  linkToCacheId <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -224,7 +224,7 @@ This is used when identical outputs exist in the cache. This will save disk spac
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

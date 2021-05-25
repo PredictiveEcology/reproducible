@@ -82,7 +82,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -90,7 +90,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -119,7 +119,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -145,17 +145,18 @@
     <p>Download file from Google Drive</p>
     </div>
 
-    <pre class="usage"><span class='fu'>dlGoogle</span>(
-  <span class='no'>url</span>,
-  <span class='kw'>archive</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>targetFile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='no'>checkSums</span>,
-  <span class='no'>skipDownloadMsg</span>,
-  <span class='no'>destinationPath</span>,
-  <span class='no'>overwrite</span>,
-  <span class='no'>needChecksums</span>,
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>)
-)</pre>
+    <pre class="usage"><span class='fu'>dlGoogle</span><span class='op'>(</span>
+  <span class='va'>url</span>,
+  archive <span class='op'>=</span> <span class='cn'>NULL</span>,
+  targetFile <span class='op'>=</span> <span class='cn'>NULL</span>,
+  <span class='va'>checkSums</span>,
+  <span class='va'>skipDownloadMsg</span>,
+  <span class='va'>destinationPath</span>,
+  <span class='va'>overwrite</span>,
+  <span class='va'>needChecksums</span>,
+  verbose <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span><span class='op'>)</span>,
+  team_drive <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -170,7 +171,10 @@
 containing <code>targetFile</code>, or a vector giving a set of nested archives
 (e.g., <code><a href='https://rdrr.io/r/base/c.html'>c("xxx.tar", "inner.zip", "inner.rar")</a></code>). If there is/are (an) inner
 archive(s), but they are unknown, the function will try all until it finds
-the <code>targetFile</code>. See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+the <code>targetFile</code>. See table in <code><a href='preProcessParams.html'>preProcess</a></code>. If it is <code>NA</code>,
+then it will <em>not</em> attempt to see it as an archive, even if it has archive-like
+file extension (e.g., <code>.zip</code>). This may be useful when an R function
+is expecting an archive directly.</p></td>
     </tr>
     <tr>
       <th>targetFile</th>
@@ -180,7 +184,7 @@ or tar archive. This is the file <em>before</em> it is passed to
 <code>postProcess</code>. Currently, the internal checksumming does not checksum
 the file after it is <code>postProcess</code>ed (e.g., cropped/reprojected/masked).
 Using <code>Cache</code> around <code>prepInputs</code> will do a sufficient job in these cases.
-See table in <code><a href='preProcess.html'>preProcess</a></code>.</p></td>
+See table in <code><a href='preProcessParams.html'>preProcess</a></code>.</p></td>
     </tr>
     <tr>
       <th>destinationPath</th>
@@ -207,6 +211,9 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Eliot McIntire and Alex Chubaty</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -223,7 +230,7 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

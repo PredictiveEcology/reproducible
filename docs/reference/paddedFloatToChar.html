@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Check a neededFile for commonly needed auxiliary files — .checkForAuxiliaryFiles • reproducible</title>
+<title>Convert numeric to character with padding — paddedFloatToChar • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,11 @@
 
 
 
-<meta property="og:title" content="Check a neededFile for commonly needed auxiliary files — .checkForAuxiliaryFiles" />
-<meta property="og:description" content="Currently, this is only used for shapefiles." />
+<meta property="og:title" content="Convert numeric to character with padding — paddedFloatToChar" />
+<meta property="og:description" content="This will pad floating point numbers, right or left. For integers, either class
+integer or functionally integer (e.g., 1.0), it will not pad right of the decimal.
+For more specific control or to get exact padding right and left of decimal,
+try the stringi package. It will also not do any rounding. See examples." />
 
 
 
@@ -136,30 +139,55 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Check a neededFile for commonly needed auxiliary files</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/prepInputs.R'><code>R/prepInputs.R</code></a></small>
-    <div class="hidden name"><code>checkForAuxiliaryFiles.Rd</code></div>
+    <h1>Convert numeric to character with padding</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PredictiveEcology/reproducible/blob/master/R/helpers.R'><code>R/helpers.R</code></a></small>
+    <div class="hidden name"><code>paddedFloatToChar.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Currently, this is only used for shapefiles.</p>
+    <p>This will pad floating point numbers, right or left. For integers, either class
+integer or functionally integer (e.g., 1.0), it will not pad right of the decimal.
+For more specific control or to get exact padding right and left of decimal,
+try the <code>stringi</code> package. It will also not do any rounding. See examples.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>.checkForAuxiliaryFiles</span><span class='op'>(</span><span class='va'>neededFiles</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>paddedFloatToChar</span><span class='op'>(</span><span class='va'>x</span>, padL <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Round.html'>ceiling</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/Log.html'>log10</a></span><span class='op'>(</span><span class='va'>x</span> <span class='op'>+</span> <span class='fl'>1</span><span class='op'>)</span><span class='op'>)</span>, padR <span class='op'>=</span> <span class='fl'>3</span>, pad <span class='op'>=</span> <span class='st'>"0"</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>neededFiles</th>
-      <td><p>A character string of file name(s) that will be checked. Specifically
-if the file extension is <code>.shp</code> it will output the names of files with
-these extensions also:
-c("shx", "dbf", "prj", "sbx", "sbn") files also.</p></td>
+      <th>x</th>
+      <td><p>numeric. Number to be converted to character with padding</p></td>
+    </tr>
+    <tr>
+      <th>padL</th>
+      <td><p>numeric. Desired number of digits on left side of decimal.
+If not enough, <code>pad</code> will be used to pad.</p></td>
+    </tr>
+    <tr>
+      <th>padR</th>
+      <td><p>numeric. Desired number of digits on right side of decimal.
+If not enough, <code>pad</code> will be used to pad.</p></td>
+    </tr>
+    <tr>
+      <th>pad</th>
+      <td><p>character to use as padding (<code>nchar(pad) == 1</code> must be <code>TRUE</code>).</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
+    <p>Character string representing the filename.</p>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Eliot McIntire and Alex Chubaty</p>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>paddedFloatToChar</span><span class='op'>(</span><span class='fl'>1.25</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] "1.250"</div><div class='input'><span class='fu'>paddedFloatToChar</span><span class='op'>(</span><span class='fl'>1.25</span>, padL <span class='op'>=</span> <span class='fl'>3</span>, padR <span class='op'>=</span> <span class='fl'>5</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; [1] "001.25000"</div><div class='input'><span class='fu'>paddedFloatToChar</span><span class='op'>(</span><span class='fl'>1.25</span>, padL <span class='op'>=</span> <span class='fl'>3</span>, padR <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span> <span class='co'># no rounding, so keeps 2 right of decimal</span>
+</div><div class='output co'>#&gt; [1] "001.25"</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

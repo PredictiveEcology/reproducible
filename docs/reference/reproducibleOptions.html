@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title><code>reproducible</code> options — reproducibleOptions • reproducible</title>
+<title>reproducible options — reproducibleOptions • reproducible</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="<code>reproducible</code> options — reproducibleOptions" />
+<meta property="og:title" content="reproducible options — reproducibleOptions" />
 <meta property="og:description" content="These provide top-level, powerful settings for a comprehensive
 reproducible workflow. To see defaults, run reproducibleOptions().
 See Details below." />
@@ -84,7 +84,7 @@ See Details below." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -92,7 +92,7 @@ See Details below." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -121,7 +121,7 @@ See Details below." />
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -149,7 +149,7 @@ reproducible workflow. To see defaults, run <code>reproducibleOptions()</code>.
 See Details below.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>reproducibleOptions</span>()</pre>
+    <pre class="usage"><span class='fu'>reproducibleOptions</span><span class='op'>(</span><span class='op'>)</span></pre>
 
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
@@ -158,8 +158,8 @@ See Details below.</p>
 where <code>xxx</code> is one of the values below, and <code>newValue</code> is a new value to
 give the option. Sometimes these options can be placed in the user's <code>.Rprofile</code>
 file so they persist between sessions.</p>
-<p>The following options are likely of interest to most users:</p><dl'>
-  <dt><code>ask</code></dt><dd><p>Default: <code>TRUE</code>. Used in <code><a href='viewCache.html'>clearCache</a></code> and <code><a href='viewCache.html'>keepCache</a></code>.</p></dd>
+<p>The following options are likely of interest to most users:</p><dl>
+  <dt><code>ask</code></dt><dd><p>Default: <code>TRUE</code>. Used in <code><a href='clearCache.html'>clearCache</a></code> and <code><a href='clearCache.html'>keepCache</a></code>.</p></dd>
   <dt><code>cachePath</code></dt><dd><p>Default: <code>.reproducibleTempCacheDir</code>. Used in <code><a href='Cache.html'>Cache</a></code> and many others.
     The default path for repositories if not passed as an argument.</p></dd>
   <dt><code>cacheSaveFormat</code></dt><dd><p>Default: <code>"rds"</code>. What save format to use; currently, <code>"qs"</code> or <code>"rds"</code>.</p></dd>
@@ -171,16 +171,16 @@ file so they persist between sessions.</p>
     <code>dbConnect(drv = RSQLite::SQLite())</code> or <code>dbConnect(drv = RPostgres::Postgres()</code>.
     For remote database servers, setting one connection may be far faster than using
     <code>drv</code> which must make a new connection every time.</p></dd>
-  <dt><code>destinationPath</code></dt><dd><p>Default: <code>NULL</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcess.html'>preProcess</a></code>.
+  <dt><code>destinationPath</code></dt><dd><p>Default: <code>NULL</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcessParams.html'>preProcess</a></code>.
     Can be set globally here.</p></dd>
   <dt><code>drv</code></dt><dd><p>Default: <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code>. Sets the default driver for the backend database system.
-    Only tested with <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code> and <code>RPostgres::Postgres()</code>.</p></dd>
+    Only tested with <code><a href='https://rsqlite.r-dbi.org/reference/SQLite.html'>RSQLite::SQLite()</a></code> and <code><a href='https://rpostgres.r-dbi.org/reference/Postgres.html'>RPostgres::Postgres()</a></code>.</p></dd>
   <dt><code>futurePlan</code></dt><dd><p>Default: <code>FALSE</code>. On Linux OSes, <code>Cache</code> and <code>cloudCache</code> have some
     functionality that uses the <code>future</code> package.
     Default is to not use these, as they are experimental.
     They may, however, be very effective in speeding up some things, specifically,
     uploading cached elements via googledrive in <code>cloudCache</code>.</p></dd>
-  <dt><code>inputPaths</code></dt><dd><p>Default: <code>NULL</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcess.html'>preProcess</a></code>.
+  <dt><code>inputPaths</code></dt><dd><p>Default: <code>NULL</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcessParams.html'>preProcess</a></code>.
     If set to a path, this will cause these functions to save their downloaded and preprocessed
     file to this location, with a hardlink (via <code>file.link</code>) to the file created in the
     <code>destinationPath</code>.
@@ -189,14 +189,17 @@ file so they persist between sessions.</p>
     re-downloading the same (perhaps large) file over and over for each project.
     Because the files are hardlinks, there is no extra space taken up by the apparently
     duplicated files.</p></dd>
-  <dt><code>inputPathsRecursive</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcess.html'>preProcess</a></code>.
+  <dt><code>inputPathsRecursive</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code> and <code><a href='preProcessParams.html'>preProcess</a></code>.
     Should the <code>reproducible.inputPaths</code> be searched recursively for existence of a file?</p></dd>
   <dt><code>nThreads</code></dt><dd><p>Default: <code>1</code>. The number of threads to use for reading/writing cache files.</p></dd>
-  <dt><code>overwrite</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code>, <code><a href='preProcess.html'>preProcess</a></code>,
+  <dt><code>overwrite</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='prepInputs.html'>prepInputs</a></code>, <code><a href='preProcessParams.html'>preProcess</a></code>,
     <code><a href='downloadFile.html'>downloadFile</a></code>, and <code><a href='postProcess.html'>postProcess</a></code>.</p></dd>
   <dt><code>quick</code></dt><dd><p>Default: <code>FALSE</code>. Used in <code><a href='Cache.html'>Cache</a></code>. This will cause <code>Cache</code> to use
     <code><a href='https://rdrr.io/r/base/file.info.html'>file.size(file)</a></code> instead of the <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest(file)</a></code>.
     Less robust to changes, but faster. <em>NOTE: this will only affect objects on disk</em>.</p></dd>
+  <dt><code>shapefileRead</code></dt><dd><p>Default <code>NULL</code>. Used during <code>prepInputs</code> when reading a <code>.shp</code> file.
+    If <code>NULL</code>, it will use `sf::st_read` if `sf` package is available; otherwise,
+    it will use `raster::shapefile`</p></dd>
   <dt><code>showSimilar</code></dt><dd><p>Default <code>FALSE</code>. Passed to <code>Cache</code>.</p></dd>
   <dt><code>useCache</code></dt><dd><p>Default: <code>TRUE</code>. Used in <code><a href='Cache.html'>Cache</a></code>. If <code>FALSE</code>, then the entire
     <code>Cache</code> machinery is skipped and the functions are run as if there was no Cache occurring.
@@ -227,8 +230,11 @@ file so they persist between sessions.</p>
     <em>NOTE: memoised values are removed when the R session is restarted</em>.
     <strong>This option will use more RAM</strong> and so may need to be turned off if RAM is limiting.
     <code>clearCache</code> of any sort will cause all memoising to be 'forgotten' (<code><a href='https://rdrr.io/pkg/memoise/man/forget.html'>memoise::forget</a></code>).</p></dd>
-  <dt><code>useNewDigestAlgorithm</code></dt><dd><p>Default: <code>TRUE</code>. This will mean that previous cache repositories will be defunct.
-    This new algorithm will make <code>Cache</code> less sensitive to minor but irrelevant changes
+  <dt><code>useNewDigestAlgorithm</code></dt><dd><p>Default: <code>1</code>. Option 1 is the version that has existed for sometime. There is now
+    and option <code>2</code> which is substantially faster. It will, however, create
+    Caches that are not compatible with previous ones. Options <code>1</code> and <code>2</code>
+    are not compatible with the earlier <code>0</code>.
+    <code>1</code> and <code>2</code> will make <code>Cache</code> less sensitive to minor but irrelevant changes
     (like changing the order of arguments) and will work successfully across operating systems
     (especially relevant for the new <code>cloudCache</code> function.</p></dd>
   <dt><code>verbose</code></dt><dd><p>Default: <code>FALSE</code>. If set to <code>TRUE</code> then every <code>Cache</code> call will show a
@@ -243,9 +249,9 @@ file so they persist between sessions.</p>
 
     
 
-<p>The following options are likely not needed by a user.</p><dl'>
+<p>The following options are likely not needed by a user.</p><dl>
   <dt><code>cloudChecksumsFilename</code></dt><dd><p>Default: <code><a href='https://rdrr.io/r/base/file.path.html'>file.path(dirname(.reproducibleTempCacheDir()), "checksums.rds")</a></code>.
-    Used in <code><a href='Deprcated.html'>cloudCache</a></code></p></dd>
+    Used in <code><a href='cloudCache.html'>cloudCache</a></code></p></dd>
   <dt><code>length</code></dt><dd><p>Default: <code>Inf</code>. Used in <code><a href='Cache.html'>Cache</a></code>, specifically to the internal
     calls to <code><a href='CacheDigest.html'>CacheDigest</a></code>. This is passed to <code><a href='https://rdrr.io/pkg/digest/man/digest.html'>digest::digest</a></code>.
     Mostly this would be changed from default <code>Inf</code> if the digesting is taking too long.
@@ -272,7 +278,7 @@ file so they persist between sessions.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

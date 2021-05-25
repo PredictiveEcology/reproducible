@@ -82,7 +82,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.2.7</span>
       </span>
     </div>
 
@@ -90,7 +90,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -119,7 +119,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="https://github.com/PredictiveEcology/reproducible/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -145,14 +145,14 @@
     <p>Determine the filename, given various combinations of inputs.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>determineFilename</span>(
-  <span class='kw'>filename2</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>filename1</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>destinationPath</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span>),
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span>),
-  <span class='kw'>prefix</span> <span class='kw'>=</span> <span class='st'>"Small"</span>,
-  <span class='no'>...</span>
-)</pre>
+    <pre class="usage"><span class='fu'>determineFilename</span><span class='op'>(</span>
+  filename2 <span class='op'>=</span> <span class='cn'>NULL</span>,
+  filename1 <span class='op'>=</span> <span class='cn'>NULL</span>,
+  destinationPath <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.destinationPath"</span>, <span class='st'>"."</span><span class='op'>)</span>,
+  verbose <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span><span class='op'>(</span><span class='st'>"reproducible.verbose"</span>, <span class='fl'>1</span><span class='op'>)</span>,
+  prefix <span class='op'>=</span> <span class='st'>"Small"</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -163,7 +163,7 @@
 NULL (no writing of outputs to disk), or several options
 for writing the object to disk. If
 <code>TRUE</code> (the default), it will give it a file name determined by
-<code><a href='prefix.html'>.prefix(basename(filename1), prefix)</a></code>. If
+<code><a href='.prefix.html'>.prefix(basename(filename1), prefix)</a></code>. If
 a character string, it will use this as its file name. See
 <code>determineFilename</code>.</p></td>
     </tr>
@@ -200,13 +200,13 @@ not provided.</p></td>
            <code><a href='projectInputs.html'>projectInputs</a></code>, <code><a href='maskInputs.html'>maskInputs</a></code>,
            <code>determineFilename</code>, and <code><a href='writeOutputs.html'>writeOutputs</a></code>.
            Each of these may also pass <code>...</code> into other functions, like
-           <code><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></code>, or <code><a href='https://rdrr.io/pkg/sf/man/st_write.html'>sf::st_write</a></code>.
+           <code><a href='https://rdrr.io/pkg/raster/man/writeRaster.html'>writeRaster</a></code>, or <code><a href='https://r-spatial.github.io/sf/reference/st_write.html'>sf::st_write</a></code>.
            This might include potentially important arguments like <code>datatype</code>,
            <code>format</code>. Also passed to <code>projectRaster</code>,
            with likely important arguments such as <code>method = "bilinear"</code>.
            See details.</p>
-<h3>... passed to:</h3>
-<p></p><dl'>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>... passed to:</h3>
+<p></p><dl>
     <dt><code>cropInputs</code>:</dt><dd><p><code><a href='https://rdrr.io/pkg/raster/man/crop.html'>crop</a></code></p></dd>
     <dt><code>projectInputs</code></dt><dd><p><code><a href='https://rdrr.io/pkg/raster/man/projectRaster.html'>projectRaster</a></code></p></dd>
     <dt><code>maskInputs</code></dt><dd><p><code><a href='fastMask.html'>fastMask</a></code> or <code><a href='https://rdrr.io/pkg/raster/man/intersect.html'>intersect</a></code></p></dd>
@@ -255,34 +255,38 @@ several file names at play. For example, <code>Raster</code> objects may have
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Add a study area to Crop and Mask to</span>
 <span class='co'># Create a "study area"</span>
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>sp</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)
-<span class='no'>ow</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>setwd</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span>())
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://github.com/edzer/sp/'>sp</a></span><span class='op'>)</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://rspatial.org/raster'>raster</a></span><span class='op'>)</span>
+<span class='va'>ow</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>setwd</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempdir</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>
 
 <span class='co'># make a SpatialPolygon</span>
-<span class='no'>coords1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>123.98</span>, -<span class='fl'>117.1</span>, -<span class='fl'>80.2</span>, -<span class='fl'>100</span>, -<span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span>),
-                     <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
-<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords1</span>)
-<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
-<span class='no'>shpEcozone</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
-<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>shpEcozone</span>) <span class='kw'>&lt;-</span> <span class='st'>"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
+<span class='va'>coords1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>-</span><span class='fl'>123.98</span>, <span class='op'>-</span><span class='fl'>117.1</span>, <span class='op'>-</span><span class='fl'>80.2</span>, <span class='op'>-</span><span class='fl'>100</span>, <span class='op'>-</span><span class='fl'>123.98</span>, <span class='fl'>60.9</span>, <span class='fl'>67.73</span>, <span class='fl'>65.58</span>, <span class='fl'>51.79</span>, <span class='fl'>60.9</span><span class='op'>)</span>,
+                     .Dim <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>5L</span>, <span class='fl'>2L</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>Sr1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span><span class='op'>(</span><span class='va'>coords1</span><span class='op'>)</span>
+<span class='va'>Srs1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>Sr1</span><span class='op'>)</span>, <span class='st'>"s1"</span><span class='op'>)</span>
+<span class='va'>shpEcozone</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>Srs1</span><span class='op'>)</span>, <span class='fl'>1L</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span><span class='op'>(</span><span class='va'>shpEcozone</span><span class='op'>)</span> <span class='op'>&lt;-</span> <span class='st'>"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
 
 <span class='co'># make a "study area" that is subset of larger dataset</span>
-<span class='no'>coords</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(-<span class='fl'>118.98</span>, -<span class='fl'>116.1</span>, -<span class='fl'>99.2</span>, -<span class='fl'>106</span>, -<span class='fl'>118.98</span>, <span class='fl'>59.9</span>, <span class='fl'>65.73</span>, <span class='fl'>63.58</span>, <span class='fl'>54.79</span>, <span class='fl'>59.9</span>),
-                    <span class='kw'>.Dim</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>5L</span>, <span class='fl'>2L</span>))
-<span class='no'>Sr1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span>(<span class='no'>coords</span>)
-<span class='no'>Srs1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Sr1</span>), <span class='st'>"s1"</span>)
-<span class='no'>StudyArea</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>Srs1</span>), <span class='fl'>1L</span>)
-<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span>(<span class='no'>StudyArea</span>) <span class='kw'>&lt;-</span> <span class='st'>"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
+<span class='va'>coords</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/structure.html'>structure</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='op'>-</span><span class='fl'>118.98</span>, <span class='op'>-</span><span class='fl'>116.1</span>, <span class='op'>-</span><span class='fl'>99.2</span>, <span class='op'>-</span><span class='fl'>106</span>, <span class='op'>-</span><span class='fl'>118.98</span>, <span class='fl'>59.9</span>, <span class='fl'>65.73</span>, <span class='fl'>63.58</span>, <span class='fl'>54.79</span>, <span class='fl'>59.9</span><span class='op'>)</span>,
+                    .Dim <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>5L</span>, <span class='fl'>2L</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>Sr1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygon</a></span><span class='op'>(</span><span class='va'>coords</span><span class='op'>)</span>
+<span class='va'>Srs1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>Polygons</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>Sr1</span><span class='op'>)</span>, <span class='st'>"s1"</span><span class='op'>)</span>
+<span class='va'>StudyArea</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/sp/man/SpatialPolygons.html'>SpatialPolygons</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='va'>Srs1</span><span class='op'>)</span>, <span class='fl'>1L</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/pkg/raster/man/projection.html'>crs</a></span><span class='op'>(</span><span class='va'>StudyArea</span><span class='op'>)</span> <span class='op'>&lt;-</span> <span class='st'>"+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"</span>
 
 <span class='co'>##########</span>
-<span class='no'>shpEcozonePostProcessed</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span>(<span class='no'>shpEcozone</span>, <span class='kw'>studyArea</span> <span class='kw'>=</span> <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span>
-#&gt; <span class='message'>  this will not persist across R sessions.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  ...(Object to retrieve (1ca251f991c47008.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous cropInputs call, </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SpatialPolygon</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Found no errors.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span>
-#&gt; <span class='message'>  this will not persist across R sessions.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  ...(Object to retrieve (b8053bfec9665f45.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous projectInputs call, </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SpatialPolygon</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Found no errors.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span>
-#&gt; <span class='message'>  this will not persist across R sessions.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  ...(Object to retrieve (51007a91ef41d8db.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous maskInputs call, </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Skipping writeOutputs; filename2 is NULL</span><span></span></div><div class='input'>
+<span class='va'>shpEcozonePostProcessed</span> <span class='op'>&lt;-</span> <span class='fu'><a href='postProcess.html'>postProcess</a></span><span class='op'>(</span><span class='va'>shpEcozone</span>, studyArea <span class='op'>=</span> <span class='va'>StudyArea</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>useCache is FALSE; skipping Cache on function cropInputs)</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>    cropping ...</span><span></span></div><div class='output co'>#&gt; <span class='message'>although coordinates are longitude/latitude, st_intersection assumes that they are planar</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>No cacheRepo supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span>
+#&gt; <span class='message'>  this will not persist across R sessions.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  ...(Object to retrieve (c5139ef6645d9ae3.rds))</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>     loaded cached result from previous projectInputs call, </span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>maskInputs with sf class objects is still experimental</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>    intersecting ...</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SimpleFeature</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Found errors in SimpleFeature. Attempting to correct.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>useCache is FALSE; skipping Cache on function FUN)</span><span></span></div><div class='output co'>#&gt; <span class='message'>dist is assumed to be in decimal degrees (arc_degrees).</span></div><div class='output co'>#&gt; <span class='warning'>Warning: st_buffer does not correctly buffer longitude/latitude data</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Some or all of the errors fixed.</span><span></span></div><div class='output co'>#&gt; <span class='message'>although coordinates are longitude/latitude, st_intersection assumes that they are planar</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>  Skipping writeOutputs; filename2 is NULL</span><span></span></div><div class='input'>
 <span class='co'># Try manually, individual pieces</span>
-<span class='no'>shpEcozoneReprojected</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>    reprojecting ...</span><span></span></div><div class='input'><span class='no'>shpEcozoneCropped</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>    cropping ...</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; useGDAL = 'force' to override</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SpatialPolygon</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Found no errors.</span><span></span></div><div class='output co'>#&gt; <span class='message'>although coordinates are longitude/latitude, st_intersection assumes that they are planar</span></div><div class='input'><span class='no'>shpEcozoneClean</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='fixErrors.html'>fixErrors</a></span>(<span class='no'>shpEcozone</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SpatialPolygon</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Found no errors.</span><span></span></div><div class='input'><span class='no'>shpEcozoneMasked</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span>(<span class='no'>shpEcozone</span>, <span class='no'>StudyArea</span>)</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SimpleFeature</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Found no errors.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>maskInputs with sf class objects is still experimental</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>    intersecting ...</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SimpleFeature</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Found no errors.</span><span></span></div><div class='output co'>#&gt; <span class='message'>although coordinates are longitude/latitude, st_intersection assumes that they are planar</span></div><div class='output co'>#&gt; <span class='message'>dist is assumed to be in decimal degrees (arc_degrees).</span></div><div class='input'>
-<span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>setwd</a></span>(<span class='no'>ow</span>)</div></span></pre>
+<span class='va'>shpEcozoneReprojected</span> <span class='op'>&lt;-</span> <span class='fu'><a href='projectInputs.html'>projectInputs</a></span><span class='op'>(</span><span class='va'>shpEcozone</span>, <span class='va'>StudyArea</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>    reprojecting ...</span><span></span></div><div class='input'><span class='va'>shpEcozoneCropped</span> <span class='op'>&lt;-</span> <span class='fu'><a href='cropInputs.html'>cropInputs</a></span><span class='op'>(</span><span class='va'>shpEcozone</span>, <span class='va'>StudyArea</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>    cropping ...</span><span></span></div><div class='output co'>#&gt; <span class='message'>although coordinates are longitude/latitude, st_intersection assumes that they are planar</span></div><div class='input'><span class='va'>shpEcozoneClean</span> <span class='op'>&lt;-</span> <span class='fu'><a href='fixErrors.html'>fixErrors</a></span><span class='op'>(</span><span class='va'>shpEcozone</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SpatialPolygon</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Found no errors.</span><span></span></div><div class='input'><span class='va'>shpEcozoneMasked</span> <span class='op'>&lt;-</span> <span class='fu'><a href='maskInputs.html'>maskInputs</a></span><span class='op'>(</span><span class='va'>shpEcozone</span>, <span class='va'>StudyArea</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>maskInputs with sf class objects is still experimental</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>    intersecting ...</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Checking for errors in SimpleFeature</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>Found errors in SimpleFeature. Attempting to correct.</span><span></span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>useCache is FALSE; skipping Cache on function FUN)</span><span></span></div><div class='output co'>#&gt; <span class='message'>dist is assumed to be in decimal degrees (arc_degrees).</span></div><div class='output co'>#&gt; <span class='warning'>Warning: st_buffer does not correctly buffer longitude/latitude data</span></div><div class='output co'>#&gt; <span class='message'></span><span style='color: #00BBBB;'>  Some or all of the errors fixed.</span><span></span></div><div class='output co'>#&gt; <span class='message'>although coordinates are longitude/latitude, st_intersection assumes that they are planar</span></div><div class='input'>
+<span class='fu'><a href='https://rdrr.io/r/base/getwd.html'>setwd</a></span><span class='op'>(</span><span class='va'>ow</span><span class='op'>)</span>
+</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -298,7 +302,7 @@ several file names at play. For example, <code>Raster</code> objects may have
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
