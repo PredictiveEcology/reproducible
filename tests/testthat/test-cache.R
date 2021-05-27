@@ -976,7 +976,6 @@ test_that("test cache-helpers", {
 
 })
 
-
 test_that("test useCache = 'overwrite'", {
   testInitOut <- testInit(ask = FALSE)
   on.exit({
@@ -1088,7 +1087,6 @@ test_that("test pre-creating conn", {
   expect_false(grepl(basename(dirname(filename(r2))), "rasters")) # changed behaviour as of reproducible 1.2.0.9020
 
 })
-
 
 test_that("test .defaultUserTags", {
   testInitOut <- testInit()
