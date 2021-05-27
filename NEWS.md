@@ -1,5 +1,11 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+Version 1.2.8
+=============
+## Enhancements
+* `fixErrors` can now distinguish `testValidity = NA` meaning don't fix errors and `testValidity = FALSE` run buffering which fixes many errors, but don't test whether there are any invalid polygons first (maybe slow), or `testValidity = TRUE` meaning test for validity, then if some are invalid, then run buffer.
+
+
 Version 1.2.7
 =============
 

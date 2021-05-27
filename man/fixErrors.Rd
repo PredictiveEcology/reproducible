@@ -72,6 +72,14 @@ Default \code{TRUE}, though this may not be the right action for all cases.}
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 Cache is used on the internal \code{raster::buffer} command.}
 
+\item{testValidity}{Logical. If \code{TRUE}, the a test for validity will happen
+before actually running buffering (which is the solution in most
+cases). However, sometimes it takes longer to test for validity
+than just buffer without testing (there are no consequences of
+buffering if everything is valid). If \code{FALSE}, then the
+test will be skipped and the buffering will happen regardless.
+If \code{NA}, then all testing and buffering will be skipped.}
+
 \item{...}{Passed to methods. None currently implemented.}
 }
 \description{
