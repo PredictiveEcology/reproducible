@@ -7,11 +7,12 @@ This release fixes a bug that was introduced by an updated RSQLite package. It a
 ### GitHub Actions
 - os: macOS-latest,   r: 'release'
 - os: windows-latest, r: 'release'
+- os: windows-latest, r: '4.0'
 - os: windows-latest, r: '3.6'
 - os: ubuntu-18.04,   r: 'devel', 
 - os: ubuntu-18.04,   r: 'release'
 - os: ubuntu-18.04,   r: 'oldrel'
-- os: ubuntu-18.04,   r: '3.5'
+- os: ubuntu-18.04,   r: '3.6'
           
 ### Winbuilder -- all passed Feb 11, 2021
 * Windows                 (win-builder), R 3.6.3 (2021-02-11)

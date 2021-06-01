@@ -413,7 +413,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                           sf::st_as_sf(x)
                         ),
                         exprBetween = quote(
-                          x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
+                          x <- fixErrors(x, testValidity = NA, useCache = useCache)
                         ))
             x <- yy
           }
@@ -426,7 +426,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                         sf::st_as_sf(yyy)
                       ),
                       exprBetween = quote(
-                        yyy <- fixErrors(yyy, testValidity = FALSE, useCache = useCache)
+                        yyy <- fixErrors(yyy, testValidity = NA, useCache = useCache)
                       ))
 
           # yyySF <- sf::st_as_sf(yyy)
@@ -476,7 +476,7 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
                         }
                       ),
                       exprBetween = quote(
-                        x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
+                        x <- fixErrors(x, testValidity = NA, useCache = useCache)
                       ))
           if (!identical(names(yy), layerNamesNow))
             names(yy) <- layerNamesNow
@@ -554,7 +554,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
                       do.call(sf::st_crop, args = append(list(x = x, y = cropExtent), dots))
                     ),
                     exprBetween = quote(
-                      x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
+                      x <- fixErrors(x, testValidity = NA, useCache = useCache)
                     ))
         x <- yy
 
@@ -584,6 +584,13 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #'        Default \code{TRUE}, though this may not be the right action for all cases.
 #' @param useCache Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 #'                 Cache is used on the internal \code{raster::buffer} command.
+#' @param testValidity Logical. If \code{TRUE}, the a test for validity will happen
+#'                 before actually running buffering (which is the solution in most
+#'                 cases). However, sometimes it takes longer to test for validity
+#'                 than just buffer without testing (there are no consequences of
+#'                 buffering if everything is valid). If \code{FALSE}, then the
+#'                 test will be skipped and the buffering will happen regardless.
+#'                 If \code{NA}, then all testing and buffering will be skipped.
 #' @param ... Passed to methods. None currently implemented.
 #'
 #' @export
@@ -660,7 +667,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
     if (is(x, "SpatialPolygons")) {
       messagePrepInputs("Checking for errors in ", objectName, verbose = verbose)
 
-      anyNotValid <- if (requireNamespace("sf", quietly = TRUE) && isTRUE(testValidity)) {
+      runBuffer <- if (requireNamespace("sf", quietly = TRUE) && isTRUE(testValidity)) {
         x1 <- sf::st_as_sf(x)
         anv <- any(!sf::st_is_valid(x1))
         if (isTRUE(anv)) {
@@ -668,14 +675,13 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
                             verbose = verbose)
         }
         anv
+      } else if (is.na(testValidity)) {
+        FALSE
       } else {
-        if (!isTRUE(testValidity))
-          messagePrepInputs("please install sf package to evaluate whether there are errors in",
-                            " the polygons object: install.packages('sf')", verbose = verbose)
         TRUE
       }
 
-      if (anyNotValid) {
+      if (runBuffer) {
         if (!requireNamespace("rgeos", quietly = TRUE)) stop(messageRgeosMissing)
         messagePrepInputs("      Trying the buffer = 0 trick", verbose = verbose, verboseLevel = 2)
         # prevent the warning about not projected, because we are buffering 0, which doesn't matter
@@ -720,12 +726,14 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
       x <- suppressWarnings(sf::st_collection_extract(x, "POLYGON"))
 
       ## too computationally intensive to buffer everything all the time, so only do for invalid geometries
-      knownNotValid <- if (isTRUE(testValidity)) {
+      runBuffer <- if (isTRUE(testValidity)) {
         suppressWarnings(any(!sf::st_is_valid(x)))
-      } else {
+      } else if (is.na(testValidity)) {
         FALSE
+      } else {
+        TRUE
       }
-      if (isTRUE(knownNotValid)) {
+      if (isTRUE(runBuffer)) {
         messagePrepInputs("Found errors in ", objectName, ". Attempting to correct.",
                           verbose = verbose)
 
@@ -1182,7 +1190,7 @@ maskInputs.Spatial <- function(x, studyArea, rasterToMatch, maskWithRTM = FALSE,
                maskInputs(x, studyArea, rasterToMatch, maskWithRTM, verbose = verbose)
              ),
              exprBetween = quote(
-               x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
+               x <- fixErrors(x, testValidity = NA, useCache = useCache)
              ))
 
   as(x, "Spatial")
@@ -1233,7 +1241,7 @@ maskInputs.sf <- function(x, studyArea, verbose = getOption("reproducible.verbos
                    sf::st_intersection(x, studyArea)
                  ),
                  exprBetween = quote(
-                   x <- fixErrors(x, testValidity = FALSE, useCache = useCache)
+                   x <- fixErrors(x, testValidity = NA, useCache = useCache)
                  ))
       # x <- sf::st_set_precision(x, 1e5) %>% fixErrors(.)
       # studyArea <- sf::st_set_precision(studyArea, 1e5) %>% fixErrors(.)
@@ -1919,7 +1927,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                      extentCRS = crsRTM,
                      useCache = useCache, verbose = verbose, ...)
           useCache <- useCacheOrig
-          testValidity <- FALSE # Crop will have done it
+          testValidity <- NA # Crop will have done it
         } else {
           messageCache("  Skipping cropInputs; already same extents")
         }
@@ -1954,7 +1962,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                        ),
                        exprBetween = quote(
                          x <- fixErrors(x, objectName = objectName,
-                                        testValidity = FALSE, useCache = useCache)
+                                        testValidity = NA, useCache = useCache)
                        ))
           } else {
             messageCache("  Skipping projectInputs; identical crs, res, extent")
@@ -1971,7 +1979,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                       ),
                       exprBetween = quote(
                         x <- fixErrors(x, objectName = objectName,
-                                       testValidity = FALSE, useCache = useCache)
+                                       testValidity = NA, useCache = useCache)
                       ))
           x <- yy
 

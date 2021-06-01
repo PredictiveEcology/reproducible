@@ -1271,6 +1271,21 @@ test_that("quick arg in Cache as character", {
   messes <- list()
   quicks <- rep(list(FALSE, FALSE, "file", "file", TRUE, TRUE), 2)
   rasRan <- c(rep(TRUE, 6), rep(FALSE, 6))
+
+  ##     quicks ranRas
+  ## 1   FALSE   TRUE
+  ## 2   FALSE   TRUE
+  ## 3    file   TRUE
+  ## 4    file   TRUE
+  ## 5    TRUE   TRUE
+  ## 6    TRUE   TRUE
+  ## 7   FALSE  FALSE
+  ## 8   FALSE  FALSE
+  ## 9    file  FALSE
+  ## 10   file  FALSE
+  ## 11   TRUE  FALSE
+  ## 12   TRUE  FALSE
+
   for (i in seq(quicks)) {
     vals <- if (rasRan[i]) sample(1:100) else 1:100
     ranRas <- raster(extent(0, 10, 0, 10), vals = vals);
