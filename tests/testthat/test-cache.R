@@ -1300,12 +1300,13 @@ test_that("quick arg in Cache as character", {
     messes[[i]] <- capture_messages(Cache(saveRDS, ranRas, file = tf, cacheRepo = tmpCache,
                                           quick = quicks[[i]]))
   }
-  ## TODO: fix tests for messes[[9]] and sum of all tests
-  expect_true(length(messes[[6]]) > 0) # undesirable quick = FALSE -- even when raster has changed
-  expect_true(length(messes[[8]]) == 0) # undesirable quick = FALSE -- even when raster not changed, but file yes
-  # Desired -- 9 not cache, 10 cached
-  expect_true(length(messes[[9]]) == 0) # undesirable quick = FALSE -- even when raster not changed, but file yes
-  expect_true(length(messes[[10]]) > 0) # undesirable quick = FALSE -- even when raster not changed, but file yes
+
+  expect_true(length(messes[[6]]) > 0)  # undesirable: quick = TRUE -- raster has changed
+  expect_true(length(messes[[8]]) == 0) # undesirable: quick = FALSE -- raster & file not changed
+
+  ## Desired: 9 not cache, 10 cached. But 9 is picking up cache from 4.
+  expect_true(length(messes[[9]]) == 0) # undesirable: quick = 'file' -- raster & file changed
+  expect_true(length(messes[[10]]) > 0) # undesirable: quick = 'file -- raster & file not changed
   expect_true(sum(unlist(lapply(messes, function(x) length(x) > 0))) == 4L)
 })
 
