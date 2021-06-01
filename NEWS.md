@@ -1,5 +1,14 @@
 Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
+Version 1.2.7.9000
+=============
+
+## Enhancements
+* none
+
+## Bug fixes
+* none
+
 Version 1.2.7
 =============
 
@@ -23,7 +32,6 @@ There is a large user-visible change that will come (in the next release), which
 * `fun` argument in `prepInputs` can now be a quoted function call.
 * `preProcess` now does a better job with large archives that can't be correctly handled with the default `zip` and `unzip` with R, by trying `system2` calls to possible `7z.exe` or other options on Linux-alikes.
 
-
 ## Bug fixes
 * `Copy` generic no longer has `fileBackedDir` argument. It is now passed through with the `...`. This was creating a bug with some cases where `fileBackedDir` was not being correctly executed.
 * `fixErrors()` now better handles `sf` polygons with mixed geometries that include points.
@@ -33,7 +41,6 @@ There is a large user-visible change that will come (in the next release), which
 * `prepInputs(..., fun = NA)` now is the correct specification for "do not load object into R". This essentially replicates `preProcess` with same arguments.
 * several minor bugfixes
 * `Copy` did not correctly copy `RasterStack`s when some of the `RasterLayer` objects were in memory, some on disk; `raster::fromDisk` returned `FALSE` in those cases, so `Copy` didn't occur on the file-backed layer files. Using `Filenames` instead to determine if there are any files that need copying.
-
 
 version 1.2.6
 ==============
