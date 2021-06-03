@@ -1291,7 +1291,8 @@ test_that("quick arg in Cache as character", {
     ranRas <- raster(extent(0, 10, 0, 10), vals = vals);
     ranRas <- suppressWarningsSpecific(
       falseWarnings = proj6Warn,
-      writeRaster(ranRas, filename = tf2, overwrite = TRUE))
+      writeRaster(ranRas, filename = tf2, overwrite = TRUE)
+    )
     a <- sample(1e7, 1);
     saveRDS(a, file = tf);
 
