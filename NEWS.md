@@ -4,10 +4,11 @@ Version 1.2.8
 =============
 ## Enhancements
 * `fixErrors` can now distinguish `testValidity = NA` meaning don't fix errors and `testValidity = FALSE` run buffering which fixes many errors, but don't test whether there are any invalid polygons first (maybe slow), or `testValidity = TRUE` meaning test for validity, then if some are invalid, then run buffer.
+* Change default option to `reproducible.useNewDigestAlgorithm = 2` which will have user visible changes. To keep old behaviour, set `options(reproducible.useNewDigestAlgorithm = 1)`
 
 
 ## Bug fixes
-* none
+* A small, but very impactful bug that created false positive `Cache` returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occured for when the differences were in unnamed arguments only.
 
 Version 1.2.7
 =============
