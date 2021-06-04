@@ -991,7 +991,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
     }
 
     # On *nix types -- try symlink
-    if (.isFALSE(all(result)) && isTRUE(symlink)) {
+    if (isFALSE(all(result)) && isTRUE(symlink)) {
       if (!isWindows()) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
@@ -1001,7 +1001,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
       }
     }
 
-    if (.isFALSE(all(result))) {
+    if (isFALSE(all(result))) {
       result <- file.copy(from, to)
       messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed, verbose = verbose)
     }

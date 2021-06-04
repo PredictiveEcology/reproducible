@@ -1551,7 +1551,7 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         xTmp <- raster::stack(xTmp)
       } else {
         if (file.exists(argsForWrite$filename)) {
-          if (interactive() && .isFALSE(argsForWrite$overwrite)) {
+          if (interactive() && isFALSE(argsForWrite$overwrite)) {
             wantOverwrite <- readline(paste0("File ", argsForWrite$filename, " already exists; overwrite? Y or N: "))
             if (identical(tolower(wantOverwrite), "y"))
               argsForWrite$overwrite <- TRUE
@@ -2208,11 +2208,11 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   tempSrcRaster <- bigRastersTmpFile()
   returnToRAM <- FALSE
   if (missing(filename2)) filename2 <- NULL
-  if (!.isFALSE(filename2)) {
+  if (!isFALSE(filename2)) {
     filename2 <- determineFilename(filename2, destinationPath = destinationPath, verbose = verbose)
   }
 
-  if (is.null(filename2) | .isFALSE(filename2)) {
+  if (is.null(filename2) | isFALSE(filename2)) {
     returnToRAM <- TRUE
     tmpRasPath <- checkPath(bigRastersTmpFolder(), create = TRUE)
     filename2 <- file.path(tmpRasPath, paste0(x@data@names, "_", rndstr(1, 8)))

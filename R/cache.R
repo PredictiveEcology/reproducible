@@ -428,7 +428,7 @@ setMethod(
     originalDots <- fnDetails$originalDots
     skipCacheDueToNumeric <- is.numeric(useCache) && useCache <= (fnDetails$nestLevel)
 
-    if (.isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
+    if (isFALSE(useCache) || isTRUE(0 == useCache) || skipCacheDueToNumeric) {
       nestedLev <- as.numeric(fnDetails$nestLevel)
       spacing <- paste(collapse = "",
                        rep("  ", nestedLev)
@@ -790,7 +790,7 @@ setMethod(
         # browser(expr = exists("._Cache_8"))
 
         if (!is.null(showSimilar)) { # TODO: Needs testing
-          if (!.isFALSE(showSimilar)) {
+          if (!isFALSE(showSimilar)) {
             if (!exists("localTags", inherits = FALSE)) #
               localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
@@ -1011,7 +1011,7 @@ setMethod(
       useFuture <- FALSE
       .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux"
       if (.onLinux) {
-        if (!.isFALSE(getOption("reproducible.futurePlan")) &&
+        if (!isFALSE(getOption("reproducible.futurePlan")) &&
             .requireNamespace("future", messageStart = "To use reproducible.futurePlan, ")) {
           useFuture <- TRUE
         }
