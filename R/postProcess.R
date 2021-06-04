@@ -365,7 +365,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
           # "-ot ", dType, # Why is this missing?
-          gdalUtils::gdalwarp(srcfile = Filenames(x, allowMultiple = FALSE),
+
+           gdalUtilities::gdalwarp(srcfile = Filenames(x, allowMultiple = FALSE),
                               dstfile = tmpfile,
                               tr = c(res(x)[1], res(x)[2]),
                               overwrite = TRUE,
@@ -2195,6 +2196,7 @@ projNotWKT2warn <- "Using PROJ not WKT2"
 
 
 #' @importFrom raster extension
+#' @importFrom gdalUtilities gdalwarp
 cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                 targetCRS, cores = 1, dots = list(), filename2, useSAcrs = FALSE,
                                 destinationPath = getOption("reproducible.destinationPath", "."),
@@ -2252,9 +2254,11 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
 
   srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
 
-  needCutline <- FALSE
+  needCutline <- NULL
   needReproject <- FALSE
   needNewRes <- FALSE
+  tempSrcShape <- NULL
+  cropExtent <- NULL
 
   if (!is.null(studyArea)) {
     # studyAreaCRSx <- spTransform(studyArea, crs(x))
@@ -2305,7 +2309,7 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   }
 
   if (isWindows()) {
-    messagePrepInputs("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
+    messagePrepInputs("Using gdal via gdalUtilities")
     exe <- ".exe"
   } else {
     exe <- ""
@@ -2324,32 +2328,26 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
     targCRS <- as.character(targCRS)
   }
 
+  #convert extent to string
+  if (!is.null(cropExtent)) {
+    te <-   paste(c(cropExtent[1], cropExtent[3],
+                    cropExtent[2], cropExtent[4]))
+  } else {
+    te <- NULL
+  }
+
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")
-  # browser(expr = exists("._cropReprojMaskWGDAL_2"))
-  system(
-    paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-           "-s_srs \"", srcCRS, "\"",
-           " -t_srs \"", targCRS, "\"",
-           " -multi ", prll,
-           "-ot ",
-           dTypeGDAL, " ",
-           " -srcnodata NA ",
-           " -dstnodata NA ",
-           # "-crop_to_cutline ", # crop to cutline is wrong here, it will realign raster to new origin
-           if (needCutline) {paste0("-cutline ",  "\"", tempSrcShape,"\"", " ")},
-           if (needReproject) {paste0("-r ", dots$method)},
-           " -overwrite ",
-           # " -dstalpha ",
-           if (!dontSpecifyResBCLongLat) {paste("-tr ", paste(tr, collapse = " "))},
-           # "-tr ", paste(tr, collapse = " "), " ",
-           " -te ", paste(c(cropExtent[1], cropExtent[3], # having this here is like crop to cutline
-                            cropExtent[2], cropExtent[4]), # but without cutting pixels off
-                          collapse = " "), " ",
-           "\"", tempSrcRaster, "\"", " ",
-           "\"", filename2, "\""),
-    wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
+
+  #this is a workaround to passing NULL arguments to gdal_warp, which does not work
+  gdalArgs <- list(srcfile = tempSrcRaster, dstfile = filename2, s_srs = srcCRS, te = te,
+                   t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
+                   dstnodata = NA, tr = tr, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
+  gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
+  do.call(gdalUtilities::gdalwarp, gdalArgs)
+
   x <- raster(filename2)
+
   x <- setMinMaxIfNeeded(x)
   if (returnToRAM) {
     origColors <- checkColors(x)

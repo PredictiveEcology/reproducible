@@ -73,6 +73,7 @@ checkGDALVersion <- function(version) {
 #' @importFrom raster crop crs extract mask nlayers raster stack tmpDir
 #' @importFrom raster xmin xmax ymin ymax fromDisk setMinMax
 #' @importFrom sp SpatialPolygonsDataFrame spTransform
+#' @importFrom gdalUtilities gdalwarp
 #'
 #' @examples
 #' library(sp)
@@ -165,34 +166,20 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       sf::st_write(ysf, tempSrcShape)
       tr <- res(x)
 
-      if (isWindows()) {
-        messagePrepInputs("Using gdal at ", getOption("gdalUtils_gdalPath")[[1]]$path)
-        exe <- ".exe"
-      } else {
-        exe <- ""
-      }
-      # dType <- assessDataType(raster(tempSrcRaster), type = "GDAL")
       cores <- dealWithCores(cores)
       prll <- paste0("-wo NUM_THREADS=", cores, " ")
       srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
       targCRS <- srcCRS
-      system(
-        paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-               "-s_srs \"", srcCRS, "\"",
-               " -t_srs \"", targCRS, "\"",
-               " -multi ", prll,
-               "-ot ",
-               dTypeGDAL, " ",
-               # "-crop_to_cutline ", # crop to cutline is wrong here, it will realign raster to new origin
-               "-cutline ",  "\"", tempSrcShape,"\"", " ",
-               " -overwrite ",
-               "-tr ", paste(tr, collapse = " "), " ",
-               "-te ", paste(c(cropExtent[1], cropExtent[3], # having this here is like crop to cutline
-                               cropExtent[2], cropExtent[4]), # but without cutting pixels off
-                             collapse = " "), " ",
-               "\"", tempSrcRaster, "\"", " ",
-               "\"", tempDstRaster, "\""),
-        wait = TRUE, intern = TRUE, ignore.stderr = TRUE)
+
+      gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster, s_srs = srcCRS, t_srs = targCRS,
+               cutline = tempSrcShape, crop_to_cutline = TRUE,
+               srcnodata = NA, dstnodata = NA, tr = tr,
+               # te = paste(c(cropExtent[1], cropExtent[3], # this mimics crop to cutline
+               #              cropExtent[2], cropExtent[4]), # without cutting pixels off
+               #            collapse = " "),
+               ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
+      #this doesn't seem to be working -is it because targCRS and srcCRS are the same? not sure.
+
       x <- raster(tempDstRaster)
       x <- setMinMaxIfNeeded(x)
     } else {
