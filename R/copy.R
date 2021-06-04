@@ -9,7 +9,7 @@
 file.move <- function(from, to, overwrite = FALSE) {
   stopifnot(file.exists(from))
   res <- suppressWarnings(file.rename(from = from, to = to))
-  if (.isFALSE(res)) {
+  if (!isTRUE(all(res))) {
     res2 <- file.copy(from = from, to = to, overwrite = overwrite)
     if (isTRUE(res2)) {
       file.remove(from)

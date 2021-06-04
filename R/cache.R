@@ -1243,7 +1243,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
             whHasNames <- nams != "" | !is.na(nams)
             whHasNames[is.na(whHasNames)] <- FALSE
             namedNames <- names(modifiedDots)[whHasNames]
-            modifiedDotsArgsToUse <- intersect(names(formals(FUN)), namedNames)
+            modifiedDotsArgsToUse <- namedNames %in% c("", names(formals(FUN)))
             modifiedDots <- append(modifiedDots[!whHasNames], modifiedDots[modifiedDotsArgsToUse])
           }
           modifiedDots <- as.list(
