@@ -12,7 +12,7 @@ file.move <- function(from, to, overwrite = FALSE) {
 
   if (!isTRUE(all(res))) {
     res2 <- file.copy(from = from, to = to, overwrite = overwrite)
-    if (isTRUE(all(res))) {
+    if (isTRUE(all(res2))) {
       file.remove(from)
     }
     return(res2)
