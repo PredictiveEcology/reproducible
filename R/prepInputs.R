@@ -828,7 +828,7 @@ extractFromArchive <- function(archive,
 
       suppressWarnings(out <- try(file.link(from, to)))
 
-      if (any(!out == TRUE)) {
+      if (!isTRUE(all(out))) {
         out <- try(file.move(from, to))
       }
       extractedFiles <- to
