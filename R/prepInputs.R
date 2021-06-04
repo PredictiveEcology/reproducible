@@ -789,8 +789,8 @@ extractFromArchive <- function(archive,
                ". The file might have been moved during unzipping or is corrupted")
         }
       }
-      unz <- Sys.which("unzip.exe")
-      sZip <- Sys.which("7z.exe")
+      unz <- Sys.which("unzip")
+      sZip <- Sys.which("7z")
       if (nchar(sZip) > 0) {
         messagePrepInputs("Using 7zip.exe")
         op <- setwd(.tempPath)
@@ -828,8 +828,12 @@ extractFromArchive <- function(archive,
 
       suppressWarnings(out <- try(file.link(from, to)))
 
-      if (any(!out == TRUE)) {
+      if (!isTRUE(all(out))) {
         out <- try(file.move(from, to))
+      }
+
+      if (!isTRUE(all(out))) {
+        stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
       }
       extractedFiles <- to
       unlink(.tempPath, recursive = TRUE)
