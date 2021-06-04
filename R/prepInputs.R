@@ -831,6 +831,10 @@ extractFromArchive <- function(archive,
       if (!isTRUE(all(out))) {
         out <- try(file.move(from, to))
       }
+
+      if (!isTRUE(all(out))) {
+        stop(paste("Could not move extractedfiles from", .tempPath, "to", args$exdir))
+      }
       extractedFiles <- to
       unlink(.tempPath, recursive = TRUE)
     }
