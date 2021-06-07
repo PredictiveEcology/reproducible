@@ -382,7 +382,7 @@ utils::globalVariables(c(
 #' @example inst/examples/example_Cache.R
 #'
 setGeneric(
-  "Cache", signature = "...",
+  "Cache", # signature = "...",
   function(FUN, ..., notOlderThan = NULL,
            .objects = NULL, #objects = NULL,
            outputObjects = NULL, # nolint
@@ -413,6 +413,8 @@ setMethod(
                         digestPathContent, omitArgs, classOptions,
                         debugCache, sideEffect, makeCopy, quick, verbose,
                         cacheId, useCache,
+                        useCloud,
+                        cloudFolderID,
                         showSimilar, drv, conn) {
 
     if (exists("._Cache_1")) browser() # to allow easier debugging of S4 class
