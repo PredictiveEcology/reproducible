@@ -178,7 +178,6 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
                #              cropExtent[2], cropExtent[4]), # without cutting pixels off
                #            collapse = " "),
                ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
-      #this doesn't seem to be working -is it because targCRS and srcCRS are the same? not sure.
 
       x <- raster(tempDstRaster)
       x <- setMinMaxIfNeeded(x)

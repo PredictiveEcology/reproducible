@@ -356,6 +356,8 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             length(Filenames(x, allowMultiple = FALSE)) <= 1) {
           if (needOT) {
             datatype <- switchDataTypes(unique(dots$datatype)[[1]], "GDAL")
+          } else {
+            datatype <- NULL #need default
           }
           tmpfile <- paste0(tempfile(fileext = ".tif"))
           wasInMemory <- inMemory(x)
@@ -365,18 +367,18 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
           # "-ot ", dType, # Why is this missing?
+          crsX <- as.character(crsX)
 
-           gdalUtilities::gdalwarp(srcfile = Filenames(x, allowMultiple = FALSE),
-                              dstfile = tmpfile,
-                              tr = c(res(x)[1], res(x)[2]),
-                              overwrite = TRUE,
-                              s_srs = crsX,
-                              t_srs = crsX,
-                              if (needOT) ot = datatype,
-                              te = c(cropExtentRounded[1], cropExtentRounded[3],
-                                     cropExtentRounded[2], cropExtentRounded[4]),
-                              te_srs = crsX,
-                              tap = TRUE)
+          gdalArgs <- list(srcfile = Filenames(x, allowMultiple = FALSE), dstfile = tmpfile,
+                           tr = c(res(x)[1], res(x)[2]),
+                           s_srs = crsX, t_srs = crsX, te_srs = crsX,
+                           te = c(cropExtentRounded[1], cropExtentRounded[3],
+                                  cropExtentRounded[2], cropExtentRounded[4]),
+                           tap = TRUE, ot = datatype)
+          gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))] #gdalUtilities fails with NULL args
+          do.call(gdalUtilities::gdalwarp, gdalArgs)
+
+
           if (isStack) {
             x <- raster::stack(tmpfile)
           } else if (isBrick) {
