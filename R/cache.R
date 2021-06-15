@@ -254,6 +254,9 @@ utils::globalVariables(c(
 #'                the list, environment or similar objects. In the case of nested list-type
 #'                objects, this will only be applied outermost first.
 #'
+#' @param .cacheExtra A an arbitrary R object that will be included in the `CacheDigest`,
+#'       but otherwise not passed into the \code{FUN}.
+#'
 #' @param outputObjects Optional character vector indicating which objects to
 #'                      return. This is only relevant for list, environment (or similar) objects
 #'
@@ -384,7 +387,7 @@ utils::globalVariables(c(
 setGeneric(
   "Cache", # signature = "...",
   function(FUN, ..., notOlderThan = NULL,
-           .objects = NULL,
+           .objects = NULL, .cacheExtra = NULL,
            outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL,
            length = getOption("reproducible.length", Inf),
@@ -576,7 +579,11 @@ setMethod(
       argsToOmitForDigest <- dotPipe | (names(modifiedDots) %in% .defaultCacheOmitArgs)
 
       preCacheDigestTime <- Sys.time()
-      cacheDigest <- CacheDigest(modifiedDots[!argsToOmitForDigest], .objects = .objects,
+      toDigest <- modifiedDots[!argsToOmitForDigest]
+      if (!is.null(.cacheExtra)) {
+        toDigest <- append(toDigest, list(.cacheExtra))
+      }
+      cacheDigest <- CacheDigest(toDigest, .objects = .objects,
                                  length = length, algo = algo, quick = quick,
                                  classOptions = classOptions)
       postCacheDigestTime <- Sys.time()

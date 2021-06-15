@@ -1360,4 +1360,19 @@ test_that("Cache the dots; .cacheExtra", {
   suppressMessages(out1 <- Cache(fn1, a = 1, b = 2, d = 1))
   suppressMessages(out2 <- Cache(fn1, a = 1, b = 2, d = 2))
   expect_true(!identical(out1, out2))
+
+
+  fn3 <- function(a, b) {
+    out <- fn2(d = 1)
+  }
+
+  suppressMessages(out3 <- Cache(fn3, .cacheExtra = "12342"))
+  suppressMessages(out4 <- Cache(fn3, .cacheExtra = "123422"))
+  expect_true(!identical(out3, out4))
+
+  # These are now the same because the .cacheExtra is the same and the arg is ignored
+  suppressMessages(out5 <- Cache(mean, 1, omitArgs = "x", .cacheExtra = "234"))
+  suppressMessages(out6 <- Cache(mean, 2, omitArgs = "x", .cacheExtra = "234"))
+  expect_true(identical(out5, out6))
+
 })

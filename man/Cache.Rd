@@ -10,6 +10,7 @@ Cache(
   ...,
   notOlderThan = NULL,
   .objects = NULL,
+  .cacheExtra = NULL,
   outputObjects = NULL,
   algo = "xxhash64",
   cacheRepo = NULL,
@@ -38,6 +39,7 @@ Cache(
   ...,
   notOlderThan = NULL,
   .objects = NULL,
+  .cacheExtra = NULL,
   outputObjects = NULL,
   algo = "xxhash64",
   cacheRepo = NULL,
@@ -75,6 +77,9 @@ within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
 the list, environment or similar objects. In the case of nested list-type
 objects, this will only be applied outermost first.}
+
+\item{.cacheExtra}{A an arbitrary R object that will be included in the `CacheDigest`,
+but otherwise not passed into the \code{FUN}.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
