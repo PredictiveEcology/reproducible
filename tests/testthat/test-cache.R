@@ -1338,3 +1338,26 @@ test_that("List of Rasters", {
   expect_false(isTRUE(attr(b, ".Cache")$newCache))
   expect_true(isTRUE(attr(a, ".Cache")$newCache))
 })
+
+
+
+test_that("Cache the dots; .cacheExtra", {
+  testInitOut <- testInit("raster", tmpFileExt = c("tif", "tif"))
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  fn1 <- function(a, b, ...) {
+    out <- fn2(...)
+    return(out)
+  }
+
+  fn2 <- function(d, e = 0, f = 1) {
+    rnorm(d, e, f)
+  }
+
+
+  suppressMessages(out1 <- Cache(fn1, a = 1, b = 2, d = 1))
+  suppressMessages(out2 <- Cache(fn1, a = 1, b = 2, d = 2))
+  expect_true(!identical(out1, out2))
+})

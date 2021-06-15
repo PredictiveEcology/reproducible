@@ -384,7 +384,7 @@ utils::globalVariables(c(
 setGeneric(
   "Cache", # signature = "...",
   function(FUN, ..., notOlderThan = NULL,
-           .objects = NULL, #objects = NULL,
+           .objects = NULL,
            outputObjects = NULL, # nolint
            algo = "xxhash64", cacheRepo = NULL,
            length = getOption("reproducible.length", Inf),
@@ -407,7 +407,6 @@ setGeneric(
 setMethod(
   "Cache",
   definition = function(FUN, ..., notOlderThan, .objects = NULL,
-                        #objects,
                         outputObjects,  # nolint
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
@@ -1245,7 +1244,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
             whHasNames <- nams != "" | !is.na(nams)
             whHasNames[is.na(whHasNames)] <- FALSE
             namedNames <- names(modifiedDots)[whHasNames]
-            modifiedDotsArgsToUse <- namedNames %in% c("", names(formals(FUN)))
+            modifiedDotsArgsToUse <- namedNames[!namedNames %in% names(.formalsCache)]#  c("", names(formals(FUN)))
             modifiedDots <- append(modifiedDots[!whHasNames], modifiedDots[modifiedDotsArgsToUse])
           }
           modifiedDots <- as.list(
