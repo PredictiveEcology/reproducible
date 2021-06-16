@@ -796,7 +796,8 @@ setMethod(
             if (!exists("localTags", inherits = FALSE)) #
               localTags <- showCache(repo, drv = drv, verboseMessaging = FALSE) # This is noisy
             .findSimilar(localTags, showSimilar, scalls, preDigestUnlistTrunc,
-                         userTags, useCache = useCache, verbose = verbose)
+                         userTags, functionName = fnDetails$functionName,
+                         useCache = useCache, verbose = verbose)
           }
         }
       }
@@ -1463,8 +1464,10 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
 #' @importFrom data.table setDT setkeyv melt
 #' @keywords internal
 .findSimilar <- function(localTags, showSimilar, scalls, preDigestUnlistTrunc, userTags,
+                         functionName,
                          useCache = getOption("reproducible.useCache", TRUE),
                          verbose = getOption("reproducible.verbose", TRUE)) {
+
   setDT(localTags)
   isDevMode <- identical("devMode", useCache)
   if (isDevMode) {
@@ -1523,7 +1526,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
       messageCache("This call to cache will replace", verbose = verbose)
     } else {
       messageCache(" ------ showSimilar -------", verbose = verbose)
-      messageCache("This call to cache differs from the next closest:", verbose = verbose)
+      messageCache("This call to cache ", if (!is.null(functionName)) paste0("with function '",functionName,"' "),
+                   "differs from the next closest:", verbose = verbose)
     }
     messageCache(paste0("... artifact with cacheId ", cacheIdOfSimilar), verbose = verbose)
 
