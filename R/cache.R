@@ -437,17 +437,11 @@ setMethod(
       spacing <- paste(collapse = "",
                        rep("  ", nestedLev)
       )
-      #if (fnDetails$nestLevel > 0 && !is.numeric(useCache)) {
-        messageCache(spacing, "useCache is ", useCache,
-                     "; skipping Cache on function ", fnDetails$functionName,
-                     if (nestedLev > 0) paste0(" (currently running nested Cache level ",nestedLev + 1),
-                     ")",
-                     verbose = verbose)
-      #} else {
-      #  messageCache(spacing, "useCache is ", useCache, ", skipping Cache.",
-      #               verbose = verbose)
-      #}
-
+      messageCache(spacing, "useCache is ", useCache,
+                   "; skipping Cache on function ", fnDetails$functionName,
+                   if (nestedLev > 0) paste0(" (currently running nested Cache level ",nestedLev + 1),
+                   ")",
+                   verbose = verbose)
       if (fnDetails$isDoCall) {
         do.call(modifiedDots$what, args = modifiedDots$args)
       } else {
