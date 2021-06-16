@@ -1248,7 +1248,7 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
         } else {
           nams <- names(modifiedDots)
           if (!is.null(nams)) {
-            whHasNames <- nams != "" | !is.na(nams)
+            whHasNames <- nams != "" & !is.na(nams)
             whHasNames[is.na(whHasNames)] <- FALSE
             namedNames <- names(modifiedDots)[whHasNames]
             modifiedDotsArgsToUse <- namedNames[!namedNames %in% names(.formalsCache)]#  c("", names(formals(FUN)))
