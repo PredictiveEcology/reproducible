@@ -1249,8 +1249,17 @@ writeFuture <- function(written, outputToSave, cacheRepo, userTags,
             modifiedDotsArgsToUse <- namedNames[!namedNames %in% names(.formalsCache)]#  c("", names(formals(FUN)))
             modifiedDots <- append(modifiedDots[!whHasNames], modifiedDots[modifiedDotsArgsToUse])
           }
-          modifiedDots <- as.list(
-            match.call(FUN, as.call(append(list(FUN), modifiedDots))))[-1]
+          theCall <- as.call(append(list(FUN), modifiedDots))
+          modifiedDots <- try(as.list(
+            match.call(FUN, theCall))[-1], silent = TRUE)
+          if (is(modifiedDots, "try-error")) {
+            modifiedDots <- if (any(formalArgs(FUN) %in% names(theCall))) {
+              md <- as.list(theCall)[formalArgs(FUN)]
+              md[!sapply(md, is.null)]
+            } else {
+              list()
+            }
+          }
         }
       }
     } else {
