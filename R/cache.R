@@ -409,7 +409,7 @@ setGeneric(
 #' @rdname Cache
 setMethod(
   "Cache",
-  definition = function(FUN, ..., notOlderThan, .objects = NULL,
+  definition = function(FUN, ..., notOlderThan, .objects = NULL, .cacheExtra = NULL,
                         outputObjects,  # nolint
                         algo, cacheRepo, length, compareRasterFileLength, userTags,
                         digestPathContent, omitArgs, classOptions,
