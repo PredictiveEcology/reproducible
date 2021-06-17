@@ -1544,7 +1544,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
     if (sum(similar2[differs %in% TRUE]$differs, na.rm = TRUE)) {
       differed <- TRUE
       messageCache("    ... because of (a) different ",
-                   unique(paste(similar2[differs %in% TRUE]$fun, collapse = ", ")),
+                   paste(unique(similar2[differs %in% TRUE]$fun), collapse = ", "),
                    verbose = verbose)
     }
 
