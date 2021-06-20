@@ -1535,8 +1535,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
       messageCache("    This call to cache will replace", verbose = verbose)
     } else {
       # messageCache(" ------ showSimilar -------", verbose = verbose)
-      messageCache("    (reproducible.showSimilar option is TRUE) This Cache call ",
-                   if (!is.null(functionName)) paste0("with FUN arg of '",functionName,"' "),
+      messageCache("    Cache ",
+                   if (!is.null(functionName)) paste0("of '",functionName,"' ") else "call ",
                    "differs from", verbose = verbose)
     }
     messageCache(paste0("    the next closest cacheId ", cacheIdOfSimilar), verbose = verbose)
