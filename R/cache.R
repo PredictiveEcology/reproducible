@@ -16,8 +16,8 @@ utils::globalVariables(c(
 #' will decline when the computational time of the "first" function call is fast and/or
 #' the argument values and return objects are large. The default setting (and first
 #' call to Cache) will always save to disk. The 2nd call to the same function will return
-#' from disk. If the \code{options("reproducible.useMemoise" = TRUE)}, then the 3rd time
-#' will recover the object from RAM and is normally much faster.
+#' from disk, unless \code{options("reproducible.useMemoise" = TRUE)}, then the 2nd time
+#' will recover the object from RAM and is normally much faster (at the expense of RAM use).
 #'
 #' @details
 #'
