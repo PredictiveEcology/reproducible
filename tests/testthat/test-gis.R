@@ -42,12 +42,6 @@ test_that("fastMask produces correct results", {
   names(newStack3) <- names(newStack1)
   expect_equivalent(newStack1, newStack3)
   # Run same as above but with different internal pathway
-  hasGDAL <- findGDAL()
-  if (!isTRUE(hasGDAL))
-    skip("no GDAL installation found")
-
-  # if it doesn't find gdal installed
-  hasGDALInstalled <- !is.null(getOption("gdalUtils_gdalPath"))
 
   testthat::with_mock(
     "raster::canProcessInMemory" = function(x, n) {
@@ -58,12 +52,10 @@ test_that("fastMask produces correct results", {
     },
     # The warning is "data type "LOG" is not available in GDAL -- not relevant here
     {
-      if (hasGDALInstalled) {
-        mess <- capture_messages({
-          out <- fastMask(x = origStack[[2]], y = shpDF)
-        })
-        expect_true(any(grepl("GDAL because crs", mess)))
-      }
+      mess <- capture_messages({
+        out <- fastMask(x = origStack[[2]], y = shpDF)
+      })
+      expect_true(any(grepl("GDAL because crs", mess)))
     }
   )
   mess <- capture_messages({

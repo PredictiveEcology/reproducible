@@ -1,7 +1,4 @@
 test_that("GDAL doesn't work (part 3)", {
-  hasGDAL <- findGDAL()
-  if (!isTRUE(hasGDAL))
-    skip("no GDAL installation found")
 
   #if (requireNamespace("rgeos")) {
   #testInitOut <- testInit(c("raster", "sf", "rgeos"), tmpFileExt = c(".grd", ".tif"),

@@ -390,17 +390,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             x[] <- x[]
           x <- setMinMaxIfNeeded(x)
 
-          # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-          #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
-          #        " -t_srs \"", targCRS, "\"",
-          #        " -multi ", prll,
-          #        "-ot ", dType,
-          #        teRas,
-          #        "-r ", dots$method,
-          #        " -overwrite ",
-          #        "-tr ", paste(tr, collapse = " "), " ",
-          #        "\"", tempSrcRaster, "\"", " ",
-          #        "\"", tempDstRaster, "\""),
         } else if (isX_Sp || isX_Sf) { # raster::crop has stopped working on SpatialPolygons
           yyy <- as(cropExtentRounded, "SpatialPolygons")
           if (transformToCRSX) {
@@ -888,7 +877,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
           dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
         }
 
-        teRas <- " " #This sets extents in GDAL
+        teRas <- NULL #This sets extents in GDAL
         if (!is.null(rasterToMatch)) {
           teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ",
                                           extent(rasterToMatch)@ymin, " ",
@@ -902,19 +891,21 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         # browser(expr = exists("._projectInputs_2"))
         # This will clear the Windows error that sometimes occurs:
         #  ERROR 1: PROJ: pj_obj_create: Cannot find proj.db ## Eliot Jan 22, 2020
-        if (identical(.Platform[["OS.type"]], "windows")) {
-          oldProjLib <- Sys.getenv("PROJ_LIB")
-          if (!isTRUE(grepl("proj.db", dir(oldProjLib)))) {
-            possNewDir <- dir(file.path(dirname(getOption("gdalUtils_gdalPath")[[1]]$path), "share", "proj"),
-                              recursive = TRUE, pattern = "proj.db", full.names = TRUE)
-            if (length(possNewDir)) {
-              Sys.setenv(PROJ_LIB = dirname(possNewDir))
-              on.exit(add = TRUE, {
-                Sys.setenv(PROJ_LIB = oldProjLib)
-              })
-            }
-          }
-        }
+        #IE commented this out -
+        #TODO: review if this is necessary
+        # if (identical(.Platform[["OS.type"]], "windows")) {
+        #   oldProjLib <- Sys.getenv("PROJ_LIB")
+        #   if (!isTRUE(grepl("proj.db", dir(oldProjLib)))) {
+        #     possNewDir <- dir(file.path(dirname(getOption("gdalUtils_gdalPath")[[1]]$path), "share", "proj"),
+        #                       recursive = TRUE, pattern = "proj.db", full.names = TRUE)
+        #     if (length(possNewDir)) {
+        #       Sys.setenv(PROJ_LIB = dirname(possNewDir))
+        #       on.exit(add = TRUE, {
+        #         Sys.setenv(PROJ_LIB = oldProjLib)
+        #       })
+        #     }
+        #   }
+        # }
 
         targCRS <- as.character(targetCRS)
         if (FALSE) {
@@ -923,20 +914,11 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
           #  I think leave it with the warning.
           targCRS <- gsub(".*(epsg:.[0123456789]*)( ).*", "\\1", targCRS)
         }
-        system(
-          paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
-                 "-s_srs \"", as.character(.crs(raster::raster(tempSrcRaster))), "\"",
-                 " -t_srs \"", targCRS, "\"",
-                 " -multi ", prll,
-                 "-ot ", dTypeGDAL,
-                 teRas,
-                 "-r ", dots$method,
-                 " -overwrite ",
-                 if (!dontSpecifyResBCLongLat) {paste("-tr ", paste(tr, collapse = " "))},
-                 " ",
-                 "\"", tempSrcRaster, "\"", " ",
-                 "\"", tempDstRaster, "\""),
-          wait = TRUE)
+        gdalArgs <- list(srcfile = tempSrcRaster, dstfile = tempDstRaster,
+                         s_srs = as.character(.crs(raster::raster(tempSrcRaster))), t_srs = targCRS,
+                         te = teRas, tr = tr, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
+        gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
+        do.call(gdalUtilities::gdalwarp, gdalArgs)
 
         x <- raster(tempDstRaster)
         x <- setMinMaxIfNeeded(x)

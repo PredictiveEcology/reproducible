@@ -249,75 +249,26 @@ dealWithCores <- function(cores) {
 
 }
 
-findGDAL <- function() {
-  attemptGDAL <- FALSE
-  if (.requireNamespace("gdalUtils")) {
-    gdalPath <- NULL
-    attemptGDAL <- TRUE
-    if (isWindows()) {
-      # Handle all QGIS possibilities
-      a <- dir("C:/", pattern = "Progra", full.names = TRUE)
-      a <- grep("Program Files", a, value = TRUE)
-      a <- unlist(lapply(a, dir, pattern = "QGIS", full.name = TRUE))
-      a <- unlist(lapply(a, dir, pattern = "bin", full.name = TRUE))
-
-
-      possibleWindowsPaths <- c(a, "C:/OSGeo4W64/bin",
-                                "C:/GuidosToolbox/QGIS/bin",
-                                "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
-                                "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
-                                "C:/Program Files/GDAL",
-                                "C:/Program Files (x86)/GDAL")
-      gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
-      if (any(gdalInfoExists))
-        gdalPath <- possibleWindowsPaths[gdalInfoExists]
-    }
-    b <- try(setGDALInst(gdalPath), silent = TRUE)
-
-    if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
-      attemptGDAL <- FALSE
-    attemptGDAL
-  }
-  invisible(attemptGDAL)
-}
-
-setGDALInst <- function(gdalPath) {
-  setTimeLimit(20, transient = TRUE)
-  on.exit({
-    setTimeLimit(cpu = Inf, elapsed = Inf, transient = FALSE)
-  })
-  messagePrepInputs("Searching for gdal installation")
-  out <- gdalUtils::gdal_setInstallation(gdalPath)
-  if (is.null(getOption("gdalUtils_gdalPath")))
-    messagePrepInputs("  .. Done")
-  return(out)
-}
-
 attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE),
                         verbose = getOption("reproducible.verbose", 1)) {
   attemptGDAL <- FALSE
   if (is(x, "Raster")) {
-    if (requireNamespace("gdalUtils", quietly = TRUE)) {
-      # browser(expr = exists("._attemptGDAL_1"))
-      crsIsNA <- is.na(.crs(x))
-      cpim <- canProcessInMemory(x, 3)
-      isTRUEuseGDAL <- isTRUE(useGDAL)
-      forceGDAL <- identical(useGDAL, "force")
-      shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
-      attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
-        findGDAL()
-      } else {
-        if (crsIsNA && shouldUseGDAL)
-          messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
-        if (cpim && isTRUEuseGDAL)
-          messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
-                            "useGDAL = 'force' to override", verbose = verbose)
-
-        FALSE
-      }
+    # browser(expr = exists("._attemptGDAL_1"))
+    crsIsNA <- is.na(.crs(x))
+    cpim <- canProcessInMemory(x, 3)
+    isTRUEuseGDAL <- isTRUE(useGDAL)
+    forceGDAL <- identical(useGDAL, "force")
+    shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
+    attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
+      TRUE
     } else {
-      messagePrepInputs("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')", verbose = verbose)
-      attemptGDAL <- FALSE
+      if (crsIsNA && shouldUseGDAL)
+        messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
+      if (cpim && isTRUEuseGDAL)
+        messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
+                          "useGDAL = 'force' to override", verbose = verbose)
+
+      FALSE
     }
   }
   attemptGDAL
