@@ -181,7 +181,7 @@ test_that("prepInputs doesn't work (part 1)", {
   # #######################################
   # ### url, targetFile, archive     ######
   # #######################################
-  # # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
+  # # if wrapped with Cache, will be very fast second time (via memoised copy)
   # LCC2005_2 <- Cache(
   #   prepInputs,
   #   url = url,

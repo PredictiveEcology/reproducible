@@ -1927,7 +1927,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
           x <- Cache(cropInputs, x = x, studyArea = studyArea,
                      extentToMatch = extRTM,
                      extentCRS = crsRTM,
-                     useCache = useCache, verbose = verbose, ...)
+                     useCache = useCache, verbose = verbose, useGDAL = useGDAL, ...)
           useCache <- useCacheOrig
           testValidity <- NA # Crop will have done it
         } else {
@@ -1960,7 +1960,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                        expr = quote(
                          Cache(projectInputs, x = x, targetCRS = targetCRS,
                                rasterToMatch = rasterToMatch, useCache = useCache,
-                               cores = cores, verbose = verbose, ...)
+                               cores = cores, verbose = verbose, useGDAL = useGDAL, ...)
                        ),
                        exprBetween = quote(
                          x <- fixErrors(x, objectName = objectName,
@@ -1977,7 +1977,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                       expr = quote(
                         maskInputs(x = x, studyArea = studyArea,
                                    rasterToMatch = rasterToMatch, useCache = useCache,
-                                   verbose = verbose, ...)
+                                   verbose = verbose, useGDAL = useGDAL, ...)
                       ),
                       exprBetween = quote(
                         x <- fixErrors(x, objectName = objectName,

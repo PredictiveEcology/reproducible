@@ -189,9 +189,10 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       #      (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
       #   x <- cropInputs(x, y)
       if (!is(y, "sf")) {
-        y <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+        y <- sf::st_as_sf(y)
       }
-      x <- maskWithRasterNAs(x = x, y = y)
+      yRas <- fasterize::fasterize(y, raster = x[[1]], field = NULL)
+      x <- maskWithRasterNAs(x = x, y = yRas)
       # if (canProcessInMemory(x, 3) && fromDisk(x))
       #   x[] <- x[]
       # m <- which(is.na(y[]))
