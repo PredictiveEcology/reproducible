@@ -85,7 +85,8 @@ If \code{NA}, then all testing and buffering will be skipped.}
 \description{
 These must be very common for this function to be useful. Currently, the only
 meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
-If \code{FALSE}, then it runs a buffer of width 0.
+If \code{FALSE}, then it runs  \code{st_make_valid} or \code{raster::buffer},
+depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
 
 This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
 failures to \code{sf::st_is_valid}

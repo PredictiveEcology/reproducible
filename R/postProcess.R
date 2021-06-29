@@ -562,7 +562,8 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #'
 #' These must be very common for this function to be useful. Currently, the only
 #' meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
-#' If \code{FALSE}, then it runs a buffer of width 0.
+#' If \code{FALSE}, then it runs  \code{st_make_valid} or \code{raster::buffer},
+#' depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
 #'
 #' @param x A \code{SpatialPolygons*} or \code{sf} object.
 #'
@@ -695,6 +696,7 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 
 #' @export
 #' @rdname fixErrors
+#' @importFrom sf st_is_valid st_geometry st_make_valid
 fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE),
                          verbose = getOption("reproducible.verbose", 1),
