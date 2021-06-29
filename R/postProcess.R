@@ -696,7 +696,6 @@ fixErrors.SpatialPolygons <- function(x, objectName = NULL,
 
 #' @export
 #' @rdname fixErrors
-#' @importFrom sf st_is_valid st_geometry st_make_valid
 fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
                          useCache = getOption("reproducible.useCache", FALSE),
                          verbose = getOption("reproducible.verbose", 1),
