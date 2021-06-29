@@ -2242,7 +2242,7 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   needReproject <- FALSE
   needNewRes <- FALSE
   tempSrcShape <- NULL
-  cropExtent <- NULL
+  cropExtent <- extent(raster::raster(tempSrcRaster)) #default
 
   if (!is.null(studyArea)) {
     # studyAreaCRSx <- spTransform(studyArea, crs(x))
@@ -2261,21 +2261,22 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
       studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
     }
     # write the studyArea to disk -- go via sf because faster
-    cropExtent <- extent(studyAreasf)
-    if (!(grepl("longlat", targCRS)))
-      cropExtent <- roundToRes(cropExtent, x = x)
-
     muffld <- capture.output(
       sf::st_write(studyAreasf, tempSrcShape)
     )
 
-
-
   } else if (!is.null(rasterToMatch)) {
-
-    cropExtent <- extent(rasterToMatch)
-    targCRS <- .crs(rasterToMatch)
+   targCRS <- .crs(rasterToMatch)
   }
+
+  if (isTRUE(useSAcrs) | is.null(rasterToMatch)) {
+    cropExtent <- extent(studyAreasf)
+    if (!(grepl("longlat", targCRS)))
+      cropExtent <- roundToRes(cropExtent, x = x)
+  } else if (!is.null(rasterToMatch)) {
+    cropExtent <- extent(rasterToMatch)
+  } # else keep extent the original extent (ie SA provided, but useSACRS = FALSE)
+
   dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
 
   if (!is.null(rasterToMatch)) {
@@ -2313,12 +2314,8 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   }
 
   #convert extent to string
-  if (!is.null(cropExtent)) {
-    te <-   paste(c(cropExtent[1], cropExtent[3],
-                    cropExtent[2], cropExtent[4]))
-  } else {
-    te <- NULL
-  }
+  te <-   paste(c(cropExtent[1], cropExtent[3],
+                  cropExtent[2], cropExtent[4]))
 
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")

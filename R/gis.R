@@ -148,6 +148,8 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 
       # GDAL will to a reprojection without an explicit crop
       cropExtent <- extent(x)
+      te <- paste(c(cropExtent[1], cropExtent[3],
+                    cropExtent[2], cropExtent[4]))
       # cropExtentRounded <- roundToRes(cropExtent, x)
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
@@ -172,11 +174,9 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       targCRS <- srcCRS
 
       gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster, s_srs = srcCRS, t_srs = targCRS,
-               cutline = tempSrcShape, crop_to_cutline = TRUE,
+               cutline = tempSrcShape, crop_to_cutline = FALSE,
                srcnodata = NA, dstnodata = NA, tr = tr,
-               # te = paste(c(cropExtent[1], cropExtent[3], # this mimics crop to cutline
-               #              cropExtent[2], cropExtent[4]), # without cutting pixels off
-               #            collapse = " "),
+               te = te,
                ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
 
       x <- raster(tempDstRaster)
