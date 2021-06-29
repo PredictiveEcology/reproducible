@@ -730,10 +730,10 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 
         x1 <- suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
                                                              "GEOS expects planar coordinates"),
-                                       try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache)))
+                                       try(Cache(sf::st_make_valid, x, useCache = useCache)))
         x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
           objectName = objectName,
-          x1 = x1, bufferFn = "sf::st_buffer")
+          x1 = x1, bufferFn = "sf::st_make_valid")
 
       } else {
         messagePrepInputs("  Found no errors.", verbose = verbose)
@@ -2187,6 +2187,10 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                 verbose = getOption("reproducible.verbose", 1),
                                 ...) {
   messagePrepInputs("crop, reproject, mask is using one-step gdalwarp")
+
+  if (!is.null(studyArea)) {
+    studyArea <- fixErrors(x = studyArea)
+  }
 
   # browser(expr = exists("._cropReprojMaskWGDAL_1"))
 
