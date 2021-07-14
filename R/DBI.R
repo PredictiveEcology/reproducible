@@ -122,7 +122,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
   fsChar <- as.character(fs)
 
   tagKeyHasFS <- tagKey %in% "file.size"
-  if (.isFALSE(any(tagKeyHasFS))) {
+  if (isFALSE(any(tagKeyHasFS))) {
     tagKey <- c(tagKey, "file.size")
     tagValue <- c(tagValue, fsChar)
   } else {
@@ -234,7 +234,7 @@ dbConnectAll <- function(drv = getOption("reproducible.drv", RSQLite::SQLite()),
   # browser(expr = exists("yyyy"))
   if (is(drv, "SQLiteDriver")) {
     # if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn))
-    #   if (.isFALSE(create)) {
+    #   if (isFALSE(create)) {
     #     return(invisible())
     #   }
     args <- append(args, list(dbname = CacheDBFile(cachePath, drv = drv, conn = conn),
@@ -500,7 +500,7 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
   }
 
   if (useDBI()) {
-    if (.isFALSE(ret) && isTRUE(create)) {
+    if (isFALSE(ret) && isTRUE(create)) {
       if (grepl(type, "Pq")) {
         file.create(CacheDBFile(cachePath, drv = drv, conn = conn))
       }
