@@ -181,7 +181,7 @@ test_that("prepInputs doesn't work (part 1)", {
   # #######################################
   # ### url, targetFile, archive     ######
   # #######################################
-  # # if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
+  # # if wrapped with Cache, will be very fast second time (via memoised copy)
   # LCC2005_2 <- Cache(
   #   prepInputs,
   #   url = url,
@@ -1910,9 +1910,6 @@ test_that("rasters aren't properly resampled", {
 
 test_that("System call gdal works", {
   skip_on_cran()
-  hasGDAL <- findGDAL()
-  if (!isTRUE(hasGDAL))
-    skip("no GDAL installation found")
 
   testInitOut <- testInit("raster")
   on.exit({
@@ -1947,11 +1944,8 @@ test_that("System call gdal works", {
   on.exit(raster::rasterOptions(todisk = FALSE))
 })
 
-test_that("System call gdal works using multicores for both projecting and masking", {
+test_that("gdalUtilities works using multicores for both projecting and masking", {
   skip_on_cran()
-  hasGDAL <- findGDAL()
-  if (!isTRUE(hasGDAL))
-    skip("no GDAL installation found")
 
   testInitOut <- testInit("raster")
   on.exit({
@@ -2002,9 +1996,6 @@ test_that("System call gdal works using multicores for both projecting and maski
 
 test_that("System call gdal will make the rasters match for rasterStack", {
   skip_on_cran()
-  hasGDAL <- findGDAL()
-  if (!isTRUE(hasGDAL))
-    skip("no GDAL installation found")
 
   testInitOut <- testInit("raster")
   on.exit({
