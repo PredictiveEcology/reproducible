@@ -2,6 +2,10 @@ Known issues: https://github.com/PredictiveEcology/reproducible/issues
 
 Version 1.2.8
 =============
+
+## Dependency changes
+* `lwgeom` now a suggested package
+
 ## Enhancements
 * `fixErrors` can now distinguish `testValidity = NA` meaning don't fix errors and `testValidity = FALSE` run buffering which fixes many errors, but don't test whether there are any invalid polygons first (maybe slow), or `testValidity = TRUE` meaning test for validity, then if some are invalid, then run buffer.
 * Change default option to `reproducible.useNewDigestAlgorithm = 2` which will have user visible changes. To keep old behaviour, set `options(reproducible.useNewDigestAlgorithm = 1)`
