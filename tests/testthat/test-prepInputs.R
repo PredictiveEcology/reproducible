@@ -218,10 +218,10 @@ test_that("prepInputs doesn't work (part 1)", {
   ######################################
   ## don't pass url -- use local copy of archive only
   ## use purge = TRUE to rm checksums file, rewrite it here
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     shpEcozone <- prepInputs(destinationPath = dPath,
                              archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
-  )
+  })
   expect_true(is(shpEcozone, shapefileClassDefault))
 
   #######################################
