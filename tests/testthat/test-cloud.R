@@ -17,7 +17,11 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     }, add = TRUE)
     clearCache(x = tmpCache)
     testsForPkgs <- "testsForPkgs"
-    df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
+    if (packageVersion("googledrive") < "2.0.0") {
+      df <- googledrive::drive_find(pattern = testsForPkgs, team_drive = NULL)
+    } else {
+      df <- googledrive::drive_find(pattern = testsForPkgs, shared_drive = NULL)
+    }
     if (NROW(df) == 0)
       testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
     newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
@@ -246,7 +250,12 @@ test_that("prepInputs works with team drives", {
     }, add = TRUE)
 
     zipUrl <- "https://drive.google.com/file/d/1zRX2c55ebJbQtjijCErEfGxhsa7Ieph2"
-    wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
-                     alsoExtract = "similar", fun = "shapefile", team_drive = TRUE)
+    if (packageVersion("googledrive") < "2.0.0") {
+      wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+                       alsoExtract = "similar", fun = "shapefile", team_drive = TRUE)
+    } else {
+      wb <- prepInputs(targetFile = "WB_BCR.shp", destinationPath = tmpdir, url = zipUrl,
+                       alsoExtract = "similar", fun = "shapefile", shared_drive = TRUE)
+    }
   }
 })
