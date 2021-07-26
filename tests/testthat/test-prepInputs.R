@@ -20,7 +20,7 @@ test_that("prepInputs doesn't work (part 1)", {
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- crsToUse
+  st_crs(StudyArea) <- crsToUse
 
   dPath <- file.path(tmpdir, "ecozones")
 
@@ -106,7 +106,7 @@ test_that("prepInputs doesn't work (part 1)", {
     )
   })
   expect_true(is(shpEcozoneSm, "SpatialPolygons"))
-  expect_true(isTRUE(all.equal(extent(shpEcozoneSm), extent(StudyArea)))) ## TODO: fix error
+  expect_true(isTRUE(all.equal(extent(shpEcozoneSm), extent(StudyArea)))) ## TODO: fix #222
 
   unlink(dirname(ecozoneFilename), recursive = TRUE)
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
