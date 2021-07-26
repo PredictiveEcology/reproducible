@@ -396,8 +396,8 @@ messagePrepInputs <- function(...) {
   messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"))
 }
 
-messageCache <- function(..., colour = getOption("reproducible.messageColourCache")) {
-  messageColoured(..., colour = colour)
+messageCache <- function(...) {
+  messageColoured(..., colour = getOption("reproducible.messageColourCache"))
 }
 
 messageQuestion <- function(..., verboseLevel = 0) {

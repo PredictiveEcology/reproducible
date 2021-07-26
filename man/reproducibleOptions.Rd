@@ -124,9 +124,8 @@ The following options are likely of interest to most users:
   \item{\code{useMemoise}}{
     Default: \code{FALSE}. Used in \code{\link{Cache}}. If \code{TRUE}, recovery of cached
     elements from the \code{cacheRepo} will use \code{memoise::memoise}.
-    This means that the 2nd time running a function will be much faster than the first
-    in a session (which either will create a new cache entry to disk or read a cached
-    entry from disk).
+    This means that the 3rd time running a function will be much faster than the first (create
+    cache entry) or second (recover from the SQLite database on disk).
     \emph{NOTE: memoised values are removed when the R session is restarted}.
     \strong{This option will use more RAM} and so may need to be turned off if RAM is limiting.
     \code{clearCache} of any sort will cause all memoising to be 'forgotten' (\code{memoise::forget}).

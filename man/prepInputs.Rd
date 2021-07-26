@@ -275,7 +275,7 @@ LCC2005 <- prepInputs(url = url,
 
 plot(LCC2005)
 
-# if wrapped with Cache, will be very fast second time (via memoised copy)
+# if wrapped with Cache, will be fast second time, very fast 3rd time (via memoised copy)
 LCC2005 <- Cache(prepInputs, url = url,
                  targetFile = lcc2005Filename,
                  archive = asPath("LandCoverOfCanada2005_V1_4.zip"),

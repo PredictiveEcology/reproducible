@@ -356,8 +356,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             length(Filenames(x, allowMultiple = FALSE)) <= 1) {
           if (needOT) {
             datatype <- switchDataTypes(unique(dots$datatype)[[1]], "GDAL")
-          } else {
-            datatype <- NULL #need default
           }
           tmpfile <- paste0(tempfile(fileext = ".tif"))
           wasInMemory <- inMemory(x)
@@ -367,18 +365,18 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           # Need to create correct "origin" meaning the 0,0 are same. If we take the
           #   cropExtent directly, we will have the wrong origin if it doesn't align perfectly.
           # "-ot ", dType, # Why is this missing?
-          crsX <- as.character(crsX)
 
-          gdalArgs <- list(srcfile = Filenames(x, allowMultiple = FALSE), dstfile = tmpfile,
-                           tr = c(res(x)[1], res(x)[2]),
-                           s_srs = crsX, t_srs = crsX, te_srs = crsX,
-                           te = c(cropExtentRounded[1], cropExtentRounded[3],
-                                  cropExtentRounded[2], cropExtentRounded[4]),
-                           tap = TRUE, ot = datatype)
-          gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))] #gdalUtilities fails with NULL args
-          do.call(gdalUtilities::gdalwarp, gdalArgs)
-
-
+           gdalUtilities::gdalwarp(srcfile = Filenames(x, allowMultiple = FALSE),
+                              dstfile = tmpfile,
+                              tr = c(res(x)[1], res(x)[2]),
+                              overwrite = TRUE,
+                              s_srs = crsX,
+                              t_srs = crsX,
+                              if (needOT) ot = datatype,
+                              te = c(cropExtentRounded[1], cropExtentRounded[3],
+                                     cropExtentRounded[2], cropExtentRounded[4]),
+                              te_srs = crsX,
+                              tap = TRUE)
           if (isStack) {
             x <- raster::stack(tmpfile)
           } else if (isBrick) {
@@ -390,6 +388,17 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
             x[] <- x[]
           x <- setMinMaxIfNeeded(x)
 
+          # paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+          #        "-s_srs \"", as.character(raster::crs(raster::raster(tempSrcRaster))), "\"",
+          #        " -t_srs \"", targCRS, "\"",
+          #        " -multi ", prll,
+          #        "-ot ", dType,
+          #        teRas,
+          #        "-r ", dots$method,
+          #        " -overwrite ",
+          #        "-tr ", paste(tr, collapse = " "), " ",
+          #        "\"", tempSrcRaster, "\"", " ",
+          #        "\"", tempDstRaster, "\""),
         } else if (isX_Sp || isX_Sf) { # raster::crop has stopped working on SpatialPolygons
           yyy <- as(cropExtentRounded, "SpatialPolygons")
           if (transformToCRSX) {
@@ -562,8 +571,7 @@ cropInputs.sf <- function(x, studyArea = NULL, rasterToMatch = NULL,
 #'
 #' These must be very common for this function to be useful. Currently, the only
 #' meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
-#' If \code{FALSE}, then it runs  \code{st_make_valid} or \code{raster::buffer},
-#' depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
+#' If \code{FALSE}, then it runs a buffer of width 0.
 #'
 #' @param x A \code{SpatialPolygons*} or \code{sf} object.
 #'
@@ -731,10 +739,10 @@ fixErrors.sf <- function(x, objectName = NULL, attemptErrorFixes = TRUE,
 
         x1 <- suppressWarningsSpecific(falseWarnings = paste("Spatial object is not projected;",
                                                              "GEOS expects planar coordinates"),
-                                       try(Cache(sf::st_make_valid, x, useCache = useCache)))
+                                       try(Cache(sf::st_buffer, x, dist = 0, useCache = useCache)))
         x <- bufferWarningSuppress(#warn = attr(x1, "warning"),
           objectName = objectName,
-          x1 = x1, bufferFn = "sf::st_make_valid")
+          x1 = x1, bufferFn = "sf::st_buffer")
 
       } else {
         messagePrepInputs("  Found no errors.", verbose = verbose)
@@ -878,7 +886,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
           dTypeGDAL <- assessDataType(raster(tempSrcRaster), type = "GDAL")
         }
 
-        teRas <- NULL #This sets extents in GDAL
+        teRas <- " " #This sets extents in GDAL
         if (!is.null(rasterToMatch)) {
           teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ",
                                           extent(rasterToMatch)@ymin, " ",
@@ -892,21 +900,19 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         # browser(expr = exists("._projectInputs_2"))
         # This will clear the Windows error that sometimes occurs:
         #  ERROR 1: PROJ: pj_obj_create: Cannot find proj.db ## Eliot Jan 22, 2020
-        #IE commented this out -
-        #TODO: review if this is necessary
-        # if (identical(.Platform[["OS.type"]], "windows")) {
-        #   oldProjLib <- Sys.getenv("PROJ_LIB")
-        #   if (!isTRUE(grepl("proj.db", dir(oldProjLib)))) {
-        #     possNewDir <- dir(file.path(dirname(getOption("gdalUtils_gdalPath")[[1]]$path), "share", "proj"),
-        #                       recursive = TRUE, pattern = "proj.db", full.names = TRUE)
-        #     if (length(possNewDir)) {
-        #       Sys.setenv(PROJ_LIB = dirname(possNewDir))
-        #       on.exit(add = TRUE, {
-        #         Sys.setenv(PROJ_LIB = oldProjLib)
-        #       })
-        #     }
-        #   }
-        # }
+        if (identical(.Platform[["OS.type"]], "windows")) {
+          oldProjLib <- Sys.getenv("PROJ_LIB")
+          if (!isTRUE(grepl("proj.db", dir(oldProjLib)))) {
+            possNewDir <- dir(file.path(dirname(getOption("gdalUtils_gdalPath")[[1]]$path), "share", "proj"),
+                              recursive = TRUE, pattern = "proj.db", full.names = TRUE)
+            if (length(possNewDir)) {
+              Sys.setenv(PROJ_LIB = dirname(possNewDir))
+              on.exit(add = TRUE, {
+                Sys.setenv(PROJ_LIB = oldProjLib)
+              })
+            }
+          }
+        }
 
         targCRS <- as.character(targetCRS)
         if (FALSE) {
@@ -915,11 +921,20 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
           #  I think leave it with the warning.
           targCRS <- gsub(".*(epsg:.[0123456789]*)( ).*", "\\1", targCRS)
         }
-        gdalArgs <- list(srcfile = tempSrcRaster, dstfile = tempDstRaster,
-                         s_srs = as.character(.crs(raster::raster(tempSrcRaster))), t_srs = targCRS,
-                         te = teRas, tr = tr, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
-        gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
-        do.call(gdalUtilities::gdalwarp, gdalArgs)
+        system(
+          paste0(paste0(getOption("gdalUtils_gdalPath")[[1]]$path, "gdalwarp", exe, " "),
+                 "-s_srs \"", as.character(.crs(raster::raster(tempSrcRaster))), "\"",
+                 " -t_srs \"", targCRS, "\"",
+                 " -multi ", prll,
+                 "-ot ", dTypeGDAL,
+                 teRas,
+                 "-r ", dots$method,
+                 " -overwrite ",
+                 if (!dontSpecifyResBCLongLat) {paste("-tr ", paste(tr, collapse = " "))},
+                 " ",
+                 "\"", tempSrcRaster, "\"", " ",
+                 "\"", tempDstRaster, "\""),
+          wait = TRUE)
 
         x <- raster(tempDstRaster)
         x <- setMinMaxIfNeeded(x)
@@ -1910,7 +1925,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
           x <- Cache(cropInputs, x = x, studyArea = studyArea,
                      extentToMatch = extRTM,
                      extentCRS = crsRTM,
-                     useCache = useCache, verbose = verbose, useGDAL = useGDAL, ...)
+                     useCache = useCache, verbose = verbose, ...)
           useCache <- useCacheOrig
           testValidity <- NA # Crop will have done it
         } else {
@@ -1943,7 +1958,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                        expr = quote(
                          Cache(projectInputs, x = x, targetCRS = targetCRS,
                                rasterToMatch = rasterToMatch, useCache = useCache,
-                               cores = cores, verbose = verbose, useGDAL = useGDAL, ...)
+                               cores = cores, verbose = verbose, ...)
                        ),
                        exprBetween = quote(
                          x <- fixErrors(x, objectName = objectName,
@@ -1960,7 +1975,7 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
                       expr = quote(
                         maskInputs(x = x, studyArea = studyArea,
                                    rasterToMatch = rasterToMatch, useCache = useCache,
-                                   verbose = verbose, useGDAL = useGDAL, ...)
+                                   verbose = verbose, ...)
                       ),
                       exprBetween = quote(
                         x <- fixErrors(x, objectName = objectName,
@@ -2189,10 +2204,6 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
                                 ...) {
   messagePrepInputs("crop, reproject, mask is using one-step gdalwarp")
 
-  if (!is.null(studyArea)) {
-    studyArea <- fixErrors(x = studyArea)
-  }
-
   # browser(expr = exists("._cropReprojMaskWGDAL_1"))
 
   # rasters need to go to same directory that can be unlinked at end without losing other temp files
@@ -2247,7 +2258,7 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   needReproject <- FALSE
   needNewRes <- FALSE
   tempSrcShape <- NULL
-  cropExtent <- extent(raster::raster(tempSrcRaster)) #default
+  cropExtent <- NULL
 
   if (!is.null(studyArea)) {
     # studyAreaCRSx <- spTransform(studyArea, crs(x))
@@ -2266,22 +2277,21 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
       studyAreasf <- sf::st_transform(studyAreasf, crs = targCRS)
     }
     # write the studyArea to disk -- go via sf because faster
+    cropExtent <- extent(studyAreasf)
+    if (!(grepl("longlat", targCRS)))
+      cropExtent <- roundToRes(cropExtent, x = x)
+
     muffld <- capture.output(
       sf::st_write(studyAreasf, tempSrcShape)
     )
 
-  } else if (!is.null(rasterToMatch)) {
-   targCRS <- .crs(rasterToMatch)
-  }
 
-  if (isTRUE(useSAcrs) | is.null(rasterToMatch)) {
-    cropExtent <- extent(studyAreasf)
-    if (!(grepl("longlat", targCRS)))
-      cropExtent <- roundToRes(cropExtent, x = x)
+
   } else if (!is.null(rasterToMatch)) {
+
     cropExtent <- extent(rasterToMatch)
-  } # else keep extent the original extent (ie SA provided, but useSACRS = FALSE)
-
+    targCRS <- .crs(rasterToMatch)
+  }
   dontSpecifyResBCLongLat <- isLongLat(targCRS, srcCRS)
 
   if (!is.null(rasterToMatch)) {
@@ -2319,8 +2329,12 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   }
 
   #convert extent to string
-  te <-   paste(c(cropExtent[1], cropExtent[3],
-                  cropExtent[2], cropExtent[4]))
+  if (!is.null(cropExtent)) {
+    te <-   paste(c(cropExtent[1], cropExtent[3],
+                    cropExtent[2], cropExtent[4]))
+  } else {
+    te <- NULL
+  }
 
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")

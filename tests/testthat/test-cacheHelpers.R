@@ -94,7 +94,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   })
   expect_true(any(grepl("different n", bMess)))
   expect_true(any(grepl("new argument.*sd", bMess)))
-  expect_true(any(grepl("next closest cacheId", bMess)))
+  expect_true(any(grepl("artifact with cacheId", bMess)))
   # aaaa <<- bbbb <<- cccc <<- 1
   cMess <- capture_messages({
     b <- Cache(rnorm, n = 3, mean = 1, sd = 3, showSimilar = TRUE, cacheRepo = tmpCache)
