@@ -152,6 +152,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
 
+  teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
+    dots[["team_drive"]]
+  } else {
+    dots[["shared_drive"]]
+  }
+
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
@@ -165,7 +171,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (is.null(targetFile)) {
     fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
                               destinationPath = destinationPath, verbose = verbose,
-                              team_drive = dots[["team_drive"]])
+                              team_drive = teamDrive)
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
     if (isTRUE(!is.na(archive)))
@@ -267,7 +273,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         #   an archive, either remotely, in the case of google or from the basename of url
         fileGuess <- .guessAtFile(url = url, archive = archive,
                                   targetFile = targetFile, destinationPath = destinationPath,
-                                  verbose = verbose, team_drive = dots[["team_drive"]])
+                                  verbose = verbose, team_drive = teamDrive)
         archive <- .isArchive(fileGuess)
         # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
         archive <- moveAttributes(fileGuess, receiving = archive)
