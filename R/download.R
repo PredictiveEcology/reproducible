@@ -593,7 +593,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
                                                      team_drive = team_drive)))
     } else {
       fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url),
-                                                     shared__drive = team_drive)))
+                                                     shared_drive = team_drive)))
     }
     fileSize <- fileAttr$drive_resource[[1]]$size ## TODO: not returned with team drive (i.e., NULL)
     if (!is.null(fileSize)) {
