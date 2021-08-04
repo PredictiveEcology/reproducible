@@ -20,7 +20,7 @@ test_that("prepInputs doesn't work (part 1)", {
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  st_crs(StudyArea) <- crsToUse
+  crs(StudyArea) <- crsToUse
 
   dPath <- file.path(tmpdir, "ecozones")
 
