@@ -874,10 +874,10 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
 
         teRas <- NULL #This sets extents in GDAL
         if (!is.null(rasterToMatch)) {
-          teRas <- paste0(" -te ", paste0(extent(rasterToMatch)@xmin, " ",
-                                          extent(rasterToMatch)@ymin, " ",
-                                          extent(rasterToMatch)@xmax, " ",
-                                          extent(rasterToMatch)@ymax, " "))
+          teRas <- paste(c(extent(rasterToMatch)@xmin,
+                           extent(rasterToMatch)@ymin,
+                           extent(rasterToMatch)@xmax,
+                           extent(rasterToMatch)@ymax))
         }
 
         cores <- dealWithCores(cores)
@@ -911,7 +911,9 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         }
         gdalArgs <- list(srcfile = tempSrcRaster, dstfile = tempDstRaster,
                          s_srs = as.character(.crs(raster::raster(tempSrcRaster))), t_srs = targCRS,
-                         te = teRas, tr = tr, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
+                         te = teRas, tr = tr, ot = dTypeGDAL,
+                         r = dots$method,
+                         multi = TRUE, wo = prll, overwrite = TRUE)
         gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
         do.call(gdalUtilities::gdalwarp, gdalArgs)
 
@@ -2292,13 +2294,6 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
     needReproject <- TRUE
   }
 
-  if (isWindows()) {
-    messagePrepInputs("Using gdal via gdalUtilities")
-    exe <- ".exe"
-  } else {
-    exe <- ""
-  }
-
   if (needReproject) {
     if (is.null(dots$method)) {
       dots$method <- assessDataType(x, type = "projectRaster")
@@ -2322,8 +2317,10 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   #this is a workaround to passing NULL arguments to gdal_warp, which does not work
   gdalArgs <- list(srcfile = tempSrcRaster, dstfile = filename2, s_srs = srcCRS, te = te,
                    t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
-                   dstnodata = NA, tr = tr, r = dots$method, ot = dTypeGDAL,
-                   multi = TRUE, wo = prll, overwrite = TRUE)
+                   dstnodata = NA, tr = tr, ot = dTypeGDAL,
+                   multi = TRUE, wo = prll,
+                   r = dots$method,
+                   overwrite = TRUE)
   gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
   do.call(gdalUtilities::gdalwarp, gdalArgs)
 
