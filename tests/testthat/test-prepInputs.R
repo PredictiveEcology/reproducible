@@ -92,6 +92,8 @@ test_that("prepInputs doesn't work (part 1)", {
     "ecozones.shp",
     "ecozones.shx"
   )
+  oldPolyOption <- options("reproducible.polygonShortcut")
+  options("reproducible.polygonShortcut" = TRUE)
   warn <- suppressWarningsSpecific(
     falseWarnings = "attribute variables are assumed to be spatially constant", {
     shpEcozoneSm <- Cache(
@@ -105,6 +107,7 @@ test_that("prepInputs doesn't work (part 1)", {
       filename2 = "EcozoneFile.shp"
     )
   })
+  options("reproducible.polygonShortcut" = oldPolyOption)
   expect_true(is(shpEcozoneSm, "SpatialPolygons"))
   expect_true(isTRUE(all.equal(extent(shpEcozoneSm), extent(StudyArea)))) ## TODO: fix #222
 
