@@ -632,7 +632,7 @@ extractFromArchive <- function(archive,
         " If that is not correct, please specify a targetFile",
         " and/or different fun. The current files in the targetFilePath's",
         " directory are: \n",
-        paste(possibleFiles, collapse = "\n"))
+        paste(possibleFiles, collapse = ", "))
     }
     messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
 
