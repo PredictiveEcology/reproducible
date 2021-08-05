@@ -853,12 +853,6 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
           tr <- res(x)
         }
 
-        if (isWindows()) {
-          exe <- ".exe"
-        } else {
-          exe <- ""
-        }
-
         if (is.null(dots$method)) {
           dots$method <- assessDataType(x, type = "projectRaster")
         }
@@ -2319,8 +2313,8 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   }
 
   #convert extent to string
-  te <-   paste(c(cropExtent[1], cropExtent[3],
-                  cropExtent[2], cropExtent[4]))
+  te <- paste(c(cropExtent[1], cropExtent[3],
+                cropExtent[2], cropExtent[4]))
 
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")
@@ -2328,7 +2322,8 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   #this is a workaround to passing NULL arguments to gdal_warp, which does not work
   gdalArgs <- list(srcfile = tempSrcRaster, dstfile = filename2, s_srs = srcCRS, te = te,
                    t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
-                   dstnodata = NA, tr = tr, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
+                   dstnodata = NA, tr = tr, r = dots$method, ot = dTypeGDAL,
+                   multi = TRUE, wo = prll, overwrite = TRUE)
   gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
   do.call(gdalUtilities::gdalwarp, gdalArgs)
 
