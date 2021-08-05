@@ -36,11 +36,21 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption('reproducible.cl
     }
     isID <- isTRUE(32 <= nchar(cloudFolderID) && nchar(cloudFolderID) <= 33)
     driveLs <- if (isID) {
-      tryCatch(googledrive::drive_get(googledrive::as_id(cloudFolderID), team_drive = team_drive),
-               error = function(x) {character()})
+      if (packageVersion("googledrive") < "2.0.0") {
+        tryCatch(googledrive::drive_get(googledrive::as_id(cloudFolderID), team_drive = team_drive),
+                 error = function(x) {character()})
+      } else {
+        tryCatch(googledrive::drive_get(googledrive::as_id(cloudFolderID), shared_drive = team_drive),
+                 error = function(x) {character()})
+      }
     } else {
-      tryCatch(googledrive::drive_get(cloudFolderID, team_drive = team_drive),
-               error = function(x) { character() })
+      if (packageVersion("googledrive") < "2.0.0") {
+        tryCatch(googledrive::drive_get(cloudFolderID, team_drive = team_drive),
+                 error = function(x) { character() })
+      } else {
+        tryCatch(googledrive::drive_get(cloudFolderID, shared_drive = team_drive),
+                 error = function(x) { character() })
+      }
     }
 
     if (NROW(driveLs) == 0) {
@@ -74,9 +84,10 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL,
     stop(requireNamespaceMsg("googledrive", "to use google drive files"))
   #browser(expr = exists("kkkk"))
 
-  if (!is(cloudFolderID, "tbl"))
+  if (!is(cloudFolderID, "tbl")) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, create = FALSE,
                                                team_drive = team_drive) # only deals with NULL case
+  }
 
   messageCache("Retrieving file list in cloud folder", verbose = verbose)
   gdriveLs <- retry(quote({

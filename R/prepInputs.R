@@ -595,7 +595,7 @@ extractFromArchive <- function(archive,
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- fileExt(possibleFiles)
   isShapefile <- grepl("shp$|gdb$", fileExt)
-  isRaster <- fileExt %in% c("tif", "grd")
+  isRaster <- fileExt %in% c("asc", "grd", "tif")
   isRDS <- fileExt %in% c("rds")
   if (is.null(fun)) { #i.e., the default
     fun <- if (any(isShapefile)) {
