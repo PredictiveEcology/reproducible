@@ -430,6 +430,12 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
   dots <- list(...)
 
+  teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
+    dots[["team_drive"]]
+  } else {
+    dots[["shared_drive"]]
+  }
+
   if (!is.null(url) || !is.null(dlFun)) { # if no url, no download
     #if (!is.null(fileToDownload)  ) { # don't need to download because no url --- but need a case
       if (!isTRUE(tryCatch(is.na(fileToDownload), warning = function(x) FALSE)))  {
@@ -491,7 +497,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             overwrite = overwrite,
             needChecksums = needChecksums,
             verbose = verbose,
-            team_drive = dots[["team_drive"]]
+            team_drive = teamDrive
           )
 
         } else if (grepl("dl.dropbox.com", url)) {
@@ -582,12 +588,19 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   }
 
   if (is.null(archive) || is.na(archive)) {
-    fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url), team_drive = team_drive)))
+    if (packageVersion("googledrive") < "2.0.0") {
+      fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url),
+                                                     team_drive = team_drive)))
+    } else {
+      fileAttr <- retry(quote(googledrive::drive_get(googledrive::as_id(url),
+                                                     shared_drive = team_drive)))
+    }
     fileSize <- fileAttr$drive_resource[[1]]$size ## TODO: not returned with team drive (i.e., NULL)
     if (!is.null(fileSize)) {
       fileSize <- as.numeric(fileSize)
       class(fileSize) <- "object_size"
-      messagePrepInputs("  File on Google Drive is ", format(fileSize, units = "auto"), verbose = verbose)
+      messagePrepInputs("  File on Google Drive is ", format(fileSize, units = "auto"),
+                        verbose = verbose)
     }
     archive <- .isArchive(fileAttr$name)
     if (is.null(archive)) {
