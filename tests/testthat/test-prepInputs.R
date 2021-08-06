@@ -92,7 +92,7 @@ test_that("prepInputs doesn't work (part 1)", {
     "ecozones.shp",
     "ecozones.shx"
   )
-  oldPolyOption <- options("reproducible.polygonShortcut")
+  oldPolyOption <- getOption("reproducible.polygonShortcut")
   options("reproducible.polygonShortcut" = TRUE)
   warn <- suppressWarningsSpecific(
     falseWarnings = "attribute variables are assumed to be spatially constant", {
