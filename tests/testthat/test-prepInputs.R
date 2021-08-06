@@ -2,7 +2,7 @@ test_that("prepInputs doesn't work (part 1)", {
   skip_on_cran()
   skip_on_ci()
 
-  testInitOut <- testInit(c("sf", "sp", "raster"), opts = list(
+  testInitOut <- testInit("raster", opts = list(
     "rasterTmpDir" = tempdir2(rndstr(1,6)),
     "reproducible.inputPaths" = NULL,
     "reproducible.overwrite" = TRUE)
