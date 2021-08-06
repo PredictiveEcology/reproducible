@@ -2294,13 +2294,11 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
     needReproject <- TRUE
   }
 
-  if (needReproject) {
-    if (is.null(dots$method)) {
-      dots$method <- assessDataType(x, type = "projectRaster")
-    }
-    if (dots$method == "ngb") {
-      dots$method <- "near"
-    }
+  if (is.null(dots$method)) {
+    dots$method <- assessDataType(x, type = "projectRaster")
+  }
+  if (dots$method == "ngb") {
+    dots$method <- "near"
   }
 
   if (!is.character(targCRS)) {
@@ -2308,9 +2306,7 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
   }
 
   ## convert extent to string
-  te <- paste(c(cropExtent[1], cropExtent[3],
-                cropExtent[2], cropExtent[4]))
-
+  te <- paste(c(cropExtent[1], cropExtent[3], cropExtent[2], cropExtent[4]))
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")
 
