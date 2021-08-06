@@ -1463,16 +1463,16 @@ test_that("lightweight tests for code coverage", {
     file.remove(file.path(tmpdir, "ecozone_shp.zip"))
     checkSums <- Checksums(path = tmpdir)
 
-
-
     noisyOutput <- capture.output(
-      expect_error(downloadFile(url = url,
-                                neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
-                                                "ecozones.shp", "ecozones.shx"),
-                                checkSums = checkSums,
-                                targetFile = "ecozones.shp",
-                                archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
-                                destinationPath = tmpdir, checksumFile = checkSumFilePath))
+      expect_error(
+        downloadFile(url = url,
+                     neededFiles = c("ecozones.dbf", "ecozones.prj", "ecozones.sbn", "ecozones.sbx",
+                                     "ecozones.shp", "ecozones.shx"),
+                     checkSums = checkSums,
+                     targetFile = "ecozones.shp",
+                     archive = "ecozone_shp.zip", needChecksums = TRUE, quick = FALSE,
+                     destinationPath = tmpdir, checksumFile = checkSumFilePath)
+      )
     )
 
     ## postProcess.default
@@ -1906,7 +1906,6 @@ test_that("rasters aren't properly resampled", {
                      filename2 = c(tempfile(tmpdir = tmpdir, fileext = ".grd"), tempfile(tmpdir = tmpdir, fileext = ".grd")))
   expect_true(is(out4, "RasterStack"))
   expect_true(identical(length(Filenames(out4)), 4L))
-
 })
 
 test_that("System call gdal works", {
