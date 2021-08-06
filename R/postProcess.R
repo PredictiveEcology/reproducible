@@ -1997,7 +1997,8 @@ postProcessAllSpatial <- function(x, studyArea, rasterToMatch,
 useETM <- function(extentToMatch, extentCRS, verbose) {
   passingExtents <- sum(!is.null(extentToMatch), !is.null(extentCRS))
   if (passingExtents == 1) {
-    messagePrepInputs("When passing extentToMatch, you must also pass extentCRS; using rasterToMatch or studyArea instead",
+    messagePrepInputs(paste("When passing extentToMatch, you must also pass extentCRS;",
+                            "using rasterToMatch or studyArea instead"),
                       verbose = verbose)
   } else if (passingExtents == 2) {
     return(TRUE)
@@ -2010,7 +2011,7 @@ bufferWarningSuppress <- function(# warn,
   x1, bufferFn, verbose = getOption("reproducible.verbose", 1)) {
   if (is(x1, "try-error")) {
     messagePrepInputs("There are errors with ", objectName,
-                      ". Couldn't fix them with ",bufferFn,"(..., width = 0)", verbose = verbose)
+                      ". Couldn't fix them with ", bufferFn, "(..., width = 0)", verbose = verbose)
   } else {
     messagePrepInputs("  Some or all of the errors fixed.", verbose = verbose)
   }
@@ -2318,7 +2319,7 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
                    t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
                    dstnodata = NA, tr = tr, ot = dTypeGDAL,
                    multi = TRUE, wo = prll,
-                   r = ifelse(dots$method == "ngb", "near", dots$method),
+                   r = dots$method,
                    overwrite = TRUE)
   gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
   do.call(gdalUtilities::gdalwarp, gdalArgs)
