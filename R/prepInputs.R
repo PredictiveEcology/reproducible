@@ -736,7 +736,8 @@ extractFromArchive <- function(archive,
         X = extractedFiles,
         FUN = function(fileToMove) {
           invisible(file.move(from = file.path(.tempPath, fileToMove),
-                              to = file.path(args$exdir, basename(fileToMove))))
+                              to = file.path(args$exdir, basename(fileToMove)),
+                              overwrite = overwrite))
         }
       ))
       # unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
@@ -829,7 +830,7 @@ extractFromArchive <- function(archive,
       suppressWarnings(out <- try(file.link(from, to)))
 
       if (!isTRUE(all(out))) {
-        out <- try(file.move(from, to))
+        out <- try(file.move(from, to, overwrite))
       }
 
       if (!isTRUE(all(out))) {
