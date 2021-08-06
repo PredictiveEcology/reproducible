@@ -737,7 +737,7 @@ extractFromArchive <- function(archive,
         FUN = function(fileToMove) {
           invisible(file.move(from = file.path(.tempPath, fileToMove),
                               to = file.path(args$exdir, basename(fileToMove)),
-                              overwrite))
+                              overwrite = overwrite))
         }
       ))
       # unlink(file.path(args$exdir, "extractedFiles"), recursive = TRUE)
