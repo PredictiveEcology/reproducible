@@ -911,8 +911,8 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         gdalArgs <- list(srcfile = tempSrcRaster, dstfile = tempDstRaster,
                          s_srs = as.character(.crs(raster::raster(tempSrcRaster))), t_srs = targCRS,
                          te = teRas, tr = tr, ot = dTypeGDAL,
-                         r = ifelse(dots$method == "ngb", "near", dots$method),
                          multi = TRUE, wo = prll, overwrite = TRUE)
+        gdalArgs[["r"]] <- dots$method ## keep separate in case it's TNULL
         gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
         do.call(gdalUtilities::gdalwarp, gdalArgs)
 
@@ -2319,8 +2319,8 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
                    t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
                    dstnodata = NA, tr = tr, ot = dTypeGDAL,
                    multi = TRUE, wo = prll,
-                   r = dots$method,
                    overwrite = TRUE)
+  gdalArgs[["r"]] <- dots$method ## keep 'r' separate in case it's NULL (so it won't be added)
   gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
   do.call(gdalUtilities::gdalwarp, gdalArgs)
 
