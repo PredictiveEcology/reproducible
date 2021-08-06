@@ -1,4 +1,4 @@
-Known issues: https://github.com/PredictiveEcology/reproducible/issues
+Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
 Version 1.2.8
 =============
@@ -12,7 +12,7 @@ Version 1.2.8
 * minor changes to messaging when `options(reproducible.showSimilar)` is set. It is now more compact e.g., 3 lines instead of 5.
 
 ## Bug fixes
-* A small, but very impactful bug that created false positive `Cache` returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occured for when the differences were in unnamed arguments only.
+* A small, but very impactful bug that created false positive `Cache` returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occurred for when the differences were in unnamed arguments only.
 
 Version 1.2.7
 =============
@@ -24,7 +24,7 @@ There is a large user-visible change that will come (in the next release), which
 * default `fun` in `prepInputs` for shapefiles (`.shp`) is now `sf::st_read` if the system has `sf` installed. This can be overridden with `options("reproducible.shapefileRead" = "raster::shapefile")`, and this is indicated with a message at the moment this is occurring, as it will cause different behaviour.
 * `quick` argument in `Cache` can now be a character vector, allowing individual character arguments to be digested as character vectors and others to be digested as files located at the specified path as represented by the character vector.
 * `objSize` previously included objects in `namespaces`, `baseenv` and `emptyenv`, so it was generally too large. Now uses the same criteria as `pryr::object_size`
-* improvements with messaging when `unzip` missing (thanks to C. Barros #202)
+* improvements with messaging when `unzip` missing (thanks to @CeresBarros #202)
 * while unzipping, will also search for `7z.exe` on Windows if the object is larger than 2GB, if can't find `unzip`.
 * `fun` argument in `prepInputs` and family can now be a quoted expression.
 * `archive` argument in `prepInputs` can now be `NA` which means to treat the file downloaded not as an archive, even if it has a `.zip` file extension

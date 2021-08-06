@@ -1,6 +1,5 @@
 test_that("prepInputs doesn't work (part 1)", {
   skip_on_cran()
-
   skip_on_ci()
 
   testInitOut <- testInit("raster", opts = list(
@@ -21,7 +20,7 @@ test_that("prepInputs doesn't work (part 1)", {
   Sr1 <- Polygon(coords)
   Srs1 <- Polygons(list(Sr1), "s1")
   StudyArea <- SpatialPolygons(list(Srs1), 1L)
-  crs(StudyArea) <- crsToUse
+  st_crs(StudyArea) <- crsToUse
 
   dPath <- file.path(tmpdir, "ecozones")
 
@@ -93,6 +92,8 @@ test_that("prepInputs doesn't work (part 1)", {
     "ecozones.shp",
     "ecozones.shx"
   )
+  oldPolyOption <- options("reproducible.polygonShortcut")
+  options("reproducible.polygonShortcut" = TRUE)
   warn <- suppressWarningsSpecific(
     falseWarnings = "attribute variables are assumed to be spatially constant", {
     shpEcozoneSm <- Cache(
@@ -106,8 +107,9 @@ test_that("prepInputs doesn't work (part 1)", {
       filename2 = "EcozoneFile.shp"
     )
   })
+  options("reproducible.polygonShortcut" = oldPolyOption)
   expect_true(is(shpEcozoneSm, "SpatialPolygons"))
-  expect_true(isTRUE(all.equal(extent(shpEcozoneSm), extent(StudyArea))))
+  expect_true(isTRUE(all.equal(extent(shpEcozoneSm), extent(StudyArea)))) ## TODO: fix #222
 
   unlink(dirname(ecozoneFilename), recursive = TRUE)
   # Test useCache = FALSE -- doesn't error and has no "loading from cache" or "loading from memoised"
@@ -218,10 +220,10 @@ test_that("prepInputs doesn't work (part 1)", {
   ######################################
   ## don't pass url -- use local copy of archive only
   ## use purge = TRUE to rm checksums file, rewrite it here
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     shpEcozone <- prepInputs(destinationPath = dPath,
                              archive = file.path(dPath, "ecozone_shp.zip"), purge = TRUE)
-  )
+  })
   expect_true(is(shpEcozone, shapefileClassDefault))
 
   #######################################
@@ -459,13 +461,13 @@ test_that("preProcess doesn't work", {
   ###############################################################
   ##### url                                                 #####
   ###############################################################
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     mess <- capture_messages({
-    warns <- capture_warnings({
-      test <- prepInputs(url = urlTif1, destinationPath = tmpdir)
+      warns <- capture_warnings({
+        test <- prepInputs(url = urlTif1, destinationPath = tmpdir)
+      })
     })
   })
-  )
   runTest("1_2_5_6_7_10_13", "Raster", 1, mess, expectedMess = expectedMessage,
           filePattern = "DEM", tmpdir = tmpdir, test = test)
 
@@ -480,13 +482,13 @@ test_that("preProcess doesn't work", {
   unlink(dir(tmpdir, full.names = TRUE))
 
   # url is an archive on googledrive -- can get file.info from remote -- so can do checksums
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     mess <- capture_messages({
       warns <- capture_warnings({
         test <- prepInputs(url = urlShapefiles1Zip, destinationPath = tmpdir)
       })
     })
-  )
+  })
 
   runTest("1_2_3_4_5_6_7_10_12_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
@@ -504,13 +506,13 @@ test_that("preProcess doesn't work", {
   ################################################################
   ###### url, targetFile                                     #####
   ################################################################
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     mess <- capture_messages({
-    warns <- capture_warnings({
-      test <- prepInputs(url = urlTif1, targetFile = basename(urlTif1), destinationPath = tmpdir)
+      warns <- capture_warnings({
+        test <- prepInputs(url = urlTif1, targetFile = basename(urlTif1), destinationPath = tmpdir)
+      })
     })
   })
-  )
   runTest("1_2_5_6_7_13", "Raster", 1, mess, expectedMess = expectedMessage,
           filePattern = "DEM", tmpdir = tmpdir, test = test)
 
@@ -548,13 +550,13 @@ test_that("preProcess doesn't work", {
   ################################################################
   ###### url, alsoExtract                                    #####
   ################################################################
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     mess <- capture_messages({
-    warns <- capture_warnings({
-      test <- prepInputs(url = urlTif1, alsoExtract = "DEM.tif", destinationPath = tmpdir)
+      warns <- capture_warnings({
+        test <- prepInputs(url = urlTif1, alsoExtract = "DEM.tif", destinationPath = tmpdir)
+      })
     })
   })
-  )
   runTest("1_2_5_6_7_10_13", "Raster", 1, mess, expectedMess = expectedMessage,
           filePattern = "DEM", tmpdir = tmpdir, test = test)
 
@@ -604,17 +606,17 @@ test_that("preProcess doesn't work", {
   ################################################################
   # url is an archive on googledrive -- here, zip has 2 Shapefile filesets -- Shapefile1* and Shapefile2*
   #   should extract all
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     mess <- capture_messages({
-    warns <- capture_warnings({
-      test <- prepInputs(
-        url = urlShapefilesZip,
-        archive = "Shapefiles1.zip",
-        destinationPath = tmpdir
-      )
+      warns <- capture_warnings({
+        test <- prepInputs(
+          url = urlShapefilesZip,
+          archive = "Shapefiles1.zip",
+          destinationPath = tmpdir
+        )
+      })
     })
   })
-  )
   runTest("1_2_3_4_5_6_7_10_12_13", shapefileClassDefault, 9, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
 
@@ -709,18 +711,18 @@ test_that("preProcess doesn't work", {
   })
   runTest("1_2_3_4_5_6_7_13", shapefileClassDefault, 5, mess, expectedMess = expectedMessage,
           filePattern = "Shapefile", tmpdir = tmpdir, test = test)
-  noisyOutput <- capture.output(
+  noisyOutput <- capture.output({
     mess <- capture_messages({
-    warns <- capture_warnings({
-      test <- prepInputs(
-        url = urlTif1,
-        targetFile = "DEM.tif",
-        alsoExtract = c("DEM.tif"),
-        destinationPath = tmpdir
-      )
+      warns <- capture_warnings({
+        test <- prepInputs(
+          url = urlTif1,
+          targetFile = "DEM.tif",
+          alsoExtract = c("DEM.tif"),
+          destinationPath = tmpdir
+        )
+      })
     })
   })
-  )
   runTest("1_2_5_6_7_13", "Raster", 1, mess, expectedMess = expectedMessage,
           filePattern = "DEM", tmpdir = tmpdir, test = test)
   unlink(dir(tmpdir, full.names = TRUE))
@@ -1136,95 +1138,95 @@ test_that("preProcess doesn't work", {
 
 test_that("prepInputs doesn't work (part 2)", {
   skip_on_cran()
+  skip_if_not(getRversion() > "3.3.0")
 
-  if (getRversion() > "3.3.0") {
-    testInitOut <- testInit(c("RCurl", "raster"), opts = list(
-      "rasterTmpDir" = tempdir2(rndstr(1,6)),
-      "reproducible.overwrite" = TRUE,
-      "reproducible.inputPaths" = NULL
-    ), needGoogle = TRUE)
-    on.exit({
-      testOnExit(testInitOut)
-    }, add = TRUE)
+  testInitOut <- testInit(c("RCurl", "raster"), opts = list(
+    "rasterTmpDir" = tempdir2(rndstr(1,6)),
+    "reproducible.overwrite" = TRUE,
+    "reproducible.inputPaths" = NULL
+  ), needGoogle = TRUE)
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
 
-    coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
-    Sr1 <- Polygon(coords)
-    Srs1 <- Polygons(list(Sr1), "s1")
-    StudyArea <- SpatialPolygons(list(Srs1), 1L)
-    crs(StudyArea) <- crsToUse
+  coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- crsToUse
 
-    if (requireNamespace("RCurl")) {
-      if (RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
-                     timeout = 1)) {
-        noisyOutput <- capture.output(type = "message", {
-          mess1 <- capture_messages({
-            test1 <- prepInputs(
-              #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
-              targetFile = targetFileLuxRDS,
-              #destinationPath = ".",
-              dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-              #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
-              path = tmpdir)
-          })
+  if (requireNamespace("RCurl")) {
+    if (RCurl::url.exists("https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_LUX_0_sp.rds",
+                   timeout = 1)) {
+      noisyOutput <- capture.output(type = "message", {
+        mess1 <- capture_messages({
+          test1 <- prepInputs(
+            #targetFile = "GADM_2.8_LUX_adm0.rds", # looks like GADM has changed their API
+            targetFile = targetFileLuxRDS,
+            #destinationPath = ".",
+            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+            #dlFun = "raster::getData", name = "GADM", country = "LUX", level = 0,
+            path = tmpdir)
         })
-        mess2 <- capture_messages({
-          test2 <- prepInputs(targetFile = targetFileLuxRDS,
+      })
+      mess2 <- capture_messages({
+        test2 <- prepInputs(targetFile = targetFileLuxRDS,
+                            dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
+                            path = tmpdir)
+      })
+
+      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+      mess2 <- capture_messages({
+        warn <- capture_warnings({
+          test3 <- prepInputs(targetFile = targetFileLuxRDS,
                               dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                              path = tmpdir)
+                              path = tmpdir, filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
         })
+      })
+      runTest("1_2_5_6_8_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+              test = test3)
 
-        runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 1, mess1, expectedMess = expectedMessage,
-                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
-        runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 1, mess2, expectedMess = expectedMessage,
-                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test1)
+      testOnExit(testInitOut)
+      testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                    "reproducible.overwrite" = TRUE),
+                              needGoogle = TRUE)
+      noisyOutput <- capture.output(type = "message", {
         mess2 <- capture_messages({
           warn <- capture_warnings({
-            test3 <- prepInputs(targetFile = targetFileLuxRDS,
-                                dlFun = getDataFn, name = "GADM", country = "LUX", level = 0,
-                                path = tmpdir, filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
+            test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
+                                country = "LUX", level = 0, path = tmpdir,
+                                filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
           })
         })
-        runTest("1_2_5_6_8_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
-                filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-                test = test3)
+      })
+      runTest("1_2_5_6_13_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir,
+              test = test3)
 
-        testOnExit(testInitOut)
-        testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                      "reproducible.overwrite" = TRUE),
-                                needGoogle = TRUE)
-        noisyOutput <- capture.output(type = "message", {
-          mess2 <- capture_messages({
-            warn <- capture_warnings({
-              test3 <- prepInputs(targetFile = targetFileLuxRDS, dlFun = getDataFn, name = "GADM",
-                                  country = "LUX", level = 0, path = tmpdir,
-                                  filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
-            })
-          })
-        })
-        runTest("1_2_5_6_13_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
-                filePattern = targetFileLuxRDS, tmpdir = tmpdir,
-                test = test3)
+      runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 5, mess2,
+              expectedMess = expectedMessagePostProcess,
+              filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
-        runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 5, mess2,
-                expectedMess = expectedMessagePostProcess,
-                filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
-
-        testOnExit(testInitOut)
-        testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
-                                                      "reproducible.inputPaths" = NULL),
-                                needGoogle = TRUE)
-      }
+      testOnExit(testInitOut)
+      testInitOut <- testInit("raster", opts = list("reproducible.overwrite" = TRUE,
+                                                    "reproducible.inputPaths" = NULL),
+                              needGoogle = TRUE)
     }
-    # Add a study area to Crop and Mask to
-    # Create a "study area"
-    coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
-    Sr1 <- Polygon(coords)
-    Srs1 <- Polygons(list(Sr1), "s1")
-    StudyArea <- SpatialPolygons(list(Srs1), 1L)
-    crs(StudyArea) <- crsToUse
+  }
+  # Add a study area to Crop and Mask to
+  # Create a "study area"
+  coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  crs(StudyArea) <- crsToUse
 
-    noisyOutput <- capture.output(
-      mess1 <- capture_messages({
+  noisyOutput <- capture.output({
+    mess1 <- capture_messages({
       test <- prepInputs(
         targetFile = "DEM.tif",
         url = urlTif1,
@@ -1232,34 +1234,33 @@ test_that("prepInputs doesn't work (part 2)", {
         useCache = TRUE
       )
     })
-    )
-    runTest("1_2_5_6_7_13", "Raster", 1, mess1, expectedMess = expectedMessage,
-            filePattern = "DEM", tmpdir = tmpdir, test = test)
+  })
+  runTest("1_2_5_6_7_13", "Raster", 1, mess1, expectedMess = expectedMessage,
+          filePattern = "DEM", tmpdir = tmpdir, test = test)
 
-    if (interactive()) {
-      testOnExit(testInitOut)
-      testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
-                                                    "reproducible.overwrite" = TRUE),
-                              needGoogle = TRUE)
-      opts <- options("reproducible.cachePath" = tmpCache)
-      on.exit({
-        options(opts)
-      }, add = TRUE)
+  if (interactive()) {
+    testOnExit(testInitOut)
+    testInitOut <- testInit("raster", opts = list("reproducible.inputPaths" = NULL,
+                                                  "reproducible.overwrite" = TRUE),
+                            needGoogle = TRUE)
+    opts <- options("reproducible.cachePath" = tmpCache)
+    on.exit({
+      options(opts)
+    }, add = TRUE)
 
-      mess2 <- capture_messages({
-        warn <- capture_warnings({
-          test3 <- prepInputs(
-            url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing", #nolint
-            studyArea = StudyArea,
-            destinationPath = tmpdir,
-            fun = "base::readRDS"
-          )
-        })
+    mess2 <- capture_messages({
+      warn <- capture_warnings({
+        test3 <- prepInputs(
+          url = "https://drive.google.com/file/d/1zkdGyqkssmx14B9wotOqlK7iQt3aOSHC/view?usp=sharing", #nolint
+          studyArea = StudyArea,
+          destinationPath = tmpdir,
+          fun = "base::readRDS"
+        )
       })
-      runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 1, mess2,
-              expectedMess = expectedMessagePostProcess,
-              filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
-    }
+    })
+    runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 1, mess2,
+            expectedMess = expectedMessagePostProcess,
+            filePattern = "GADM_2.8_LUX_adm0.rds$", tmpdir = tmpdir, test = test3)
   }
 })
 

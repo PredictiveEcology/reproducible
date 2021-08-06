@@ -595,7 +595,7 @@ extractFromArchive <- function(archive,
   possibleFiles <- unique(.basename(c(targetFilePath, filesExtracted)))
   fileExt <- fileExt(possibleFiles)
   isShapefile <- grepl("shp$|gdb$", fileExt)
-  isRaster <- fileExt %in% c("tif", "grd")
+  isRaster <- fileExt %in% c("asc", "grd", "tif")
   isRDS <- fileExt %in% c("rds")
   if (is.null(fun)) { #i.e., the default
     fun <- if (any(isShapefile)) {
@@ -632,7 +632,7 @@ extractFromArchive <- function(archive,
         " If that is not correct, please specify a targetFile",
         " and/or different fun. The current files in the targetFilePath's",
         " directory are: \n",
-        paste(possibleFiles, collapse = "\n"))
+        paste(possibleFiles, collapse = ", "))
     }
     messagePrepInputs(c("  targetFile was not specified.", secondPartOfMess), verbose = verbose)
 
