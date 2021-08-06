@@ -173,10 +173,11 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
       targCRS <- srcCRS
 
-      gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster, s_srs = srcCRS, t_srs = targCRS,
-               cutline = tempSrcShape, crop_to_cutline = FALSE,
-               srcnodata = NA, dstnodata = NA, tr = tr,
-               te = te, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
+      gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster,
+                              s_srs = srcCRS, t_srs = targCRS,
+                              cutline = tempSrcShape, crop_to_cutline = FALSE,
+                              srcnodata = NA, dstnodata = NA, tr = tr,
+                              te = te, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
 
       x <- raster(tempDstRaster)
       x <- setMinMaxIfNeeded(x)

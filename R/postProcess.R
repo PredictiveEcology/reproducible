@@ -378,7 +378,6 @@ cropInputs.spatialClasses <- function(x, studyArea = NULL, rasterToMatch = NULL,
           gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))] #gdalUtilities fails with NULL args
           do.call(gdalUtilities::gdalwarp, gdalArgs)
 
-
           if (isStack) {
             x <- raster::stack(tmpfile)
           } else if (isBrick) {
@@ -912,7 +911,7 @@ projectInputs.Raster <- function(x, targetCRS = NULL,
         gdalArgs <- list(srcfile = tempSrcRaster, dstfile = tempDstRaster,
                          s_srs = as.character(.crs(raster::raster(tempSrcRaster))), t_srs = targCRS,
                          te = teRas, tr = tr, ot = dTypeGDAL,
-                         r = dots$method,
+                         r = ifelse(dots$method == "ngb", "near", dots$method),
                          multi = TRUE, wo = prll, overwrite = TRUE)
         gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
         do.call(gdalUtilities::gdalwarp, gdalArgs)
@@ -2307,19 +2306,19 @@ cropReprojMaskWGDAL <- function(x, studyArea = NULL, rasterToMatch = NULL,
     targCRS <- as.character(targCRS)
   }
 
-  #convert extent to string
+  ## convert extent to string
   te <- paste(c(cropExtent[1], cropExtent[3],
                 cropExtent[2], cropExtent[4]))
 
   cores <- dealWithCores(cores)
   prll <- paste0("-wo NUM_THREADS=", cores, " ")
 
-  #this is a workaround to passing NULL arguments to gdal_warp, which does not work
+  ## this is a workaround to passing NULL arguments to gdal_warp, which does not work
   gdalArgs <- list(srcfile = tempSrcRaster, dstfile = filename2, s_srs = srcCRS, te = te,
                    t_srs = targCRS, cutline = tempSrcShape, crop_to_cutline = NULL, srcnodata = NA,
                    dstnodata = NA, tr = tr, ot = dTypeGDAL,
                    multi = TRUE, wo = prll,
-                   r = dots$method,
+                   r = ifelse(dots$method == "ngb", "near", dots$method),
                    overwrite = TRUE)
   gdalArgs <- gdalArgs[!unlist(lapply(gdalArgs, is.null))]
   do.call(gdalUtilities::gdalwarp, gdalArgs)
