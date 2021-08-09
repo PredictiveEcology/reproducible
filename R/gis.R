@@ -148,6 +148,8 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
 
       # GDAL will to a reprojection without an explicit crop
       cropExtent <- extent(x)
+      te <- paste(c(cropExtent[1], cropExtent[3],
+                    cropExtent[2], cropExtent[4]))
       # cropExtentRounded <- roundToRes(cropExtent, x)
       # the raster could be in memory if it wasn't reprojected
       if (inMemory(x)) {
@@ -171,14 +173,11 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       srcCRS <- as.character(.crs(raster::raster(tempSrcRaster)))
       targCRS <- srcCRS
 
-      gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster, s_srs = srcCRS, t_srs = targCRS,
-               cutline = tempSrcShape, crop_to_cutline = TRUE,
-               srcnodata = NA, dstnodata = NA, tr = tr,
-               # te = paste(c(cropExtent[1], cropExtent[3], # this mimics crop to cutline
-               #              cropExtent[2], cropExtent[4]), # without cutting pixels off
-               #            collapse = " "),
-               ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
-      #this doesn't seem to be working -is it because targCRS and srcCRS are the same? not sure.
+      gdalUtilities::gdalwarp(srcfile = tempSrcRaster, dstfile = tempDstRaster,
+                              s_srs = srcCRS, t_srs = targCRS,
+                              cutline = tempSrcShape, crop_to_cutline = FALSE,
+                              srcnodata = NA, dstnodata = NA, tr = tr,
+                              te = te, ot = dTypeGDAL, multi = TRUE, wo = prll, overwrite = TRUE)
 
       x <- raster(tempDstRaster)
       x <- setMinMaxIfNeeded(x)
@@ -190,9 +189,10 @@ fastMask <- function(x, y, cores = NULL, useGDAL = getOption("reproducible.useGD
       #      (ymin(x) + resX[2]) < ymin(extentY) && (ymax(x) - resX[2]) > ymax(extentY) )
       #   x <- cropInputs(x, y)
       if (!is(y, "sf")) {
-        y <- fasterize::fasterize(sf::st_as_sf(y), raster = x[[1]], field = NULL)
+        y <- sf::st_as_sf(y)
       }
-      x <- maskWithRasterNAs(x = x, y = y)
+      yRas <- fasterize::fasterize(y, raster = x[[1]], field = NULL)
+      x <- maskWithRasterNAs(x = x, y = yRas)
       # if (canProcessInMemory(x, 3) && fromDisk(x))
       #   x[] <- x[]
       # m <- which(is.na(y[]))
@@ -249,75 +249,26 @@ dealWithCores <- function(cores) {
 
 }
 
-findGDAL <- function() {
-  attemptGDAL <- FALSE
-  if (.requireNamespace("gdalUtils")) {
-    gdalPath <- NULL
-    attemptGDAL <- TRUE
-    if (isWindows()) {
-      # Handle all QGIS possibilities
-      a <- dir("C:/", pattern = "Progra", full.names = TRUE)
-      a <- grep("Program Files", a, value = TRUE)
-      a <- unlist(lapply(a, dir, pattern = "QGIS", full.name = TRUE))
-      a <- unlist(lapply(a, dir, pattern = "bin", full.name = TRUE))
-
-
-      possibleWindowsPaths <- c(a, "C:/OSGeo4W64/bin",
-                                "C:/GuidosToolbox/QGIS/bin",
-                                "C:/GuidosToolbox/guidos_progs/FWTools_win/bin",
-                                "C:/Program Files (x86)/Quantum GIS Wroclaw/bin",
-                                "C:/Program Files/GDAL",
-                                "C:/Program Files (x86)/GDAL")
-      gdalInfoExists <- file.exists(file.path(possibleWindowsPaths, "gdalinfo.exe"))
-      if (any(gdalInfoExists))
-        gdalPath <- possibleWindowsPaths[gdalInfoExists]
-    }
-    b <- try(setGDALInst(gdalPath), silent = TRUE)
-
-    if (is.null(getOption("gdalUtils_gdalPath"))) # if it doesn't find gdal installed
-      attemptGDAL <- FALSE
-    attemptGDAL
-  }
-  invisible(attemptGDAL)
-}
-
-setGDALInst <- function(gdalPath) {
-  setTimeLimit(20, transient = TRUE)
-  on.exit({
-    setTimeLimit(cpu = Inf, elapsed = Inf, transient = FALSE)
-  })
-  messagePrepInputs("Searching for gdal installation")
-  out <- gdalUtils::gdal_setInstallation(gdalPath)
-  if (is.null(getOption("gdalUtils_gdalPath")))
-    messagePrepInputs("  .. Done")
-  return(out)
-}
-
 attemptGDAL <- function(x, useGDAL = getOption("reproducible.useGDAL", TRUE),
                         verbose = getOption("reproducible.verbose", 1)) {
   attemptGDAL <- FALSE
   if (is(x, "Raster")) {
-    if (requireNamespace("gdalUtils", quietly = TRUE)) {
-      # browser(expr = exists("._attemptGDAL_1"))
-      crsIsNA <- is.na(.crs(x))
-      cpim <- canProcessInMemory(x, 3)
-      isTRUEuseGDAL <- isTRUE(useGDAL)
-      forceGDAL <- identical(useGDAL, "force")
-      shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
-      attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
-        findGDAL()
-      } else {
-        if (crsIsNA && shouldUseGDAL)
-          messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
-        if (cpim && isTRUEuseGDAL)
-          messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
-                            "useGDAL = 'force' to override", verbose = verbose)
-
-        FALSE
-      }
+    # browser(expr = exists("._attemptGDAL_1"))
+    crsIsNA <- is.na(.crs(x))
+    cpim <- canProcessInMemory(x, 3)
+    isTRUEuseGDAL <- isTRUE(useGDAL)
+    forceGDAL <- identical(useGDAL, "force")
+    shouldUseGDAL <- (!cpim && isTRUEuseGDAL || forceGDAL)
+    attemptGDAL <- if (shouldUseGDAL && !crsIsNA) {
+      TRUE
     } else {
-      messagePrepInputs("To use gdal, you need to install gdalUtils; install.packages('gdalUtils')", verbose = verbose)
-      attemptGDAL <- FALSE
+      if (crsIsNA && shouldUseGDAL)
+        messagePrepInputs("      Can't use GDAL because crs is NA", verbose = verbose)
+      if (cpim && isTRUEuseGDAL)
+        messagePrepInputs("      useGDAL is TRUE, but problem is small enough for RAM; skipping GDAL; ",
+                          "useGDAL = 'force' to override", verbose = verbose)
+
+      FALSE
     }
   }
   attemptGDAL

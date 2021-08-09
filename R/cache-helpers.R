@@ -443,7 +443,7 @@ getFunctionName <- function(FUN, originalDots, ..., overrideCall, isPipe) { # no
     functionName <- NA_character_
 
   nestLevel <- length(grep(lapply(scalls, function(x) x[1:2]),
-                           pattern = "standardGeneric.+Cache"))
+                           pattern = "^Cache"))/2
 
   return(list(functionName = functionName, .FUN = .FUN, nestLevel = nestLevel - 1))#, callIndex = callIndex))
 }

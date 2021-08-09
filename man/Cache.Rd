@@ -10,6 +10,7 @@ Cache(
   ...,
   notOlderThan = NULL,
   .objects = NULL,
+  .cacheExtra = NULL,
   outputObjects = NULL,
   algo = "xxhash64",
   cacheRepo = NULL,
@@ -38,6 +39,7 @@ Cache(
   ...,
   notOlderThan = NULL,
   .objects = NULL,
+  .cacheExtra = NULL,
   outputObjects = NULL,
   algo = "xxhash64",
   cacheRepo = NULL,
@@ -75,6 +77,9 @@ within it. Only this/these objects will be considered for caching,
 i.e., only use a subset of
 the list, environment or similar objects. In the case of nested list-type
 objects, this will only be applied outermost first.}
+
+\item{.cacheExtra}{A an arbitrary R object that will be included in the `CacheDigest`,
+but otherwise not passed into the \code{FUN}.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
@@ -189,8 +194,8 @@ slow to run, yet the inputs and outputs are small. The benefit of caching, there
 will decline when the computational time of the "first" function call is fast and/or
 the argument values and return objects are large. The default setting (and first
 call to Cache) will always save to disk. The 2nd call to the same function will return
-from disk. If the \code{options("reproducible.useMemoise" = TRUE)}, then the 3rd time
-will recover the object from RAM and is normally much faster.
+from disk, unless \code{options("reproducible.useMemoise" = TRUE)}, then the 2nd time
+will recover the object from RAM and is normally much faster (at the expense of RAM use).
 }
 \details{
 There are other similar functions in the R universe. This version of Cache has
