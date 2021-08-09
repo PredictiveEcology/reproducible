@@ -68,7 +68,7 @@ jobs:
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install python-software-properties
+          sudo apt-get install software-properties-common
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-stable
           sudo apt-get update
           while read -r cmd
