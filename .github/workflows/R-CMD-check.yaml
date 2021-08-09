@@ -69,7 +69,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install software-properties-common
-          sudo add-apt-repository ppa:ubuntugis/ubuntugis-stable
+          sudo add-apt-repository ppa:ubuntugis/ppa
           sudo apt-get update
           while read -r cmd
           do
