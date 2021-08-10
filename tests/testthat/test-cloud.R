@@ -4,7 +4,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
   skip_if_no_token()
   if (interactive()) {
-
     testInitOut <- testInit(
       c("googledrive", "raster"), tmpFileExt = c(".tif", ".grd"),
       #needGoogle = TRUE,
