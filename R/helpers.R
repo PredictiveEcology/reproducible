@@ -114,6 +114,33 @@ setMethod(
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
 })
 
+#' @export
+#' @rdname studyAreaName
+setMethod(
+  "studyAreaName",
+  signature = "sf",
+  definition = function(studyArea, ...) {
+    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+  })
+
+#' @export
+#' @rdname studyAreaName
+setMethod(
+  "studyAreaName",
+  signature = "sfc_MULTIPOLYGON",
+  definition = function(studyArea, ...) {
+    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+  })
+
+#' @export
+#' @rdname studyAreaName
+setMethod(
+  "studyAreaName",
+  signature = "sfc_POLYGON",
+  definition = function(studyArea, ...) {
+    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+  })
+
 #' Identify which formals to a function are not in the current \code{...}
 #'
 #' Advanced use.
