@@ -90,6 +90,7 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #'
 #' @export
 #' @importFrom digest digest
+#' @importFrom sf st_geometry
 setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
 })
@@ -103,16 +104,7 @@ setMethod(
     studyArea <- studyArea[, -c(1:ncol(studyArea))]
     studyArea <- as(studyArea, "SpatialPolygons")
     studyAreaName(studyArea, ...)
-})
-
-#' @export
-#' @rdname studyAreaName
-setMethod(
-  "studyAreaName",
-  signature = "SpatialPolygons",
-  definition = function(studyArea, ...) {
-    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
-})
+  })
 
 #' @export
 #' @rdname studyAreaName
@@ -120,26 +112,22 @@ setMethod(
   "studyAreaName",
   signature = "sf",
   definition = function(studyArea, ...) {
-    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
+    studyArea <- st_geometry(studyArea)
+    studyAreaName(studyArea, ...)
   })
 
 #' @export
 #' @rdname studyAreaName
 setMethod(
   "studyAreaName",
-  signature = "sfc_MULTIPOLYGON",
+  signature = "ANY",
   definition = function(studyArea, ...) {
+    if (!is(studyArea, "spatialClasses") || !is(studyArea, "sf")) {
+      stop("studyAreaName expects a spatialClasses object")
+    }
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
   })
 
-#' @export
-#' @rdname studyAreaName
-setMethod(
-  "studyAreaName",
-  signature = "sfc_POLYGON",
-  definition = function(studyArea, ...) {
-    digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
-  })
 
 #' Identify which formals to a function are not in the current \code{...}
 #'
@@ -166,7 +154,7 @@ setMethod(
       formalNames <- names(formals(fun))
     }
 
-if (!missing(dots)) {
+  if (!missing(dots)) {
     out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
     out <- names(list(...))[!(names(list(...)) %in% formalNames)]
