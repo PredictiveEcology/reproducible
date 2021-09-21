@@ -90,7 +90,6 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
 #'
 #' @export
 #' @importFrom digest digest
-#' @importFrom sf st_geometry
 setGeneric("studyAreaName", function(studyArea, ...) {
   standardGeneric("studyAreaName")
 })
@@ -110,19 +109,14 @@ setMethod(
 #' @rdname studyAreaName
 setMethod(
   "studyAreaName",
-  signature = "sf",
-  definition = function(studyArea, ...) {
-    studyArea <- st_geometry(studyArea)
-    studyAreaName(studyArea, ...)
-  })
-
-#' @export
-#' @rdname studyAreaName
-setMethod(
-  "studyAreaName",
   signature = "ANY",
   definition = function(studyArea, ...) {
-    if (!is(studyArea, "spatialClasses") || !is(studyArea, "sf")) {
+    if (is(studyArea, "sf")) {
+      if (requireNamespace("sf")) {
+        studyArea <- sf::st_geometry(studyArea)
+      }
+    }
+    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc"))) {
       stop("studyAreaName expects a spatialClasses object")
     }
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
