@@ -16,6 +16,30 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(any(grepl(.loadedCacheResultMsg, mess)))
   expect_false(all(grepl("adding", mess)))
 
+  # studyAreaName with sf and sfc
+  if (require("sf")) {
+    pol <- st_sfc(st_polygon(list(cbind(c(0,3,3,0,0),c(0,0,3,3,0)))))
+    h <- st_sf(r = 5, pol)
+    expect_true(is(studyAreaName(pol), "character"))
+    expect_true(is(studyAreaName(h), "character"))
+  }
+
+  # studyAreaName with SPDF/SP
+  coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+                      .Dim = c(5L, 2L))
+  Sr1 <- Polygon(coords)
+  Srs1 <- Polygons(list(Sr1), "s1")
+  StudyArea <- SpatialPolygons(list(Srs1), 1L)
+  df <- data.frame(a = 1, row.names = row.names(StudyArea))
+
+  SPDF <- SpatialPolygonsDataFrame(StudyArea, df, match.ID = TRUE)
+  expect_true(is(studyAreaName(StudyArea), "character"))
+  expect_true(is(studyAreaName(SPDF), "character"))
+
+  # studyAreaName with random object
+  expect_true(grepl("studyAreaName expects a spatialClasses object",
+                     capture_error(studyAreaName(integer(0)))))
+
   # .checkCacheRepo
   options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))
