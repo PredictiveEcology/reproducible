@@ -37,8 +37,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   expect_true(is(studyAreaName(SPDF), "character"))
 
   # studyAreaName with random object
-  expect_true(grepl("studyAreaName expects a spatialClasses object",
-                     capture_error(studyAreaName(integer(0)))))
+  expect_error(studyAreaName(integer(0)))
 
   # .checkCacheRepo
   options(reproducible.cachePath = .reproducibleTempCacheDir())
