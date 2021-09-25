@@ -403,7 +403,7 @@ setGeneric(
            showSimilar = getOption("reproducible.showSimilar", FALSE),
            drv = getOption("reproducible.drv", RSQLite::SQLite()), conn = getOption("reproducible.conn", NULL)) {
     standardGeneric("Cache")
-})
+  })
 
 #' @export
 #' @rdname Cache
@@ -739,11 +739,11 @@ setMethod(
           class(objSize) <- "object_size"
           bigFile <- isTRUE(objSize > 1e6)
           messageCache("  ...(Object to retrieve (",
-                                      basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
-                                      ")",
-                                      if (bigFile) " is large: ",
-                                      if (bigFile) format(objSize, units = "auto"),
-                                      ")",
+                       basename2(CacheStoredFile(cacheRepo, isInRepo[[.cacheTableHashColName()]])),
+                       ")",
+                       if (bigFile) " is large: ",
+                       if (bigFile) format(objSize, units = "auto"),
+                       ")",
                        verbose = verbose)
 
           preLoadTime <- Sys.time()
@@ -756,8 +756,8 @@ setMethod(
                                      preDigest = preDigest, startCacheTime = startCacheTime,
                                      drv = drv, conn = conn,
                                      ...), silent = TRUE)
-          output <- dealWithRastersOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
-                                              drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
+          output <- dealWithClassOnRecovery(output, cacheRepo = cacheRepo, cacheId = isInRepo$cacheId,
+                                            drv = drv, conn = conn) # returns just the "original" filenames in metadata & copies file-backed
           postLoadTime <- Sys.time()
           elapsedTimeLoad <- postLoadTime - preLoadTime
 
@@ -774,9 +774,9 @@ setMethod(
 
           if (useDBI())
             .updateTagsRepo(outputHash, cacheRepo, "elapsedTimeLoad",
-                         format(elapsedTimeLoad, units = "secs"),
-                         add = TRUE,
-                         drv = drv, conn = conn)
+                            format(elapsedTimeLoad, units = "secs"),
+                            add = TRUE,
+                            drv = drv, conn = conn)
           if (useCloud) {
             # browser(expr = exists("._Cache_7b"))
             # Here, upload local copy to cloud folder
@@ -911,7 +911,7 @@ setMethod(
       # Can make new methods by class to add tags to outputs
       if (useDBI()) {
         if (.CacheIsNew) {
-          outputToSave <- dealWithRasters(output, cacheRepo, drv = drv, conn = conn)
+          outputToSave <- dealWithClass(output, cacheRepo, drv = drv, conn = conn)
           outputToSave <- .addTagsToOutput(outputToSave, outputObjects, FUN, preDigestByClass)
         } else {
           outputToSave <- .addTagsToOutput(output, outputObjects, FUN, preDigestByClass)
@@ -1025,9 +1025,9 @@ setMethod(
 
         if (isTRUE(getOption("reproducible.futurePlan"))) {
           messageCache('options("reproducible.futurePlan") is TRUE. Setting it to "multiprocess".\n',
-                  'Please specify a plan by name, e.g.,\n',
-                  '  options("reproducible.futurePlan" = "multiprocess")',
-                  verbose = verbose)
+                       'Please specify a plan by name, e.g.,\n',
+                       '  options("reproducible.futurePlan" = "multiprocess")',
+                       verbose = verbose)
           future::plan("multiprocess", workers = 2)
         } else {
           if (!is(future::plan(), getOption("reproducible.futurePlan"))) {
@@ -1051,9 +1051,9 @@ setMethod(
           )
         if (is.null(.reproEnv$alreadyMsgFuture)) {
           messageCache("  Cache saved in a separate 'future' process. ",
-                  "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
-                  "This message will not be shown again until next reload of reproducible",
-                  verbose = verbose)
+                       "Set options('reproducible.futurePlan' = FALSE), if there is strange behaviour.",
+                       "This message will not be shown again until next reload of reproducible",
+                       verbose = verbose)
           .reproEnv$alreadyMsgFuture <- TRUE
         }
       } else {
@@ -1075,8 +1075,8 @@ setMethod(
             colour = getOption("reproducible.messageColourCache"))
 
           #  outputToSave <- saveToCache(cachePath = cacheRepo, drv = drv, userTags = userTags,
-        #                              conn = conn, obj = outputToSave, cacheId = outputHash,
-        #                              linkToCacheId = linkToCacheId)
+          #                              conn = conn, obj = outputToSave, cacheId = outputHash,
+          #                              linkToCacheId = linkToCacheId)
         }
       }
 
@@ -1095,7 +1095,7 @@ setMethod(
 
       if (isNullOutput) return(NULL) else return(output)
     }
-})
+  })
 
 #' @keywords internal
 .formalsCache <- formals(Cache)[-(1:2)]
@@ -1551,8 +1551,8 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
     if (length(similar2[is.na(differs) & deeperThan3 == TRUE]$differs)) {
       differed <- TRUE
       messageCache("    ... possible, unknown, differences in a nested list ",
-                           "that is deeper than ",getOption("reproducible.showSimilarDepth", 3)," in ",
-                           paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)),
+                   "that is deeper than ",getOption("reproducible.showSimilarDepth", 3)," in ",
+                   paste(collapse = ", ", as.character(similar2[deeperThan3 == TRUE]$fun)),
                    verbose = verbose)
     }
     missingArgs <- similar2[is.na(deeperThan3) & is.na(differs)]$fun
@@ -1564,7 +1564,7 @@ CacheDigest <- function(objsToDigest, algo = "xxhash64", calledFrom = "Cache", q
     if (isDevMode) {
       messageCache(" ------ end devMode -------", verbose = verbose)
     } #else {
-      #messageCache(" ------ end showSimilar -------", verbose = verbose)
+    #messageCache(" ------ end showSimilar -------", verbose = verbose)
     #}
 
   } else {
@@ -1592,8 +1592,8 @@ verboseTime <- function(verbose) {
 verboseMessage1 <- function(verbose, userTags) {
   if (verbose > 2)
     messageCache("Using devMode; overwriting previous Cache entry with tags: ",
-            paste(userTags, collapse = ", "),
-            verbose = verbose)
+                 paste(userTags, collapse = ", "),
+                 verbose = verbose)
   invisible(NULL)
 }
 
@@ -1601,8 +1601,8 @@ verboseMessage1 <- function(verbose, userTags) {
 verboseMessage2 <- function(verbose) {
   if (verbose > 2)
     messageCache("Using devMode; Found entry with identical userTags, ",
-            "but since it is very different, adding new entry",
-            verbose = verbose)
+                 "but since it is very different, adding new entry",
+                 verbose = verbose)
   invisible(NULL)
 }
 
@@ -1820,12 +1820,12 @@ cloudFolderFromCacheRepo <- function(cacheRepo)
                                 "FUN", "capture", "withVisible)")
 
 
-dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
-                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                      conn = getOption("reproducible.conn", NULL)) {
+dealWithClassOnRecovery <- function(output, cacheRepo, cacheId,
+                                    drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                    conn = getOption("reproducible.conn", NULL)) {
   if (isTRUE(getOption("reproducible.useNewDigestAlgorithm") < 2)) {
-    return(dealWithRastersOnRecovery2(output, cacheRepo, cacheId,
-                               drv, conn))
+    return(dealWithClassOnRecovery2(output, cacheRepo, cacheId,
+                                    drv, conn))
   }
 
   if (is(output, "list") && !is.null(output$origRaster) && !is.null(output$cacheRaster)) {
@@ -1858,13 +1858,24 @@ dealWithRastersOnRecovery <- function(output, cacheRepo, cacheId,
     output <- newOutput
     .setSubAttrInList(output, ".Cache", "newCache", FALSE)
   }
+
+  if (any(inherits(output, "PackedSpatVector"))) {
+    if (!requireNamespace("terra")) stop("Please install terra package")
+    output <- terra::vect(output)
+  }
+  if (any(inherits(output, "PackedSpatRaster"))) {
+    if (!requireNamespace("terra")) stop("Please install terra package")
+    output <- terra::rast(output)
+  }
+
+
   output
 }
 
 # This one is old, overly complicated; defunct
-dealWithRastersOnRecovery2 <- function(output, cacheRepo, cacheId,
-                                      drv = getOption("reproducible.drv", RSQLite::SQLite()),
-                                      conn = getOption("reproducible.conn", NULL)) {
+dealWithClassOnRecovery2 <- function(output, cacheRepo, cacheId,
+                                     drv = getOption("reproducible.drv", RSQLite::SQLite()),
+                                     conn = getOption("reproducible.conn", NULL)) {
   # This function is because the user doesn't want the path of the file-backed raster to
   #   be in the cacheRepo --> they want it in its original file location
   #   If it is in both, take the one in the original location; if it has been deleted
