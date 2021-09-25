@@ -1176,8 +1176,8 @@ nextNumericName <- function(string) {
 }
 
 #' @importFrom raster fromDisk
-dealWithRasters <- function(obj, cachePath, drv, conn) {
-  # browser(expr = exists("._dealWithRasters_1"))
+dealWithClass <- function(obj, cachePath, drv, conn) {
+  # browser(expr = exists("._dealWithClass_1"))
   outputToSaveIsList <- is(obj, "list") # is.list is TRUE for anything, e.g., data.frame. We only want "list"
   if (outputToSaveIsList) {
     rasters <- unlist(lapply(obj, is, "Raster"))
@@ -1187,7 +1187,7 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
   if (any(rasters)) {
     objOrig <- obj
     atts <- attributes(obj)
-    # browser(expr = exists("._dealWithRasters_2"))
+    # browser(expr = exists("._dealWithClass_2"))
     if (outputToSaveIsList) {
       obj[rasters] <- lapply(obj[rasters], function(x)
         .prepareFileBackedRaster(x, repoDir = cachePath, overwrite = FALSE, drv = drv, conn = conn))
@@ -1226,6 +1226,11 @@ dealWithRasters <- function(obj, cachePath, drv, conn) {
 
     }
 
+  }
+  if (any(inherits(obj, "SpatVector"), inherits(obj, "SpatRast"))) {
+    if (!requireNamespace("terra")) stop("Please install terra package")
+
+    obj <- terra::wrap(obj)
   }
   obj
 }
