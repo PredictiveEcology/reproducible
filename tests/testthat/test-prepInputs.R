@@ -1186,7 +1186,8 @@ test_that("prepInputs doesn't work (part 2)", {
                               path = tmpdir, filename2 = "gadm36_LUX_0_sp.rds.shp", studyArea = StudyArea)
         })
       })
-      runTest("1_2_5_6_8_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
+      # Why is no longer "although coordinates are longitude"?
+      runTest("1_2_5_6_8", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
               filePattern = targetFileLuxRDS, tmpdir = tmpdir,
               test = test3)
 
@@ -1203,11 +1204,11 @@ test_that("prepInputs doesn't work (part 2)", {
           })
         })
       })
-      runTest("1_2_5_6_13_14", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
+      runTest("1_2_5_6_13", "SpatialPolygonsDataFrame", 5, mess2, expectedMess = expectedMessage,
               filePattern = targetFileLuxRDS, tmpdir = tmpdir,
               test = test3)
 
-      runTest("1_2_3_4_6", "SpatialPolygonsDataFrame", 5, mess2,
+      runTest("1_2_3_4", "SpatialPolygonsDataFrame", 5, mess2,
               expectedMess = expectedMessagePostProcess,
               filePattern = targetFileLuxRDS, tmpdir = tmpdir, test = test3)
 
