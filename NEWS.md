@@ -11,6 +11,7 @@ Version 1.2.8
 * `fixErrors` can now distinguish `testValidity = NA` meaning don't fix errors and `testValidity = FALSE` run buffering which fixes many errors, but don't test whether there are any invalid polygons first (maybe slow), or `testValidity = TRUE` meaning test for validity, then if some are invalid, then run buffer.
 * Change default option to `reproducible.useNewDigestAlgorithm = 2` which will have user visible changes. To keep old behaviour, set `options(reproducible.useNewDigestAlgorithm = 1)`
 * minor changes to messaging when `options(reproducible.showSimilar)` is set. It is now more compact e.g., 3 lines instead of 5.
+* added `sf` methods to `studyAreaName`
 
 ## Bug fixes
 * A small, but very impactful bug that created false positive `Cache` returns; i.e., a 2nd time through a Cache would return a cached copy, when some of the arguments were different. It occurred for when the differences were in unnamed arguments only.

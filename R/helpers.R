@@ -103,16 +103,25 @@ setMethod(
     studyArea <- studyArea[, -c(1:ncol(studyArea))]
     studyArea <- as(studyArea, "SpatialPolygons")
     studyAreaName(studyArea, ...)
-})
+  })
 
 #' @export
 #' @rdname studyAreaName
 setMethod(
   "studyAreaName",
-  signature = "SpatialPolygons",
+  signature = "ANY",
   definition = function(studyArea, ...) {
+    if (is(studyArea, "sf")) {
+      if (requireNamespace("sf")) {
+        studyArea <- sf::st_geometry(studyArea)
+      }
+    }
+    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc"))) {
+      stop("studyAreaName expects a spatialClasses object")
+    }
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
-})
+  })
+
 
 #' Identify which formals to a function are not in the current \code{...}
 #'
@@ -139,7 +148,7 @@ setMethod(
       formalNames <- names(formals(fun))
     }
 
-if (!missing(dots)) {
+  if (!missing(dots)) {
     out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
     out <- names(list(...))[!(names(list(...)) %in% formalNames)]
