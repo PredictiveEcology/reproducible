@@ -178,13 +178,13 @@ test_that("prepInputs doesn't work (part 3)", {
       mess <- capture_messages({
         p6a <- fixErrors(st_as_sf(p6))
       })
-      expect_true(any(grepl("Found no errors", mess)))
       expect_true(any(grepl("Checking for errors", mess)))
+      expect_true(any(grepl("Found errors", mess)))
+      expect_true(any(grepl("errors fixed", mess)))
     }
     # projectInputs pass through
     nc5 <- projectInputs(x = 1)
     expect_identical(nc5, 1)
-
   }
 })
 
@@ -212,10 +212,6 @@ test_that("writeOutputs with non-matching filename2", {
 
 test_that("new gdalwarp all in one with grd with factor", {
   skip_on_cran()
-  hasGDAL <- findGDAL()
-  if (!isTRUE(hasGDAL))
-    skip("no GDAL installation found")
-
   testInitOut <- testInit(c("raster"), tmpFileExt = c(".grd", ".tif"))
   on.exit({
     testOnExit(testInitOut)
@@ -265,12 +261,12 @@ test_that("new gdalwarp all in one with grd with factor", {
   mmm <- Map(ff = files, nf = newFiles, function(ff, nf) file.link(ff, nf))
   unlink(files)
   expect_true(all(file.exists(newFiles)))
-  expect_warning(regexp = "being updated automatically",
-                 rr4 <- Cache(postProcess, r, destinationPath = tmpdir,
-               studyArea = StudyArea, useCache = TRUE, useGDAL = "force",
-               cacheRepo = tmpCache2, filename2 = TRUE))
+  expect_warning(regexp = "being updated automatically", {
+    rr4 <- Cache(postProcess, r, destinationPath = tmpdir,
+                 studyArea = StudyArea, useCache = TRUE, useGDAL = "force",
+                 cacheRepo = tmpCache2, filename2 = TRUE)
+  })
   expect_identical(rr3, rr4)
-
 })
 
 test_that("cropInputs crops too closely when input projections are different", {
@@ -374,3 +370,29 @@ test_that("maskInputs errors when x is Lat-Long", {
   expect_true(extent(roads[[3]]) > extent(roads[[1]]))
 
 })
+
+
+test_that("prepInputs doesn't work (part 3)", {
+  if (interactive()) {
+    # if (requireNamespace("rgeos")) {
+    testInitOut <- testInit()
+    on.exit({
+      testOnExit(testInitOut)
+    }, add = TRUE)
+
+    # Tati's reprex
+    wd <- checkPath(file.path(getwd(), "reprex"), create = TRUE)
+    ranges <- prepInputs(url = "https://drive.google.com/file/d/1AfGfRjaDsdq3JqcsidGRo3N66OUjRJnn",
+                         destinationPath = wd,
+                         fun = "sf::st_read")
+    LCC05 <- prepInputs(url = "https://drive.google.com/file/d/1g9jr0VrQxqxGjZ4ckF6ZkSMP-zuYzHQC",
+                        targetFile = "LCC2005_V1_4a.tif",
+                        studyArea = ranges,
+                        destinationPath = wd)
+    sumNonNAs <- sum(!is.na(!LCC05[]))
+
+    # These are suitably vague that they will capture the mask if it gets it right
+    expect_true(sumNonNAs < 38000000)
+    expect_true(sumNonNAs > 37000000)
+  }}
+)

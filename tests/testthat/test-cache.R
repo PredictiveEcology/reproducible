@@ -976,7 +976,6 @@ test_that("test cache-helpers", {
 
 })
 
-
 test_that("test useCache = 'overwrite'", {
   testInitOut <- testInit(ask = FALSE)
   on.exit({
@@ -1089,7 +1088,6 @@ test_that("test pre-creating conn", {
 
 })
 
-
 test_that("test .defaultUserTags", {
   testInitOut <- testInit()
   on.exit({
@@ -1198,7 +1196,9 @@ test_that("test file link with duplicate Cache", {
   expect_true(any(grepl("loaded cached", mess2)))
   expect_true(any(grepl("loaded cached", mess1)))
   # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
-  warns <- capture_warnings(out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE))
+  warns <- capture_warnings({
+    out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
+  })
   # out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out1, "try-error"))
     fs1 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out1))
@@ -1271,27 +1271,43 @@ test_that("quick arg in Cache as character", {
   messes <- list()
   quicks <- rep(list(FALSE, FALSE, "file", "file", TRUE, TRUE), 2)
   rasRan <- c(rep(TRUE, 6), rep(FALSE, 6))
+
+  ##     quicks ranRas
+  ## 1   FALSE   TRUE
+  ## 2   FALSE   TRUE
+  ## 3    file   TRUE
+  ## 4    file   TRUE
+  ## 5    TRUE   TRUE
+  ## 6    TRUE   TRUE
+  ## 7   FALSE  FALSE
+  ## 8   FALSE  FALSE
+  ## 9    file  FALSE
+  ## 10   file  FALSE
+  ## 11   TRUE  FALSE
+  ## 12   TRUE  FALSE
+
   for (i in seq(quicks)) {
     vals <- if (rasRan[i]) sample(1:100) else 1:100
-    ranRas <- raster(extent(0,10,0,10), vals = vals);
+    ranRas <- raster(extent(0, 10, 0, 10), vals = vals);
     ranRas <- suppressWarningsSpecific(
       falseWarnings = proj6Warn,
-      writeRaster(ranRas, filename = tf2, overwrite = TRUE))
+      writeRaster(ranRas, filename = tf2, overwrite = TRUE)
+    )
     a <- sample(1e7, 1);
     saveRDS(a, file = tf);
 
     # new copy
     messes[[i]] <- capture_messages(Cache(saveRDS, ranRas, file = tf, cacheRepo = tmpCache,
                                           quick = quicks[[i]]))
-
   }
-  expect_true(length(messes[[6]]) > 0) # undesireable quick = FALSE -- even when raster has changed
-  expect_true(length(messes[[8]]) == 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
-  # Desired -- 9 not cache, 10 cached
-  expect_true(length(messes[[9]]) == 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
-  expect_true(length(messes[[10]]) > 0) # undesireable quick = FALSE -- even when raster not changed, but file yes
-  expect_true(sum(unlist(lapply(messes, function(x) length(x) > 0))) == 4L)
 
+  expect_true(length(messes[[6]]) > 0)  # undesirable: quick = TRUE -- raster has changed
+  expect_true(length(messes[[8]]) == 0) # undesirable: quick = FALSE -- raster & file not changed
+
+  ## Desired: 9 not cache, 10 cached. But 9 is picking up cache from 4.
+  expect_true(length(messes[[9]]) == 0) # undesirable: quick = 'file' -- raster & file changed
+  expect_true(length(messes[[10]]) > 0) # undesirable: quick = 'file -- raster & file not changed
+  expect_true(sum(unlist(lapply(messes, function(x) length(x) > 0))) == 4L)
 })
 
 test_that("List of Rasters", {
@@ -1321,4 +1337,43 @@ test_that("List of Rasters", {
   b <- Cache(writeRasterList, listOfRas)
   expect_false(isTRUE(attr(b, ".Cache")$newCache))
   expect_true(isTRUE(attr(a, ".Cache")$newCache))
+})
+
+
+
+test_that("Cache the dots; .cacheExtra", {
+  testInitOut <- testInit()
+  on.exit({
+    testOnExit(testInitOut)
+  }, add = TRUE)
+
+  fn1 <- function(a, b, ...) {
+    out <- fn2(...)
+    return(out)
+  }
+
+  fn2 <- function(d, e = 0, f = 1) {
+    rnorm(d, e, f)
+  }
+
+
+  suppressMessages(out1 <- Cache(fn1, a = 1, b = 2, d = 1, cacheRepo = tmpCache))
+  suppressMessages(out2 <- Cache(fn1, a = 1, b = 2, d = 2, cacheRepo = tmpCache))
+  expect_true(!identical(out1, out2))
+
+
+  fn3 <- function(a, b) {
+    out <- fn2(d = 1)
+  }
+
+  suppressMessages(out3 <- Cache(fn3, .cacheExtra = "12342", cacheRepo = tmpCache))
+  suppressMessages(out4 <- Cache(fn3, .cacheExtra = "123422", cacheRepo = tmpCache))
+  expect_true(!identical(out3, out4))
+
+  # These are now the same because the .cacheExtra is the same and the arg is ignored
+  suppressMessages(out5 <- Cache(mean, 6, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache))
+  suppressMessages(out6 <- Cache(mean, 7, omitArgs = "x", .cacheExtra = "234", cacheRepo = tmpCache))
+  expect_true(out6 - 6 == 0) # takes first one
+  expect_equivalent(out5, out6) # the attributes will be different because one is a recovery of the other
+
 })

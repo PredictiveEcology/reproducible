@@ -19,6 +19,6 @@ test_that("prepInputs correctly unzips large files", {
                    fun = "raster::raster",
                    userTags = c("objectName:forestHarvestMask", "goal:posthocGIS"))
   fout <- file.path(tmpdir, "CA_harvest_year_1985_2015.tif")
-  expect_true(identical(filename(ff), fout))
+  expect_true(identical(normPath(filename(ff)), fout))
   expect_true(file.info(fout)[["size"]] > 28 * 1024^3)
 })

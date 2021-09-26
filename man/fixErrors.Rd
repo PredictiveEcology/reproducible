@@ -72,12 +72,21 @@ Default \code{TRUE}, though this may not be the right action for all cases.}
 \item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
 Cache is used on the internal \code{raster::buffer} command.}
 
+\item{testValidity}{Logical. If \code{TRUE}, the a test for validity will happen
+before actually running buffering (which is the solution in most
+cases). However, sometimes it takes longer to test for validity
+than just buffer without testing (there are no consequences of
+buffering if everything is valid). If \code{FALSE}, then the
+test will be skipped and the buffering will happen regardless.
+If \code{NA}, then all testing and buffering will be skipped.}
+
 \item{...}{Passed to methods. None currently implemented.}
 }
 \description{
 These must be very common for this function to be useful. Currently, the only
 meaningful method is on \code{SpatialPolygons}, and it runs \code{sf::st_is_valid}.
-If \code{FALSE}, then it runs a buffer of width 0.
+If \code{FALSE}, then it runs  \code{st_make_valid} or \code{raster::buffer},
+depending on whether x is \code{sf} or \code{SpatialPolygons*}, respectively.
 
 This uses \code{raster::buffer(..., width = 0)} internally, which fixes some
 failures to \code{sf::st_is_valid}

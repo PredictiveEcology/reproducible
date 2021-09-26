@@ -103,16 +103,25 @@ setMethod(
     studyArea <- studyArea[, -c(1:ncol(studyArea))]
     studyArea <- as(studyArea, "SpatialPolygons")
     studyAreaName(studyArea, ...)
-})
+  })
 
 #' @export
 #' @rdname studyAreaName
 setMethod(
   "studyAreaName",
-  signature = "SpatialPolygons",
+  signature = "ANY",
   definition = function(studyArea, ...) {
+    if (is(studyArea, "sf")) {
+      if (requireNamespace("sf")) {
+        studyArea <- sf::st_geometry(studyArea)
+      }
+    }
+    if (!(is(studyArea, "spatialClasses") || is(studyArea, "sfc"))) {
+      stop("studyAreaName expects a spatialClasses object")
+    }
     digest(studyArea, algo = "xxhash64") ## TODO: use `...` to pass `algo`
-})
+  })
+
 
 #' Identify which formals to a function are not in the current \code{...}
 #'
@@ -139,7 +148,7 @@ setMethod(
       formalNames <- names(formals(fun))
     }
 
-if (!missing(dots)) {
+  if (!missing(dots)) {
     out <- names(dots)[!(names(dots) %in% formalNames)]
   } else {
     out <- names(list(...))[!(names(list(...)) %in% formalNames)]
@@ -344,7 +353,7 @@ fileExt <- function(x) {
 isDirectory <- function(pathnames) {
   keep <- is.character(pathnames)
   if (length(pathnames) == 0) return(logical())
-  if (.isFALSE(keep)) stop("pathnames must be character")
+  if (isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   pathnames <- normPath(pathnames[keep])
   id <- dir.exists(pathnames)
@@ -355,7 +364,7 @@ isDirectory <- function(pathnames) {
 
 isFile <- function(pathnames) {
   keep <- is.character(pathnames)
-  if (.isFALSE(keep)) stop("pathnames must be character")
+  if (isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   pathnames <- normPath(pathnames[keep])
   iF <- file.exists(pathnames)
@@ -367,7 +376,7 @@ isFile <- function(pathnames) {
 isAbsolutePath <- function(pathnames) {
   # modified slightly from R.utils::isAbsolutePath
   keep <- is.character(pathnames)
-  if (.isFALSE(keep)) stop("pathnames must be character")
+  if (isFALSE(keep)) stop("pathnames must be character")
   origPn <- pathnames
   nPathnames <- length(pathnames)
   if (nPathnames == 0L)
@@ -389,15 +398,15 @@ isAbsolutePath <- function(pathnames) {
 }
 
 # This is so that we don't need to import from backports
-.isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
+isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 
 
 messagePrepInputs <- function(...) {
   messageColoured(..., colour = getOption("reproducible.messageColourPrepInputs"))
 }
 
-messageCache <- function(...) {
-  messageColoured(..., colour = getOption("reproducible.messageColourCache"))
+messageCache <- function(..., colour = getOption("reproducible.messageColourCache")) {
+  messageColoured(..., colour = colour)
 }
 
 messageQuestion <- function(..., verboseLevel = 0) {

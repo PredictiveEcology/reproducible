@@ -139,7 +139,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        quick = getOption("reproducible.quick"),
                        overwrite = getOption("reproducible.overwrite", FALSE),
                        purge = FALSE,
-                       useCache = getOption("reproducible.useCache", FALSE),
+                       # useCache = getOption("reproducible.useCache", FALSE),
                        verbose = getOption("reproducible.verbose", 1),
                        .tempPath, ...) {
   if (missing(.tempPath)) {
@@ -152,18 +152,31 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   fun <- .checkFunInDots(fun = fun, dots = dots)
   dots <- .checkDeprecated(dots, verbose = verbose)
 
+  teamDrive <- if (packageVersion("googledrive") < "2.0.0") {
+    dots[["team_drive"]]
+  } else {
+    dots[["shared_drive"]]
+  }
+
   # remove trailing slash -- causes unzip fail if it is there
   destinationPath <- gsub("\\\\$|/$", "", destinationPath)
   checkSumFilePath <- file.path(destinationPath, "CHECKSUMS.txt")
 
+  if (!is.null(archive))
+    if (any(is.na(archive)))
+      if (all(!is.character(archive))) {
+        archive <- as.character(archive)
+      }
+
   if (is.null(targetFile)) {
     fileGuess <- .guessAtFile(url = url, archive = archive, targetFile = targetFile,
                               destinationPath = destinationPath, verbose = verbose,
-                              team_drive = dots[["team_drive"]])
+                              team_drive = teamDrive)
     if (is.null(archive))
       archive <- .isArchive(fileGuess)
-    archive <- moveAttributes(fileGuess, archive)
-    if (is.null(archive) && !is.null(fileGuess)) {
+    if (isTRUE(!is.na(archive)))
+      archive <- moveAttributes(fileGuess, archive)
+    if ((is.null(archive) || is.na(archive)) && !is.null(fileGuess)) {
       messagePrepInputs("targetFile was not supplied; guessed and will try ", fileGuess,
               ". If this is incorrect, please supply targetFile", verbose = verbose)
       targetFile <- .basename(fileGuess)
@@ -189,7 +202,6 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       }
     }
   }
-
   if (!is.null(alsoExtract)) {
     alsoExtract <- if (isTRUE(all(is.na(alsoExtract)))) {
       character()
@@ -261,7 +273,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
         #   an archive, either remotely, in the case of google or from the basename of url
         fileGuess <- .guessAtFile(url = url, archive = archive,
                                   targetFile = targetFile, destinationPath = destinationPath,
-                                  verbose = verbose, team_drive = dots[["team_drive"]])
+                                  verbose = verbose, team_drive = teamDrive)
         archive <- .isArchive(fileGuess)
         # The fileGuess MAY have a fileSize attribute, which can be attached to "archive"
         archive <- moveAttributes(fileGuess, receiving = archive)
@@ -570,11 +582,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   ## targetFilePath might still be NULL, need destinationPath too
   if (is.null(targetFilePath)) {
-    if (is.null(filesExtracted$filesExtr)) {
+    if (is.null(filesExtr)) {
       if (!is.null(downloadFileResult$downloaded))
         targetFilePath <- downloadFileResult$downloaded
     } else {
-      targetFilePath <- filesExtracted$filesExtr
+      targetFilePath <- filesExtr
     }
   }
 
@@ -985,7 +997,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
     }
 
     # On *nix types -- try symlink
-    if (.isFALSE(all(result)) && isTRUE(symlink)) {
+    if (isFALSE(all(result)) && isTRUE(symlink)) {
       if (!isWindows()) {
         result <- suppressWarnings(file.symlink(from, to))
         if (isTRUE(all(result))) {
@@ -995,7 +1007,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, verbose = getOption("reproducib
       }
     }
 
-    if (.isFALSE(all(result))) {
+    if (isFALSE(all(result))) {
       result <- file.copy(from, to)
       messagePrepInputs("Copy of file: ", fromCollapsed, ", was created at: ", toCollapsed, verbose = verbose)
     }

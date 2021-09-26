@@ -1,5 +1,4 @@
 test_that("Checksums read and written correctly", {
-  # library(magrittr)
 
   testInitOut <- testInit()
   on.exit({
@@ -40,7 +39,18 @@ test_that("Checksums read and written correctly", {
   data.table::setorderv(txt, "expectedFile")
   expect_true(all(colnames(txt) == cnamesR))
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
-  expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
+
+   #expect_identical(sort(txt$expectedFile), sort(basename(sampleFiles)))
+  #expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
+  a <- sort(grep(".R$", txt$expectedFile, value = TRUE))
+  b <- sort(basename(sampleFiles))
+  expect_identical(a, b)
+  # expect_identical(a[1], b[1])
+  # expect_identical(a[2], b[2])
+  # expect_identical(a[3], b[3])
+  # expect_identical(a[4], b[4])
+  # expect_identical(a[5], b[5])
+  # expect_identical(a[6], b[6])
 
   # 4. read Checksums with non-empty, but incomplete CHECKSUMS.txt file
   out <- txt[, `:=`(file = expectedFile,
@@ -64,6 +74,15 @@ test_that("Checksums read and written correctly", {
   txt <- Checksums(tmpdir)
   txt <- txt[grepl("R", expectedFile)]
   expect_equal(nrow(txt), NROW(dir(tmpdir, pattern = "R")))
-  expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
+  # expect_true(all(sort(txt$expectedFile) == sort(basename(sampleFiles))))
+  a <- sort(grep(".R$", txt$expectedFile, value = TRUE))
+  expect_identical(a, b)
+  # expect_identical(a[1], b[1])
+  # expect_identical(a[2], b[2])
+  # expect_identical(a[3], b[3])
+  # expect_identical(a[4], b[4])
+  # expect_identical(a[5], b[5])
+  # expect_identical(a[6], b[6])
+
 
 })

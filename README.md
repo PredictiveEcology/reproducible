@@ -13,7 +13,9 @@ This package aims at making high-level, robust, machine and OS independent tools
 
 ## News
 
-See updates from latest [CRAN](https://cran.r-project.org/package=reproducible) and [development](https://github.com/PredictiveEcology/reproducible/blob/development/NEWS.md) versions. Note that versions 1.0.0 and later are not compatible with previous versions. The current version can be much faster and creates smaller repository files (each with specific options set using `Suggests` packages) and allows for different (e.g., `RPostgres` backends for the database -- not the saved files, however; these are still saved locally).
+See updates from latest [CRAN](https://cran.r-project.org/package=reproducible) and [development](https://github.com/PredictiveEcology/reproducible/blob/development/NEWS.md) versions.
+Note that versions 1.0.0 and later are not compatible with previous versions.
+The current version can be much faster and creates smaller repository files (each with specific options set using `Suggests` packages) and allows for different (e.g., `RPostgres` backends for the database -- not the saved files, however; these are still saved locally).
 
 # Reproducible workflows
 
