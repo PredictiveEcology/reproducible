@@ -1,6 +1,6 @@
 ## Updated release
 
-This release addresses a failure on the CRAN version of `reproducible`, plus adds several new features.
+This release addresses transient failures on the CRAN version of `reproducible` (currently there are none: https://cran.r-project.org/web/checks/check_results_reproducible.html), plus adds several new features.
 
 ## Test environments
 
@@ -15,13 +15,13 @@ This release addresses a failure on the CRAN version of `reproducible`, plus add
 - os: ubuntu-18.04,   r: '3.6'
           
 ### Winbuilder -- all passed Sept 25, 2021
-* Windows                 (win-builder), R 3.6.3 (2021-02-11)
-* Windows                 (win-builder), R 4.0.5 (2021-02-11)
-* Windows                 (win-builder), R-devel (2021-05-18 r80323)
+* Windows                 (win-builder), R 3.6.3
+* Windows                 (win-builder), R 4.0.5
+* Windows                 (win-builder), R-devel
 
 ## R CMD check results
 
-There were no ERRORs nor WARNINGs or NOTEs.
+There is only a NOTE about the email address, which is correct, and unchanged, for the maintainer.
 
 ## Downstream dependencies
 
