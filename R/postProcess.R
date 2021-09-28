@@ -1438,20 +1438,22 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
       if (fileExt(theFilename) == "grd") {
         if (!fileExt(filename2) == "grd") {
           if (fileExt(filename2) != ""){
-          warning("filename2 file type (", fileExt(filename2), ") was not same type (",
-                  fileExt(filename(x)),") ", "as the filename of the raster; ",
-                  "Changing filename2 so that it is ", fileExt(filename(x)))
+            warning("filename2 file type (", fileExt(filename2), ") was not same type (",
+                    fileExt(filename(x)),") ", "as the filename of the raster; ",
+                    "Changing filename2 so that it is ", fileExt(filename(x)))
             # ^^ This doesn't Work for rasterStack
-          filename2 <- gsub(fileExt(filename2), "grd", filename2)
+            filename2 <- gsub(fileExt(filename2), "grd", filename2)
           } else {
-            if (!is(x, "RasterStack")) {
-              stop("The object has no file extension and is not a raster stack. Please debug")
+            if (!is(x, "Raster")) {
+              stop("The object has no file extension and is not a Raster* class object. Please debug")
               # Catch for weird cases where the filename is not present and the
               # object is NOT a RasterStack
             }
-            warning("filename2 file is NULL and not the same type as the ",
-                    "filename of the raster (", fileExt(filename(x[[1]])),"); ",
-                    "Changing filename2 so that it is ", fileExt(filename(x[[1]])))
+            if (!identical(fileExt(filename(x[[1]])), fileExt(theFilename))) {
+              warning("filetype of filename2 provided (", fileExt(filename2),") does not ",
+                      "match the filetype of the object; ",
+                      "Changing filename2 so that it is ", fileExt(filename(x[[1]])))
+            }
             filename2 <- paste0(filename2, ".grd")
           }
         }
