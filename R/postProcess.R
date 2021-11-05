@@ -1494,7 +1494,8 @@ writeOutputs.Raster <- function(x, filename2 = NULL,
         nLayers <- raster::nlayers(x)
         if (any(unlist(longerThanOne))) {
           if (!identical(nLayers, length(argsForWrite$filename))) {
-            argsForWrite$filename <- file.path(dirname(argsForWrite$filename), paste0(names(x), "_", basename(argsForWrite$filename)))
+            argsForWrite$filename <- file.path(dirname(argsForWrite$filename),
+                                               paste0(names(x), "_", basename(argsForWrite$filename)))
           }
         }
         if (length(argsForWrite$filename) == 1) {
