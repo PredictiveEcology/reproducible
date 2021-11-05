@@ -1,5 +1,17 @@
 Known issues: <https://github.com/PredictiveEcology/reproducible/issues>
 
+Version 1.2.8.9000
+=============
+
+## Dependency changes
+* Drop support for R 3.6 (#230)
+
+## Enhancements
+none
+
+## Bug fixes
+none
+
 Version 1.2.8
 =============
 
